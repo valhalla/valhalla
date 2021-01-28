@@ -89,12 +89,13 @@ TEST(Filesystem, recursive_directory_listing) {
   EXPECT_TRUE(files.empty());
 
   // cleanup the stuff we made, 2 tests in one ;o)
-  EXPECT_TRUE(filesystem::remove_all("foo")) << "why cant we delete the stuff we just made";
+  filesystem::remove_all("foo");
+  EXPECT_TRUE(!filesystem::exists("foo"));
 }
 
 TEST(Filesystem, remove_any) {
   // delete non existent thing
-  EXPECT_TRUE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return true";
+  EXPECT_FALSE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return false";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
@@ -138,35 +139,64 @@ TEST(Filesystem, file_size) {
 
 TEST(Filesystem, concurrent_folder_create_delete) {
 
-  const char* folder_name = "test/a/b/c/d/e/f/g";
+  const char* create_subdir = "test/a/b/c/d/e/f/g/h/i/j";
+  const char* base_subdir = "test/a";
 
   auto create_folder = [&]() {
-    bool success = filesystem::create_directories(folder_name);
+    bool success = filesystem::create_directories(create_subdir);
     EXPECT_TRUE(success);
+    EXPECT_TRUE(filesystem::exists(create_subdir));
   };
 
   auto remove_folder = [&]() {
-    bool success = filesystem::remove_all(folder_name);
-    EXPECT_TRUE(success);
+    std::uintmax_t delete_count = filesystem::remove_all(base_subdir);
+    // I've found that two+ threads will claim that they've deleted the same
+    // file object. This results in double+ counting and prevents me from
+    // asserting anything related to the delete_count. All we can be sure
+    // is the following:
+    EXPECT_TRUE(!filesystem::exists(base_subdir));
   };
 
   size_t num_threads = std::thread::hardware_concurrency();
 
-  for (int j = 0; j < 500; j++) {
+  const int num_iters = 50;
+  for (int j = 0; j < num_iters; j++) {
+    // concurrent folder creation
     {
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
       for (size_t i = 0; i < num_threads; i++)
         threads[i].reset(new std::thread(create_folder));
       for (size_t i = 0; i < num_threads; i++)
         threads[i]->join();
+      EXPECT_TRUE(filesystem::exists(create_subdir));
     }
 
+    // populate each subfolder with num_files_per_folder text files.
+    {
+      const int num_files_per_folder = 10;
+      std::string folder_name = "test";
+      for (char subdir = 'a'; subdir < 'k'; subdir++) {
+        folder_name = folder_name + "/" + subdir;
+        for (size_t i = 0; i < num_files_per_folder; i++) {
+          std::string filename = folder_name + "/" + std::to_string(i) + ".txt";
+          FILE* f = fopen(filename.c_str(), "w");
+          fprintf(f, "hello");
+          fclose(f);
+        }
+      }
+    }
+
+    // Tell every thread to delete the same "test/a" folder. Each will
+    // take some portion of the effort decided simply by who gets there first.
+    // The key aspect is that this succeeds without error and the "test/a"
+    // folder is successfully deleted.
     {
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
       for (size_t i = 0; i < num_threads; i++)
         threads[i].reset(new std::thread(remove_folder));
       for (size_t i = 0; i < num_threads; i++)
         threads[i]->join();
+      EXPECT_TRUE(!filesystem::exists(base_subdir));
     }
   }
 }
