@@ -8,6 +8,7 @@
    * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
 
 * **Enhancement**
+   * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
@@ -252,7 +253,6 @@
    * CHANGED: nit: Enables compiler warnings in part of loki module [#2767](https://github.com/valhalla/valhalla/pull/2767)
    * CHANGED: Reducing the number of uturns by increasing the cost to for them to 9.5f. Note: Did not increase the cost for motorcycles or motorscooters. [#2770](https://github.com/valhalla/valhalla/pull/2770)
    * ADDED: Add option to use thread-safe GraphTile's reference counter. [#2772](https://github.com/valhalla/valhalla/pull/2772)
-   * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * CHANGED: nit: Enables compiler warnings in part of thor module [#2768](https://github.com/valhalla/valhalla/pull/2768)
    * ADDED: Add costing option `use_tracks` to avoid or favor tracks in route. [#2769](https://github.com/valhalla/valhalla/pull/2769)
    * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
