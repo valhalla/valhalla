@@ -115,7 +115,7 @@ protected:
                                         // close_partial_dir_edge(reader, tile, index, 0.5, current,
                                         // "AB", "B", closure_map);
                                         close_partial_dir_edge(reader, tile, index, 0.5, current,
-                                                               "AB", "A", closure_map);
+                                                               "AB", "B", closure_map);
                                       });
 
 #if 0
