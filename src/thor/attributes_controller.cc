@@ -66,6 +66,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeLaneConnectivity, true},
     {kEdgeCycleLane, true},
     {kEdgeBicycleNetwork, true},
+    {kEdgeSacScale, true},
     {kEdgeSidewalk, true},
     {kEdgeDensity, true},
     {kEdgeSpeedLimit, true},
