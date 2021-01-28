@@ -26,7 +26,7 @@ jobs:
         displayName: 'Pull submodules'
       
       - task: Cache@2
-        displayName: "Cache vcpkg's packages"
+        displayName: "Cache vcpkg's packages "
         inputs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
           path: "$(VCPKG_DIR)"
