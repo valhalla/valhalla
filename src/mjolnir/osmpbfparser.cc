@@ -28,7 +28,7 @@
 // This is largely based off of: https://github.com/CanalTP/libosmpbfreader
 // there have been some minor changes for our own purposes but its largely the same
 #include <cstdint>
-#if defined(_WIN32) && !defined(__MINGW32__)
+#ifdef _MSC_VER
 #include <winsock2.h> // ntohl
 #else
 #include <netinet/in.h>

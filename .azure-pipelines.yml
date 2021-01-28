@@ -83,11 +83,20 @@ jobs:
 
       - script: |
           SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
+          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+          popd
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
           cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
         displayName: 'Run CMake to configure build'
 
       - script: |
+          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
+          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+          popd
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --build %BUILD_DIR% --config %BUILD_CFG%
         displayName: 'Run CMake to build'
 
