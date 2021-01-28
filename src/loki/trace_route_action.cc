@@ -212,7 +212,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = orig_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method
@@ -239,7 +239,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = dest_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method

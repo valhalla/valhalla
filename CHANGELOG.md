@@ -6,6 +6,7 @@
    * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
    * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
    * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
+   * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2871](https://github.com/valhalla/valhalla/pull/2817)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
