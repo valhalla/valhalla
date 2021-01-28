@@ -72,20 +72,14 @@ jobs:
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
       - powershell: |
-          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o .\ninja_win.zip
-          Expand-Archive .\ninja_win.zip -DestinationPath .\ninja
-          $env:Path += ";$pwd\ninja"
+          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
+          Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
+        displayName: 'Download Ninja'
+
+      - script: |
+          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
           cmake --version
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vcvarspath = &$vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          Write-Output "vc tools located at: $vcvarspath"
-          cmd.exe /c "call `"$vcvarspath\VC\Auxiliary\Build\vcvars64.bat`" && set > %temp%\vcvars.txt"
-          Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
-            if ($_ -match "^(.*?)=(.*)$") {
-              Set-Content "env:\$($matches[1])" $matches[2]
-            }
-          }
-          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B"$env:BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_DIR\scripts\buildsystems\vcpkg.cmake" -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR="$env:VCPKG_DIR\installed\$env:TRIPLET-windows\include\luajit" -DLUA_LIBRARIES="$env:VCPKG_DIR\installed\$env:TRIPLET-windows\lib\lua51.lib"
+          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\$env:TRIPLET-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
         displayName: 'Run CMake to configure build'
 
       - script: |
