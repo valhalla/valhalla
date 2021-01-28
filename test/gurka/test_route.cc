@@ -476,3 +476,42 @@ TEST(Standalone, DontIgnoreRestriction) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
 }
+
+TEST(Standalone, BridgingEdgeIsRestricted) {
+  const std::string ascii_map = R"(
+   A----B----C--------D----E----F-----G
+)";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BC", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"CD", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"DE", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"EF", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"FG", {{"highway", "primary"}, {"oneway", "yes"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "CD", "via"},
+           {gurka::way_member, "DE", "via"},
+           {gurka::way_member, "EF", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_entry"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/bridging_edge_is_restricted",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
