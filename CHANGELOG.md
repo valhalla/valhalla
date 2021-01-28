@@ -3,6 +3,7 @@
 
 * **Bug Fix**
    * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
+   * FIXED: Fix crash in loki when trace_route is called with 2 locations.
 
 * **Enhancement**
 
