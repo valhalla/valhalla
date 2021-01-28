@@ -48,7 +48,7 @@ gurka::map InstructionsSameNameTurnLeft::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsSameNameTurnLeft, SameNameTurnLeft) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types (turn_degree=270)
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -105,7 +105,7 @@ gurka::map InstructionsSameNameTurnLeft302::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsSameNameTurnLeft302, SameNameTurnLeft) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types (turn_degree=302)
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -162,7 +162,7 @@ gurka::map InstructionsSameNameLeftForward::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsSameNameLeftForward, SameNameNoLeft) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types (turn_degree=329)
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -215,7 +215,7 @@ gurka::map InstructionsSameNameTurnLeftToward::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsSameNameTurnLeftToward, SameNameTurnLeftToward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types (turn_degree=270)
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

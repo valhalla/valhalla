@@ -91,7 +91,7 @@ void recost_forward(baldr::GraphReader& reader,
     // TODO: if this edge begins a restriction, we need to start popping off edges into queue
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
-    int time_restrictions_TODO = -1;
+    uint8_t time_restrictions_TODO = -1;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to

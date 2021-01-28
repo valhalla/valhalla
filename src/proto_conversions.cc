@@ -112,6 +112,7 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
       {"height", Options::height},
       {"transit_available", Options::transit_available},
       {"expansion", Options::expansion},
+      {"centroid", Options::centroid},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -133,6 +134,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
       {Options::height, "height"},
       {Options::transit_available, "transit_available"},
       {Options::expansion, "expansion"},
+      {Options::centroid, "centroid"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;

@@ -93,7 +93,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
@@ -190,7 +190,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred, predindex)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -252,7 +252,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (opp_edge == nullptr ||
         !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0, restriction_idx)) {
       continue;
@@ -349,7 +349,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, predindex)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -450,7 +450,8 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {});
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {},
+                         baldr::kInvalidRestriction);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -501,7 +502,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // of the path. Set the origin flag.
     // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
-                         {});
+                         {}, baldr::kInvalidRestriction);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -611,8 +612,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
-    const EdgeLabel& pred,
-    const uint32_t /*predindex*/) {
+    const EdgeLabel& pred) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];

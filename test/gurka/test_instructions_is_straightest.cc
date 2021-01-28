@@ -48,7 +48,7 @@ gurka::map InstructionsIsStraightest::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsIsStraightest, SingleStraight) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

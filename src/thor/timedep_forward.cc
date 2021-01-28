@@ -104,7 +104,8 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
-      if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
+      if ((!trans->up() &&
+           hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
@@ -163,7 +164,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   }
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
-  int restriction_idx = -1;
+  uint8_t restriction_idx = -1;
   if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                          nodeinfo->timezone(), restriction_idx) ||
@@ -510,7 +511,8 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{});
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
+                         baldr::kInvalidRestriction);
     // Set the origin flag
     edge_label.set_origin();
 

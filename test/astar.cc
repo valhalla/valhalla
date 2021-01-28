@@ -126,32 +126,15 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
                                        gurka::relation_member{gurka::way_member, "hi", "via"}},
                                       {{"type", "restriction"}, {"restriction", "no_right_turn"}}}};
 
-//
-const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
-
 gurka::nodelayout node_locations;
-
-const std::string config_file = "test/test_trivial_path";
-
-void write_config(const std::string& filename,
-                  const std::string& tile_dir = "test/data/trivial_tiles") {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"concurrency\": 1, \
-      \"id_table_size\": 1000, \
-       \"tile_dir\": \"" +
-                tile_dir + "\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
-      } \
-    }";
-  } catch (...) {}
-  file.close();
-}
+const std::string test_dir = "test/data/fake_tiles_astar";
+const auto fake_conf =
+    test::make_config(test_dir,
+                      {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},
+                       {"mjolnir.timezone", VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite"},
+                       {"mjolnir.hierarchy", "false"},
+                       {"mjolnir.shortcuts", "false"}});
 
 void make_tile() {
 
@@ -159,14 +142,6 @@ void make_tile() {
     filesystem::remove_all(test_dir);
 
   filesystem::create_directories(test_dir);
-
-  boost::property_tree::ptree conf;
-  write_config(config_file, test_dir);
-  rapidjson::read_json(config_file, conf);
-
-  // We don't want these in our test tile
-  conf.put("mjolnir.hierarchy", false);
-  conf.put("mjolnir.shortcuts", false);
 
   const double gridsize = 666;
 
@@ -200,7 +175,7 @@ void make_tile() {
 
   {
     constexpr bool release_osmpbf_memory = false;
-    mjolnir::build_tile_set(conf,
+    mjolnir::build_tile_set(fake_conf,
                             {test_dir + "/map1.pbf", test_dir + "/map2.pbf", test_dir + "/map3.pbf"},
                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
                             release_osmpbf_memory);
@@ -447,67 +422,8 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-boost::property_tree::ptree get_conf(const char* tiles) {
-  std::stringstream ss;
-  ss << R"({
-      "mjolnir":{
-        "tile_dir":"test/data/)"
-     << tiles << R"(",
-        "concurrency": 1
-      },
-      "loki":{
-        "actions":["route"],
-        "logging":{"long_request": 100},
-        "service_defaults":{
-          "minimum_reachability": 50,
-          "radius": 0,
-          "search_cutoff": 35000,
-          "node_snap_tolerance": 5,
-          "street_side_tolerance": 5,
-          "street_side_max_distance": 1000,
-          "heading_tolerance": 60
-        }
-      },
-      "thor":{"logging":{
-        "long_request": 100,
-        "type": "std_out"
-        }
-      },
-      "midgard":{
-        "logging":{
-          "type": "std_out"
-        }
-      },
-      "odin":{"logging":{"long_request": 100}},
-      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-      "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
-              "mode":"auto","grid":{"cache_size":100240,"size":500},
-              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
-      "service_limits": {
-        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-      }
-    })";
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(ss, conf);
-  return conf;
-}
-
 TEST(Astar, TestTrivialPathNoUturns) {
-  boost::property_tree::ptree conf = gurka::detail::build_config("test/data/utrecht_tiles", {});
+  boost::property_tree::ptree conf = test::make_config("test/data/utrecht_tiles");
   vr::actor_t actor(conf);
   valhalla::Api api;
   actor.route(
@@ -541,7 +457,7 @@ struct route_tester {
 };
 
 TEST(Astar, test_oneway) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway works, South-West to North-East
   std::string request =
@@ -576,7 +492,7 @@ TEST(Astar, test_oneway) {
 }
 
 TEST(Astar, test_oneway_wrong_way) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway wrong way, North-east to South-West
   // Should produce no-route
@@ -592,7 +508,7 @@ TEST(Astar, test_oneway_wrong_way) {
 }
 
 TEST(Astar, test_deadend) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -643,7 +559,7 @@ TEST(Astar, test_deadend) {
 TEST(Astar, test_time_dep_forward_with_current_time) {
   // Test a request with date_time as "current" (type: 0)
   //
-  auto conf = get_conf("whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -689,7 +605,7 @@ TEST(Astar, test_time_dep_forward_with_current_time) {
 }
 
 TEST(Astar, test_deadend_timedep_forward) {
-  auto conf = get_conf("whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -742,7 +658,7 @@ TEST(Astar, test_deadend_timedep_forward) {
   EXPECT_EQ(uturn_street, "Quay Street") << "We did not find the expected u-turn";
 }
 TEST(Astar, test_deadend_timedep_reverse) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -799,7 +715,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
-  auto conf = get_conf("roma_tiles");
+  auto conf = test::make_config("test/data/roma_tiles");
   route_tester tester(conf);
   std::string request =
       R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
@@ -878,7 +794,7 @@ Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // so lets use a timedependent a-star and verify that
 
   LOG_INFO("Testing " + costing_str + " route at hour " + std::to_string(hour));
-  auto conf = get_conf("roma_tiles");
+  auto conf = test::make_config("test/data/roma_tiles");
   route_tester tester(conf);
   // The following request results in timedep astar during the restricted hours
   // and should be denied
@@ -952,7 +868,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
   //
   // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
   //
-  auto conf = get_conf("bayfront_singapore_tiles");
+  auto conf = test::make_config("test/data/bayfront_singapore_tiles");
   route_tester tester(conf);
   std::string request;
   switch (date_time_type) {
@@ -1156,7 +1072,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
-  auto conf = get_conf("ny_ar_tiles");
+  auto conf = test::make_config("test/data/ny_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1227,7 +1143,7 @@ TEST(Astar, test_timed_access_restriction_2) {
 
 Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
-  auto conf = get_conf("pa_ar_tiles");
+  auto conf = test::make_config("test/data/pa_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1247,7 +1163,7 @@ Api timed_conditional_restriction_pa(const std::string& mode, const std::string&
 
 Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
-  auto conf = get_conf("nh_ar_tiles");
+  auto conf = test::make_config("test/data/nh_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1415,7 +1331,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
-  auto conf = get_conf("melborne_tiles");
+  auto conf = test::make_config("test/data/melborne_tiles");
   route_tester tester(conf);
   {
     // Tests "Route around the block" due to complex restriction,

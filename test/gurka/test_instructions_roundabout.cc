@@ -62,7 +62,7 @@ gurka::map InstructionsRoundabout::map = {};
 // enter_roundabout_verbal
 // "0": "Enter the roundabout."
 TEST_F(InstructionsRoundabout, RoundaboutEnterOnly) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -79,7 +79,7 @@ TEST_F(InstructionsRoundabout, RoundaboutEnterOnly) {
 // enter_roundabout_verbal
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 TEST_F(InstructionsRoundabout, RoundaboutOrdinalOnly) {
-  auto result = gurka::route(map, "A", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -102,7 +102,7 @@ TEST_F(InstructionsRoundabout, RoundaboutOrdinalOnly) {
 // enter_roundabout_verbal
 // "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
 TEST_F(InstructionsRoundabout, RoundaboutOntoStreetName) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -126,7 +126,7 @@ TEST_F(InstructionsRoundabout, RoundaboutOntoStreetName) {
 // "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto
 // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 TEST_F(InstructionsRoundabout, RoundaboutOntoBeginStreetName) {
-  auto result = gurka::route(map, "A", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -151,7 +151,7 @@ TEST_F(InstructionsRoundabout, RoundaboutOntoBeginStreetName) {
 // enter_roundabout_verbal
 // "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
 TEST_F(InstructionsRoundabout, RoundaboutToward) {
-  auto result = gurka::route(map, "I", "A", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"I", "A"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -181,7 +181,7 @@ TEST_F(InstructionsRoundabout, RoundaboutExitSuppressed) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
@@ -254,7 +254,7 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
 
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kExitRight,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
