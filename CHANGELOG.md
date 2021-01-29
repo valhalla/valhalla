@@ -9,6 +9,7 @@
    * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2871](https://github.com/valhalla/valhalla/pull/2817)
 
 * **Enhancement**
+   * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

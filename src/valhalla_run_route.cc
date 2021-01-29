@@ -189,11 +189,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
-    std::vector<Measurement> trace;
-    trace.reserve(shape.size());
-    std::transform(shape.begin(), shape.end(), std::back_inserter(trace), [](const PointLL& p) {
-      return Measurement{p, 0, 0};
-    });
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
@@ -223,8 +218,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
-    std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
+    std::vector<std::vector<PathInfo>> paths;
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, paths);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
