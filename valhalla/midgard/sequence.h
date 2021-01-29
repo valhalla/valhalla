@@ -206,6 +206,7 @@ public:
     }
   }
 
+  // reset to another file or another size with readonly permissions
   void
   map_readonly(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     map(new_file_name, new_count, advice, true /* readonly */);
