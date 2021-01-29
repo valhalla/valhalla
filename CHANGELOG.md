@@ -135,6 +135,7 @@
    * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
    * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
    * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
+   * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
 
 * **Enhancement**
    * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
