@@ -6,9 +6,10 @@
    * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
    * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
    * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
-   * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2871](https://github.com/valhalla/valhalla/pull/2817)
+   * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2817](https://github.com/valhalla/valhalla/pull/2817)
 
 * **Enhancement**
+   * CHANGED: Github Actions CI running on fedora:33 instead of instable rawhide [#2821](https://github.com/valhalla/valhalla/pull/2821)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

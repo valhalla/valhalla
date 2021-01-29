@@ -5,7 +5,7 @@ jobs:
   build:
     name: MinGW64 build
     runs-on: ubuntu-latest
-    container: fedora:rawhide
+    container: fedora:33
     steps:
       - name: Get dependencies
         run: |
