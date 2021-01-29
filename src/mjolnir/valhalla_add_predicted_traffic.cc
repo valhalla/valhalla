@@ -57,7 +57,7 @@ struct stats {
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
-  std::vector<int16_t> coefficients;
+  std::array<int16_t, kCoefficientCount> coefficients;
 };
 
 /**
@@ -128,9 +128,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
               if (t.size()) {
                 try {
                   // Decode the base64 predicted speeds
-                  // Decode the base64 string and cast the data to a raw string of signed bytes
-                  auto coefficients = decode_compressed_speeds(t);
-                  traffic->second.coefficients.assign(coefficients.begin(), coefficients.end());
+                  traffic->second.coefficients = decode_compressed_speeds(t);
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +

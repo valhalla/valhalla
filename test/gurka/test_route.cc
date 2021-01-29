@@ -247,7 +247,7 @@ TEST(AutoDataFix, deprecation) {
 class AlgorithmTest : public ::testing::Test {
 protected:
   static gurka::map map;
-  static uint32_t current, historical, constrained;
+  static uint32_t current, historical, constrained, freeflow;
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
@@ -281,7 +281,10 @@ protected:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algorithm_selection",
-                            {{"mjolnir.shortcuts", "false"}});
+                            {
+                                {"mjolnir.shortcuts", "false"},
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                            });
     map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
 
     // add live traffic
@@ -297,30 +300,38 @@ protected:
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
 
-      // 200 dct coeficients
-      std::vector<int16_t> historical(200, -1337);
+      // speeds for every 5 min bucket of the week
+      std::array<float, kBucketsPerWeek> historical;
+      historical.fill(7);
+      for (size_t i = 0; i < historical.size(); ++i) {
+        // TODO: if we are in morning or evening set a different speed and add another test
+      }
       return historical;
     });
 
-    // tests below use saturday at 9am
-    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    // tests below use saturday at 9am and thursday 4am (27 if for leap seconds)
+    size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60 + 27;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
       auto tile = reader->GetGraphTile(tile_id);
       for (const auto& e : tile->GetDirectedEdges()) {
-        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
+        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, 0);
         EXPECT_EQ(current, 50);
-        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week);
+        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week_constrained);
         EXPECT_EQ(historical, 7);
-        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week);
+        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week_constrained);
         EXPECT_EQ(constrained, 25);
+        freeflow = tile->GetSpeed(&e, baldr::kFreeFlowMask, second_of_week_freeflow);
+        EXPECT_EQ(freeflow, 75);
       }
     }
   }
 };
 
 gurka::map AlgorithmTest::map = {};
-uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0;
+uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
+         AlgorithmTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api) {
   uint32_t kmh = -1;
@@ -410,6 +421,15 @@ TEST_F(AlgorithmTest, Bidir) {
                                  {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), current);
+  }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-28T04:00"},
+                                 {"/costing_options/auto/speed_types/0", "freeflow"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), freeflow);
   }
 }
 
