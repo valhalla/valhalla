@@ -456,3 +456,43 @@ TEST(Standalone, LegWeightRegression) {
   // "weight" was negative due to failing to properly update elapsed_cost.cost
   EXPECT_GT(doc["routes"][0]["legs"][0]["steps"][2]["weight"].GetDouble(), 0);
 }
+
+TEST(Standalone, DontIgnoreRestriction) {
+  const std::string ascii_map = R"(
+                D
+               /
+      A----B--C
+           |
+           E
+)";
+
+  const gurka::ways ways = {
+      {"DC", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"CB", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "DC", "from"},
+           {gurka::way_member, "CB", "via"},
+           {gurka::way_member, "BE", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_entry"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/dont_ignore_restriction",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "E"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
