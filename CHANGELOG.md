@@ -7,6 +7,7 @@
    * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
    * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
    * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2817](https://github.com/valhalla/valhalla/pull/2817)
+   * FIXED: Mark the restriction start and end as via ways to fix IsBridgingEdge function in Bidirectional Astar [#2796](https://github.com/valhalla/valhalla/pull/2796)
 
 * **Enhancement**
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
