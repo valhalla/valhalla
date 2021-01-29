@@ -20,21 +20,45 @@ namespace {
 // graph with two states part of the same country - with a highway between them.
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
-        A-------B-------C
-        |       |       |
-        |   G---|---H   |
-        |       |       |
-        F-------E-------D
+        A-------B-------C-------I-------J
+        |       |       |   W   |       |
+        |       |       |   |   |       |
+        |   G---|---H---|---X---|---Y   |
+        |       |       |   |   |       |
+        |       |       |   Z   |       |
+        F-------E-------D-------L-------K
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
   const gurka::ways ways = {{"ABCDEFA", {}},
                             {"ABEFA", {}},
                             {"BCDEB", {}},
+                            {"CIJKLDC", {}},
+                            {"CILDC", {}},
+                            {"IJKLI", {}},
                             {"GH",
-                             {
-                                 {"highway", "primary"},
-                             }}};
+                                {
+                                    {"highway", "primary"},
+                                }},
+                            {"HX",
+                                {
+                                    {"highway", "primary"},
+                                }},
+                            {"XY",
+                                {
+                                    {"highway", "primary"},
+                                }},
+                            {"WX",
+                                {
+                                    {"highway", "primary"},
+                                }},
+                            {"XZ",
+                                {
+                                    {"highway", "primary"},
+                                }}};
+
+  // X lives Japan which allows named intersections - and is named.
+  const gurka::nodes nodes = {{ "X", {{ "junction", "named" }}}};
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
                                        {{"type", "boundary"},
@@ -50,22 +74,32 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
                                        {{"type", "boundary"},
                                         {"boundary", "administrative"},
                                         {"admin_level", "2"},
-                                        {"name", "USA"}}}};
+                                        {"name", "USA"}}},
+                                      {{{{gurka::way_member, "CILDC", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "4"},
+                                        {"name", "Hyogo"}}},
+                                      {{{{gurka::way_member, "IJKLI", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "4"},
+                                        {"name", "Kyoto"}}},
+                                      {{{{gurka::way_member, "CIJKLDC", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "2"},
+                                        {"name", "Japan"}}}};
 
   constexpr double gridsize = 10;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, {}, relations, pbf_filename);
+  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename);
 
   valhalla::gurka::map result;
   result.nodes = node_layout;
   return result;
-}
-
-void BuildTiles(valhalla::gurka::map& admin_map, const std::vector<std::string>& pbf_filenames) {
-  build_tile_set(admin_map.config, pbf_filenames, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
 }
 
 void GetAdminData(const std::string& dbname,
@@ -158,88 +192,88 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = {"USA"};
+  std::set<std::string> exp_countries = {"Japan", "USA"};
   EXPECT_EQ(countries, exp_countries);
 
-  std::set<std::string> exp_states = {"Colorado", "Utah"};
+  std::set<std::string> exp_states = {"Colorado", "Hyogo", "Kyoto", "Utah"};
   EXPECT_EQ(states, exp_states);
 
   //======================================================================
-  // part II: build the tile data. Call GetAdminInfo() which reads
-  // sqlite and tile data. Confirm the polygonal data is correct
-  // with a few simple containment tests.
+  // part II: build the tile data. Query/assert things about the highway
+  // nodes that span the two countries.
   //======================================================================
-  BuildTiles(admin_map, input_files);
+  build_tile_set(admin_map.config, input_files, mjolnir::BuildStage::kInitialize,
+                 mjolnir::BuildStage::kValidate, false);
 
-  // reverse engineer the tile_id from the nodes that make up
-  // our mock map.pbf. Its probably overkill to check every node
-  // for its tile-id if I know they are all in the same tile-id,
-  // but its a good exercise.
-  std::unordered_set<GraphId> tile_ids;
-  for (const auto& node : admin_map.nodes) {
-    const midgard::PointLL& latlon = node.second;
-    GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
-    tile_ids.insert(tile_id);
-  }
-  EXPECT_EQ(tile_ids.size(), 1);
-
-  GraphId tile_id(*tile_ids.begin());
-
-  // Create a GraphReader so we can create a GraphTileBuilder
   GraphReader graph_reader(pt.get_child("mjolnir"));
-  auto t = GraphTile::Create(graph_reader.tile_dir(), tile_id);
-  EXPECT_TRUE(t);
-  GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, true);
 
-  // Load the admin.sqlite table we just created
-  sqlite3* db_handle = nullptr;
-  uint32_t ret = sqlite3_open_v2(dbname.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
-  EXPECT_EQ(ret, SQLITE_OK);
-
-  // Call GetAdminInfo.
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
-  std::unordered_map<uint32_t, bool> drive_on_right;
-  std::unordered_map<uint32_t, bool> allow_intersection_names;
-  AABB2<PointLL> world_box(-180.0f, -90.0f, 180.f, 90.f);
-  polys = GetAdminInfo(db_handle, drive_on_right, allow_intersection_names, world_box, tilebuilder);
-  sqlite3_close(db_handle);
-
-  // For two states part of one country, there should be three polys, etc.
-  EXPECT_EQ(polys.size(), 3);
-  EXPECT_EQ(drive_on_right.size(), 3);
-  EXPECT_EQ(allow_intersection_names.size(), 3);
-
-  // find the GH way/edge in the graph, make sure its there
-  GraphId edge_id;
-  const DirectedEdge* edge = nullptr;
-  GraphId opp_edge_id;
-  const DirectedEdge* opp_edge = nullptr;
-  std::tie(edge_id, edge, opp_edge_id, opp_edge) =
-      findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
-  EXPECT_NE(edge, nullptr);
-  EXPECT_NE(opp_edge, nullptr);
+  //----------------------------
+  // Get/assert info on G & H
+  //----------------------------
+  GraphId GH_edge_id;
+  const DirectedEdge* GH_edge = nullptr;
+  GraphId HG_edge_id;
+  const DirectedEdge* HG_edge = nullptr;
+  std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) = findEdge(graph_reader, admin_map.nodes, "GH", "H");
+  EXPECT_NE(GH_edge, nullptr);
+  EXPECT_NE(HG_edge, nullptr);
 
   // H is the end node of edge GH
   {
-    auto H_tile = graph_reader.GetGraphTile(edge_id);
-    const DirectedEdge* GH_edge = H_tile->directededge(edge_id);
-    EXPECT_EQ(GH_edge, edge);
     GraphId H_node_id = GH_edge->endnode();
+    auto H_tile = graph_reader.GetGraphTile(H_node_id);
     const NodeInfo* H_node = H_tile->node(H_node_id);
+    EXPECT_EQ(H_node->drive_on_right(), true);
+    EXPECT_EQ(H_node->named_intersection(), false );
     AdminInfo H_admin = H_tile->admininfo(H_node->admin_index());
     EXPECT_EQ(H_admin.state_text(), "Utah");
     EXPECT_EQ(H_admin.country_text(), "USA");
   }
 
-  // G is the end node of opp_edge HG
+  // G is the end node of edge HG
   {
-    auto G_tile = graph_reader.GetGraphTile(opp_edge_id);
-    const DirectedEdge* HG_edge = G_tile->directededge(opp_edge_id);
-    EXPECT_EQ(HG_edge, opp_edge);
     GraphId G_node_id = HG_edge->endnode();
+    auto G_tile = graph_reader.GetGraphTile(G_node_id);
     const NodeInfo* G_node = G_tile->node(G_node_id);
+    EXPECT_EQ(G_node->drive_on_right(), true);
+    EXPECT_EQ(G_node->named_intersection(), false );
     AdminInfo G_admin = G_tile->admininfo(G_node->admin_index());
     EXPECT_EQ(G_admin.state_text(), "Colorado");
     EXPECT_EQ(G_admin.country_text(), "USA");
+  }
+
+  //----------------------------
+  // Get/assert info on X & Y
+  //----------------------------
+  GraphId XY_edge_id;
+  const DirectedEdge* XY_edge = nullptr;
+  GraphId YX_edge_id;
+  const DirectedEdge* YX_edge = nullptr;
+  std::tie(XY_edge_id, XY_edge, YX_edge_id, YX_edge) = findEdge(graph_reader, admin_map.nodes, "XY", "Y");
+  EXPECT_NE(XY_edge, nullptr);
+  EXPECT_NE(YX_edge, nullptr);
+
+  // Y is the end node of edge XY
+  {
+    GraphId Y_node_id = XY_edge->endnode();
+    auto Y_tile = graph_reader.GetGraphTile(Y_node_id);
+    const NodeInfo* Y_node = Y_tile->node(Y_node_id);
+    EXPECT_EQ(Y_node->drive_on_right(), false);
+    EXPECT_EQ(Y_node->named_intersection(), false );
+    AdminInfo Y_admin = Y_tile->admininfo(Y_node->admin_index());
+    EXPECT_EQ(Y_admin.state_text(), "Kyoto");
+    EXPECT_EQ(Y_admin.country_text(), "Japan");
+  }
+
+  // X is the end node of edge YX
+  {
+    GraphId X_node_id = YX_edge->endnode();
+    auto X_tile = graph_reader.GetGraphTile(X_node_id);
+    const NodeInfo* X_node = X_tile->node(X_node_id);
+    EXPECT_EQ(X_node->drive_on_right(), false);
+    EXPECT_EQ(X_node->named_intersection(), true );
+    AdminInfo X_admin = X_tile->admininfo(X_node->admin_index());
+    EXPECT_EQ(X_admin.state_text(), "Hyogo");
+    EXPECT_EQ(X_admin.country_text(), "Japan");
   }
 }

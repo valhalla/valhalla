@@ -506,8 +506,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-            auto* reverse_directed_edge = tile->directededge(reverse_edge_id.id());
+            graph_tile_ptr reverse_tile = nullptr;
+            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                    reverse_directed_edge);
           }
