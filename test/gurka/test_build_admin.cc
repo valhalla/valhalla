@@ -37,28 +37,28 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
                             {"CILDC", {}},
                             {"IJKLI", {}},
                             {"GH",
-                                {
-                                    {"highway", "primary"},
-                                }},
+                             {
+                                 {"highway", "primary"},
+                             }},
                             {"HX",
-                                {
-                                    {"highway", "primary"},
-                                }},
+                             {
+                                 {"highway", "primary"},
+                             }},
                             {"XY",
-                                {
-                                    {"highway", "primary"},
-                                }},
+                             {
+                                 {"highway", "primary"},
+                             }},
                             {"WX",
-                                {
-                                    {"highway", "primary"},
-                                }},
+                             {
+                                 {"highway", "primary"},
+                             }},
                             {"XZ",
-                                {
-                                    {"highway", "primary"},
-                                }}};
+                             {
+                                 {"highway", "primary"},
+                             }}};
 
   // X lives Japan which allows named intersections - and is named.
-  const gurka::nodes nodes = {{ "X", {{ "junction", "named" }}}};
+  const gurka::nodes nodes = {{"X", {{"junction", "named"}}}};
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
                                        {{"type", "boundary"},
@@ -214,7 +214,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   const DirectedEdge* GH_edge = nullptr;
   GraphId HG_edge_id;
   const DirectedEdge* HG_edge = nullptr;
-  std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) = findEdge(graph_reader, admin_map.nodes, "GH", "H");
+  std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) =
+      findEdge(graph_reader, admin_map.nodes, "GH", "H");
   EXPECT_NE(GH_edge, nullptr);
   EXPECT_NE(HG_edge, nullptr);
 
@@ -224,7 +225,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     auto H_tile = graph_reader.GetGraphTile(H_node_id);
     const NodeInfo* H_node = H_tile->node(H_node_id);
     EXPECT_EQ(H_node->drive_on_right(), true);
-    EXPECT_EQ(H_node->named_intersection(), false );
+    EXPECT_EQ(H_node->named_intersection(), false);
     AdminInfo H_admin = H_tile->admininfo(H_node->admin_index());
     EXPECT_EQ(H_admin.state_text(), "Utah");
     EXPECT_EQ(H_admin.country_text(), "USA");
@@ -236,7 +237,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     auto G_tile = graph_reader.GetGraphTile(G_node_id);
     const NodeInfo* G_node = G_tile->node(G_node_id);
     EXPECT_EQ(G_node->drive_on_right(), true);
-    EXPECT_EQ(G_node->named_intersection(), false );
+    EXPECT_EQ(G_node->named_intersection(), false);
     AdminInfo G_admin = G_tile->admininfo(G_node->admin_index());
     EXPECT_EQ(G_admin.state_text(), "Colorado");
     EXPECT_EQ(G_admin.country_text(), "USA");
@@ -249,7 +250,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   const DirectedEdge* XY_edge = nullptr;
   GraphId YX_edge_id;
   const DirectedEdge* YX_edge = nullptr;
-  std::tie(XY_edge_id, XY_edge, YX_edge_id, YX_edge) = findEdge(graph_reader, admin_map.nodes, "XY", "Y");
+  std::tie(XY_edge_id, XY_edge, YX_edge_id, YX_edge) =
+      findEdge(graph_reader, admin_map.nodes, "XY", "Y");
   EXPECT_NE(XY_edge, nullptr);
   EXPECT_NE(YX_edge, nullptr);
 
@@ -259,7 +261,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     auto Y_tile = graph_reader.GetGraphTile(Y_node_id);
     const NodeInfo* Y_node = Y_tile->node(Y_node_id);
     EXPECT_EQ(Y_node->drive_on_right(), false);
-    EXPECT_EQ(Y_node->named_intersection(), false );
+    EXPECT_EQ(Y_node->named_intersection(), false);
     AdminInfo Y_admin = Y_tile->admininfo(Y_node->admin_index());
     EXPECT_EQ(Y_admin.state_text(), "Kyoto");
     EXPECT_EQ(Y_admin.country_text(), "Japan");
@@ -271,7 +273,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     auto X_tile = graph_reader.GetGraphTile(X_node_id);
     const NodeInfo* X_node = X_tile->node(X_node_id);
     EXPECT_EQ(X_node->drive_on_right(), false);
-    EXPECT_EQ(X_node->named_intersection(), true );
+    EXPECT_EQ(X_node->named_intersection(), true);
     AdminInfo X_admin = X_tile->admininfo(X_node->admin_index());
     EXPECT_EQ(X_admin.state_text(), "Hyogo");
     EXPECT_EQ(X_admin.country_text(), "Japan");
