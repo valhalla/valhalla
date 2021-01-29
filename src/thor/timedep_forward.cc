@@ -104,7 +104,8 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
-      if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
+      if ((!trans->up() &&
+           hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
