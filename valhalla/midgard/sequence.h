@@ -139,7 +139,10 @@ public:
   }
 
   // construct with file
-  mem_map(const std::string& file_name, size_t size, int advice = POSIX_MADV_NORMAL, bool readonly = false)
+  mem_map(const std::string& file_name,
+          size_t size,
+          int advice = POSIX_MADV_NORMAL,
+          bool readonly = false)
       : ptr(nullptr), count(0), file_name("") {
     map(file_name, size, advice, readonly);
   }
@@ -165,7 +168,10 @@ public:
   }
 
   // reset to another file or another size
-  void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL, bool readonly = false) {
+  void map(const std::string& new_file_name,
+           size_t new_count,
+           int advice = POSIX_MADV_NORMAL,
+           bool readonly = false) {
     // just in case there was already something
     unmap();
 
@@ -180,7 +186,8 @@ public:
       if (fd == -1) {
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
       }
-      ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE), MAP_SHARED, fd, 0);
+      ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE),
+                 MAP_SHARED, fd, 0);
       if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
@@ -199,7 +206,8 @@ public:
     }
   }
 
-  void map_readonly(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+  void
+  map_readonly(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     map(new_file_name, new_count, advice, true /* readonly */);
   }
 
