@@ -170,6 +170,8 @@ void loki_worker_t::trace(Api& request) {
   };
 }
 
+// TODO: remove this, it was a hack to support display_ll for map matching, what we can do is
+// actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
   std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin()),
