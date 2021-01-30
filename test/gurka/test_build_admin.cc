@@ -58,7 +58,12 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
                              }}};
 
   // X lives Japan which allows named intersections - and is named.
-  const gurka::nodes nodes = {{"X", {{"junction", "named"}}}};
+  // gurka automatically names the nodes by their name in the ascii map
+  // if you want to make sure there is no name you need to send empty string
+  const gurka::nodes nodes = {
+      {"X", {{"junction", "named"}, {"name", "namae wa desu ka"}}},
+      {"Y", {{"junction", "yes"}, {"name", ""}}},
+  };
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
                                        {{"type", "boundary"},

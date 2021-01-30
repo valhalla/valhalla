@@ -110,7 +110,7 @@ void statistics::create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
   std::string sql;
 
   // Create table for tiles
-  sql = "SELECT InitSpatialMetaData(); CREATE TABLE tiledata (";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE tiledata (";
   sql += "tileid INTEGER PRIMARY KEY,";
   sql += "tilearea REAL,";
   sql += "totalroadlen REAL,";
