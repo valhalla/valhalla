@@ -10,6 +10,8 @@ namespace vb = valhalla::baldr;
 
 namespace {
 
+uint32_t bs{0};
+
 struct tile_cache {
   tile_cache(vb::GraphReader& reader)
       : m_reader(reader), m_last_tile_id(), m_tile(nullptr), m_nodes(nullptr), m_edges(nullptr) {
