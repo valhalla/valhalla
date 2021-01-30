@@ -88,7 +88,7 @@ jobs:
           popd
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
-          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
+          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
         displayName: 'Run CMake to configure build'
 
       - script: |
@@ -101,12 +101,7 @@ jobs:
         displayName: 'Run CMake to build'
 
       - script: |
-          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
-          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
-          popd
-          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
-          ls %BUILD_DIR% 
+          SET PATH=%PATH%;%VCPKG_DIR%\installed\%TRIPLET%-windows\bin;%VCPKG_DIR%\installed\%TRIPLET%-windows\debug\bin
           %BUILD_DIR%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           %BUILD_DIR%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
           %BUILD_DIR%\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
