@@ -17,7 +17,7 @@ using namespace valhalla::mjolnir;
 namespace valhalla {
 namespace mjolnir {
 
-void statistics::build_db(const boost::property_tree::ptree& pt) {
+void statistics::build_db() {
   std::string database = "statistics.sqlite";
   if (filesystem::exists(database)) {
     filesystem::remove(database);
@@ -55,13 +55,13 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   LOG_INFO("Creating tables");
 
   sqlite3_stmt* stmt = nullptr;
-  create_tile_tables(db_handle, stmt);
+  create_tile_tables(db_handle);
   LOG_INFO("Created tile tables");
 
-  create_country_tables(db_handle, stmt);
+  create_country_tables(db_handle);
   LOG_INFO("Created country tables");
 
-  create_exit_tables(db_handle, stmt);
+  create_exit_tables(db_handle);
   LOG_INFO("Created exit tables");
 
   insert_tile_data(db_handle, stmt);
@@ -104,7 +104,7 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   sqlite3_close(db_handle);
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
-void statistics::create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_tile_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
@@ -179,7 +179,7 @@ void statistics::create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 }
 
-void statistics::create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_country_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
@@ -242,7 +242,7 @@ void statistics::create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 }
 
-void statistics::create_exit_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_exit_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
