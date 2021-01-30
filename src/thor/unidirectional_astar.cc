@@ -39,8 +39,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
   edgelabels_.clear();

@@ -33,14 +33,9 @@ class UnidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param config   Config with std::string for key and data, and default
+   * @param config A config object of key, value pairs
    */
-  explicit TimeDepForward(const boost::property_tree::ptree& config = {});
-
-  /**
-   * Destructor
-   */
-  virtual ~TimeDepForward();
+  explicit UnidirectionalAStar(const boost::property_tree::ptree& config = {});
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -210,13 +205,6 @@ protected:
  * routes it uses a highway hierarchy with shortcut edges to improve
  * performance.
  */
-class TimeDepReverse : public TimeDepForward {
-public:
-  /**
-   * Constructor.
-   * @param config   Config with std::string for key and data
-   */
-  explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
 
 /*
 template <const ExpansionType expansion_direction,

@@ -66,13 +66,13 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian), bidir_astar(config), bss_astar(config),
-      multi_modal_astar(config), timedep_forward(config), timedep_reverse(config),
-      isochrone_gen(config), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{} {
-  // If we weren't provided with a graph reader make our own
-  if (!reader)
-    reader = matcher_factory.graphreader();
+    : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
+      bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
+      multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
+      timedep_reverse(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
+      reader(graph_reader ? graph_reader
+                          : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      matcher_factory(config, reader), controller{} {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)

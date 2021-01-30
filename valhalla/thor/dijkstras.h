@@ -35,7 +35,7 @@ class Dijkstras {
 public:
   /**
    * Constructor.
-   * @param config   Config with std::string for key and data
+   * @param config A config object of key, value pairs
    */
   explicit Dijkstras(const boost::property_tree::ptree& config = {});
 

@@ -53,12 +53,16 @@ Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
 void Dijkstras::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
-  bdedgelabels_.resize(clear_reserved_memory_ ? 0 : max_reserved_labels_count_);
-  bdedgelabels_.shrink_to_fit();
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (bdedgelabels_.size() > reservation) {
+    bdedgelabels_.resize(reservation);
+    bdedgelabels_.shrink_to_fit();
+  }
   bdedgelabels_.clear();
-
-  mmedgelabels_.resize(clear_reserved_memory_ ? 0 : max_reserved_labels_count_);
-  mmedgelabels_.shrink_to_fit();
+  if (mmedgelabels_.size() > reservation) {
+    mmedgelabels_.resize(reservation);
+    mmedgelabels_.shrink_to_fit();
+  }
   mmedgelabels_.clear();
 
   adjacencylist_.clear();

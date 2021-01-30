@@ -44,8 +44,11 @@ AStarBSSAlgorithm::~AStarBSSAlgorithm() {
 // Clear the temporary information generated during path construction.
 void AStarBSSAlgorithm::Clear() {
   // Reduce edge labels capacity if it's more than limit
-  edgelabels_.resize(clear_reserved_memory_ ? 0 : max_reserved_labels_count_);
-  edgelabels_.shrink_to_fit();
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
+    edgelabels_.shrink_to_fit();
+  }
 
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.

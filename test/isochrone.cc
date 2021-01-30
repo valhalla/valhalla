@@ -161,6 +161,77 @@ TEST(Isochrones, Basic) {
   }
 }
 
+TEST(Isochrones, OriginEdge) {
+  const std::string ascii_map = R"(
+       a-b-c
+     )";
+
+  const gurka::ways ways = {
+      {"abc", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2000);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/origin_edge");
+
+  std::string geojson;
+  auto result = gurka::do_action(valhalla::Options::isochrone, map, {"b"}, "pedestrian",
+                                 {{"/contours/0/time", "10"}}, {}, &geojson);
+  std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
+
+  auto WaypointToBoostPoint = [&](std::string waypoint) {
+    auto point = map.nodes[waypoint];
+    return point_type(point.x(), point.y());
+  };
+  polygon_type polygon;
+  for (const auto& p : iso_polygon) {
+    boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
+  }
+  EXPECT_EQ(within(WaypointToBoostPoint("b"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("a"), polygon), false);
+  EXPECT_EQ(within(WaypointToBoostPoint("c"), polygon), false);
+}
+
+TEST(Isochrones, LongEdge) {
+  const std::string ascii_map = R"(
+          c----d
+         /
+      a-b--------------f
+    )";
+
+  const gurka::ways ways = {
+      {"ab", {{"highway", "primary"}}},
+      {"bc", {{"highway", "primary"}}},
+      {"cd", {{"highway", "primary"}}},
+      {"bf", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/long_edge");
+
+  std::string geojson;
+  auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",
+                                 {{"/contours/0/time", "15"}}, {}, &geojson);
+  std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
+
+  auto WaypointToBoostPoint = [&](std::string waypoint) {
+    auto point = map.nodes[waypoint];
+    return point_type(point.x(), point.y());
+  };
+  polygon_type polygon;
+  for (const auto& p : iso_polygon) {
+    boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
+  }
+  EXPECT_EQ(within(WaypointToBoostPoint("a"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("b"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("c"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("d"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("f"), polygon), false);
+
+  // check that b-f edges is visited and is partially within the isochrone
+  auto interpolated = map.nodes["b"].PointAlongSegment(map.nodes["f"], 0.4);
+  EXPECT_EQ(within(point_type(interpolated.x(), interpolated.y()), polygon), true);
+}
+
 class IsochroneTest : public thor::Isochrone {
 public:
   explicit IsochroneTest(const boost::property_tree::ptree& config = {}) : Isochrone(config) {

@@ -30,7 +30,7 @@ class AStarBSSAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param config   Config with std::string for key and data
+   * @param config A config object of key, value pairs
    */
   explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config = {});
 

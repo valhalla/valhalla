@@ -77,9 +77,12 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
 
 // Clear the temporary information generated during path construction.
 void MultiModalPathAlgorithm::Clear() {
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
+    edgelabels_.shrink_to_fit();
+  }
   // Clear the edge labels and destination list
-  edgelabels_.resize(clear_reserved_memory_ ? 0 : max_reserved_labels_count_);
-  edgelabels_.shrink_to_fit();
   edgelabels_.clear();
 
   destinations_.clear();
