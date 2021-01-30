@@ -2,6 +2,7 @@
 
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
+#include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -555,9 +556,11 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
     edges.reserve(tile.header()->directededgecount());
     for (const auto& edge : tile.GetDirectedEdges()) {
       edges.push_back(edge);
-      auto historical = cb(edges.back());
-      if (!historical.empty())
-        tile.AddPredictedSpeed(edges.size() - 1, historical, tile.header()->directededgecount());
+      const auto historical = cb(edges.back());
+      if (historical.size() == kBucketsPerWeek) {
+        auto coefs = valhalla::baldr::compress_speed_buckets(historical.data());
+        tile.AddPredictedSpeed(edges.size() - 1, coefs, tile.header()->directededgecount());
+      }
       edges.back().set_has_predicted_speed(!historical.empty());
     }
     tile.UpdatePredictedSpeeds(edges);
