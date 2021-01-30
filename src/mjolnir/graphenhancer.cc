@@ -841,8 +841,9 @@ void CreateInternalRestriction(const graph_tile_ptr& start_tile,
                                DirectedEdge& directededge,
                                const uint32_t idx,
                                enhancer_stats& stats) {
-  // must be marked as internal
-  if (!directededge.internal()) {
+
+  // must be marked as internal not oneway.
+  if (!directededge.internal() || !(directededge.reverseaccess() & kAutoAccess)) {
     return;
   }
 
@@ -865,7 +866,8 @@ void CreateInternalRestriction(const graph_tile_ptr& start_tile,
     // edges that are not driveable outbound.
     if (i == directededge.opp_local_idx() || !diredge->is_road() ||
         !(diredge->forwardaccess() & kAutoAccess) ||
-        ((directededge.restrictions() & (1 << diredge->localedgeidx())) != 0)) {
+        ((directededge.restrictions() & (1 << diredge->localedgeidx())) != 0) ||
+        (directededge.classification() != diredge->classification())) {
       continue;
     }
 
