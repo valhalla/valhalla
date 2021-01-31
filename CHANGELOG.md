@@ -10,6 +10,7 @@
    * FIXED: Mark the restriction start and end as via ways to fix IsBridgingEdge function in Bidirectional Astar [#2796](https://github.com/valhalla/valhalla/pull/2796)
 
 * **Enhancement**
+   * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
