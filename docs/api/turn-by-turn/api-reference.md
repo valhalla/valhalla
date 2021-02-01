@@ -247,6 +247,7 @@ A multimodal request with a filter for certain Onestop IDs:
 
 | Language tag | Language alias | Description |
 | :------------------ | :----------- | :----------- |
+| `bg-BG` | `bg` | Bulgarian (Bulgaria) |
 | `ca-ES` | `ca` | Catalan (Spain) |
 | `cs-CZ` | `cs` | Czech (Czech Republic) |
 | `de-DE` | `de` | German (Germany) |
