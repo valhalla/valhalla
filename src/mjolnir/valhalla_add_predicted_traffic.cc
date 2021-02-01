@@ -13,6 +13,7 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
@@ -57,7 +58,7 @@ struct stats {
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
-  std::array<int16_t, kCoefficientCount> coefficients;
+  boost::optional<std::array<int16_t, kCoefficientCount>> coefficients;
 };
 
 /**
@@ -172,7 +173,7 @@ void update_tile(const std::string& tile_dir,
   size_t pred_count = 0;
   for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
     auto found = speeds.find(j);
-    pred_count += found != speeds.cend() && found->second.coefficients.size() == kCoefficientCount;
+    pred_count += found != speeds.cend() && found->second.coefficients.has_value();
   }
 
   // Update directed edges as needed
@@ -190,8 +191,8 @@ void update_tile(const std::string& tile_dir,
       if (speed.free_flow_speed) {
         directededge.set_free_flow_speed(speed.free_flow_speed);
       }
-      if (speed.coefficients.size() == kCoefficientCount) {
-        tile_builder.AddPredictedSpeed(j, speed.coefficients, pred_count);
+      if (speed.coefficients) {
+        tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
         directededge.set_has_predicted_speed(true);
       }
       ++stat.updated_count;
