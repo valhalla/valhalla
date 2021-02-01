@@ -1,26 +1,24 @@
 {
-  "posix_locale": "it_IT.UTF-8",
-  "aliases": [
-    "it"
-  ],
+  "posix_locale": "da_DK.UTF-8",
+  "aliases": "da",
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Tra <LENGTH> , <CURRENT_VERBAL_CUE>"
+        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +28,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Arrivo: <TIME> .",
-        "1": "Arrivo: <TIME> presso <TRANSIT_STOP> ."
+        "0": "Ankomst: <TIME>.",
+        "1": "Ankomst: <TIME> ved <TRANSIT_STOP>.<TRANSIT_STOP>"
       },
       "example_phrases": {
         "0": [
@@ -44,8 +42,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrivo alle <TIME> .",
-        "1": "Arrivo alle <TIME> presso <TRANSIT_STOP>."
+        "0": "Ankomst kl <TIME>.",
+        "1": "Ankomst kl <TIME> ved <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +56,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Styr mod <RELATIVE_DIRECTION>.",
+        "1": "Styr mod <RELATIVE_DIRECTION> på <STREET_NAMES>.",
+        "2": "Styr mod <RELATIVE_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt ind på <STREET_NAMES>.",
+        "3": "Styr mod <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Styr mod <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Styr mod <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +95,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION>.",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Styr mod <RELATIVE_DIRECTION>.",
+        "1": "Styr mod <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Styr mod <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Styr mod <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Styr mod <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Styr mod <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +134,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> bliver til <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +144,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> bliver til <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +154,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Fortsæt.",
+        "1": "Fortsæt på <STREET_NAMES>.",
+        "2": "Fortsæt ved <JUNCTION_NAME>.",
+        "3": "Fortsæt mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +181,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua per <LENGTH>.",
-        "2": "Continua su <STREET_NAMES>.",
-        "3": "Continua su <STREET_NAMES> per <LENGTH>.",
-        "4": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "5": "Arrivato a <JUNCTION_NAME>, prosegui per <LENGTH>.",
-        "6": "Continua verso <TOWARD_SIGN>.",
-        "7": "Continua verso <TOWARD_SIGN> per <LENGTH>."
+        "0": "Fortsæt.",
+        "1": "Fortsæt i <LENGTH>.",
+        "2": "Fortsæt på <STREET_NAMES>.",
+        "3": "Fortsæt på <STREET_NAMES> i <LENGTH>.",
+        "4": "Fortsæt ved <JUNCTION_NAME>.",
+        "5": "Fortsæt ved <JUNCTION_NAME> i <LENGTH>.",
+        "6": "Fortsæt mod <TOWARD_SIGN>.",
+        "7": "Fortsæt mod <TOWARD_SIGN> i <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "metric_lengths": [
-        "<KILOMETERS>chilometri",
-        "1 chilometro",
-        "<METERS>metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES>miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET>piedi",
-        "meno di 10 piedi"
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +238,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Fortsæt.",
+        "1": "Fortsæt på <STREET_NAMES>.",
+        "2": "Fortsæt ved <JUNCTION_NAME>.",
+        "3": "Fortsæt mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +265,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Partenza: <TIME>.",
-        "1": "Partenza: <TIME> da <TRANSIT_STOP>."
+        "0": "Afgang: <TIME>.",
+        "1": "Afgang: <TIME> fra <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +279,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Partenza alle <TIME>.",
-        "1": "Partenza alle <TIME> da <TRANSIT_STOP>."
+        "0": "Afgang kl <TIME>.",
+        "1": "Afgang kl <TIME> fra <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +293,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION>.",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Du er ankommet til din destination.",
+        "1": "Du er ankommet til <DESTINATION>.",
+        "2": "Din destination er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +320,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION> .",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Du er ankommet til din destination.",
+        "1": "Du er ankommet til <DESTINATION>.",
+        "2": "Din destination er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +347,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Arriverai a destinazione.",
-        "1": "Arriverai a <DESTINATION>.",
-        "2": "La tua destinazione sarà sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> sarà sulla <RELATIVE_DIRECTION>."
+        "0": "Du ankommer til din destination",
+        "1": "Du ankommer til <DESTINATION>.",
+        "2": "Din destination vil være til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> vil være til <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +374,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Tag færgen.",
+        "1": "Tag <STREET_NAMES>.",
+        "2": "Tag <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tag færgen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Færge",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +402,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Tag færgen.",
+        "1": "Tag <STREET_NAMES>.",
+        "2": "Tag <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tag færgen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Færge",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,39 +430,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> . Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "ntra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi ll'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Kør ind i rundkørslen.",
+        "1": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel.",
+        "2": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "5": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Kør ind i rundkørslen og tag frakørslen mod <TOWARD_SIGN>.",
+        "8": "Kør ind på <STREET_NAMES>",
+        "9": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel.",
+        "10": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "13": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "første",
+        "anden",
+        "tredje",
+        "fjerde",
+        "femte",
+        "sjette",
+        "syvende",
+        "ottende",
+        "niende",
+        "tiende"
       ],
       "example_phrases": {
         "0": [
@@ -528,39 +526,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "eEntra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Kør ind i rundkørslen.",
+        "1": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel.",
+        "2": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "5": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Kør ind i rundkørslen og tag frakørslen mod <TOWARD_SIGN>.",
+        "8": "Kør ind på <STREET_NAMES>",
+        "9": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel.",
+        "10": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "13": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "første",
+        "anden",
+        "tredje",
+        "fjerde",
+        "femte",
+        "sjette",
+        "syvende",
+        "ottende",
+        "niende",
+        "tiende"
       ],
       "example_phrases": {
         "0": [
@@ -624,34 +622,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION>.",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION>.",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l'uscita <NUMBER_SIGN>",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN>.",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Tag frakørslen til <RELATIVE_DIRECTION>.",
+        "1": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "3": "Tage frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "4": "Tag frakørslen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "6": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "7": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "8": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "10": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "12": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "15": "Tag frakørslen.",
+        "16": "Tag frakørsel <NUMBER_SIGN>.",
+        "17": "Tag <BRANCH_SIGN> frakørsel.",
+        "18": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN>.",
+        "19": "Tag frakørslen mod <TOWARD_SIGN>.",
+        "20": "Tag frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "21": "Tag <BRANCH_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "22": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "23": "Tag <NAME_SIGN> frakørsel.",
+        "25": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN>.",
+        "27": "Tag <NAME_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "29": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN> mod <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +729,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria verso <STREET_NAMES>.",
-        "2": "Esci dalla rotatoria verso <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
+        "0": "Kør ud ad rundkørslen.",
+        "1": "Kør ud ad rundkørslen ind på <STREET_NAMES>.",
+        "2": "Kør ud ad rundkørslen ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Kør ud ad rundkørslen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +756,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria su <STREET_NAMES> .",
-        "2": "Esci dalla rotatoria su <BEGIN_STREET_NAMES> .",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN> ."
+        "0": "Kør ud ad rundkørslen.",
+        "1": "Kør ud ad rundkørslen ind på <STREET_NAMES>.",
+        "2": "Kør ud ad rundkørslen ind på <BEGIN_STREET_NAMES>.",
+        "3": "Kør ud ad rundkørslen mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +783,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION> .",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l&#39;uscita <NUMBER_SIGN> .",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN> .",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Tag frakørslen til <RELATIVE_DIRECTION>.",
+        "1": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "3": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "4": "Tag frakørslen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "6": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "7": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "8": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "10": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "12": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "15": "Tag frakørslen.",
+        "16": "Tag frakørsel <NUMBER_SIGN>.",
+        "17": "Tag <BRANCH_SIGN> frakørsel.",
+        "18": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN>.",
+        "19": "Tag frakørslen mod <TOWARD_SIGN>.",
+        "20": "Tag frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "21": "Tag <BRANCH_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "22": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "23": "Tag <NAME_SIGN> frakørsel.",
+        "25": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN>.",
+        "27": "Tag <NAME_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "29": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN> mod <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "sinstra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +890,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Uscita <EXIT_NUMBERS>"
+        "0": "Kør ud ad <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +900,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES>.",
-        "4": "Mantieni la <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Hold til <RELATIVE_DIRECTION> ved vejgaflen.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "venstre",
+        "lige ud",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +950,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "venstre",
+        "lige ud",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +984,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "venstre",
+        "lige ud",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1018,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> .",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN> .",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Hold til <RELATIVE_DIRECTION> ved vejgaflen.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "venstre",
+        "lige ud",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1068,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Flet.",
+        "1": "Flet <RELATIVE_DIRECTION>.",
+        "2": "Flet ind på <STREET_NAMES>.",
+        "3": "Flet <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "4": "Flet mod <TOWARD_SIGN>.",
+        "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1107,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Flet.",
+        "1": "Flet <RELATIVE_DIRECTION>.",
+        "2": "Flet ind på <STREET_NAMES>.",
+        "3": "Flet <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "4": "Flet mod <TOWARD_SIGN>.",
+        "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1146,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Viaggia <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> ."
+        "0": "Rejs <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "stop",
+        "other": "stop"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1161,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continua per <LENGTH> .",
-        "1": "Continua su <STREET_NAMES> per <LENGTH> ."
+        "0": "Fortsæt i <LENGTH>.",
+        "1": "Fortsæt på <STREET_NAMES> i <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1196,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Prendi lo svincolo per <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Tag rampen til <RELATIVE_DIRECTION>.",
+        "1": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "2": "Tag rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "3": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "4": "Tag <NAME_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "5": "Drej til <RELATIVE_DIRECTION> for at tage rampen.",
+        "6": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen.",
+        "7": "Drej til <RELATIVE_DIRECTION> for at tage rampen mod <TOWARD_SIGN>.",
+        "8": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "9": "Drej til <RELATIVE_DIRECTION> for at tage <NAME_SIGN> rampen.",
+        "10": "Tag rampen.",
+        "11": "Tag <BRANCH_SIGN> rampen.",
+        "12": "Tag rampen mod <TOWARD_SIGN>.",
+        "13": "Tag <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> rampen."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1268,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Bliv i banen for at tage rampen.",
+        "1": "Bliv i banen for at tage <BRANCH_SIGN> rampe.",
+        "2": "Bliv i banen for at tage rampen mod <TOWARD_SIGN>.",
+        "3": "Bliv i banen for at tage <BRANCH_SIGN> rampe mod <TOWARD_SIGN>.",
+        "4": "Bliv i banen for at tage <NAME_SIGN> rampe."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1294,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Bliv i banen for at tage rampen.",
+        "1": "Bliv i banen for at tage <BRANCH_SIGN> rampe.",
+        "2": "Bliv i banen for at tage rampen mod <TOWARD_SIGN>.",
+        "3": "Bliv i banen for at tage <BRANCH_SIGN> rampe mod <TOWARD_SIGN>.",
+        "4": "Bliv i banen for at tage <NAME_SIGN> rampe."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1320,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Prendi lo svincolo a <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo <BRANCH_SIGN> svincolo verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Tag rampen til <RELATIVE_DIRECTION>.",
+        "1": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "2": "Tag rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "3": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "4": "Tag <NAME_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "5": "Drej til <RELATIVE_DIRECTION> for at tage rampen.",
+        "6": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen.",
+        "7": "Drej til <RELATIVE_DIRECTION> for at tage rampen mod <TOWARD_SIGN>.",
+        "8": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "9": "Drej til <RELATIVE_DIRECTION> for at tage <NAME_SIGN> rampen.",
+        "10": "Tag rampen.",
+        "11": "Tag <BRANCH_SIGN> rampen.",
+        "12": "Tag rampen mod <TOWARD_SIGN>.",
+        "13": "Tag <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> rampen."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1392,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION> .",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Drej skarpt til <RELATIVE_DIRECTION>.",
+        "1": "Drej skarpt til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej skarpt til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Drej skarpt til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej skarpt til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej skarpt til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1431,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>. fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Drej skarpt til <RELATIVE_DIRECTION>.",
+        "1": "Drej skarpt til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej skarpt til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Drej skarpt til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej skarpt til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej skarpt til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1472,33 +1470,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua a <STREET_NAMES> .",
-        "4": "Guida verso <CARDINAL_DIRECTION> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "8": "Cammina verso <CARDINAL_DIRECTION> .",
-        "9": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> ."
+        "0": "Tag mod <CARDINAL_DIRECTION>.",
+        "1": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "2": "Tag mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "4": "Kør mod <CARDINAL_DIRECTION>.",
+        "5": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "6": "Kør mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "8": "Gå mod <CARDINAL_DIRECTION>.",
+        "9": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "10": "Gå mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "16": "Cykl mod <CARDINAL_DIRECTION>.",
+        "17": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykl mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
-        "nord-est",
-        "est",
-        "sud-est",
-        "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "nordøst",
+        "øst",
+        "sydøst",
+        "syd",
+        "sydvest",
+        "vest",
+        "nordvest"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "example_phrases": {
         "0": [
@@ -1551,55 +1549,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "3": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "4": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "7": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "8": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "9": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> .",
-        "11": "Cammina verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "12": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "13": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "14": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "15": "Pedala verso <CARDINAL_DIRECTION> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "19": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> ."
+        "0": "Tag mod <CARDINAL_DIRECTION>.",
+        "1": "Tag mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "2": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "3": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "4": "Tag mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "5": "Kør mod <CARDINAL_DIRECTION>.",
+        "6": "Kør mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "7": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "8": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "9": "Kør mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "10": "Gå mod <CARDINAL_DIRECTION>.",
+        "11": "Gå mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "12": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "13": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "14": "Gå mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "15": "Cykl mod <CARDINAL_DIRECTION>.",
+        "16": "Cykl mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "17": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "19": "Cykl mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
-        "nord-est",
-        "est",
-        "sud-est",
-        "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "nordøst",
+        "øst",
+        "sydøst",
+        "syd",
+        "sydvest",
+        "vest",
+        "nordvest"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1672,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Tag <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Tag <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "stop",
+        "other": "stop"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1703,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Gå ud fra stationen.",
+        "1": "Gå ud fra<TRANSIT_STOP>.",
+        "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1722,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Gå ud fra stationen.",
+        "1": "Gå ud fra stationen.",
+        "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1741,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Gå ind på stationen.",
+        "1": "Gå ind på <TRANSIT_STOP>.",
+        "2": "Gå ind på <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1760,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Gå ind på stationen.",
+        "1": "Gå ind på <TRANSIT_STOP>.",
+        "2": "Gå ind på <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1779,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Effettua il cambio in stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Transfer ved stationen.",
+        "1": "Transfer ved <TRANSIT_STOP>.",
+        "2": "Transfer ved <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1798,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio alla stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Transfer ved stationen.",
+        "1": "Transfer ved <TRANSIT_STOP>.",
+        "2": "Transfer ved <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Station",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1817,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Bliv på <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Bliv på <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "stop",
+        "other": "stop"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1846,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> .",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Bliv på <TRANSIT_NAME>.",
+        "1": "Bliv på <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1870,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Transfer for at tage <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transfer for at tage <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "stop",
+        "other": "stop"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1899,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> .",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Transfer for at tage <TRANSIT_NAME>.",
+        "1": "Transfer for at tage <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1923,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> .",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Tag <TRANSIT_NAME>.",
+        "1": "Tag <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
+        "sporvogn",
         "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1947,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Drej til <RELATIVE_DIRECTION>.",
+        "1": "Drej til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Drej til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1986,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Drej til <RELATIVE_DIRECTION>.",
+        "1": "Drej til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Drej til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2025,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Foretag en <RELATIVE_DIRECTION> u-vending.",
+        "1": "Foretag en <RELATIVE_DIRECTION> u-vending ind på <STREET_NAMES>.",
+        "2": "Foretag en <RELATIVE_DIRECTION> u-vending for at blive på <STREET_NAMES>.",
+        "3": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES>.",
+        "4": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> ind på <STREET_NAMES>.",
+        "5": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> for at blive på <STREET_NAMES>.",
+        "6": "Foretag en <RELATIVE_DIRECTION> u-vending ved <JUNCTION_NAME>.",
+        "7": "Foretag en <RELATIVE_DIRECTION> u-vending mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2072,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Foretag en <RELATIVE_DIRECTION> u-vending.",
+        "1": "Foretag en <RELATIVE_DIRECTION> u-vending ind på <STREET_NAMES>.",
+        "2": "Foretag en <RELATIVE_DIRECTION> u-vending for at blive på <STREET_NAMES>.",
+        "3": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES>.",
+        "4": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> ind på <STREET_NAMES>.",
+        "5": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> for at blive på <STREET_NAMES>.",
+        "6": "Foretag en <RELATIVE_DIRECTION> u-vending ved <JUNCTION_NAME>.",
+        "7": "Foretag en <RELATIVE_DIRECTION> u-vending mod <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "venstre",
+        "højre"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2119,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> poi <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> poi, tra <LENGTH> , <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Derefter <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Derefter, om <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
       ],
       "example_phrases": {
         "0": [

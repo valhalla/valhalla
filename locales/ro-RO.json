@@ -1,26 +1,26 @@
 {
-  "posix_locale": "it_IT.UTF-8",
+  "posix_locale": "ro_RO.UTF-8",
   "aliases": [
-    "it"
+    "ro"
   ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Tra <LENGTH> , <CURRENT_VERBAL_CUE>"
+        "0": "Peste <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
         "<METERS> metri",
-        "meno di 10 metri"
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Arrivo: <TIME> .",
-        "1": "Arrivo: <TIME> presso <TRANSIT_STOP> ."
+        "0": "Sosire: <TIME>.",
+        "1": "Sosire: <TIME> la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -44,8 +44,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrivo alle <TIME> .",
-        "1": "Arrivo alle <TIME> presso <TRANSIT_STOP>."
+        "0": "Sosire la <TIME>.",
+        "1": "Sosire la <TIME> la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +58,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Îndreaptă-te spre<RELATIVE_DIRECTION>.",
+        "1": "Îndreaptă-te <RELATIVE_DIRECTION> spre <STREET_NAMES>.",
+        "2": "Îndreaptă-te <RELATIVE_DIRECTION> spre <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Îndreaptă-te spre<RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Îndreaptă-te <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION>.",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Îndreaptă-te spre<RELATIVE_DIRECTION>.",
+        "1": "Îndreaptă-te spre<RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Îndreaptă-te spre <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Îndreaptă-te spre <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Îndreaptă-te <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> devine <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> devine <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Continuă.",
+        "1": "Continuă pe <STREET_NAMES>.",
+        "2": "Continuă la <JUNCTION_NAME>.",
+        "3": "Continuă spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +183,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua per <LENGTH>.",
-        "2": "Continua su <STREET_NAMES>.",
-        "3": "Continua su <STREET_NAMES> per <LENGTH>.",
-        "4": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "5": "Arrivato a <JUNCTION_NAME>, prosegui per <LENGTH>.",
-        "6": "Continua verso <TOWARD_SIGN>.",
-        "7": "Continua verso <TOWARD_SIGN> per <LENGTH>."
+        "0": "Continuă.",
+        "1": "Continuă pe distanța de <LENGTH>.",
+        "2": "Continuă pe <STREET_NAMES>.",
+        "3": "Continuă pe <STREET_NAMES> for <LENGTH>.",
+        "4": "Continuă la <JUNCTION_NAME>.",
+        "5": "Continuă la <JUNCTION_NAME> pe distanța de <LENGTH>.",
+        "6": "Continuă spre <TOWARD_SIGN>.",
+        "7": "Continuă spre <TOWARD_SIGN> pe distanța de <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS>chilometri",
-        "1 chilometro",
-        "<METERS>metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES>miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET>piedi",
-        "meno di 10 piedi"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Continuă.",
+        "1": "Continuă pe <STREET_NAMES>.",
+        "2": "Continuă la <JUNCTION_NAME>.",
+        "3": "Continuă spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +267,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Partenza: <TIME>.",
-        "1": "Partenza: <TIME> da <TRANSIT_STOP>."
+        "0": "Plecare: <TIME>.",
+        "1": "Plecare: <TIME> de la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Partenza alle <TIME>.",
-        "1": "Partenza alle <TIME> da <TRANSIT_STOP>."
+        "0": "Plecare la ora <TIME>.",
+        "1": "Plecare la ora <TIME> de la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +295,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION>.",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Ai ajuns la destinație.",
+        "1": "Ai ajuns la <DESTINATION>.",
+        "2": "Destinația se află pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se află pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +322,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION> .",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Ai ajuns la destinație.",
+        "1": "Ai ajuns la <DESTINATION>.",
+        "2": "Destinația se află pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se află pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +349,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Arriverai a destinazione.",
-        "1": "Arriverai a <DESTINATION>.",
-        "2": "La tua destinazione sarà sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> sarà sulla <RELATIVE_DIRECTION>."
+        "0": "Vei ajunge la destinație.",
+        "1": "Vei ajunge la <DESTINATION>.",
+        "2": "Destinația se va afla pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se va afla pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Ia feribotul.",
+        "1": "Ia-o pe <STREET_NAMES>.",
+        "2": "Ia-o pe <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Ia feribotul spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Ia feribotul.",
+        "1": "Ia-o pe <STREET_NAMES>.",
+        "2": "Ia-o pe <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Ia feribotul spre<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,39 +432,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> . Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "ntra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi ll'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Intră în sensul giratoriu.",
+        "1": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "2": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "5": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Intră în sensul giratoriu și ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "8": "Intră pe <STREET_NAMES>",
+        "9": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "10": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "13": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "prima",
+        "a doua",
+        "a treia",
+        "a patra",
+        "a cincea",
+        "a șasea",
+        "a șaptea",
+        "a opta",
+        "a noua",
+        "a zecea"
       ],
       "example_phrases": {
         "0": [
@@ -528,39 +528,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "eEntra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Intră în sensul giratoriu.",
+        "1": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "2": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "5": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Intră în sensul giratoriu și ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "8": "Intră pe <STREET_NAMES>",
+        "9": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "10": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "13": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "prima",
+        "a doua",
+        "a treia",
+        "a patra",
+        "a cincea",
+        "a șasea",
+        "a șaptea",
+        "a opta",
+        "a noua",
+        "a zecea"
       ],
       "example_phrases": {
         "0": [
@@ -624,34 +624,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION>.",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION>.",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l'uscita <NUMBER_SIGN>",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN>.",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "3": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "4": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "6": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "7": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "8": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "10": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "12": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "15": "Ia-o pe ieșire.",
+        "16": "Ia-o pe ieșirea <NUMBER_SIGN>.",
+        "17": "Ia-o pe <BRANCH_SIGN> ieșire.",
+        "18": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN>.",
+        "19": "Ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "20": "Ia-o pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "21": "Ia-o pe <BRANCH_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "22": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "23": "Ia-o pe <NAME_SIGN> ieșire.",
+        "25": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN>.",
+        "27": "Ia-o pe <NAME_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "29": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN> spre <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +731,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria verso <STREET_NAMES>.",
-        "2": "Esci dalla rotatoria verso <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
+        "0": "Ieși din sensul giratoriu.",
+        "1": "Ieși din sensul giratoriu pe <STREET_NAMES>.",
+        "2": "Ieși din sensul giratoriu pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Ieși din sensul giratoriu spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria su <STREET_NAMES> .",
-        "2": "Esci dalla rotatoria su <BEGIN_STREET_NAMES> .",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN> ."
+        "0": "Ieși din sensul giratoriu.",
+        "1": "Ieși din sensul giratoriu pe <STREET_NAMES>.",
+        "2": "Ieși din sensul giratoriu pe <BEGIN_STREET_NAMES>.",
+        "3": "Ieși din sensul giratoriu spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION> .",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l&#39;uscita <NUMBER_SIGN> .",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN> .",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Ia-o pe ieșirea spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe ieșirea <NUMBER_SIGN> spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe <BRANCH_SIGN> ieșire spre <RELATIVE_DIRECTION>.",
+        "3": "Ia-o pe ieșirea <NUMBER_SIGN> spre <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "4": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "6": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "7": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "8": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "10": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "12": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "15": "Ia-o pe ieșire.",
+        "16": "Ia-o pe ieșirea <NUMBER_SIGN>.",
+        "17": "Ia-o pe <BRANCH_SIGN> ieșire.",
+        "18": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN>.",
+        "19": "Ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "20": "Ia-o pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "21": "Ia-o pe <BRANCH_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "22": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "23": "Ia-o pe <NAME_SIGN> ieșire.",
+        "25": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN>.",
+        "27": "Ia-o pe <NAME_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "29": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN> spre <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "sinstra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Uscita <EXIT_NUMBERS>"
+        "0": "Ieșire <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +902,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES>.",
-        "4": "Mantieni la <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Ține <RELATIVE_DIRECTION> la bifurcație.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES>.",
+        "4": "Ține <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "6": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "7": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +952,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> .",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN> .",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Ține <RELATIVE_DIRECTION> la bifurcație.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES>.",
+        "4": "Ține <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "6": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "7": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1070,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Intră pe banda.",
+        "1": "Intră pe banda <RELATIVE_DIRECTION>.",
+        "2": "Intră pe banda pentru <STREET_NAMES>.",
+        "3": "Intră pe banda <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "4": "Intră pe banda spre <TOWARD_SIGN>.",
+        "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1109,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Intră pe banda.",
+        "1": "Intră pe banda <RELATIVE_DIRECTION>.",
+        "2": "Intră pe banda pentru <STREET_NAMES>.",
+        "3": "Intră pe banda <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "4": "Intră pe banda spre <TOWARD_SIGN>.",
+        "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1148,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Viaggia <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> ."
+        "0": "Călătorește <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1163,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continua per <LENGTH> .",
-        "1": "Continua su <STREET_NAMES> per <LENGTH> ."
+        "0": "Continuă pe o distanță de <LENGTH>.",
+        "1": "Continuă pe <STREET_NAMES> pe o distanță de <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
         "<METERS> metri",
-        "meno di 10 metri"
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1198,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Prendi lo svincolo per <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Ia-o pe rampă spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe <BRANCH_SIGN> rampă spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe rampă pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "3": "Ia-o pe <BRANCH_SIGN> rampă pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "4": "Ia-o pe <NAME_SIGN> rampă pe <RELATIVE_DIRECTION>.",
+        "5": "Întoarce <RELATIVE_DIRECTION> pentru a lua pe rampă.",
+        "6": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "7": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "8": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "9": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <NAME_SIGN> rampă.",
+        "10": "Ia-o pe rampă.",
+        "11": "Ia-o pe <BRANCH_SIGN> rampă.",
+        "12": "Ia-o pe rampa spre <TOWARD_SIGN>.",
+        "13": "Ia-o pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> rampă."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Mergi înainte pentru a o lua pe rampă.",
+        "1": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "2": "Mergi drept înainte pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "3": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "4": "Mergi drept înainte pentru a o lua pe <NAME_SIGN> rampă."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Mergi drept înainte pentru a o lua pe rampă.",
+        "1": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "2": "Mergi drept înainte pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "3": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "4": "Mergi drept înainte pentru a o lua pe <NAME_SIGN> rampă."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Prendi lo svincolo a <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo <BRANCH_SIGN> svincolo verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Ia-o pe rampa spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe <BRANCH_SIGN> rampă spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe rampa de pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "3": "Ia-o pe <BRANCH_SIGN> rampă de pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "4": "Ia-o pe <NAME_SIGN> rampă de pe <RELATIVE_DIRECTION>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe rampă.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "8": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "9": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <NAME_SIGN> rampă.",
+        "10": "Ia-o pe rampă.",
+        "11": "Ia-o pe <BRANCH_SIGN> rampă.",
+        "12": "Ia-o pe rampa spre <TOWARD_SIGN>.",
+        "13": "Ia-o pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> rampă."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1394,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION> .",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Virează strâns la <RELATIVE_DIRECTION>.",
+        "1": "Virează strâns la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează strâns la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Virează strâns la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează strâns la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează strâns la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1433,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>. fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Virează strâns la <RELATIVE_DIRECTION>.",
+        "1": "Virează strâns la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează strâns la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Virează strâns la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează strâns la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează strâns la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1472,18 +1472,18 @@
     },
     "start": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua a <STREET_NAMES> .",
-        "4": "Guida verso <CARDINAL_DIRECTION> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "8": "Cammina verso <CARDINAL_DIRECTION> .",
-        "9": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> ."
+        "0": "Îndreaptă-te spre <CARDINAL_DIRECTION>.",
+        "1": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "4": "Condu spre <CARDINAL_DIRECTION>.",
+        "5": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "6": "Condu spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "8": "Mergi spre <CARDINAL_DIRECTION>.",
+        "9": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "10": "Mergi spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "16": "Pedalează spre <CARDINAL_DIRECTION>.",
+        "17": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "18": "Pedalează spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
@@ -1491,14 +1491,14 @@
         "est",
         "sud-est",
         "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "sud-vest",
+        "vest",
+        "nord-vest"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -1551,26 +1551,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "3": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "4": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "7": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "8": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "9": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> .",
-        "11": "Cammina verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "12": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "13": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "14": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "15": "Pedala verso <CARDINAL_DIRECTION> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "19": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> ."
+        "0": "Îndreaptă-te spre <CARDINAL_DIRECTION>.",
+        "1": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "2": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "4": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "5": "Condu spre <CARDINAL_DIRECTION>.",
+        "6": "Condu spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "7": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "8": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "9": "Condu spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "10": "Mergi spre <CARDINAL_DIRECTION>.",
+        "11": "Mergi spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "12": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "13": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "14": "Mergi spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "15": "Pedalează spre <CARDINAL_DIRECTION>.",
+        "16": "Pedalează spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "17": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "18": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "19": "Pedalează spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
@@ -1578,28 +1578,28 @@
         "est",
         "sud-est",
         "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "sud-vest",
+        "vest",
+        "nord-vest"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
         "<METERS> metri",
-        "meno di 10 metri"
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1674,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Ia-o pe <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ia-o pe <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1705,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Ieși din stație.",
+        "1": "Ieși din <TRANSIT_STOP>.",
+        "2": "Ieși din <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1724,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Ieși din stație.",
+        "1": "Ieși din <TRANSIT_STOP>.",
+        "2": "Ieși din <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1743,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Intră în stație.",
+        "1": "Intră în <TRANSIT_STOP>.",
+        "2": "Intră în <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1762,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Intră în stație.",
+        "1": "Intră în <TRANSIT_STOP>.",
+        "2": "Intră în <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1781,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Effettua il cambio in stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Transfer la stație.",
+        "1": "Transfer la <TRANSIT_STOP>.",
+        "2": "Transfer la <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1800,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio alla stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Transfer la stație.",
+        "1": "Transfer la <TRANSIT_STOP>.",
+        "2": "Transfer la <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1819,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Rămâi la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Rămâi la <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1848,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> .",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Rămâi la <TRANSIT_NAME>.",
+        "1": "Rămâi la <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1872,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Transfer pentru a lua <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transfer pentru a lua <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1901,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> .",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Transfer pentru a lua <TRANSIT_NAME>.",
+        "1": "Transfer pentru a lua <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1925,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> .",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Ia <TRANSIT_NAME>.",
+        "1": "Ia <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
-        "gondola",
-        "funicolare"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1949,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Virează la <RELATIVE_DIRECTION>.",
+        "1": "Virează la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Virează la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Virează la <RELATIVE_DIRECTION>.",
+        "1": "Virează la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Virează la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2027,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Întoarce la <RELATIVE_DIRECTION>.",
+        "1": "Întoarce la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Întoarce la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "3": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES>.",
+        "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe <STREET_NAMES>.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Întoarce la <RELATIVE_DIRECTION>.",
+        "1": "Întoarce la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Întoarce la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "3": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES>.",
+        "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe<STREET_NAMES>.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> poi <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> poi, tra <LENGTH> , <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Apoi <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Apoi, după <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
         "<METERS> metri",
-        "meno di 10 metri"
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [

@@ -1,26 +1,26 @@
 {
-  "posix_locale": "it_IT.UTF-8",
+  "posix_locale": "hu_HU.UTF-8",
   "aliases": [
-    "it"
+    "hu"
   ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Tra <LENGTH> , <CURRENT_VERBAL_CUE>"
+        "0": "<LENGTH> távon belül, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Arrivo: <TIME> .",
-        "1": "Arrivo: <TIME> presso <TRANSIT_STOP> ."
+        "0": "Érkezés: <TIME>.",
+        "1": "Érkezés: <TIME> ide: <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -44,8 +44,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrivo alle <TIME> .",
-        "1": "Arrivo alle <TIME> presso <TRANSIT_STOP>."
+        "0": "Érkezés ekkor: <TIME>.",
+        "1": "Érkezés ekkor: <TIME> ide: <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +58,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon balra <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jelzés felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpár út"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION>.",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES>.",
+        "3": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jel felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> átvált <STREET_NAMES> utcára."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> diventa <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> átvált <STREET_NAMES> utcára."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Folytatás.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "3": "Haladjon tovább a(z) <TOWARD_SIGN> jel felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +183,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua per <LENGTH>.",
-        "2": "Continua su <STREET_NAMES>.",
-        "3": "Continua su <STREET_NAMES> per <LENGTH>.",
-        "4": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "5": "Arrivato a <JUNCTION_NAME>, prosegui per <LENGTH>.",
-        "6": "Continua verso <TOWARD_SIGN>.",
-        "7": "Continua verso <TOWARD_SIGN> per <LENGTH>."
+        "0": "Folytatás.",
+        "1": "Haladjon tovább <LENGTH> távot.",
+        "2": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Haladjon tovább a(z) <STREET_NAMES> utcán <LENGTH> távot.",
+        "4": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Haladjon tovább a(z) <JUNCTION_NAME> útketeszteződésnél <LENGTH> távot.",
+        "6": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felé.",
+        "7": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felé <LENGTH> távot."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "metric_lengths": [
-        "<KILOMETERS>chilometri",
-        "1 chilometro",
-        "<METERS>metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "lkevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES>miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET>piedi",
-        "meno di 10 piedi"
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "egy fél mérföld",
+        "egy negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Continua.",
-        "1": "Continua su <STREET_NAMES>.",
-        "2": "Arrivato a <JUNCTION_NAME>, prosegui.",
-        "3": "Continua verso <TOWARD_SIGN>."
+        "0": "Folytatás.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "3": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felés."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +267,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Partenza: <TIME>.",
-        "1": "Partenza: <TIME> da <TRANSIT_STOP>."
+        "0": "Indulás: <TIME>.",
+        "1": "Indulás: <TIME> innen <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Partenza alle <TIME>.",
-        "1": "Partenza alle <TIME> da <TRANSIT_STOP>."
+        "0": "Indulás ekkor <TIME>.",
+        "1": "Indulás ekkor <TIME> innen <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +295,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION>.",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Megérkezett az úti céljához.",
+        "1": "Megérkezett ide: <DESTINATION>.",
+        "2": "Az úti célja erre van: <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> erre van: <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +322,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION> .",
-        "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
+        "0": "Megérkezett az úti céljához.",
+        "1": "Megérkezett ide: <DESTINATION>.",
+        "2": "Az Ön úti célja <RELATIVE_DIRECTION> van.",
+        "3": "A(z) <DESTINATION> <RELATIVE_DIRECTION> lesz."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +349,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Arriverai a destinazione.",
-        "1": "Arriverai a <DESTINATION>.",
-        "2": "La tua destinazione sarà sulla <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> sarà sulla <RELATIVE_DIRECTION>."
+        "0": "Ön meg fog érkezni az úti céljához.",
+        "1": "Ön meg fog érkezni ide: <DESTINATION>.",
+        "2": "Az Ön úti célja <RELATIVE_DIRECTION> lesz.",
+        "3": "A(z)<DESTINATION> <RELATIVE_DIRECTION> lesz."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Utazás komppal.",
+        "1": "Utazás ezen az utcán: <STREET_NAMES>.",
+        "2": "Utazás a(z) <STREET_NAMES> utcán a(z) <FERRY_LABEL> komppal.",
+        "3": "Utazás komppal a(z) <TOWARD_SIGN> jelzés felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Komp",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Prendi il traghetto.",
-        "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi il <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
+        "0": "Utazás komppal.",
+        "1": "Utazás a(z) <STREET_NAMES> utcán.",
+        "2": "Utazás a(z) <STREET_NAMES> utcán a(z) <FERRY_LABEL> komppal.",
+        "3": "Utazás komppal a(z) <TOWARD_SIGN> jelzés felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
-      "ferry_label": "Traghetto",
+      "ferry_label": "Komp",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,39 +432,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> . Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "ntra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi ll'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Menjen be a körforgalomba.",
+        "1": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "2": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utca felé.",
+        "3": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot (z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utca felé. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "4": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "6": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> felé vezető kijáratot. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "7": "Menjen be a körforgalomba és válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "8": "Térjen be a(z) <STREET_NAMES> utcára",
+        "9": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "10": "Térjen be a(z) <STREET_NAMES> utcáraés válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utca felé.",
+        "11": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utca felé. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "12": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "13": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
       ],
       "example_phrases": {
         "0": [
@@ -528,39 +528,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Entra nella rotonda.",
-        "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "5": "Entra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "eEntra nella rotonda e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Entra nella rotonda e prendi l'uscita verso <TOWARD_SIGN>.",
-        "8": "Entra in <STREET_NAMES>",
-        "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
-        "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
-        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
+        "0": "Menjen be a körforgalomba.",
+        "1": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "2": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára.",
+        "3": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára.",
+        "4": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "6": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot.",
+        "7": "Menjen be a körforgalomba és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot.",
+        "8": "Térjen be a(z) <STREET_NAMES> utcára",
+        "9": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "10": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára.",
+        "11": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára.",
+        "12": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "13": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot.",
+        "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "ordinal_values": [
-        "1a",
-        "2a",
-        "3a",
-        "4a",
-        "5a",
-        "6a",
-        "7a",
-        "8a",
-        "9a",
-        "10a"
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
       ],
       "example_phrases": {
         "0": [
@@ -624,34 +624,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION>.",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION>.",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l'uscita <NUMBER_SIGN>",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN>.",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Válassza a(z) <RELATIVE_DIRECTION> irányba lévő kijáratot.",
+        "1": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "3": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "4": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jelzés felé.",
+        "6": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "7": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <BRANCH_SIGN> felé, a(z) <TOWARD_SIGN> jelzés irányába.",
+        "8": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "10": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "12": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "14": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "15": "Használja a kijáratot.",
+        "16": "Válassza a(z) <NUMBER_SIGN> kijáratot.",
+        "17": "Válassza a(z) <BRANCH_SIGN> kijáratot.",
+        "18": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "19": "Válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "20": "Válassza a(z) <NUMBER_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "21": "Válassza a(z) <BRANCH_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "22": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé <TOWARD_SIGN> irányába.",
+        "23": "Válassza a(z) <NAME_SIGN> kijáratot.",
+        "25": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé.",
+        "27": "Válassza a(z) <NAME_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "29": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +731,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria verso <STREET_NAMES>.",
-        "2": "Esci dalla rotatoria verso <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
+        "0": "Hagyja el a körforgalmat.",
+        "1": "Hagyja el a körforgalmat a(z) <STREET_NAMES> utcára fordulva.",
+        "2": "Hagyja el a körforgalmat a(z) <BEGIN_STREET_NAMES> utcára fordulva. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Hagyja el a körforgalmat a(z) <TOWARD_SIGN> irányába."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria su <STREET_NAMES> .",
-        "2": "Esci dalla rotatoria su <BEGIN_STREET_NAMES> .",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN> ."
+        "0": "Hagyja el a körforgalmat.",
+        "1": "Hagyja el a körforgalmat a(z) <STREET_NAMES> felé.",
+        "2": "Hagyja el a körforgalmat a(z) <BEGIN_STREET_NAMES> felé.",
+        "3": "Hagyja el a körforgalmat a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerkpárút"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION> .",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
-        "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "6": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
-        "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "15": "Prendi l'uscita.",
-        "16": "Prendi l&#39;uscita <NUMBER_SIGN> .",
-        "17": "Prendi l'uscita <BRANCH_SIGN>.",
-        "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN> .",
-        "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
-        "23": "Prendi l'uscita <NAME_SIGN>.",
-        "25": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN>.",
-        "27": "Prendi l'uscita <NAME_SIGN> verso <TOWARD_SIGN>.",
-        "29": "Prendi l'uscita <NAME_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>."
+        "0": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot.",
+        "1": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "3": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "4": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot <TOWARD_SIGN> felé.",
+        "5": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "6": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "7": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "8": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "10": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "12": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "14": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "15": "Használja a kijáratot.",
+        "16": "Válassza a(z) <NUMBER_SIGN> kijáratot.",
+        "17": "Válassza a(z) <BRANCH_SIGN> kijáratot.",
+        "18": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "19": "Válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "20": "Válassza a(z) <NUMBER_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "21": "Válassza a(z) <BRANCH_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "22": "Válassza a(z) <NUMBER_SIGN> kijáratot <BRANCH_SIGN> felé a(z)<TOWARD_SIGN> irányába.",
+        "23": "Válassza a(z) <NAME_SIGN> kijáratot.",
+        "25": "Válassza a(z) <NAME_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "27": "Válassza a(z) <NAME_SIGN> kijáratot a(z) <TOWARD_SIGN> felé.",
+        "29": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába."
       },
       "relative_directions": [
-        "sinstra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Uscita <EXIT_NUMBERS>"
+        "0": "Kijárat <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +902,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN>.",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES>.",
-        "4": "Mantieni la <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Az útelágazásnál tartson <RELATIVE_DIRECTION>.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcára térhessen.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> felé.",
+        "4": "Tartson <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "5": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <TOWARD_SIGN> felé.",
+        "6": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcába a(z) <TOWARD_SIGN> felé.",
+        "7": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> utca felé a(z) <TOWARD_SIGN> irányába."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "balra",
+        "egyenesen előre",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +952,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "1": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <NUMBER_SIGN> kijáratot használva a(z) <STREET_NAMES> utcán maradjon.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon, a(z) <TOWARD_SIGN> felé.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon, <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "balra",
+        "egyenesen előre",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon, <TOWARD_SIGN> felé.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "balra",
+        "egyenesen előre",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> .",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN> .",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Tartson <RELATIVE_DIRECTION> az útelágazásnál.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcára.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> felé.",
+        "4": "Tartson <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "5": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához <TOWARD_SIGN> felé.",
+        "6": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcára <TOWARD_SIGN> felé.",
+        "7": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat haszálatához <STREET_NAMES> felé, <TOWARD_SIGN> irányába."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "dritto",
-        "destra"
+        "balra",
+        "egyenesen előre",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1070,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Úttorkolat.",
+        "1": "Úttorkolat <RELATIVE_DIRECTION>.",
+        "2": "Úttorkolat a(z) <STREET_NAMES> utcába.",
+        "3": "Úttorkolat <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcába.",
+        "4": "Úttorkolat <TOWARD_SIGN> felé.",
+        "5": "Úttorkolat <RELATIVE_DIRECTION> felé <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1109,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Úttorkolat.",
+        "1": "Úttorkolat <RELATIVE_DIRECTION>.",
+        "2": "Úttorkolat a(z) <STREET_NAMES> utcába.",
+        "3": "Úttorkolat <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcába.",
+        "4": "Úttorkolat a(z) <TOWARD_SIGN> felé.",
+        "5": "Úttorkolat <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1148,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Viaggia <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> ."
+        "0": "Utazás <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "megálló",
+        "other": "megállók"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1163,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continua per <LENGTH> .",
-        "1": "Continua su <STREET_NAMES> per <LENGTH> ."
+        "0": "Haladjon tovább <LENGTH> távot.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán <LENGTH> távot."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mérföld",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1198,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Prendi lo svincolo per <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Válassza a rámpát <RELATIVE_DIRECTION>.",
+        "1": "Válassza a(z) <BRANCH_SIGN> rámpát <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <RELATIVE_DIRECTION> lévő rámpát <TOWARD_SIGN> felé.",
+        "3": "Válassza a(z) <BRANCH_SIGN> rámpát <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "4": "Válassza a(z) <NAME_SIGN> rámpát <RELATIVE_DIRECTION>.",
+        "5": "Forduljon <RELATIVE_DIRECTION>, hogy a rámpára hajtson.",
+        "6": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <BRANCH_SIGN> rámpára hajtson.",
+        "7": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <TOWARD_SIGN> felé vezető rámpára hajtson.",
+        "8": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <BRANCH_SIGN> rámpára hajtson a(z) <TOWARD_SIGN> felé.",
+        "9": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <NAME_SIGN> rámpára hajtson.",
+        "10": "Hajtson a rámpára.",
+        "11": "Hajtson rá a(z) <BRANCH_SIGN> rámpára.",
+        "12": "Hajtson rá a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "13": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "14": "Hajtson rá a(z) <NAME_SIGN> rámpára."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Tartson egyenesen előre, hogy ráhajtson a rámpára.",
+        "1": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "2": "Tartson egyenesen előre, hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "3": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "4": "Tartson egyenesen előre, hogy ráhajtson a(z) <NAME_SIGN> rámpára."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "0": "Tartson egyenesen előre, hogy ráhajtson a rámpára",
+        "1": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "2": "Tartson egyenesen előre, hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "3": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "4": "Tartson egyenesen előre, hogy ráhajtson a(z) <NAME_SIGN> rámpára."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Prendi lo svincolo a <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
-        "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo <BRANCH_SIGN> svincolo verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
-        "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "0": "Hajtson rá a <RELATIVE_DIRECTION> lévő rámpára.",
+        "1": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <RELATIVE_DIRECTION>.",
+        "2": "Hajtson rá a(z) <RELATIVE_DIRECTION> lévő rámpára <TOWARD_SIGN> felé.",
+        "3": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "4": "Hajtson rá a(z) <NAME_SIGN> rámpára <RELATIVE_DIRECTION>.",
+        "5": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a rámpára.",
+        "6": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "7": "Forduljon <RELATIVE_DIRECTION> hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "8": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "9": "Forduljon <RELATIVE_DIRECTION> hogy ráhajtson a(z) <NAME_SIGN> rámpára.",
+        "10": "Hajtson a rámpára.",
+        "11": "Hajtson a(z) <BRANCH_SIGN> rámpára.",
+        "12": "Hajtson rá a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "13": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "14": "Hajtson rá a(z) <NAME_SIGN> rámpára."
       },
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1394,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION> .",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Forduljon élesen <RELATIVE_DIRECTION>.",
+        "1": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon élesen <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1433,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>. fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Forduljon élesen <RELATIVE_DIRECTION>.",
+        "1": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára.",
+        "3": "Forduljon élesen <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1472,33 +1472,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua a <STREET_NAMES> .",
-        "4": "Guida verso <CARDINAL_DIRECTION> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "8": "Cammina verso <CARDINAL_DIRECTION> .",
-        "9": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> ."
+        "0": "Haladjon <CARDINAL_DIRECTION>.",
+        "1": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "4": "Hajtson <CARDINAL_DIRECTION>.",
+        "5": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "6": "Hajtson <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "8": "Sétáljon <CARDINAL_DIRECTION>.",
+        "9": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "10": "Sétáljon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "16": "Kerékpározzon <CARDINAL_DIRECTION>.",
+        "17": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "18": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán."
       },
       "cardinal_directions": [
-        "nord",
-        "nord-est",
-        "est",
-        "sud-est",
-        "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "északra",
+        "északkeletre",
+        "keletre",
+        "délkeletre",
+        "délre",
+        "délnyugatra",
+        "nyugatra",
+        "északnyugatra"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "example_phrases": {
         "0": [
@@ -1551,55 +1551,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "3": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "4": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "7": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "8": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "9": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> .",
-        "11": "Cammina verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "12": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "13": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "14": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "15": "Pedala verso <CARDINAL_DIRECTION> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "19": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> ."
+        "0": "Haladjon <CARDINAL_DIRECTION>.",
+        "1": "Haladjon <CARDINAL_DIRECTION> <LENGTH> távolságot.",
+        "2": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "3": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> <LENGTH> távolságot.",
+        "4": "Haladjon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "5": "Hajtson <CARDINAL_DIRECTION>.",
+        "6": "Hajtson <CARDINAL_DIRECTION> <LENGTH> távolságot.",
+        "7": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "8": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán <LENGTH> távolságot.",
+        "9": "Hajtson <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "10": "Sétáljon <CARDINAL_DIRECTION>.",
+        "11": "Sétáljon <CARDINAL_DIRECTION> <LENGTH> távot.",
+        "12": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES>utcán.",
+        "13": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> <LENGTH> távot.",
+        "14": "Sétáljon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "15": "Kerékpározzon <CARDINAL_DIRECTION>.",
+        "16": "Kerékpározzon <CARDINAL_DIRECTION> <LENGTH> távot.",
+        "17": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "18": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán <LENGTH> távot.",
+        "19": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán."
       },
       "cardinal_directions": [
-        "nord",
-        "nord-est",
-        "est",
-        "sud-est",
-        "sud",
-        "sud-ovest",
-        "ovest",
-        "nord-ovest"
+        "északra",
+        "északkeletre",
+        "keletre",
+        "délkeletre",
+        "délre",
+        "délnyugatra",
+        "nyugatra",
+        "északnyugatra"
       ],
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1674,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Válassza a következő közlekedési eszközt: <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Válassz a következő közlekedési eszközt: <TRANSIT_NAME> a(z) <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "Felvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "megálló",
+        "other": "megállók"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1705,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Hagyja el az állomást.",
+        "1": "Hagyja el a(z) <TRANSIT_STOP> megállót.",
+        "2": "Hagyja el a következőt: <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1724,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "0": "Hagyja el az állomást.",
+        "1": "Hagyja el a(z) <TRANSIT_STOP> megállót.",
+        "2": "Hagyja el a következőt <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1743,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Menjen az állomásra.",
+        "1": "Menjen a(z) <TRANSIT_STOP> megálló területére.",
+        "2": "Menjen a(z) <TRANSIT_STOP> megálló területére a(z) <STATION_LABEL> állomáson."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1762,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Menjen az állomásra.",
+        "1": "Menjen ide: <TRANSIT_STOP>.",
+        "2": "Menjen a(z) <TRANSIT_STOP> megállóba a(z) <STATION_LABEL> állomáson."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1781,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Effettua il cambio in stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Váltson közlekedési eszközt az állomáson.",
+        "1": "Váltson közlekedési eszközt itt: <TRANSIT_STOP>.",
+        "2": "Váltson közlekedési eszközt a <TRANSIT_STOP> megállóban a(z) <STATION_LABEL> állomáson."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1800,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio alla stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "0": "Váltson közlekedési eszközt az állomáson.",
+        "1": "Váltson közlekedési eszközt a(z) <TRANSIT_STOP> megállóban.",
+        "2": "Váltson közlekedési eszközt a(z) <TRANSIT_STOP> megállóban a(z) <STATION_LABEL> állomáson."
       },
-      "station_label": "Stazione",
+      "station_label": "Állomás",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1819,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "falvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "megálló",
+        "other": "megállók"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1848,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> .",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön.",
+        "1": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön <TRANSIT_HEADSIGN> felé."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1872,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Váltson közlekedési eszközt, és válassza a következőt: <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Váltson közlekedési eszközt és válassza a következőt: <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "transit_stop_count_labels": {
-        "one": "fermata",
-        "other": "fermate"
+        "one": "megálló",
+        "other": "megállók"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1901,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> .",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Váltson közlekedési eszközt, és válassza a következőt: <TRANSIT_NAME>.",
+        "1": "Váltson közlekedési eszközt és válassza a következőt <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1925,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> .",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Válassza a következő közlekedési eszközt: <TRANSIT_NAME>.",
+        "1": "Válassza akövetkező közlekedési eszközt <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé."
       },
       "empty_transit_name_labels": [
-        "tram",
-        "metro",
-        "treno",
-        "autobus",
-        "traghetto",
-        "funivia",
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
         "gondola",
-        "funicolare"
+        "sikló"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1949,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkeresztaződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2027,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Végezzen egy <RELATIVE_DIRECTION> megfordulást.",
+        "1": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <STREET_NAMES> utcára.",
+        "2": "Végezzen egy <RELATIVE_DIRECTION> megfordulást, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "3": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél.",
+        "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
+        "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "7": "Végezzen egy <RELATIVE_DIRECTION> Umegfordulást a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
-        "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "0": "Végezzen egy <RELATIVE_DIRECTION> megfordulást.",
+        "1": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <STREET_NAMES> utcára.",
+        "2": "Végezzen egy <RELATIVE_DIRECTION> megfordulást, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "3": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél.",
+        "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
+        "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "7": "VÉgezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <TOWARD_SIGN> felé."
       },
       "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút"
       ],
       "relative_directions": [
-        "sinistra",
-        "destra"
+        "balra",
+        "jobbra"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> poi <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> poi, tra <LENGTH> , <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> aztán <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Aztán, <LENGTH> hosszban, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
       ],
       "example_phrases": {
         "0": [
