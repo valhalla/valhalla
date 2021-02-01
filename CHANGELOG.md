@@ -12,6 +12,7 @@
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
+   * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
