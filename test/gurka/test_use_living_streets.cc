@@ -56,7 +56,8 @@ TEST_F(LivingStreetTest, test_default_value) {
   for (const auto& c : costing)
     if (c == "bicycle" || c == "pedestrian")
       // living_street tag shouldn't affect these costings too much
-      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c), {"AB", "BE", "EF"});
+      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c),
+                    {"AB", "BE", "EF"});
     else
       // avoid living_streets by default; use living_streets only if the route starts or ends at
       // 'living_street' edge
@@ -68,7 +69,7 @@ TEST_F(LivingStreetTest, test_use_living_streets) {
   // use routes with living_streets
   for (const auto& c : costing)
     validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
-                               {{"/costing_options/" + c + "/use_living_streets", "1"}}),
+                                   {{"/costing_options/" + c + "/use_living_streets", "1"}}),
                   {"AB", "BE", "EF"});
 }
 
@@ -77,10 +78,11 @@ TEST_F(LivingStreetTest, test_avoid_living_streets) {
   for (const auto& c : costing)
     if (c == "bicycle")
       // bicycle is not currently affected by this option
-      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c), {"AB", "BE", "EF"});
+      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c),
+                    {"AB", "BE", "EF"});
     else
       validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
-                                 {{"/costing_options/" + c + "/use_living_streets", "0"}}),
+                                     {{"/costing_options/" + c + "/use_living_streets", "0"}}),
                     {"AB", "BC", "CD", "DE", "EF"});
 }
 
@@ -88,7 +90,7 @@ TEST_F(LivingStreetTest, test_use_living_streets_if_no_other_roads) {
   // use living_street if it's needed to complete the route
   for (const auto& c : costing) {
     validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"D", "3"}, c,
-                               {{"/costing_options/" + c + "/use_living_streets", "0"}}),
+                                   {{"/costing_options/" + c + "/use_living_streets", "0"}}),
                   {"DE", "EF", "FG"});
   }
 }

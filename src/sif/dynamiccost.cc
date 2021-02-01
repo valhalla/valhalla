@@ -240,7 +240,8 @@ void DynamicCost::set_use_tracks(float use_tracks) {
 void DynamicCost::set_use_living_streets(float use_living_streets) {
   // Calculate factor value based on use preference. Return value
   // in range [kMaxLivingStreetFactor; 1], if use < 0.5; or
-  // in range [1; kMinLivingStreetFactor], if use > 0.5
+  // in range [1; kMinLivingStreetFactor], if use > 0.5.
+  // Thus living_street_factor_ is inversely proportional to use_living_streets.
   living_street_factor_ =
       use_living_streets < 0.5f
           ? (kMaxLivingStreetFactor - 2.f * use_living_streets * (kMaxLivingStreetFactor - 1.f))
