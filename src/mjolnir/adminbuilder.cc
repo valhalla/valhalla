@@ -280,7 +280,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   /* creating an admin POLYGON table */
-  sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
   sql += "admin_level INTEGER NOT NULL,";
   sql += "iso_code TEXT,";
   sql += "parent_admin INTEGER,";
