@@ -564,7 +564,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished");
 
-  stats.build_db(pt);
+  stats.build_db();
   stats.roulette_data.GenerateTasks(pt);
 }
 
