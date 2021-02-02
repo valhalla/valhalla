@@ -433,7 +433,7 @@ inline bool remove(const path& p) {
   // stat() on the file object in question it will get 0 which means
   // "file object exists". We kinda want thread 2 to wait for the
   // file object to truly go out of existence. Hence, this spin loop.
-  if (ret == false) {
+  if (!ret) {
     if ((errno == EINVAL) || (errno == ENOENT)) {
       const int max_tries = 10000;
       int tries = 0;

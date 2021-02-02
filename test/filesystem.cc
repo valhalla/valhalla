@@ -139,16 +139,47 @@ TEST(Filesystem, file_size) {
 
 TEST(Filesystem, concurrent_folder_create_delete) {
 
-  const char* create_subdir = "test/a/b/c/d/e/f/g/h/i/j";
-  const char* base_subdir = "test/a";
+  const std::string nested_subdir = "test/a/b/c/d/e/f/g/h/i/j";
+  const std::string base_subdir = "test/a";
 
-  auto create_folder = [&]() {
-    bool success = filesystem::create_directories(create_subdir);
+  // Use half the available cores so we don't place too much extra pressure
+  // on the CI test runs which are already run in parallel.
+  size_t num_threads = std::thread::hardware_concurrency() / 2;
+
+  // start_race_mutex protects the start_race_event and the start_race
+  // boolean. Condition variables can be awoken "spuriously", hence the
+  // start_race boolean.
+  std::mutex start_race_mutex;
+  bool start_race = false;
+  std::condition_variable start_race_event;
+
+  auto create_folder = [&](bool & ready_flag) {
+    // a simple (cheesy?) way for each thread to announce they are ready
+    ready_flag = true;
+
+    // All threads will queue up at start_race_event.wait(), only
+    // being released when the "race manager" sets start_race to true
+    // and calls start_race_event.notify_all().
+    std::unique_lock<std::mutex> start_race_lock(start_race_mutex);
+    start_race_event.wait(start_race_lock, [&] { return start_race; });
+    start_race_mutex.unlock();
+
+    bool success = filesystem::create_directories(nested_subdir);
     EXPECT_TRUE(success);
-    EXPECT_TRUE(filesystem::exists(create_subdir));
+    EXPECT_TRUE(filesystem::exists(nested_subdir));
   };
 
-  auto remove_folder = [&]() {
+  auto remove_folder = [&](bool & ready_flag) {
+    // a simple (cheesy?) way for each thread to announce they are ready
+    ready_flag = true;
+
+    // All threads will queue up at start_race_event.wait(), only
+    // being released when the "race manager" sets start_race to true
+    // and calls start_race_event.notify_all().
+    std::unique_lock<std::mutex> start_lock(start_race_mutex);
+    start_race_event.wait(start_lock, [&] { return start_race; });
+    start_race_mutex.unlock();
+
     std::uintmax_t delete_count = filesystem::remove_all(base_subdir);
     // I've found that two+ threads will claim that they've deleted the same
     // file object. This results in double+ counting and prevents me from
@@ -157,18 +188,34 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     EXPECT_TRUE(!filesystem::exists(base_subdir));
   };
 
-  size_t num_threads = std::thread::hardware_concurrency();
-
   const int num_iters = 50;
   for (int j = 0; j < num_iters; j++) {
     // concurrent folder creation
     {
+      // Start some threads. Wait for each to declare themselves ready.
+      start_race = false;
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
-      for (size_t i = 0; i < num_threads; i++)
-        threads[i].reset(new std::thread(create_folder));
-      for (size_t i = 0; i < num_threads; i++)
+      for (size_t i = 0; i < num_threads; i++) {
+        bool ready_flag = false;
+        threads[i].reset(new std::thread(create_folder, std::ref(ready_flag)));
+        while (!ready_flag) {
+          std::this_thread::yield();
+        }
+      }
+
+      // By this point we know all threads have been created and are ready.
+      // Announce the start of the race by first setting the "race_started"
+      // cv boolean and then calling "notify_all()".
+      start_race_mutex.lock();
+      start_race = true;
+      start_race_mutex.unlock();
+      start_race_event.notify_all();
+
+      for (size_t i = 0; i < num_threads; i++) {
         threads[i]->join();
-      EXPECT_TRUE(filesystem::exists(create_subdir));
+      }
+
+      EXPECT_TRUE(filesystem::exists(nested_subdir));
     }
 
     // populate each subfolder with num_files_per_folder text files.
@@ -179,9 +226,9 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         folder_name = folder_name + "/" + subdir;
         for (size_t i = 0; i < num_files_per_folder; i++) {
           std::string filename = folder_name + "/" + std::to_string(i) + ".txt";
-          FILE* f = fopen(filename.c_str(), "w");
-          fprintf(f, "hello");
-          fclose(f);
+          std::ofstream f( filename.c_str(), std::ios::out );
+          f << "hello";
+          f.close();
         }
       }
     }
@@ -191,11 +238,29 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     // The key aspect is that this succeeds without error and the "test/a"
     // folder is successfully deleted.
     {
+      // Start some threads. Wait for each to declare themselves ready.
+      start_race = false;
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
-      for (size_t i = 0; i < num_threads; i++)
-        threads[i].reset(new std::thread(remove_folder));
-      for (size_t i = 0; i < num_threads; i++)
+      for (size_t i = 0; i < num_threads; i++) {
+        bool ready_flag = false;
+        threads[i].reset(new std::thread(remove_folder, std::ref(ready_flag)));
+        while (!ready_flag) {
+          std::this_thread::yield();
+        }
+      }
+
+      // By this point we know all threads have been created and are ready.
+      // Announce the start of the race by first setting the "race_started"
+      // cv boolean and then calling "notify_all()".
+      start_race_mutex.lock();
+      start_race = true;
+      start_race_mutex.unlock();
+      start_race_event.notify_all();
+
+      for (size_t i = 0; i < num_threads; i++) {
         threads[i]->join();
+      }
+
       EXPECT_TRUE(!filesystem::exists(base_subdir));
     }
   }
