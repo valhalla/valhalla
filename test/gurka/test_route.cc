@@ -535,3 +535,54 @@ TEST(Standalone, BridgingEdgeIsRestricted) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
 }
+
+TEST(Standalone, AvoidExtraDetours) {
+  // Check that we don't take extra detours to get the target point. Here is
+  // a special usecase that breaks previous logic about connection edges in bidirectional astar.
+  const std::string ascii_map = R"(
+                             F
+                             2
+                             |
+                             E
+                             |
+      A-1--B--------C--------D---------H---------------------------------------I
+                                       |                                       |
+                                       K---------------------------------------J
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+
+      {"DE", {{"highway", "service"}, {"service", "driveway"}}},
+      {"EF", {{"highway", "service"}, {"service", "driveway"}}},
+
+      {"DH", {{"highway", "primary"}}},
+      {"HI", {{"highway", "primary"}}},
+      {"IJ", {{"highway", "primary"}}},
+      {"JK", {{"highway", "primary"}, {"maxspeed", "10"}}},
+      {"KH", {{"highway", "primary"}}},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, {}, "test/data/avoid_extra_detours");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<GraphId> not_thru_edgeids;
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "C")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "C", "B")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
+  // not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "G")));
+
+  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())
+      edge.set_not_thru(true);
+  });
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
+}
