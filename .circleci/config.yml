@@ -133,7 +133,6 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
       - run: make -C build -j2
       - run: make -C build utrecht_tiles
