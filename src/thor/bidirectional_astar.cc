@@ -1193,6 +1193,15 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       break;
     }
 
+    // Check for double u-turn. It might happen in the following case:
+    // forward and reverse searches traverse edges that belong to the same complex
+    // restriction. Then forward/reverse search reaches last edge and due to the
+    // restriction can't go futher and make a u-turn. After that forward and reverse
+    // searches meet at some edge and compose double u-turn.
+    if (std::find(patch_path.begin(), patch_path.end(), next_rev_pred.opp_edgeid()) !=
+        patch_path.end())
+      return true;
+
     // Since we are on the reverse expansion here, we want the opp_edgeid
     // since we're tracking everything in the forward direction
     const auto edgeid = next_rev_pred.opp_edgeid();
