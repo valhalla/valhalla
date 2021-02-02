@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Arrivo: <TIME> .",
-        "1": "Arrivo: <TIME> presso <TRANSIT_STOP> ."
+        "0": "Arrivo: <TIME>.",
+        "1": "Arrivo: <TIME> presso <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -44,7 +44,7 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrivo alle <TIME> .",
+        "0": "Arrivo alle <TIME>.",
         "1": "Arrivo alle <TIME> presso <TRANSIT_STOP>."
       },
       "example_phrases": {
@@ -58,7 +58,7 @@
     },
     "bear": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
+        "0": "Svolta a <RELATIVE_DIRECTION>.",
         "1": "Mantieni la <RELATIVE_DIRECTION> su <STREET_NAMES>.",
         "2": "Mantieni la <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
         "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
@@ -323,7 +323,7 @@
     "destination_verbal": {
       "phrases": {
         "0": "Sei arrivato a destinazione.",
-        "1": "Sei arrivato a <DESTINATION> .",
+        "1": "Sei arrivato a <DESTINATION>.",
         "2": "La tua destinazione è sulla <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
       },
@@ -443,7 +443,7 @@
         "8": "Entra in <STREET_NAMES>",
         "9": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita.",
         "10": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> . Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Entra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "12": "ntra in <STREET_NAMES> e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
         "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "14": "Entra in <STREET_NAMES> e prendi ll'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
@@ -759,9 +759,9 @@
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Esci dalla rotatoria.",
-        "1": "Esci dalla rotatoria su <STREET_NAMES> .",
-        "2": "Esci dalla rotatoria su <BEGIN_STREET_NAMES> .",
-        "3": "Esci dalla rotonda verso <TOWARD_SIGN> ."
+        "1": "Esci dalla rotatoria su <STREET_NAMES>.",
+        "2": "Esci dalla rotatoria su <BEGIN_STREET_NAMES>.",
+        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -785,8 +785,8 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Prendi l'uscita a <RELATIVE_DIRECTION> .",
-        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> .",
+        "0": "Prendi l'uscita a <RELATIVE_DIRECTION>.",
+        "1": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION>.",
         "2": "Prendi l'uscita <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
         "3": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
         "4": "Prendi l'uscita a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
@@ -795,13 +795,13 @@
         "7": "Prendi l'uscita <NUMBER_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
         "8": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION>.",
         "10": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN>.",
-        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
+        "12": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
         "14": "Prendi l'uscita <NAME_SIGN> a <RELATIVE_DIRECTION> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
         "15": "Prendi l'uscita.",
-        "16": "Prendi l&#39;uscita <NUMBER_SIGN> .",
+        "16": "Prendi l&#39;uscita <NUMBER_SIGN>.",
         "17": "Prendi l'uscita <BRANCH_SIGN>.",
         "18": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN>.",
-        "19": "Prendi l'uscita verso <TOWARD_SIGN> .",
+        "19": "Prendi l'uscita verso <TOWARD_SIGN>.",
         "20": "Prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
         "21": "Prendi l'uscita <BRANCH_SIGN> verso <TOWARD_SIGN>.",
         "22": "Prendi l'uscita <NUMBER_SIGN> per <BRANCH_SIGN> verso <TOWARD_SIGN>.",
@@ -952,10 +952,10 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
+        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
         "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -986,10 +986,10 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> .",
-        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
+        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1021,13 +1021,13 @@
     "keep_verbal": {
       "phrases": {
         "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> .",
+        "1": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN>.",
         "2": "Mantieni la <RELATIVE_DIRECTION> per imboccare <STREET_NAMES>.",
-        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> .",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN> .",
-        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN> .",
-        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> verso <TOWARD_SIGN> ."
+        "3": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES>.",
+        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "5": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
+        "6": "Mantieni la <RELATIVE_DIRECTION> per prendere <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "7": "Mantieni la <RELATIVE_DIRECTION> per prendere l'uscita <NUMBER_SIGN> su <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1071,11 +1071,11 @@
     "merge": {
       "phrases": {
         "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "1": "Immettiti a <RELATIVE_DIRECTION>.",
+        "2": "Immettiti in <STREET_NAMES>.",
+        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
+        "4": "Immettiti verso <TOWARD_SIGN>.",
+        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1110,11 +1110,11 @@
     "merge_verbal": {
       "phrases": {
         "0": "Immettiti.",
-        "1": "Immettiti a <RELATIVE_DIRECTION> .",
-        "2": "Immettiti in <STREET_NAMES> .",
-        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "4": "Immettiti verso <TOWARD_SIGN> .",
-        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "1": "Immettiti a <RELATIVE_DIRECTION>.",
+        "2": "Immettiti in <STREET_NAMES>.",
+        "3": "Immettiti a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
+        "4": "Immettiti verso <TOWARD_SIGN>.",
+        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1148,7 +1148,7 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Viaggia <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> ."
+        "0": "Viaggia <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
         "one": "fermata",
@@ -1163,8 +1163,8 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continua per <LENGTH> .",
-        "1": "Continua su <STREET_NAMES> per <LENGTH> ."
+        "0": "Continua per <LENGTH>.",
+        "1": "Continua su <STREET_NAMES> per <LENGTH>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1198,21 +1198,21 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Prendi lo svincolo per <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
+        "0": "Prendi lo svincolo per <RELATIVE_DIRECTION>.",
+        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
+        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION>.",
         "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
+        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN>.",
+        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN>.",
+        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
+        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN>.",
         "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "11": "Prendi lo svincolo <BRANCH_SIGN>.",
+        "12": "Prendi lo svincolo verso <TOWARD_SIGN>.",
+        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
+        "14": "Prendi lo svincolo <NAME_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1271,10 +1271,10 @@
     "ramp_straight": {
       "phrases": {
         "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN>.",
+        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN>.",
+        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
+        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
@@ -1297,10 +1297,10 @@
     "ramp_straight_verbal": {
       "phrases": {
         "0": "Prosegui dritto per prendere lo svincolo.",
-        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> .",
-        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN> ."
+        "1": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN>.",
+        "2": "Prosegui dritto per prendere lo svincolo verso <TOWARD_SIGN>.",
+        "3": "Prosegui dritto per prendere lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
+        "4": "Prosegui dritto per prendere lo svincolo <NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
@@ -1322,21 +1322,21 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Prendi lo svincolo a <RELATIVE_DIRECTION> .",
-        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> .",
-        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> .",
-        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION> .",
+        "0": "Prendi lo svincolo a <RELATIVE_DIRECTION>.",
+        "1": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION>.",
+        "2": "Prendi lo svincolo a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "3": "Prendi lo svincolo <BRANCH_SIGN> a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "4": "Prendi lo svincolo <NAME_SIGN> a <RELATIVE_DIRECTION>.",
         "5": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo.",
-        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN> .",
-        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN> .",
-        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo <BRANCH_SIGN> svincolo verso <TOWARD_SIGN> .",
-        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN> .",
+        "6": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <BRANCH_SIGN>.",
+        "7": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo verso <TOWARD_SIGN>.",
+        "8": "Svolta a <RELATIVE_DIRECTION> per prendere lo <BRANCH_SIGN> svincolo verso <TOWARD_SIGN>.",
+        "9": "Svolta a <RELATIVE_DIRECTION> per prendere lo svincolo <NAME_SIGN>.",
         "10": "Prendi lo svincolo.",
-        "11": "Prendi lo svincolo <BRANCH_SIGN> .",
-        "12": "Prendi lo svincolo verso <TOWARD_SIGN> .",
-        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN> .",
-        "14": "Prendi lo svincolo <NAME_SIGN> ."
+        "11": "Prendi lo svincolo <BRANCH_SIGN>.",
+        "12": "Prendi lo svincolo verso <TOWARD_SIGN>.",
+        "13": "Prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
+        "14": "Prendi lo svincolo <NAME_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1394,12 +1394,12 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION> .",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
+        "0": "Fai un curva a gomito a <RELATIVE_DIRECTION>.",
+        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <STREET_NAMES>.",
+        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
+        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
         "4": "Arrivato a <JUNCTION_NAME>, fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1434,11 +1434,11 @@
     "sharp_verbal": {
       "phrases": {
         "0": "Fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
+        "1": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
+        "2": "Fai un curva a gomito a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
+        "3": "Fai un curva a gomito a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
         "4": "Arrivato a <JUNCTION_NAME>. fai un curva a gomito a <RELATIVE_DIRECTION>.",
-        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "5": "Fai un curva a gomito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1472,18 +1472,18 @@
     },
     "start": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua a <STREET_NAMES> .",
-        "4": "Guida verso <CARDINAL_DIRECTION> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "8": "Cammina verso <CARDINAL_DIRECTION> .",
-        "9": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> ."
+        "0": "Procedi verso <CARDINAL_DIRECTION>.",
+        "1": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "2": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua a <STREET_NAMES>.",
+        "4": "Guida verso <CARDINAL_DIRECTION>.",
+        "5": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "6": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
+        "8": "Cammina verso <CARDINAL_DIRECTION>.",
+        "9": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "10": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
+        "16": "Pedala verso <CARDINAL_DIRECTION>.",
+        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "18": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
@@ -1551,26 +1551,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Procedi verso <CARDINAL_DIRECTION> .",
-        "1": "Procedi verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "2": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "3": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "4": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "5": "Guida verso <CARDINAL_DIRECTION> .",
-        "6": "Guida verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "7": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "8": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "9": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "10": "Cammina verso <CARDINAL_DIRECTION> .",
-        "11": "Cammina verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "12": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "13": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "14": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "15": "Pedala verso <CARDINAL_DIRECTION> .",
-        "16": "Pedala verso <CARDINAL_DIRECTION> per <LENGTH> .",
-        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> .",
-        "18": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH> .",
-        "19": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES> ."
+        "0": "Procedi verso <CARDINAL_DIRECTION>.",
+        "1": "Procedi verso <CARDINAL_DIRECTION> per <LENGTH>.",
+        "2": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "3": "Procedi verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH>.",
+        "4": "Procedi verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
+        "5": "Guida verso <CARDINAL_DIRECTION>.",
+        "6": "Guida verso <CARDINAL_DIRECTION> per <LENGTH>.",
+        "7": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "8": "Guida verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH>.",
+        "9": "Guida verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
+        "10": "Cammina verso <CARDINAL_DIRECTION>.",
+        "11": "Cammina verso <CARDINAL_DIRECTION> per <LENGTH>.",
+        "12": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "13": "Cammina verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH>.",
+        "14": "Cammina verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
+        "15": "Pedala verso <CARDINAL_DIRECTION>.",
+        "16": "Pedala verso <CARDINAL_DIRECTION> per <LENGTH>.",
+        "17": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES>.",
+        "18": "Pedala verso <CARDINAL_DIRECTION> su <STREET_NAMES> per <LENGTH>.",
+        "19": "Pedala verso <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
@@ -1674,8 +1674,8 @@
     },
     "transit": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Prendi il <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1706,8 +1706,8 @@
     "transit_connection_destination": {
       "phrases": {
         "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "1": "Esci da <TRANSIT_STOP>.",
+        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Stazione",
       "example_phrases": {
@@ -1725,8 +1725,8 @@
     "transit_connection_destination_verbal": {
       "phrases": {
         "0": "Esci dalla stazione.",
-        "1": "Esci da <TRANSIT_STOP> .",
-        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL> ."
+        "1": "Esci da <TRANSIT_STOP>.",
+        "2": "Esci da <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Stazione",
       "example_phrases": {
@@ -1744,8 +1744,8 @@
     "transit_connection_start": {
       "phrases": {
         "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
-        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "1": "Entra a <TRANSIT_STOP>.",
+        "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Stazione",
       "example_phrases": {
@@ -1763,7 +1763,7 @@
     "transit_connection_start_verbal": {
       "phrases": {
         "0": "Entra nella stazione.",
-        "1": "Entra a <TRANSIT_STOP> .",
+        "1": "Entra a <TRANSIT_STOP>.",
         "2": "Entra nella <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Stazione",
@@ -1782,8 +1782,8 @@
     "transit_connection_transfer": {
       "phrases": {
         "0": "Effettua il cambio in stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "1": "Effettua il cambio a <TRANSIT_STOP>.",
+        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Stazione",
       "example_phrases": {
@@ -1801,8 +1801,8 @@
     "transit_connection_transfer_verbal": {
       "phrases": {
         "0": "Effettua il cambio alla stazione.",
-        "1": "Effettua il cambio a <TRANSIT_STOP> .",
-        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP> ."
+        "1": "Effettua il cambio a <TRANSIT_STOP>.",
+        "2": "Effettua il cambio nella <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Stazione",
       "example_phrases": {
@@ -1819,8 +1819,8 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Rimani sul <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1848,8 +1848,8 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Rimani sul <TRANSIT_NAME> .",
-        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Rimani sul <TRANSIT_NAME>.",
+        "1": "Rimani sul <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1872,8 +1872,8 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> . ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
+        "0": "Effettua il cambio per prendere il <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1901,8 +1901,8 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Effettua il cambio per prendere il <TRANSIT_NAME> .",
-        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Effettua il cambio per prendere il <TRANSIT_NAME>.",
+        "1": "Effettua il cambio per prendere il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1925,8 +1925,8 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Prendi il <TRANSIT_NAME> .",
-        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN> ."
+        "0": "Prendi il <TRANSIT_NAME>.",
+        "1": "Prendi il <TRANSIT_NAME> verso <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
@@ -1949,12 +1949,12 @@
     },
     "turn": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> . Continua su <STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
+        "0": "Svolta a <RELATIVE_DIRECTION>.",
+        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
+        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
+        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
         "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -1988,12 +1988,12 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Svolta a <RELATIVE_DIRECTION> .",
-        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES> .",
-        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES> .",
-        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
+        "0": "Svolta a <RELATIVE_DIRECTION>.",
+        "1": "Svolta a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
+        "2": "Svolta a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
+        "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
         "4": "Arrivato a <JUNCTION_NAME>, svolta a <RELATIVE_DIRECTION>.",
-        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "5": "Svolta a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -2028,13 +2028,13 @@
     "uturn": {
       "phrases": {
         "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
+        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES>.",
+        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>per rimanere su <STREET_NAMES>.",
+        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES>.",
+        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES>.",
+        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES>.",
         "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
@@ -2075,13 +2075,13 @@
     "uturn_verbal": {
       "phrases": {
         "0": "Fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES> .",
-        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> .",
-        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> .",
-        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES> .",
-        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES> .",
+        "1": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <STREET_NAMES>.",
+        "2": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
+        "3": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES>.",
+        "4": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> verso <STREET_NAMES>.",
+        "5": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> su <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES>.",
         "6": "Arrivato a <JUNCTION_NAME>, fai un'inversione di marcia a <RELATIVE_DIRECTION>.",
-        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN> ."
+        "7": "Fai un'inversione di marcia a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la passerella",
