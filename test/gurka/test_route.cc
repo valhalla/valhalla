@@ -586,3 +586,54 @@ TEST(Standalone, AvoidExtraDetours) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
 }
+
+TEST(Standalone, DoNotAllowDoubleUturns) {
+  // This test checks that bidirectional astar doesn't allow double uturns.
+  // It might happens if we handle connection edges incorrectly.
+  const std::string ascii_map = R"(
+  J---------------2---------I-------------------------------F
+                            |
+                            |
+  A---1-------B-------------C------D------------------------E
+              |                    |
+              K--------------------L
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"BC", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"CI", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"DE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"FI", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"IJ", {{"highway", "primary"}, {"oneway", "yes"}}},
+
+      {"BK", {{"highway", "secondary"}}},
+      {"KL", {{"highway", "secondary"}}},
+      {"LD", {{"highway", "secondary"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "CI", "via"},
+           {gurka::way_member, "IJ", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, relations, "test/data/do_not_allow_double_uturns");
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+    const auto names = gurka::detail::get_path(result);
+    if (std::count(names.begin(), names.end(), "CI") == 3)
+      FAIL() << "Double uturn detected!";
+    else
+      FAIL() << "Unexpected path found!";
+  } catch (const std::exception& e) { EXPECT_STREQ(e.what(), "No path could be found for input"); }
+}
