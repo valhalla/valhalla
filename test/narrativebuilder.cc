@@ -4261,8 +4261,7 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_it_IT) {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Svolta a sinistra su Middletown Road.",
                                   "Svolta a sinistra su Middletown Road.",
-                                  "Svolta a sinistra su Middletown Road.",
-                                  "Continua per 1 miglio.");
+                                  "Svolta a sinistra su Middletown Road.", "Continua per 1 miglio.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
