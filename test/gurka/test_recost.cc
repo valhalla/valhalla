@@ -32,7 +32,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return std::array<float, kBucketsPerWeek>{};
+    return boost::none;
   });
 
   // run a route and check that the costs are the same for the same options
