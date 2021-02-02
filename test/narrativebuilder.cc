@@ -4259,9 +4259,9 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_it_IT) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Svolta a sinistra e prendi Middletown Road.",
-                                  "Svolta a sinistra e prendi Middletown Road.",
-                                  "Svolta a sinistra e prendi Middletown Road.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Svolta a sinistra su Middletown Road.",
+                                  "Svolta a sinistra su Middletown Road.",
+                                  "Svolta a sinistra su Middletown Road.",
                                   "Continua per 1 miglio.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7661,11 +7661,11 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_1_miles_cs_CZ) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Nastupte na R směr FOREST HILLS - 71 AV. (1 zastávka)", "",
-                                  "Nastupte na R směr FOREST HILLS - 71 AV.", "Jeďte 1 zastávku.",
-                                  "Odjezd: 08:06 z Union St.", "Odjíždíte v 08:06 z Union St.",
-                                  "Příjezd: 08:08 na Atlantic Av - Barclays Ctr.",
-                                  "Přijedete v 08:08 na Atlantic Av - Barclays Ctr.");
+                                  "Jeďte R směrem na FOREST HILLS - 71 AV. (1 zastávka)", "",
+                                  "Jeďte R směrem na FOREST HILLS - 71 AV.", "Jeďte 1 zastávku.",
+                                  "Vyjeďte: 08:06 z Union St.", "Vyjeďte v 08:06 z Union St.",
+                                  "Příjezd: 08:08 do Atlantic Av - Barclays Ctr.",
+                                  "Přijedete v 08:08 do Atlantic Av - Barclays Ctr.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7692,11 +7692,11 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_2_miles_cs_CZ) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Nastupte na R směr BAY RIDGE - 95 ST. (2 zastávky)", "",
-                                  "Nastupte na R směr BAY RIDGE - 95 ST.", "Jeďte 2 zastávky.",
-                                  "Odjezd: 08:05 z 28 St.", "Odjíždíte v 08:05 z 28 St.",
-                                  "Příjezd: 08:08 na 14 St - Union Sq.",
-                                  "Přijedete v 08:08 na 14 St - Union Sq.");
+                                  "Jeďte R směrem na BAY RIDGE - 95 ST. (2 zastávky)", "",
+                                  "Jeďte R směrem na BAY RIDGE - 95 ST.", "Jeďte 2 zastávky.",
+                                  "Vyjeďte: 08:05 z 28 St.", "Vyjeďte v 08:05 z 28 St.",
+                                  "Příjezd: 08:08 do 14 St - Union Sq.",
+                                  "Přijedete v 08:08 do 14 St - Union Sq.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7723,11 +7723,11 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_4_miles_cs_CZ) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Nastupte na R směr FOREST HILLS - 71 AV. (4 zastávky)", "",
-                                  "Nastupte na R směr FOREST HILLS - 71 AV.", "Jeďte 4 zastávky.",
-                                  "Odjezd: 08:02 z 8 St - NYU.", "Odjíždíte v 08:02 z 8 St - NYU.",
-                                  "Příjezd: 08:08 na 34 St - Herald Sq.",
-                                  "Přijedete v 08:08 na 34 St - Herald Sq.");
+                                  "Jeďte R směrem na FOREST HILLS - 71 AV. (4 zastávky)", "",
+                                  "Jeďte R směrem na FOREST HILLS - 71 AV.", "Jeďte 4 zastávky.",
+                                  "Vyjeďte: 08:02 z 8 St - NYU.", "Vyjeďte v 08:02 z 8 St - NYU.",
+                                  "Příjezd: 08:08 do 34 St - Herald Sq.",
+                                  "Přijedete v 08:08 do 34 St - Herald Sq.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7754,10 +7754,10 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_8_miles_cs_CZ) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Nastupte na M směr FOREST HILLS - 71 AV. (8 zastávek)", "",
-                                  "Nastupte na M směr FOREST HILLS - 71 AV.", "Jeďte 8 zastávek.",
-                                  "Odjezd: 08:11 z Flushing Av.", "Odjíždíte v 08:11 z Flushing Av.",
-                                  "Příjezd: 08:32 na 23 St.", "Přijedete v 08:32 na 23 St.");
+                                  "Jeďte R směrem na FOREST HILLS - 71 AV. (8 zastávek)", "",
+                                  "Jeďte R směrem na  FOREST HILLS - 71 AV.", "Jeďte 8 zastávek.",
+                                  "Vyjeďte: 08:11 z Flushing Av.", "Vyjeďte v 08:11 z Flushing Av.",
+                                  "Příjezd: 08:32 do 23 St.", "Přijedete v 08:32 do 23 St.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
