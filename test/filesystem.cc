@@ -153,7 +153,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   bool start_race = false;
   std::condition_variable start_race_event;
 
-  auto create_folder = [&](bool & ready_flag) {
+  auto create_folder = [&](bool& ready_flag) {
     // a simple (cheesy?) way for each thread to announce they are ready
     ready_flag = true;
 
@@ -169,7 +169,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     EXPECT_TRUE(filesystem::exists(nested_subdir));
   };
 
-  auto remove_folder = [&](bool & ready_flag) {
+  auto remove_folder = [&](bool& ready_flag) {
     // a simple (cheesy?) way for each thread to announce they are ready
     ready_flag = true;
 
@@ -226,7 +226,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         folder_name = folder_name + "/" + subdir;
         for (size_t i = 0; i < num_files_per_folder; i++) {
           std::string filename = folder_name + "/" + std::to_string(i) + ".txt";
-          std::ofstream f( filename.c_str(), std::ios::out );
+          std::ofstream f(filename.c_str(), std::ios::out);
           f << "hello";
           f.close();
         }
