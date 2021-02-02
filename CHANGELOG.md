@@ -14,6 +14,7 @@
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
+   * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
@@ -139,7 +140,6 @@
    * FIXED: Added unit test for BuildAdminFromPBF() to test GEOS 3.9 update. [#2787](https://github.com/valhalla/valhalla/pull/2787)
    * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
    * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
-   * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
 
 * **Enhancement**
    * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
