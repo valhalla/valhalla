@@ -576,7 +576,6 @@ TEST(Standalone, AvoidExtraDetours) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
-  // not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "G")));
 
   test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())

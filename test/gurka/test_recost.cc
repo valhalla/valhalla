@@ -53,7 +53,7 @@ TEST(recosting, same_historical) {
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
-      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
