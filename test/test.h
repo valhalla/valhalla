@@ -84,7 +84,8 @@ using LiveTrafficCustomize = std::function<void(valhalla::baldr::GraphReader&,
 void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb);
 
-using HistoricalTrafficCustomize = std::function<std::vector<int16_t>(DirectedEdge&)>;
+using HistoricalTrafficCustomize =
+    std::function<boost::optional<std::array<float, kBucketsPerWeek>>(DirectedEdge&)>;
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 

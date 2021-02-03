@@ -147,26 +147,32 @@ void thor_worker_t::trace_route(Api& request) {
 void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
-  std::vector<PathInfo> path;
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, path)) {
-    // TODO: we dont support multileg here as it ignores location types but...
-    // if this were a time dependent match you need to propogate the date time
-    // information to each legs origin location because triplegbuilder relies on it.
-    // form path set the first one but on the subsequent legs we will need to set them
-    // by doing time offsetting like is done in route_action.cc thor_worker_t::depart_at
+  std::vector<std::vector<PathInfo>> legs;
 
-    // For now we ignore multileg complications and just make sure the searched locations
-    // get the same data information the shape informations had
-    if (options.shape(0).has_date_time())
-      options.mutable_locations(0)->set_date_time(options.shape(0).date_time());
-
-    // Form the trip path based on mode costing, origin, destination, and path edges
-    auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-    thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                                *options.mutable_locations()->begin(),
-                                *options.mutable_locations()->rbegin(),
-                                std::list<valhalla::Location>{}, leg, {"edge_walk"}, interrupt);
-  } else {
+  // if the shape walking succeeds
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, options, legs)) {
+    // the origin is the first location for sure
+    auto origin = options.mutable_shape()->begin();
+    // build each leg of the route
+    for (const auto& pleg : legs) {
+      // find the destination for this leg
+      auto dest = std::find_if(origin + 1, options.mutable_shape()->end(),
+                               [&options](const valhalla::Location& l) {
+                                 return l.type() == Location::kBreak ||
+                                        l.type() == Location::kBreakThrough ||
+                                        &l == &*options.shape().rbegin();
+                               });
+      assert(dest != options.mutable_shape()->end());
+      // Form the trip path based on mode costing, origin, destination, and path edges
+      auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+      thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, pleg.begin(),
+                                  pleg.end(), *origin, *dest, std::list<valhalla::Location>{}, leg,
+                                  {"edge_walk"}, interrupt);
+      // Next leg
+      origin = dest;
+    }
+  } // the shape walking failed
+  else {
     throw std::exception{};
   }
 }

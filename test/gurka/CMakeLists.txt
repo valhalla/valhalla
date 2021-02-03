@@ -17,9 +17,10 @@ if(ENABLE_DATA_TOOLS)
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
-    set_target_properties(${TESTNAME} PROPERTIES
-      FOLDER "Tests"
-      COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+    set_target_properties(${TESTNAME} PROPERTIES FOLDER "Tests")
+    target_compile_definitions(${TESTNAME} PRIVATE
+      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
     create_source_groups("Source Files" ${FILENAME})
     target_link_libraries(${TESTNAME} valhalla_test)
     if (LUAJIT_FOUND AND APPLE)
