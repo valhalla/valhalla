@@ -30,7 +30,7 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), path_id_(0),
+        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), short_internal_(0), path_id_(0),
         restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -70,7 +70,7 @@ public:
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
-                         edge->end_restriction()),
+                         edge->end_restriction()), short_internal_(edge->internal() && edge->length() <= 8.0f),
         path_id_(path_id), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
         distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
@@ -303,6 +303,10 @@ public:
     return on_complex_rest_;
   }
 
+  bool short_internal() const {
+    return short_internal_;
+  }
+
   /**
    * Is this edge not-through
    * @return  Returns true if the edge is not thru.
@@ -388,6 +392,7 @@ protected:
    * not_thru_:       Flag indicating edge is not_thru.
    * deadend_:        Flag indicating edge is a dead-end.
    * on_complex_rest: Part of a complex restriction.
+   * internal_:       Flag indicating edge is an internal.
    */
   uint64_t endnode_ : 46;
   uint64_t use_ : 6;
@@ -399,7 +404,8 @@ protected:
   uint64_t not_thru_ : 1;
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
-  uint64_t spare_0 : 2;
+  uint64_t short_internal_ : 1;
+  uint64_t spare_0 : 1;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
