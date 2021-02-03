@@ -1,26 +1,26 @@
 {
-  "posix_locale": "cs_CZ.UTF-8",
+  "posix_locale": "ro_RO.UTF-8",
   "aliases": [
-    "cs"
+    "ro"
   ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Za <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "Peste <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Přijeďte: <TIME>.",
-        "1": "Přijeďte: <TIME> do <TRANSIT_STOP>."
+        "0": "Sosire: <TIME>.",
+        "1": "Sosire: <TIME> la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -44,8 +44,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Přijeďte v <TIME>.",
-        "1": "Přijeďte v <TIME> do <TRANSIT_STOP>."
+        "0": "Sosire la <TIME>.",
+        "1": "Sosire la <TIME> la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +58,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Îndreaptă-te spre<RELATIVE_DIRECTION>.",
+        "1": "Îndreaptă-te <RELATIVE_DIRECTION> spre <STREET_NAMES>.",
+        "2": "Îndreaptă-te <RELATIVE_DIRECTION> spre <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Îndreaptă-te spre<RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Îndreaptă-te <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Îndreaptă-te spre<RELATIVE_DIRECTION>.",
+        "1": "Îndreaptă-te spre<RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Îndreaptă-te spre <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Îndreaptă-te spre <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Îndreaptă-te <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> devine <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> devine <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte směrem na <TOWARD_SIGN>."
+        "0": "Continuă.",
+        "1": "Continuă pe <STREET_NAMES>.",
+        "2": "Continuă la <JUNCTION_NAME>.",
+        "3": "Continuă spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +183,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte <LENGTH>.",
-        "2": "Pokračujte na <STREET_NAMES>.",
-        "3": "Pokračujte <LENGTH> na <STREET_NAMES> .",
-        "4": "Pokračujte na <JUNCTION_NAME>.",
-        "5": "Pokračujte <LENGTH> na <JUNCTION_NAME>.",
-        "6": "Pokračujte směrem na <TOWARD_SIGN>.",
-        "7": "Pokračujte <LENGTH> směrem na <TOWARD_SIGN>."
+        "0": "Continuă.",
+        "1": "Continuă pe distanța de <LENGTH>.",
+        "2": "Continuă pe <STREET_NAMES>.",
+        "3": "Continuă pe <STREET_NAMES> for <LENGTH>.",
+        "4": "Continuă la <JUNCTION_NAME>.",
+        "5": "Continuă la <JUNCTION_NAME> pe distanța de <LENGTH>.",
+        "6": "Continuă spre <TOWARD_SIGN>.",
+        "7": "Continuă spre <TOWARD_SIGN> pe distanța de <LENGTH>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte na <TOWARD_SIGN>."
+        "0": "Continuă.",
+        "1": "Continuă pe <STREET_NAMES>.",
+        "2": "Continuă la <JUNCTION_NAME>.",
+        "3": "Continuă spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +267,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Vyjeďte: <TIME>.",
-        "1": "Vyjeďte: <TIME> z <TRANSIT_STOP>."
+        "0": "Plecare: <TIME>.",
+        "1": "Plecare: <TIME> de la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Vyjeďte v <TIME>.",
-        "1": "Vyjeďte v <TIME> z <TRANSIT_STOP>."
+        "0": "Plecare la ora <TIME>.",
+        "1": "Plecare la ora <TIME> de la <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +295,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Ai ajuns la destinație.",
+        "1": "Ai ajuns la <DESTINATION>.",
+        "2": "Destinația se află pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se află pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +322,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Ai ajuns la destinație.",
+        "1": "Ai ajuns la <DESTINATION>.",
+        "2": "Destinația se află pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se află pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +349,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Dorazíte do svého cíle.",
-        "1": "Dorazíte do <DESTINATION>.",
-        "2": "Váš cíl bude <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> bude <RELATIVE_DIRECTION>."
+        "0": "Vei ajunge la destinație.",
+        "1": "Vei ajunge la <DESTINATION>.",
+        "2": "Destinația se va afla pe <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> se va afla pe <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Ia feribotul.",
+        "1": "Ia-o pe <STREET_NAMES>.",
+        "2": "Ia-o pe <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Ia feribotul spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "tcyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Ia feribotul.",
+        "1": "Ia-o pe <STREET_NAMES>.",
+        "2": "Ia-o pe <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Ia feribotul spre<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,39 +432,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte do <STREET_NAMES>",
-        "9": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "13": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Intră în sensul giratoriu.",
+        "1": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "2": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "5": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Intră în sensul giratoriu și ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "8": "Intră pe <STREET_NAMES>",
+        "9": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "10": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "13": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "ordinal_values": [
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "6.",
-        "7.",
-        "8.",
-        "9.",
-        "10."
+        "prima",
+        "a doua",
+        "a treia",
+        "a patra",
+        "a cincea",
+        "a șasea",
+        "a șaptea",
+        "a opta",
+        "a noua",
+        "a zecea"
       ],
       "example_phrases": {
         "0": [
@@ -528,39 +528,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a vyjeďte na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte na <STREET_NAMES>",
-        "9": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Vjeďtena <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Intră în sensul giratoriu.",
+        "1": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "2": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Intră în sensul giratoriu și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "5": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Intră în sensul giratoriu și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Intră în sensul giratoriu și ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "8": "Intră pe <STREET_NAMES>",
+        "9": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire.",
+        "10": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Intră pe <STREET_NAMES> și ia-o pe <ORDINAL_VALUE> ieșire spre <TOWARD_SIGN>.",
+        "13": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "ordinal_values": [
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "6.",
-        "7.",
-        "8.",
-        "9.",
-        "10."
+        "prima",
+        "a doua",
+        "a treia",
+        "a patra",
+        "a cincea",
+        "a șasea",
+        "a șaptea",
+        "a opta",
+        "a noua",
+        "a zecea"
       ],
       "example_phrases": {
         "0": [
@@ -624,34 +624,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN><RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "3": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "4": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "6": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "7": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "8": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "10": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "12": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "15": "Ia-o pe ieșire.",
+        "16": "Ia-o pe ieșirea <NUMBER_SIGN>.",
+        "17": "Ia-o pe <BRANCH_SIGN> ieșire.",
+        "18": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN>.",
+        "19": "Ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "20": "Ia-o pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "21": "Ia-o pe <BRANCH_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "22": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "23": "Ia-o pe <NAME_SIGN> ieșire.",
+        "25": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN>.",
+        "27": "Ia-o pe <NAME_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "29": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN> spre <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +731,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Ieși din sensul giratoriu.",
+        "1": "Ieși din sensul giratoriu pe <STREET_NAMES>.",
+        "2": "Ieși din sensul giratoriu pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Ieși din sensul giratoriu spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Ieși din sensul giratoriu.",
+        "1": "Ieși din sensul giratoriu pe <STREET_NAMES>.",
+        "2": "Ieși din sensul giratoriu pe <BEGIN_STREET_NAMES>.",
+        "3": "Ieși din sensul giratoriu spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "Ia-o pe ieșirea spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe ieșirea <NUMBER_SIGN> spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe <BRANCH_SIGN> ieșire spre <RELATIVE_DIRECTION>.",
+        "3": "Ia-o pe ieșirea <NUMBER_SIGN> spre <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "4": "Ia-o pe ieșirea pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "6": "Ia-o pe <BRANCH_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "7": "Ia-o pe ieșirea <NUMBER_SIGN> pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "8": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION>.",
+        "10": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN>.",
+        "12": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> ieșire pe <RELATIVE_DIRECTION> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "15": "Ia-o pe ieșire.",
+        "16": "Ia-o pe ieșirea <NUMBER_SIGN>.",
+        "17": "Ia-o pe <BRANCH_SIGN> ieșire.",
+        "18": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN>.",
+        "19": "Ia-o pe ieșirea spre <TOWARD_SIGN>.",
+        "20": "Ia-o pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "21": "Ia-o pe <BRANCH_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "22": "Ia-o pe ieșirea <NUMBER_SIGN> pe <BRANCH_SIGN> spre <TOWARD_SIGN>.",
+        "23": "Ia-o pe <NAME_SIGN> ieșire.",
+        "25": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN>.",
+        "27": "Ia-o pe <NAME_SIGN> ieșire spre <TOWARD_SIGN>.",
+        "29": "Ia-o pe <NAME_SIGN> ieșire pe <BRANCH_SIGN> spre <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Sjeďte <EXIT_NUMBERS>"
+        "0": "Ieșire <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +902,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Ține <RELATIVE_DIRECTION> la bifurcație.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES>.",
+        "4": "Ține <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "6": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "7": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +952,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pentru a rămâne pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli do <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Drže se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Ține <RELATIVE_DIRECTION> la bifurcație.",
+        "1": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN>.",
+        "2": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES>.",
+        "3": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES>.",
+        "4": "Ține <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "5": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> spre <TOWARD_SIGN>.",
+        "6": "Ține <RELATIVE_DIRECTION> pentru a o lua pe <STREET_NAMES> spre <TOWARD_SIGN>.",
+        "7": "Ține <RELATIVE_DIRECTION> pentru a o lua pe ieșirea <NUMBER_SIGN> pe <STREET_NAMES> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "stânga",
+        "drept înainte",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1070,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Intră pe banda.",
+        "1": "Intră pe banda <RELATIVE_DIRECTION>.",
+        "2": "Intră pe banda pentru <STREET_NAMES>.",
+        "3": "Intră pe banda <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "4": "Intră pe banda spre <TOWARD_SIGN>.",
+        "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1109,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Intră pe banda.",
+        "1": "Intră pe banda <RELATIVE_DIRECTION>.",
+        "2": "Intră pe banda pentru <STREET_NAMES>.",
+        "3": "Intră pe banda <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "4": "Intră pe banda spre <TOWARD_SIGN>.",
+        "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1148,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Cestování <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Călătorește <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1163,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Pokračujte <LENGTH>.",
-        "1": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "0": "Continuă pe o distanță de <LENGTH>.",
+        "1": "Continuă pe <STREET_NAMES> pe o distanță de <LENGTH>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1198,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "Ia-o pe rampă spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe <BRANCH_SIGN> rampă spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe rampă pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "3": "Ia-o pe <BRANCH_SIGN> rampă pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "4": "Ia-o pe <NAME_SIGN> rampă pe <RELATIVE_DIRECTION>.",
+        "5": "Întoarce <RELATIVE_DIRECTION> pentru a lua pe rampă.",
+        "6": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "7": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "8": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "9": "Întoarce <RELATIVE_DIRECTION> pentru a o lua pe <NAME_SIGN> rampă.",
+        "10": "Ia-o pe rampă.",
+        "11": "Ia-o pe <BRANCH_SIGN> rampă.",
+        "12": "Ia-o pe rampa spre <TOWARD_SIGN>.",
+        "13": "Ia-o pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> rampă."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Mergi înainte pentru a o lua pe rampă.",
+        "1": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "2": "Mergi drept înainte pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "3": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "4": "Mergi drept înainte pentru a o lua pe <NAME_SIGN> rampă."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Mergi drept înainte pentru a o lua pe rampă.",
+        "1": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "2": "Mergi drept înainte pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "3": "Mergi drept înainte pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "4": "Mergi drept înainte pentru a o lua pe <NAME_SIGN> rampă."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "Ia-o pe rampa spre <RELATIVE_DIRECTION>.",
+        "1": "Ia-o pe <BRANCH_SIGN> rampă spre <RELATIVE_DIRECTION>.",
+        "2": "Ia-o pe rampa de pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "3": "Ia-o pe <BRANCH_SIGN> rampă de pe <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "4": "Ia-o pe <NAME_SIGN> rampă de pe <RELATIVE_DIRECTION>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe rampă.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe rampa spre <TOWARD_SIGN>.",
+        "8": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "9": "Întoarce la <RELATIVE_DIRECTION> pentru a o lua pe <NAME_SIGN> rampă.",
+        "10": "Ia-o pe rampă.",
+        "11": "Ia-o pe <BRANCH_SIGN> rampă.",
+        "12": "Ia-o pe rampa spre <TOWARD_SIGN>.",
+        "13": "Ia-o pe <BRANCH_SIGN> rampă spre <TOWARD_SIGN>.",
+        "14": "Ia-o pe <NAME_SIGN> rampă."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1394,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Virează strâns la <RELATIVE_DIRECTION>.",
+        "1": "Virează strâns la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează strâns la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Virează strâns la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează strâns la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează strâns la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1433,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Virează strâns la <RELATIVE_DIRECTION>.",
+        "1": "Virează strâns la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează strâns la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Virează strâns la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează strâns la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează strâns la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1472,33 +1472,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "4": "Jeďte <CARDINAL_DIRECTION>.",
-        "5": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "6": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "8": "Jděte <CARDINAL_DIRECTION>.",
-        "9": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "16": "Jeďte <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>."
+        "0": "Îndreaptă-te spre <CARDINAL_DIRECTION>.",
+        "1": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "4": "Condu spre <CARDINAL_DIRECTION>.",
+        "5": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "6": "Condu spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "8": "Mergi spre <CARDINAL_DIRECTION>.",
+        "9": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "10": "Mergi spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "16": "Pedalează spre <CARDINAL_DIRECTION>.",
+        "17": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "18": "Pedalează spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "nord",
+        "nord-est",
+        "est",
+        "sud-est",
+        "sud",
+        "sud-vest",
+        "vest",
+        "nord-vest"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "example_phrases": {
         "0": [
@@ -1551,55 +1551,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "3": "Směřujte <LENGTH><CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "4": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "5": "Jeďte <CARDINAL_DIRECTION>.",
-        "6": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "7": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "8": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "9": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION>.",
-        "11": "Jděte <LENGTH> <CARDINAL_DIRECTION>.",
-        "12": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "13": "Jděte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "14": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "15": "Jeďte <CARDINAL_DIRECTION>.",
-        "16": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "19": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>."
+        "0": "Îndreaptă-te spre <CARDINAL_DIRECTION>.",
+        "1": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "2": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "3": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "4": "Îndreaptă-te spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "5": "Condu spre <CARDINAL_DIRECTION>.",
+        "6": "Condu spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "7": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "8": "Condu spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "9": "Condu spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "10": "Mergi spre <CARDINAL_DIRECTION>.",
+        "11": "Mergi spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "12": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "13": "Mergi spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "14": "Mergi spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "15": "Pedalează spre <CARDINAL_DIRECTION>.",
+        "16": "Pedalează spre <CARDINAL_DIRECTION> pe o distanță de <LENGTH>.",
+        "17": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES>.",
+        "18": "Pedalează spre <CARDINAL_DIRECTION> pe <STREET_NAMES> pe o distanță de <LENGTH>.",
+        "19": "Pedalează spre <CARDINAL_DIRECTION> pe <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "nord",
+        "nord-est",
+        "est",
+        "sud-est",
+        "sud",
+        "sud-vest",
+        "vest",
+        "nord-vest"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1674,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Ia-o pe <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ia-o pe <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1705,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Ieși din stație.",
+        "1": "Ieși din <TRANSIT_STOP>.",
+        "2": "Ieși din <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1724,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Ieși din stație.",
+        "1": "Ieși din <TRANSIT_STOP>.",
+        "2": "Ieși din <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1743,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Intră în stație.",
+        "1": "Intră în <TRANSIT_STOP>.",
+        "2": "Intră în <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1762,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Intră în stație.",
+        "1": "Intră în <TRANSIT_STOP>.",
+        "2": "Intră în <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1781,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Transfer la stație.",
+        "1": "Transfer la <TRANSIT_STOP>.",
+        "2": "Transfer la <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1800,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Transfer la stație.",
+        "1": "Transfer la <TRANSIT_STOP>.",
+        "2": "Transfer la <TRANSIT_STOP> <STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Stație",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1819,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Rămâi la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Rămâi la <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1848,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>.",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Rămâi la <TRANSIT_NAME>.",
+        "1": "Rămâi la <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1872,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Transfer pentru a lua <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transfer pentru a lua <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "oprire",
+        "other": "opriri"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1901,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>.",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Transfer pentru a lua <TRANSIT_NAME>.",
+        "1": "Transfer pentru a lua <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1925,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>.",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Ia <TRANSIT_NAME>.",
+        "1": "Ia <TRANSIT_NAME> spre <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "tramvai",
+        "metrou",
+        "tren",
+        "autobuz",
+        "feribot",
+        "telecabină",
+        "gondolă",
+        "funicular"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1949,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Virează la <RELATIVE_DIRECTION>.",
+        "1": "Virează la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>. Continuă pe <STREET_NAMES>.",
+        "3": "Virează la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Virează la <RELATIVE_DIRECTION>.",
+        "1": "Virează la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Virează la <RELATIVE_DIRECTION> pe <BEGIN_STREET_NAMES>.",
+        "3": "Virează la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "4": "Virează la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "5": "Virează la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2027,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Întoarce la <RELATIVE_DIRECTION>.",
+        "1": "Întoarce la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Întoarce la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "3": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES>.",
+        "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe <STREET_NAMES>.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>.",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180°<RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180 °<RELATIVE_DIRECTION>.",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Întoarce la <RELATIVE_DIRECTION>.",
+        "1": "Întoarce la <RELATIVE_DIRECTION> pe <STREET_NAMES>.",
+        "2": "Întoarce la <RELATIVE_DIRECTION> pentru a rămâne pe <STREET_NAMES>.",
+        "3": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES>.",
+        "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
+        "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe<STREET_NAMES>.",
+        "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "stânga",
+        "dreapta"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Poté <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Poté za <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Apoi <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Apoi, după <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
       ],
       "example_phrases": {
         "0": [
