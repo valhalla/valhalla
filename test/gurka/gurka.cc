@@ -415,7 +415,6 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
 }
 
 std::vector<std::string> get_path(const valhalla::Api& result) {
-  assert(result.trip().routes(0).legs_size() == 1);
   std::vector<std::string> actual_names;
   for (const auto& leg : result.trip().routes(0).legs()) {
     for (const auto& node : leg.node()) {
