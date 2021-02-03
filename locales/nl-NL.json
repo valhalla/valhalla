@@ -543,7 +543,7 @@
         "12": "<STREET_NAMES> opgaan en de <ORDINAL_VALUE> afslag nemen richting <TOWARD_SIGN>.",
         "13": "<STREET_NAMES> opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "14": "<STREET_NAMES> opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "<STREET_NAMES> opgaan en de afslag nemen richting <TOWARD_SIGN>.<instructions.enter_roundabout_verbal.ordinal_values.__array__>1e"
+        "15": "<STREET_NAMES> opgaan en de afslag nemen richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
@@ -551,6 +551,7 @@
         "het mountainbikepad"
       ],
       "ordinal_values": [
+        "1e",
         "2e",
         "3e",
         "4e",

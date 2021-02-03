@@ -1704,7 +1704,7 @@
     "transit_connection_destination": {
       "phrases": {
         "0": "Gå ud fra stationen.",
-        "1": "Gå ud fra<TRANSIT_STOP>.",
+        "1": "Gå ud fra <TRANSIT_STOP>.",
         "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
@@ -1723,7 +1723,7 @@
     "transit_connection_destination_verbal": {
       "phrases": {
         "0": "Gå ud fra stationen.",
-        "1": "Gå ud fra stationen.",
+        "1": "Gå ud fra <TRANSIT_STOP>.",
         "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
