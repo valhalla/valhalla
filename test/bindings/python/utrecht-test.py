@@ -8,7 +8,14 @@ import re
 
 
 def has_cyrillic(text):
-    return bool(re.search('[а-яА-Я]', text))
+    """
+    This is ensuring that the given text contains cyrllic characters
+    :param text:  The text to validate
+    :return: Returns true if there are cyrillic characters
+    """
+    # Note: The character range includes the entire Cyrillic script range including the extended
+    #       Cyrillic alphabet (e.g. ё, Є, ў)
+    return bool(re.search('[\u0400-\u04FF]', text))
 
 
 valhalla.Configure(sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__)) + '/valhalla.json')
