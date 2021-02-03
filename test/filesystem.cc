@@ -146,6 +146,10 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   // on the CI test runs which are already run in parallel.
   size_t num_threads = std::thread::hardware_concurrency() / 2;
 
+  // There's no point in running this test if it will be single threaded.
+  if (num_threads < 2)
+    return;
+
   // start_race_mutex protects the start_race_event and the start_race
   // boolean. Condition variables can be awoken "spuriously", hence the
   // start_race boolean.
