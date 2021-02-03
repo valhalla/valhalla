@@ -15,7 +15,7 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread GEOS::GEOS)
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge

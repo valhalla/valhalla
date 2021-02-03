@@ -557,11 +557,11 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
     for (const auto& edge : tile.GetDirectedEdges()) {
       edges.push_back(edge);
       const auto historical = cb(edges.back());
-      if (historical.size() == kBucketsPerWeek) {
-        auto coefs = valhalla::baldr::compress_speed_buckets(historical.data());
+      if (historical) {
+        auto coefs = valhalla::baldr::compress_speed_buckets(historical->data());
         tile.AddPredictedSpeed(edges.size() - 1, coefs, tile.header()->directededgecount());
       }
-      edges.back().set_has_predicted_speed(!historical.empty());
+      edges.back().set_has_predicted_speed(historical.has_value());
     }
     tile.UpdatePredictedSpeeds(edges);
   }
