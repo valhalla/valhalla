@@ -12,6 +12,11 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, expected_names);
+
+  for (const auto& n : result.trip().routes(0).legs(0).node()) {
+    std::cout << "Cost:" << n.cost().elapsed_cost().cost() << " transition "
+              << n.cost().transition_cost().cost() << std::endl;
+  }
 }
 
 class LivingStreetTest : public ::testing::Test {
@@ -20,7 +25,7 @@ protected:
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
-    A-1----B--------E-----2-F
+    A-1----B-b----e-E-----2-F
            |        |       |
            |        |       |
            |        |       3
@@ -31,7 +36,8 @@ protected:
     )";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "living_street"}}}, {"BE", {{"highway", "living_street"}}},
+        {"AB", {{"highway", "living_street"}}}, {"Bb", {{"highway", "residential"}}},
+        {"be", {{"highway", "living_street"}}}, {"eE", {{"highway", "residential"}}},
         {"EF", {{"highway", "living_street"}}}, {"FG", {{"highway", "residential"}}},
         {"BC", {{"highway", "residential"}}},   {"CD", {{"highway", "residential"}}},
         {"DE", {{"highway", "residential"}}},   {"DI", {{"highway", "secondary"}}},
@@ -57,7 +63,7 @@ TEST_F(LivingStreetTest, test_default_value) {
     if (c == "bicycle" || c == "pedestrian")
       // living_street tag shouldn't affect these costings too much
       validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c),
-                    {"AB", "BE", "EF"});
+                    {"AB", "Bb", "be", "eE", "EF"});
     else
       // avoid living_streets by default; use living_streets only if the route starts or ends at
       // 'living_street' edge
@@ -70,7 +76,7 @@ TEST_F(LivingStreetTest, test_use_living_streets) {
   for (const auto& c : costing)
     validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
                                    {{"/costing_options/" + c + "/use_living_streets", "1"}}),
-                  {"AB", "BE", "EF"});
+                  {"AB", "Bb", "be", "eE", "EF"});
 }
 
 TEST_F(LivingStreetTest, test_avoid_living_streets) {
@@ -78,8 +84,9 @@ TEST_F(LivingStreetTest, test_avoid_living_streets) {
   for (const auto& c : costing)
     if (c == "bicycle")
       // bicycle is not currently affected by this option
-      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c),
-                    {"AB", "BE", "EF"});
+      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
+                                     {{"/costing_options/" + c + "/use_living_streets", "0"}}),
+                    {"AB", "Bb", "be", "eE", "EF"});
     else
       validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
                                      {{"/costing_options/" + c + "/use_living_streets", "0"}}),
@@ -93,4 +100,36 @@ TEST_F(LivingStreetTest, test_use_living_streets_if_no_other_roads) {
                                    {{"/costing_options/" + c + "/use_living_streets", "0"}}),
                   {"DE", "EF", "FG"});
   }
+}
+
+TEST(LivingStreetStandaloneTest, test_living_streets_cheapest_route) {
+  const std::string ascii_map = R"(
+    A-1----B--------E-----2-F
+           |        |       |
+           |        |       |
+           |        |       3
+           |        |       |
+           C--------D       G
+                     \
+                      I
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "living_street"}}}, {"BE", {{"highway", "living_street"}}},
+      {"EF", {{"highway", "living_street"}}}, {"FG", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},   {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},   {"DI", {{"highway", "secondary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_living_streets");
+
+  // This test is to note the following corner case:
+  // When both start and end locations are on living streets AND there is a relatively short path
+  // between them that takes only living_street edges it may turn out to be cheaper than
+  // the one that leaves and enters living street edges later. This happens due to transition penalty
+  // usage. However, living_streets_factor generally strives to discourage such cases.
+  validate_path(gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto",
+                                 {{"/costing_options/auto/use_living_streets", "0"}}),
+                {"AB", "BE", "EF"});
 }

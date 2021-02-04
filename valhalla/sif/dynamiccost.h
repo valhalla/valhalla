@@ -750,6 +750,7 @@ protected:
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
+  float living_street_penalty_;    // Penalty (seconds) to use a living street
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -881,6 +882,8 @@ protected:
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
+    c.cost += living_street_penalty_ *
+              (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;

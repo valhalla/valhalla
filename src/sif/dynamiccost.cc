@@ -57,9 +57,12 @@ namespace {
 constexpr float kMinTrackFactor = 0.8f;
 constexpr float kMaxTrackFactor = 10.f;
 
+// max penalty to apply when use living streets
+constexpr float kMaxLivingStreetPenalty = 500.f;
+
 // min and max factors to apply when use living streets
 constexpr float kMinLivingStreetFactor = 0.8f;
-constexpr float kMaxLivingStreetFactor = 10.f;
+constexpr float kMaxLivingStreetFactor = 3.f;
 
 } // namespace
 
@@ -238,6 +241,13 @@ void DynamicCost::set_use_tracks(float use_tracks) {
 }
 
 void DynamicCost::set_use_living_streets(float use_living_streets) {
+  // Calculate penalty value based on use preference. Return value
+  // in range [kMaxLivingStreetPenalty; 0], if use < 0.5; or
+  // 0, if use > 0.5.
+  // Thus living_street_factor_ is inversely proportional to use_living_streets.
+  living_street_penalty_ =
+      use_living_streets < 0.5f ? (kMaxLivingStreetPenalty * (1.f - 2.f * use_living_streets)) : 0;
+
   // Calculate factor value based on use preference. Return value
   // in range [kMaxLivingStreetFactor; 1], if use < 0.5; or
   // in range [1; kMinLivingStreetFactor], if use > 0.5.
