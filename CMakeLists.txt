@@ -266,7 +266,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
-  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic)
+  valhalla_convert_transit valhalla_fetch_transit valhalla_gtfs_transit valhalla_query_transit valhalla_add_predicted_traffic)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
