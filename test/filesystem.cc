@@ -29,22 +29,22 @@ TEST(Filesystem, exists) {
   // drop a file
   { std::fstream fs(".touched_file", std::ios::out); }
   // check this dir is there
-  EXPECT_TRUE(filesystem::exists(".")) << "the current directory doesnt exist?";
-  EXPECT_TRUE(filesystem::exists(".touched_file")) << "couldn't create a file?";
+  ASSERT_TRUE(filesystem::exists(".")) << "the current directory doesnt exist?";
+  ASSERT_TRUE(filesystem::exists(".touched_file")) << "couldn't create a file?";
 }
 
 TEST(Filesystem, directory) {
   // todo: any specific reason it was repeated 2 times?
-  EXPECT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
-  EXPECT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
+  ASSERT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
+  ASSERT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
 }
 
 TEST(Filesystem, regular_file) {
-  EXPECT_TRUE(filesystem::is_regular_file(".touched_file"));
+  ASSERT_TRUE(filesystem::is_regular_file(".touched_file"));
 }
 
 void try_mkdir(const std::string& p) {
-  EXPECT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory";
+  ASSERT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory";
 }
 
 TEST(Filesystem, recursive_directory_listing) {
@@ -85,27 +85,27 @@ TEST(Filesystem, recursive_directory_listing) {
     }
   }
   // if we didnt get everything we have a problem
-  EXPECT_TRUE(dirs.empty());
-  EXPECT_TRUE(files.empty());
+  ASSERT_TRUE(dirs.empty());
+  ASSERT_TRUE(files.empty());
 
   // cleanup the stuff we made, 2 tests in one ;o)
   filesystem::remove_all("foo");
-  EXPECT_TRUE(!filesystem::exists("foo"));
+  ASSERT_TRUE(!filesystem::exists("foo"));
 }
 
 TEST(Filesystem, remove_any) {
   // delete non existent thing
-  EXPECT_FALSE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return false";
+  ASSERT_FALSE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return false";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
-  EXPECT_TRUE(filesystem::remove(".foobar"));
-  EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar file should have been deleted";
+  ASSERT_TRUE(filesystem::remove(".foobar"));
+  ASSERT_FALSE(filesystem::exists(".foobar")) << ".foobar file should have been deleted";
 
   // make and delete a file
   try_mkdir(".foobar");
-  EXPECT_TRUE(filesystem::remove(".foobar"));
-  EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
+  ASSERT_TRUE(filesystem::remove(".foobar"));
+  ASSERT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
 }
 
 TEST(Filesystem, parent_path) {
@@ -116,7 +116,7 @@ TEST(Filesystem, parent_path) {
   };
   for (const auto& i : in) {
     auto a = i.parent_path();
-    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong parent path";
+    ASSERT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong parent path";
   }
 }
 
@@ -130,7 +130,7 @@ TEST(Filesystem, extension) {
                                     {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
   for (const auto& i : in) {
     auto a = i.extension();
-    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong extension";
+    ASSERT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong extension";
   }
 }
 
@@ -169,8 +169,8 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_mutex.unlock();
 
     bool success = filesystem::create_directories(nested_subdir);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(filesystem::exists(nested_subdir));
+    ASSERT_TRUE(success);
+    ASSERT_TRUE(filesystem::exists(nested_subdir));
   };
 
   auto remove_folder = [&](bool& ready_flag) {
@@ -189,7 +189,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     // file object. This results in double+ counting and prevents me from
     // asserting anything related to the delete_count. All we can be sure
     // is the following:
-    EXPECT_TRUE(!filesystem::exists(base_subdir));
+    ASSERT_TRUE(!filesystem::exists(base_subdir));
   };
 
   const int num_iters = 50;
@@ -219,7 +219,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         threads[i]->join();
       }
 
-      EXPECT_TRUE(filesystem::exists(nested_subdir));
+      ASSERT_TRUE(filesystem::exists(nested_subdir));
     }
 
     // populate each subfolder with num_files_per_folder text files.
@@ -265,7 +265,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         threads[i]->join();
       }
 
-      EXPECT_TRUE(!filesystem::exists(base_subdir));
+      ASSERT_TRUE(!filesystem::exists(base_subdir));
     }
   }
 }
