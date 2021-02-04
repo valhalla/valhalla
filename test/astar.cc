@@ -1067,6 +1067,15 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 
     verify_paths(paths);
   }
+  {
+    vt::BidirectionalAStar astar;
+    auto paths = astar
+                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                                  *reader, costs, mode)
+                     .front();
+
+    verify_paths(paths);
+  }
 }
 
 Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {

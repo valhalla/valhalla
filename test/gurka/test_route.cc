@@ -535,3 +535,104 @@ TEST(Standalone, BridgingEdgeIsRestricted) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
 }
+
+TEST(Standalone, AvoidExtraDetours) {
+  // Check that we don't take extra detours to get the target point. Here is
+  // a special usecase that breaks previous logic about connection edges in bidirectional astar.
+  const std::string ascii_map = R"(
+                             F
+                             2
+                             |
+                             E
+                             |
+      A-1--B--------C--------D---------H---------------------------------------I
+                                       |                                       |
+                                       K---------------------------------------J
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+
+      {"DE", {{"highway", "service"}, {"service", "driveway"}}},
+      {"EF", {{"highway", "service"}, {"service", "driveway"}}},
+
+      {"DH", {{"highway", "primary"}}},
+      {"HI", {{"highway", "primary"}}},
+      {"IJ", {{"highway", "primary"}}},
+      {"JK", {{"highway", "primary"}, {"maxspeed", "10"}}},
+      {"KH", {{"highway", "primary"}}},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, {}, "test/data/avoid_extra_detours");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<GraphId> not_thru_edgeids;
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "C")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "C", "B")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
+
+  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())
+      edge.set_not_thru(true);
+  });
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
+}
+
+TEST(Standalone, DoNotAllowDoubleUturns) {
+  // This test checks that bidirectional astar doesn't allow double uturns.
+  // It might happens if we handle connection edges incorrectly.
+  const std::string ascii_map = R"(
+  J---------------2---------I-------------------------------F
+                            |
+                            |
+  A---1-------B-------------C------D------------------------E
+              |                    |
+              K--------------------L
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"BC", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"CI", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"DE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"FI", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"IJ", {{"highway", "primary"}, {"oneway", "yes"}}},
+
+      {"BK", {{"highway", "secondary"}}},
+      {"KL", {{"highway", "secondary"}}},
+      {"LD", {{"highway", "secondary"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "CI", "via"},
+           {gurka::way_member, "IJ", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, relations, "test/data/do_not_allow_double_uturns");
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+    const auto names = gurka::detail::get_path(result);
+    if (std::count(names.begin(), names.end(), "CI") == 3)
+      FAIL() << "Double uturn detected!";
+    else
+      FAIL() << "Unexpected path found!";
+  } catch (const std::exception& e) { EXPECT_STREQ(e.what(), "No path could be found for input"); }
+}

@@ -567,4 +567,27 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
   }
 }
 
+void customize_edges(const boost::property_tree::ptree& config, const EdgesCustomize& setter_cb) {
+  // loop over all tiles in the tileset
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
+  for (const auto& tile_id : reader.GetTileSet()) {
+    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
+    std::vector<valhalla::baldr::NodeInfo> nodes;
+    nodes.reserve(tile.header()->nodecount());
+    for (const auto& node : tile.GetNodes())
+      nodes.push_back(node);
+
+    std::vector<valhalla::baldr::DirectedEdge> edges;
+    edges.reserve(tile.header()->directededgecount());
+
+    GraphId edgeid = tile_id;
+    for (size_t j = 0; j < tile.header()->directededgecount(); ++j, ++edgeid) {
+      edges.push_back(tile.directededge(j));
+      setter_cb(edgeid, edges.back());
+    }
+    tile.Update(nodes, edges);
+  }
+}
+
 } // namespace test

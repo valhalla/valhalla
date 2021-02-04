@@ -4,10 +4,34 @@
     "nl"
   ],
   "instructions": {
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Over <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "minder dan 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mijl",
+        "1 mijl",
+        "een halve mijl",
+        "een kwart mijl",
+        "<FEET> voet",
+        "minder dan 10 voet"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
     "arrive": {
       "phrases": {
         "0": "Aankomst: <TIME>.",
-        "1": "Aankomst: <TIME> op <TRANSIT_STOP>."
+        "1": "Aankomst: <TIME> bij <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -21,7 +45,7 @@
     "arrive_verbal": {
       "phrases": {
         "0": "Aankomst om <TIME>.",
-        "1": "Om <TIME> aankomen op <TRANSIT_STOP>."
+        "1": "Aankomst bij <TRANSIT_STOP> om <TIME>."
       },
       "example_phrases": {
         "0": [
@@ -34,17 +58,17 @@
     },
     "bear": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan.",
-        "1": "Hou <RELATIVE_DIRECTION> aan naar de <STREET_NAMES>.",
-        "2": "Hou <RELATIVE_DIRECTION> aan naar de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "3": "Hou <RELATIVE_DIRECTION> aan op de <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Sla <RELATIVE_DIRECTION>af.",
+        "1": "Sla <RELATIVE_DIRECTION>af en ga <STREET_NAMES> op.",
+        "2": "Sla <RELATIVE_DIRECTION>af en ga <BEGIN_STREET_NAMES> op. Ga verder op <STREET_NAMES>.",
+        "3": "Sla <RELATIVE_DIRECTION>af om op <STREET_NAMES> te blijven.",
+        "4": "Sla <RELATIVE_DIRECTION>af bij <JUNCTION_NAME>.",
+        "5": "Sla <RELATIVE_DIRECTION>af naar <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -73,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan.",
-        "1": "Hou <RELATIVE_DIRECTION> aan naar de <STREET_NAMES>.",
-        "2": "Hou <RELATIVE_DIRECTION> aan naar de <BEGIN_STREET_NAMES>.",
-        "3": "Hou <RELATIVE_DIRECTION> aan op de <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> afslaan.",
+        "1": "<RELATIVE_DIRECTION> afslaan en <STREET_NAMES> ingaan.",
+        "2": "<RELATIVE_DIRECTION> afslaan en <BEGIN_STREET_NAMES> ingaan.",
+        "3": "<RELATIVE_DIRECTION> afslaan om op <STREET_NAMES> te blijven.",
+        "4": "<RELATIVE_DIRECTION> afslaan bij <JUNCTION_NAME>.",
+        "5": "<RELATIVE_DIRECTION> afslaan richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -112,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> wordt <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> gaat over in <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -122,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> wordt <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> gaat over in <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -132,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Blijf verder gaan.",
-        "1": "Ga verder op de <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "0": "Ga verder.",
+        "1": "Ga verder op <STREET_NAMES>.",
+        "2": "Ga verder bij <JUNCTION_NAME>.",
+        "3": "Ga verder richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "example_phrases": {
         "0": [
@@ -159,19 +183,19 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Ga <LENGTH> verder.",
-        "1": "Ga verder op de <STREET_NAMES> voor <LENGTH>.",
-        "2": "Continue on <STREET_NAMES>.",
-        "3": "Continue on <STREET_NAMES> for <LENGTH>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "0": "Doorgaan.",
+        "1": "<LENGTH> doorgaan.",
+        "2": "Doorgaan op <STREET_NAMES>.",
+        "3": "<LENGTH> doorgaan op <STREET_NAMES>.",
+        "4": "Doorgaan bij <JUNCTION_NAME>.",
+        "5": "<LENGTH> doorgaan bij <JUNCTION_NAME>.",
+        "6": "Doorgaan <TOWARD_SIGN>.",
+        "7": "<LENGTH> doorgaan <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -189,10 +213,10 @@
       ],
       "example_phrases": {
         "0": [
-          "Continue for 300 feet."
+          "Continue."
         ],
         "1": [
-          "Continue on 10th Avenue for 3 tenths of a mile."
+          "Continue for 300 feet."
         ],
         "2": [
           "Continue on 10th Avenue."
@@ -216,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Blijf verder gaan.",
-        "1": "Ga verder op de <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "0": "Doorgaan.",
+        "1": "Doorgaan op <STREET_NAMES>.",
+        "2": "Doorgaan bij <JUNCTION_NAME>.",
+        "3": "Doorgaan <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "example_phrases": {
         "0": [
@@ -244,7 +268,7 @@
     "depart": {
       "phrases": {
         "0": "Vertrek: <TIME>.",
-        "1": "Vertrek: <TIME> op <TRANSIT_STOP>."
+        "1": "Vertrek: <TIME> vanaf <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -257,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Vertrek om <TIME>.",
-        "1": "Vertrek om <TIME> op <TRANSIT_STOP>."
+        "0": "Vertrekken om <TIME>.",
+        "1": "Vertrekken om <TIME> vanaf <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -271,10 +295,10 @@
     },
     "destination": {
       "phrases": {
-        "0": "Je hebt je bestemming bereikt.",
-        "1": "Je hebt je bestemming <DESTINATION> bereikt.",
-        "2": "Je bestemming is <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> is <RELATIVE_DIRECTION>."
+        "0": "Je bent op je bestemming aangekomen.",
+        "1": "Je bent aangekomen op <DESTINATION>.",
+        "2": "Je bestemming bevindt zich <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> bevindt zich <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "links",
@@ -298,10 +322,10 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Je hebt je bestemming bereikt.",
-        "1": "Je hebt je bestemming <DESTINATION> bereikt.",
-        "2": "Je bestemming is <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> is <RELATIVE_DIRECTION>."
+        "0": "Aangekomen op je bestemming.",
+        "1": "Aangekomen op <DESTINATION>.",
+        "2": "Je bestemming bevindt zich <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> bevindt zich <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "links",
@@ -325,10 +349,10 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Je komt aan op je bestemming.",
-        "1": "Je komt aan op <DESTINATION>.",
-        "2": "Je bestemming komt <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> komt <RELATIVE_DIRECTION>."
+        "0": "Je zult op je bestemming aankomen.",
+        "1": "Je zult aankomen op <DESTINATION>.",
+        "2": "Je bestemming bevindt zich <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> bevindt zich <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "links",
@@ -352,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Neem het veer.",
+        "0": "Neem de veerboot.",
         "1": "Neem de <STREET_NAMES>.",
         "2": "Neem de <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Neem de veerboot richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
-      "ferry_label": "Veer",
+      "ferry_label": "Veerboot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -380,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Neem het veer.",
-        "1": "Neem de <STREET_NAMES>.",
-        "2": "Neem de <STREET_NAMES> <FERRY_LABEL>",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "0": "Veerboot nemen.",
+        "1": "<STREET_NAMES> nemen.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> nemen.",
+        "3": "Veerboot nemen richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
-      "ferry_label": "Veer",
+      "ferry_label": "Veerboot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -409,38 +433,38 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Ga de rotonde op.",
-        "1": "Verlaat de rotonde en neem de <ORDINAL_VALUE> afslag.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "1": "Ga de rotonde op en neem de <ORDINAL_VALUE> afslag.",
+        "2": "Ga de rotonde op en neem de <ORDINAL_VALUE> afslag naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Ga de rotonde op en neem de <ORDINAL_VALUE> afslag naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Ga verder op <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Ga de rotonde op en neem de <ORDINAL_VALUE> afslag richting <TOWARD_SIGN>.",
+        "5": "Ga de rotonde op en neem de afslag naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Ga de rotonde op en neem de afslag naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Ga verder op <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Ga de rotonde op en neem de afslag richting <TOWARD_SIGN>.",
+        "8": "Ga <STREET_NAMES> op",
+        "9": "Ga <STREET_NAMES> op en neem de <ORDINAL_VALUE> afslag.",
+        "10": "Ga <STREET_NAMES> op en neem de <ORDINAL_VALUE> afslag naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Ga <STREET_NAMES> op en neem de <ORDINAL_VALUE> afslag naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Ga verder op <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Ga <STREET_NAMES> op en neem de <ORDINAL_VALUE> afslag richting <TOWARD_SIGN>.",
+        "13": "Ga <STREET_NAMES> op en neem de afslag naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Ga <STREET_NAMES> op en neem de afslag naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Ga verder op <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Ga <STREET_NAMES> op en neem de afslag richting <TOWARD_SIGN>."
       },
-      "ordinal_values": [
-        "eerste",
-        "tweede",
-        "derde",
-        "vierde",
-        "vijfde",
-        "zesde",
-        "zevende",
-        "achtste",
-        "negende",
-        "tiende"
-      ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad"
+      ],
+      "ordinal_values": [
+        "1e",
+        "2e",
+        "3e",
+        "4e",
+        "5e",
+        "6e",
+        "7e",
+        "8e",
+        "9e",
+        "10e"
       ],
       "example_phrases": {
         "0": [
@@ -504,39 +528,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Ga de rotonde op.",
-        "1": "Verlaat de rotonde en neem de <ORDINAL_VALUE> afslag.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "0": "Rotonde opgaan.",
+        "1": "Rotonde opgaan en de <ORDINAL_VALUE> afslag nemen.",
+        "2": "Rotonde opgaan en de <ORDINAL_VALUE> afslag nemen naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Rotonde opgaan en de <ORDINAL_VALUE> afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Rotonde opgaan en de <ORDINAL_VALUE> afslag nemen richting <TOWARD_SIGN>.",
+        "5": "Rotonde opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Rotonde opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Rotonde opgaan en de afslag nemen richting <TOWARD_SIGN>.",
+        "8": "<STREET_NAMES> opgaan",
+        "9": "<STREET_NAMES> opgaan en de <ORDINAL_VALUE> afslag nemen.",
+        "10": "<STREET_NAMES> opgaan en de <ORDINAL_VALUE> afslag nemen naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "<STREET_NAMES> opgaan en de <ORDINAL_VALUE> afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "<STREET_NAMES> opgaan en de <ORDINAL_VALUE> afslag nemen richting <TOWARD_SIGN>.",
+        "13": "<STREET_NAMES> opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "<STREET_NAMES> opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "<STREET_NAMES> opgaan en de afslag nemen richting <TOWARD_SIGN>."
       },
-      "ordinal_values": [
-        "eerste",
-        "tweede",
-        "derde",
-        "vierde",
-        "vijfde",
-        "zesde",
-        "zevende",
-        "achtste",
-        "negende",
-        "tiende"
-      ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad"
+      ],
+      "ordinal_values": [
+        "1e",
+        "2e",
+        "3e",
+        "4e",
+        "5e",
+        "6e",
+        "7e",
+        "8e",
+        "9e",
+        "10e"
       ],
       "example_phrases": {
         "0": [
@@ -600,30 +624,30 @@
     },
     "exit": {
       "phrases": {
-        "0": "Neem de afslag naar <RELATIVE_DIRECTION>.",
-        "1": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION>.",
-        "2": "Neem afslag <BRANCH_SIGN> naar <RELATIVE_DIRECTION>.",
-        "3": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> richting <BRANCH_SIGN>.",
-        "4": "Neem de afslag <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "5": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "6": "Neem de afslag <BRANCH_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "7": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> op de <BRANCH_SIGN> richting <TOWARD_SIGN>.",
-        "8": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION>.",
-        "10": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> richting <BRANCH_SIGN>.",
-        "12": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "14": "Neem afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> op de <BRANCH_SIGN> richting <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "0": "Neem <RELATIVE_DIRECTION> de afslag.",
+        "1": "Neem <RELATIVE_DIRECTION> afslag <NUMBER_SIGN>.",
+        "2": "Neem <RELATIVE_DIRECTION> de afslag <BRANCH_SIGN>.",
+        "3": "Neem <RELATIVE_DIRECTION> afslag <NUMBER_SIGN> naar <BRANCH_SIGN>.",
+        "4": "Neem <RELATIVE_DIRECTION> de afslag richting <TOWARD_SIGN>.",
+        "5": "Neem <RELATIVE_DIRECTION> afslag <NUMBER_SIGN> richting <TOWARD_SIGN>.",
+        "6": "Neem <RELATIVE_DIRECTION> de afslag <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "7": "Neem <RELATIVE_DIRECTION> afslag <NUMBER_SIGN> naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "8": "Neem <RELATIVE_DIRECTION> de afslag <NAME_SIGN>.",
+        "10": "Neem <RELATIVE_DIRECTION> de afslag <NAME_SIGN> naar <BRANCH_SIGN>.",
+        "12": "Neem <RELATIVE_DIRECTION> de afslag <NAME_SIGN> richting <TOWARD_SIGN>.",
+        "14": "Neem <RELATIVE_DIRECTION> de afslag <NAME_SIGN> naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "15": "Neem de afslag.",
+        "16": "Neem afslag <NUMBER_SIGN>.",
+        "17": "Neem de afslag <BRANCH_SIGN>.",
+        "18": "Neem afslag <NUMBER_SIGN> naar <BRANCH_SIGN>.",
+        "19": "Neem de afslag richting <TOWARD_SIGN>.",
+        "20": "Neem afslag <NUMBER_SIGN> richting <TOWARD_SIGN>.",
+        "21": "Neem de afslag <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "22": "Neem afslag <NUMBER_SIGN> naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "23": "Neem afslag <NAME_SIGN>.",
+        "25": "Neem afslag <NAME_SIGN> naar <BRANCH_SIGN>.",
+        "27": "Neem afslag <NAME_SIGN> richting <TOWARD_SIGN>.",
+        "29": "Neem afslag <NAME_SIGN> naar <BRANCH_SIGN> richting <TOWARD_SIGN>."
       },
       "relative_directions": [
         "links",
@@ -708,14 +732,14 @@
     "exit_roundabout": {
       "phrases": {
         "0": "Verlaat de rotonde.",
-        "1": "Verlaat de rotonde naar de <STREET_NAMES>.",
-        "2": "Verlaat de rotonde naar de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "1": "Verlaat de rotonde naar <STREET_NAMES>.",
+        "2": "Verlaat de rotonde naar <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "3": "Verlaat de rotonde richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "example_phrases": {
         "0": [
@@ -734,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Verlaat de rotonde.",
-        "1": "Verlaat de rotonde naar de <STREET_NAMES>.",
-        "2": "Verlaat de rotonde naar de <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "0": "Rotonde verlaten.",
+        "1": "Rotonde verlaten naar <STREET_NAMES>.",
+        "2": "Rotonde verlaten naar <BEGIN_STREET_NAMES>.",
+        "3": "Rotonde verlaten richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "example_phrases": {
         "0": [
@@ -761,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Neem de afslag naar <RELATIVE_DIRECTION>.",
-        "1": "Neem afslag <NUMBER_SIGN> richting <RELATIVE_DIRECTION>.",
-        "2": "Neem afslag <BRANCH_SIGN> naar <RELATIVE_DIRECTION>.",
-        "3": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> richting <BRANCH_SIGN>.",
-        "4": "Neem de afslag <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "5": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "6": "Neem de afslag <BRANCH_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "7": "Neem afslag <NUMBER_SIGN> naar <RELATIVE_DIRECTION> op de <BRANCH_SIGN> richting <TOWARD_SIGN>.",
-        "8": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION>.",
-        "10": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> richting <BRANCH_SIGN>.",
-        "12": "Neem de afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "14": "Neem afslag <NAME_SIGN> naar <RELATIVE_DIRECTION> op de <BRANCH_SIGN> richting <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> de afslag nemen.",
+        "1": "<RELATIVE_DIRECTION> afslag <NUMBER_SIGN> nemen.",
+        "2": "<RELATIVE_DIRECTION> afslag <BRANCH_SIGN> nemen.",
+        "3": "<RELATIVE_DIRECTION> afslag <NUMBER_SIGN> nemen naar <BRANCH_SIGN>.",
+        "4": "<RELATIVE_DIRECTION> de afslag nemen richting <TOWARD_SIGN>.",
+        "5": "<RELATIVE_DIRECTION> afslag <NUMBER_SIGN> nemen richting <TOWARD_SIGN>.",
+        "6": "<RELATIVE_DIRECTION> afslag <BRANCH_SIGN> nemen richting <TOWARD_SIGN>.",
+        "7": "<RELATIVE_DIRECTION> afslag <NUMBER_SIGN> nemen naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "8": "<RELATIVE_DIRECTION> afslag <NAME_SIGN> nemen.",
+        "10": "<RELATIVE_DIRECTION> afslag <NAME_SIGN> nemen naar <BRANCH_SIGN>.",
+        "12": "<RELATIVE_DIRECTION> afslag <NAME_SIGN> nemen richting <TOWARD_SIGN>.",
+        "14": "<RELATIVE_DIRECTION> afslag <NAME_SIGN> nemen naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "15": "Afslag nemen.",
+        "16": "Afslag <NUMBER_SIGN> nemen.",
+        "17": "Afslag <BRANCH_SIGN> nemen.",
+        "18": "Afslag <NUMBER_SIGN> nemen naar <BRANCH_SIGN>.",
+        "19": "De afslag nemen richting <TOWARD_SIGN>.",
+        "20": "Afslag <NUMBER_SIGN> nemen richting <TOWARD_SIGN>.",
+        "21": "Afslag <BRANCH_SIGN> nemen richting <TOWARD_SIGN>.",
+        "22": "Afslag <NUMBER_SIGN> nemen naar <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "23": "Afslag <NAME_SIGN> nemen.",
+        "25": "Afslag <NAME_SIGN> nemen naar <BRANCH_SIGN>.",
+        "27": "Afslag <NAME_SIGN> nemen richting <TOWARD_SIGN>.",
+        "29": "Afslag <NAME_SIGN> nemen naar <BRANCH_SIGN> richting <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -868,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Exit <EXIT_NUMBERS>"
+        "0": "Afslag <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -878,19 +902,19 @@
     },
     "keep": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan op de splitsing.",
-        "1": "Hou <RELATIVE_DIRECTION> om afslag <NUMBER_SIGN> te nemen.",
-        "2": "Hou <RELATIVE_DIRECTION> aan om de <STREET_NAMES> te nemen.",
-        "3": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar de <STREET_NAMES>.",
-        "4": "Hou <RELATIVE_DIRECTION> aan richting <TOWARD_SIGN>.",
-        "5": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen richting <TOWARD_SIGN>.",
-        "6": "Hou <RELATIVE_DIRECTION> aan om de <STREET_NAMES>  te nemen richting <TOWARD_SIGN>.",
-        "7": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar de <STREET_NAMES> richting <TOWARD_SIGN>."
+        "0": "Houd bij de splitsing <RELATIVE_DIRECTION> aan.",
+        "1": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen.",
+        "2": "Houd <RELATIVE_DIRECTION> aan om <STREET_NAMES> op te gaan.",
+        "3": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar <STREET_NAMES>.",
+        "4": "Houd <RELATIVE_DIRECTION> aan richting <TOWARD_SIGN>.",
+        "5": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "6": "Houd <RELATIVE_DIRECTION> aan om <STREET_NAMES> op te gaan richting <TOWARD_SIGN>.",
+        "7": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar <STREET_NAMES> richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -928,15 +952,15 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan om op de <STREET_NAMES> te blijven.",
-        "1": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op de <STREET_NAMES> te blijven.",
-        "2": "Hou <RELATIVE_DIRECTION> aan om op de <STREET_NAMES> te blijven richting <TOWARD_SIGN>.",
-        "3": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op de <STREET_NAMES> te blijven richting <TOWARD_SIGN>."
+        "0": "Houd <RELATIVE_DIRECTION> aan om op <STREET_NAMES> te blijven.",
+        "1": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op <STREET_NAMES> te blijven.",
+        "2": "Houd <RELATIVE_DIRECTION> aan om op <STREET_NAMES> te blijven richting <TOWARD_SIGN>.",
+        "3": "Houd <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op <STREET_NAMES> te blijven richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -962,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan om op de <STREET_NAMES> te blijven.",
-        "1": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op de <STREET_NAMES> te blijven.",
-        "2": "Hou <RELATIVE_DIRECTION> aan om op de <STREET_NAMES>  te blijven richting <TOWARD_SIGN>.",
-        "3": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen om op de <STREET_NAMES> te blijven richting <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> aanhouden om op <STREET_NAMES> te blijven.",
+        "1": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen om op <STREET_NAMES> te blijven.",
+        "2": "<RELATIVE_DIRECTION> aanhouden om op <STREET_NAMES> te blijven richting <TOWARD_SIGN>.",
+        "3": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen om op <STREET_NAMES> te blijven richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
-        "links",
-        "rechtdoor",
-        "rechts"
+        "Links",
+        "Rechtdoor",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -996,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Hou <RELATIVE_DIRECTION> aan op de splitsing.",
-        "1": "Hou <RELATIVE_DIRECTION> om afslag <NUMBER_SIGN> te nemen.",
-        "2": "Hou <RELATIVE_DIRECTION> aan om de <STREET_NAMES> te nemen.",
-        "3": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar de <STREET_NAMES>.",
-        "4": "Hou <RELATIVE_DIRECTION> aan richting <TOWARD_SIGN>.",
-        "5": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen richting <TOWARD_SIGN>.",
-        "6": "Hou <RELATIVE_DIRECTION> aan om de <STREET_NAMES>  te nemen richting <TOWARD_SIGN>.",
-        "7": "Hou <RELATIVE_DIRECTION> aan om afslag <NUMBER_SIGN> te nemen naar de <STREET_NAMES> richting <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> aanhouden bij de splitsing.",
+        "1": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen.",
+        "2": "<RELATIVE_DIRECTION> aanhouden om <STREET_NAMES> op te gaan.",
+        "3": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen naar <STREET_NAMES>.",
+        "4": "<RELATIVE_DIRECTION> aanhouden richting <TOWARD_SIGN>.",
+        "5": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "6": "<RELATIVE_DIRECTION> aanhouden om <STREET_NAMES> op te gaan richting <TOWARD_SIGN>.",
+        "7": "<RELATIVE_DIRECTION> aanhouden om afslag <NUMBER_SIGN> te nemen naar <STREET_NAMES> richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
-        "links",
-        "rechtdoor",
-        "rechts"
+        "Links",
+        "Rechtdoor",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -1047,27 +1071,27 @@
     "merge": {
       "phrases": {
         "0": "Voeg in.",
-        "1": "Merge <RELATIVE_DIRECTION>.",
-        "2": "Voeg in op de <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "1": "Voeg <RELATIVE_DIRECTION> in.",
+        "2": "Voeg in op <STREET_NAMES>.",
+        "3": "Voeg <RELATIVE_DIRECTION> in op <STREET_NAMES>.",
+        "4": "Voeg in richting <TOWARD_SIGN>.",
+        "5": "Voeg <RELATIVE_DIRECTION> in richting <TOWARD_SIGN>."
       },
-      "relative_directions": [
-        "left",
-        "right"
-      ],
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
+      ],
+      "relative_directions": [
+        "links",
+        "rechts"
       ],
       "example_phrases": {
         "0": [
           "Merge."
         ],
         "1": [
-          "Merge onto I 76 West/Pennsylvania Turnpike."
+          "Merge left."
         ],
         "2": [
           "Merge onto I 76 West/Pennsylvania Turnpike."
@@ -1085,28 +1109,28 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Voeg in.",
-        "1": "Merge <RELATIVE_DIRECTION>.",
-        "2": "Voeg in op de <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Invoegen.",
+        "1": "<RELATIVE_DIRECTION> invoegen.",
+        "2": "Invoegen op <STREET_NAMES>.",
+        "3": "<RELATIVE_DIRECTION> invoegen op <STREET_NAMES>.",
+        "4": "Invoegen richting <TOWARD_SIGN>.",
+        "5": "<RELATIVE_DIRECTION> invoegen richting <TOWARD_SIGN>."
       },
-      "relative_directions": [
-        "left",
-        "right"
-      ],
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
+      ],
+      "relative_directions": [
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
           "Merge."
         ],
         "1": [
-          "Merge onto Interstate 76 West, Pennsylvania Turnpike."
+          "Merge left."
         ],
         "2": [
           "Merge onto I 76 West/Pennsylvania Turnpike."
@@ -1139,13 +1163,13 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Ga <LENGTH> verder.",
-        "1": "Ga verder op de <STREET_NAMES> voor <LENGTH>."
+        "0": "<LENGTH> doorgaan.",
+        "1": "<LENGTH> doorgaan op <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1174,21 +1198,21 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Neem de toerit naar <RELATIVE_DIRECTION>.",
-        "1": "Neem de oprit <BRANCH_SIGN> naar <RELATIVE_DIRECTION>.",
-        "2": "Neem de toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "3": "Neem de <BRANCH_SIGN> toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "4": "Neem de <NAME_SIGN> toerit <RELATIVE_DIRECTION>.",
-        "5": "Sla <RELATIVE_DIRECTION> af richting de toerit.",
-        "6": "Sla <RELATIVE_DIRECTION> af richting de <BRANCH_SIGN>  toerit.",
-        "7": "Sla <RELATIVE_DIRECTION> af richting de toerit naar <TOWARD_SIGN>.",
-        "8": "Sla <RELATIVE_DIRECTION> af richting de <BRANCH_SIGN> toerit naar <TOWARD_SIGN>.",
-        "9": "Sla <RELATIVE_DIRECTION> af richting de <NAME_SIGN> toerit.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "0": "Neem <RELATIVE_DIRECTION> de op-/afrit.",
+        "1": "Neem <RELATIVE_DIRECTION> de op-/afrit <BRANCH_SIGN>.",
+        "2": "Neem <RELATIVE_DIRECTION> de op-/afrit richting <TOWARD_SIGN>.",
+        "3": "Neem <RELATIVE_DIRECTION> de op-/afrit <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "4": "Neem <RELATIVE_DIRECTION> de op-/afrit <NAME_SIGN>.",
+        "5": "Sla <RELATIVE_DIRECTION>af om de op-/afrit te nemen.",
+        "6": "Sla <RELATIVE_DIRECTION>af om de op-/afrit <BRANCH_SIGN> te nemen.",
+        "7": "Sla <RELATIVE_DIRECTION>af om de op-/afrit te nemen richting <TOWARD_SIGN>.",
+        "8": "Sla <RELATIVE_DIRECTION>af om de op-/afrit <BRANCH_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "9": "Sla <RELATIVE_DIRECTION>af om de op-/afrit <NAME_SIGN> te nemen.",
+        "10": "Neem de op-/afrit.",
+        "11": "Neem de op-/afrit <BRANCH_SIGN>.",
+        "12": "Neem de op-/afrit richting <TOWARD_SIGN>.",
+        "13": "Neem de op-/afrit <BRANCH_SIGN> richting <TOWARD_SIGN>.",
+        "14": "Neem de op-/afrit <NAME_SIGN>."
       },
       "relative_directions": [
         "links",
@@ -1246,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Rij rechtdoor naar de toerit.",
-        "1": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit.",
-        "2": "Rij rechtdoor naar de toerit richting <TOWARD_SIGN>.",
-        "3": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit richting <TOWARD_SIGN>.",
-        "4": "Stay straight to take the <NAME_SIGN> ramp."
+        "0": "Blijf rechtdoor gaan om de op-/afrit te nemen.",
+        "1": "Blijf rechtdoor gaan om de op-/afrit <BRANCH_SIGN> te nemen.",
+        "2": "Blijf rechtdoor gaan om de op-/afrit te nemen richting <TOWARD_SIGN>.",
+        "3": "Blijf rechtdoor gaan om de op-/afrit <BRANCH_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "4": "Blijf rechtdoor gaan om de op-/afrit <NAME_SIGN> te nemen."
       },
       "example_phrases": {
         "0": [
@@ -1272,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Rij rechtdoor naar de toerit",
-        "1": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit.",
-        "2": "Rij rechtdoor naar de toerit richting <TOWARD_SIGN>.",
-        "3": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit richting <TOWARD_SIGN>.",
-        "4": "Stay straight to take the <NAME_SIGN> ramp."
+        "0": "Rechtdoor blijven gaan om de op-/afrit te nemen.",
+        "1": "Rechtdoor blijven gaan om de op-/afrit <BRANCH_SIGN> te nemen.",
+        "2": "Rechtdoor blijven gaan om de op-/afrit te nemen richting <TOWARD_SIGN>.",
+        "3": "Rechtdoor blijven gaan om de op-/afrit <BRANCH_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "4": "Rechtdoor blijven gaan om de op-/afrit <NAME_SIGN> te nemen."
       },
       "example_phrases": {
         "0": [
@@ -1298,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Neem de oprit richting <RELATIVE_DIRECTION>.",
-        "1": "Neem de oprit <BRANCH_SIGN> richting <RELATIVE_DIRECTION>.",
-        "2": "Neem de toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "3": "Neem de <BRANCH_SIGN> toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "4": "Neem de <NAME_SIGN> toerit <RELATIVE_DIRECTION>.",
-        "5": "Sla <RELATIVE_DIRECTION> af richting de toerit.",
-        "6": "Sla <RELATIVE_DIRECTION> af richting de <BRANCH_SIGN>  toerit.",
-        "7": "Sla <RELATIVE_DIRECTION> af richting de toerit naar <TOWARD_SIGN>.",
-        "8": "Sla <RELATIVE_DIRECTION> af richting de <BRANCH_SIGN> toerit naar <TOWARD_SIGN>.",
-        "9": "Sla <RELATIVE_DIRECTION> af richting de <NAME_SIGN> toerit.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "0": "<RELATIVE_DIRECTION> de op-/afrit nemen.",
+        "1": "<RELATIVE_DIRECTION> de op-/afrit <BRANCH_SIGN> nemen.",
+        "2": "<RELATIVE_DIRECTION> de op-/afrit nemen richting <TOWARD_SIGN>.",
+        "3": "<RELATIVE_DIRECTION> de op-/afrit <BRANCH_SIGN> nemen richting <TOWARD_SIGN>.",
+        "4": "<RELATIVE_DIRECTION> de op-/afrit <NAME_SIGN> nemen.",
+        "5": "<RELATIVE_DIRECTION> afslaan om de op-/afrit te nemen.",
+        "6": "<RELATIVE_DIRECTION> afslaan om de op-/afrit <BRANCH_SIGN> te nemen.",
+        "7": "<RELATIVE_DIRECTION> afslaan om de op-/afrit te nemen richting <TOWARD_SIGN>.",
+        "8": "<RELATIVE_DIRECTION> afslaan om de op-/afrit <BRANCH_SIGN> te nemen richting <TOWARD_SIGN>.",
+        "9": "<RELATIVE_DIRECTION> afslaan om de op-/afrit <NAME_SIGN> te nemen.",
+        "10": "Op-/afrit nemen.",
+        "11": "Op-/afrit <BRANCH_SIGN> nemen.",
+        "12": "Op-/afrit nemen richting <TOWARD_SIGN>.",
+        "13": "Op-/afrit <BRANCH_SIGN> nemen richting <TOWARD_SIGN>.",
+        "14": "Op-/afrit <NAME_SIGN> nemen."
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -1370,17 +1394,17 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Sla scherp naar <RELATIVE_DIRECTION> af.",
-        "1": "Sla scherp naar<RELATIVE_DIRECTION> af naar de <STREET_NAMES>.",
-        "2": "Sla scherp naar <RELATIVE_DIRECTION> af naar de < BEGIN_STREET_NAMES >. Ga verder op de <STREET_NAMES>.",
-        "3": "Sla scherp naar <RELATIVE_DIRECTION> af om op de <STREET_NAMES> te blijven.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Neem een scherpe bocht <RELATIVE_DIRECTION>.",
+        "1": "Neem een scherpe bocht <RELATIVE_DIRECTION> naar <STREET_NAMES>.",
+        "2": "Neem een scherpe bocht <RELATIVE_DIRECTION> naar <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "3": "Neem een scherpe bocht <RELATIVE_DIRECTION> om op <STREET_NAMES> te blijven.",
+        "4": "Neem een scherpe bocht <RELATIVE_DIRECTION> bij <JUNCTION_NAME>.",
+        "5": "Neem een scherpe bocht <RELATIVE_DIRECTION> richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -1409,17 +1433,17 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Sla scherp naar <RELATIVE_DIRECTION> af.",
-        "1": "Sla scherp naar<RELATIVE_DIRECTION> af naar de <STREET_NAMES>.",
-        "2": "Sla scherp naar<RELATIVE_DIRECTION> af naar de <BEGIN_STREET_NAMES>.",
-        "3": "Sla scherp naar <RELATIVE_DIRECTION> af om op de <STREET_NAMES> te blijven.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen.",
+        "1": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen naar <STREET_NAMES>.",
+        "2": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen naar <BEGIN_STREET_NAMES>.",
+        "3": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen om op <STREET_NAMES> te blijven.",
+        "4": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen bij <JUNCTION_NAME>.",
+        "5": "Scherpe bocht naar <RELATIVE_DIRECTION> nemen richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -1448,33 +1472,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Ga richting het <CARDINAL_DIRECTION>en.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "8": "Loop richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "16": "Fiets richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>."
+        "0": "Ga richting het <CARDINAL_DIRECTION>.",
+        "1": "Ga richting het <CARDINAL_DIRECTION> op <STREET_NAMES>.",
+        "2": "Ga richting het <CARDINAL_DIRECTION> op <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "4": "Rijd richting het <CARDINAL_DIRECTION>.",
+        "5": "Rijd richting het <CARDINAL_DIRECTION> op <STREET_NAMES>.",
+        "6": "Rijd richting het <CARDINAL_DIRECTION> op <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "8": "Loop richting het <CARDINAL_DIRECTION>.",
+        "9": "Loop richting het <CARDINAL_DIRECTION> op <STREET_NAMES>.",
+        "10": "Loop richting het <CARDINAL_DIRECTION> op <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "16": "Fiets richting het <CARDINAL_DIRECTION>.",
+        "17": "Fiets richting het <CARDINAL_DIRECTION> op <STREET_NAMES>.",
+        "18": "Fiets richting het <CARDINAL_DIRECTION> op <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>."
       },
       "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
+        "noorden",
+        "noordoosten",
+        "oosten",
+        "zuidoosten",
+        "zuiden",
+        "zuidwesten",
+        "westen",
+        "noordwesten"
       ],
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "example_phrases": {
         "0": [
@@ -1527,44 +1551,44 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Hou het <CARDINAL_DIRECTION>en aan voor <LENGTH>.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES> voor <LENGTH>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "4": "Rij <LENGTH> richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij <LENGTH> richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "7": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "8": "Loop <LENGTH> richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop <LENGTH> richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "11": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
-        "12": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "13": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "14": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "15": "Bike <CARDINAL_DIRECTION>.",
-        "16": "Fiets <LENGTH> richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES> voor <LENGTH>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "19": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "Richting het <CARDINAL_DIRECTION> gaan.",
+        "1": "<LENGTH> richting het <CARDINAL_DIRECTION> gaan.",
+        "2": "Richting het <CARDINAL_DIRECTION> gaan op <STREET_NAMES>.",
+        "3": "<LENGTH> richting het <CARDINAL_DIRECTION> gaan op <STREET_NAMES>.",
+        "4": "Richting het <CARDINAL_DIRECTION> gaan op <BEGIN_STREET_NAMES>.",
+        "5": "Richting het <CARDINAL_DIRECTION> rijden.",
+        "6": "<LENGTH> richting het <CARDINAL_DIRECTION> rijden.",
+        "7": "Richting het <CARDINAL_DIRECTION> rijden op <STREET_NAMES>.",
+        "8": "<LENGTH> richting het <CARDINAL_DIRECTION> rijden op <STREET_NAMES>.",
+        "9": "Richting het <CARDINAL_DIRECTION> rijden op <BEGIN_STREET_NAMES>.",
+        "10": "Richting het <CARDINAL_DIRECTION> lopen.",
+        "11": "<LENGTH> richting het <CARDINAL_DIRECTION> lopen.",
+        "12": "Richting het <CARDINAL_DIRECTION> lopen op <STREET_NAMES>.",
+        "13": "<LENGTH> richting het <CARDINAL_DIRECTION> lopen op <STREET_NAMES>.",
+        "14": "Richting het <CARDINAL_DIRECTION> lopen op <BEGIN_STREET_NAMES>.",
+        "15": "Richting het <CARDINAL_DIRECTION> fietsen.",
+        "16": "<LENGTH> richting het <CARDINAL_DIRECTION> fietsen.",
+        "17": "Richting het <CARDINAL_DIRECTION> fietsen op <STREET_NAMES>.",
+        "18": "<LENGTH> richting het <CARDINAL_DIRECTION> fietsen op <STREET_NAMES>.",
+        "19": "Richting het <CARDINAL_DIRECTION> fietsen op <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
+        "noorden",
+        "noordoosten",
+        "oosten",
+        "zuidoosten",
+        "zuiden",
+        "zuidwesten",
+        "westen",
+        "noordwesten"
       ],
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
+        "<KILOMETERS> kilometer",
         "1 kilometer",
         "<METERS> meter",
         "minder dan 10 meter"
@@ -1579,40 +1603,42 @@
       ],
       "example_phrases": {
         "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
           "Head east for a half mile.",
           "Head north for 1 kilometer."
         ],
-        "1": [
-          "Head southwest on 5th Avenue for 1 tenth of a mile."
-        ],
         "2": [
-          "Head south on North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
         ],
         "3": [
           "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Drive east for a half mile.",
-          "Drive north for 1 kilometer."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Drive south on North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
         ],
         "7": [
           "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Walk east for a half mile.",
-          "Walk north for 1 kilometer."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Walk south on North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
         ],
         "11": [
           "Walk east for a half mile.",
@@ -1636,10 +1662,10 @@
           "Bike north for 1 kilometer."
         ],
         "17": [
-          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Bike south on North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "19": [
           "Bike south on North Prince Street, U.S. 2 22."
@@ -1649,14 +1675,14 @@
     "transit": {
       "phrases": {
         "0": "Neem de <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Neem de <TRANSIT_NAME> naar <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Neem de <TRANSIT_NAME> richting <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
         "tram",
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1698,9 +1724,9 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Verlaat het station.",
-        "1": "Verlaat de <TRANSIT_STOP>.",
-        "2": "Verlaat de <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Het station verlaten.",
+        "1": "De <TRANSIT_STOP> verlaten.",
+        "2": "De <TRANSIT_STOP> <STATION_LABEL> verlaten."
       },
       "station_label": "Station",
       "example_phrases": {
@@ -1717,9 +1743,9 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Ga naar het station.",
-        "1": "Ga naar de <TRANSIT_STOP>.",
-        "2": "Ga naar de <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Ga het station in.",
+        "1": "Ga de <TRANSIT_STOP> in.",
+        "2": "Ga de <TRANSIT_STOP> <STATION_LABEL> in."
       },
       "station_label": "Station",
       "example_phrases": {
@@ -1736,9 +1762,9 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Ga naar het station.",
-        "1": "Ga naar de <TRANSIT_STOP>.",
-        "2": "Ga naar de <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Station ingaan.",
+        "1": "<TRANSIT_STOP> ingaan.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> ingaan."
       },
       "station_label": "Station",
       "example_phrases": {
@@ -1756,8 +1782,8 @@
     "transit_connection_transfer": {
       "phrases": {
         "0": "Stap over op het station.",
-        "1": "Stap over op de <TRANSIT_STOP>.",
-        "2": "Stap over op de <TRANSIT_STOP> <STATION_LABEL>."
+        "1": "Stap over bij de <TRANSIT_STOP>.",
+        "2": "Stap over bij de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
@@ -1774,9 +1800,9 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Stap over op het station.",
-        "1": "Stap over op de <TRANSIT_STOP>.",
-        "2": "Stap over op de <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Overstappen op het station.",
+        "1": "Overstappen bij de <TRANSIT_STOP>.",
+        "2": "SOverstappen bij de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
@@ -1794,14 +1820,14 @@
     "transit_remain_on": {
       "phrases": {
         "0": "Blijf in de <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Blijf in de <TRANSIT_NAME> naar <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Blijf in de <TRANSIT_NAME> richting <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
         "tram",
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1822,15 +1848,15 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Blijf in de <TRANSIT_NAME>.",
-        "1": "Blijf in de <TRANSIT_NAME> naar <TRANSIT_HEADSIGN>."
+        "0": "In de <TRANSIT_NAME> blijven.",
+        "1": "In de <TRANSIT_NAME> blijven richting <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1854,7 +1880,7 @@
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1875,15 +1901,15 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Stap over om de <TRANSIT_NAME> te nemen.",
-        "1": "Stap over op de <TRANSIT_NAME> naar <TRANSIT_HEADSIGN>."
+        "0": "Overstappen om de <TRANSIT_NAME> te nemen.",
+        "1": "Overstappen om de <TRANSIT_NAME> te nemen richting <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1899,15 +1925,15 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Neem de <TRANSIT_NAME>.",
-        "1": "Neem de <TRANSIT_NAME> richting <TRANSIT_HEADSIGN>."
+        "0": "De <TRANSIT_NAME> nemen.",
+        "1": "<TRANSIT_NAME> nemen richting <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tram",
         "metro",
         "trein",
         "bus",
-        "veer",
+        "veerboot",
         "kabeltram",
         "gondel",
         "kabeltrein"
@@ -1923,17 +1949,17 @@
     },
     "turn": {
       "phrases": {
-        "0": "Sla <RELATIVE_DIRECTION> af.",
-        "1": "Sla <RELATIVE_DIRECTION> af naar de <STREET_NAMES>.",
-        "2": "Sla <RELATIVE_DIRECTION> af naar de < BEGIN_STREET_NAMES >. Ga verder op de <STREET_NAMES>.",
-        "3": "Sla <RELATIVE_DIRECTION> af op de <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Sla <RELATIVE_DIRECTION>af.",
+        "1": "Sla <RELATIVE_DIRECTION>af naar <STREET_NAMES>.",
+        "2": "Sla <RELATIVE_DIRECTION>af naar <BEGIN_STREET_NAMES>. Ga verder op <STREET_NAMES>.",
+        "3": "Sla <RELATIVE_DIRECTION>af om op <STREET_NAMES> te blijven.",
+        "4": "Sla <RELATIVE_DIRECTION>af bij <JUNCTION_NAME>.",
+        "5": "Sla <RELATIVE_DIRECTION>af richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -1962,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Sla <RELATIVE_DIRECTION> af.",
-        "1": "Sla <RELATIVE_DIRECTION> af naar de <STREET_NAMES>.",
-        "2": "Sla <RELATIVE_DIRECTION> af naar de <BEGIN_STREET_NAMES>.",
-        "3": "Sla <RELATIVE_DIRECTION> af om op de <STREET_NAMES> te blijven.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> afslaan.",
+        "1": "<RELATIVE_DIRECTION> afslaan naar <STREET_NAMES>.",
+        "2": "<RELATIVE_DIRECTION> afslaan naar <BEGIN_STREET_NAMES>.",
+        "3": "<RELATIVE_DIRECTION> afslaan om op <STREET_NAMES> te blijven.",
+        "4": "<RELATIVE_DIRECTION> afslaan bij <JUNCTION_NAME>.",
+        "5": "<RELATIVE_DIRECTION> afslaan richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -2001,19 +2027,19 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Maak rechtsomkeert naar <RELATIVE_DIRECTION>.",
-        "1": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> naar de <STREET_NAMES>.",
-        "2": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> om op de <STREET_NAMES> te bljven.",
-        "3": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES>.",
-        "4": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES> naar de <STREET_NAMES>.",
-        "5": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES> om op de <STREET_NAMES> te blijven.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "Keer <RELATIVE_DIRECTION>om.",
+        "1": "Keer <RELATIVE_DIRECTION>om naar <STREET_NAMES>.",
+        "2": "Keer <RELATIVE_DIRECTION>om om op <STREET_NAMES> te blijven.",
+        "3": "Keer <RELATIVE_DIRECTION>om bij <CROSS_STREET_NAMES>.",
+        "4": "Keer <RELATIVE_DIRECTION>om bij <CROSS_STREET_NAMES> naar <STREET_NAMES>.",
+        "5": "Keer <RELATIVE_DIRECTION>om bij <CROSS_STREET_NAMES> om op <STREET_NAMES> te blijven.",
+        "6": "Keer <RELATIVE_DIRECTION>om bij <JUNCTION_NAME>.",
+        "7": "Keer <RELATIVE_DIRECTION>om richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
         "links",
@@ -2048,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Maak rechtsomkeert naar <RELATIVE_DIRECTION>.",
-        "1": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> naar de <STREET_NAMES>.",
-        "2": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> om op de <STREET_NAMES> te bljven.",
-        "3": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES>.",
-        "4": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES> naar de <STREET_NAMES>.",
-        "5": "Maak rechtsomkeert naar <RELATIVE_DIRECTION> bij de <CROSS_STREET_NAMES> om op de <STREET_NAMES> te blijven.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> omkeren.",
+        "1": "<RELATIVE_DIRECTION> omkeren naar <STREET_NAMES>.",
+        "2": "<RELATIVE_DIRECTION> omkeren om op <STREET_NAMES> te blijven.",
+        "3": "<RELATIVE_DIRECTION> omkeren bij <CROSS_STREET_NAMES>.",
+        "4": "<RELATIVE_DIRECTION> omkeren bij <CROSS_STREET_NAMES> naar <STREET_NAMES>.",
+        "5": "<RELATIVE_DIRECTION> omkeren bij <CROSS_STREET_NAMES> om op <STREET_NAMES> te blijven.",
+        "6": "<RELATIVE_DIRECTION> omkeren bij <JUNCTION_NAME>.",
+        "7": "<RELATIVE_DIRECTION> omkeren richting <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbike pad"
+        "het mountainbikepad"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "Links",
+        "Rechts"
       ],
       "example_phrases": {
         "0": [
@@ -2095,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> dan <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Daarna <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Daarna, over <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
+        "<KILOMETERS> kilometer",
         "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
+        "<METERS> meter",
+        "minder dan 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
+        "<MILES> mijl",
+        "1 mijl",
+        "een halve mijl",
         "een kwart mijl",
-        "<FEET> feet",
-        "less than 10 feet"
+        "<FEET> voet",
+        "minder dan 10 voet"
       ],
       "example_phrases": {
         "0": [
@@ -2118,306 +2144,6 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
-        ]
-      }
-    },
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometers",
-        "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
-      ],
-      "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "een kwart mijl",
-        "<FEET> feet",
-        "less than 10 feet"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Ga richting het <CARDINAL_DIRECTION>en.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "8": "Loop richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "16": "Fiets richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
-      ],
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbike pad"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Drive southeast."
-        ],
-        "5": [
-          "Drive west on Ferry Lane"
-        ],
-        "6": [
-          "Drive south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Walk southeast."
-        ],
-        "9": [
-          "Walk west on Ferry Lane"
-        ],
-        "10": [
-          "Walk south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "16": [
-          "Bike southeast."
-        ],
-        "17": [
-          "Bike west on Ferry Lane"
-        ],
-        "18": [
-          "Bike south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Ga richting het <CARDINAL_DIRECTION>en.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "8": "Loop richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "16": "Fiets richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
-      ],
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbike pad"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Drive southeast."
-        ],
-        "5": [
-          "Drive west on Ferry Lane"
-        ],
-        "6": [
-          "Drive south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Walk southeast."
-        ],
-        "9": [
-          "Walk west on Ferry Lane"
-        ],
-        "10": [
-          "Walk south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Bike southeast."
-        ],
-        "17": [
-          "Bike west on Ferry Lane"
-        ],
-        "18": [
-          "Bike south on Summerfield Place, New York 1 14."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Ga richting het <CARDINAL_DIRECTION>en.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "8": "Loop richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>.",
-        "16": "Fiets richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>. Ga verder op de <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
-      ],
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbike pad"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Drive west."
-        ],
-        "5": [
-          "Drive northeast on Broadway"
-        ],
-        "6": [
-          "Drive south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Walk west."
-        ],
-        "9": [
-          "Walk northeast on Broadway"
-        ],
-        "10": [
-          "Walk south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "16": [
-          "Bike west."
-        ],
-        "17": [
-          "Bike northeast on Broadway"
-        ],
-        "18": [
-          "Bike south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Ga richting het <CARDINAL_DIRECTION>en.",
-        "1": "Ga richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "2": "Ga richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en.",
-        "5": "Rij richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "6": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "8": "Loop richting het <CARDINAL_DIRECTION>en.",
-        "9": "Loop richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "10": "Loop richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>.",
-        "16": "Fiets richting het <CARDINAL_DIRECTION>en.",
-        "17": "Fiets richting het <CARDINAL_DIRECTION>en op de <STREET_NAMES>.",
-        "18": "Fiets richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "noord",
-        "noordoost",
-        "oost",
-        "zuidoost",
-        "zuid",
-        "zuidwest",
-        "west",
-        "noordwest"
-      ],
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbike pad"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Drive west."
-        ],
-        "5": [
-          "Drive northeast on Broadway"
-        ],
-        "6": [
-          "Drive south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Walk west."
-        ],
-        "9": [
-          "Walk northeast on Broadway"
-        ],
-        "10": [
-          "Walk south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Bike west."
-        ],
-        "17": [
-          "Bike northeast on Broadway"
-        ],
-        "18": [
-          "Bike south on Summerfield Place, New York 1 14."
         ]
       }
     }
