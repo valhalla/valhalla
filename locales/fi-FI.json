@@ -1,26 +1,26 @@
 {
-  "posix_locale": "cs_CZ.UTF-8",
+  "posix_locale": "fi_FI.UTF-8",
   "aliases": [
-    "cs"
+    "fi"
   ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Za <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Přijeďte: <TIME>.",
-        "1": "Přijeďte: <TIME> do <TRANSIT_STOP>."
+        "0": "Saavu: <TIME>.",
+        "1": "Saavu: <TIME> pysäkille <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -44,8 +44,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Přijeďte v <TIME>.",
-        "1": "Přijeďte v <TIME> do <TRANSIT_STOP>."
+        "0": "Saavu kello <TIME>.",
+        "1": "Saavu kello <TIME> pysäkille <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +58,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Jatka <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> kadulle <BEGIN_STREET_NAMES>. ‎Jatka eteenpäin kadulla <STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> Jatkaaksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> liittymässä <JUNCTION_NAME>.",
+        "5": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Jatka <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Jatka<RELATIVE_DIRECTION> Jatkaaksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> vaihtuu kaduksi ‎‎<STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> vaihtuu kaduksi ‎‎<STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte směrem na <TOWARD_SIGN>."
+        "0": "Jatka.",
+        "1": "Jatka kadulla <STREET_NAMES>.",
+        "2": "Jatka liittymässä <JUNCTION_NAME>.",
+        "3": "Jatka suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +183,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte <LENGTH>.",
-        "2": "Pokračujte na <STREET_NAMES>.",
-        "3": "Pokračujte <LENGTH> na <STREET_NAMES> .",
-        "4": "Pokračujte na <JUNCTION_NAME>.",
-        "5": "Pokračujte <LENGTH> na <JUNCTION_NAME>.",
-        "6": "Pokračujte směrem na <TOWARD_SIGN>.",
-        "7": "Pokračujte <LENGTH> směrem na <TOWARD_SIGN>."
+        "0": "Jatka.",
+        "1": "Jatka <LENGTH>.",
+        "2": "Jatka kadulla <STREET_NAMES>.",
+        "3": "Jatka kadulla <STREET_NAMES> <LENGTH>.",
+        "4": "Jatka liittymässä <JUNCTION_NAME>.",
+        "5": "Jatka liittymässä <JUNCTION_NAME> <LENGTH>.",
+        "6": "Jatka suuntana <TOWARD_SIGN>.",
+        "7": "Jatka suuntana <TOWARD_SIGN> <LENGTH>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte na <TOWARD_SIGN>."
+        "0": "Jatka.",
+        "1": "Jatka kadulla <STREET_NAMES>.",
+        "2": "Jatka liittymässä <JUNCTION_NAME>.",
+        "3": "Jatka suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +267,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Vyjeďte: <TIME>.",
-        "1": "Vyjeďte: <TIME> z <TRANSIT_STOP>."
+        "0": "Lähde: <TIME>.",
+        "1": "Lähde: <TIME> pysäkiltä <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Vyjeďte v <TIME>.",
-        "1": "Vyjeďte v <TIME> z <TRANSIT_STOP>."
+        "0": "Lähde kello <TIME>.",
+        "1": "Lähde kello <TIME> pysäkiltä <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +295,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Olet saapunut määränpäähäsi.",
+        "1": "Olet saapunut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalla",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +322,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Olet saapunut määränpäähäsi.",
+        "1": "Olet saapunut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalla",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +349,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Dorazíte do svého cíle.",
-        "1": "Dorazíte do <DESTINATION>.",
-        "2": "Váš cíl bude <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> bude <RELATIVE_DIRECTION>."
+        "0": "Saavut määränpäähäsi.",
+        "1": "Saavut määränpäähän <DESTINATION>.",
+        "2": "Määränpääsi on <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> on <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalla",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Mene lautalle.",
+        "1": "Mene kadulle <STREET_NAMES>.",
+        "2": "Mene kadun <STREET_NAMES> lautalle <FERRY_LABEL>.",
+        "3": "Mene lautalle suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "tcyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Lautta",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Mene lautalle.",
+        "1": "Mene kadulle <STREET_NAMES>.",
+        "2": "Mene kadun <STREET_NAMES> lautalle ‎‎<FERRY_LABEL>.",
+        "3": "Mene lautalle suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Lautta",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,27 +432,27 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte do <STREET_NAMES>",
-        "9": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "13": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Mene kiertoliittymään.",
+        "1": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno.",
+        "2": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Mene kiertoliittymään ja valitse <ORDINAL_VALUE> ‎ulosmeno suuntana <TOWARD_SIGN>.",
+        "5": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Mene kiertoliittymään ja valitse ulosmeno suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Mene kadulle <STREET_NAMES>",
+        "9": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "10": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "13": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "ordinal_values": [
         "1.",
@@ -528,27 +528,27 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a vyjeďte na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte na <STREET_NAMES>",
-        "9": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Vjeďtena <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Mene kiertoliittymään.",
+        "1": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "2": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Mene kiertoliittymään ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "5": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Mene kiertoliittymään ja valitse ulosmeno kadulle ‎‎<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Mene kiertoliittymään ja valitse ulosmeno ‎suuntana <TOWARD_SIGN>.",
+        "8": "Mene kadulle <STREET_NAMES>",
+        "9": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno.",
+        "10": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Mene kadulle <STREET_NAMES> ja valitse ‎‎<ORDINAL_VALUE> ulosmeno suuntana <TOWARD_SIGN>.",
+        "13": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno kadulle <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "ordinal_values": [
         "1.",
@@ -624,34 +624,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN><RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "Valitse ulosmeno <RELATIVE_DIRECTION>.",
+        "1": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN>.",
+        "4": "Valitse ulosmeno <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "5": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "6": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "8": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN>.",
+        "12": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "14": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "15": "Valitse ulosmeno.",
+        "16": "Valitse ulosmeno <NUMBER_SIGN>.",
+        "17": "Valitse ulosmeno <BRANCH_SIGN>.",
+        "18": "Valitse ulosmeno <NUMBER_SIGN> haaraan <BRANCH_SIGN>.",
+        "19": "Valitse ulosmeno suuntana <TOWARD_SIGN>.",
+        "20": "Valitse ulosmeno <NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "21": "Valitse ulosmeno <BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "22": "Valitse ulosmeno <NUMBER_SIGN> haaraan <BRANCH_SIGN> ja ‎suuntana <TOWARD_SIGN>.",
+        "23": "Valitse ulosmeno <NAME_SIGN>.",
+        "25": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN>.",
+        "27": "Valitse ulosmeno <NAME_SIGN> suuntana <TOWARD_SIGN>.",
+        "29": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN> ja ‎suuntana <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +731,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Poistu kiertoliittymästä.",
+        "1": "Poistu kiertoliittymästä kadulle <STREET_NAMES>.",
+        "2": "Poistu kiertoliittymästä kadulle <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "3": "Poistu kiertoliittymästä suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Poistu kiertoliittymästä.",
+        "1": "Poistu kiertoliittymästä kadulle <STREET_NAMES>.",
+        "2": "Poistu kiertoliittymästä kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Poistu kiertoliittymästä suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "Valitse ulosmeno <RELATIVE_DIRECTION>.",
+        "1": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN>.",
+        "4": "Valitse ulosmeno <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "5": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "6": "Valitse ulosmeno <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Valitse ulosmeno <NUMBER_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "8": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN>.",
+        "12": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "14": "Valitse ulosmeno <NAME_SIGN> <RELATIVE_DIRECTION> ‎haaraan <BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "15": "Valitse ulosmeno.",
+        "16": "Valitse ulosmeno <NUMBER_SIGN>.",
+        "17": "Valitse ulosmeno <BRANCH_SIGN>.",
+        "18": "Valitse ulosmeno <NUMBER_SIGN> haaraan ‎‎<BRANCH_SIGN>.",
+        "19": "Valitse ulosmeno suuntana <TOWARD_SIGN>.",
+        "20": "Valitse ulosmeno <NUMBER_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "21": "Valitse ulosmeno <BRANCH_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "22": "Valitse ulosmeno <NUMBER_SIGN> haaraan ‎‎<BRANCH_SIGN> ja suuntana <TOWARD_SIGN>.",
+        "23": "Valitse ulosmeno <NAME_SIGN>.",
+        "25": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN>.",
+        "27": "Valitse ulosmeno <NAME_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "29": "Valitse ulosmeno <NAME_SIGN> haaraan <BRANCH_SIGN> ‎ja suuntana <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Sjeďte <EXIT_NUMBERS>"
+        "0": "Ulosmeno <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +902,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Jatka Y-risteyksessä <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN>.",
+        "2": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle <STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>.",
+        "5": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "6": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle <STREET_NAMES> ‎suuntana <TOWARD_SIGN>.",
+        "7": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +952,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ‎ulosmenon <NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES>.",
+        "2": "Jatka <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ‎ulosmenon <NUMBER_SIGN> pysyäksesi kadulla <STREET_NAMES> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli do <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Drže se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Jatka Y-risteyksessä <RELATIVE_DIRECTION>.",
+        "1": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN>.",
+        "2": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle ‎‎<STREET_NAMES>.",
+        "3": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES>.",
+        "4": "Jatka <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>.",
+        "5": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> suuntana <TOWARD_SIGN>.",
+        "6": "Jatka <RELATIVE_DIRECTION> siirtyäksesi kadulle ‎‎<STREET_NAMES> suuntana <TOWARD_SIGN>.",
+        "7": "Jatka <RELATIVE_DIRECTION> valitaksesi ulosmenon ‎‎<NUMBER_SIGN> kadulle <STREET_NAMES> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "vasemmalla",
+        "suoraan eteenpäin",
+        "oikealla"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1070,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Liity.",
+        "1": "Liity <RELATIVE_DIRECTION>.",
+        "2": "Liity kadulle <STREET_NAMES>.",
+        "3": "Liity <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "4": "Liity suuntana <TOWARD_SIGN>.",
+        "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1109,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Liity.",
+        "1": "Liity <RELATIVE_DIRECTION>.",
+        "2": "Liity kadulle <STREET_NAMES>.",
+        "3": "Liity <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "4": "Liity suuntana <TOWARD_SIGN>.",
+        "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1148,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Cestování <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Matkusta <TRANSIT_STOP_COUNT> ‎‎<TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1163,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Pokračujte <LENGTH>.",
-        "1": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "0": "Jatka <LENGTH>.",
+        "1": "Jatka kadulla <STREET_NAMES> <LENGTH>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1198,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "Valitse ramppi <RELATIVE_DIRECTION>.",
+        "1": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ramppi <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "4": "Valitse ramppi <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin.",
+        "6": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "7": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "9": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin <NAME_SIGN>.",
+        "10": "Valitse ramppi.",
+        "11": "Valitse ramppi <BRANCH_SIGN>.",
+        "12": "Valitse ramppi suuntana <TOWARD_SIGN>.",
+        "13": "Valitse ramppi <BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "14": "Valitse ramppi <NAME_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Jatka suoraan eteenpäin valitaksesi rampin.",
+        "1": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "2": "Jatka suoraan eteenpäin valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Jatka suoraan eteenpäin valitaksesi rampin <BRANCH_SIGN> ‎suuntana <TOWARD_SIGN>.",
+        "4": "Jatka suoraan eteenpäin valitaksesi rampin <NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Jatka suoraan eteenpäin valitaksesi rampin.",
+        "1": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "2": "Jatka suoraan eteenpäin valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "4": "Jatka suoraan eteenpäin valitaksesi rampin ‎‎<NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "Valitse ramppi <RELATIVE_DIRECTION>.",
+        "1": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Valitse ramppi <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>.",
+        "3": "Valitse ramppi <BRANCH_SIGN> <RELATIVE_DIRECTION> ‎suuntana <TOWARD_SIGN>.",
+        "4": "Valitse ramppi <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin.",
+        "6": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN>.",
+        "7": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin suuntana ‎‎<TOWARD_SIGN>.",
+        "8": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<BRANCH_SIGN> suuntana <TOWARD_SIGN>.",
+        "9": "Käänny <RELATIVE_DIRECTION> valitaksesi rampin ‎‎<NAME_SIGN>.",
+        "10": "Valitse ramppi.",
+        "11": "Valitse ramppi <BRANCH_SIGN>.",
+        "12": "Valitse ramppi suuntana <TOWARD_SIGN>.",
+        "13": "Valitse ramppi <BRANCH_SIGN> suuntana ‎‎<TOWARD_SIGN>.",
+        "14": "Valitse ramppi <NAME_SIGN>."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1394,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Käänny tiukasti <RELATIVE_DIRECTION>.",
+        "1": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>.",
+        "3": "Käänny tiukasti <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny tiukasti <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny tiukasti <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1433,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Käänny tiukasti <RELATIVE_DIRECTION>.",
+        "1": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<STREET_NAMES>.",
+        "2": "Käänny tiukasti <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Käänny tiukasti <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny tiukasti <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny tiukasti <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1472,33 +1472,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "4": "Jeďte <CARDINAL_DIRECTION>.",
-        "5": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "6": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "8": "Jděte <CARDINAL_DIRECTION>.",
-        "9": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "16": "Jeďte <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>."
+        "0": "Suuntaa <CARDINAL_DIRECTION>.",
+        "1": "Suuntaa <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "2": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>.",
+        "4": "Aja <CARDINAL_DIRECTION>.",
+        "5": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "6": "Aja <CARDINAL_DIRECTION> kadulla <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "8": "Kävele <CARDINAL_DIRECTION>.",
+        "9": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "10": "Kävele <CARDINAL_DIRECTION> kadulla <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "16": "Pyöräile <CARDINAL_DIRECTION>.",
+        "17": "Pyöräile <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "18": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>. Jatka kadulla <STREET_NAMES>."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "pohjoiseen",
+        "koilliseen",
+        "itään",
+        "kaakkoon",
+        "etelään",
+        "lounaaseen",
+        "länteen",
+        "luoteeseen"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "example_phrases": {
         "0": [
@@ -1551,55 +1551,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "3": "Směřujte <LENGTH><CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "4": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "5": "Jeďte <CARDINAL_DIRECTION>.",
-        "6": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "7": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "8": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "9": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION>.",
-        "11": "Jděte <LENGTH> <CARDINAL_DIRECTION>.",
-        "12": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "13": "Jděte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "14": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "15": "Jeďte <CARDINAL_DIRECTION>.",
-        "16": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "19": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>."
+        "0": "Suuntaa <CARDINAL_DIRECTION>.",
+        "1": "Suuntaa <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<STREET_NAMES>.",
+        "3": "Suuntaa <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "4": "Suuntaa <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "5": "Aja <CARDINAL_DIRECTION>.",
+        "6": "Aja <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "8": "Aja <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "9": "Aja <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "10": "Kävele <CARDINAL_DIRECTION>.",
+        "11": "Kävele <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES>.",
+        "13": "Kävele <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "14": "Kävele <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>.",
+        "15": "Pyöräile <CARDINAL_DIRECTION>.",
+        "16": "Pyöräile <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<STREET_NAMES>.",
+        "18": "Pyöräile <CARDINAL_DIRECTION> kadulla <STREET_NAMES> ‎‎<LENGTH>.",
+        "19": "Pyöräile <CARDINAL_DIRECTION> kadulla ‎‎<BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "pohjoiseen",
+        "koilliseen",
+        "itään",
+        "kaakkoon",
+        "etelään",
+        "lounaaseen",
+        "länteen",
+        "luoteeseen"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1674,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Matkusta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> ‎‎<TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Matkusta <TRANSIT_NAME> suuntana <TRANSIT_HEADSIGN>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1705,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Poistu asemalta.",
+        "1": "Poistu pysäkiltä <TRANSIT_STOP>.",
+        "2": "Poistu pysäkiltä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1724,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Poistu asemalta.",
+        "1": "Poistu pysäkiltä <TRANSIT_STOP>.",
+        "2": "Poistu pysäkiltä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1743,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Mene asemalle.",
+        "1": "Mene pysäkille <TRANSIT_STOP>.",
+        "2": "Mene pysäkille <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1762,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Mene asemalle.",
+        "1": "Mene pysäkille <TRANSIT_STOP>.",
+        "2": "Mene pysäkille <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1781,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Vaihda asemalla.",
+        "1": "Vaihda pysäkillä <TRANSIT_STOP>.",
+        "2": "Vaihda pysäkillä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1800,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Vaihda asemalla.",
+        "1": "Vaihda pysäkillä <TRANSIT_STOP>.",
+        "2": "Vaihda pysäkillä <TRANSIT_STOP> ‎‎<STATION_LABEL>."
       },
-      "station_label": "Zastávka",
+      "station_label": "Asema",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1819,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Jatka matkustamista <TRANSIT_NAME>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Jatka matkustamista <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1848,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>.",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Jatka matkustamista <TRANSIT_NAME>.",
+        "1": "Jatka matkustamista <TRANSIT_NAME> ‎suuntana <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1872,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Vaihda matkustaaksesi <TRANSIT_NAME>. ‎‎(<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Vaihda matkustaaksesi <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "pysäkinväli",
+        "other": "pysäkinväliä"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1901,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>.",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Vaihda matkustaaksesi <TRANSIT_NAME>.",
+        "1": "Vaihda matkustaaksesi <TRANSIT_NAME> ‎suuntana <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1925,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>.",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "Matkusta <TRANSIT_NAME>.",
+        "1": "Matkusta <TRANSIT_NAME> suuntana ‎‎<TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "raitiovaunulla",
+        "metrolla",
+        "junalla",
+        "linja-autolla",
+        "lautalla",
+        "köysiradalla",
+        "gondolihissillä",
+        "kiskoköysiradalla"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1949,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Käänny <RELATIVE_DIRECTION>.",
+        "1": "Käänny <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny <RELATIVE_DIRECTION> kadulle <BEGIN_STREET_NAMES>. ‎Jatka kadulla <STREET_NAMES>.",
+        "3": "Käänny <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny <RELATIVE_DIRECTION> liittymässä <JUNCTION_NAME>.",
+        "5": "Käänny <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Käänny <RELATIVE_DIRECTION>.",
+        "1": "Käänny <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Käänny <RELATIVE_DIRECTION> kadulle ‎‎<BEGIN_STREET_NAMES>.",
+        "3": "Käänny <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "4": "Käänny <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "5": "Käänny <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2027,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Tee U-käännös <RELATIVE_DIRECTION>.",
+        "1": "Tee U-käännös <RELATIVE_DIRECTION> kadulle <STREET_NAMES>.",
+        "2": "Tee U-käännös <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "3": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä.",
+        "4": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä kadulle <STREET_NAMES>.",
+        "5": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä pysyäksesi kadulla <STREET_NAMES>.",
+        "6": "Tee U-käännös <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "7": "Tee U-käännös <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>.",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180°<RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180 °<RELATIVE_DIRECTION>.",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Tee U-käännös <RELATIVE_DIRECTION>.",
+        "1": "Tee U-käännös <RELATIVE_DIRECTION> kadulle ‎‎<STREET_NAMES>.",
+        "2": "Tee U-käännös <RELATIVE_DIRECTION> pysyäksesi kadulla ‎‎<STREET_NAMES>.",
+        "3": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä.",
+        "4": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä kadulle <STREET_NAMES>.",
+        "5": "Tee U-käännös <RELATIVE_DIRECTION> kadun ‎‎<CROSS_STREET_NAMES> risteyksessä pysyäksesi kadulla <STREET_NAMES>.",
+        "6": "Tee U-käännös <RELATIVE_DIRECTION> liittymässä ‎‎<JUNCTION_NAME>.",
+        "7": "Tee U-käännös <RELATIVE_DIRECTION> suuntana ‎‎<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "vasemmalle",
+        "oikealle"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Poté <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Poté za <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Sitten <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Sitten, kun matkaa on kulunut ‎‎<LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
       ],
       "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
       ],
       "example_phrases": {
         "0": [

@@ -1,26 +1,26 @@
 {
-  "posix_locale": "cs_CZ.UTF-8",
+  "posix_locale": "tr_TR.UTF-8",
   "aliases": [
-    "cs"
+    "tr"
   ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
-        "0": "Za <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "<LENGTH> sonunda, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS>kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
       ],
       "us_customary_lengths": [
         "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET>fit",
+        "10 fitten daha az"
       ],
       "example_phrases": {
         "0": [
@@ -30,8 +30,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Přijeďte: <TIME>.",
-        "1": "Přijeďte: <TIME> do <TRANSIT_STOP>."
+        "0": "Varış: <TIME>.",
+        "1": "Varış: <TIME> <TRANSIT_STOP> durağında."
       },
       "example_phrases": {
         "0": [
@@ -44,8 +44,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Přijeďte v <TIME>.",
-        "1": "Přijeďte v <TIME> do <TRANSIT_STOP>."
+        "0": "Saat <TIME>'da varış.",
+        "1": "Saat <TIME>'da <TRANSIT_STOP> durağına varış."
       },
       "example_phrases": {
         "0": [
@@ -58,21 +58,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin. <STREET_NAMES> caddesine devam edin.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -97,21 +97,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION> yönelin.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION> yönelin.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION> yönelin.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION> yönelin.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION> yönelin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -136,7 +136,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES>, <STREET_NAMES> olarak değişiyor."
       },
       "example_phrases": {
         "0": [
@@ -146,7 +146,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "Z <PREVIOUS_STREET_NAMES> se stává <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES>, <STREET_NAMES> olarak değişiyor."
       },
       "example_phrases": {
         "0": [
@@ -156,15 +156,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte směrem na <TOWARD_SIGN>."
+        "0": "Devam edin.",
+        "1": "<STREET_NAMES> caddesine devam edin.",
+        "2": "<JUNCTION_NAME> kavşağından devam edin.",
+        "3": "<TOWARD_SIGN> işaretine doğru devam edin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "example_phrases": {
         "0": [
@@ -183,33 +183,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte <LENGTH>.",
-        "2": "Pokračujte na <STREET_NAMES>.",
-        "3": "Pokračujte <LENGTH> na <STREET_NAMES> .",
-        "4": "Pokračujte na <JUNCTION_NAME>.",
-        "5": "Pokračujte <LENGTH> na <JUNCTION_NAME>.",
-        "6": "Pokračujte směrem na <TOWARD_SIGN>.",
-        "7": "Pokračujte <LENGTH> směrem na <TOWARD_SIGN>."
+        "0": "Devam edin.",
+        "1": "<LENGTH> boyunca devam edin.",
+        "2": "<STREET_NAMES> caddesine devam edin.",
+        "3": "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin.",
+        "4": "<JUNCTION_NAME> kavşağından devam edin.",
+        "5": "<JUNCTION_NAME> kavşağından <LENGTH> boyunca devam edin.",
+        "6": "<TOWARD_SIGN> işaretine doğru devam edin.",
+        "7": "<TOWARD_SIGN> işaretine doğru for <LENGTH> boyunca devam edin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS> kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
       ],
       "us_customary_lengths": [
         "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET> fit",
+        "10 fitten az"
       ],
       "example_phrases": {
         "0": [
@@ -240,15 +240,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Pokračujte.",
-        "1": "Pokračujte na <STREET_NAMES>.",
-        "2": "Pokračujte na <JUNCTION_NAME>.",
-        "3": "Pokračujte na <TOWARD_SIGN>."
+        "0": "Decam edin.",
+        "1": "<STREET_NAMES>caddesine devam edin.",
+        "2": "<JUNCTION_NAME> kavşağına devam edin.",
+        "3": "<TOWARD_SIGN> işaretine doğru devam edin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "example_phrases": {
         "0": [
@@ -267,8 +267,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Vyjeďte: <TIME>.",
-        "1": "Vyjeďte: <TIME> z <TRANSIT_STOP>."
+        "0": "Kalkış: <TIME>.",
+        "1": "Kalkış: <TRANSIT_STOP> durağından saat <TIME>'da kalkış."
       },
       "example_phrases": {
         "0": [
@@ -281,8 +281,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Vyjeďte v <TIME>.",
-        "1": "Vyjeďte v <TIME> z <TRANSIT_STOP>."
+        "0": "Saat <TIME>'da kalkış.",
+        "1": "<TRANSIT_STOP> durağından saat <TIME>'da kalkış."
       },
       "example_phrases": {
         "0": [
@@ -295,14 +295,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Hedefinize vardınız.",
+        "1": "<DESTINATION> durağına vardınız.",
+        "2": "Hedefiniz <RELATIVE_DIRECTION>da.",
+        "3": "<DESTINATION> durağı <RELATIVE_DIRECTION>da."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -322,14 +322,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Dorazili jste do svého cíle.",
-        "1": "Dorazili jste do <DESTINATION>.",
-        "2": "Váš cíl je <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> je <RELATIVE_DIRECTION>."
+        "0": "Hedefinize vardınız.",
+        "1": "<DESTINATION> durağına vardınız.",
+        "2": "Hedefiniz <RELATIVE_DIRECTION>da.",
+        "3": "<DESTINATION> durağı <RELATIVE_DIRECTION>da."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -349,14 +349,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Dorazíte do svého cíle.",
-        "1": "Dorazíte do <DESTINATION>.",
-        "2": "Váš cíl bude <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> bude <RELATIVE_DIRECTION>."
+        "0": "Hedefinize varacaksınız.",
+        "1": "<DESTINATION> durağına varacaksınız.",
+        "2": "Hedefiniz <RELATIVE_DIRECTION>da kalacak.",
+        "3": "<DESTINATION> durağı <RELATIVE_DIRECTION>da olacak."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -376,17 +376,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Feribota binin.",
+        "1": "<STREET_NAMES> caddesine dönün.",
+        "2": "<STREET_NAMES> caddesine dönün <FERRY_LABEL>.",
+        "3": "<TOWARD_SIGN> işaretine doğru feribota binin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "tcyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -404,17 +404,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Jeďte trajektem.",
-        "1": "Jeďte po <STREET_NAMES>.",
-        "2": "Jeďte <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Jeďte trajektem k <TOWARD_SIGN>."
+        "0": "Feribota binin.",
+        "1": "<STREET_NAMES> caddesine dönün.",
+        "2": "<STREET_NAMES> caddesine dönün <FERRY_LABEL>.",
+        "3": "<TOWARD_SIGN> işaretine doğru feribota binin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
-      "ferry_label": "Trajekt",
+      "ferry_label": "Feribot",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -432,39 +432,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte do <STREET_NAMES>",
-        "9": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Vjeďte do <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <TOWARD_SIGN>.",
-        "13": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Döner kavşağa girin.",
+        "1": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru devam edin.",
+        "4": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
+        "7": "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın.",
+        "8": "<STREET_NAMES> caddesine girin",
+        "9": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "10": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine çıkın.",
+        "11": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine çıkın. <ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
+        "12": "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "13": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
+        "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "ordinal_values": [
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "6.",
-        "7.",
-        "8.",
-        "9.",
-        "10."
+        "Birinci",
+        "İkinci",
+        "Üçüncü",
+        "Dördüncü",
+        "Beşinci",
+        "Altıncı",
+        "Yedinci",
+        "Sekizinci",
+        "Dokuzuncu",
+        "Onuncu"
       ],
       "example_phrases": {
         "0": [
@@ -528,39 +528,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Vjeďte na kruhový objezd.",
-        "1": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "2": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Vjeďte na kruhový objezd a sjeďte <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Vjeďte na kruhový objezd a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "5": "Vjeďte na kruhový objezd a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Vjeďte na kruhový objezd a vyjeďte na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Vjeďte na kruhový objezd a sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "8": "Vjeďte na <STREET_NAMES>",
-        "9": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu.",
-        "10": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Vjeďte na <STREET_NAMES> a sjeďte na <ORDINAL_VALUE> výjezdu směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Vjeďtena <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
+        "0": "Döner kavşağa girin.",
+        "1": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "2": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "3": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
+        "4": "Döner kavşağa girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "Döner kavşağa girin <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "6": "Döner kavşağa girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
+        "7": "Döner kavşağa girin ve <TOWARD_SIGN> işaretine doğru çıkın.",
+        "8": "<STREET_NAMES> caddesine girin",
+        "9": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan çıkın.",
+        "10": "<STREET_NAMES> caddesine girin ve<ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "11": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.",
+        "12": "<STREET_NAMES> caddesine girin ve <ORDINAL_VALUE> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "13": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_STREET_NAMES> caddesine doğru çıkın.",
+        "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>caddesine doğru çıkın.",
+        "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "ordinal_values": [
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "6.",
-        "7.",
-        "8.",
-        "9.",
-        "10."
+        "Birinci",
+        "İkinci",
+        "Üçüncü",
+        "Dördüncü",
+        "Beşinci",
+        "Altıncı",
+        "Yedinci",
+        "Sekizinci",
+        "Dokuzuncu",
+        "Onuncu"
       ],
       "example_phrases": {
         "0": [
@@ -624,34 +624,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN><RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu směrem na <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>daki çıkıştan çıkın.",
+        "1": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan çıkın.",
+        "2": "<RELATIVE_DIRECTION>taki <BRANCH_SIGN> çıkıştan çıkın.",
+        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <BRANCH_SIGN> işaretine doğru çıkın.",
+        "4": "<RELATIVE_DIRECTION>daki çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından çıkın.",
+        "10": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <BRANCH_SIGN> işaretine doğru çıkın.",
+        "12": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "14": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "15": "Çıkın",
+        "16": "<NUMBER_SIGN> çıkıştan çıkın.",
+        "17": "<BRANCH_SIGN> çıkışından çıkın.",
+        "18": "<NUMBER_SIGN> çıkıştan <BRANCH_SIGN> işaretine doğru çıkın.",
+        "19": "<TOWARD_SIGN> doğru çıkın.",
+        "20": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkıştan çıkın.",
+        "21": "<BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "22": "<BRANCH_SIGN> üzerindeki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "23": "<NAME_SIGN> çıkışından çıkın.",
+        "25": "<BRANCH_SIGN> üzerindeki <NAME_SIGN> çıkışından çıkın.",
+        "27": "<TOWARD_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
+        "29": "<BRANCH_SIGN> üzerindeki <NAME_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -731,15 +731,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Döner kavşaktan çıkın",
+        "1": "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın. <STREET_NAMES> caddesine devam edin.",
+        "3": "<TOWARD_SIGN> işaretine doğru döner kavşaktan çıkın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "example_phrases": {
         "0": [
@@ -758,15 +758,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Sjeďte z kruhového objezdu.",
-        "1": "Sjeďte z kruhového objezdu na <STREET_NAMES>.",
-        "2": "Sjeďte z kruhového objezdu na <BEGIN_STREET_NAMES>.",
-        "3": "Sjeďte z kruhového objezdu směrem na <TOWARD_SIGN>."
+        "0": "Döner kavşaktan çıkın.",
+        "1": "<STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru döner kavşaktan çıkın.",
+        "3": "<TOWARD_SIGN> işaretine doğru döner kavşaktan çıkın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "example_phrases": {
         "0": [
@@ -785,34 +785,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Sjeďte na výjezdu <RELATIVE_DIRECTION>.",
-        "1": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "4": "Sjeďte na výjezdu <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "6": "Sjeďte na výjezdu <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "7": "Sjeďte na výjezdu <NUMBER_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "8": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "10": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN>.",
-        "12": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "14": "Sjeďte na výjezdu <NAME_SIGN> <RELATIVE_DIRECTION> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "15": "Sjeďte na výjezdu.",
-        "16": "Sjeďte na výjezdu <NUMBER_SIGN>.",
-        "17": "Sjeďte na výjezdu <BRANCH_SIGN>.",
-        "18": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN>.",
-        "19": "Sjeďte na výjezdu <TOWARD_SIGN>.",
-        "20": "Sjeďte na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "21": "Sjeďte na výjezdu <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "22": "Sjeďte na výjezdu <NUMBER_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "23": "Sjeďte na výjezdu <NAME_SIGN>.",
-        "25": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN>.",
-        "27": "Sjeďte na výjezdu <NAME_SIGN> směrem na <TOWARD_SIGN>.",
-        "29": "Sjeďte na výjezdu <NAME_SIGN> na <BRANCH_SIGN> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>daki çıkıştan çıkın.",
+        "1": "Take exit on the <RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan çıkın.",
+        "2": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından çıkın.",
+        "3": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <BRANCH_SIGN> doğru çıkın.",
+        "4": "<RELATIVE_DIRECTION>daki <TOWARD_SIGN> işaretine doğru çıkın.",
+        "5": "<RELATIVE_DIRECTION>daki <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "6": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "7": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkıştan <TOWARD_SIGN> işaretine doğru çıkın.",
+        "8": "<RELATIVE_DIRECTION>daki <NAME_SIGN> çıkıştan çıkın.",
+        "10": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
+        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> üzerinde bulunan <NAME_SIGN> çıkışından <TOWARD_SIGN> işaretine doğru çıkın.",
+        "15": "Çıkıştan çıkın",
+        "16": "<NUMBER_SIGN> çıkıştan çıkın.",
+        "17": "<BRANCH_SIGN> çıkışından çıkın.",
+        "18": "<BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkın.",
+        "19": "<TOWARD_SIGN> işaretine giden çıkıştan çıkın.",
+        "20": "<TOWARD_SIGN> işaretine giden <NUMBER_SIGN> çıkıştan çıkın.",
+        "21": "<TOWARD_SIGN> işaretine giden <BRANCH_SIGN> çıkışından çıkın.",
+        "22": "<TOWARD_SIGN> işaretine giden <BRANCH_SIGN> üzerinde bulunan <NUMBER_SIGN> çıkıştan çıkın.",
+        "23": "<NAME_SIGN> çıkışından çıkın.",
+        "25": "<BRANCH_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
+        "27": "<TOWARD_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın.",
+        "29": "<BRANCH_SIGN> üzerinde bulunan <TOWARD_SIGN> işaretine doğru <NAME_SIGN> çıkışından çıkın."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -892,7 +892,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Sjeďte <EXIT_NUMBERS>"
+        "0": "Çıkın <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -902,24 +902,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Çatalın <RELATIVE_DIRECTION> yönünde kalın.",
+        "1": "<NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> caddesine giden <NUMBER_SIGN> çıkışından çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "4": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "7": "<STREET_NAMES> üzerinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "sol",
+        "straight",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -952,20 +952,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın.",
+        "1": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkıştan çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "sol",
+        "straight",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -986,20 +986,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> a zůstali na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>da kalın.",
+        "1": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> caddesinde kalmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> caddesinde kalmak amacıyla <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "sol",
+        "straight",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1020,24 +1020,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Na rozdvojení se držte <RELATIVE_DIRECTION>.",
-        "1": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN>.",
-        "2": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <STREET_NAMES>.",
-        "3": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES>.",
-        "4": "Držte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "5": "Držte se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> směrem na <TOWARD_SIGN>.",
-        "6": "Držte se <RELATIVE_DIRECTION>, abyste vjeli do <STREET_NAMES> směrem na <TOWARD_SIGN>.",
-        "7": "Drže se <RELATIVE_DIRECTION>, abyste sjeli na výjezdu <NUMBER_SIGN> na <STREET_NAMES> směrem na <TOWARD_SIGN>."
+        "0": "Çatalın <RELATIVE_DIRECTION>da kalın.",
+        "1": "<NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "2": "<STREET_NAMES> caddesine girmek için <RELATIVE_DIRECTION>da kalın.",
+        "3": "<STREET_NAMES> caddesine doğru <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "4": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "5": "<TOWARD_SIGN> işaretine doğru <NUMBER_SIGN> çıkıştan çıkmak için <RELATIVE_DIRECTION>da kalın.",
+        "6": "<STREET_NAMES> caddesine girmek için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın.",
+        "7": "<STREET_NAMES> caddesinde bulunan <NUMBER_SIGN> çıkışından çıkmak için <TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>da kalın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "uprostřed",
-        "vpravo"
+        "sol",
+        "straight",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1070,21 +1070,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Yola katılın.",
+        "1": "<RELATIVE_DIRECTION>dan yola katılın.",
+        "2": "<STREET_NAMES> caddesine doğru yola katılın.",
+        "3": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>dan yola katılın.",
+        "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
+        "5": "<RELATIVE_DIRECTION>dan yola katılın toward <TOWARD_SIGN> işaretine doğru."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1109,21 +1109,21 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Zařaďte se.",
-        "1": "Zařaďte se <RELATIVE_DIRECTION>.",
-        "2": "Zařaďte se k <STREET_NAMES>.",
-        "3": "Zařaďte se <RELATIVE_DIRECTION> k <STREET_NAMES>.",
-        "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
-        "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "Yola katıl.",
+        "1": "<RELATIVE_DIRECTION> doğru yola katılın.",
+        "2": "<STREET_NAMES> caddesine katılın.",
+        "3": "<RELATIVE_DIRECTION> doğru <STREET_NAMES>caddesine katılın.",
+        "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
+        "5": "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1148,11 +1148,11 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Cestování <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Seyahat edin <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "durak",
+        "other": "duraklar"
       },
       "example_phrases": {
         "0": [
@@ -1163,27 +1163,27 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Pokračujte <LENGTH>.",
-        "1": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "0": "<LENGTH> boyunca devam edin.",
+        "1": "<STREET_NAMES> caddesinde <LENGTH> boyunca devam edin."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS>kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
       ],
       "us_customary_lengths": [
         "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET>fit",
+        "10 fitten daha az"
       ],
       "example_phrases": {
         "0": [
@@ -1198,25 +1198,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "<RELATIVE_DIRECTION>daki rampayı kullanın.",
+        "1": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> rampasını kullanın.",
+        "2": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>daki rampayı kullanın.",
+        "3": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>daki <BRANCH_SIGN> rampasını kullanın.",
+        "4": "<RELATIVE_DIRECTION>daki <NAME_SIGN> rampasını kullanın.",
+        "5": "Rampayı kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "6": "<BRANCH_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "7": "<TOWARD_SIGN> işaretine doğru rampayı kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "8": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "9": "<NAME_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "10": "Rampayı kullanın.",
+        "11": "<BRANCH_SIGN> rampasını kullanın.",
+        "12": "<TOWARD_SIGN> işaretine doğru rampayı kullanın.",
+        "13": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanın.",
+        "14": "<NAME_SIGN> rampasını kullanın."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1270,11 +1270,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Rampayı kullanmak için düz devam edin.",
+        "1": "<BRANCH_SIGN> rampasını kullanmak için düz devam edin.",
+        "2": "<TOWARD_SIGN> işaretine doğru rampayı kullanmak için düz devam edin.",
+        "3": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanmak için düz devam edin.",
+        "4": "<NAME_SIGN> rampasını kullanmak için düz devam edin."
       },
       "example_phrases": {
         "0": [
@@ -1296,11 +1296,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Pokračujte rovně, abyste vjeli na nájezd.",
-        "1": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "4": "Pokračujte rovně, abyste vjeli na nájezd <NAME_SIGN>."
+        "0": "Rampayı kullanmak için düz devam edin.",
+        "1": "<BRANCH_SIGN> rampasını kullanmak için düz devam edin.",
+        "2": "<TOWARD_SIGN> işaretine doğru rampayı kullanmak için düz devam edin.",
+        "3": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanmak için düz devam edin.",
+        "4": "<NAME_SIGN> rampasını kullanmak için düz devam edin."
       },
       "example_phrases": {
         "0": [
@@ -1322,25 +1322,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Vjeďte na nájezd <RELATIVE_DIRECTION>.",
-        "1": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Vjeďte na nájezd <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "3": "Vjeďte na nájezd <BRANCH_SIGN> <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
-        "4": "Vjeďte na nájezd <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "5": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd.",
-        "6": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN>.",
-        "7": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd směrem na <TOWARD_SIGN>.",
-        "8": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "9": "Odbočte <RELATIVE_DIRECTION>, abyste vjeli na nájezd <NAME_SIGN>.",
-        "10": "Vjeďte na nájezd.",
-        "11": "Vjeďte na nájezd <BRANCH_SIGN>.",
-        "12": "Vjeďte na nájezd směrem na <TOWARD_SIGN>.",
-        "13": "Vjeďte na nájezd <BRANCH_SIGN> směrem na <TOWARD_SIGN>.",
-        "14": "Vjeďte na nájezd <NAME_SIGN>."
+        "0": "<RELATIVE_DIRECTION>daki rampayı kullanın.",
+        "1": "<RELATIVE_DIRECTION>daki <BRANCH_SIGN> rampasını kullanın.",
+        "2": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>daki rampayı kullanın.",
+        "3": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>daki <BRANCH_SIGN> rampasını kullanın.",
+        "4": "<RELATIVE_DIRECTION>daki <NAME_SIGN> rampasını kullanın.",
+        "5": "Rampayı kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "6": "<BRANCH_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "7": "<TOWARD_SIGN> işaretine doğru rampayı kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "8": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "9": "<NAME_SIGN> rampasını kullanmak için <RELATIVE_DIRECTION>a dönün.",
+        "10": "Rampayı kullanın.",
+        "11": "<BRANCH_SIGN> rampasını kullanın.",
+        "12": "<TOWARD_SIGN> işaretine doğru rampayı kullanın.",
+        "13": "<TOWARD_SIGN> işaretine doğru <BRANCH_SIGN> rampasını kullanın.",
+        "14": "<NAME_SIGN> rampasını kullanın."
       },
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1394,21 +1394,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın. <STREET_NAMES> caddesine devam edin.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1433,21 +1433,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
-        "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Na <JUNCTION_NAME> odbočte ostře <RELATIVE_DIRECTION>.",
-        "5": "Odbočte ostře <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru keskin bir dönüş yapın.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a keskin bir dönüş yapın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1472,33 +1472,33 @@
     },
     "start": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "4": "Jeďte <CARDINAL_DIRECTION>.",
-        "5": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "6": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "8": "Jděte <CARDINAL_DIRECTION>.",
-        "9": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "16": "Jeďte <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>."
+        "0": "<CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "1": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "2": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin. <STREET_NAMES> caddesine devam edin.",
+        "4": "<CARDINAL_DIRECTION> yönüne doğru sürün.",
+        "5": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün.",
+        "6": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru sürün. <STREET_NAMES> caddesine devam edin.",
+        "8": "<CARDINAL_DIRECTION> yönüne yürüyün.",
+        "9": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün.",
+        "10": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne yürüyün.<STREET_NAMES> caddesine devam edin.",
+        "16": "<CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "17": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "18": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin. <STREET_NAMES> caddesine devam edin."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "kuzey",
+        "kuzeydoğu",
+        "güney",
+        "güneydoğu",
+        "güney",
+        "güneybatı",
+        "batı",
+        "kuzeybatı"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "example_phrases": {
         "0": [
@@ -1551,55 +1551,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Směřujte <CARDINAL_DIRECTION>.",
-        "1": "Směřujte <LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "Směřujte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "3": "Směřujte <LENGTH><CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "4": "Směřujte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "5": "Jeďte <CARDINAL_DIRECTION>.",
-        "6": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "7": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "8": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "9": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "10": "Jděte <CARDINAL_DIRECTION>.",
-        "11": "Jděte <LENGTH> <CARDINAL_DIRECTION>.",
-        "12": "Jděte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "13": "Jděte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "14": "Jděte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "15": "Jeďte <CARDINAL_DIRECTION>.",
-        "16": "Jeďte <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Jeďte <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "18": "Jeďte <LENGTH> <CARDINAL_DIRECTION> na <STREET_NAMES>.",
-        "19": "Jeďte <CARDINAL_DIRECTION> na <BEGIN_STREET_NAMES>."
+        "0": "<CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "1": "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "2": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "3": "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "4": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "5": "<CARDINAL_DIRECTION> yönüne sürün.",
+        "6": "<LENGTH> boyunca <CARDINAL_DIRECTION> yönüne sürün.",
+        "7": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "8": "<STREET_NAMES> caddesinde <LENGTH> boyunca <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "9": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne ilerleyin.",
+        "10": "<CARDINAL_DIRECTION> yönüne yürüyün.",
+        "11": "<CARDINAL_DIRECTION> yönünde <LENGTH> boyunca yürüyün.",
+        "12": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
+        "13": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru <LENGTH> boyunca yürüyün.",
+        "14": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne doğru yürüyün.",
+        "15": "<CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "16": "<CARDINAL_DIRECTION> yönüne <LENGTH> boyunca bisikletinizle ilerleyin.",
+        "17": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin.",
+        "18": "<STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönünde <LENGTH> boyunca bisikletinizle ilerleyin.",
+        "19": "<BEGIN_STREET_NAMES> caddesinde <CARDINAL_DIRECTION> yönüne bisikletinizle ilerleyin."
       },
       "cardinal_directions": [
-        "na sever",
-        "na severovýchod",
-        "na východ",
-        "na jihovýchod",
-        "na jih",
-        "na jihozápad",
-        "na západ",
-        "na severozápad"
+        "kuzey",
+        "kuzeydoğu",
+        "doğu",
+        "güneydoğu",
+        "güney",
+        "güneybatı",
+        "batı",
+        "kuzeybatı"
       ],
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS>kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
       ],
       "us_customary_lengths": [
         "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET>fit",
+        "10 fitten daha az"
       ],
       "example_phrases": {
         "0": [
@@ -1674,22 +1674,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME> geçişini kullanın (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişini kullanın. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "durak",
+        "other": "duraklar"
       },
       "example_phrases": {
         "0": [
@@ -1705,11 +1705,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyondan çıkın.",
+        "1": "<TRANSIT_STOP> istasyonundan çıkın.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonundan çıkın."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1724,11 +1724,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Odejděte ze zastávky.",
-        "1": "Odejděte z <TRANSIT_STOP>.",
-        "2": "Odejděte z <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyondan çıkın.",
+        "1": "<TRANSIT_STOP> istasyonundan çıkın.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonundan çıkın."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1743,11 +1743,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyonuna girin.",
+        "1": "<TRANSIT_STOP> durağına girin.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>durağına girin."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1762,11 +1762,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Vstupte na zastávku.",
-        "1": "Vstupte na <TRANSIT_STOP>.",
-        "2": "Vstupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyonuna girin.",
+        "1": "<TRANSIT_STOP> durağına girin.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>durağına girin."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1781,11 +1781,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyonunda aktarma yapın.",
+        "1": "<TRANSIT_STOP> istasyonunda aktarma yapın.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonunda aktarma yapın."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1800,11 +1800,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte na zastávce.",
-        "1": "Přestupte na <TRANSIT_STOP>.",
-        "2": "Přestupte na <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "İstasyonunda aktarma yapın.",
+        "1": "<TRANSIT_STOP> istasyonunda aktarma yapın.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> istasyonunda aktarma yapın."
       },
-      "station_label": "Zastávka",
+      "station_label": "İstasyon",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1819,22 +1819,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME> geçişinde kalın. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişinde kalın. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "durak",
+        "other": "duraklar"
       },
       "example_phrases": {
         "0": [
@@ -1848,18 +1848,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Zůstaňte <TRANSIT_NAME>.",
-        "1": "Zůstaňte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "<TRANSIT_NAME> geçişinde kalın.",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişinde kalın."
       },
       "empty_transit_name_labels": [
-        "v tramvaji",
-        "v metru",
-        "ve vlaku",
-        "v autobuse",
-        "na trajektu",
-        "v lanovce",
-        "v gondole",
-        "v pozemní lanovce"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "example_phrases": {
         "0": [
@@ -1872,22 +1872,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME> geçişini kullanmak için aktarma yapın. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişini kullanmak için aktarma yapın (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "transit_stop_count_labels": {
-        "one": "zastávka",
-        "other": "zastávky"
+        "one": "durak",
+        "other": "duraklar"
       },
       "example_phrases": {
         "0": [
@@ -1901,18 +1901,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Přestupte, abyste nastoupili <TRANSIT_NAME>.",
-        "1": "Přestupte, abyste nastoupili <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "<TRANSIT_NAME> geçişini kullanmak için aktarma yapın.",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişini kullanmak için aktarma yapın."
       },
       "empty_transit_name_labels": [
-        "do tramvaje",
-        "do metra",
-        "do vlaku",
-        "do autobusu",
-        "na trajekt",
-        "do lanovky",
-        "na gondolu",
-        "do pozemní lanovky"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "example_phrases": {
         "0": [
@@ -1925,18 +1925,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Jeďte <TRANSIT_NAME>.",
-        "1": "Jeďte <TRANSIT_NAME> směrem na <TRANSIT_HEADSIGN>."
+        "0": "<TRANSIT_NAME> geçişini kullanın.",
+        "1": "<TRANSIT_HEADSIGN> işaretine doğru <TRANSIT_NAME> geçişini kullanın."
       },
       "empty_transit_name_labels": [
-        "tramvají",
-        "metrem",
-        "vlakem",
-        "autobusem",
-        "trajektem",
-        "lanovkou",
-        "gondolou",
-        "pozemní lanovkou"
+        "tramvay",
+        "metro",
+        "tren",
+        "otobüs",
+        "feribot",
+        "teleferik",
+        "gondol",
+        "füniküler"
       ],
       "example_phrases": {
         "0": [
@@ -1949,21 +1949,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a dönün.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.<STREET_NAMES> caddesine devam edin.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a dönün.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a dönün."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -1988,21 +1988,21 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Odbočte <RELATIVE_DIRECTION>.",
-        "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "4": "Odbočte <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "5": "Odbočte <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a dönün.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
+        "2": "<BEGIN_STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a dönün.",
+        "3": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a dönün.",
+        "4": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a dönün.",
+        "5": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a dönün."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -2027,23 +2027,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "1": "<STREET_NAMES> caddesi üzerinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "2": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "3": "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -2074,23 +2074,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Otočte se o 180° <RELATIVE_DIRECTION>.",
-        "1": "Otočte se o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "3": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>.",
-        "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Na <CROSS_STREET_NAMES> se otočte o 180°<RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
-        "6": "Na <JUNCTION_NAME> se otočte o 180 °<RELATIVE_DIRECTION>.",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "1": "<STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "2": "<STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "3": "<CROSS_STREET_NAMES> caddesinde <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
       },
       "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu"
       ],
       "relative_directions": [
-        "vlevo",
-        "vpravo"
+        "sol",
+        "sağ"
       ],
       "example_phrases": {
         "0": [
@@ -2121,22 +2121,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Poté <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Poté za <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Sonra <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Sonra, <LENGTH> sonunda, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
+        "<KILOMETERS>kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
       ],
       "us_customary_lengths": [
         "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET>fit",
+        "10 fitten daha az"
       ],
       "example_phrases": {
         "0": [
