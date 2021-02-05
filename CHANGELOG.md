@@ -17,8 +17,8 @@
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
-   * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
    * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
+   * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

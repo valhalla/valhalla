@@ -704,7 +704,6 @@ protected:
   virtual void set_use_tracks(float use_tracks);
 
   /**
-   * TODO add comment
    * Calculate `living_street` costs based on living streets preference.
    * @param use_living_streets value of living streets preference in range [0; 1]
    */

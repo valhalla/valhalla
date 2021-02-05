@@ -244,7 +244,6 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
   // Calculate penalty value based on use preference. Return value
   // in range [kMaxLivingStreetPenalty; 0], if use < 0.5; or
   // 0, if use > 0.5.
-  // Thus living_street_factor_ is inversely proportional to use_living_streets.
   living_street_penalty_ =
       use_living_streets < 0.5f ? (kMaxLivingStreetPenalty * (1.f - 2.f * use_living_streets)) : 0;
 

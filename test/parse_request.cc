@@ -100,6 +100,7 @@ constexpr float kDefaultBicycle_UseRoad = 0.25f;               // Factor between
 constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
+constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
 const std::string kDefaultBicycle_BicycleType = "Hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
     25.0f, // Road bicycle: ~15.5 MPH
@@ -640,6 +641,8 @@ void test_default_bicycle_cost_options(const Costing costing, const Options::Act
            request.options().costing_options(static_cast<int>(costing)).use_hills());
   validate("avoid_bad_surfaces", kDefaultBicycle_AvoidBadSurfaces,
            request.options().costing_options(static_cast<int>(costing)).avoid_bad_surfaces());
+  validate("use_living_streets", kDefaultBicycle_UseLivingStreets,
+           request.options().costing_options(static_cast<int>(costing)).use_living_streets());
   validate("cycling_speed",
            kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)],
            request.options().costing_options(static_cast<int>(costing)).cycling_speed());
@@ -2167,6 +2170,7 @@ TEST(ParseRequest, test_use_living_streets) {
   costing_with_defaults.emplace_back(Costing::motor_scooter, kDefaultMotorScooter_UseLivingStreets);
   costing_with_defaults.emplace_back(Costing::motorcycle, kDefaultMotorcycle_UseLivingStreets);
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_UseLivingStreets);
+  costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_UseLivingStreets);
 
   for (const auto& [costing, default_value] : costing_with_defaults) {
     test_use_living_streets_parsing(costing, default_value, default_value);

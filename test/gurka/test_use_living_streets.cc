@@ -12,11 +12,6 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, expected_names);
-
-  for (const auto& n : result.trip().routes(0).legs(0).node()) {
-    std::cout << "Cost:" << n.cost().elapsed_cost().cost() << " transition "
-              << n.cost().transition_cost().cost() << std::endl;
-  }
 }
 
 class LivingStreetTest : public ::testing::Test {
@@ -82,15 +77,9 @@ TEST_F(LivingStreetTest, test_use_living_streets) {
 TEST_F(LivingStreetTest, test_avoid_living_streets) {
   // avoid living_streets
   for (const auto& c : costing)
-    if (c == "bicycle")
-      // bicycle is not currently affected by this option
-      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
-                                     {{"/costing_options/" + c + "/use_living_streets", "0"}}),
-                    {"AB", "Bb", "be", "eE", "EF"});
-    else
-      validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
-                                     {{"/costing_options/" + c + "/use_living_streets", "0"}}),
-                    {"AB", "BC", "CD", "DE", "EF"});
+    validate_path(gurka::do_action(valhalla::Options::route, use_living_streets_map, {"1", "2"}, c,
+                                   {{"/costing_options/" + c + "/use_living_streets", "0"}}),
+                  {"AB", "BC", "CD", "DE", "EF"});
 }
 
 TEST_F(LivingStreetTest, test_use_living_streets_if_no_other_roads) {
