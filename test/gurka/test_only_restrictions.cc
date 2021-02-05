@@ -34,8 +34,8 @@ TEST(OnlyRestrictions, Straight) {
   auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/only_restrictions_straight",
                                {{"mjolnir.concurrency", "1"}});
 
-  for (auto from : map.nodes) {
-    for (auto to : map.nodes) {
+  for (const auto& from : map.nodes) {
+    for (const auto& to : map.nodes) {
       if (from == to)
         continue;
       auto result = gurka::do_action(valhalla::Options::route, map, {from.first, to.first}, "auto");
@@ -122,8 +122,8 @@ TEST(OnlyRestrictions, ManyNeighbours) {
       gurka::buildtiles(layout, ways, {}, relations, "test/data/only_restrictions_many_neighbours",
                         {{"mjolnir.concurrency", "1"}});
 
-  for (auto from : {"A", "B"}) {
-    for (auto to : {"1", "2", "3", "4", "5"}) {
+  for (const auto& from : {"A", "B"}) {
+    for (const auto& to : {"1", "2", "3", "4", "5"}) {
       try {
         auto result = gurka::do_action(valhalla::Options::route, map, {from, to}, "auto");
         gurka::assert::raw::expect_path(result, {std::string("Unexpected path found for request ") +
