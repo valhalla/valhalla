@@ -121,7 +121,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, restriction_idx);
+                             distance, transition_cost, restriction_idx, true);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -280,7 +280,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, restriction_idx);
+                             distance, transition_cost, restriction_idx, true);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -451,7 +451,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {},
-                         baldr::kInvalidRestriction);
+                         baldr::kInvalidRestriction, true);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -502,7 +502,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // of the path. Set the origin flag.
     // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
-                         {}, baldr::kInvalidRestriction);
+                         {}, baldr::kInvalidRestriction, true);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

@@ -141,7 +141,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
   // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
@@ -306,6 +306,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -348,7 +349,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
@@ -521,6 +522,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -882,7 +884,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1);
+                                     -1, !(costing_->IsClosed(directededge, tile)));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -962,7 +964,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(), -1);
+                                     dist, mode_, c, !opp_dir_edge->not_thru(),
+                                     !(costing_->IsClosed(directededge, tile)), -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

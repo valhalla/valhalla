@@ -328,7 +328,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              (pred.not_thru_pruning() || !directededge->not_thru()), true,
                               restriction_idx);
       adj->add(idx);
     }
@@ -596,7 +596,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              (pred.not_thru_pruning() || !directededge->not_thru()), true,
                               restriction_idx);
       adj->add(idx);
 
@@ -703,7 +703,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             -1);
+                             true, -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -786,7 +786,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, -1);
+                             false, true, -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

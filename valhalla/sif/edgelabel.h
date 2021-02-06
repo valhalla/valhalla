@@ -30,8 +30,8 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), path_id_(0),
-        restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(true),
+        path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -61,6 +61,7 @@ public:
             const uint32_t path_distance,
             const Cost& transition_cost,
             const uint8_t restriction_idx,
+            const bool closure_pruning,
             const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
@@ -70,7 +71,7 @@ public:
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
-                         edge->end_restriction()),
+                         edge->end_restriction()), closure_pruning_(closure_pruning),
         path_id_(path_id), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
         distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
@@ -350,6 +351,14 @@ public:
     return path_id_;
   }
 
+  /**
+   * Should closure pruning be enabled on this path?
+   * @return Returns true if closure pruning should be enabled.
+   */
+  bool closure_pruning() const {
+    return closure_pruning_;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -384,10 +393,11 @@ protected:
    * shortcut_:       Was the prior edge a shortcut edge?
    * dest_only_:      Was the prior edge destination only?
    * origin_:         True if this is an origin edge.
-   * toll_"           Edge is toll.
+   * toll_:           Edge is toll.
    * not_thru_:       Flag indicating edge is not_thru.
    * deadend_:        Flag indicating edge is a dead-end.
    * on_complex_rest: Part of a complex restriction.
+   * closure_pruning_:Was closure pruning active on prior edge?
    */
   uint64_t endnode_ : 46;
   uint64_t use_ : 6;
@@ -399,7 +409,8 @@ protected:
   uint64_t not_thru_ : 1;
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
-  uint64_t spare_0 : 2;
+  uint64_t closure_pruning_ : 1;
+  uint64_t spare_0 : 1;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
@@ -440,6 +451,7 @@ public:
    * @param mode              Mode of travel along this edge.
    * @param tc                Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
+   * @param closure_pruning   Is closure pruning active.
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
    * @param path_id           When searching more than one path at a time this denotes which path the
    *                          this label is tracking
@@ -454,6 +466,7 @@ public:
               const sif::TravelMode mode,
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
+              const bool closure_pruning,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -466,8 +479,10 @@ public:
                   0,
                   transition_cost,
                   restriction_idx,
+                  closure_pruning,
                   path_id),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+        opp_edgeid_(oppedgeid),
+        not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -483,6 +498,7 @@ public:
    * @param tc                Transition cost entering this edge.
    * @param path_distance     Accumulated path distance.
    * @param not_thru_pruning  Is not thru pruning enabled.
+   * @param closure_pruning   Is closure pruning active.
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
    * @param path_id           When searching more than one path at a time this denotes which path the
    *                          this label is tracking
@@ -496,6 +512,7 @@ public:
               const sif::Cost& transition_cost,
               const uint32_t path_distance,
               const bool not_thru_pruning,
+              const bool closure_pruning,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -508,8 +525,10 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
+                  closure_pruning,
                   path_id),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+              opp_edgeid_(oppedgeid),
+              not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -534,6 +553,7 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const uint8_t restriction_idx,
+              const bool closure_pruning,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -545,6 +565,7 @@ public:
                   0,
                   Cost{},
                   restriction_idx,
+                  closure_pruning,
                   path_id),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
@@ -611,6 +632,7 @@ public:
     return not_thru_pruning_;
   }
 
+
 protected:
   // Graph Id of the opposing edge.
   // not_thru_pruning_: Is not thru pruning enabled?
@@ -674,6 +696,7 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
+                  true,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {

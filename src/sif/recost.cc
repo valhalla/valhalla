@@ -125,7 +125,7 @@ void recost_forward(baldr::GraphReader& reader,
     length += edge->length() * edge_pct;
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO);
+                      transition_cost, time_restrictions_TODO, true);
     // hand back the label
     label_cb(label);
     // next edge

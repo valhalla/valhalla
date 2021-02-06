@@ -199,7 +199,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                               transition_cost, path_dist, false, restriction_idx, pred.path_id());
+                               transition_cost, path_dist, false, true, restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -375,7 +375,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
-                               transition_cost, path_dist, false, restriction_idx, pred.path_id());
+                               transition_cost, path_dist, false, true, restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -850,7 +850,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
-                                 Cost{}, path_dist, false, restriction_idx, multipath_ ? path_id : 0);
+                                 Cost{}, path_dist, false, true, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -925,7 +925,7 @@ void Dijkstras::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
-                                 Cost{}, path_dist, false, restriction_idx, multipath_ ? path_id : 0);
+                                 Cost{}, path_dist, false, true, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id),
                       multipath_ ? path_id : 0);
