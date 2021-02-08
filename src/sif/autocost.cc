@@ -259,7 +259,8 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const InternalTurn internal_turn) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -500,16 +501,16 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     uint32_t si = edge->stopimpact(idx);
     if (node->drive_on_right()) {
-      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred.short_internal() && (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft || edge->turntype(idx) == baldr::Turn::Type::kLeft))) {
+      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred.internal_turn() == InternalTurn::kLeftTurn && (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft || edge->turntype(idx) == baldr::Turn::Type::kLeft))) {
         si = pow (si, 4.0);
       }
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
         si *= si;
     } else {
-      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred.short_internal() && (edge->turntype(idx) == baldr::Turn::Type::kSharpRight || edge->turntype(idx) == baldr::Turn::Type::kRight)))
+      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred.internal_turn() == InternalTurn::kRightTurn && (edge->turntype(idx) == baldr::Turn::Type::kSharpRight || edge->turntype(idx) == baldr::Turn::Type::kRight)))
         si = pow (si, 4.0);
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
         si *= si;
     }
@@ -538,7 +539,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const {
+                                     const baldr::DirectedEdge* edge,
+                                     const InternalTurn internal_turn) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -564,16 +566,20 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
     uint32_t si = edge->stopimpact(idx);
     if (node->drive_on_right()) {
-      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred->internal() && pred->length() <= 8.0f && (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft || edge->turntype(idx) == baldr::Turn::Type::kLeft))) {
+      if (edge->turntype(idx) == baldr::Turn::Type::kReverse ||
+          (internal_turn == InternalTurn::kLeftTurn && (pred->reverseaccess() & access_mask_) &&
+              (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft || edge->turntype(idx) == baldr::Turn::Type::kLeft))) {
         si = pow (si, 4.0);
       }
-        else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
         si *= si;
     } else {
-      if (edge->turntype(idx) == baldr::Turn::Type::kReverse || (pred->internal() && pred->length() <= 8.0f && (edge->turntype(idx) == baldr::Turn::Type::kSharpRight || edge->turntype(idx) == baldr::Turn::Type::kRight)))
+      if (edge->turntype(idx) == baldr::Turn::Type::kReverse ||
+          (internal_turn == InternalTurn::kRightTurn && (pred->reverseaccess() & access_mask_) &&
+              (edge->turntype(idx) == baldr::Turn::Type::kSharpRight || edge->turntype(idx) == baldr::Turn::Type::kRight)))
         si = pow (si, 4.0);
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
         si *= si;
     }
