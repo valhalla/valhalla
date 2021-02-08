@@ -13,6 +13,7 @@
    * FIXED: Dont add predictive traffic to the tile if it's empty [#2826](https://github.com/valhalla/valhalla/pull/2826)
    * FIXED: Fix logic bidirectional astar to avoid double u-turns and extra detours [#2802](https://github.com/valhalla/valhalla/pull/2802)
    * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
+   * FIXED: Increase limits for timedep_* algorithms. Split track_factor into edge factor and transition penalty [#2845](https://github.com/valhalla/valhalla/pull/2845)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
