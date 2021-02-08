@@ -1,21 +1,27 @@
-#include <cmath>
-#include <iomanip>
-#include <sstream>
-#include <string>
+#include "../../valhalla/odin/narrativebuilder.h"
 
+#include <bits/stdint-uintn.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/format.hpp>
+#include <cmath>
+#include <iomanip>
+#include <list>
+#include <locale>
+#include <memory>
+#include <sstream>
+#include <stddef.h>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
-#include "baldr/verbal_text_formatter.h"
-#include "midgard/constants.h"
-
-#include "odin/enhancedtrippath.h"
-#include "odin/maneuver.h"
-#include "odin/narrative_dictionary.h"
-#include "odin/narrativebuilder.h"
-#include "odin/util.h"
-#include "worker.h"
+#include "../../build/src/valhalla/proto/directions.pb.h"
+#include "../../valhalla/baldr/location.h"
+#include "../../valhalla/baldr/streetname.h"
+#include "../../valhalla/baldr/streetnames.h"
+#include "../../valhalla/midgard/constants.h"
+#include "../../valhalla/odin/signs.h"
+#include "../../valhalla/odin/util.h"
+#include "../../valhalla/worker.h"
 
 namespace {
 // Text instruction initial capacity
@@ -66,6 +72,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctStartTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
@@ -80,6 +90,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalDestinationInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctDestinationTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kBecomes: {
@@ -94,7 +108,14 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
+            FormVerbalPostTransitionInstruction(maneuver,
+                                                maneuver
+                                                    .HasBeginStreetNames())); // Set verbal succinct
+                                                                              // transition
+                                                                              // instruction
+
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctBecomesTransitionInstruction(maneuver, prev_maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kSlightRight:
@@ -115,6 +136,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctTurnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kUturnRight:
@@ -131,6 +156,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctUturnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRampStraight: {
@@ -153,6 +182,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctRampStraightTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRampRight:
@@ -175,6 +208,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctRampTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kExitRight:
@@ -197,6 +234,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctExitTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kStayStraight:
@@ -248,6 +289,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
                 FormVerbalPostTransitionInstruction(maneuver));
           }
         }
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctKeepToStayOnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kMerge:
@@ -269,6 +314,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctMergeTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter: {
@@ -290,6 +339,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
               FormVerbalPostTransitionInstruction(maneuver,
                                                   maneuver.HasRoundaboutExitBeginStreetNames()));
         }
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctEnterRoundaboutTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit: {
@@ -302,6 +355,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctExitRoundaboutTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kFerryEnter: {
@@ -318,6 +375,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kTransitConnectionStart: {
@@ -450,6 +511,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctContinueTransitionInstruction(maneuver));
         break;
       }
     }
@@ -3800,6 +3865,410 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(Maneuve
   boost::replace_all(instruction, kTransitPlatformCountTag,
                      std::to_string(stop_count)); // TODO: locale specific numerals
   boost::replace_all(instruction, kTransitPlatformCountLabelTag, stop_count_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Drive <CARDINAL_DIRECTION>.",
+  // "2": "Walk <CARDINAL_DIRECTION>.",
+  // "3": "Bike <CARDINAL_DIRECTION>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Set cardinal_direction value
+  std::string cardinal_direction =
+      dictionary_.start_verbal_subset.cardinal_directions.at(maneuver.begin_cardinal_direction());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+
+  // Set base phrase id per mode
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
+    phrase_id += 1;
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
+    phrase_id += 2;
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
+    phrase_id += 3;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.start_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver) {
+  // "0": "You have arrived at your destination."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.destination_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctPostTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Continue for <LENGTH>.",
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.post_transition_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
+                                dictionary_.post_transition_verbal_subset.us_customary_lengths));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string
+NarrativeBuilder::FormVerbalSuccinctBecomesTransitionInstruction(Maneuver& maneuver,
+                                                                 Maneuver* prev_maneuver,
+                                                                 uint32_t element_max_count,
+                                                                 const std::string& delim) {
+  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Assign the street names and the previous maneuver street names
+  std::string street_names =
+      FormStreetNames(maneuver, maneuver.street_names(), nullptr, false, element_max_count, delim,
+                      prev_maneuver->verbal_formatter());
+  std::string prev_street_names =
+      FormStreetNames(*prev_maneuver, prev_maneuver->street_names(), nullptr, false,
+                      element_max_count, delim, prev_maneuver->verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.becomes_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Continue."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.continue_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(maneuver, dictionary_.continue_verbal_subset.metric_lengths,
+                                dictionary_.continue_verbal_subset.us_customary_lengths));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuver& maneuver) {
+
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>."
+
+  const TurnSubset* subset = nullptr;
+  switch (maneuver.type()) {
+    case DirectionsLeg_Maneuver_Type_kSlightRight:
+    case DirectionsLeg_Maneuver_Type_kSlightLeft:
+      subset = &dictionary_.bear_verbal_subset;
+      break;
+    case DirectionsLeg_Maneuver_Type_kRight:
+    case DirectionsLeg_Maneuver_Type_kLeft:
+      subset = &dictionary_.turn_verbal_subset;
+      break;
+    case DirectionsLeg_Maneuver_Type_kSharpRight:
+    case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      subset = &dictionary_.sharp_verbal_subset;
+      break;
+    default:
+      throw valhalla_exception_t{230};
+  }
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = subset->phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Make a <RELATIVE_DIRECTION> U-turn."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.uturn_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeTwoDirection(maneuver.type(),
+                                              dictionary_.uturn_verbal_subset.relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string
+NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Stay straight to take the ramp."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_straight_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeTwoDirection(maneuver.type(),
+                                              dictionary_.ramp_verbal_subset.relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Take the exit on the <RELATIVE_DIRECTION>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeTwoDirection(maneuver.type(),
+                                              dictionary_.exit_verbal_subset.relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Keep <RELATIVE_DIRECTION> at the fork."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.keep_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeThreeDirection(maneuver.type(),
+                                                dictionary_.keep_verbal_subset.relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string
+NarrativeBuilder::FormVerbalSuccinctKeepToStayOnTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.keep_to_stay_on_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeThreeDirection(maneuver.type(),
+                                                dictionary_.keep_to_stay_on_verbal_subset
+                                                    .relative_directions));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Merge."
+  // "1": "Merge <RELATIVE_DIRECTION>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Check for merge relative direction
+  std::string relative_direction;
+  if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+      (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
+    phrase_id += 1;
+    relative_direction =
+        FormRelativeTwoDirection(maneuver.type(),
+                                 dictionary_.merge_verbal_subset.relative_directions);
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string
+NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Enter the roundabout.",
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string
+NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Exit the roundabout."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver) {
+  // "0": "Take the Ferry."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

@@ -365,6 +365,16 @@ public:
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
   void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
 
+  const std::string& verbal_succinct_transition_instruction() const;
+  void set_verbal_succinct_transition_instruction(
+      const std::string& verbal_succinct_transition_instruction);
+  void
+  set_verbal_succinct_transition_instruction(std::string&& verbal_succinct_transition_instruction);
+  bool HasVerbalSuccinctTransitionInstruction() const;
+
+  bool has_long_street_name() const;
+  void set_long_street_name(bool has_long_street_name);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -407,6 +417,7 @@ protected:
   std::string verbal_transition_alert_instruction_;
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
+  std::string verbal_succinct_transition_instruction_;
   bool tee_;
   TrailType trail_type_;
   bool imminent_verbal_multi_cue_;
@@ -434,6 +445,7 @@ protected:
 
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;
+  bool has_long_street_name_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

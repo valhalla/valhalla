@@ -28,6 +28,7 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
+#include "odin/util.h"
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -130,6 +131,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
+
+  ProcessVerbalSuccinctTransitionInstruction(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -907,6 +910,15 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
     // Update iterators
     curr_man = prev_man;
     ++prev_man;
+  }
+}
+
+void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers) {
+  for (auto& maneuver : maneuvers) {
+    std::string street_name = maneuver.street_names().front()->value();
+    if (get_word_count(street_name) > 5 || street_name.length() > 30) {
+      maneuver.set_long_street_name(true);
+    }
   }
 }
 
