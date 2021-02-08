@@ -42,6 +42,12 @@ enum class BicycleType : uint8_t {
   kMountain = 3
 };
 
+enum class InternalTurn : uint8_t {
+  kNoTurn = 0,
+  kLeftTurn = 1,
+  kRightTurn = 2,
+};
+
 // Transit travel type
 // TODO: these are in graphconstants
 // decide what to do
