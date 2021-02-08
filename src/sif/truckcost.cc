@@ -40,6 +40,8 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets =
+    0.f; // Avoid living streets by default. Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -103,6 +105,7 @@ constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f}
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 } // namespace
 
@@ -454,6 +457,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
   }
 
   return {sec * factor, sec};
@@ -672,6 +677,10 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(
         kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
                             .get_value_or(kDefaultUseTracks)));
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -692,6 +701,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }

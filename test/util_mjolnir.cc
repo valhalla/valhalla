@@ -36,7 +36,8 @@ TEST(UtilMjolnir, BuildTileSet) {
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
                              mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
   // Clear the tile directory so it doesn't interfere with the next test.
-  EXPECT_TRUE(filesystem::remove_all(tile_dir));
+  filesystem::remove_all(tile_dir);
+  EXPECT_TRUE(!filesystem::exists(tile_dir));
 }
 
 TEST(UtilMjolnir, TileManifestReadFromFile) {
