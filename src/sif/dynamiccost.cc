@@ -53,9 +53,12 @@ namespace sif {
 // default options/parameters
 namespace {
 
+// max penalty to apply when use tracks
+constexpr float kMaxTrackPenalty = 300.f; // 5 min
+
 // min and max factors to apply when use tracks
 constexpr float kMinTrackFactor = 0.8f;
-constexpr float kMaxTrackFactor = 10.f;
+constexpr float kMaxTrackFactor = 4.f;
 
 // max penalty to apply when use living streets
 constexpr float kMaxLivingStreetPenalty = 500.f;
@@ -232,6 +235,10 @@ Cost DynamicCost::BSSCost() const {
 }
 
 void DynamicCost::set_use_tracks(float use_tracks) {
+  // Calculate penalty value based on use preference. Return value
+  // in range [kMaxTrackPenalty; 0], if use < 0.5; or
+  // 0, if use > 0.5.
+  track_penalty_ = use_tracks < 0.5f ? (kMaxTrackPenalty * (1.f - 2.f * use_tracks)) : 0.f;
   // Calculate factor value based on use preference. Return value
   // in range [kMaxTrackFactor; 1], if use < 0.5; or
   // in range [1; kMinTrackFactor], if use > 0.5
