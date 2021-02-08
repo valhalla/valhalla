@@ -736,6 +736,7 @@ protected:
   float ferry_factor_, rail_ferry_factor_;
   float track_factor_;         // Avoid tracks factor.
   float living_street_factor_; // Avoid living streets factor.
+  float service_factor_ = 2;    //
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -750,6 +751,7 @@ protected:
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float living_street_penalty_;    // Penalty (seconds) to use a living street
+  float service_penalty_ = 300;    // Penalty (seconds) to use ZZZ
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -883,6 +885,7 @@ protected:
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
     c.cost += living_street_penalty_ *
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
+    c.cost += service_penalty_ * (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;

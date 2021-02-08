@@ -465,6 +465,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     case Use::kLivingStreet:
       factor *= living_street_factor_;
       break;
+    case Use::kServiceRoad:
+      factor *= service_factor_;
+      break;
     default:
       break;
   }
