@@ -361,6 +361,43 @@ protected:
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
+  std::string FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctPostTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctBecomesTransitionInstruction(
+      Maneuver& maneuver,
+      Maneuver* prev_maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
+
+  std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctTurnTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctKeepToStayOnTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver& maneuver);
+
+  std::string FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the transit stop count label based on the value of the specified
    * stop count and language rules.

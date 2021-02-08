@@ -427,6 +427,14 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
       }
     }
 
+    // Verbal succinct transition instruction
+    if (maneuver.has_verbal_succinct_transition_instruction()) {
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
+                                       maneuver.verbal_succinct_transition_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
+    }
+
     // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
