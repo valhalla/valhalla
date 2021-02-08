@@ -306,7 +306,8 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge) const;
+                                     const baldr::DirectedEdge* opp_pred_edge,
+                                     const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.

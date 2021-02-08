@@ -169,7 +169,8 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t,
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
-                                     const baldr::DirectedEdge*) const override {
+                                     const baldr::DirectedEdge*,
+                                     const InternalTurn internal_turn) const override {
     return {};
   }
 
