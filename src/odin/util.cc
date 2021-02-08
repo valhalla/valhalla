@@ -162,5 +162,27 @@ std::string turn_lane_direction(uint16_t turn_lane) {
   return "";
 }
 
+size_t get_word_count(const std::string& street_name) {
+  size_t word_count = 0;
+  std::string::const_iterator pos = street_name.begin();
+  std::string::const_iterator end = street_name.end();
+
+  while (pos != end) {
+    // Skip over space, white space, and punctuation
+    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos))) {
+      ++pos;
+    }
+
+    // Word found - increment
+    word_count += (pos != end);
+
+    // Skip over letters in word
+    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos)))) {
+      ++pos;
+    }
+  }
+  return word_count;
+}
+
 } // namespace odin
 } // namespace valhalla

@@ -1064,6 +1064,33 @@ void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type
   bss_maneuver_type_ = type;
 }
 
+const std::string& Maneuver::verbal_succinct_transition_instruction() const {
+  return verbal_succinct_transition_instruction_;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    const std::string& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = verbal_succinct_transition_instruction;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    std::string&& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = std::move(verbal_succinct_transition_instruction);
+}
+
+bool Maneuver::HasVerbalSuccinctTransitionInstruction() const {
+  return (!verbal_succinct_transition_instruction_.empty());
+}
+
+bool Maneuver::has_long_street_name() const {
+
+  return has_long_street_name_;
+}
+
+void Maneuver::set_long_street_name(bool has_long_street_name) {
+  has_long_street_name_ = has_long_street_name;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -1174,6 +1201,9 @@ std::string Maneuver::ToString() const {
   man_str += " | verbal_post_transition_instruction=";
   man_str += verbal_post_transition_instruction_;
 
+  man_str += " | verbal_succinct_transition_instruction=";
+  man_str += verbal_succinct_transition_instruction_;
+
   man_str += " | tee=";
   man_str += std::to_string(tee_);
 
@@ -1224,6 +1254,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | bus=";
   man_str += std::to_string(bus_);
+
+  man_str += " | has_long_street_name=";
+  man_str += std::to_string(has_long_street_name_);
 
   // TODO travel types
 
@@ -1372,6 +1405,11 @@ std::string Maneuver::ToParameterString() const {
   man_str += delim;
   man_str += "\"";
   man_str += verbal_post_transition_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_succinct_transition_instruction_;
   man_str += "\"";
 
   man_str += delim;
