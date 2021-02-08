@@ -915,9 +915,11 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
 
 void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers) {
   for (auto& maneuver : maneuvers) {
-    std::string street_name = maneuver.street_names().front()->value();
-    if (get_word_count(street_name) > 5 || street_name.length() > 30) {
-      maneuver.set_long_street_name(true);
+    if (maneuver.HasStreetNames()) {
+      std::string street_name = maneuver.street_names().front()->value();
+      if (get_word_count(street_name) > 5 || street_name.length() > 30) {
+        maneuver.set_long_street_name(true);
+      }
     }
   }
 }
