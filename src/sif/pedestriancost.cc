@@ -315,7 +315,8 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const InternalTurn internal_turn) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -654,7 +655,8 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
-                                           const baldr::DirectedEdge* edge) const {
+                                           const baldr::DirectedEdge* edge,
+                                           const InternalTurn internal_turn) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};

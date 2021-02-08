@@ -337,7 +337,8 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const InternalTurn internal_turn) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -768,7 +769,8 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
-                                        const baldr::DirectedEdge* edge) const {
+                                        const baldr::DirectedEdge* edge,
+                                        const InternalTurn internal_turn) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
