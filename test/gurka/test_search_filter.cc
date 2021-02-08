@@ -797,7 +797,7 @@ std::vector<costing_and_datetype> buildParams() {
   std::vector<costing_and_datetype> params;
 
   std::vector<std::string> costings = {
-      "auto"/*, "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",*/
+      "auto" /*, "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",*/
   };
   params.reserve(costings.size());
   for (const auto& costing : costings) {
@@ -817,8 +817,7 @@ INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          ::testing::ValuesIn(buildParams()));
 
 // TODO: Enable once https://github.com/valhalla/valhalla/issues/2732 is addressed
-class ClosuresWithRestrictions
-    : public ::testing::TestWithParam<costing_and_datetype> {
+class ClosuresWithRestrictions : public ::testing::TestWithParam<costing_and_datetype> {
 protected:
   static gurka::map closure_map;
   static int const default_speed;
@@ -846,18 +845,15 @@ protected:
                               {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"FH", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
-    const gurka::relations relations = {
-        {{
-             {gurka::way_member, "FH", "from"},
-             {gurka::way_member, "EF", "to"},
-             {gurka::node_member, "F", "via"},
-         },
-         {
-             {"type", "restriction"},
-             {"restriction", "no_left_turn"},
-         }}
-    };
-
+    const gurka::relations relations = {{{
+                                             {gurka::way_member, "FH", "from"},
+                                             {gurka::way_member, "EF", "to"},
+                                             {gurka::node_member, "F", "via"},
+                                         },
+                                         {
+                                             {"type", "restriction"},
+                                             {"restriction", "no_left_turn"},
+                                         }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, relations, tile_dir);
@@ -888,8 +884,7 @@ protected:
 
 gurka::map ClosuresWithRestrictions::closure_map = {};
 const int ClosuresWithRestrictions::default_speed = 36;
-const std::string ClosuresWithRestrictions::tile_dir =
-    "test/data/traffic_exclude_closures";
+const std::string ClosuresWithRestrictions::tile_dir = "test/data/traffic_exclude_closures";
 std::shared_ptr<baldr::GraphReader> ClosuresWithRestrictions::reader;
 
 TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
@@ -926,12 +921,11 @@ TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
          std::to_string(closure_map.nodes.at("C").lat()) %
          std::to_string(closure_map.nodes.at("C").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"FG", "CE"});
     gurka::assert::raw::expect_path(result, {"FG", "EF", "CE"});
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(SearchFilter,
-                         ClosuresWithRestrictions,
-                         ::testing::ValuesIn(buildParams()));
+INSTANTIATE_TEST_SUITE_P(SearchFilter, ClosuresWithRestrictions, ::testing::ValuesIn(buildParams()));

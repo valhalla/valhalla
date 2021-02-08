@@ -274,17 +274,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
-    pred = {kInvalidLabel,
-            edge_id,
-            directededge,
-            elapsed,
-            0,
-            0,
-            mode,
-            0,
-            {},
-            baldr::kInvalidRestriction,
-            true};
+    pred =
+        {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}, baldr::kInvalidRestriction,
+         true};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

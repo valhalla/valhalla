@@ -31,7 +31,8 @@ public:
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(true),
-        path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0),
+        transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -71,9 +72,9 @@ public:
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
-                         edge->end_restriction()), closure_pruning_(closure_pruning),
-        path_id_(path_id), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
-        distance_(dist), transition_cost_(transition_cost) {
+                         edge->end_restriction()),
+        closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
+        cost_(cost), sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -481,8 +482,7 @@ public:
                   restriction_idx,
                   closure_pruning,
                   path_id),
-        opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning) {
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -527,8 +527,7 @@ public:
                   restriction_idx,
                   closure_pruning,
                   path_id),
-              opp_edgeid_(oppedgeid),
-              not_thru_pruning_(not_thru_pruning) {
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -631,7 +630,6 @@ public:
   bool not_thru_pruning() const {
     return not_thru_pruning_;
   }
-
 
 protected:
   // Graph Id of the opposing edge.
