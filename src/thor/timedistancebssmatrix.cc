@@ -135,7 +135,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx);
+                             distance, transition_cost, restriction_idx, sif::InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -328,7 +328,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx);
+                             distance, transition_cost, restriction_idx, sif::InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -514,7 +514,7 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, sif::InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -565,7 +565,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, sif::InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

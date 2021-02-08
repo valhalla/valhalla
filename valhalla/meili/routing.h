@@ -50,7 +50,8 @@ public:
         const uint32_t predecessor,
         const baldr::DirectedEdge* edge,
         const sif::TravelMode mode,
-        int restriction_idx)
+        int restriction_idx,
+        const sif::InternalTurn internal_turn)
       : sif::EdgeLabel(predecessor,
                        edgeid,
                        edge,
@@ -60,7 +61,8 @@ public:
                        mode,
                        0,
                        sif::Cost{},
-                       restriction_idx),
+                       restriction_idx,
+                       internal_turn),
         nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
@@ -212,7 +214,8 @@ public:
            const uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            const sif::TravelMode mode,
-           int restriction_idx);
+           int restriction_idx,
+           const sif::InternalTurn internal_turn);
 
   /**
    * Add a label with an edge and a destination index.
@@ -227,7 +230,8 @@ public:
            const uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            const sif::TravelMode mode,
-           int restriction_idx);
+           int restriction_idx,
+           const sif::InternalTurn internal_turn);
 
   /**
    * Get the next label from the priority queue. Marks the popped label

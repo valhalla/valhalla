@@ -197,7 +197,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0, {}, kInvalidRestriction};
+        prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0, {}, kInvalidRestriction, InternalTurn::kNoTurn};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -386,7 +386,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Set previous edge label
         prev_edge_label =
-            {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}, baldr::kInvalidRestriction};
+            {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}, baldr::kInvalidRestriction, sif::InternalTurn::kNoTurn};
 
         // Continue walking shape to find the end node
         GraphId end_node;
