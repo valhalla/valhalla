@@ -1,27 +1,21 @@
-#include "../../valhalla/odin/narrativebuilder.h"
-
-#include <bits/stdint-uintn.h>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include <cmath>
 #include <iomanip>
-#include <list>
-#include <locale>
-#include <memory>
 #include <sstream>
-#include <stddef.h>
 #include <string>
-#include <unordered_map>
-#include <utility>
 
-#include "../../build/src/valhalla/proto/directions.pb.h"
-#include "../../valhalla/baldr/location.h"
-#include "../../valhalla/baldr/streetname.h"
-#include "../../valhalla/baldr/streetnames.h"
-#include "../../valhalla/midgard/constants.h"
-#include "../../valhalla/odin/signs.h"
-#include "../../valhalla/odin/util.h"
-#include "../../valhalla/worker.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/format.hpp>
+
+#include "baldr/verbal_text_formatter.h"
+#include "midgard/constants.h"
+
+#include "odin/enhancedtrippath.h"
+#include "odin/maneuver.h"
+#include "odin/narrative_dictionary.h"
+#include "odin/narrativebuilder.h"
+#include "odin/util.h"
+#include "worker.h"
 
 namespace {
 // Text instruction initial capacity

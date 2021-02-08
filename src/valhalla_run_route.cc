@@ -429,7 +429,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
     // Verbal succinct transition instruction
     if (maneuver.has_verbal_succinct_transition_instruction()) {
-      valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
                                       " [NARRATIVE] ");
