@@ -243,6 +243,10 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       if (maneuver.has_verbal_post_transition_instruction()) {
         writer("verbal_post_transition_instruction", maneuver.verbal_post_transition_instruction());
       }
+      if (maneuver.has_verbal_succinct_transition_instruction()) {
+        writer("verbal_succinct_transition_instruction",
+               maneuver.verbal_succinct_transition_instruction());
+      }
 
       // Set street names
       if (maneuver.street_name_size() > 0) {
