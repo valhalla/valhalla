@@ -124,8 +124,18 @@ void recost_forward(baldr::GraphReader& reader,
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label
+
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = node ? label.opp_local_idx() : 0;
+    uint32_t access_mode = costing.access_mode();
+    if (node && node->drive_on_right()) {
+      if (edge->internal() && edge->length() <= 8.0f && (edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpLeft || edge->turntype(opp_local_idx) == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (node && edge->internal() && edge->length() <= 8.0f && (edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpRight || edge->turntype(opp_local_idx) == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO);
+                      transition_cost, time_restrictions_TODO, turn);
     // hand back the label
     label_cb(label);
     // next edge

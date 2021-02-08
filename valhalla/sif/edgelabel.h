@@ -30,7 +30,7 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), short_internal_(0), path_id_(0),
+        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), internal_turn_(0), path_id_(0),
         restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -61,6 +61,7 @@ public:
             const uint32_t path_distance,
             const Cost& transition_cost,
             const uint8_t restriction_idx,
+            const InternalTurn internal_turn,
             const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
@@ -70,7 +71,7 @@ public:
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
-                         edge->end_restriction()), short_internal_(edge->internal() && edge->length() <= 8.0f),
+                         edge->end_restriction()), internal_turn_(static_cast<uint32_t>(internal_turn)),
         path_id_(path_id), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
         distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
@@ -303,9 +304,10 @@ public:
     return on_complex_rest_;
   }
 
-  bool short_internal() const {
-    return short_internal_;
+  InternalTurn internal_turn() const {
+    return static_cast<InternalTurn>(internal_turn_);
   }
+
 
   /**
    * Is this edge not-through
@@ -404,14 +406,13 @@ protected:
   uint64_t not_thru_ : 1;
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
-  uint64_t short_internal_ : 1;
-  uint64_t spare_0 : 1;
+  uint64_t internal_turn_ : 2;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
   uint32_t path_id_ : 7;
   uint32_t restriction_idx_ : 8;
-  uint32_t spare_1 : 17;
+  uint32_t spare_ : 17;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -461,6 +462,7 @@ public:
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
               const uint8_t restriction_idx,
+              const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -472,6 +474,7 @@ public:
                   0,
                   transition_cost,
                   restriction_idx,
+                  internal_turn,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -503,6 +506,7 @@ public:
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const uint8_t restriction_idx,
+              const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -514,6 +518,7 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
+                  internal_turn,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -540,6 +545,7 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const uint8_t restriction_idx,
+              const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -551,6 +557,7 @@ public:
                   0,
                   Cost{},
                   restriction_idx,
+                  internal_turn,
                   path_id),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
@@ -669,6 +676,7 @@ public:
               const bool has_transit,
               const Cost& transition_cost,
               const uint8_t restriction_idx,
+              const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -680,6 +688,7 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
+                  internal_turn,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {

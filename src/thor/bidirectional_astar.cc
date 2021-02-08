@@ -303,10 +303,19 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
+  InternalTurn turn = InternalTurn::kNoTurn;
+
+  uint32_t opp_local_idx = pred.opp_local_idx();
+  if (nodeinfo->drive_on_right()) {
+    if (meta.edge->internal() && meta.edge->length() <= 8.0f && (meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpLeft || meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kLeft))
+      turn = InternalTurn::kLeftTurn;
+  } else if (meta.edge->internal() && meta.edge->length() <= 8.0f  && (meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpRight || meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kRight))
+    turn = InternalTurn::kRightTurn;
+
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                                   restriction_idx);
+                                   restriction_idx, turn);
 
   adjacencylist_forward_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -492,7 +501,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
   const Cost transition_cost =
-      costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
+      costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge, pred.internal_turn());
   const Cost newcost =
       pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
 
@@ -516,12 +525,22 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
+  uint32_t opp_local_idx = pred.opp_local_idx();
+  InternalTurn turn = InternalTurn::kNoTurn;
+
+  if (nodeinfo->drive_on_right()) {
+    if (meta.edge->internal() && meta.edge->length() <= 8.0f && (meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpLeft || meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kLeft))
+      turn = InternalTurn::kLeftTurn;
+  } else if (meta.edge->internal() && meta.edge->length() <= 8.0f && (meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kSharpRight || meta.edge->turntype(opp_local_idx) == baldr::Turn::Type::kRight))
+    turn = InternalTurn::kRightTurn;
+
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                                   restriction_idx);
+                                   restriction_idx, turn);
 
   adjacencylist_reverse_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -882,7 +901,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1);
+                                     -1, sif::InternalTurn::kNoTurn);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -962,7 +981,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(), -1);
+                                     dist, mode_, c, !opp_dir_edge->not_thru(),-1,sif::InternalTurn::kNoTurn);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
