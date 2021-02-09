@@ -797,7 +797,7 @@ std::vector<costing_and_datetype> buildParams() {
   std::vector<costing_and_datetype> params;
 
   std::vector<std::string> costings = {
-      "auto" /*, "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",*/
+      "auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",
   };
   params.reserve(costings.size());
   for (const auto& costing : costings) {
