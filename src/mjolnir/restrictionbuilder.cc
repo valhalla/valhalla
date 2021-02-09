@@ -23,31 +23,33 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-struct Ids {
+namespace {
+
+struct EdgeId {
   uint64_t way_id;
-  GraphId edge_id;
+  GraphId graph_id;
 };
 
 bool GetGraphIdsInner(GraphReader& reader,
                       std::mutex& lock,
                       GraphId& last_node,
-                      std::vector<Ids>& edge_ids,
+                      std::vector<EdgeId>& edge_ids,
                       const std::vector<uint64_t>& way_ids,
                       size_t way_id_index,
                       graph_tile_ptr prev_tile,
                       GraphId prev_node,
                       GraphId current_node);
 
-bool expand(GraphReader& reader,
-            std::mutex& lock,
-            GraphId& last_node,
-            std::vector<Ids>& edge_ids,
-            const std::vector<uint64_t>& way_ids,
-            size_t way_id_index,
-            graph_tile_ptr tile,
-            GraphId prev_node,
-            GraphId current_node,
-            const NodeInfo* node_info) {
+bool ExpandFromNode(GraphReader& reader,
+                    std::mutex& lock,
+                    GraphId& last_node,
+                    std::vector<EdgeId>& edge_ids,
+                    const std::vector<uint64_t>& way_ids,
+                    size_t way_id_index,
+                    graph_tile_ptr tile,
+                    GraphId prev_node,
+                    GraphId current_node,
+                    const NodeInfo* node_info) {
   uint64_t way_id = way_ids[way_id_index];
 
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
@@ -85,18 +87,21 @@ bool expand(GraphReader& reader,
 //
 //
 // python pseudo-code
-//  def GetGraphIdsInner(way_id, node):
-//   for edge in edges(node): # edges = directed_edges + transition_edges
+//  def DepthFirstSearch(way_id, node):
+//   if not way_id:
+//     # we matched all way ids
+//     return true
+//   for edge in edges(node): # edges = directed_edges + transition_node_edges
 //     if edge.way_id == way_id:
-//       if GetGraphIdsInner(next(way_id), edge.end_node):
+//       if DepthFirstSearch(next(way_id), edge.end_node):
 //         return true
-//       if GetGraphIdsInner(way_id, edge.end_node):
+//       if DepthFirstSearch(way_id, edge.end_node):
 //         return true
 //    return false
 bool GetGraphIdsInner(GraphReader& reader,
                       std::mutex& lock,
                       GraphId& last_node,
-                      std::vector<Ids>& edge_ids,
+                      std::vector<EdgeId>& edge_ids,
                       const std::vector<uint64_t>& way_ids,
                       size_t way_id_index,
                       graph_tile_ptr prev_tile,
@@ -119,8 +124,8 @@ bool GetGraphIdsInner(GraphReader& reader,
 
   bool found;
   // expand from the current node
-  found = expand(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile, prev_node,
-                 current_node, node_info);
+  found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile, prev_node,
+                         current_node, node_info);
   if (found)
     return true;
 
@@ -135,8 +140,8 @@ bool GetGraphIdsInner(GraphReader& reader,
       lock.unlock();
     }
 
-    found = expand(reader, lock, last_node, edge_ids, way_ids, way_id_index, trans_tile, prev_node,
-                   trans->endnode(), trans_tile->node(trans->endnode()));
+    found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, trans_tile,
+                           prev_node, trans->endnode(), trans_tile->node(trans->endnode()));
     if (found)
       return true;
   }
@@ -152,19 +157,19 @@ std::vector<GraphId> GetGraphIds(GraphId& start_node,
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   lock.unlock();
 
-  std::vector<Ids> edge_ids;
+  std::vector<EdgeId> edge_ids;
   GetGraphIdsInner(reader, lock, start_node, edge_ids, way_ids, 0, tile, GraphId(), start_node);
   if (edge_ids.empty())
     return {};
 
   // ignore duplicated way_ids in the prefix so [1, 1, 1, 2, 54] => [1, 2, 54]
   auto it = std::find_if(edge_ids.begin() + 1, edge_ids.end(),
-                         [&](const Ids& id) { return id.way_id != edge_ids.front().way_id; });
+                         [&](const EdgeId& id) { return id.way_id != edge_ids.front().way_id; });
   --it;
   std::vector<GraphId> res;
   res.reserve(edge_ids.end() - it);
   for (; it != edge_ids.end(); ++it) {
-    res.push_back(it->edge_id);
+    res.push_back(it->graph_id);
   }
   return res;
 }
@@ -525,6 +530,8 @@ void build(const std::string& complex_restriction_from_file,
   // Send back the statistics
   result.set_value(stats);
 }
+
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
