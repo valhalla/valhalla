@@ -36,12 +36,16 @@ RUN strip /usr/local/lib/python3.8/dist-packages/python_valhalla.cpython-38-x86_
 FROM ubuntu:20.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/bin/prime_* /usr/bin/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gnu/
 
 # we need to add back some runtime dependencies for binaries and scripts
-RUN apt update && apt install -y software-properties-common
-RUN add-apt-repository -y ppa:valhalla-core/valhalla && apt update
-RUN apt install -y libboost-program-options1.71.0 libcurl3-gnutls libluajit-5.1-2 libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite zlib1g
-RUN apt install -y curl gdb locales parallel prime-server-bin python spatialite-bin unzip wget
-
 # install all the posix locales that we support
-RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
+RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
+    apt install -y \
+      libboost-program-options1.71.0 libcurl4 libczmq4 libluajit-5.1-2 \
+      libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      curl gdb locales parallel python3.8-minimal python-is-python3 \
+      spatialite-bin unzip wget && \
+    cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
+    rm -rf /var/lib/apt/lists/*

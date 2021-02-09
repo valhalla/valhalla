@@ -13,48 +13,28 @@ commands:
       - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
 
 jobs:
-  build-base:
+  build-docker-images:
     docker:
       - image: docker:18.06.3-ce-git
     steps:
       - setup_remote_docker
       - checkout
       - run:
-          name: Build Valhalla base Dockerfile
+          name: Build Valhalla Docker Images
           command: |
             docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
-      - run:
-          name: Push Valhalla base image
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-latest
-            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-${CIRCLE_TAG}
-            fi
-
-  build-binary:
-    requires: build-base
-    docker:
-      - image: docker:18.06.3-ce-git
-    steps:
-      - setup_remote_docker
-      - checkout
-      - run:
-          name: Build Valhalla binary artifacts Dockerfile
-          command: |
             if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
               docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
             fi
       - run:
-          name: Push Valhalla binary artifacts image
+          name: Push Valhalla Docker Images
           command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-latest
               docker push valhalla/valhalla:run-latest
             elif [[ ! -z "${CIRCLE_TAG}" ]]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-${CIRCLE_TAG}
               docker push valhalla/valhalla:run-${CIRCLE_TAG}
             fi
 
@@ -238,7 +218,7 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-base
+      - build-docker-images
       - lint-build-debug
       - build-release
       - build-osx
