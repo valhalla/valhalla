@@ -30,26 +30,26 @@ struct EdgeId {
   GraphId graph_id;
 };
 
-bool GetGraphIdsInner(GraphReader& reader,
-                      std::mutex& lock,
-                      GraphId& last_node,
-                      std::vector<EdgeId>& edge_ids,
-                      const std::vector<uint64_t>& way_ids,
-                      size_t way_id_index,
-                      graph_tile_ptr prev_tile,
-                      GraphId prev_node,
-                      GraphId current_node);
-
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
                     GraphId& last_node,
                     std::vector<EdgeId>& edge_ids,
                     const std::vector<uint64_t>& way_ids,
                     size_t way_id_index,
-                    graph_tile_ptr tile,
+                    const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
-                    GraphId current_node,
-                    const NodeInfo* node_info) {
+                    GraphId current_node);
+
+bool ExpandFromNodeInner(GraphReader& reader,
+                         std::mutex& lock,
+                         GraphId& last_node,
+                         std::vector<EdgeId>& edge_ids,
+                         const std::vector<uint64_t>& way_ids,
+                         size_t way_id_index,
+                         const graph_tile_ptr& tile,
+                         GraphId prev_node,
+                         GraphId current_node,
+                         const NodeInfo* node_info) {
   uint64_t way_id = way_ids[way_id_index];
 
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
@@ -65,14 +65,14 @@ bool ExpandFromNode(GraphReader& reader,
         bool found;
 
         // expand with the next way_id
-        found = GetGraphIdsInner(reader, lock, last_node, edge_ids, way_ids, way_id_index + 1, tile,
-                                 current_node, de->endnode());
+        found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index + 1, tile,
+                               current_node, de->endnode());
         if (found)
           return true;
 
         // expand with the same way_id
-        found = GetGraphIdsInner(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile,
-                                 current_node, de->endnode());
+        found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile,
+                               current_node, de->endnode());
         if (found)
           return true;
 
@@ -86,7 +86,7 @@ bool ExpandFromNode(GraphReader& reader,
 // The function does depth-first-search to convert way_ids to the edge_ids
 //
 //
-// python pseudo-code
+// pseudo-code
 //  def DepthFirstSearch(way_id, node):
 //   if not way_id:
 //     # we matched all way ids
@@ -98,15 +98,15 @@ bool ExpandFromNode(GraphReader& reader,
 //       if DepthFirstSearch(way_id, edge.end_node):
 //         return true
 //    return false
-bool GetGraphIdsInner(GraphReader& reader,
-                      std::mutex& lock,
-                      GraphId& last_node,
-                      std::vector<EdgeId>& edge_ids,
-                      const std::vector<uint64_t>& way_ids,
-                      size_t way_id_index,
-                      graph_tile_ptr prev_tile,
-                      GraphId prev_node,
-                      GraphId current_node) {
+bool ExpandFromNode(GraphReader& reader,
+                    std::mutex& lock,
+                    GraphId& last_node,
+                    std::vector<EdgeId>& edge_ids,
+                    const std::vector<uint64_t>& way_ids,
+                    size_t way_id_index,
+                    const graph_tile_ptr& prev_tile,
+                    GraphId prev_node,
+                    GraphId current_node) {
   if (way_id_index == way_ids.size()) {
     // assign last node to use it for the reverse search later
     last_node = current_node;
@@ -124,8 +124,8 @@ bool GetGraphIdsInner(GraphReader& reader,
 
   bool found;
   // expand from the current node
-  found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile, prev_node,
-                         current_node, node_info);
+  found = ExpandFromNodeInner(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile,
+                              prev_node, current_node, node_info);
   if (found)
     return true;
 
@@ -140,8 +140,8 @@ bool GetGraphIdsInner(GraphReader& reader,
       lock.unlock();
     }
 
-    found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, trans_tile,
-                           prev_node, trans->endnode(), trans_tile->node(trans->endnode()));
+    found = ExpandFromNodeInner(reader, lock, last_node, edge_ids, way_ids, way_id_index, trans_tile,
+                                prev_node, trans->endnode(), trans_tile->node(trans->endnode()));
     if (found)
       return true;
   }
@@ -158,7 +158,7 @@ std::vector<GraphId> GetGraphIds(GraphId& start_node,
   lock.unlock();
 
   std::vector<EdgeId> edge_ids;
-  GetGraphIdsInner(reader, lock, start_node, edge_ids, way_ids, 0, tile, GraphId(), start_node);
+  ExpandFromNode(reader, lock, start_node, edge_ids, way_ids, 0, tile, GraphId(), start_node);
   if (edge_ids.empty())
     return {};
 
