@@ -29,6 +29,33 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-latest
+            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-${CIRCLE_TAG}
+            fi
+
+  build-binary:
+    requires: build-base
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: Build Valhalla binary artifacts Dockerfile
+          command: |
+            if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
+              docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
+            fi
+      - run:
+          name: Push Valhalla binary artifacts image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:run-latest
+            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:run-${CIRCLE_TAG}
             fi
 
   build-release-binary-linux:
