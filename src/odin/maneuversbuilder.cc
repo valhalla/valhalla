@@ -56,6 +56,10 @@ constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
 // Small end ramp fork threshold in kilometers
 constexpr float kSmallEndRampForkThreshold = 0.125f;
 
+// Thresholds for succinct phrase usage
+constexpr uint32_t kMaxWordCount = 5;
+constexpr uint32_t kMaxStreetNameLength = 30;
+
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
   std::string token;
@@ -917,8 +921,12 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
   for (auto& maneuver : maneuvers) {
     if (maneuver.HasStreetNames()) {
       std::string street_name = maneuver.street_names().front()->value();
-      if (get_word_count(street_name) > 5 || street_name.length() > 30) {
+      if (get_word_count(street_name) > kMaxWordCount ||
+          street_name.length() > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
+        std::cout << "******************STREET NAME :: " << street_name << std::endl;
+        std::cout << "******************WORD COUNT :: " << get_word_count(street_name) << std::endl;
+        std::cout << "******************STREET NAME LENGTH :: " << street_name.length() << std::endl;
       }
     }
   }

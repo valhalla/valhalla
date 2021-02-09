@@ -116,6 +116,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       const std::string& verbal_transition_alert_instruction = "",
                       const std::string& verbal_pre_transition_instruction = "",
                       const std::string& verbal_post_transition_instruction = "",
+                      const std::string& verbal_succinct_transition_instruction = "",
                       bool tee = false,
                       bool unnamed_walkway = false,
                       bool unnamed_cycleway = false,
@@ -197,6 +198,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_tee(tee);
   if (unnamed_walkway) {
     maneuver.set_trail_type(TrailType::kUnnamedWalkway);
@@ -300,6 +302,10 @@ void TryBuild(const Options& options,
     // Check maneuver verbal_post_transition_instruction
     EXPECT_EQ(man->verbal_post_transition_instruction(),
               expected_man->verbal_post_transition_instruction());
+
+    // Check maneuver verbal_succinct_transition_instruction
+    EXPECT_EQ(man->verbal_succinct_transition_instruction(),
+              expected_man->verbal_succinct_transition_instruction());
 
     // Check maneuver depart_instruction
     EXPECT_EQ(man->depart_instruction(), expected_man->depart_instruction());
@@ -3180,6 +3186,7 @@ void SetExpectedManeuverInstructions(std::list<Maneuver>& expected_maneuvers,
                                      const string& verbal_transition_alert_instruction,
                                      const string& verbal_pre_transition_instruction,
                                      const string& verbal_post_transition_instruction,
+                                     const string& verbal_succinct_transition_instruction,
                                      const string& depart_instruction = "",
                                      const string& verbal_depart_instruction = "",
                                      const string& arrive_instruction = "",
@@ -3189,6 +3196,7 @@ void SetExpectedManeuverInstructions(std::list<Maneuver>& expected_maneuvers,
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_depart_instruction(depart_instruction);
   maneuver.set_verbal_depart_instruction(verbal_depart_instruction);
   maneuver.set_arrive_instruction(arrive_instruction);
@@ -3199,12 +3207,14 @@ void SetExpectedPreviousManeuverInstructions(std::list<Maneuver>& expected_maneu
                                              const string& instruction,
                                              const string& verbal_transition_alert_instruction,
                                              const string& verbal_pre_transition_instruction,
-                                             const string& verbal_post_transition_instruction) {
+                                             const string& verbal_post_transition_instruction,
+                                             const string& verbal_succinct_transition_instruction) {
   Maneuver& maneuver = expected_maneuvers.front();
   maneuver.set_instruction(instruction);
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
 }
 
 TEST(NarrativeBuilder, TestBuildStartInstructions_0_miles_en_US) {

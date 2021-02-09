@@ -30,7 +30,8 @@ void test_instructions(const std::string& filename,
                        const std::string& expected_text_instruction,
                        const std::string& expected_verbal_transition_alert_instruction,
                        const std::string& expected_verbal_pre_transition_instruction,
-                       const std::string& expected_verbal_post_transition_instruction) {
+                       const std::string& expected_verbal_post_transition_instruction,
+                       const std::string& expected_verbal_succinct_transition_instruction) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
@@ -82,6 +83,16 @@ void test_instructions(const std::string& filename,
                                                              .maneuver(maneuver_index)
                                                              .verbal_post_transition_instruction();
   EXPECT_EQ(found_verbal_post_transition_instruction, expected_verbal_post_transition_instruction);
+
+  // Validate the verbal_succinct_transition_instruction for the specified maneuver index
+  std::string found_verbal_succinct_transition_instruction =
+      request.directions()
+          .routes(0)
+          .legs(0)
+          .maneuver(maneuver_index)
+          .verbal_succinct_transition_instruction();
+  EXPECT_EQ(found_verbal_succinct_transition_instruction,
+            expected_verbal_succinct_transition_instruction);
 }
 
 void test_osrm_maneuver(const std::string& filename,
