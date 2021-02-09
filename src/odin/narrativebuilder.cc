@@ -3870,9 +3870,13 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(Maneuve
 
 std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver) {
   // "0": "Head <CARDINAL_DIRECTION>.",
-  // "1": "Drive <CARDINAL_DIRECTION>.",
-  // "2": "Walk <CARDINAL_DIRECTION>.",
-  // "3": "Bike <CARDINAL_DIRECTION>."
+  // "1": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "5": "Drive <CARDINAL_DIRECTION>.",
+  // "6": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "10": "Walk <CARDINAL_DIRECTION>.",
+  // "11": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "15": "Bike <CARDINAL_DIRECTION>."
+  // "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3886,11 +3890,16 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
 
   // Set base phrase id per mode
   if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
-    phrase_id += 1;
+    phrase_id += 5;
   } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
-    phrase_id += 2;
+    phrase_id += 10;
   } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
-    phrase_id += 3;
+    phrase_id += 15;
+  }
+
+  if (maneuver.include_verbal_pre_transition_length()) {
+    // Increment phrase id for length
+    phrase_id += 1;
   }
 
   // Set instruction to the determined tagged phrase
@@ -3898,6 +3907,9 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(maneuver, dictionary_.start_verbal_subset.metric_lengths,
+                                dictionary_.start_verbal_subset.us_customary_lengths));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
