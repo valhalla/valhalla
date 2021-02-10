@@ -3,6 +3,7 @@
 import sys
 import os
 import valhalla
+from valhalla.utils import decode_polyline
 import json
 
 valhalla.Configure(sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__)) + '/valhalla.json')
@@ -17,3 +18,4 @@ assert('legs' in route['trip'] and len(route['trip']['legs']) > 0)
 assert('maneuvers' in route['trip']['legs'][0] and len(route['trip']['legs'][0]['maneuvers']) > 0)
 assert('instruction' in route['trip']['legs'][0]['maneuvers'][0])
 assert(route['trip']['legs'][0]['maneuvers'][0]['instruction'] == u'Двигайтесь на восток по велосипедной дорожке.')
+assert(len(decode_polyline(route['trip']['legs'][0]['shape'])) == 344)
