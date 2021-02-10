@@ -519,7 +519,8 @@ void PopulateStartManeuverList_13_unnamed_walkway(std::list<Maneuver>& maneuvers
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kStart, {}, {}, {},
                    "", 0.050737, 35, 0, Maneuver::RelativeDirection::kNone,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 213, 209, 0, 3, 0, 4, 0, 0, 0,
-                   0, 0, 0, 1, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 1, 0, 0, 36, 0);
+                   0, 0, 0, 1, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 1, 0, 0, 36,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -611,7 +612,8 @@ void PopulateStartManeuverList_18_unnamed_mountain_bike_trail(std::list<Maneuver
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kStart, {}, {}, {},
                    "", 0.200000, 29, 0, Maneuver::RelativeDirection::kNone,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 269, 221, 0, 2, 0, 21, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 1, 36, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 1, 36,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -683,16 +685,16 @@ void PopulateBecomesManeuverList_0(std::list<Maneuver>& maneuvers,
                    {{"Vine Street", 0}}, {}, {}, "", 0.365000, 25, 25,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 355, 25, 47, 49, 497, 504, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 19,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   19, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code, DirectionsLeg_Maneuver_Type_kBecomes,
                    {{"Middletown Road", 0}}, {}, {}, "", 1.489000, 98, 4,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 29, 30, 49, 65, 504, 529, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
-                   97, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0,
+                   0, 97, 0);
 }
 
 void PopulateContinueManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -763,8 +765,8 @@ void PopulateTurnManeuverList_1(std::list<Maneuver>& maneuvers,
                    {{"Middletown Road", 0}}, {}, {}, "", 2.011000, 152, 271,
                    Maneuver::RelativeDirection::kLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 28, 14, 5, 10, 40, 83, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 1, 0, "", "", "", "", 1, 0, 0, 0, 129,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 1, 0, "", "", "", "", 1, 0, 0, 0,
+                   129, 0);
 }
 
 void PopulateTurnManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -898,16 +900,16 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
                    {{"US 15", 1}}, {{"Catoctin Mountain Highway", 0}, {"US 15", 1}}, {}, "",
                    18.278002, 928, 34, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 201, 204, 161, 187, 1461, 1805, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   900, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 900, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code, DirectionsLeg_Maneuver_Type_kSlightLeft,
                    {{"US 15 South", 1}}, {}, {}, "", 4.137000, 232, 349,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 193, 197, 187, 197, 1805, 1878, 0,
-                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 1, "", "", "", "", 0, 0, 0, 0,
-                   200, 0);
+                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 1, "", "", "", "", 0, 0, 0,
+                   0, 200, 0);
   maneuver2.set_to_stay_on(true);
 }
 
@@ -943,15 +945,16 @@ void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
                    {{"Bunker Hill Road", 0}}, {}, {}, "", 0.287000, 28, 81,
                    Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 335, 337, 2, 3, 36, 46, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 1, "", "", "", "", 0, 0, 0, 0, 20,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 1, "", "", "", "", 0, 0, 0, 0,
+                   20, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code, DirectionsLeg_Maneuver_Type_kUturnLeft,
                    {{"Bunker Hill Road", 0}}, {}, {}, "", 0.287000, 25, 180,
                    Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 157, 155, 3, 4, 46, 56, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 20, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 20,
+                   0);
   maneuver2.set_to_stay_on(true);
 }
 
@@ -988,14 +991,16 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
                    {{"Jonestown Road", 0}, {"US 22", 1}}, {}, {}, "", 0.062923, 2, 0,
                    Maneuver::RelativeDirection::kNone,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 36, 32, 0, 1, 0, 1, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 2, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 2,
+                   0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code, DirectionsLeg_Maneuver_Type_kUturnLeft,
                    {{"Jonestown Road", 0}, {"US 22", 1}}, {}, {{"Devonshire Road", 0}}, "", 0.072697,
                    47, 180, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 212, 221, 1, 3, 1, 3, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 40, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 40,
+                   0);
   maneuver2.set_to_stay_on(true);
 }
 
@@ -1007,8 +1012,8 @@ void PopulateRampStraightManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampStraight, {},
                    {}, {}, "", 2.4, 37, 340, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 60, 57, 9, 10, 88, 92, 1, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 30,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   30, 0);
 }
 
 void PopulateRampStraightManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1073,8 +1078,8 @@ void PopulateRampManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
                    {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 9, 0,
-                   false);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 9,
+                   0, false);
 }
 
 void PopulateRampManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1112,8 +1117,8 @@ void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("South Conduit Avenue", 0, 0)},
-                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 6, 0,
-                   true);
+                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   6, 0, true);
 }
 
 void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1136,7 +1141,8 @@ void PopulateRampManeuverList_5(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
                    {}, "", 0.256000, 46, 92, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 86, 129, 11, 13, 51, 62, 1, 0, 0,
-                   0, 0, 1, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 23, 0);
+                   0, 0, 1, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 23,
+                   0);
 }
 
 void PopulateRampManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1199,7 +1205,8 @@ void PopulateRampManeuverList_10(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
                    {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 9, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 9,
+                   0);
 }
 
 void PopulateRampManeuverList_11(std::list<Maneuver>& maneuvers,
@@ -1238,8 +1245,8 @@ void PopulateRampManeuverList_13(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("South Conduit Avenue", 0, 0)},
-                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 6,
-                   0);
+                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   6, 0);
 }
 
 void PopulateRampManeuverList_14(std::list<Maneuver>& maneuvers,
@@ -1263,8 +1270,8 @@ void PopulateExitManeuverList_0(std::list<Maneuver>& maneuvers,
                    {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 23,
-                   0, false);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   23, 0, false);
 }
 
 void PopulateExitManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1303,8 +1310,8 @@ void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)},
-                   {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
-                   0, 0, 23, 0, false);
+                   {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1330,8 +1337,8 @@ void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {},
-                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   23, 0, false);
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1344,8 +1351,8 @@ void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)},
-                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   23, 0, false);
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1376,8 +1383,8 @@ void PopulateExitManeuverList_8(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_10(std::list<Maneuver>& maneuvers,
@@ -1390,8 +1397,8 @@ void PopulateExitManeuverList_10(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)}, {},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_12(std::list<Maneuver>& maneuvers,
@@ -1404,8 +1411,8 @@ void PopulateExitManeuverList_12(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("White Marsh", 0, 0)},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
@@ -1419,8 +1426,8 @@ void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)},
                    {std::make_tuple("White Marsh", 0, 0)},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_15(std::list<Maneuver>& maneuvers,
@@ -1432,8 +1439,8 @@ void PopulateExitManeuverList_15(std::list<Maneuver>& maneuvers,
                    {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 23,
-                   0, true);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   23, 0, true);
 }
 
 void PopulateExitManeuverList_16(std::list<Maneuver>& maneuvers,
@@ -1472,8 +1479,8 @@ void PopulateExitManeuverList_18(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)},
-                   {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
-                   0, 0, 23, 0, true);
+                   {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 23, 0, true);
 }
 
 void PopulateExitManeuverList_19(std::list<Maneuver>& maneuvers,
@@ -1499,8 +1506,8 @@ void PopulateExitManeuverList_20(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {},
-                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   23, 0, true);
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 23, 0, true);
 }
 
 void PopulateExitManeuverList_21(std::list<Maneuver>& maneuvers,
@@ -1513,8 +1520,8 @@ void PopulateExitManeuverList_21(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)},
-                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   23, 0, true);
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 23, 0, true);
 }
 
 void PopulateExitManeuverList_22(std::list<Maneuver>& maneuvers,
@@ -1545,8 +1552,8 @@ void PopulateExitManeuverList_23(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0, false);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0, false);
 }
 
 void PopulateExitManeuverList_25(std::list<Maneuver>& maneuvers,
@@ -1559,8 +1566,8 @@ void PopulateExitManeuverList_25(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)}, {},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0, false);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0, false);
 }
 
 void PopulateExitManeuverList_27(std::list<Maneuver>& maneuvers,
@@ -1573,8 +1580,8 @@ void PopulateExitManeuverList_27(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("White Marsh", 0, 0)},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0, false);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0, false);
 }
 
 void PopulateExitManeuverList_29(std::list<Maneuver>& maneuvers,
@@ -1588,8 +1595,8 @@ void PopulateExitManeuverList_29(std::list<Maneuver>& maneuvers,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
                    1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)},
                    {std::make_tuple("White Marsh", 0, 0)},
-                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0,
-                   0, 0, 0, 46, 0, false);
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", "",
+                   0, 0, 0, 0, 46, 0, false);
 }
 
 void PopulateKeepManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1624,8 +1631,8 @@ void PopulateKeepManeuverList_2(std::list<Maneuver>& maneuvers,
                    {{"I 895 South", 1}}, {}, {}, "", 14.464000, 634, 2,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 221, 214, 21, 45, 148, 323, 0,
-                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   581, 0);
+                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 581, 0);
 }
 
 void PopulateKeepManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1662,8 +1669,8 @@ void PopulateKeepManeuverList_5(std::list<Maneuver>& maneuvers,
                    {}, "", 14.464000, 634, 2, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 221, 214, 21, 45, 148, 323, 0,
                    0, 0, 0, 0, 1, 0, 1, 0, {std::make_tuple("62", 0, 0)}, {},
-                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   581, 0);
+                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 581, 0);
 }
 
 void PopulateKeepManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1677,8 +1684,8 @@ void PopulateKeepManeuverList_6(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 1, 0, 1, 0, {},
                    {std::make_tuple("I 895 South", 1, 1),
                     std::make_tuple("Baltimore Harbor Tunnel Thruway", 0, 0)},
-                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   581, 0);
+                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 581, 0);
 }
 
 void PopulateKeepManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1693,8 +1700,8 @@ void PopulateKeepManeuverList_7(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 1, 0, 1, 0, {std::make_tuple("62", 0, 0)},
                    {std::make_tuple("I 895 South", 1, 1),
                     std::make_tuple("Baltimore Harbor Tunnel Thruway", 0, 0)},
-                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   581, 0);
+                   {std::make_tuple("Annapolis", 0, 0)}, {}, 0, 0, 0, 1, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 581, 0);
 }
 
 void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1706,8 +1713,8 @@ void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
                    {{"I 95 South", 1}, {"John F. Kennedy Memorial Highway", 0}}, {}, {}, "",
                    23.639002, 843, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 234, 219, 24, 34, 210, 380, 0,
-                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   832, 0);
+                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1729,8 +1736,8 @@ void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
                    {{"I 95 South", 1}, {"John F. Kennedy Memorial Highway", 0}}, {}, {}, "",
                    23.639002, 843, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 234, 219, 24, 34, 210, 380, 0,
-                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   832, 0);
+                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1739,8 +1746,8 @@ void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 219, 232, 34, 45, 380, 491, 0,
                    0, 0, 0, 0, 1, 0, 1, 0, {std::make_tuple("62", 0, 0)},
-                   {std::make_tuple("I 95 South", 1, 0)}, {}, {}, 0, 0, 0, 1, 0, 0, "", "", "", "", 0, 0,
-                   0, 0, 334, 0);
+                   {std::make_tuple("I 95 South", 1, 0)}, {}, {}, 0, 0, 0, 1, 0, 0, "", "", "", "", 0,
+                   0, 0, 0, 334, 0);
   maneuver2.set_to_stay_on(true);
 }
 
@@ -1753,8 +1760,8 @@ void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
                    {{"I 95 South", 1}, {"John F. Kennedy Memorial Highway", 0}}, {}, {}, "",
                    23.639002, 843, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 234, 219, 24, 34, 210, 380, 0,
-                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   832, 0);
+                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1763,8 +1770,8 @@ void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 219, 232, 34, 45, 380, 491, 0,
                    0, 0, 0, 0, 1, 0, 1, 0, {}, {std::make_tuple("I 95 South", 1, 0)},
-                   {std::make_tuple("Baltimore", 0, 0)}, {}, 0, 0, 0, 1, 0, 0, "", "", "", "", 0, 0, 0, 0,
-                   334, 0);
+                   {std::make_tuple("Baltimore", 0, 0)}, {}, 0, 0, 0, 1, 0, 0, "", "", "", "", 0, 0,
+                   0, 0, 334, 0);
   maneuver2.set_to_stay_on(true);
 }
 
@@ -1777,8 +1784,8 @@ void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
                    {{"I 95 South", 1}, {"John F. Kennedy Memorial Highway", 0}}, {}, {}, "",
                    23.639002, 843, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 234, 219, 24, 34, 210, 380, 0,
-                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   832, 0);
+                   0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1801,16 +1808,16 @@ void PopulateMergeManeuverList_0(std::list<Maneuver>& maneuvers,
                    {}, {}, "", 0.864000, 34, 6, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 174, 241, 39, 41, 158, 180, 1, 0,
                    0, 0, 0, 1, 0, 0, 0, {}, {std::make_tuple("I 76 West", 1, 1)},
-                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
-                   0, 34, 0);
+                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code, DirectionsLeg_Maneuver_Type_kMerge, {}, {},
                    {}, "", 7.624001, 245, 1, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 242, 293, 41, 42, 180, 236, 0,
-                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   243, 0);
+                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 243, 0);
 }
 
 void PopulateMergeManeuverList_1_1(std::list<Maneuver>& maneuvers,
@@ -1822,8 +1829,8 @@ void PopulateMergeManeuverList_1_1(std::list<Maneuver>& maneuvers,
                    {}, {}, "", 0.864000, 34, 6, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 174, 241, 39, 41, 158, 180, 1, 0,
                    0, 0, 0, 1, 0, 0, 0, {}, {std::make_tuple("I 76 West", 1, 1)},
-                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
-                   0, 34, 0);
+                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1831,8 +1838,8 @@ void PopulateMergeManeuverList_1_1(std::list<Maneuver>& maneuvers,
                    {{"I 76 West", 1}, {"Pennsylvania Turnpike", 0}}, {}, {}, "", 7.624001, 245, 1,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 242, 293, 41, 42, 180, 236, 0,
-                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   243, 0);
+                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 243, 0);
 }
 
 void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
@@ -1844,8 +1851,8 @@ void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
                    {}, {}, "", 2.1, 34, 6, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 174, 241, 39, 41, 158, 180, 1, 0,
                    0, 0, 0, 1, 0, 0, 0, {}, {std::make_tuple("I 76 West", 1, 1)},
-                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
-                   0, 34, 0);
+                   {std::make_tuple("Pittsburgh", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0,
+                   0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1853,8 +1860,8 @@ void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
                    {{"I 76 West", 1}, {"Pennsylvania Turnpike", 0}}, {}, {}, "", 7.624001, 245, 1,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 242, 293, 41, 42, 180, 236, 0,
-                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   243, 0);
+                   0, 0, 0, 0, 1, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 243, 0);
 }
 
 void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1865,8 +1872,8 @@ void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                    {}, {}, {}, "", 0.043000, 2, 41, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 264, 167, 135, 139, 1457, 1464, 0,
-                   0, 0, 0, 1, 0, 0, 0, 0, {}, {}, {}, {}, 1, 2, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   2, 0);
+                   0, 0, 0, 1, 0, 0, 0, 0, {}, {}, {}, {}, 1, 2, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 2, 0);
 }
 
 void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1890,8 +1897,8 @@ void PopulateExitRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRoundaboutExit,
                    {}, {}, {}, "", 1.041000, 69, 24, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 224, 262, 8, 11, 32, 60, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 64,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   64, 0);
 }
 
 void PopulateExitRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1903,8 +1910,8 @@ void PopulateExitRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
                    {{"Philadelphia Road", 0}, {"MD 7", 1}}, {}, {}, "", 1.041000, 69, 24,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 224, 262, 8, 11, 32, 60, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 64,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   64, 0);
 }
 
 void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1916,8 +1923,8 @@ void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
                    {{"US 15", 1}}, {{"Catoctin Mountain Highway", 0}, {"US 15", 1}}, {}, "",
                    18.278002, 923, 34, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 201, 204, 139, 154, 1464, 1808, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   914, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 914, 0);
 }
 
 void PopulateEnterFerryManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1928,7 +1935,8 @@ void PopulateEnterFerryManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryEnter, {},
                    {}, {}, "", 1.446000, 822, 4, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 280, 280, 5, 6, 8, 9, 0, 0, 1, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 521, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 521,
+                   0);
 }
 
 void PopulateEnterFerryManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1940,7 +1948,8 @@ void PopulateEnterFerryManeuverList_1(std::list<Maneuver>& maneuvers,
                    {{"Millersburg FERRY", 0}}, {}, {}, "", 1.446000, 822, 4,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 280, 280, 5, 6, 8, 9, 0, 0, 1, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 521, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 521,
+                   0);
 }
 
 void PopulateEnterFerryManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1964,8 +1973,8 @@ void PopulateExitFerryManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -1977,8 +1986,8 @@ void PopulateExitFerryManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -1992,7 +2001,8 @@ void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2005,7 +2015,8 @@ void PopulateExitFerryManeuverList_3(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2019,8 +2030,8 @@ void PopulateExitFerryManeuverList_4(std::list<Maneuver>& maneuvers,
                    {{"US 9", 1}}, {{"Cape May-Lewes Ferry Entrance", 0}, {"US 9", 1}}, {}, "",
                    0.099000, 7, 356, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 5,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   5, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2032,8 +2043,8 @@ void PopulateExitFerryManeuverList_5(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -2045,8 +2056,8 @@ void PopulateExitFerryManeuverList_6(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2060,7 +2071,8 @@ void PopulateExitFerryManeuverList_7(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -2073,7 +2085,8 @@ void PopulateExitFerryManeuverList_8(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2087,8 +2100,8 @@ void PopulateExitFerryManeuverList_9(std::list<Maneuver>& maneuvers,
                    {{"US 9", 1}}, {{"Cape May-Lewes Ferry Entrance", 0}, {"US 9", 1}}, {}, "",
                    0.099000, 7, 356, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 5,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   5, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -2100,8 +2113,8 @@ void PopulateExitFerryManeuverList_10(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -2113,8 +2126,8 @@ void PopulateExitFerryManeuverList_11(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2128,7 +2141,8 @@ void PopulateExitFerryManeuverList_12(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -2141,7 +2155,8 @@ void PopulateExitFerryManeuverList_13(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2155,8 +2170,8 @@ void PopulateExitFerryManeuverList_14(std::list<Maneuver>& maneuvers,
                    {{"US 9", 1}}, {{"Cape May-Lewes Ferry Entrance", 0}, {"US 9", 1}}, {}, "",
                    0.099000, 7, 356, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 5,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   5, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -2168,8 +2183,8 @@ void PopulateExitFerryManeuverList_15(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -2181,8 +2196,8 @@ void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kFerryExit, {}, {},
                    {}, "", 0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 12,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   12, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2196,7 +2211,8 @@ void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -2209,7 +2225,8 @@ void PopulateExitFerryManeuverList_18(std::list<Maneuver>& maneuvers,
                    {{"Ferry Lane", 0}}, {}, {}, "", 0.578000, 81, 7,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 70,
+                   0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2223,8 +2240,8 @@ void PopulateExitFerryManeuverList_19(std::list<Maneuver>& maneuvers,
                    {{"US 9", 1}}, {{"Cape May-Lewes Ferry Entrance", 0}, {"US 9", 1}}, {}, "",
                    0.099000, 7, 356, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 5,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
+                   5, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -2237,7 +2254,8 @@ void PopulateTransitConnectionStartManeuverList_0(std::list<Maneuver>& maneuvers
                    DirectionsLeg_Maneuver_Type_kTransitConnectionStart, {{"Broadway", 0}}, {}, {}, "",
                    0.036000, 28, 0, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 213, 212, 2, 3, 2, 4, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
+                   0);
 }
 
 void PopulateTransitConnectionStartManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2249,8 +2267,8 @@ void PopulateTransitConnectionStartManeuverList_1(std::list<Maneuver>& maneuvers
                    DirectionsLeg_Maneuver_Type_kTransitConnectionStart, {{"Townsend Street", 0}}, {},
                    {}, "", 0.084000, 60, 204, Maneuver::RelativeDirection::kLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 226, 175, 27, 28, 733, 736, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
-                   59, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0,
+                   0, 59, 0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                              "s-9q8yyv42k3-caltrain~sanfranciscostation",
@@ -2267,7 +2285,8 @@ void PopulateTransitConnectionStartManeuverList_2(std::list<Maneuver>& maneuvers
                    DirectionsLeg_Maneuver_Type_kTransitConnectionStart, {{"Broadway", 0}}, {}, {}, "",
                    0.036000, 28, 0, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 213, 212, 2, 3, 2, 4, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
+                   0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation, "s-dr5rsq8pqg-8st~nyu<r21n",
                              "8 St - NYU", "", "2016-03-29T08:02-04:00", 0, 0.0f, 0.0f));
@@ -2282,8 +2301,8 @@ void PopulateTransitConnectionTransferManeuverList_0(std::list<Maneuver>& maneuv
                    DirectionsLeg_Maneuver_Type_kTransitConnectionTransfer, {{"Broadway", 0}}, {}, {},
                    "", 0.036000, 25, 196, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 32, 33, 11, 12, 16, 18, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   25, 0);
 }
 
 void PopulateTransitConnectionTransferManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2295,8 +2314,8 @@ void PopulateTransitConnectionTransferManeuverList_1(std::list<Maneuver>& maneuv
                    DirectionsLeg_Maneuver_Type_kTransitConnectionTransfer, {{"Townsend Street", 0}},
                    {}, {}, "", 0.084000, 60, 204, Maneuver::RelativeDirection::kLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 226, 175, 27, 28, 733, 736, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
-                   59, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0,
+                   0, 59, 0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                              "s-9q8yyv42k3-caltrain~sanfranciscostation",
@@ -2313,8 +2332,8 @@ void PopulateTransitConnectionTransferManeuverList_2(std::list<Maneuver>& maneuv
                    DirectionsLeg_Maneuver_Type_kTransitConnectionTransfer, {{"Broadway", 0}}, {}, {},
                    "", 0.036000, 25, 196, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 32, 33, 11, 12, 16, 18, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   25, 0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation, "s-dr5rsq8pqg-8st~nyu<r21s",
                              "8 St - NYU", "2016-03-29T08:19-04:00", "", 0, 0.0f, 0.0f));
@@ -2329,8 +2348,8 @@ void PopulateTransitConnectionDestinationManeuverList_0(std::list<Maneuver>& man
                    DirectionsLeg_Maneuver_Type_kTransitConnectionDestination, {{"Broadway", 0}}, {},
                    {}, "", 0.036000, 25, 196, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 32, 33, 11, 12, 16, 18, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   25, 0);
 }
 
 void PopulateTransitConnectionDestinationManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2343,8 +2362,8 @@ void PopulateTransitConnectionDestinationManeuverList_1(std::list<Maneuver>& man
                    {{"Townsend Street", 0}}, {}, {}, "", 0.084000, 60, 204,
                    Maneuver::RelativeDirection::kLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 226, 175, 27, 28, 733, 736, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0,
-                   59, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0,
+                   0, 59, 0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                              "s-9q8yyv42k3-caltrain~sanfranciscostation",
@@ -2361,8 +2380,8 @@ void PopulateTransitConnectionDestinationManeuverList_2(std::list<Maneuver>& man
                    DirectionsLeg_Maneuver_Type_kTransitConnectionDestination, {{"Broadway", 0}}, {},
                    {}, "", 0.036000, 25, 196, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 32, 33, 11, 12, 16, 18, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 25,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   25, 0);
   maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation, "s-dr5rsq8pqg-8st~nyu<r21s",
                              "8 St - NYU", "2016-03-29T08:19-04:00", "", 0, 0.0f, 0.0f));
@@ -2449,7 +2468,8 @@ void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kTransit, {}, {},
                    {}, "", 0.826000, 502, 289, Maneuver::RelativeDirection::kLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 171, 171, 2, 9, 3, 24, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 595, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 595,
+                   0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-9q8zn-powell~hyde", 0, 26285, "", "",
                       "Powell & Market", 16777215, 0, "", "o-9q8y-sfmta",
@@ -2498,8 +2518,8 @@ void PopulateTransitManeuverList_1_stop_count_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kTransit, {}, {},
                    {}, "", 0.794000, 395, 10, Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 27, 27, 2, 3, 3, 5, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 572,
-                   0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   572, 0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-r", 0, 84508, "R", "Broadway Local",
                       "FOREST HILLS - 71 AV", 16567306, 0,
@@ -2527,7 +2547,8 @@ void PopulateTransitManeuverList_1_stop_count_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kTransit, {}, {},
                    {}, "", 1.097000, 277, 179, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouth, 187, 189, 4, 6, 7, 9, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 790, 0);
+                   0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", "", 0, 0, 0, 0, 790,
+                   0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-r", 0, 135877, "R", "Broadway Local",
                       "BAY RIDGE - 95 ST", 16567306, 0,
@@ -2595,8 +2616,8 @@ void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kTransit, {}, {},
                    {}, "", 7.685000, 1350, 175, Maneuver::RelativeDirection::KReverse,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 307, 29, 10, 18, 11, 108, 0,
-                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
-                   5534, 0);
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0,
+                   0, 5534, 0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-m", 0, 134164, "M",
                       "QNS BLVD-6th AVE/ Myrtle Local", "FOREST HILLS - 71 AV", 16737049, 0,
@@ -2871,8 +2892,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_0(std::list<Maneuver>&
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2885,8 +2906,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_1(std::list<Maneuver>&
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2901,8 +2922,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_2(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2916,8 +2937,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_3(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2932,8 +2953,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_4(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2946,8 +2967,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_5(std::list<Maneuver>&
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -2960,8 +2981,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_6(std::list<Maneuver>&
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -2976,8 +2997,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_7(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -2991,8 +3012,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_8(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -3007,8 +3028,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_9(std::list<Maneuver>&
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
@@ -3021,8 +3042,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_10(std::list<Maneuver>
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -3035,8 +3056,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_11(std::list<Maneuver>
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -3051,8 +3072,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_12(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -3066,8 +3087,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_13(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -3082,8 +3103,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_14(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
@@ -3096,8 +3117,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_15(std::list<Maneuver>
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -3110,8 +3131,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_16(std::list<Maneuver>
                    DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination, {}, {}, {}, "",
                    0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -3126,8 +3147,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_17(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -3141,8 +3162,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_18(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
   maneuver.set_include_verbal_pre_transition_length(true);
 }
@@ -3157,8 +3178,8 @@ void PopulatePostTransitConnectionDestinationManeuverList_19(std::list<Maneuver>
                    {{"6th Avenue", 0}, {"Avenue of the Americas", 0}}, {}, "", 0.088000, 66, 2,
                    Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0, 62,
-                   0);
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", "", 0, 0, 0, 0,
+                   62, 0);
   maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
@@ -3256,8 +3277,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "Head east.", "", "Head east for a half mile.",
-                                  "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "Head east.", "",
+                                  "Head east for a half mile.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3278,8 +3299,9 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "Head southwest.", "",
-                                  "Head southwest on 5th Avenue.", "Continue for 700 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.",
+                                  "Head southwest.", "", "Head southwest on 5th Avenue.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3300,8 +3322,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "Head southwest.", "",
-                                  "Head southwest on 5th Avenue for 700 feet.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.",
+                                  "Head southwest.", "", "Head southwest on 5th Avenue for 700 feet.",
                                   "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3325,8 +3347,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_4_miles_en_US) {
   PopulateStartManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Head south.", "",
-      "Head south on North Prince Street, U.S. 2 22.",
+      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Head south.",
+      "", "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3392,8 +3414,9 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_7_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_7(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.", "Drive southwest.", "",
-                                  "Drive southwest on 5th Avenue.", "Continue for 700 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.",
+                                  "Drive southwest.", "", "Drive southwest on 5th Avenue.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3414,7 +3437,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_8_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_8(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.", "Drive southwest.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.",
+                                  "Drive southwest.", "",
                                   "Drive southwest on 5th Avenue for 700 feet.",
                                   "Continue for 700 feet.");
 
@@ -3439,8 +3463,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_9_miles_en_US) {
   PopulateStartManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Drive south.", "",
-      "Drive south on North Prince Street, U.S. 2 22.",
+      "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Drive south.",
+      "", "Drive south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3484,8 +3508,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_11_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_11(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk east.", "Walk east.", "", "Walk east for a half mile.",
-                                  "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk east.", "Walk east.", "",
+                                  "Walk east for a half mile.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3506,8 +3530,9 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_12_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_12(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.", "Walk southwest.", "",
-                                  "Walk southwest on 5th Avenue.", "Continue for 700 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.",
+                                  "Walk southwest.", "", "Walk southwest on 5th Avenue.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3528,8 +3553,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_13_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_13(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.", "Walk southwest.", "",
-                                  "Walk southwest on 5th Avenue for 700 feet.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.",
+                                  "Walk southwest.", "", "Walk southwest on 5th Avenue for 700 feet.",
                                   "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3551,7 +3576,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_13_unnamed_walkway_miles_en_US
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_13_unnamed_walkway(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the walkway.", "Walk southwest.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the walkway.",
+                                  "Walk southwest.", "",
                                   "Walk southwest on the walkway for 200 feet.",
                                   "Continue for 200 feet.");
 
@@ -3576,8 +3602,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_14_miles_en_US) {
   PopulateStartManeuverList_14(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Walk south.", "",
-      "Walk south on North Prince Street, U.S. 2 22.",
+      "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Walk south.",
+      "", "Walk south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3621,8 +3647,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_16_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_16(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike east.",  "Bike east.", "", "Bike east for a half mile.",
-                                  "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike east.", "Bike east.", "",
+                                  "Bike east for a half mile.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3643,8 +3669,9 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.", "Bike southwest.", "",
-                                  "Bike southwest on 5th Avenue.", "Continue for 700 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.",
+                                  "Bike southwest.", "", "Bike southwest on 5th Avenue.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3665,8 +3692,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_18_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_18(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.", "Bike southwest.", "",
-                                  "Bike southwest on 5th Avenue for 700 feet.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.",
+                                  "Bike southwest.", "", "Bike southwest on 5th Avenue for 700 feet.",
                                   "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3712,7 +3739,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_18_unnamed_mountain_bike_trail
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_18_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
                                                            state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on the mountain bike trail.", "Bike west.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on the mountain bike trail.",
+                                  "Bike west.", "",
                                   "Bike west on the mountain bike trail for 700 feet.",
                                   "Continue for 700 feet.");
 
@@ -3737,8 +3765,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_19_miles_en_US) {
   PopulateStartManeuverList_19(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Bike south.", "",
-      "Bike south on North Prince Street, U.S. 2 22.",
+      "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Bike south.",
+      "", "Bike south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3782,8 +3810,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_1_kilometers_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "Head east.", "", "Head east for 800 meters.",
-                                  "Continue for 800 meters.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "Head east.", "",
+                                  "Head east for 800 meters.", "Continue for 800 meters.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3804,8 +3832,9 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_2_kilometers_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "Head southwest.", "",
-                                  "Head southwest on 5th Avenue.", "Continue for 200 meters.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.",
+                                  "Head southwest.", "", "Head southwest on 5th Avenue.",
+                                  "Continue for 200 meters.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3826,7 +3855,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_3_kilometers_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "Head southwest.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.",
+                                  "Head southwest.", "",
                                   "Head southwest on 5th Avenue for 200 meters.",
                                   "Continue for 200 meters.");
 
@@ -3851,8 +3881,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_4_kilometers_en_US) {
   PopulateStartManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Head south.", "",
-      "Head south on North Prince Street, U.S. 2 22.",
+      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "Head south.",
+      "", "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 5 kilometers.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3879,7 +3909,8 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at your destination.", "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at your destination.",
+                                  "You have arrived at your destination.",
                                   "You will arrive at your destination.",
                                   "You have arrived at your destination.", "");
 
@@ -3915,7 +3946,8 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at 3206 Powelton Avenue.", "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at 3206 Powelton Avenue.",
+                                  "You have arrived at your destination.",
                                   "You will arrive at 32 o6 Powelton Avenue.",
                                   "You have arrived at 32 o6 Powelton Avenue.", "");
 
@@ -3953,7 +3985,8 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Your destination is on the right.", "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Your destination is on the right.",
+                                  "You have arrived at your destination.",
                                   "Your destination will be on the right.",
                                   "Your destination is on the right.", "");
 
@@ -3991,7 +4024,8 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Lancaster Brewing Company is on the left.", "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Lancaster Brewing Company is on the left.",
+                                  "You have arrived at your destination.",
                                   "Lancaster Brewing Company will be on the left.",
                                   "Lancaster Brewing Company is on the left.", "");
 
@@ -4057,8 +4091,8 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.", "Continue.", "Continue.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.", "Continue.",
+                                  "Continue.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4156,8 +4190,8 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left.", "Turn left.", "Turn left.", "Turn left.",
-                                  "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left.", "Turn left.", "Turn left.",
+                                  "Turn left.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), false);
@@ -4213,8 +4247,8 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_cs_CZ) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Odbočte vlevo na Middletown Road.","Odbočte vlevo.",
-                                  "Odbočte vlevo na Middletown Road.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Odbočte vlevo na Middletown Road.",
+                                  "Odbočte vlevo.", "Odbočte vlevo na Middletown Road.",
                                   "Odbočte vlevo na Middletown Road.", "Pokračujte 1 míli.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4330,11 +4364,12 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_3_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right.", "Turn right onto Sunstone Drive.",
+      expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right.",
+      "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to stay on Sunstone Drive.", "Turn right.",
-                                  "Turn right to stay on Sunstone Drive.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to stay on Sunstone Drive.",
+                                  "Turn right.", "Turn right to stay on Sunstone Drive.",
                                   "Turn right to stay on Sunstone Drive.", "Continue for 100 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4362,8 +4397,9 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp left.", "Make a sharp left.", "Make a sharp left.",
-                                  "Make a sharp left.", "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp left.", "Make a sharp left.",
+                                  "Make a sharp left.", "Make a sharp left.",
+                                  "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4389,8 +4425,8 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right onto Flatbush Avenue.", "Make a sharp right.",
-                                  "Make a sharp right onto Flatbush Avenue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right onto Flatbush Avenue.",
+                                  "Make a sharp right.", "Make a sharp right onto Flatbush Avenue.",
                                   "Make a sharp right onto Flatbush Avenue.",
                                   "Continue for 600 feet.");
 
@@ -4420,8 +4456,8 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_2_miles_en_US) {
   PopulateSharpManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.", "Make a sharp left.",
-      "Make a sharp left onto North Bond Street.",
+      "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
+      "Make a sharp left.", "Make a sharp left onto North Bond Street.",
       "Make a sharp left onto North Bond Street, U.S. 1 Business.",
       "Continue on Maryland 9 24 for a half mile.");
 
@@ -4451,11 +4487,12 @@ TEST(NarrativeBuilder, DISABLED_TestBuildSharpInstructions_3_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right.", "Turn right onto Sunstone Drive.",
+      expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right.",
+      "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right to stay on Sunstone Drive.", "",
-                                  "Make a sharp right to stay on Sunstone Drive.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right to stay on Sunstone Drive.",
+                                  "", "Make a sharp right to stay on Sunstone Drive.",
                                   "Make a sharp right to stay on Sunstone Drive.",
                                   "Continue for 100 feet.");
 
@@ -4484,8 +4521,8 @@ TEST(NarrativeBuilder, TestBuildBearInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateBearManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bear right.", "Bear right.", "Bear right.", "Bear right.",
-                                  "Continue for 60 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bear right.", "Bear right.", "Bear right.",
+                                  "Bear right.", "Continue for 60 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4540,8 +4577,8 @@ TEST(NarrativeBuilder, TestBuildBearInstructions_2_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateBearManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.", "Bear right.",
-      "Bear right onto Belair Road.", "Bear right onto Belair Road, U.S. 1 Business.",
+      expected_maneuvers, "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.",
+      "Bear right.", "Bear right onto Belair Road.", "Bear right onto Belair Road, U.S. 1 Business.",
       "Continue on U.S. 1 Business for 2 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4570,11 +4607,11 @@ TEST(NarrativeBuilder, TestBuildBearInstructions_3_miles_en_US) {
   PopulateBearManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers,
-      "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.", "Exit the roundabout.", "",
-      "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
+      "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.",
+      "Exit the roundabout.", "", "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
       "Continue on U.S. 15 for 11 miles.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bear left to stay on US 15 South.", "Bear left.",
-                                  "Bear left to stay on U.S. 15 South.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bear left to stay on US 15 South.",
+                                  "Bear left.", "Bear left to stay on U.S. 15 South.",
                                   "Bear left to stay on U.S. 15 South.", "Continue for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4602,8 +4639,9 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.", "Make a left U-turn.", "Make a left U-turn.",
-                                  "Make a left U-turn.", "Continue for a quarter mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.", "Make a left U-turn.",
+                                  "Make a left U-turn.", "Make a left U-turn.",
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4629,7 +4667,8 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a right U-turn onto Bunker Hill Road.", "Make a right U-turn.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a right U-turn onto Bunker Hill Road.",
+                                  "Make a right U-turn.",
                                   "Make a right U-turn onto Bunker Hill Road.",
                                   "Make a right U-turn onto Bunker Hill Road.",
                                   "Continue for a quarter mile.");
@@ -4658,12 +4697,13 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedPreviousManeuverInstructions(expected_maneuvers, "Turn right onto Bunker Hill Road.", "Turn right.",
-                                          "Turn right onto Bunker Hill Road.",
+  SetExpectedPreviousManeuverInstructions(expected_maneuvers, "Turn right onto Bunker Hill Road.",
+                                          "Turn right.", "Turn right onto Bunker Hill Road.",
                                           "Turn right onto Bunker Hill Road.",
                                           "Continue for 900 feet.");
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Make a left U-turn to stay on Bunker Hill Road.", "Make a left U-turn.",
+                                  "Make a left U-turn to stay on Bunker Hill Road.",
+                                  "Make a left U-turn.",
                                   "Make a left U-turn to stay on Bunker Hill Road.",
                                   "Make a left U-turn to stay on Bunker Hill Road.",
                                   "Continue for 900 feet.");
@@ -4693,8 +4733,8 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn at Devonshire Road.", "Make a left U-turn.",
-                                  "Make a left U-turn at Devonshire Road.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn at Devonshire Road.",
+                                  "Make a left U-turn.", "Make a left U-turn at Devonshire Road.",
                                   "Make a left U-turn at Devonshire Road.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4722,8 +4762,8 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_4_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22.", "Make a left U-turn.",
-      "Make a left U-turn at Devonshire Road.",
+      expected_maneuvers, "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22.",
+      "Make a left U-turn.", "Make a left U-turn at Devonshire Road.",
       "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22.",
       "Continue for 200 feet.");
 
@@ -4756,8 +4796,8 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_5_miles_en_US) {
       "Drive northeast on Jonestown Road, U.S. 22. Then Make a left U-turn at Devonshire Road.",
       "Continue for 200 feet.");
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.", "Make a left U-turn.",
-      "Make a left U-turn at Devonshire Road.",
+      expected_maneuvers, "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.",
+      "Make a left U-turn.", "Make a left U-turn at Devonshire Road.",
       "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.",
       "Continue for 200 feet.");
 
@@ -4786,8 +4826,8 @@ TEST(NarrativeBuilder, TestBuildRampStraight_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampStraightManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Stay straight to take the ramp.", "Stay straight.",
-                                  "Stay straight to take the ramp.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Stay straight to take the ramp.",
+                                  "Stay straight.", "Stay straight to take the ramp.",
                                   "Stay straight to take the ramp.", "Continue for 1.5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4814,8 +4854,8 @@ TEST(NarrativeBuilder, TestBuildRampStraight_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampStraightManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Stay straight to take the US 322 East ramp.", "Stay straight.",
-                                  "Stay straight to take the U.S. 3 22 East ramp.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Stay straight to take the US 322 East ramp.",
+                                  "Stay straight.", "Stay straight to take the U.S. 3 22 East ramp.",
                                   "Stay straight to take the U.S. 3 22 East ramp.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4874,8 +4914,8 @@ TEST(NarrativeBuilder, TestBuildRampStraight_3_miles_en_US) {
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward "
-      "Hershey/Palmdale/Palmyra/Campbelltown.", "Stay straight.",
-      "Stay straight to take the U.S. 3 22 East ramp.",
+      "Hershey/Palmdale/Palmyra/Campbelltown.",
+      "Stay straight.", "Stay straight to take the U.S. 3 22 East ramp.",
       "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4931,8 +4971,9 @@ TEST(NarrativeBuilder, TestBuildRamp_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp on the right.", "Take the ramp on the right.",
-                                  "Take the ramp on the right.", "Take the ramp on the right.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp on the right.",
+                                  "Take the ramp on the right.", "Take the ramp on the right.",
+                                  "Take the ramp on the right.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4958,7 +4999,8 @@ TEST(NarrativeBuilder, TestBuildRamp_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the I 95 ramp on the right.", "Take the ramp on the right.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the I 95 ramp on the right.",
+                                  "Take the ramp on the right.",
                                   "Take the Interstate 95 ramp on the right.",
                                   "Take the Interstate 95 ramp on the right.", "");
 
@@ -4986,7 +5028,8 @@ TEST(NarrativeBuilder, TestBuildRamp_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp on the left toward JFK.", "Take the ramp on the left.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp on the left toward JFK.",
+                                  "Take the ramp on the left.",
                                   "Take the ramp on the left toward JFK.",
                                   "Take the ramp on the left toward JFK.", "");
 
@@ -5015,7 +5058,8 @@ TEST(NarrativeBuilder, TestBuildRamp_3_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the South Conduit Avenue ramp on the left toward JFK.", "Take the ramp on the left.",
+                                  "Take the South Conduit Avenue ramp on the left toward JFK.",
+                                  "Take the ramp on the left.",
                                   "Take the South Conduit Avenue ramp on the left.",
                                   "Take the South Conduit Avenue ramp on the left toward JFK.", "");
 
@@ -5043,7 +5087,8 @@ TEST(NarrativeBuilder, TestBuildRamp_4_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_4(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Gettysburg Pike ramp on the right.", "Take the ramp on the right.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Gettysburg Pike ramp on the right.",
+                                  "Take the ramp on the right.",
                                   "Take the Gettysburg Pike ramp on the right.",
                                   "Take the Gettysburg Pike ramp on the right.", "");
 
@@ -5098,8 +5143,8 @@ TEST(NarrativeBuilder, TestBuildRamp_6_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_6(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left to take the PA 283 West ramp.", "Turn left.",
-                                  "Turn left to take the Pennsylvania 2 83 West ramp.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left to take the PA 283 West ramp.",
+                                  "Turn left.", "Turn left to take the Pennsylvania 2 83 West ramp.",
                                   "Turn left to take the Pennsylvania 2 83 West ramp.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5158,8 +5203,8 @@ TEST(NarrativeBuilder, TestBuildRamp_8_miles_en_US) {
   PopulateRampManeuverList_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport.", "Turn left.",
-      "Turn left to take the Pennsylvania 2 83 West ramp.",
+      "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport.",
+      "Turn left.", "Turn left to take the Pennsylvania 2 83 West ramp.",
       "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg "
       "International Airport.",
       "");
@@ -5188,8 +5233,8 @@ TEST(NarrativeBuilder, TestBuildRamp_9_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_9(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to take the Gettysburg Pike ramp.", "Turn right.",
-                                  "Turn right to take the Gettysburg Pike ramp.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to take the Gettysburg Pike ramp.",
+                                  "Turn right.", "Turn right to take the Gettysburg Pike ramp.",
                                   "Turn right to take the Gettysburg Pike ramp.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5216,8 +5261,8 @@ TEST(NarrativeBuilder, TestBuildRamp_10_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_10(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp.", "Take the ramp.", "Take the ramp.",
-                                  "Take the ramp.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp.", "Take the ramp.",
+                                  "Take the ramp.", "Take the ramp.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5298,7 +5343,8 @@ TEST(NarrativeBuilder, TestBuildRamp_13_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_13(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the South Conduit Avenue ramp on the left toward JFK.", "Take the ramp on the left.",
+                                  "Take the South Conduit Avenue ramp on the left toward JFK.",
+                                  "Take the ramp on the left.",
                                   "Take the South Conduit Avenue ramp on the left.",
                                   "Take the South Conduit Avenue ramp on the left toward JFK.", "");
 
@@ -5326,9 +5372,9 @@ TEST(NarrativeBuilder, TestBuildRamp_14_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_14(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Gettysburg Pike ramp.", "Take the ramp.",
-                                  "Take the Gettysburg Pike ramp.", "Take the Gettysburg Pike ramp.",
-                                  "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Gettysburg Pike ramp.",
+                                  "Take the ramp.", "Take the Gettysburg Pike ramp.",
+                                  "Take the Gettysburg Pike ramp.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5354,8 +5400,9 @@ TEST(NarrativeBuilder, TestBuildExit_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit on the right.", "Take the exit on the right.",
-                                  "Take the exit on the right.", "Take the exit on the right.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit on the right.",
+                                  "Take the exit on the right.", "Take the exit on the right.",
+                                  "Take the exit on the right.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5381,9 +5428,9 @@ TEST(NarrativeBuilder, TestBuildExit_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A on the right.", "Take the exit on the right.",
-                                  "Take exit 67 B-A on the right.", "Take exit 67 B-A on the right.",
-                                  "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A on the right.",
+                                  "Take the exit on the right.", "Take exit 67 B-A on the right.",
+                                  "Take exit 67 B-A on the right.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5409,7 +5456,8 @@ TEST(NarrativeBuilder, TestBuildExit_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit on the right.", "Take the exit on the right.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit on the right.",
+                                  "Take the exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right.", "");
 
@@ -5438,8 +5486,8 @@ TEST(NarrativeBuilder, TestBuildExit_3_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take exit 67 B-A on the right onto US 322 West.", "Take the exit on the right.",
-                                  "Take exit 67 B-A on the right.",
+                                  "Take exit 67 B-A on the right onto US 322 West.",
+                                  "Take the exit on the right.", "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right onto U.S. 3 22 West.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5466,7 +5514,8 @@ TEST(NarrativeBuilder, TestBuildExit_4_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_4(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit on the right toward Lewistown.", "Take the exit on the right.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit on the right toward Lewistown.",
+                                  "Take the exit on the right.",
                                   "Take the exit on the right toward Lewistown.",
                                   "Take the exit on the right toward Lewistown.", "");
 
@@ -5495,8 +5544,8 @@ TEST(NarrativeBuilder, TestBuildExit_5_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take exit 67 B-A on the right toward Lewistown.", "Take the exit on the right.",
-                                  "Take exit 67 B-A on the right.",
+                                  "Take exit 67 B-A on the right toward Lewistown.",
+                                  "Take the exit on the right.", "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right toward Lewistown.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5524,7 +5573,8 @@ TEST(NarrativeBuilder, TestBuildExit_6_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the US 322 West exit on the right toward Lewistown.", "Take the exit on the right.",
+                                  "Take the US 322 West exit on the right toward Lewistown.",
+                                  "Take the exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right toward Lewistown.", "");
 
@@ -5554,8 +5604,8 @@ TEST(NarrativeBuilder, TestBuildExit_7_miles_en_US) {
   PopulateExitManeuverList_7(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College.", "Take the exit on the right.",
-      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College.",
+      "Take the exit on the right.", "Take exit 67 B-A on the right.",
       "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5583,7 +5633,8 @@ TEST(NarrativeBuilder, TestBuildExit_8_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the White Marsh Boulevard exit on the left.", "Take the exit on the left.",
+                                  "Take the White Marsh Boulevard exit on the left.",
+                                  "Take the exit on the left.",
                                   "Take the White Marsh Boulevard exit on the left.",
                                   "Take the White Marsh Boulevard exit on the left.", "");
 
@@ -5612,8 +5663,8 @@ TEST(NarrativeBuilder, TestBuildExit_10_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_10(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the White Marsh Boulevard exit on the left onto MD 43 East.", "Take the exit on the left.",
-      "Take the Maryland 43 East exit on the left.",
+      expected_maneuvers, "Take the White Marsh Boulevard exit on the left onto MD 43 East.",
+      "Take the exit on the left.", "Take the Maryland 43 East exit on the left.",
       "Take the White Marsh Boulevard exit on the left onto Maryland 43 East.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5641,8 +5692,8 @@ TEST(NarrativeBuilder, TestBuildExit_12_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_12(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the White Marsh Boulevard exit on the left toward White Marsh.", "Take the exit on the left.",
-      "Take the exit on the left toward White Marsh.",
+      expected_maneuvers, "Take the White Marsh Boulevard exit on the left toward White Marsh.",
+      "Take the exit on the left.", "Take the exit on the left toward White Marsh.",
       "Take the White Marsh Boulevard exit on the left toward White Marsh.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5671,8 +5722,8 @@ TEST(NarrativeBuilder, TestBuildExit_14_miles_en_US) {
   PopulateExitManeuverList_14(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh.", "Take the exit on the left.",
-      "Take the Maryland 43 East exit on the left.",
+      "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh.",
+      "Take the exit on the left.", "Take the Maryland 43 East exit on the left.",
       "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.",
       "");
 
@@ -5700,8 +5751,8 @@ TEST(NarrativeBuilder, TestBuildExit_15_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_15(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit.", "Take the exit.", "Take the exit.",
-                                  "Take the exit.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit.", "Take the exit.",
+                                  "Take the exit.", "Take the exit.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5727,8 +5778,8 @@ TEST(NarrativeBuilder, TestBuildExit_16_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_16(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A.", "Take the exit.", "Take exit 67 B-A.",
-                                  "Take exit 67 B-A.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A.", "Take the exit.",
+                                  "Take exit 67 B-A.", "Take exit 67 B-A.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5782,8 +5833,9 @@ TEST(NarrativeBuilder, TestBuildExit_18_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_18(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A onto US 322 West.", "Take the exit.",
-                                  "Take exit 67 B-A.", "Take exit 67 B-A onto U.S. 3 22 West.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A onto US 322 West.",
+                                  "Take the exit.", "Take exit 67 B-A.",
+                                  "Take exit 67 B-A onto U.S. 3 22 West.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5809,8 +5861,8 @@ TEST(NarrativeBuilder, TestBuildExit_19_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_19(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit toward Lewistown.", "Take the exit.",
-                                  "Take the exit toward Lewistown.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit toward Lewistown.",
+                                  "Take the exit.", "Take the exit toward Lewistown.",
                                   "Take the exit toward Lewistown.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5837,8 +5889,9 @@ TEST(NarrativeBuilder, TestBuildExit_20_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_20(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A toward Lewistown.", "Take the exit.",
-                                  "Take exit 67 B-A.", "Take exit 67 B-A toward Lewistown.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A toward Lewistown.",
+                                  "Take the exit.", "Take exit 67 B-A.",
+                                  "Take exit 67 B-A toward Lewistown.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5864,8 +5917,8 @@ TEST(NarrativeBuilder, TestBuildExit_21_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_21(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit toward Lewistown.", "Take the exit.",
-                                  "Take the U.S. 3 22 West exit.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit toward Lewistown.",
+                                  "Take the exit.", "Take the U.S. 3 22 West exit.",
                                   "Take the U.S. 3 22 West exit toward Lewistown.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5893,9 +5946,9 @@ TEST(NarrativeBuilder, TestBuildExit_22_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_22(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take exit 67 B-A onto US 322 West toward Lewistown/State College.", "Take the exit.",
-      "Take exit 67 B-A.", "Take exit 67 B-A onto U.S. 3 22 West toward Lewistown, State College.",
-      "");
+      expected_maneuvers, "Take exit 67 B-A onto US 322 West toward Lewistown/State College.",
+      "Take the exit.", "Take exit 67 B-A.",
+      "Take exit 67 B-A onto U.S. 3 22 West toward Lewistown, State College.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5921,8 +5974,8 @@ TEST(NarrativeBuilder, TestBuildExit_23_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_23(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the White Marsh Boulevard exit.", "Take the exit.",
-                                  "Take the White Marsh Boulevard exit.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the White Marsh Boulevard exit.",
+                                  "Take the exit.", "Take the White Marsh Boulevard exit.",
                                   "Take the White Marsh Boulevard exit.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5950,8 +6003,8 @@ TEST(NarrativeBuilder, TestBuildExit_25_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_25(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the White Marsh Boulevard exit onto MD 43 East.", "Take the exit.",
-                                  "Take the Maryland 43 East exit.",
+                                  "Take the White Marsh Boulevard exit onto MD 43 East.",
+                                  "Take the exit.", "Take the Maryland 43 East exit.",
                                   "Take the White Marsh Boulevard exit onto Maryland 43 East.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -5979,8 +6032,8 @@ TEST(NarrativeBuilder, TestBuildExit_27_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_27(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the White Marsh Boulevard exit toward White Marsh.", "Take the exit.",
-                                  "Take the exit toward White Marsh.",
+                                  "Take the White Marsh Boulevard exit toward White Marsh.",
+                                  "Take the exit.", "Take the exit toward White Marsh.",
                                   "Take the White Marsh Boulevard exit toward White Marsh.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6008,8 +6061,8 @@ TEST(NarrativeBuilder, TestBuildExit_29_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_29(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh.", "Take the exit.",
-      "Take the Maryland 43 East exit.",
+      expected_maneuvers, "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh.",
+      "Take the exit.", "Take the Maryland 43 East exit.",
       "Take the White Marsh Boulevard exit onto Maryland 43 East toward White Marsh.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6036,8 +6089,9 @@ TEST(NarrativeBuilder, TestBuildKeep_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep straight at the fork.", "Keep straight at the fork.",
-                                  "Keep straight at the fork.", "Keep straight at the fork.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep straight at the fork.",
+                                  "Keep straight at the fork.", "Keep straight at the fork.",
+                                  "Keep straight at the fork.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6063,9 +6117,9 @@ TEST(NarrativeBuilder, TestBuildKeep_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62.", "Keep right to take exit 62.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62.",
                                   "Keep right to take exit 62.", "Keep right to take exit 62.",
-                                  "Continue for 9 miles.");
+                                  "Keep right to take exit 62.", "Continue for 9 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6091,7 +6145,8 @@ TEST(NarrativeBuilder, TestBuildKeep_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take I 895 South.", "Keep right at the fork.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take I 895 South.",
+                                  "Keep right at the fork.",
                                   "Keep right to take Interstate 8 95 South.",
                                   "Keep right to take Interstate 8 95 South.",
                                   "Continue for 9 miles.");
@@ -6120,8 +6175,8 @@ TEST(NarrativeBuilder, TestBuildKeep_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62 onto I 895 South.", "Keep right to take exit 62.",
-                                  "Keep right to take exit 62.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62 onto I 895 South.",
+                                  "Keep right to take exit 62.", "Keep right to take exit 62.",
                                   "Keep right to take exit 62 onto Interstate 8 95 South.",
                                   "Continue for 9 miles.");
 
@@ -6149,9 +6204,9 @@ TEST(NarrativeBuilder, TestBuildKeep_4_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_4(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right toward Annapolis.", "Keep right at the fork.",
-                                  "Keep right toward Annapolis.", "Keep right toward Annapolis.",
-                                  "Continue for 9 miles.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right toward Annapolis.",
+                                  "Keep right at the fork.", "Keep right toward Annapolis.",
+                                  "Keep right toward Annapolis.", "Continue for 9 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6177,8 +6232,8 @@ TEST(NarrativeBuilder, TestBuildKeep_5_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_5(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62 toward Annapolis.", "Keep right to take exit 62.",
-                                  "Keep right to take exit 62.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Keep right to take exit 62 toward Annapolis.",
+                                  "Keep right to take exit 62.", "Keep right to take exit 62.",
                                   "Keep right to take exit 62 toward Annapolis.",
                                   "Continue for 9 miles.");
 
@@ -6207,7 +6262,8 @@ TEST(NarrativeBuilder, TestBuildKeep_6_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Keep right to take I 895 South toward Annapolis.", "Keep right at the fork.",
+                                  "Keep right to take I 895 South toward Annapolis.",
+                                  "Keep right at the fork.",
                                   "Keep right to take Interstate 8 95 South.",
                                   "Keep right to take Interstate 8 95 South toward Annapolis.",
                                   "Continue for 9 miles.");
@@ -6237,8 +6293,8 @@ TEST(NarrativeBuilder, TestBuildKeep_7_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_7(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take exit 62 onto I 895 South toward Annapolis.", "Keep right to take exit 62.",
-      "Keep right to take exit 62.",
+      expected_maneuvers, "Keep right to take exit 62 onto I 895 South toward Annapolis.",
+      "Keep right to take exit 62.", "Keep right to take exit 62.",
       "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis.",
       "Continue for 9 miles.");
 
@@ -6300,7 +6356,7 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepToStayOnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "Merge.",  "",
+      expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "Merge.", "",
       "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Keep left to take exit 62 to stay on I 95 South.", "",
@@ -6334,7 +6390,7 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_2_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepToStayOnManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.",  "Merge.", "",
+      expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "Merge.", "",
       "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Keep left to stay on I 95 South toward Baltimore.", "",
@@ -6371,8 +6427,8 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_3_miles_en_US) {
       expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "Merge.", "",
       "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep left to take exit 62 to stay on I 95 South toward Baltimore.", "Keep left to take exit 62.",
-      "Keep left to stay on Interstate 95 South.",
+      expected_maneuvers, "Keep left to take exit 62 to stay on I 95 South toward Baltimore.",
+      "Keep left to take exit 62.", "Keep left to stay on Interstate 95 South.",
       "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.",
       "Continue for 5 miles.");
 
@@ -6402,8 +6458,8 @@ TEST(NarrativeBuilder, TestBuildMerge_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(expected_maneuvers,
-                                          "Take the I 76 West exit toward Pittsburgh.", "Take the exit.",
-                                          "Take the Interstate 76 West exit.",
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the exit.", "Take the Interstate 76 West exit.",
                                           "Take the Interstate 76 West exit toward Pittsburgh.", "");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge.", "Merge.", "", "Merge.",
                                   "Continue for 5 miles.");
@@ -6433,11 +6489,12 @@ TEST(NarrativeBuilder, TestBuildMerge_1_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_1_1(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(expected_maneuvers,
-                                          "Take the I 76 West exit toward Pittsburgh.", "Take the exit.",
-                                          "Take the Interstate 76 West exit.",
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the exit.", "Take the Interstate 76 West exit.",
                                           "Take the Interstate 76 West exit toward Pittsburgh.", "");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.", "Merge.",
-                                  "", "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
+                                  "Merge.", "",
+                                  "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
                                   "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6465,12 +6522,12 @@ TEST(NarrativeBuilder, TestBuildMerge_1_2_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_1_2(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(expected_maneuvers,
-                                          "Take the I 76 West exit toward Pittsburgh.", "Take the exit.",
-                                          "Take the Interstate 76 West exit.",
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the exit.", "Take the Interstate 76 West exit.",
                                           "Take the Interstate 76 West exit toward Pittsburgh.",
                                           "Continue for 1.5 miles.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.", "Merge.",
-                                  "Merge onto Interstate 76 West.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
+                                  "Merge.", "Merge onto Interstate 76 West.",
                                   "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
                                   "Continue for 5 miles.");
 
@@ -6498,8 +6555,9 @@ TEST(NarrativeBuilder, TestBuildEnterRoundabout_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateEnterRoundaboutManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the roundabout.", "Enter the roundabout.",
-                                  "Enter the roundabout.", "Enter the roundabout.", "");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the roundabout.",
+                                  "Enter the roundabout.", "Enter the roundabout.",
+                                  "Enter the roundabout.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6532,7 +6590,8 @@ TEST(NarrativeBuilder, TestBuildEnterRoundabout_1_miles_en_US) {
     PopulateEnterRoundaboutManeuverList_1(expected_maneuvers, country_code, state_code,
                                           roundabout_exit_count++);
     SetExpectedManeuverInstructions(expected_maneuvers,
-                                    "Enter the roundabout and take the " + ordinal_value + " exit.", "Enter the roundabout.",
+                                    "Enter the roundabout and take the " + ordinal_value + " exit.",
+                                    "Enter the roundabout.",
                                     "Enter the roundabout and take the " + ordinal_value + " exit.",
                                     "Enter the roundabout and take the " + ordinal_value + " exit.",
                                     "");
@@ -6562,8 +6621,8 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitRoundaboutManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the roundabout.", "Exit the roundabout.", "",
-                                  "Exit the roundabout.", "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the roundabout.", "Exit the roundabout.",
+                                  "", "Exit the roundabout.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6590,7 +6649,8 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitRoundaboutManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Exit the roundabout onto Philadelphia Road/MD 7.", "Exit the roundabout.", "",
+                                  "Exit the roundabout onto Philadelphia Road/MD 7.",
+                                  "Exit the roundabout.", "",
                                   "Exit the roundabout onto Philadelphia Road, Maryland 7.",
                                   "Continue for a half mile.");
 
@@ -6620,8 +6680,8 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_2_miles_en_US) {
   PopulateExitRoundaboutManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.", "Exit the roundabout.", "",
-      "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
+      "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.",
+      "Exit the roundabout.", "", "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
       "Continue on U.S. 15 for 11 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6648,8 +6708,8 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateEnterFerryManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Ferry.", "Take the Ferry.", "Take the Ferry.",
-                                  "Take the Ferry.", "Continue for 1 mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Ferry.", "Take the Ferry.",
+                                  "Take the Ferry.", "Take the Ferry.", "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6675,9 +6735,9 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateEnterFerryManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Millersburg FERRY.", "Take the Ferry.",
-                                  "Take the Millersburg FERRY.", "Take the Millersburg FERRY.",
-                                  "Continue for 1 mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Millersburg FERRY.",
+                                  "Take the Ferry.", "Take the Millersburg FERRY.",
+                                  "Take the Millersburg FERRY.", "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6703,8 +6763,8 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateEnterFerryManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Bridgeport - Port Jefferson Ferry.", "Take the Ferry.",
-                                  "Take the Bridgeport - Port Jefferson Ferry.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Bridgeport - Port Jefferson Ferry.",
+                                  "Take the Ferry.", "Take the Bridgeport - Port Jefferson Ferry.",
                                   "Take the Bridgeport - Port Jefferson Ferry.",
                                   "Continue for 17 miles.");
 
@@ -6728,8 +6788,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southeast.", "Head southeast.", "", "Head southeast.",
-                                  "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southeast.", "Head southeast.", "",
+                                  "Head southeast.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6822,8 +6882,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_4_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Head northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.", "Head northeast.",
-      "", "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      expected_maneuvers, "Head northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+      "Head northeast.", "", "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6846,8 +6906,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_5_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_5(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southeast.", "Drive southeast.", "", "Drive southeast.",
-                                  "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southeast.", "Drive southeast.", "",
+                                  "Drive southeast.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6940,8 +7000,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_9_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Drive northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.", "Drive northeast.",
-      "", "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      expected_maneuvers, "Drive northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+      "Drive northeast.", "", "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6964,8 +7024,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_10_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_10(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southeast.", "Walk southeast.", "", "Walk southeast.",
-                                  "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southeast.", "Walk southeast.", "",
+                                  "Walk southeast.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7058,8 +7118,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_14_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_14(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Walk northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.", "Walk northeast.",
-      "", "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      expected_maneuvers, "Walk northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+      "Walk northeast.", "", "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7082,8 +7142,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_15_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_15(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.",  "Bike southeast.", "", "Bike southeast.",
-                                  "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.", "Bike southeast.", "",
+                                  "Bike southeast.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7105,7 +7165,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_16_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_16(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.",  "Bike southeast.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.", "Bike southeast.", "",
                                   "Bike southeast for 200 feet.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7128,7 +7188,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_17_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_17(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on Ferry Lane.",  "Bike west.", "",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on Ferry Lane.", "Bike west.", "",
                                   "Bike west on Ferry Lane.", "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7176,8 +7236,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_19_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_19(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Bike northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.", "Bike northeast.",
-      "", "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      expected_maneuvers, "Bike northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+      "Bike northeast.", "", "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7204,8 +7264,8 @@ TEST(NarrativeBuilder, TestBuildTransitConnectionStart_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionStartManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the station.", "", "", "Enter the station.",
-                                  "Continue for 100 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the station.", "", "",
+                                  "Enter the station.", "Continue for 100 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7231,8 +7291,8 @@ TEST(NarrativeBuilder, TestBuildTransitConnectionStart_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionStartManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the CALTRAIN - SAN FRANCISCO STATION.", "",
-                                  "", "Enter the CALTRAIN - SAN FRANCISCO STATION.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Enter the CALTRAIN - SAN FRANCISCO STATION.",
+                                  "", "", "Enter the CALTRAIN - SAN FRANCISCO STATION.",
                                   "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7369,8 +7429,8 @@ TEST(NarrativeBuilder, TestBuildTransitConnectionDestination_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionDestinationManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the station.", "", "", "Exit the station.",
-                                  "Continue for 100 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the station.", "", "",
+                                  "Exit the station.", "Continue for 100 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7396,8 +7456,8 @@ TEST(NarrativeBuilder, TestBuildTransitConnectionDestination_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionDestinationManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the CALTRAIN - SAN FRANCISCO STATION.", "",
-                                  "", "Exit the CALTRAIN - SAN FRANCISCO STATION.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Exit the CALTRAIN - SAN FRANCISCO STATION.",
+                                  "", "", "Exit the CALTRAIN - SAN FRANCISCO STATION.",
                                   "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -7856,8 +7916,8 @@ TEST(NarrativeBuilder, TestBuildTransitTransfer_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitTransferManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Transfer to take the R toward FOREST HILLS - 71 AV. (4 stops)", "", "",
-                                  "Transfer to take the R toward FOREST HILLS - 71 AV.",
+                                  "Transfer to take the R toward FOREST HILLS - 71 AV. (4 stops)", "",
+                                  "", "Transfer to take the R toward FOREST HILLS - 71 AV.",
                                   "Travel 4 stops.", "Depart: 8:02 AM from 8 St - NYU.",
                                   "Depart at 8:02 AM from 8 St - NYU.",
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
@@ -8485,11 +8545,12 @@ TEST(NarrativeBuilder, TestBuildVerbalMultiCue_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateVerbalMultiCueManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Turn left onto North Plum Street.", "Turn left.", "Turn left onto North Plum Street.",
+      expected_maneuvers, "Turn left onto North Plum Street.", "Turn left.",
+      "Turn left onto North Plum Street.",
       "Turn left onto North Plum Street. Then Turn left onto East Fulton Street.",
       "Continue for 200 feet.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left onto East Fulton Street.", "Turn left.",
-                                  "Turn left onto East Fulton Street.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left onto East Fulton Street.",
+                                  "Turn left.", "Turn left onto East Fulton Street.",
                                   "Turn left onto East Fulton Street.", "Continue for 400 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
