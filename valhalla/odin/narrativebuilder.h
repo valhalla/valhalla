@@ -385,7 +385,8 @@ protected:
 
   std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
+                                                          const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalSuccinctKeepToStayOnTransitionInstruction(Maneuver& maneuver);
 

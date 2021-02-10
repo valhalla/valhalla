@@ -199,6 +199,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
     }
 
+    if (maneuver.HasVerbalSuccinctTransitionInstruction()) {
+      trip_maneuver->set_verbal_succinct_transition_instruction(
+          maneuver.verbal_succinct_transition_instruction());
+    }
+
     if (maneuver.HasVerbalTransitionAlertInstruction()) {
       trip_maneuver->set_verbal_transition_alert_instruction(
           maneuver.verbal_transition_alert_instruction());
@@ -214,10 +219,6 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           maneuver.verbal_post_transition_instruction());
     }
 
-    if (maneuver.HasVerbalSuccinctTransitionInstruction()) {
-      trip_maneuver->set_verbal_succinct_transition_instruction(
-          maneuver.verbal_succinct_transition_instruction());
-    }
     // Populate sign information
     if (maneuver.HasExitSign() || maneuver.HasGuideSign() || maneuver.HasJunctionNameSign()) {
       auto* trip_sign = trip_maneuver->mutable_sign();
