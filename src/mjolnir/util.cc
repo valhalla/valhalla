@@ -30,7 +30,7 @@ namespace {
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
-const std::string way_node_tmp_file = "way_nodes_tmp.bin";
+const std::string way_nodes_tmp_file = "way_nodes_tmp.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
