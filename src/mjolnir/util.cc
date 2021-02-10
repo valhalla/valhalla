@@ -32,6 +32,8 @@ const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
+const std::string start_node_edge_tmp_file = "start_node_edge_tmp.bin";
+const std::string end_node_edge_tmp_file = "end_node_edge_tmp.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
@@ -215,6 +217,8 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string way_nodes_bin = tile_dir + way_nodes_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
+  std::string start_node_edge_tmp_bin = tile_dir + start_node_edge_tmp_file;
+  std::string end_node_edge_tmp_bin = tile_dir + end_node_edge_tmp_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
@@ -288,7 +292,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     if (start_stage == BuildStage::kConstructEdges)
       osm_data.read_from_temp_files(tile_dir);
 
-    tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+    tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin, start_node_edge_tmp_bin, end_node_edge_tmp_bin);
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
@@ -305,7 +309,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
         // TODO: Remove this backfill in the future, and make calling constructedges stage
         // explicitly required in the future.
         LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
-        tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+        tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin, start_node_edge_tmp_bin, end_node_edge_tmp_bin);
       }
     }
 
