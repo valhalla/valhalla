@@ -56,9 +56,12 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kStartLeft:
       case DirectionsLeg_Maneuver_Type_kFerryExit:
       case DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination: {
-
         // Set instruction
         maneuver.set_instruction(FormStartInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctStartTransitionInstruction(maneuver));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalStartInstruction(maneuver));
@@ -66,10 +69,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctStartTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
@@ -78,22 +77,26 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set instruction
         maneuver.set_instruction(FormDestinationInstruction(maneuver));
 
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctDestinationTransitionInstruction(maneuver));
+
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
             FormVerbalAlertDestinationInstruction(maneuver));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalDestinationInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctDestinationTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kBecomes: {
         if (prev_maneuver) {
           // Set instruction
           maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
+
+          // Set verbal succinct transition instruction
+          maneuver.set_verbal_succinct_transition_instruction(
+              FormVerbalSuccinctBecomesTransitionInstruction(maneuver, prev_maneuver));
 
           // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(
@@ -107,9 +110,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
                                                     .HasBeginStreetNames())); // Set verbal succinct
                                                                               // transition
                                                                               // instruction
-
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctBecomesTransitionInstruction(maneuver, prev_maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kSlightRight:
@@ -121,6 +121,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set instruction
         maneuver.set_instruction(FormTurnInstruction(maneuver));
 
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctTurnTransitionInstruction(maneuver));
+
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertTurnInstruction(maneuver));
 
@@ -130,16 +134,16 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctTurnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kUturnRight:
       case DirectionsLeg_Maneuver_Type_kUturnLeft: {
         // Set instruction
         maneuver.set_instruction(FormUturnInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctUturnTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertUturnInstruction(maneuver));
@@ -150,15 +154,15 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctUturnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRampStraight: {
         // Set instruction
         maneuver.set_instruction(FormRampStraightInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctRampStraightTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -176,16 +180,16 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctRampStraightTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRampRight:
       case DirectionsLeg_Maneuver_Type_kRampLeft: {
         // Set instruction
         maneuver.set_instruction(FormRampInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctRampTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertRampInstruction(maneuver));
@@ -202,16 +206,16 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctRampTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kExitRight:
       case DirectionsLeg_Maneuver_Type_kExitLeft: {
         // Set instruction
         maneuver.set_instruction(FormExitInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctExitTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertExitInstruction(maneuver));
@@ -228,10 +232,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
         }
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctExitTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kStayStraight:
@@ -240,6 +240,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         if (maneuver.to_stay_on()) {
           // Set stay on instruction
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
+
+          // Set verbal succinct transition instruction
+          // maneuver.set_verbal_succinct_transition_instruction(
+          // FormVerbalSuccinctKeepToStayOnTransitionInstruction(maneuver));
 
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(
@@ -264,6 +268,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           // Set instruction
           maneuver.set_instruction(FormKeepInstruction(maneuver));
 
+          // Set verbal succinct transition instruction
+          maneuver.set_verbal_succinct_transition_instruction(
+              FormVerbalSuccinctKeepTransitionInstruction(maneuver));
+
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertKeepInstruction(maneuver));
 
@@ -283,10 +291,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
                 FormVerbalPostTransitionInstruction(maneuver));
           }
         }
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctKeepToStayOnTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kMerge:
@@ -294,6 +298,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kMergeLeft: {
         // Set instruction
         maneuver.set_instruction(FormMergeInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctMergeTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction if previous maneuver
         // is greater than 2 km
@@ -308,15 +316,15 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctMergeTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter: {
         // Set instruction
         maneuver.set_instruction(FormEnterRoundaboutInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctEnterRoundaboutTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -333,15 +341,15 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
               FormVerbalPostTransitionInstruction(maneuver,
                                                   maneuver.HasRoundaboutExitBeginStreetNames()));
         }
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctEnterRoundaboutTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit: {
         // Set instruction
         maneuver.set_instruction(FormExitRoundaboutInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctExitRoundaboutTransitionInstruction(maneuver));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalExitRoundaboutInstruction(maneuver));
@@ -349,15 +357,15 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctExitRoundaboutTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kFerryEnter: {
         // Set instruction
         maneuver.set_instruction(FormEnterFerryInstruction(maneuver));
+
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -369,10 +377,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kTransitConnectionStart: {
@@ -2069,17 +2073,12 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(Maneuver& maneuver,
   // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward
   // <TOWARD_SIGN>.", "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.", "10": "Take the
   // <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.", "12": "Take the <NAME_SIGN>
-  // exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.", "14": "Take the <NAME_SIGN> exit on
-  // the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-  // "15": "Take the exit.",
-  // "16": "Take exit <NUMBER_SIGN>.",
-  // "17": "Take the <BRANCH_SIGN> exit.",
-  // "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-  // "19": "Take the exit toward <TOWARD_SIGN>.",
-  // "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-  // "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-  // "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-  // "23": "Take the <NAME_SIGN> exit.",
+  // exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.", "14": "Take the <NAME_SIGN> exit on the
+  // <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>." "15": "Take the exit.", "16":
+  // "Take exit <NUMBER_SIGN>.", "17": "Take the <BRANCH_SIGN> exit.", "18": "Take exit <NUMBER_SIGN>
+  // onto <BRANCH_SIGN>.", "19": "Take the exit toward <TOWARD_SIGN>.", "20": "Take exit <NUMBER_SIGN>
+  // toward <TOWARD_SIGN>.", "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.", "22": "Take
+  // exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.", "23": "Take the <NAME_SIGN> exit.",
   // "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
   // "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
   // "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
@@ -4104,11 +4103,24 @@ NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& 
 
 std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver) {
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>."
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  // "10": "Take the ramp.",
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
+  // Determine if turn, else it's a "Take" instruction
+  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
+      (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
+    phrase_id = 5;
+    // Determine if driving side matches relative direction
+  } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+              maneuver.drive_on_right()) ||
+             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+              !maneuver.drive_on_right())) {
+    phrase_id = 10;
+  }
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.ramp_verbal_subset.phrases.at(std::to_string(phrase_id));
 
@@ -4127,10 +4139,17 @@ std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuv
 
 std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver) {
   // "0": "Take the exit on the <RELATIVE_DIRECTION>."
+  // "15": "Take the exit.",
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+
+  // Determine if driving side matches relative direction
+  if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
+      ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
+    phrase_id = 15;
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.exit_verbal_subset.phrases.at(std::to_string(phrase_id));
@@ -4148,12 +4167,22 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuv
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
+                                                                          const std::string& delim) {
   // "0": "Keep <RELATIVE_DIRECTION> at the fork."
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
 
+  std::string exit_number_sign;
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
   uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign()) {
+    phrase_id += 1;
+    // Assign number sign
+    exit_number_sign =
+        maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.keep_verbal_subset.phrases.at(std::to_string(phrase_id));
@@ -4162,6 +4191,7 @@ std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuv
   boost::replace_all(instruction, kRelativeDirectionTag,
                      FormRelativeThreeDirection(maneuver.type(),
                                                 dictionary_.keep_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
