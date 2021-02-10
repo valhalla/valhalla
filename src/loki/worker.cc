@@ -84,7 +84,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
-  if (options.avoid_locations_size() > max_avoid_locations) {
+  if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
   }
 
@@ -171,18 +171,17 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "skadi") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace") {
+    if (kv.first != "trace") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+      if (kv.first == "centroid" && max_locations["centroid"] > 127)
+        throw std::runtime_error("Max locations for centroid action must be < 128");
     }
-    if (kv.first != "skadi") {
-      max_distance.emplace(kv.first,
-                           config.get<float>("service_limits." + kv.first + ".max_distance"));
-    }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+    max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
+    if (kv.first != "centroid" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                               ".max_matrix_distance"));
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
@@ -268,11 +267,16 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{
+        true,
+        {},
+        "",
+    };
     // do request specific processing
     switch (options.action()) {
       case Options::route:
       case Options::expansion:
+      case Options::centroid:
         route(request);
         result.messages.emplace_back(request.SerializeAsString());
         break;

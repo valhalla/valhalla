@@ -31,8 +31,10 @@ class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  Isochrone();
+  explicit Isochrone(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -45,43 +47,19 @@ public:
    * time taken to reach each grid point. This gridded data is then contoured
    * so it can be output as polygons. Multiple locations are allowed as the
    * origins - within some reasonable distance from each other.
-   * @param  origin_locs  List of origin locations.
-   * @param  max_minutes  Maximum time (minutes) for largest contour
-   * @param  graphreader  Graphreader
-   * @param  mode_costing List of costing objects
-   * @param  mode         Travel mode
+   *
+   * @param expansion_type  Which type of expansion to do, forward/reverse/mulitmodal
+   * @param api             The request response containing the locations to seed the expansion
+   * @param reader          Graph reader to provide access to graph primitives
+   * @param costings        Per mode costing objects
+   * @param mode            The mode specifying which costing to use
+   * @return                The 2d grid each marked with the minimum time to reach it
    */
-  std::shared_ptr<const midgard::GriddedData<2>> Compute(Api& api,
-                                                         baldr::GraphReader& graphreader,
-                                                         const sif::mode_costing_t& mode_costing,
-                                                         const sif::TravelMode mode);
-
-  // Compute iso-tile that we can use to generate isochrones. This is used for
-  // the reverse direction - construct times for gridded data indicating how
-  // long it takes to reach the destination location.
-  std::shared_ptr<const midgard::GriddedData<2>>
-  ComputeReverse(Api& api,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode mode);
-
-  /**
-   * Compute an isochrone grid for multi-modal routes. This creates and
-   * populates a lat,lon grid with time taken to reach each grid point.
-   * This gridded data is then contoured so it can be output as polygons.
-   * Multiple locations are allowed as the origins - within some reasonable
-   * distance from each other.
-   * @param  origin_locations  List of origin locations.
-   * @param  max_minutes  Maximum time (minutes) for largest contour
-   * @param  graphreader  Graphreader
-   * @param  mode_costing List of costing objects
-   * @param  mode         Travel mode
-   */
-  std::shared_ptr<const midgard::GriddedData<2>>
-  ComputeMultiModal(Api& api,
-                    baldr::GraphReader& graphreader,
-                    const sif::mode_costing_t& mode_costing,
-                    const sif::TravelMode mode);
+  std::shared_ptr<const midgard::GriddedData<2>> Expand(const ExpansionType& expansion_type,
+                                                        valhalla::Api& api,
+                                                        baldr::GraphReader& reader,
+                                                        const sif::mode_costing_t& costings,
+                                                        const sif::TravelMode mode);
 
 protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
@@ -95,7 +73,7 @@ protected:
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                const sif::EdgeLabel& pred,
-                                               const InfoRoutingType route_type) override;
+                                               const ExpansionType route_type) override;
 
   // tell the expansion how many labels to expect and how many buckets to use
   virtual void GetExpansionHints(uint32_t& bucket_count,

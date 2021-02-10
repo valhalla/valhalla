@@ -281,5 +281,31 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   return json;
 }
 
+std::string
+actor_t::centroid(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // parse the request
+  Api request;
+  ParseApi(request_str, Options::centroid, request);
+  // check the request and locate the locations in the graph
+  pimpl->loki_worker.route(request);
+  // route between the locations in the graph to find the best path
+  pimpl->thor_worker.centroid(request);
+  // get some directions back from them
+  pimpl->odin_worker.narrate(request);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
+  // if they want you do to do the cleanup automatically
+  if (auto_cleanup) {
+    cleanup();
+  }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
+  return bytes;
+}
+
 } // namespace tyr
 } // namespace valhalla

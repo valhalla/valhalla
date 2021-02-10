@@ -11,33 +11,33 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepForward::TimeDepForward()
-    : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
-      max_label_count_(std::numeric_limits<uint32_t>::max()) {
-  mode_ = TravelMode::kDrive;
-  travel_type_ = 0;
-  adjacencylist_ = nullptr;
-  max_label_count_ = std::numeric_limits<uint32_t>::max();
+TimeDepForward::TimeDepForward(uint32_t max_reserved_labels_count)
+    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kDrive), travel_type_(0),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
 TimeDepForward::~TimeDepForward() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.
 void TimeDepForward::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   edgelabels_.clear();
   destinations_percent_along_.clear();
-  adjacencylist_.reset();
+  adjacencylist_.clear();
   edgestatus_.clear();
 
   // Set the ferry flag to false
@@ -104,7 +104,8 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
-      if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
+      if ((!trans->up() &&
+           hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
@@ -163,7 +164,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   }
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
-  int restriction_idx = -1;
+  uint8_t restriction_idx = -1;
   if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                          nodeinfo->timezone(), restriction_idx) ||
@@ -211,7 +212,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -236,7 +237,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
                            transition_cost, restriction_idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
-  adjacencylist_->add(idx);
+  adjacencylist_.add(idx);
   return true;
 }
 
@@ -281,7 +282,6 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
@@ -299,7 +299,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -370,13 +370,13 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue<EdgeLabel>(mincost, range, bucketsize, edgelabels_));
+  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -511,14 +511,15 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{});
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
+                         baldr::kInvalidRestriction);
     // Set the origin flag
     edge_label.set_origin();
 
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(edge_label);
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }

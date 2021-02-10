@@ -145,8 +145,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
       pathalgorithm->Clear();
-      float relax_factor = (using_astar) ? 16.0f : 8.0f;
-      float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
+      const float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
       cost->set_allow_destination_only(true);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
@@ -190,11 +189,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
-    std::vector<Measurement> trace;
-    trace.reserve(shape.size());
-    std::transform(shape.begin(), shape.end(), std::back_inserter(trace), [](const PointLL& p) {
-      return Measurement{p, 0, 0};
-    });
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
@@ -224,8 +218,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
-    std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
+    std::vector<std::vector<PathInfo>> paths;
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, paths);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {

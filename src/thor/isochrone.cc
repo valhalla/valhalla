@@ -43,7 +43,8 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
+Isochrone::Isochrone(uint32_t max_reserved_labels_count)
+    : Dijkstras(max_reserved_labels_count), shape_interval_(50.0f) {
 }
 
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
@@ -162,43 +163,15 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<2>> Isochrone::Compute(Api& api,
-                                                         GraphReader& graphreader,
-                                                         const sif::mode_costing_t& mode_costing,
-                                                         const TravelMode mode) {
+std::shared_ptr<const GriddedData<2>> Isochrone::Expand(const ExpansionType& expansion_type,
+                                                        Api& api,
+                                                        GraphReader& reader,
+                                                        const sif::mode_costing_t& mode_costing,
+                                                        const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(false, api, mode);
+  ConstructIsoTile(expansion_type == ExpansionType::multimodal, api, mode);
   // Compute the expansion
-  Dijkstras::Compute(*api.mutable_options()->mutable_locations(), graphreader, mode_costing, mode);
-  return isotile_;
-}
-
-// Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<2>>
-Isochrone::ComputeReverse(Api& api,
-                          GraphReader& graphreader,
-                          const sif::mode_costing_t& mode_costing,
-                          const TravelMode mode) {
-
-  // Initialize and create the isotile
-  ConstructIsoTile(false, api, mode);
-  // Compute the expansion
-  Dijkstras::ComputeReverse(*api.mutable_options()->mutable_locations(), graphreader, mode_costing,
-                            mode);
-  return isotile_;
-}
-
-// Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<2>>
-Isochrone::ComputeMultiModal(Api& api,
-                             GraphReader& graphreader,
-                             const sif::mode_costing_t& mode_costing,
-                             const TravelMode mode) {
-  // Initialize and create the isotile
-  ConstructIsoTile(true, api, mode);
-  // Compute the expansion
-  Dijkstras::ComputeMultiModal(*api.mutable_options()->mutable_locations(), graphreader, mode_costing,
-                               mode);
+  Dijkstras::Expand(expansion_type, api, reader, mode_costing, mode);
   return isotile_;
 }
 
@@ -314,8 +287,8 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
 
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
-                                                const InfoRoutingType route_type) {
-  if (route_type == InfoRoutingType::multi_modal) {
+                                                const ExpansionType route_type) {
+  if (route_type == ExpansionType::multimodal) {
     // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
     // label
     if (pred.cost().cost > max_seconds_ * 2) {
@@ -334,7 +307,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   bucket_count = 20000;
-  edge_label_reservation = 500000;
+  edge_label_reservation = kInitialEdgeLabelCount;
 }
 
 } // namespace thor

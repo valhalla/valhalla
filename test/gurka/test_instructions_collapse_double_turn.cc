@@ -47,7 +47,7 @@ gurka::map InstructionsCollapseDoubleTurn::map = {};
 // Drive north and turn left
 
 TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   // Verify steps
   gurka::assert::osrm::expect_steps(result, {"AG", "South River Road", "CD"});
 

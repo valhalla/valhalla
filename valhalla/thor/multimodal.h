@@ -32,8 +32,11 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  MultiModalPathAlgorithm();
+  explicit MultiModalPathAlgorithm(
+      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -100,9 +103,10 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::MMEdgeLabel> edgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::MMEdgeLabel>> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -112,13 +116,10 @@ protected:
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
-   * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const midgard::PointLL& origll,
-            const midgard::PointLL& destll,
-            const std::shared_ptr<sif::DynamicCost>& costing);
+  void Init(const midgard::PointLL& destll, const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edges at the origin to the adjacency list.

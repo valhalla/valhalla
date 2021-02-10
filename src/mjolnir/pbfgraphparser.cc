@@ -867,13 +867,14 @@ public:
       results = results ? results : empty_node_results_;
     }
 
-    const auto& highway_junction = results->find("highway");
+    const auto highway = results->find("highway");
     bool is_highway_junction =
-        ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
+        ((highway != results->end()) && (highway->second == "motorway_junction"));
 
-    const auto& junction_name = results->find("junction");
-    bool has_junction_name =
-        ((junction_name != results->end()) && (junction_name->second == "named"));
+    const auto junction = results->find("junction");
+    bool maybe_named_junction =
+        junction != results->end() && (junction->second == "named" || junction->second == "yes");
+    bool named_junction = false;
 
     // Create a new node and set its attributes
     OSMNode n;
@@ -885,103 +886,66 @@ public:
     }
 
     for (const auto& tag : *results) {
-      if (tag.first == "iso:3166_1" && !use_admin_db_) {
-        bool hasTag = (tag.second.length() ? true : false);
-        if (hasTag) {
-          // Add the country iso code to the unique node names list and store its index in the OSM
-          // node
-          n.set_country_iso_index(osmdata_.node_names.index(tag.second));
-          ++osmdata_.node_name_count;
-        }
-      } else if ((tag.first == "state_iso_code" && !use_admin_db_)) {
-        bool hasTag = (tag.second.length() ? true : false);
-        if (hasTag) {
-          // Add the state iso code to the unique node names list and store its index in the OSM
-          // node
-          n.set_state_iso_index(osmdata_.node_names.index(tag.second));
-          ++osmdata_.node_name_count;
-        }
+      // TODO: instead of checking this, we should delete these tag/values completely in lua
+      // and save our CPUs the wasted time of iterating over them again for nothing
+      auto hasTag = !tag.second.empty();
+      if (tag.first == "iso:3166_1" && !use_admin_db_ && hasTag) {
+        // Add the country iso code to the unique node names list and store its index in the OSM
+        // node
+        n.set_country_iso_index(osmdata_.node_names.index(tag.second));
+        ++osmdata_.node_name_count;
+      } else if ((tag.first == "state_iso_code" && !use_admin_db_) && hasTag) {
+        // Add the state iso code to the unique node names list and store its index in the OSM
+        // node
+        n.set_state_iso_index(osmdata_.node_names.index(tag.second));
+        ++osmdata_.node_name_count;
       } else if (tag.first == "highway") {
-        n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
+        n.set_traffic_signal(tag.second == "traffic_signals");
       } else if (tag.first == "forward_signal") {
-        n.set_forward_signal(tag.second == "true" ? true : false);
+        n.set_forward_signal(tag.second == "true");
       } else if (tag.first == "backward_signal") {
-        n.set_backward_signal(tag.second == "true" ? true : false);
+        n.set_backward_signal(tag.second == "true");
       } else if (use_urban_tag_ && tag.first == "urban") {
-        n.set_urban(tag.second == "true" ? true : false);
-      } else if (is_highway_junction && (tag.first == "exit_to")) {
-        bool hasTag = (tag.second.length() ? true : false);
-        if (hasTag) {
-          // Add the name to the unique node names list and store its index in the OSM node
-          n.set_exit_to_index(osmdata_.node_names.index(tag.second));
-          ++osmdata_.node_exit_to_count;
-        }
-      } else if (is_highway_junction && (tag.first == "ref")) {
-        bool hasTag = (tag.second.length() ? true : false);
-        if (hasTag) {
-          // Add the name to the unique node names list and store its index in the OSM node
-          n.set_ref_index(osmdata_.node_names.index(tag.second));
-          ++osmdata_.node_ref_count;
-        }
-      } else if ((is_highway_junction || has_junction_name) && (tag.first == "name")) {
-        bool hasTag = (tag.second.length() ? true : false);
-        if (hasTag) {
-          // Add the name to the unique node names list and store its index in the OSM node
-          n.set_name_index(osmdata_.node_names.index(tag.second));
-          ++osmdata_.node_name_count;
-        }
-      } else if (tag.first == "gate") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kGate);
-        }
-      } else if (tag.first == "bollard") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kBollard);
-        }
-      } else if (tag.first == "toll_booth") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kTollBooth);
-        }
-      } else if (tag.first == "border_control") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kBorderControl);
-        }
-      } else if (tag.first == "toll_gantry") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kTollGantry);
-        }
-      } else if (tag.first == "sump_buster") {
-        if (tag.second == "true") {
-          if (!intersection) {
-            intersection = true;
-            ++osmdata_.edge_count;
-          }
-          n.set_type(NodeType::kSumpBuster);
-        }
+        n.set_urban(tag.second == "true");
+      } else if (tag.first == "exit_to" && is_highway_junction && hasTag) {
+        // Add the name to the unique node names list and store its index in the OSM node
+        n.set_exit_to_index(osmdata_.node_names.index(tag.second));
+        ++osmdata_.node_exit_to_count;
+      } else if (tag.first == "ref" && is_highway_junction && hasTag) {
+        // Add the name to the unique node names list and store its index in the OSM node
+        n.set_ref_index(osmdata_.node_names.index(tag.second));
+        ++osmdata_.node_ref_count;
+      } else if (tag.first == "name" && (is_highway_junction || maybe_named_junction) && hasTag) {
+        // Add the name to the unique node names list and store its index in the OSM node
+        n.set_name_index(osmdata_.node_names.index(tag.second));
+        ++osmdata_.node_name_count;
+        named_junction = maybe_named_junction;
+      } else if (tag.first == "gate" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kGate);
+      } else if (tag.first == "bollard" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kBollard);
+      } else if (tag.first == "toll_booth" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kTollBooth);
+      } else if (tag.first == "border_control" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kBorderControl);
+      } else if (tag.first == "toll_gantry" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kTollGantry);
+      } else if (tag.first == "sump_buster" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kSumpBuster);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
-      } else if (has_junction_name) {
-        n.set_named_intersection(true);
       }
 
       /* TODO: payment type.
@@ -989,6 +953,9 @@ public:
         n.set_payment_mask(std::stoi(tag.second));
       */
     }
+
+    // If we ended up storing a name for a regular junction flag that
+    n.set_named_intersection(named_junction);
 
     // If way parsing marked it as the beginning or end of a way (dead ends) we'll keep that too
     sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
@@ -1923,6 +1890,8 @@ public:
 
         // complex restrictions -- add to end map.
         if (vias.size()) {
+          osmdata_.via_set.insert(from_way_id);
+          osmdata_.via_set.insert(restriction.to());
           restriction.set_from(from_way_id);
           restriction.set_vias(vias);
           // for bi-directional we need to create the restriction in reverse.  flip the to and from.
