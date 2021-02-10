@@ -83,8 +83,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
     if (node.is_start()) {
       starts.emplace_back(node.start_of, run_index);
     }
-    // if this node marks the end of an edge, go tell the edge where the first node in the
-    // series is
+    // if this node marks the end of an edge, keep track of the edge and the node
+    // so we can later tell the edge where the final node in the series is
     if (node.is_end()) {
       ends.emplace_back(node.end_of, run_index);
     }
