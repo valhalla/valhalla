@@ -37,12 +37,14 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUseHills = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUsePrimary = 0.5f; // Factor between 0 and 1
-constexpr uint32_t kMinimumTopSpeed = 20;  // Kilometers per hour
-constexpr uint32_t kDefaultTopSpeed = 45;  // Kilometers per hour
-constexpr uint32_t kMaximumTopSpeed = 120; // Kilometers per hour
+constexpr float kDefaultUseFerry = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseHills = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUsePrimary = 0.5f;       // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.5f;        // Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets = 0.1f; // Factor between 0 and 1
+constexpr uint32_t kMinimumTopSpeed = 20;        // Kilometers per hour
+constexpr uint32_t kDefaultTopSpeed = 45;        // Kilometers per hour
+constexpr uint32_t kMaximumTopSpeed = 120;       // Kilometers per hour
 constexpr Surface kMinimumScooterSurface = Surface::kDirt;
 
 // Default turn costs
@@ -80,6 +82,8 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTo
                                                     kMaximumTopSpeed};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -198,7 +202,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const override;
+                       uint8_t& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -225,7 +229,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const override;
+                              uint8_t& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -305,18 +309,13 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumScooterSurface ||
-        edge->bss_connection() || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
+                          !(flow_mask_ & kCurrentFlowMask);
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           (allow_closures || !tile->IsClosed(edge));
   }
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
@@ -377,7 +376,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
-                               int& restriction_idx) const {
+                               uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -400,7 +399,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const baldr::GraphId& opp_edgeid,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
-                                      int& restriction_idx) const {
+                                      uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -446,6 +445,12 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += kDestinationOnlyFactor;
   }
 
+  if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
+  }
+
   return {sec * factor, sec};
 }
 
@@ -456,7 +461,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
@@ -606,6 +611,15 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_primary(
         kUsePrimaryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_primary")
                              .get_value_or(kDefaultUsePrimary)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -620,6 +634,8 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_top_speed(kDefaultTopSpeed);
     pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_primary(kDefaultUsePrimary);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }

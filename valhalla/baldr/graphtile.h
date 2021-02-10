@@ -42,11 +42,17 @@ namespace baldr {
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+using GraphTileRefCounter = boost::thread_safe_counter;
+#else
+using GraphTileRefCounter = boost::thread_unsafe_counter;
+#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
+
 class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
-class GraphTile : public boost::intrusive_ref_counter<GraphTile, boost::thread_unsafe_counter> {
+class GraphTile : public boost::intrusive_ref_counter<GraphTile, GraphTileRefCounter> {
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
@@ -545,7 +551,7 @@ public:
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
-      if (live_speed.valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
+      if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
         // Live speed covers entire edge, can return early here
         if (live_speed.breakpoint1 == 255) {
@@ -557,9 +563,11 @@ public:
         partial_live_pct =
             (
                 // First section
-                (live_speed.breakpoint1 > 0 ? live_speed.breakpoint1 : 0)
+                (live_speed.speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
                 // Second section
-                + (live_speed.breakpoint2 > 0 ? (live_speed.breakpoint2 - live_speed.breakpoint1) : 0)
+                + (live_speed.speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                       ? (live_speed.breakpoint2 - live_speed.breakpoint1)
+                       : 0)
                 // Third section
                 + (live_speed.speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
                        ? (255 - live_speed.breakpoint2)

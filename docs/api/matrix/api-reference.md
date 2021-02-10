@@ -48,7 +48,7 @@ You can refer to the [route location documentation](/turn-by-turn/api-reference.
 
 ### Costing parameters
 
-The Time-Distance Matrix service uses the `auto`, `bicycle` and `pedestrian` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `bikeshare` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request options
 

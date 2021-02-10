@@ -132,7 +132,8 @@ Maneuver::Maneuver()
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
       has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
-      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0) {
+      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
+      has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -847,6 +848,22 @@ void Maneuver::set_roundabout_exit_length(float roundabout_exit_km_length) {
   roundabout_exit_length_ = roundabout_exit_km_length;
 }
 
+bool Maneuver::has_collapsed_small_end_ramp_fork() const {
+  return has_collapsed_small_end_ramp_fork_;
+}
+
+void Maneuver::set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork) {
+  has_collapsed_small_end_ramp_fork_ = has_collapsed_small_end_ramp_fork;
+}
+
+bool Maneuver::has_collapsed_merge_maneuver() const {
+  return has_collapsed_merge_maneuver_;
+}
+
+void Maneuver::set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuver) {
+  has_collapsed_merge_maneuver_ = has_collapsed_merge_maneuver;
+}
+
 TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -1192,6 +1209,12 @@ std::string Maneuver::ToString() const {
 
   man_str += " | roundabout_exit_length=";
   man_str += std::to_string(roundabout_exit_length_);
+
+  man_str += " | has_collapsed_small_end_ramp_fork=";
+  man_str += std::to_string(has_collapsed_small_end_ramp_fork_);
+
+  man_str += " | has_collapsed_merge_maneuver=";
+  man_str += std::to_string(has_collapsed_merge_maneuver_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);

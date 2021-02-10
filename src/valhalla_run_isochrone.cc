@@ -115,14 +115,16 @@ int main(int argc, char* argv[]) {
   bool reverse = options.date_time_type() == valhalla::Options::arrive_by;
 
   // Get Contours
-  std::unordered_map<float, std::string> colors{};
-  std::vector<float> contour_times;
-  if (options.contours_size() == 0) {
-    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
-  }
+  std::vector<GriddedData<2>::contour_interval_t> contour_times;
+  float max_minutes = std::numeric_limits<float>::min();
   for (const auto& contour : options.contours()) {
-    contour_times.push_back(contour.time());
-    colors[contour_times.back()] = contour.color();
+    if (contour.has_time()) {
+      max_minutes = std::max(max_minutes, contour.time());
+      contour_times.emplace_back(0, contour.time(), "time", contour.color());
+    }
+  }
+  if (options.contours_size() == 0 || max_minutes == std::numeric_limits<float>::min()) {
+    throw std::runtime_error("Contours failed to parse. JSON requires a contours object with time");
   }
 
   // Process locations
@@ -202,45 +204,14 @@ int main(int argc, char* argv[]) {
   // Compute the isotile
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
-  auto isotile =
-      (routetype == "multimodal")
-          ? isochrone.ComputeMultiModal(*options.mutable_locations(), contour_times.back() + 10,
-                                        reader, mode_costing, mode)
-          : (reverse)
-                ? isochrone.ComputeReverse(*options.mutable_locations(), contour_times.back() + 10,
-                                           reader, mode_costing, mode)
-                : isochrone.Compute(*options.mutable_locations(), contour_times.back() + 10, reader,
-                                    mode_costing, mode);
+  auto expansion_type = routetype == "multimodal"
+                            ? ExpansionType::multimodal
+                            : (reverse ? ExpansionType::reverse : ExpansionType::forward);
+  auto isotile = isochrone.Expand(expansion_type, request, reader, mode_costing, mode);
+
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
-
-  // Evaluate the min, max rows and columns that are set
-  int nv = 0;
-  uint32_t max_minutes = contour_times.back();
-  int32_t min_row = isotile->nrows();
-  int32_t max_row = 0;
-  int32_t min_col = isotile->ncolumns();
-  int32_t max_col = 0;
-  const auto& iso_data = isotile->data();
-  for (int32_t row = 0; row < isotile->nrows(); row++) {
-    for (int32_t col = 0; col < isotile->ncolumns(); col++) {
-      int id = isotile->TileId(col, row);
-      if (iso_data[id] < max_minutes + 5) {
-        min_row = std::min(row, min_row);
-        max_row = std::max(row, max_row);
-        min_col = std::min(col, min_col);
-        max_col = std::max(col, max_col);
-        nv++;
-      }
-    }
-  }
-  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" +
-           " size= " + std::to_string(iso_data.size()));
-  LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
-           " max = " + std::to_string(max_row));
-  LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
-           " max = " + std::to_string(max_col));
 
   // Generate contours
   t2 = std::chrono::high_resolution_clock::now();
@@ -250,8 +221,8 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
 
   // Serialize to GeoJSON
-  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
-                                                                    colors, show_locations);
+  std::string geojson =
+      valhalla::tyr::serializeIsochrones(request, contour_times, contours, polygons, show_locations);
 
   auto t4 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();

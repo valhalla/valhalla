@@ -40,101 +40,6 @@ namespace valhalla {
 namespace gurka {
 namespace detail {
 
-boost::property_tree::ptree
-build_config(const std::string& tiledir,
-             const std::unordered_map<std::string, std::string>& config_options) {
-
-  const std::string default_config = R"(
-    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
-     "thor":{
-       "logging" : {"long_request" : 100}
-     },
-     "meili":{
-       "logging" : {"long_request" : 100},
-       "grid" : {"cache_size" : 100, "size": 100 },
-       "default": {
-         "beta": 3,
-         "breakage_distance": 2000,
-         "geometry": false,
-         "gps_accuracy": 5.0,
-         "interpolation_distance": 10,
-         "max_route_distance_factor": 5,
-         "max_route_time_factor": 5,
-         "max_search_radius": 100,
-         "route": true,
-         "search_radius": 50,
-         "sigma_z": 4.07,
-         "turn_penalty_factor": 0,
-         "penalize_immediate_uturn": true
-       },
-       "customizable": [
-         "mode",
-         "search_radius",
-         "turn_penalty_factor",
-         "gps_accuracy",
-         "interpolation_distance",
-         "sigma_z",
-         "beta",
-         "max_route_distance_factor",
-         "max_route_time_factor",
-         "penalize_immediate_uturn"
-       ]
-     },
-     "loki":{
-       "actions": [
-         "locate",
-         "route",
-         "height",
-         "sources_to_targets",
-         "optimized_route",
-         "isochrone",
-         "trace_route",
-         "trace_attributes",
-         "transit_available"
-       ],
-       "logging" : {"long_request" : 100},
-       "service_defaults" : {
-         "minimum_reachability" : 50,
-         "radius" : 0,
-         "search_cutoff" : 35000,
-         "node_snap_tolerance" : 5,
-         "street_side_tolerance" : 5,
-         "street_side_max_distance": 1000,
-         "heading_tolerance" : 60
-        }
-     },
-     "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_data_fix": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "motorcycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "motor_scooter": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })";
-
-  std::stringstream stream(default_config);
-  boost::property_tree::ptree ptree;
-  boost::property_tree::json_parser::read_json(stream, ptree);
-  ptree.put("mjolnir.tile_dir", tiledir);
-  for (const auto& kv : config_options) {
-    ptree.put(kv.first, kv.second);
-  }
-  return ptree;
-}
-
 midgard::PointLL to_ll(const nodelayout& nodes, const std::string& node_name) {
   return nodes.at(node_name);
 }
@@ -509,6 +414,18 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
   return str;
 }
 
+std::vector<std::string> get_path(const valhalla::Api& result) {
+  std::vector<std::string> actual_names;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge()) {
+        actual_names.push_back(detail::to_string(node.edge().name()));
+      }
+    }
+  }
+  return actual_names;
+}
+
 } // namespace detail
 
 /**
@@ -534,7 +451,7 @@ map buildtiles(const nodelayout& layout,
                const std::unordered_map<std::string, std::string>& config_options) {
 
   map result;
-  result.config = detail::build_config(workdir, config_options);
+  result.config = test::make_config(workdir, config_options);
   result.nodes = layout;
 
   // Sanity check so that we don't blow away / by mistake
@@ -601,8 +518,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-            auto* reverse_directed_edge = tile->directededge(i);
+            graph_tile_ptr reverse_tile = nullptr;
+            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                    reverse_directed_edge);
           }
@@ -654,96 +572,57 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
-valhalla::Api route(const map& map,
-                    const std::string& request_json,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& request_json,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* json) {
+  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(request_json, nullptr, &api);
+  std::string json_str;
+  switch (action) {
+    case valhalla::Options::route:
+      json_str = actor.route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_route:
+      json_str = actor.trace_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_attributes:
+      json_str = actor.trace_attributes(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::locate:
+      json_str = actor.locate(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::centroid:
+      json_str = actor.centroid(request_json, nullptr, &api);
+      break;
+    default:
+      throw std::logic_error("Unsupported action");
+      break;
+  }
+  if (json) {
+    *json = json_str;
+  }
   return api;
 }
 
-/**
- * Calculates a route along a set of waypoints with a given costing model, and returns the
- * valhalla::Api result.
- *
- * @param map a map returned by buildtiles
- * @param waypoints an array of node names to use as waypoints
- * @param costing the name of the costing model to use
- */
-valhalla::Api route(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
-  std::cerr << "[          ] Routing with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  return route(map, request_json, reader);
-}
-
-valhalla::Api route(const map& map,
-                    const std::string& origin,
-                    const std::string& destination,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  return route(map, {origin, destination}, costing, options, std::move(reader));
-}
-
-valhalla::Api match(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& stop_type,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& waypoints,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* json,
+                        const std::string& stop_type) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-  std::cerr << "[          ] Matching with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("shape", lls, costing, options, stop_type);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  actor.trace_route(request_json, nullptr, &api);
-  return api;
-}
-
-valhalla::Api locate(const map& map,
-                     const std::vector<std::string>& waypoints,
-                     const std::string& costing,
-                     const std::unordered_map<std::string, std::string>& options,
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                     std::string* json) {
-  if (!reader)
-    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-
-  std::cerr << "[          ] Locate with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with locations ";
+  std::cerr << "[          ] " << Options_Action_Enum_Name(action)
+            << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
+            << " with locations ";
   bool first = true;
   for (const auto& waypoint : waypoints) {
     if (!first)
@@ -753,16 +632,10 @@ valhalla::Api locate(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  auto json_str = actor.locate(request_json, nullptr, &api);
-  if (json) {
-    *json = json_str;
-  }
-  return api;
+  auto location_type =
+      action == Options::trace_route || action == Options::trace_attributes ? "shape" : "locations";
+  auto request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
+  return do_action(action, map, request_json, reader, json);
 }
 
 /* Returns the raw_result formatted as a JSON document in the given format.
@@ -805,9 +678,12 @@ std::string dump_geojson_graph(const map& graph) {
       for (const std::string& name : info.GetNames()) {
         names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
       }
-      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
-      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
-                           doc.GetAllocator());
+
+      // TODO: why on earth do we need decltype?
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "edge_id" : "opp_edge_id"),
+                           std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
+                           std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
 
       // add the geom
@@ -1125,16 +1001,7 @@ void expect_eta(const valhalla::Api& result,
  */
 void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-
-  std::vector<std::string> actual_names;
-  for (const auto& leg : result.trip().routes(0).legs()) {
-    for (const auto& node : leg.node()) {
-      if (node.has_edge()) {
-        actual_names.push_back(detail::to_string(node.edge().name()));
-      }
-    }
-  }
-
+  const auto actual_names = detail::get_path(result);
   EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 

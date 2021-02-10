@@ -44,7 +44,7 @@ gurka::map InstructionsBear::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right
 TEST_F(InstructionsBear, KeepRightBranchToward) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -63,7 +63,7 @@ TEST_F(InstructionsBear, KeepRightBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left
 TEST_F(InstructionsBear, KeepLeftBranchToward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

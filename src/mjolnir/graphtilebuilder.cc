@@ -910,8 +910,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
     // dont bin these
-    if (edge->is_shortcut() || edge->use() == Use::kTransitConnection ||
-        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
+    if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
+        edge->use() == Use::kEgressConnection) {
       continue;
     }
 
@@ -1021,11 +1021,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 
 // Add a predicted speed profile for a directed edge.
 void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
-                                         const std::vector<int16_t>& profile,
+                                         const std::array<int16_t, kCoefficientCount>& coefficients,
                                          const size_t predicted_count_hint) {
-  if (profile.size() != kCoefficientCount)
-    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
-                             std::to_string(profile.size()));
   if (idx >= header_->directededgecount())
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
 
@@ -1040,7 +1037,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
   // Append the profile
-  speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
+  speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
+                                coefficients.end());
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with

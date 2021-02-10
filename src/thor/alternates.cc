@@ -58,8 +58,8 @@ void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections)
 
 // Limited Sharing. Compare duration of edge segments shared between optimal path and
 // candidate path. If they share more than kAtMostShared throw out this alternate.
-bool validate_alternate_by_sharing(GraphReader& graphreader,
-                                   std::vector<std::unordered_set<GraphId>>& shared_edgeids,
+// Note that you should recover all shortcuts before call this function.
+bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& shared_edgeids,
                                    const std::vector<std::vector<PathInfo>>& paths,
                                    const std::vector<PathInfo>& candidate_path,
                                    float at_most_shared) {
@@ -70,29 +70,13 @@ bool validate_alternate_by_sharing(GraphReader& graphreader,
     shared_edgeids.resize(paths.size());
 
   // we check each accepted path against the candidate
-  for (int i = 0; i < paths.size(); ++i) {
-    // cache edge ids encountered on the current best path, including edges that were superseded by a
-    // shortcut edge. we need to expand the shortcut edges on the current best path.
-    //
-    // Note we don't need to expand the candidate path's shortcuts because:
-    // * if a candidate path took an edge that the best path shortcutted, we'll find it in the best
-    // path's recovered edges
-    // * if a candidate path took the same shortcut as the best path, we'll count it as shared
-    // * if a candidate path took a different shortcut than the best path, then it's not shared and we
-    // don't need to count it anyway
-    // * the only case to watch out for is overlapping shortcuts, in which case we won't count
-    // the overlap as shared (TODO verify that shortcuts never overlap)
+  for (size_t i = 0; i < paths.size(); ++i) {
+    // cache edge ids encountered on the current best path. Don't care about shortcuts because they
+    // have already been recovered.
     auto& shared = shared_edgeids[i];
     if (shared.empty()) {
-      for (const auto& pi : paths[i]) {
-        // expand shortcut edge into its constituent edges
-        // if this edge isn't a shortcut RecoverShortcut is a noop
-        auto expanded_edges = graphreader.RecoverShortcut(pi.edgeid);
-        // even if it's a shortcut edge, add it to the set
+      for (const auto& pi : paths[i])
         shared.insert(pi.edgeid);
-        // and add any recovered edges to the set
-        shared.insert(expanded_edges.begin(), expanded_edges.end());
-      }
     }
 
     // if an edge on the candidate_path is encountered that is also on one of the existing paths,
@@ -120,7 +104,7 @@ bool validate_alternate_by_sharing(GraphReader& graphreader,
   return true;
 }
 
-bool validate_alternate_by_local_optimality(const std::vector<PathInfo>& candidate_path) {
+bool validate_alternate_by_local_optimality(const std::vector<PathInfo>&) {
   // [TODO] NOT IMPLEMENTED
   return true;
 }

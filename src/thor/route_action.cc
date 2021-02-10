@@ -192,7 +192,11 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // track the expansion
-  route(request);
+  try {
+    route(request);
+  } catch (...) {
+    // we swallow exceptions because we actually want to see what the heck the expansion did anyway
+  }
 
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
@@ -207,6 +211,38 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // serialize it
   return rapidjson::to_string(dom, 5);
+}
+
+void thor_worker_t::centroid(Api& request) {
+  parse_locations(request);
+  parse_filter_attributes(request);
+  auto costing = parse_costing(request);
+  auto& options = *request.mutable_options();
+  auto& locations = *options.mutable_locations();
+  valhalla::Location destination;
+
+  // get all the routes
+  auto paths =
+      centroid_gen.Expand(ExpansionType::forward, request, *reader, mode_costing, mode, destination);
+
+  // serialize path information of each route into protobuf route objects
+  auto origin = locations.begin();
+  for (const auto& path : paths) {
+    // the centroid could be either direction of the edge so here we set which it was by id
+    auto dest = destination;
+    dest.mutable_path_edges(0)->set_graph_id(path.back().edgeid);
+
+    // actually build the route object
+    auto* route = request.mutable_trip()->mutable_routes()->Add();
+    auto& leg = *route->mutable_legs()->Add();
+    thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
+                                *origin, dest, {}, leg, {"centroid"}, interrupt, nullptr);
+
+    // TODO: set the time at the destination if time dependent
+
+    // next route
+    ++origin;
+  }
 }
 
 void thor_worker_t::route(Api& request) {
@@ -361,6 +397,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -436,8 +473,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         vias.swap(flipped);
 
         // Form output information based on path edges
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                               path.end(), *origin, *destination, throughs, leg, algorithms, interrupt,
@@ -465,6 +504,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::list<valhalla::TripLeg> trip_paths;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -534,8 +574,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         }
 
         // Form output information based on path edges. vias are a route discontinuity map
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, throughs, leg, algorithms,

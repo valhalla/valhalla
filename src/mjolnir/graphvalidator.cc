@@ -392,7 +392,7 @@ void validate(
         directededge.set_opp_index(opp_index);
         if (directededge.use() == Use::kTransitConnection ||
             directededge.use() == Use::kEgressConnection ||
-            directededge.use() == Use::kPlatformConnection) {
+            directededge.use() == Use::kPlatformConnection || directededge.bss_connection()) {
           directededge.set_opp_local_idx(opp_index);
         }
 

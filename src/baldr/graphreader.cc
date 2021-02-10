@@ -105,6 +105,67 @@ GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
 }
 
 // ----------------------------------------------------------------------------
+// FlatTileCache implementation
+// ----------------------------------------------------------------------------
+
+// Constructor.
+FlatTileCache::FlatTileCache(size_t max_size) : cache_size_(0), max_cache_size_(max_size) {
+  index_offsets_[0] = 0;
+  index_offsets_[1] = index_offsets_[0] + TileHierarchy::levels()[0].tiles.TileCount();
+  index_offsets_[2] = index_offsets_[1] + TileHierarchy::levels()[1].tiles.TileCount();
+  index_offsets_[3] = index_offsets_[2] + TileHierarchy::levels()[2].tiles.TileCount();
+  cache_indices_.resize(index_offsets_[3] + TileHierarchy::GetTransitLevel().tiles.TileCount(), -1);
+}
+
+// Reserves enough cache to hold (max_cache_size / tile_size) items.
+void FlatTileCache::Reserve(size_t tile_size) {
+  cache_.reserve(max_cache_size_ / tile_size);
+}
+
+// Checks if tile exists in the cache.
+bool FlatTileCache::Contains(const GraphId& graphid) const {
+  return get_index(graphid) != -1;
+}
+
+// Lets you know if the cache is too large.
+bool FlatTileCache::OverCommitted() const {
+  return cache_size_ > max_cache_size_;
+}
+
+// Clears the cache.
+void FlatTileCache::Clear() {
+  cache_size_ = 0;
+  cache_.clear();
+  // TODO: this could be optimized by using the remaining bits in tileid. we need to track a 7bit
+  // value which is the current color of the cache. every time we clear we increment the color,
+  // thereby invalidating the last rounds color. we'd also need to check the color instead of just
+  // checking for the index being set to -1. when the color wraps around to 0 again we would have to
+  // do the hard reassign here, though that should be quite infrequent
+  cache_indices_.assign(index_offsets_[3] + TileHierarchy::GetTransitLevel().tiles.TileCount(), -1);
+}
+
+// Get a pointer to a graph tile object given a GraphId.
+graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
+  auto index = get_index(graphid);
+  if (index == -1)
+    return nullptr;
+  return cache_[index];
+}
+
+// Puts a copy of a tile of into the cache.
+graph_tile_ptr FlatTileCache::Put(const GraphId& graphid, graph_tile_ptr tile, size_t size) {
+  // TODO: protect against crazy tileid?
+  cache_size_ += size;
+  cache_indices_[get_offset(graphid)] = cache_.size();
+  cache_.emplace_back(std::move(tile));
+  return cache_.back();
+}
+
+void FlatTileCache::Trim() {
+  Clear();
+}
+
+// ----------------------------------------------------------------------------
 // SimpleTileCache implementation
 // ----------------------------------------------------------------------------
 
@@ -316,6 +377,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
                              ? TileCacheLRU::MemoryLimitControl::HARD
                              : TileCacheLRU::MemoryLimitControl::SOFT;
 
+  bool use_simple_cache = pt.get<bool>("use_simple_mem_cache", false);
+
   // wrap tile cache with thread-safe version
   if (pt.get<bool>("global_synchronized_cache", false)) {
     // Handle synchronization of cache
@@ -328,17 +391,25 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
       if (use_lru_cache) {
         globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
       } else {
-        globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+        // globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+        globalTileCache_.reset(new FlatTileCache(max_cache_size));
       }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
   }
 
-  // Otherwise: No synchronization
+  // or do you want to use an LRU cache
   if (use_lru_cache) {
     return new TileCacheLRU(max_cache_size, lru_mem_control);
   }
-  return new SimpleTileCache(max_cache_size);
+
+  // maybe you want a basic hashmap of tiles
+  if (use_simple_cache) {
+    return new SimpleTileCache(max_cache_size);
+  }
+
+  // by default you get a fixed size vector of tiles, requires about 8.5 megs of ram
+  return new FlatTileCache(max_cache_size);
 }
 
 // Constructor using separate tile files

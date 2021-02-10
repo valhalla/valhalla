@@ -81,12 +81,19 @@ namespace valhalla {
 namespace skadi {
 
 ::valhalla::skadi::sample::sample(const std::string& data_source)
-    : mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>()), data_source(data_source) {
+    : unzipped_cache(-1, std::vector<int16_t>()), data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
          this->data_source.back() == filesystem::path::preferred_separator) {
     this->data_source.pop_back();
   }
+
+  // If data_source is empty, do not allocate/resize mapped cache.
+  if (data_source.empty()) {
+    LOG_DEBUG("No elevation data_source was provided");
+    return;
+  }
+  mapped_cache.resize(TILE_COUNT);
 
   // check the directory for files that look like what we need
   auto files = get_files(data_source);

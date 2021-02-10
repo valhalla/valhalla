@@ -4,6 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
+#include "config.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
@@ -18,6 +19,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace test {
@@ -43,6 +45,11 @@ template <typename pbf_message_t> bool pbf_equals(const pbf_message_t& a, const 
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json);
+
+boost::property_tree::ptree
+make_config(const std::string& path_prefix,
+            const std::unordered_map<std::string, std::string>& overrides = {},
+            const std::unordered_set<std::string>& removes = {});
 
 /**
  * Generate a new GraphReader that doesn't re-use a previously
@@ -77,8 +84,12 @@ using LiveTrafficCustomize = std::function<void(valhalla::baldr::GraphReader&,
 void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb);
 
-using HistoricalTrafficCustomize = std::function<std::vector<int16_t>(DirectedEdge&)>;
+using HistoricalTrafficCustomize =
+    std::function<boost::optional<std::array<float, kBucketsPerWeek>>(DirectedEdge&)>;
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
+
+using EdgesCustomize = std::function<void(const GraphId&, DirectedEdge&)>;
+void customize_edges(const boost::property_tree::ptree& config, const EdgesCustomize& setter_cb);
 
 } // namespace test

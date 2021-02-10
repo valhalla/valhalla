@@ -67,7 +67,7 @@ boost::property_tree::ptree build_config(const char* live_traffic_tar) {
       "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
       "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -178,6 +178,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
+      astar.Clear();
       route_size += 1;
     }
   }
@@ -276,7 +277,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   // auto pred = sif::EdgeLabel(0, tgt_edge_id, edge, costs, 1.0, 1.0,
   // sif::TravelMode::kDrive,10,sif::Cost());
   auto pred = sif::EdgeLabel();
-  int restriction_idx;
+  uint8_t restriction_idx;
 
   for (auto _ : state) {
     cost->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);

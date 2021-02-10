@@ -212,7 +212,6 @@ public:
 
   ::valhalla::TripLeg_TransitType transit_type() const {
     return mutable_edge_->transit_type();
-    return mutable_edge_->transit_type();
   }
 
   bool toll() const {

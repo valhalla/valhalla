@@ -39,6 +39,9 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets =
+    0.f; // Avoid living streets by default. Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -48,7 +51,7 @@ constexpr float kTCFavorableSharp = 1.5f;
 constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
-constexpr float kTCReverse = 5.0f;
+constexpr float kTCReverse = 9.5f;
 
 // Default truck attributes
 constexpr float kDefaultTruckWeight = 21.77f;  // Metric Tons (48,000 lbs)
@@ -101,6 +104,8 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 } // namespace
 
@@ -153,7 +158,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const override;
+                       uint8_t& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -180,7 +185,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const override;
+                              uint8_t& restriction_idx) const override;
 
   /**
    * Callback for Allowed doing mode  specific restriction checks
@@ -262,17 +267,13 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by truck.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    if (edge->is_shortcut() || !accessible || edge->bss_connection() || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
+                          !(flow_mask_ & kCurrentFlowMask);
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           (allow_closures || !tile->IsClosed(edge));
   }
 
 public:
@@ -395,7 +396,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
-                               int& restriction_idx) const {
+                               uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
@@ -417,7 +418,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const baldr::GraphId& opp_edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
-                               int& restriction_idx) const {
+                               uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
@@ -454,6 +455,12 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
+  if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
+  }
+
   return {sec * factor, sec};
 }
 
@@ -464,7 +471,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
@@ -665,6 +672,15 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -684,6 +700,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_width(kDefaultTruckWidth);
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }

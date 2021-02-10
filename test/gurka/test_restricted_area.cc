@@ -37,7 +37,7 @@ protected:
 gurka::map RestrictedTest::map = {};
 
 TEST_F(RestrictedTest, AccessPrivate) {
-  valhalla::Api raw_result = gurka::route(map, "A", "K", "auto");
+  valhalla::Api raw_result = gurka::do_action(valhalla::Options::route, map, {"A", "K"}, "auto");
   // Convert raw api response OSRM formatted JSON
   rapidjson::Document response = gurka::convert_to_json(raw_result, valhalla::Options_Format_osrm);
 
@@ -53,7 +53,7 @@ TEST_F(RestrictedTest, AccessPrivate) {
 }
 
 TEST_F(RestrictedTest, AccessDelivery) {
-  valhalla::Api raw_result = gurka::route(map, "C", "I", "auto");
+  valhalla::Api raw_result = gurka::do_action(valhalla::Options::route, map, {"C", "I"}, "auto");
   // Convert raw api response OSRM formatted JSON
   rapidjson::Document response = gurka::convert_to_json(raw_result, valhalla::Options_Format_osrm);
 
@@ -66,7 +66,7 @@ TEST_F(RestrictedTest, AccessDelivery) {
 }
 
 TEST_F(RestrictedTest, AccessDestination) {
-  valhalla::Api raw_result = gurka::route(map, "D", "L", "auto");
+  valhalla::Api raw_result = gurka::do_action(valhalla::Options::route, map, {"D", "L"}, "auto");
   // Convert raw api response OSRM formatted JSON
   rapidjson::Document response = gurka::convert_to_json(raw_result, valhalla::Options_Format_osrm);
 
@@ -79,7 +79,7 @@ TEST_F(RestrictedTest, AccessDestination) {
 }
 
 TEST_F(RestrictedTest, AccessCustomers) {
-  valhalla::Api raw_result = gurka::route(map, "E", "J", "auto");
+  valhalla::Api raw_result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "auto");
   // Convert raw api response OSRM formatted JSON
   rapidjson::Document response = gurka::convert_to_json(raw_result, valhalla::Options_Format_osrm);
 

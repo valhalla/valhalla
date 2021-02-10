@@ -715,7 +715,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
     // Skip the candidate directed edge and any non-road edges. Skip any edges
     // that are not driveable inbound.
-    if (i == idx || diredge->use() != Use::kRoad || !(diredge->reverseaccess() & kAutoAccess)) {
+    if (i == idx || !diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
       continue;
     }
 
@@ -777,7 +777,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || (diredge->use() != Use::kRoad) ||
+    if (i == directededge.opp_local_idx() || !diredge->is_road() ||
         !(diredge->forwardaccess() & kAutoAccess)) {
       continue;
     }
@@ -870,7 +870,7 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
 
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || (diredge->use() != Use::kRoad) ||
+    if (i == directededge.opp_local_idx() || !diredge->is_road() ||
         !(diredge->forwardaccess() & kAutoAccess)) {
       continue;
     }
@@ -972,7 +972,7 @@ uint32_t GetDensity(GraphReader& reader,
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
           // Exclude non-roads (parking, walkways, ferries, etc.)
-          if (directededge->use() == Use::kRoad || directededge->use() == Use::kRamp ||
+          if (directededge->is_road() || directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
               directededge->use() == Use::kEmergencyAccess) {
             roadlengths += directededge->length();
