@@ -477,10 +477,10 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool fork = false,
                       bool begin_intersecting_edge_name_consistency = false,
                       bool intersecting_forward_edge = false,
+                      const std::string& verbal_succinct_transition_instruction = "",
                       const std::string& verbal_transition_alert_instruction = "",
                       const std::string& verbal_pre_transition_instruction = "",
                       const std::string& verbal_post_transition_instruction = "",
-                      const std::string& verbal_succinct_transition_instruction = "",
                       bool tee = false,
                       bool unnamed_walkway = false,
                       bool unnamed_cycleway = false,
@@ -555,10 +555,10 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_fork(fork);
   maneuver.set_begin_intersecting_edge_name_consistency(begin_intersecting_edge_name_consistency);
   maneuver.set_intersecting_forward_edge(intersecting_forward_edge);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
-  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_tee(tee);
   if (unnamed_walkway) {
     maneuver.set_trail_type(TrailType::kUnnamedWalkway);

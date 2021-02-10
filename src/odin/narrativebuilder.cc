@@ -2073,17 +2073,12 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(Maneuver& maneuver,
   // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward
   // <TOWARD_SIGN>.", "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.", "10": "Take the
   // <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.", "12": "Take the <NAME_SIGN>
-  // exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.", "14": "Take the <NAME_SIGN> exit on
-  // the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-  // "15": "Take the exit.",
-  // "16": "Take exit <NUMBER_SIGN>.",
-  // "17": "Take the <BRANCH_SIGN> exit.",
-  // "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-  // "19": "Take the exit toward <TOWARD_SIGN>.",
-  // "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-  // "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-  // "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-  // "23": "Take the <NAME_SIGN> exit.",
+  // exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.", "14": "Take the <NAME_SIGN> exit on the
+  // <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>." "15": "Take the exit.", "16":
+  // "Take exit <NUMBER_SIGN>.", "17": "Take the <BRANCH_SIGN> exit.", "18": "Take exit <NUMBER_SIGN>
+  // onto <BRANCH_SIGN>.", "19": "Take the exit toward <TOWARD_SIGN>.", "20": "Take exit <NUMBER_SIGN>
+  // toward <TOWARD_SIGN>.", "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.", "22": "Take
+  // exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.", "23": "Take the <NAME_SIGN> exit.",
   // "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
   // "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
   // "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
@@ -4108,11 +4103,24 @@ NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& 
 
 std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver) {
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>."
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  // "10": "Take the ramp.",
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
+  // Determine if turn, else it's a "Take" instruction
+  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
+      (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
+    phrase_id = 5;
+    // Determine if driving side matches relative direction
+  } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+              maneuver.drive_on_right()) ||
+             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+              !maneuver.drive_on_right())) {
+    phrase_id = 10;
+  }
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.ramp_verbal_subset.phrases.at(std::to_string(phrase_id));
 
