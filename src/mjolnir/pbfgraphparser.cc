@@ -2200,8 +2200,9 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   {
     sequence<OSMWayNode> way_nodes_tmp(way_nodes_tmp_file, true);
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.merge_sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; }, way_nodes_tmp);
+    way_nodes.merge_sort([](const OSMWayNode& a,
+                            const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; },
+                         way_nodes_tmp);
   }
   LOG_INFO("Merge sort done, now swapping files.");
   filesystem::remove(way_nodes_file);
@@ -2234,13 +2235,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   {
     sequence<OSMWayNode> way_nodes_tmp(way_nodes_tmp_file, true);
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.merge_sort([](const OSMWayNode& a, const OSMWayNode& b) {
-      if (a.way_index == b.way_index) {
-        // TODO: if its equal we have screwed something up, should we check and throw here?
-        return a.way_shape_node_index < b.way_shape_node_index;
-      }
-      return a.way_index < b.way_index;
-    }, way_nodes_tmp);
+    way_nodes.merge_sort(
+        [](const OSMWayNode& a, const OSMWayNode& b) {
+          if (a.way_index == b.way_index) {
+            // TODO: if its equal we have screwed something up, should we check and throw here?
+            return a.way_shape_node_index < b.way_shape_node_index;
+          }
+          return a.way_index < b.way_index;
+        },
+        way_nodes_tmp);
   }
   LOG_INFO("Merge sort done, now swapping files.");
   filesystem::remove(way_nodes_file);
