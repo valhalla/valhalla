@@ -74,7 +74,6 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
         // careful: polygon can intersect a single edge multiple times
         // and needs to be applied to bins which are entirely inside a ring as well
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-        auto name = edge_info.GetNames()[0];
         bool intersects = false;
         for (const auto& ring_loc : bin.second) {
           intersects = bg::intersects(rings[ring_loc], edge_info.shape());
