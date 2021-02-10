@@ -2,6 +2,8 @@
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 
+#include "filesystem.h"
+
 #include "graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
