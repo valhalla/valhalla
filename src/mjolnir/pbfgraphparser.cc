@@ -1134,7 +1134,8 @@ public:
         AccessType type = AccessType::kTimedDenied;
         if (tmp == "no") {
           type = AccessType::kTimedDenied;
-        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated") {
+        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated" ||
+                   tmp == "destination") {
           type = AccessType::kTimedAllowed;
         }
 
