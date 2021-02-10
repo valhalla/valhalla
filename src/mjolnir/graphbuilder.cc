@@ -6,6 +6,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include "filesystem.h"
+
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -38,7 +40,7 @@ namespace {
  * we also need to then update the edges that pointed to them
  *
  */
-std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
+std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file, sequence<std::pair<uint32_t, uint32_t>>& starts, sequence<std::pair<uint32_t, uint32_t>>& ends) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
@@ -59,8 +61,6 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  // If these get too large, consider using a sequence instead of a vector here.
-  std::vector<std::pair<uint32_t, uint32_t>> starts, ends;
   nodes.transform([&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
     // remember if this was a new tile
     if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
@@ -81,12 +81,12 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
     // if this node marks the start of an edge, keep track of the edge and the node
     // so we can later tell the edge where the first node in the series is
     if (node.is_start()) {
-      starts.emplace_back(node.start_of, run_index);
+      starts.push_back(std::make_pair(node.start_of, run_index));
     }
     // if this node marks the end of an edge, keep track of the edge and the node
     // so we can later tell the edge where the final node in the series is
     if (node.is_end()) {
-      ends.emplace_back(node.end_of, run_index);
+      ends.push_back(std::make_pair(node.end_of, run_index));
     }
 
     // next node
@@ -100,8 +100,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
     return a.first < b.first;
   };
-  std::sort(starts.begin(), starts.end(), cmp);
-  std::sort(ends.begin(), ends.end(), cmp);
+  starts.sort(cmp);
+  ends.sort(cmp);
 
   sequence<Edge> edges(edges_file, false);
 
@@ -109,40 +109,40 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
 
   auto s_it = starts.begin(), e_it = ends.begin();
   while(s_it != starts.end() && e_it != ends.end()) {
-    if (s_it->first == e_it->first) {
-      auto element = edges[s_it->first];
+    if ((*s_it).first == (*e_it).first) {
+      auto element = edges[(*s_it).first];
       auto edge = *element;
-      edge.sourcenode_ = s_it->second;
-      edge.targetnode_ = e_it->second;
+      edge.sourcenode_ = (*s_it).second;
+      edge.targetnode_ = (*e_it).second;
       element = edge;
       ++s_it;
       ++e_it;
-    } else if (s_it->first < e_it->first) {
-      auto element = edges[s_it->first];
+    } else if ((*s_it).first < (*e_it).first) {
+      auto element = edges[(*s_it).first];
       auto edge = *element;
-      edge.sourcenode_ = s_it->second;
+      edge.sourcenode_ = (*s_it).second;
       element = edge;
       ++s_it;
     } else {
-      auto element = edges[e_it->first];
+      auto element = edges[(*e_it).first];
       auto edge = *element;
-      edge.targetnode_ = e_it->second;
+      edge.targetnode_ = (*e_it).second;
       element=edge;
       ++e_it;
     }
   }
 
   while (s_it != starts.end()) {
-      auto element = edges[s_it->first];
+      auto element = edges[(*s_it).first];
       auto edge = *element;
-      edge.sourcenode_ = s_it->second;
+      edge.sourcenode_ = (*s_it).second;
       element = edge;
       ++s_it;
   }
   while (e_it != ends.end()) {
-      auto element = edges[e_it->first];
+      auto element = edges[(*e_it).first];
       auto edge = *element;
-      edge.targetnode_ = e_it->second;
+      edge.targetnode_ = (*e_it).second;
       element=edge;
       ++e_it;
   }
@@ -1118,7 +1118,9 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
-                                                   const std::string& edges_file) {
+                                                   const std::string& edges_file,
+                                                   const std::string& start_node_edge_tmp_file,
+                                                   const std::string& end_node_edge_tmp_file) {
   uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
@@ -1126,7 +1128,13 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                    return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-  return SortGraph(nodes_file, edges_file);
+  {
+    sequence<std::pair<uint32_t, uint32_t>> starts(start_node_edge_tmp_file, true);
+    sequence<std::pair<uint32_t, uint32_t>> ends(end_node_edge_tmp_file, true);
+    auto rv = SortGraph(nodes_file, edges_file, starts, ends);
+  }
+  filesystem::remove(start_node_edge_tmp_file);
+  filesystem::remove(end_node_edge_tmp_file);
 }
 
 // Build the graph from the input
