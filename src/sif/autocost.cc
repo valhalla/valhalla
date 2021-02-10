@@ -484,37 +484,39 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
-  if (!edge->has_flow_speed() || flow_mask_ == 0) {
-
-    // Intersection transition time = factor * stopimpact * turncost. Factor depends
-    // on density and whether traffic is available
-    if (edge->stopimpact(idx) > 0 && !shortest_) {
-      float turn_cost;
-      if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+  // Intersection transition time = factor * stopimpact * turncost. Factor depends
+  // on density and whether traffic is available
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      if (!edge->has_flow_speed() || flow_mask_ == 0) {
         turn_cost = kTCCrossing;
       } else {
-        turn_cost = (node->drive_on_right())
-                        ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                        : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+        turn_cost = kTCStraight;
       }
-
-      if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
-          (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-        turn_cost += 1.5f;
-        if (edge->roundabout())
-          turn_cost += 0.5f;
-      }
-
-      // Separate time and penalty when traffic is present. With traffic, edge speeds account for
-      // much of the intersection transition time (TODO - evaluate different elapsed time settings).
-      // Still want to add a penalty so routes avoid high cost intersections.
-      float seconds = turn_cost * edge->stopimpact(idx);
-      // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-      if (!edge->has_flow_speed() || flow_mask_ == 0)
-        seconds *= trans_density_factor_[node->density()];
-
-      c.cost += seconds;
+    } else {
+      turn_cost = (node->drive_on_right())
+                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
+
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost;
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0) {
+      seconds *= edge->stopimpact(idx);
+      seconds *= trans_density_factor_[node->density()];
+    }
+    c.cost += seconds;
   }
 
   // Account for the user preferring distance
@@ -536,36 +538,35 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
-  if (!edge->has_flow_speed() || flow_mask_ == 0) {
-
-    // Transition time = densityfactor * stopimpact * turncost
-    if (edge->stopimpact(idx) > 0 && !shortest_) {
-      float turn_cost;
-      if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-        turn_cost = kTCCrossing;
-      } else {
-        turn_cost = (node->drive_on_right())
-                        ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                        : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
-      }
-
-      if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
-          (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
-        turn_cost += 1.5f;
-        if (edge->roundabout())
-          turn_cost += 0.5f;
-      }
-
-      // Separate time and penalty when traffic is present. With traffic, edge speeds account for
-      // much of the intersection transition time (TODO - evaluate different elapsed time settings).
-      // Still want to add a penalty so routes avoid high cost intersections.
-      float seconds = turn_cost * edge->stopimpact(idx);
-      // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-      if (!edge->has_flow_speed() || flow_mask_ == 0)
-        seconds *= trans_density_factor_[node->density()];
-
-      c.cost += seconds;
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    } else {
+      turn_cost = (node->drive_on_right())
+                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
+
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost;
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0) {
+      seconds *= edge->stopimpact(idx);
+      seconds *= trans_density_factor_[node->density()];
+    }
+
+    c.cost += seconds;
   }
   // Account for the user preferring distance
   c.cost *= inv_distance_factor_;
