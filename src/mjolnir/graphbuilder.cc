@@ -53,13 +53,15 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // to point to the first (out of the duplicates) nodes index. at the end of this there will be
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
-  sequence<Edge> edges(edges_file, false);
+
   uint32_t run_index = 0;
   uint32_t node_index = 0;
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  nodes.transform([&edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+  // If these get too large, consider using a sequence instead of a vector here.
+  std::vector<std::pair<uint32_t, uint32_t>> starts, ends;
+  nodes.transform([&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
     // remember if this was a new tile
     if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
       tiles.insert({node.graph_id, node_index});
@@ -76,27 +78,74 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
       node.graph_id.set_id(last_node.graph_id.id());
     }
 
-    // if this node marks the start of an edge, go tell the edge where the first node in the
-    // series is
+    // if this node marks the start of an edge, keep track of the edge and the node
+    // so we can later tell the edge where the first node in the series is
     if (node.is_start()) {
-      auto element = edges[node.start_of];
-      auto edge = *element;
-      edge.sourcenode_ = run_index;
-      element = edge;
+      starts.emplace_back(node.start_of, run_index);
     }
     // if this node marks the end of an edge, go tell the edge where the first node in the
     // series is
     if (node.is_end()) {
-      auto element = edges[node.end_of];
-      auto edge = *element;
-      edge.targetnode_ = run_index;
-      element = edge;
+      ends.emplace_back(node.end_of, run_index);
     }
 
     // next node
     last_node = node;
     ++node_index;
   });
+  
+  LOG_INFO("Nodes processed. Now adding data to edges.");
+  
+  // Sort by edge. This enables a sequential update of edges
+  auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
+    return a.first < b.first;
+  };
+  std::sort(starts.begin(), starts.end(), cmp);
+  std::sort(ends.begin(), ends.end(), cmp);
+
+  sequence<Edge> edges(edges_file, false);
+
+  LOG_INFO("Sorting starts and ends done. Populating edges...");
+
+  auto s_it = starts.begin(), e_it = ends.begin();
+  while(s_it != starts.end() && e_it != ends.end()) {
+    if (s_it->first == e_it->first) {
+      auto element = edges[s_it->first];
+      auto edge = *element;
+      edge.sourcenode_ = s_it->second;
+      edge.targetnode_ = e_it->second;
+      element = edge;
+      ++s_it;
+      ++e_it;
+    } else if (s_it->first < e_it->first) {
+      auto element = edges[s_it->first];
+      auto edge = *element;
+      edge.sourcenode_ = s_it->second;
+      element = edge;
+      ++s_it;
+    } else {
+      auto element = edges[e_it->first];
+      auto edge = *element;
+      edge.targetnode_ = e_it->second;
+      element=edge;
+      ++e_it;
+    }
+  }
+
+  while (s_it != starts.end()) {
+      auto element = edges[s_it->first];
+      auto edge = *element;
+      edge.sourcenode_ = s_it->second;
+      element = edge;
+      ++s_it;
+  }
+  while (e_it != ends.end()) {
+      auto element = edges[e_it->first];
+      auto edge = *element;
+      edge.targetnode_ = e_it->second;
+      element=edge;
+      ++e_it;
+  }
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
