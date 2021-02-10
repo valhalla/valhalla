@@ -43,7 +43,7 @@ protected:
     test::customize_historical_traffic(use_tracks_map.config, [](baldr::DirectedEdge& e) {
       e.set_free_flow_speed(40);
       e.set_constrained_flow_speed(40);
-      return std::vector<int16_t>{};
+      return boost::none;
     });
   }
 };

@@ -39,11 +39,12 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
-constexpr float kDefaultUseTracks = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f;      // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;        // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.5f;        // Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets = 0.1f; // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
@@ -84,6 +85,7 @@ constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -221,13 +223,11 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -236,14 +236,12 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge,
-                                     const bool has_traffic) const;
+                                     const baldr::DirectedEdge* edge) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -438,6 +436,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
   }
 
   return {sec * factor, sec};
@@ -446,8 +446,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
-                                    const EdgeLabel& pred,
-                                    const bool) const {
+                                    const EdgeLabel& pred) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -492,8 +491,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
-                                           const baldr::DirectedEdge* edge,
-                                           const bool) const {
+                                           const baldr::DirectedEdge* edge) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -617,6 +615,11 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(
         kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
                             .get_value_or(kDefaultUseTracks)));
+
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -634,6 +637,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }

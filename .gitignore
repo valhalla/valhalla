@@ -53,6 +53,7 @@ scripts/gdal-2.0.0.tar.gz
 .cproject
 .project
 .settings
+CMakeLists.txt.user
 /.vs*/
 /*build*/
 /CMakeSettings.json

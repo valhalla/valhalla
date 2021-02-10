@@ -1,6 +1,7 @@
 #include "gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "test.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -122,5 +123,158 @@ D--3--4--C--5--6--E)";
   EXPECT_EQ(shape.size(), expected_shape.size());
   for (int i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
+  }
+}
+
+/****************THIS BOILERPLATE WAS COPYPASTA'D FROM THE ROUTE TEST****************/
+class TrafficBasedTest : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static uint32_t current, historical, constrained, freeflow;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+      b----1----c----2----d
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      3         4         5
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      a----6----f----7----e
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      8         9         0
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      g----A----h----B----i
+    )";
+
+    const gurka::ways ways = {
+        {"abcdefaghie", {{"highway", "residential"}}},
+        {"cfh", {{"highway", "tertiary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/match_timedep",
+                            {
+                                {"mjolnir.shortcuts", "false"},
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                            });
+    map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
+
+    // add live traffic
+    test::build_live_traffic_data(map.config);
+    test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                      valhalla::baldr::TrafficSpeed* traffic_speed) {
+      traffic_speed->overall_speed = 50 >> 1;
+      traffic_speed->speed1 = 50 >> 1;
+      traffic_speed->breakpoint1 = 255;
+    });
+
+    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+      e.set_constrained_flow_speed(25);
+      e.set_free_flow_speed(75);
+      std::array<float, kBucketsPerWeek> historical;
+      historical.fill(7);
+      for (size_t i = 0; i < historical.size(); ++i) {
+        // TODO: if we are in morning or evening set a different speed and add another test
+      }
+      return historical;
+    });
+
+    // tests below use saturday at 9am and thursday 4am (27 if for leap seconds)
+    size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60 + 27;
+    auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    for (auto tile_id : reader->GetTileSet()) {
+      auto tile = reader->GetGraphTile(tile_id);
+      for (const auto& e : tile->GetDirectedEdges()) {
+        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, 0);
+        EXPECT_EQ(current, 50);
+        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week_constrained);
+        EXPECT_EQ(historical, 7);
+        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week_constrained);
+        EXPECT_EQ(constrained, 25);
+        freeflow = tile->GetSpeed(&e, baldr::kFreeFlowMask, second_of_week_freeflow);
+        EXPECT_EQ(freeflow, 75);
+      }
+    }
+  }
+};
+
+gurka::map TrafficBasedTest::map = {};
+uint32_t TrafficBasedTest::current = 0, TrafficBasedTest::historical = 0,
+         TrafficBasedTest::constrained = 0, TrafficBasedTest::freeflow = 0;
+
+uint32_t speed_from_edge(const valhalla::Api& api) {
+  uint32_t kmh = -1;
+  const auto& nodes = api.trip().routes(0).legs(0).node();
+  for (int i = 0; i < nodes.size() - 1; ++i) {
+    const auto& node = nodes.Get(i);
+    if (!node.has_edge())
+      break;
+    auto km = node.edge().length_km();
+    auto h = (nodes.Get(i + 1).cost().elapsed_cost().seconds() -
+              node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
+             3600.0;
+    auto new_kmh = static_cast<uint32_t>(km / h + .5);
+    if (kmh != -1)
+      EXPECT_EQ(kmh, new_kmh);
+    kmh = new_kmh;
+  }
+  return kmh;
+}
+
+// map matching currently only allows forward time tracking and invariant so types 0, 1, 3.
+// type 2 arrive_by is not yet supported
+TEST_F(TrafficBasedTest, forward) {
+  {
+    auto api = gurka::do_action(valhalla::Options::trace_route, map, {"4", "0"}, "auto");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
+    EXPECT_EQ(speed_from_edge(api), constrained);
+  }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::trace_route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "1"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "constrained"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
+    EXPECT_EQ(speed_from_edge(api), constrained);
+  }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::trace_route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "predicted"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
+    EXPECT_EQ(speed_from_edge(api), historical);
+  }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::trace_route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "0"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "current"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
+    EXPECT_EQ(speed_from_edge(api), current);
+  }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::trace_route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-28T04:00"},
+                                 {"/costing_options/auto/speed_types/0", "freeflow"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
+    EXPECT_EQ(speed_from_edge(api), freeflow);
   }
 }

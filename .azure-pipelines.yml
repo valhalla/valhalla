@@ -17,11 +17,12 @@ jobs:
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_REF: 'f4bd6423'
-      PLATFORM: 'x64'
       TRIPLET: 'x64'
 
     steps:
-      - script: git submodule update --init --recursive
+      - script: |
+          git submodule update --init --recursive
+          echo $(Build.SourceBranch)
         displayName: 'Pull submodules'
       
       - task: Cache@2
@@ -30,6 +31,16 @@ jobs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
+      
+      - task: Cache@2
+        displayName: "Cache build"
+        inputs:
+          key: 'build | "$(Build.SourceBranch)"'
+          path: "$(BUILD_DIR)"
+          restoreKeys: |
+            build | "$(Build.SourceBranch)"
+            build
+          cacheHitVar: BUILD_CACHE_RESTORED
 
       - task: UsePythonVersion@0
         inputs:
@@ -65,17 +76,33 @@ jobs:
           del /Q third_party\OSM-binary\src\osmformat.proto.orig
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
+      - powershell: |
+          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
+          Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
+        displayName: 'Download Ninja'
+
       - script: |
+          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
+          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+          popd
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Visual Studio 16 2019" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
+          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
         displayName: 'Run CMake to configure build'
 
       - script: |
+          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
+          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+          popd
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --build %BUILD_DIR% --config %BUILD_CFG%
         displayName: 'Run CMake to build'
 
       - script: |
-          %BUILD_DIR%\%BUILD_CFG%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
-          %BUILD_DIR%\%BUILD_CFG%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
-          %BUILD_DIR%\%BUILD_CFG%\\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+          SET PATH=%PATH%;%VCPKG_DIR%\installed\%TRIPLET%-windows\bin;%VCPKG_DIR%\installed\%TRIPLET%-windows\debug\bin
+          %BUILD_DIR%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
+          %BUILD_DIR%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
+          %BUILD_DIR%\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
         displayName: 'Test some executables'
