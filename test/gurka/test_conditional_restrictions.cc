@@ -30,37 +30,45 @@ protected:
 
     const std::string timeDenied =
         "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string timeAllowed =
+    const std::string yesAllowed =
         "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string privateAllowed =
+        "private @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string deliveryAllowed =
+        "delivery @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string designatedAllowed =
+        "delivery @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string destinationAllowed =
+        "delivery @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
     const gurka::ways ways = {
         {"AD",
          {{"highway", "service"},
           {"motorcar", "no"},
           {"bicycle", "yes"},
           {"foot", "yes"},
-          {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"bicycle:conditional", yesAllowed},
+          {"foot:conditional", privateAllowed}}},
         {"AB",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", deliveryAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
-        {"BC", {{"highway", "service"}, {"motorcar:conditional", timeAllowed}}},
+          {"foot:conditional", designatedAllowed}}},
+        {"BC", {{"highway", "service"}, {"motorcar:conditional", destinationAllowed}}},
         {"CD",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", yesAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", privateAllowed}}},
         {"DE",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", deliveryAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", designatedAllowed}}},
         {"CE",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", destinationAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", yesAllowed}}},
 
     };
 
