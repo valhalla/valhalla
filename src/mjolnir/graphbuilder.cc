@@ -1135,6 +1135,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   }
   filesystem::remove(start_node_edge_tmp_file);
   filesystem::remove(end_node_edge_tmp_file);
+  return rv;
 }
 
 // Build the graph from the input
