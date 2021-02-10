@@ -321,6 +321,48 @@ public:
     std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
     return;
   }
+  
+  // sort the file based on the predicate, and outputs to output_seq
+  //
+  // Strategy is to first sort sub-ranges of length buffer_size in place. 
+  // These should all fit in memory. Then, merge the sub-ranges into the 
+  // output sequence via priority queue.
+  void merge_sort(const std::function<bool(const T&, const T&)>& predicate,
+                  sequence<T>& output_seq,
+                  size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
+    flush();
+    // if no elements we are done
+    if (memmap.size() == 0) {
+      return;
+    }
+
+    // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
+    // Pq keeps track of element and its index.
+    auto cmp = [&predicate](const std::pair<T, int>& a, std::pair<T, int>& b) {
+      return predicate(b.first, a.first);
+    };
+    std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
+
+    for(uint64_t i = 0; i < memmap.size(); i+=buffer_size) {
+      std::sort(static_cast<T*>(memmap) + i, 
+                static_cast<T*>(memmap) + std::min(memmap.size(), i+buffer_size), 
+                predicate);
+      pq.emplace(*at(i), i);
+    }
+
+    while(!pq.empty()) {
+      auto tmp = pq.top();
+      pq.pop();
+      output_seq.push_back(tmp.first);
+      auto new_idx = tmp.second+1;
+      if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
+        pq.emplace(*at(new_idx), new_idx);
+      }
+    }
+    output_seq.flush();
+	
+    return;
+  }
 
   // perform an volatile operation on all the items of this sequence
   void transform(const std::function<void(T&)>& predicate) {
