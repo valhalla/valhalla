@@ -31,6 +31,8 @@ public:
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  nodes_file                     where to store node information so it isn't in memory
    * @param  edges_file                     where to store edge information so it isn't in memory
+   * @param  start_node_edge_tmp_file       tmp file to store node-edge information so it isn't in memory
+   * @param  end_node_edge_tmp_file         tmp file to store node-edge information so it isn't in memory
    * @param  complex_from_restriction_file  where to store the from complex restrictions so they are
    * not in memory
    * @param  complex_to_restriction_file    where to store the to complex restrictions so they are not
@@ -50,7 +52,9 @@ public:
                                                      const std::string& ways_file,
                                                      const std::string& way_nodes_file,
                                                      const std::string& nodes_file,
-                                                     const std::string& edges_file);
+                                                     const std::string& edges_file,
+                                                     const std::string& start_node_edge_tmp_file,
+                                                     const std::string& end_node_edge_tmp_file);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
