@@ -13,6 +13,7 @@
    * FIXED: Dont add predictive traffic to the tile if it's empty [#2826](https://github.com/valhalla/valhalla/pull/2826)
    * FIXED: Fix logic bidirectional astar to avoid double u-turns and extra detours [#2802](https://github.com/valhalla/valhalla/pull/2802)
    * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
+   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
@@ -139,7 +140,6 @@
    * FIXED: Some HGT files not found [#2723](https://github.com/valhalla/valhalla/issues/2723)
    * FIXED: Fix PencilPointUturn detection by removing short-edge check and updating angle threshold [#2725](https://github.com/valhalla/valhalla/issues/2725)
    * FIXED: Fix invalid continue/bear maneuvers [#2729](https://github.com/valhalla/valhalla/issues/2729)
-   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
    * FIXED: Fixes an issue that lead to double turns within a very short distance, when instead, it should be a u-turn. We now collapse double L turns or double R turns in short non-internal intersections to u-turns. [#2740](https://github.com/valhalla/valhalla/pull/2740)
    * FIXED: fixes an issue that lead to adding an extra maneuver. We now combine a current maneuver short length non-internal edges (left or right) with the next maneuver that is a kRampStraight. [#2741](https://github.com/valhalla/valhalla/pull/2741)
    * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
