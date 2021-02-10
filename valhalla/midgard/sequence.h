@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
-#define VALHALLA_MJOLNIR_SEQUENCE_H_
+#pragma once
 
 #include <algorithm>
 #include <cerrno>
@@ -334,11 +333,11 @@ public:
     std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
     return;
   }
-  
+
   // sort the file based on the predicate, and outputs to output_seq
   //
-  // Strategy is to first sort sub-ranges of length buffer_size in place. 
-  // These should all fit in memory. Then, merge the sub-ranges into the 
+  // Strategy is to first sort sub-ranges of length buffer_size in place.
+  // These should all fit in memory. Then, merge the sub-ranges into the
   // output sequence via priority queue.
   void merge_sort(const std::function<bool(const T&, const T&)>& predicate,
                   sequence<T>& output_seq,
@@ -356,24 +355,23 @@ public:
     };
     std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
 
-    for(uint64_t i = 0; i < memmap.size(); i+=buffer_size) {
-      std::sort(static_cast<T*>(memmap) + i, 
-                static_cast<T*>(memmap) + std::min(memmap.size(), i+buffer_size), 
-                predicate);
+    for (uint64_t i = 0; i < memmap.size(); i += buffer_size) {
+      std::sort(static_cast<T*>(memmap) + i,
+                static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
       pq.emplace(*at(i), i);
     }
 
-    while(!pq.empty()) {
+    while (!pq.empty()) {
       auto tmp = pq.top();
       pq.pop();
       output_seq.push_back(tmp.first);
-      auto new_idx = tmp.second+1;
+      auto new_idx = tmp.second + 1;
       if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
         pq.emplace(*at(new_idx), new_idx);
       }
     }
     output_seq.flush();
-	
+
     return;
   }
 
@@ -692,5 +690,3 @@ struct tar {
 
 } // namespace midgard
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_SEQUENCE_H_
