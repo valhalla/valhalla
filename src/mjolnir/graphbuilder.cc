@@ -40,7 +40,10 @@ namespace {
  * we also need to then update the edges that pointed to them
  *
  */
-std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file, sequence<std::pair<uint32_t, uint32_t>>& starts, sequence<std::pair<uint32_t, uint32_t>>& ends) {
+std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, 
+                                    const std::string& edges_file, 
+                                    sequence<std::pair<uint32_t, uint32_t>>& starts, 
+                                    sequence<std::pair<uint32_t, uint32_t>>& ends) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
@@ -61,39 +64,40 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  nodes.transform([&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
-    // remember if this was a new tile
-    if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
-      tiles.insert({node.graph_id, node_index});
-      node.graph_id.set_id(0);
-      run_index = node_index;
-      ++node_count;
-    } // but is it a new node
-    else if (last_node.node.osmid_ != node.node.osmid_) {
-      node.graph_id.set_id(last_node.graph_id.id() + 1);
-      run_index = node_index;
-      ++node_count;
-    } // not new keep the same graphid
-    else {
-      node.graph_id.set_id(last_node.graph_id.id());
-    }
+  nodes.transform(
+    [&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+      // remember if this was a new tile
+      if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
+        tiles.insert({node.graph_id, node_index});
+        node.graph_id.set_id(0);
+        run_index = node_index;
+        ++node_count;
+      } // but is it a new node
+      else if (last_node.node.osmid_ != node.node.osmid_) {
+        node.graph_id.set_id(last_node.graph_id.id() + 1);
+        run_index = node_index;
+        ++node_count;
+      } // not new keep the same graphid
+      else {
+        node.graph_id.set_id(last_node.graph_id.id());
+      }
 
-    // if this node marks the start of an edge, keep track of the edge and the node
-    // so we can later tell the edge where the first node in the series is
-    if (node.is_start()) {
-      starts.push_back(std::make_pair(node.start_of, run_index));
-    }
-    // if this node marks the end of an edge, keep track of the edge and the node
-    // so we can later tell the edge where the final node in the series is
-    if (node.is_end()) {
-      ends.push_back(std::make_pair(node.end_of, run_index));
-    }
+      // if this node marks the start of an edge, keep track of the edge and the node
+      // so we can later tell the edge where the first node in the series is
+      if (node.is_start()) {
+        starts.push_back(std::make_pair(node.start_of, run_index));
+      }
+      // if this node marks the end of an edge, keep track of the edge and the node
+      // so we can later tell the edge where the final node in the series is
+      if (node.is_end()) {
+        ends.push_back(std::make_pair(node.end_of, run_index));
+      }
 
-    // next node
-    last_node = node;
-    ++node_index;
-  });
-  
+      // next node
+      last_node = node;
+      ++node_index;
+    });
+
   LOG_INFO("Nodes processed. Now adding data to edges.");
   
   // Sort by edge. This enables a sequential update of edges
@@ -108,7 +112,7 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   LOG_INFO("Sorting starts and ends done. Populating edges...");
 
   auto s_it = starts.begin(), e_it = ends.begin();
-  while(s_it != starts.end() && e_it != ends.end()) {
+  while (s_it != starts.end() && e_it != ends.end()) {
     if ((*s_it).first == (*e_it).first) {
       auto element = edges[(*s_it).first];
       auto edge = *element;
@@ -127,24 +131,24 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
       auto element = edges[(*e_it).first];
       auto edge = *element;
       edge.targetnode_ = (*e_it).second;
-      element=edge;
+      element = edge;
       ++e_it;
     }
   }
 
   while (s_it != starts.end()) {
-      auto element = edges[(*s_it).first];
-      auto edge = *element;
-      edge.sourcenode_ = (*s_it).second;
-      element = edge;
-      ++s_it;
+    auto element = edges[(*s_it).first];
+    auto edge = *element;
+    edge.sourcenode_ = (*s_it).second;
+    element = edge;
+    ++s_it;
   }
   while (e_it != ends.end()) {
-      auto element = edges[(*e_it).first];
-      auto edge = *element;
-      edge.targetnode_ = (*e_it).second;
-      element=edge;
-      ++e_it;
+    auto element = edges[(*e_it).first];
+    auto edge = *element;
+    edge.targetnode_ = (*e_it).second;
+    element=edge;
+    ++e_it;
   }
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
