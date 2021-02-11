@@ -22,6 +22,7 @@
    * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
    * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
    * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
+   * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [2850](https://github.com/valhalla/valhalla/pull/2850)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
