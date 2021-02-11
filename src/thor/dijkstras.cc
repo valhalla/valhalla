@@ -199,8 +199,9 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                               transition_cost, path_dist, false, true, restriction_idx,
-                               pred.path_id());
+                               transition_cost, path_dist, false,
+                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -376,8 +377,9 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
-                               transition_cost, path_dist, false, true, restriction_idx,
-                               pred.path_id());
+                               transition_cost, path_dist, false,
+                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
