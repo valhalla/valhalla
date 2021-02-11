@@ -222,8 +222,8 @@ void thor_worker_t::centroid(Api& request) {
   valhalla::Location destination;
 
   // get all the routes
-  auto paths = centroid_gen.ExpandCentroid(ExpansionType::forward, request, *reader, mode_costing,
-                                           mode, destination);
+  auto paths =
+      centroid_gen.Expand(ExpansionType::forward, request, *reader, mode_costing, mode, destination);
 
   // serialize path information of each route into protobuf route objects
   auto origin = locations.begin();

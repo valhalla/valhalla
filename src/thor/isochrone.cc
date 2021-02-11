@@ -163,12 +163,11 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<2>>
-Isochrone::ExpandWithGrid(const ExpansionType& expansion_type,
-                          Api& api,
-                          GraphReader& reader,
-                          const sif::mode_costing_t& mode_costing,
-                          const TravelMode mode) {
+std::shared_ptr<const GriddedData<2>> Isochrone::Expand(const ExpansionType& expansion_type,
+                                                        Api& api,
+                                                        GraphReader& reader,
+                                                        const sif::mode_costing_t& mode_costing,
+                                                        const TravelMode mode) {
   // Initialize and create the isotile
   ConstructIsoTile(expansion_type == ExpansionType::multimodal, api, mode);
   // Compute the expansion
