@@ -1132,10 +1132,11 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                    return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  std::map<GraphId, size_t> rv;
   {
     sequence<std::pair<uint32_t, uint32_t>> starts(start_node_edge_tmp_file, true);
     sequence<std::pair<uint32_t, uint32_t>> ends(end_node_edge_tmp_file, true);
-    auto rv = SortGraph(nodes_file, edges_file, starts, ends);
+    rv = SortGraph(nodes_file, edges_file, starts, ends);
   }
   filesystem::remove(start_node_edge_tmp_file);
   filesystem::remove(end_node_edge_tmp_file);
