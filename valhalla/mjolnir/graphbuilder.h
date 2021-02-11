@@ -31,7 +31,7 @@ public:
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  nodes_file                     where to store node information so it isn't in memory
    * @param  edges_file                     where to store edge information so it isn't in memory
-   * @param  start_node_edge_tmp_file       tmp file to store node-edge information so it isn't in 
+   * @param  start_node_edge_tmp_file       tmp file to store node-edge information so it isn't in
    * memory
    * @param  end_node_edge_tmp_file         tmp file to store node-edge information so it isn't in
    * memory
