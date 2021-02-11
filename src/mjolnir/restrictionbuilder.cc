@@ -33,6 +33,7 @@ struct EdgeId {
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
                     GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
                     std::vector<EdgeId>& edge_ids,
                     const std::vector<uint64_t>& way_ids,
                     size_t way_id_index,
@@ -43,6 +44,7 @@ bool ExpandFromNode(GraphReader& reader,
 bool ExpandFromNodeInner(GraphReader& reader,
                          std::mutex& lock,
                          GraphId& last_node,
+                         std::unordered_set<GraphId>& visited_nodes,
                          std::vector<EdgeId>& edge_ids,
                          const std::vector<uint64_t>& way_ids,
                          size_t way_id_index,
@@ -60,22 +62,24 @@ bool ExpandFromNodeInner(GraphReader& reader,
         !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
           de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
       auto edge_info = tile->edgeinfo(de->edgeinfo_offset());
-      if (edge_info.wayid() == way_id) {
+      if (edge_info.wayid() == way_id && visited_nodes.find(de->endnode()) != visited_nodes.end()) {
+        visited_nodes.insert(de->endnode());
         edge_ids.push_back({way_id, edge_id});
-        bool found;
 
+        bool found;
         // expand with the next way_id
-        found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index + 1, tile,
-                               current_node, de->endnode());
+        found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
+                               way_id_index + 1, tile, current_node, de->endnode());
         if (found)
           return true;
 
         // expand with the same way_id
-        found = ExpandFromNode(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile,
-                               current_node, de->endnode());
+        found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
+                               way_id_index, tile, current_node, de->endnode());
         if (found)
           return true;
 
+        visited_nodes.erase(de->endnode());
         edge_ids.pop_back();
       }
     }
@@ -101,6 +105,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
                     GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
                     std::vector<EdgeId>& edge_ids,
                     const std::vector<uint64_t>& way_ids,
                     size_t way_id_index,
@@ -124,8 +129,8 @@ bool ExpandFromNode(GraphReader& reader,
 
   bool found;
   // expand from the current node
-  found = ExpandFromNodeInner(reader, lock, last_node, edge_ids, way_ids, way_id_index, tile,
-                              prev_node, current_node, node_info);
+  found = ExpandFromNodeInner(reader, lock, last_node, visited_nodes, edge_ids, way_ids, way_id_index,
+                              tile, prev_node, current_node, node_info);
   if (found)
     return true;
 
@@ -140,8 +145,9 @@ bool ExpandFromNode(GraphReader& reader,
       lock.unlock();
     }
 
-    found = ExpandFromNodeInner(reader, lock, last_node, edge_ids, way_ids, way_id_index, trans_tile,
-                                prev_node, trans->endnode(), trans_tile->node(trans->endnode()));
+    found = ExpandFromNodeInner(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
+                                way_id_index, trans_tile, prev_node, trans->endnode(),
+                                trans_tile->node(trans->endnode()));
     if (found)
       return true;
   }
@@ -157,8 +163,10 @@ std::vector<GraphId> GetGraphIds(GraphId& start_node,
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   lock.unlock();
 
+  std::unordered_set<GraphId> visited_nodes{start_node};
   std::vector<EdgeId> edge_ids;
-  ExpandFromNode(reader, lock, start_node, edge_ids, way_ids, 0, tile, GraphId(), start_node);
+  ExpandFromNode(reader, lock, start_node, visited_nodes, edge_ids, way_ids, 0, tile, GraphId(),
+                 start_node);
   if (edge_ids.empty())
     return {};
 
