@@ -635,6 +635,8 @@ protected:
   // Graph Id of the opposing edge.
   // not_thru_pruning_: Is not thru pruning enabled?
   uint64_t opp_edgeid_ : 63; // Could be 46 (to provide more spare)
+  // TODO: Move not_thru_prunin to the base class - EdgeLabel so that we can
+  // consolidate all pruning related properties at 1 place
   uint64_t not_thru_pruning_ : 1;
 };
 
