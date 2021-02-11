@@ -699,6 +699,8 @@ TEST(GraphParser, TestImportBssNode) {
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string nodes_file = "test_nodes.bin";
   std::string edges_file = "test_edges.bin";
+  std::string start_node_edge_tmp_file = "test_start_node_edge_tmp.bin";
+  std::string end_node_edge_tmp_file = "test_end_node_edge_tmp.bin";
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
@@ -720,7 +722,7 @@ TEST(GraphParser, TestImportBssNode) {
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,
-                               edges_file);
+                               edges_file, start_node_edge_tmp_file, end_node_edge_tmp_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, tiles);
