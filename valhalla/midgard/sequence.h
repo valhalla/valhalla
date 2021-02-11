@@ -358,7 +358,7 @@ public:
       std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
 
       // Sort the subsections
-      for (uint64_t i = 0; i < memmap.size(); i += buffer_size) {
+      for (size_t i = 0; i < memmap.size(); i += buffer_size) {
         std::sort(static_cast<T*>(memmap) + i,
                   static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
         pq.emplace(*at(i), i);
