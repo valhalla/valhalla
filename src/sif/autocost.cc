@@ -484,8 +484,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
-  // Intersection transition time = factor * stopimpact * turncost. Factor depends
-  // on density and whether traffic is available
+  // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -511,7 +510,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
-    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
+    // using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0) {
       seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
@@ -538,11 +538,15 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
-  // Transition time = densityfactor * stopimpact * turncost
+  // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      if (!edge->has_flow_speed() || flow_mask_ == 0) {
+        turn_cost = kTCCrossing;
+      } else {
+        turn_cost = kTCStraight;
+      }
     } else {
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
@@ -560,14 +564,15 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
-    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
+    // using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0) {
       seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
     }
-
     c.cost += seconds;
   }
+
   // Account for the user preferring distance
   c.cost *= inv_distance_factor_;
 
