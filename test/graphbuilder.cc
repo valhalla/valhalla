@@ -41,6 +41,8 @@ const std::string bss_file = "test_bss_nodes_harrisburg.bin";
 const std::string edges_file = "test_edges_harrisburg.bin";
 const std::string from_restriction_file = "test_from_complex_restrictions_harrisburg.bin";
 const std::string nodes_file = "test_nodes_harrisburg.bin";
+const std::string start_node_edge_tmp_file = "test_start_node_edge_tmp_harrisburg.bin";
+const std::string end_node_edge_tmp_file = "test_end_node_edge_tmp_harrisburg.bin";
 const std::string to_restriction_file = "test_to_complex_restrictions_harrisburg.bin";
 const std::string way_nodes_file = "test_way_nodes_harrisburg.bin";
 const std::string ways_file = "test_ways_harrisburg.bin";
@@ -54,7 +56,8 @@ TEST(GraphBuilder, TestConstructEdges) {
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file,
+                               start_node_edge_tmp_file, end_node_edge_tmp_file);
   EXPECT_EQ(tiles.size(), 4);
   EXPECT_EQ(tiles[GraphId{5993698}], 0);
   EXPECT_EQ(tiles[GraphId{5993706}], 3084);
@@ -78,7 +81,8 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file,
+                               start_node_edge_tmp_file, end_node_edge_tmp_file);
   // Redefine tiles to that we only build a single tile.
   tiles = {{GraphId{5993698}, 0}};
   // This directory should be empty
