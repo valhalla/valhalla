@@ -24,7 +24,6 @@ namespace {
 
 std::string ways_file = "test_ways_utrecht.bin";
 std::string way_nodes_file = "test_way_nodes_utrecht.bin";
-std::string way_nodes_tmp_file = "test_way_nodes_tmp_utrecht.bin";
 std::string access_file = "test_access_utrecht.bin";
 std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
@@ -217,7 +216,7 @@ public:
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                               way_nodes_file, way_nodes_tmp_file, bss_file, osmdata);
+                               way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

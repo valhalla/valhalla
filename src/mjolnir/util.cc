@@ -30,7 +30,6 @@ namespace {
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
-const std::string way_nodes_tmp_file = "way_nodes_tmp.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
@@ -215,7 +214,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Set up the temporary (*.bin) files used during processing
   std::string ways_bin = tile_dir + ways_file;
   std::string way_nodes_bin = tile_dir + way_nodes_file;
-  std::string way_nodes_tmp_bin = tile_dir + way_nodes_tmp_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
@@ -269,8 +267,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
-    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin,
-                               way_nodes_tmp_bin, bss_nodes_bin, osm_data);
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
+                               osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {

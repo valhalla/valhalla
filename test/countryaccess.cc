@@ -89,7 +89,6 @@ void CountryAccess(const std::string& config_file) {
   // Set up the temporary (*.bin) files used during processing
   std::string ways_file = "test_ways_amsterdam.bin";
   std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
-  std::string way_nodes_tmp_file = "test_way_nodes_amsterdam_tmp.bin";
   std::string nodes_file = "test_nodes_amsterdam.bin";
   std::string edges_file = "test_edges_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
@@ -108,7 +107,7 @@ void CountryAccess(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, way_nodes_file,
-                             way_nodes_tmp_file, bss_nodes_file, osmdata);
+                             bss_nodes_file, osmdata);
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,
@@ -250,7 +249,6 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(ways_file);
   remove_temp_file(way_nodes_file);
   remove_temp_file(nodes_file);
-  remove_temp_file(way_nodes_tmp_file);
   remove_temp_file(edges_file);
   remove_temp_file(access_file);
   remove_temp_file(cr_from_file);
