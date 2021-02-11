@@ -24,6 +24,7 @@
    * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
    * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
    * ADDED: Added support for destination for conditional access restrictions [#2857](https://github.com/valhalla/valhalla/pull/2857)
+   * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [2850](https://github.com/valhalla/valhalla/pull/2850)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
