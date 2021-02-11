@@ -43,6 +43,7 @@ const std::string from_restriction_file = "test_from_complex_restrictions_harris
 const std::string nodes_file = "test_nodes_harrisburg.bin";
 const std::string to_restriction_file = "test_to_complex_restrictions_harrisburg.bin";
 const std::string way_nodes_file = "test_way_nodes_harrisburg.bin";
+const std::string way_nodes_tmp_file = "test_way_nodes_harrisburg_tmp.bin";
 const std::string ways_file = "test_ways_harrisburg.bin";
 
 // Test output from construct edges and that the expected number of tiles are produced from the
@@ -123,7 +124,7 @@ public:
                                                 way_nodes_file, access_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
-    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);
+    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, way_nodes_tmp_file, bss_file, osmdata);
   }
 
   void TearDown() override {
