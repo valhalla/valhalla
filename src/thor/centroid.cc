@@ -93,12 +93,12 @@ bool PathIntersection::operator==(const PathIntersection& i) const {
 }
 
 // main entry point to the functionality
-std::vector<std::vector<PathInfo>> Centroid::Expand(const ExpansionType& expansion_type,
-                                                    valhalla::Api& api,
-                                                    baldr::GraphReader& reader,
-                                                    const sif::mode_costing_t& costings,
-                                                    const sif::TravelMode mode,
-                                                    valhalla::Location& centroid) {
+std::vector<std::vector<PathInfo>> Centroid::ExpandCentroid(const ExpansionType& expansion_type,
+                                                            valhalla::Api& api,
+                                                            baldr::GraphReader& reader,
+                                                            const sif::mode_costing_t& costings,
+                                                            const sif::TravelMode mode,
+                                                            valhalla::Location& centroid) {
   // preflight check
   if (api.options().locations_size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");

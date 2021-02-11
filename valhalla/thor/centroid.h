@@ -104,12 +104,12 @@ public:
    * @return                The list of paths, one per location, to the centroid as well as the
    * centroid
    */
-  std::vector<std::vector<PathInfo>> Expand(const ExpansionType& expansion_type,
-                                            valhalla::Api& api,
-                                            baldr::GraphReader& reader,
-                                            const sif::mode_costing_t& costings,
-                                            const sif::TravelMode mode,
-                                            valhalla::Location& centroid);
+  std::vector<std::vector<PathInfo>> ExpandCentroid(const ExpansionType& expansion_type,
+                                                    valhalla::Api& api,
+                                                    baldr::GraphReader& reader,
+                                                    const sif::mode_costing_t& costings,
+                                                    const sif::TravelMode mode,
+                                                    valhalla::Location& centroid);
 
   /**
    * Resets internal state before the next call

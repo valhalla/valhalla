@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
   auto expansion_type = routetype == "multimodal"
                             ? ExpansionType::multimodal
                             : (reverse ? ExpansionType::reverse : ExpansionType::forward);
-  auto isotile = isochrone.Expand(expansion_type, request, reader, mode_costing, mode);
+  auto isotile = isochrone.ExpandWithGrid(expansion_type, request, reader, mode_costing, mode);
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

@@ -55,11 +55,11 @@ public:
    * @param mode            The mode specifying which costing to use
    * @return                The 2d grid each marked with the minimum time to reach it
    */
-  std::shared_ptr<const midgard::GriddedData<2>> Expand(const ExpansionType& expansion_type,
-                                                        valhalla::Api& api,
-                                                        baldr::GraphReader& reader,
-                                                        const sif::mode_costing_t& costings,
-                                                        const sif::TravelMode mode);
+  std::shared_ptr<const midgard::GriddedData<2>> ExpandWithGrid(const ExpansionType& expansion_type,
+                                                                valhalla::Api& api,
+                                                                baldr::GraphReader& reader,
+                                                                const sif::mode_costing_t& costings,
+                                                                const sif::TravelMode mode);
 
 protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
