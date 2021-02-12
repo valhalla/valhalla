@@ -62,8 +62,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
         !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
           de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
       auto edge_info = tile->edgeinfo(de->edgeinfo_offset());
-      if (edge_info.wayid() == way_id && visited_nodes.find(de->endnode()) != visited_nodes.end()) {
-        visited_nodes.insert(de->endnode());
+      if (edge_info.wayid() == way_id) {
         edge_ids.push_back({way_id, edge_id});
 
         bool found;
@@ -73,13 +72,18 @@ bool ExpandFromNodeInner(GraphReader& reader,
         if (found)
           return true;
 
-        // expand with the same way_id
-        found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
-                               way_id_index, tile, current_node, de->endnode());
-        if (found)
-          return true;
+        if (visited_nodes.find(de->endnode()) == visited_nodes.end()) {
+          visited_nodes.insert(de->endnode());
 
-        visited_nodes.erase(de->endnode());
+          // expand with the same way_id
+          found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
+                                 way_id_index, tile, current_node, de->endnode());
+          if (found)
+            return true;
+
+          visited_nodes.erase(de->endnode());
+        }
+
         edge_ids.pop_back();
       }
     }
