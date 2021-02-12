@@ -22,6 +22,7 @@ if (UNIX AND NOT APPLE)
     worker.cc
     locate_action.cc
     height_action.cc
+    polygon_search.cc
   PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif ()
 

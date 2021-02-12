@@ -31,7 +31,7 @@ using line_bg_t = boost::geometry::model::linestring<midgard::PointLL>;
 using ring_bg_t = std::vector<midgard::PointLL>;
 // map of tile for map of bin ids & their ring ids
 using bins_collector =
-    std::unordered_map<int32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
+    std::unordered_map<uint32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
 
 /**
  * Finds all edge IDs which are intersected by the ring

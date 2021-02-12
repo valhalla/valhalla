@@ -29,11 +29,13 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
     }
   }
 
-  std::vector<int32_t> tile_keys(bins_intersected.size());
+  std::vector<uint32_t> tile_keys(bins_intersected.size());
   std::for_each(bins_intersected.begin(), bins_intersected.end(),
                 [&tile_keys](
-                    const std::pair<int32_t, std::unordered_map<unsigned short, std::vector<size_t>>>&
-                        e) { tile_keys.push_back(e.first); });
+                    const std::pair<uint32_t,
+                                    std::unordered_map<unsigned short, std::vector<size_t>>>& e) {
+                  tile_keys.push_back(e.first);
+                });
   std::sort(tile_keys.begin(), tile_keys.end());
   for (const auto& tile_id : tile_keys) {
     auto& tile_bins = bins_intersected[tile_id];
