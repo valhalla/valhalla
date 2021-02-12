@@ -178,6 +178,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
+      astar.Clear();
       route_size += 1;
     }
   }
@@ -276,7 +277,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   // auto pred = sif::EdgeLabel(0, tgt_edge_id, edge, costs, 1.0, 1.0,
   // sif::TravelMode::kDrive,10,sif::Cost());
   auto pred = sif::EdgeLabel();
-  int restriction_idx;
+  uint8_t restriction_idx;
 
   for (auto _ : state) {
     cost->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);

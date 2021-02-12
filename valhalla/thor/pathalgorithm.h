@@ -33,6 +33,9 @@ public:
   PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
+  PathAlgorithm(const PathAlgorithm&) = delete;
+  PathAlgorithm& operator=(const PathAlgorithm&) = delete;
+
   /**
    * Destructor
    */

@@ -166,7 +166,7 @@ bool load_spatialite(sqlite3* db_handle) {
   return false;
 }
 
-bool build_tile_set(const boost::property_tree::ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage,
@@ -177,10 +177,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     }
   };
 
-  // cannot allow this when building tiles
-  if (config.get_child("mjolnir").get_optional<std::string>("tile_extract")) {
-    throw std::runtime_error("Tiles cannot be directly built into a tar extract");
-  }
+  // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
+  auto config = original_config;
+  config.get_child("mjolnir").erase("tile_extract");
+  config.get_child("mjolnir").erase("tile_url");
+  config.get_child("mjolnir").erase("traffic_extract");
 
   // Get the tile directory (make sure it ends with the preferred separator
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");

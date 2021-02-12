@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
@@ -96,7 +95,6 @@ valhalla output looks like this:
 */
 
 void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
-
   double route_time = 0;
   double route_length = 0;
   double route_cost = 0;
@@ -104,8 +102,8 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
   for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
-    const auto& leg = api.directions().routes(0).legs(leg_index);
-    const auto& trip_leg = api.trip().routes(0).legs(leg_index);
+    const auto& leg = api.directions().routes(route_index).legs(leg_index);
+    const auto& trip_leg = api.trip().routes(route_index).legs(leg_index);
     route_time += leg.summary().time();
     route_length += leg.summary().length();
     route_cost += trip_leg.node().rbegin()->cost().elapsed_cost().cost();
@@ -539,24 +537,40 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 std::string serialize(const Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
-  writer.start_object();
 
-  // the main route
-  writer.start_object("trip");
+  // for each route
+  for (int i = 0; i < api.directions().routes_size(); ++i) {
+    if (i == 1) {
+      writer.start_array("alternates");
+    }
 
-  // the locations in the trip
-  locations(api, 0, writer);
+    // the route itself
+    writer.start_object();
+    writer.start_object("trip");
 
-  // the actual meat of the route
-  legs(api, 0, writer);
+    // the locations in the trip
+    locations(api, i, writer);
 
-  // openlr references of the edges in the route
-  valhalla::tyr::openlr(api, 0, writer);
+    // the actual meat of the route
+    legs(api, i, writer);
 
-  // summary time/distance and other stats
-  summary(api, 0, writer);
+    // openlr references of the edges in the route
+    valhalla::tyr::openlr(api, i, writer);
 
-  writer.end_object(); // trip
+    // summary time/distance and other stats
+    summary(api, i, writer);
+
+    writer.end_object(); // trip
+
+    // leave space for alternates by closing this one outside the loop
+    if (i > 0) {
+      writer.end_object();
+    }
+  }
+
+  if (api.directions().routes_size() > 1) {
+    writer.end_array(); // alternates
+  }
 
   if (api.options().has_id()) {
     writer("id", api.options().id());

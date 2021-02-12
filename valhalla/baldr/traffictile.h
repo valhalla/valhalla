@@ -64,15 +64,16 @@ struct TrafficSpeed {
   uint64_t spare : 1;
 
 #ifndef C_ONLY_INTERFACE
-  inline bool valid() const volatile {
-    return breakpoint1 != 0;
+  inline bool speed_valid() const volatile {
+    return breakpoint1 != 0 && overall_speed != UNKNOWN_TRAFFIC_SPEED_RAW;
   }
+
   inline bool closed() const volatile {
-    return valid() && overall_speed == 0;
+    return breakpoint1 != 0 && overall_speed == 0;
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
-    if (!valid())
+    if (!speed_valid())
       return false;
     switch (subsegment) {
       case 0:
@@ -99,7 +100,7 @@ struct TrafficSpeed {
    * @return returns the speed of the subsegment or UNKNOWN_TRAFFIC_SPEED_KPH if unknown
    */
   inline uint8_t get_speed(std::size_t subsegment) const volatile {
-    if (!valid())
+    if (!speed_valid())
       return UNKNOWN_TRAFFIC_SPEED_KPH;
     switch (subsegment) {
       case 0:
@@ -136,7 +137,7 @@ struct TrafficSpeed {
 
   json::MapPtr json() const volatile {
     auto live_speed = json::map({});
-    if (valid()) {
+    if (speed_valid()) {
       live_speed->emplace("overall_speed", static_cast<uint64_t>(get_overall_speed()));
       auto speed = static_cast<uint64_t>(get_speed(0));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)

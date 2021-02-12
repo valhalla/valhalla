@@ -69,35 +69,13 @@ void CostMatrix::Clear() {
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
-  for (auto& adj : source_adjacency_) {
-    adj.reset();
-  }
   source_adjacency_.clear();
-
-  for (auto& el : source_edgelabel_) {
-    el.clear();
-  }
   source_edgelabel_.clear();
-
-  for (auto& es : source_edgestatus_) {
-    es.clear();
-  }
   source_edgestatus_.clear();
 
   // Clear all target adjacency lists, edge labels, and edge status
-  for (auto& adj : target_adjacency_) {
-    adj.reset();
-  }
   target_adjacency_.clear();
-
-  for (auto& el : target_edgelabel_) {
-    el.clear();
-  }
   target_edgelabel_.clear();
-
-  for (auto& es : target_edgestatus_) {
-    es.clear();
-  }
   target_edgestatus_.clear();
 
   source_hierarchy_limits_.clear();
@@ -315,7 +293,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
-      int restriction_idx = -1;
+      uint8_t restriction_idx = -1;
       if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
         continue;
@@ -588,7 +566,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       const DirectedEdge* opp_edge = t2->directededge(oppedge);
-      int restriction_idx = -1;
+      uint8_t restriction_idx = -1;
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
                                     restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, false)) {
@@ -686,7 +664,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     // Use the cost threshold to size the adjacency list.
     source_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
                                                                       costing_->UnitSize(),
-                                                                      source_edgelabel_[index]));
+                                                                      &source_edgelabel_[index]));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
@@ -759,7 +737,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     // Use the cost threshold to size the adjacency list.
     target_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
                                                                       costing_->UnitSize(),
-                                                                      target_edgelabel_[index]));
+                                                                      &target_edgelabel_[index]));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list

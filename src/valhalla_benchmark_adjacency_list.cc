@@ -66,7 +66,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
   std::vector<EdgeLabel> edgelabels;
   // Set up lambda to get sort costs
   start = std::clock();
-  DoubleBucketQueue<EdgeLabel> adjlist(0, maxcost / 2, bucketsize, edgelabels);
+  DoubleBucketQueue<EdgeLabel> adjlist(0, maxcost / 2, bucketsize, &edgelabels);
 
   // Construct EdgeLabels and add to adjacency list
 

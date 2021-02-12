@@ -60,7 +60,7 @@ config = {
     'elevation': '/data/valhalla/elevation/'
   },
   'loki': {
-    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available'],
+    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid'],
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
@@ -91,7 +91,8 @@ config = {
     'source_to_target_algorithm': 'select_optimal',
     'service': {
       'proxy': 'ipc:///tmp/thor'
-    }
+    },
+    'max_reserved_labels_count': 1000000
   },
   'odin': {
     'logging': {
@@ -255,6 +256,10 @@ config = {
       'max_matrix_distance': 200000.0,
       'max_matrix_locations': 50
     },
+    'centroid': {
+      'max_distance': 200000.0,
+      'max_locations': 5
+    },
     'max_avoid_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
@@ -314,7 +319,7 @@ help_text = {
     'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
   },
   'loki': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available',
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid',
     'use_connectivity': 'a boolean value to know whether or not to construct the connectivity maps',
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
@@ -345,7 +350,8 @@ help_text = {
     'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
     'service': {
       'proxy': 'IPC linux domain socket file location'
-    }
+    },
+    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.'
   },
   'odin': {
     'logging': {
@@ -508,6 +514,10 @@ help_text = {
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of input locations for a matrix'
+    },
+    'centroid': {
+      'max_distance': 'Maximum b-line distance between any pair of locations in meters',
+      'max_locations': 'Maximum number of input locations, 127 is a hard limit and cannot be increased in config'
     },
     'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',

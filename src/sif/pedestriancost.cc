@@ -59,6 +59,8 @@ constexpr float kDefaultSideWalkFactor = 1.0f;     // Neutral value for sidewalk
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
+constexpr float kDefaultUseTracks = 0.5f;        // Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets = 0.6f; // Factor between 0 and 1
 
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
@@ -131,6 +133,8 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -228,7 +232,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const override;
+                       uint8_t& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -255,7 +259,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const override;
+                              uint8_t& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -342,6 +346,12 @@ public:
       if (driveway_factor_ < 1.f) {
         factor *= driveway_factor_;
       }
+      if (track_factor_ < 1.f) {
+        factor *= track_factor_;
+      }
+      if (living_street_factor_ < 1.f) {
+        factor *= living_street_factor_;
+      }
 
       return (speedfactor_ * factor);
     } else {
@@ -415,55 +425,6 @@ public:
   // Used in edgefilter, it tells if the location should be projected on a edge which is
   // a bike share station connection
   bool project_on_bss_connection = 0;
-  /**
-   * Override the base transition cost to not add maneuver penalties onto transit edges.
-   * Base transition cost that all costing methods use. Includes costs for
-   * country crossing, boarding a ferry, toll booth, gates, entering destination
-   * only, alleys, and maneuver penalties. Each costing method can provide different
-   * costs for these transitions (via costing options).
-   * @param node Node at the intersection where the edge transition occurs.
-   * @param edge Directed edge entering.
-   * @param pred Predecessor edge information.
-   * @param idx  Index used for name consistency.
-   * @return Returns the transition cost (cost, elapsed time).
-   */
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const sif::EdgeLabel& pred,
-                                 const uint32_t idx) const override {
-    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
-    sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth) {
-      c += toll_booth_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-
-    // Additional penalties without any time cost
-    if (edge->destonly() && !pred.destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && edge->use() != Use::kEgressConnection &&
-        edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
-    // shortest ignores any penalties in favor of path length
-    c.cost *= !shortest_;
-    return c;
-  }
 
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
@@ -471,42 +432,43 @@ public:
    * country crossing, boarding a ferry, toll booth, gates, entering destination
    * only, alleys, and maneuver penalties. Each costing method can provide different
    * costs for these transitions (via costing options).
+   *
+   * The template allows us to treat edgelabels and directed edges the same. The unidirectinal
+   * path algorithms dont have access to the directededge from the label but they have the same
+   * function names. At the moment we could change edgelabel to keep the edge pointer because
+   * we dont clear tiles while the algorithm is running but for embedded use-cases we might one day
+   * do that so its best to keep support for labels and edges here
+   *
    * @param node Node at the intersection where the edge transition occurs.
    * @param edge Directed edge entering.
    * @param pred Predecessor edge.
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
+  template <typename predecessor_t>
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
-                                 const baldr::DirectedEdge* pred,
-                                 const uint32_t idx) const override {
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth) {
-      c += toll_booth_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
+    c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
+    c += toll_booth_cost_ * (node->type() == baldr::NodeType::kTollBooth);
+    c += ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
+    c += rail_ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    if (edge->destonly() && !pred->destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && edge->use() != Use::kEgressConnection &&
-        edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
+    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost +=
+        alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
+    c.cost +=
+        maneuver_penalty_ * (!edge->link() && edge->use() != Use::kEgressConnection &&
+                             edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx));
+
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
@@ -579,7 +541,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             int& restriction_idx) const {
+                             uint8_t& restriction_idx) const {
   if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
@@ -608,7 +570,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
-                                    int& restriction_idx) const {
+                                    uint8_t& restriction_idx) const {
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
@@ -655,6 +617,10 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
     factor *= driveway_factor_;
+  } else if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
@@ -677,7 +643,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -863,6 +829,16 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(
         kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
+
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -888,6 +864,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
     pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
   }
 }
 
