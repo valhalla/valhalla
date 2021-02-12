@@ -341,7 +341,7 @@ void parse_ring(ring_pbf_t& ring,
       throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
     }
 
-    auto* ll = ring->add_coords()->mutable_ll();
+    auto* ll = ring->add_coords();
     ll->set_lng(lon);
     ll->set_lat(lat);
   }

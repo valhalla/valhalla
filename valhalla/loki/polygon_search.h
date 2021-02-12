@@ -51,7 +51,7 @@ edges_in_rings(const std::vector<ring_bg_t>& rings,
  * @param ring_pbf The Options::Polygon ring
  *
  */
-ring_bg_t PBFToRing(const Options::Polygon& ring_pbf);
+ring_bg_t PBFToRing(const Options::Ring& ring_pbf);
 
 /**
  * Computes the length of a ring's circumference.

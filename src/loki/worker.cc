@@ -130,7 +130,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
-            // TODO: check if still necessary here since shortcuts are in bins now!
             // Check if a shortcut exists
             GraphId shortcut = reader->GetShortcut(edge.id);
             if (shortcut.Is_Valid()) {

@@ -96,10 +96,10 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
   return avoid_edge_ids;
 }
 
-ring_bg_t PBFToRing(const Options::Polygon& ring_pbf) {
+ring_bg_t PBFToRing(const Options::Ring& ring_pbf) {
   ring_bg_t new_ring;
   for (const auto& coord : ring_pbf.coords()) {
-    new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
+    new_ring.push_back({coord.lng(), coord.lat()});
   }
   // corrects geometry and handedness as expected by bg for rings
   bg::correct(new_ring);

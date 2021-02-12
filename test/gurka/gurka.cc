@@ -117,32 +117,7 @@ std::string build_valhalla_request(const std::string& location_type,
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
-    // avoid polygons needs to be turned into an array
-    if (kv.second.find("[") != std::string::npos) {
-      rapidjson::Document d;
-      d.Parse(kv.second);
-
-      // Workaround start
-      rapidjson::Value a(rapidjson::kArrayType);
-      for (const auto& poly : d.GetArray()) {
-        rapidjson::Value a1(rapidjson::kArrayType);
-        for (const auto& coords : poly.GetArray()) {
-          rapidjson::Value a2(rapidjson::kArrayType);
-          for (const auto& v : coords.GetArray()) {
-            a2.PushBack(v.GetDouble(), allocator);
-          }
-          a1.PushBack(a2, allocator);
-        }
-        a.PushBack(a1, allocator);
-      }
-      // Workaround end
-      // setting d directly somehow messes up the very first coordinate's X... bug in rapidjson? can't
-      // reproduce in isolated test..
-      // rapidjson::SetValueByPointer(doc, "/avoid_polygons", d.GetArray());
-      rapidjson::Pointer(kv.first).Set(doc, a);
-    } else {
-      rapidjson::Pointer(kv.first).Set(doc, kv.second);
-    }
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
   // TODO: allow selecting this
