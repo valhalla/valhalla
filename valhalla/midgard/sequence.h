@@ -509,6 +509,96 @@ protected:
   mem_map<T> memmap;
 };
 
+const auto in_mode = std::ios::binary;
+const auto out_mode = std::ios::binary;
+
+template <typename T> class BufferedReader {
+public:
+  BufferedReader() {
+  }
+
+  explicit BufferedReader(std::string filename, std::ios::openmode mode = in_mode)
+      : is_(std::move(filename), mode) {
+    auto end = is_.tellg();
+    element_count_ = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
+    if (end != static_cast<decltype(end)>(element_count_ * sizeof(T))) {
+      throw std::runtime_error("sequence: " + filename + " has an incorrect size for type");
+    }
+  }
+
+  void open(std::string filename, std::ios::openmode mode) {
+    is_.open(std::move(filename), mode);
+  }
+
+  void close() {
+    is_.close();
+  }
+
+  size_t size() const {
+    return element_count_;
+  }
+
+  T Read() {
+    if (ptr_ + sizeof(T) > end_) {
+      std::copy(ptr_, end_, buf_);
+      int tail = end_ - ptr_;
+      is_.read(buf_ + tail, ptr_ - buf_);
+      ptr_ = buf_;
+    }
+    T value = *reinterpret_cast<T*>(ptr_);
+    ptr_ += sizeof(T);
+    return value;
+  }
+
+private:
+  static const size_t kInitialSize = 1000;
+  char buf_[kInitialSize];
+  char* end_ = buf_ + kInitialSize;
+  char* ptr_ = end_;
+  std::ifstream is_;
+  size_t element_count_;
+};
+
+class BufferedWriter {
+public:
+  BufferedWriter() {
+  }
+
+  explicit BufferedWriter(std::string filename, std::ios::openmode mode = out_mode)
+      : os_(std::move(filename), mode) {
+  }
+
+  void open(std::string filename, std::ios::openmode mode) {
+    os_.open(std::move(filename), mode);
+  }
+
+  void close() {
+    if (ptr_ != buf_) {
+      os_.write(buf_, ptr_ - buf_);
+    }
+  }
+
+  template <class T> void Write(T t) {
+    if (ptr_ + sizeof(T) > end_) {
+      os_.write(buf_, ptr_ - buf_);
+      ptr_ = buf_;
+    }
+    *reinterpret_cast<T*>(ptr_) = t;
+    ptr_ += sizeof(T);
+  }
+
+  ~BufferedWriter() {
+    close();
+  }
+
+private:
+  static const size_t kInitialSize = 1000;
+  char buf_[kInitialSize];
+  char* end_ = buf_ + kInitialSize;
+  char* ptr_ = buf_;
+  std::ofstream os_;
+};
+
 template <typename T>
 std::queue<std::string> Split(sequence<T>& seq,
                               std::function<bool(T const&, T const&)> const& predicate,
@@ -526,9 +616,9 @@ std::queue<std::string> Split(sequence<T>& seq,
     }
     std::sort(part.begin(), part.end(), predicate);
 
-    sequence<T> seq_part(filename, true);
+    BufferedWriter seq_part(filename, true);
     for (const auto& j : part) {
-      seq_part.push_back(j);
+      seq_part.Write(j);
     }
   }
   return filenames;
@@ -545,33 +635,33 @@ void Merge(std::queue<std::string>&& parts,
   };
 
   while (true) {
-    std::vector<std::unique_ptr<sequence<T>>> fins;
+    std::vector<std::unique_ptr<BufferedReader<T>>> fins;
     std::vector<int64_t> indexes;
     using elem = std::pair<T, int>;
     std::priority_queue<elem, std::vector<elem>, decltype(pred2)> pq(pred2);
 
     auto part_count = std::min(static_cast<int>(parts.size()), 1000);
     fins.reserve(part_count);
-    indexes.assign(part_count, 0);
+    indexes.assign(part_count, 1);
 
     for (size_t i = 0; i < part_count; ++i) {
-      fins.emplace_back(std::make_unique<sequence<T>>(parts.front()));
+      fins.emplace_back(std::make_unique<BufferedReader<T>>(parts.front()));
       parts.pop();
 
-      pq.emplace(fins.back()->at(0), i);
+      pq.emplace(fins.back()->Read(), i);
     }
 
     auto output_name =
         (parts.size() == 0 ? output_file : std::string("_") + std::to_string(file_count++));
-    sequence<T> output(output_name, true);
+    BufferedWriter output(output_name, true);
     while (!pq.empty()) {
       auto top = pq.top();
       pq.pop();
       int file_index = top.second;
 
-      output.push_back(top.first);
+      output.Write<T>(top.first);
       if (indexes[file_index] != fins[file_index]->size()) {
-        pq.emplace(fins[file_index]->at(indexes[file_index]), file_index);
+        pq.emplace(fins[file_index]->Read(), file_index);
         ++indexes[file_index];
       }
     }
