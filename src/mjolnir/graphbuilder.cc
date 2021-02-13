@@ -40,10 +40,7 @@ namespace {
  * we also need to then update the edges that pointed to them
  *
  */
-std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
-                                    const std::string& edges_file,
-                                    sequence<std::pair<uint32_t, uint32_t>>& starts,
-                                    sequence<std::pair<uint32_t, uint32_t>>& ends) {
+std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
@@ -54,10 +51,19 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
     }
     return a.graph_id < b.graph_id;
   });
+
   // run through the sorted nodes, going back to the edges they reference and updating each edge
   // to point to the first (out of the duplicates) nodes index. at the end of this there will be
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
+
+  auto start_node_edge_file = filesystem::path(edges_file);
+  start_node_edge_file.replace_filename(start_node_edge_file.filename().string() + ".starts.tmp");
+  auto end_node_edge_file = filesystem::path(edges_file);
+  end_node_edge_file.replace_filename(end_node_edge_file.filename().string() + ".ends.tmp");
+  using edge_ends_t = sequence<std::pair<uint32_t, uint32_t>>;
+  std::unique_ptr<edge_ends_t> starts(new edge_ends_t(start_node_edge_file.string(), true));
+  std::unique_ptr<edge_ends_t> ends(new edge_ends_t(end_node_edge_file.string(), true));
 
   uint32_t run_index = 0;
   uint32_t node_index = 0;
@@ -85,12 +91,12 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
         // if this node marks the start of an edge, keep track of the edge and the node
         // so we can later tell the edge where the first node in the series is
         if (node.is_start()) {
-          starts.push_back(std::make_pair(node.start_of, run_index));
+          starts->push_back(std::make_pair(node.start_of, run_index));
         }
         // if this node marks the end of an edge, keep track of the edge and the node
         // so we can later tell the edge where the final node in the series is
         if (node.is_end()) {
-          ends.push_back(std::make_pair(node.end_of, run_index));
+          ends->push_back(std::make_pair(node.end_of, run_index));
         }
 
         // next node
@@ -104,15 +110,15 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
   auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
     return a.first < b.first;
   };
-  starts.sort(cmp);
-  ends.sort(cmp);
+  starts->sort(cmp);
+  ends->sort(cmp);
 
   sequence<Edge> edges(edges_file, false);
 
   LOG_INFO("Sorting starts and ends done. Populating edges...");
 
-  auto s_it = starts.begin(), e_it = ends.begin();
-  while (s_it != starts.end() && e_it != ends.end()) {
+  auto s_it = starts->begin(), e_it = ends->begin();
+  while (s_it != starts->end() && e_it != ends->end()) {
     if ((*s_it).first == (*e_it).first) {
       auto element = edges[(*s_it).first];
       auto edge = *element;
@@ -136,20 +142,26 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
     }
   }
 
-  while (s_it != starts.end()) {
+  while (s_it != starts->end()) {
     auto element = edges[(*s_it).first];
     auto edge = *element;
     edge.sourcenode_ = (*s_it).second;
     element = edge;
     ++s_it;
   }
-  while (e_it != ends.end()) {
+  while (e_it != ends->end()) {
     auto element = edges[(*e_it).first];
     auto edge = *element;
     edge.targetnode_ = (*e_it).second;
     element = edge;
     ++e_it;
   }
+
+  // clean up tmp files
+  starts.reset();
+  ends.reset();
+  filesystem::remove(start_node_edge_file);
+  filesystem::remove(end_node_edge_file);
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -1122,9 +1134,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
-                                                   const std::string& edges_file,
-                                                   const std::string& start_node_edge_tmp_file,
-                                                   const std::string& end_node_edge_tmp_file) {
+                                                   const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
@@ -1132,15 +1142,8 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                    return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-  std::map<GraphId, size_t> rv;
-  {
-    sequence<std::pair<uint32_t, uint32_t>> starts(start_node_edge_tmp_file, true);
-    sequence<std::pair<uint32_t, uint32_t>> ends(end_node_edge_tmp_file, true);
-    rv = SortGraph(nodes_file, edges_file, starts, ends);
-  }
-  filesystem::remove(start_node_edge_tmp_file);
-  filesystem::remove(end_node_edge_tmp_file);
-  return rv;
+
+  return SortGraph(nodes_file, edges_file);
 }
 
 // Build the graph from the input
