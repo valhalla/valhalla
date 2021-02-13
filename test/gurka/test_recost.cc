@@ -32,7 +32,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return std::vector<int16_t>{};
+    return boost::none;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -218,7 +218,8 @@ TEST(recosting, all_algorithms) {
         // get the api response out using the normal means
         auto start = named_locations.substr(i, 1);
         auto end = named_locations.substr(j, 1);
-        auto api = gurka::route(map, start, end, "auto", option, reader);
+        auto api =
+            gurka::do_action(valhalla::Options::route, map, {start, end}, "auto", option, reader);
         auto leg = api.trip().routes(0).legs(0);
 
         // setup a callback for the recosting to get each edge
@@ -315,7 +316,7 @@ TEST(recosting, throwing) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // cross the graph as a pedestrian
-  auto api = gurka::route(map, "A", "F", "pedestrian", {}, reader);
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "pedestrian", {}, reader);
 
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
@@ -351,7 +352,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // go in the reverse direction
-  api = gurka::route(map, "F", "A", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"F", "A"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // this path isnt possible with a car because the first node is a gate
@@ -360,7 +361,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // travel only on pedestrian edges
-  api = gurka::route(map, "B", "D", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // it wont be able to evaluate any edges because they are all pedestrian only
@@ -370,7 +371,7 @@ TEST(recosting, throwing) {
 }
 
 TEST(recosting, error_request) {
-  auto config = gurka::detail::build_config("foo_bar", {});
+  auto config = test::make_config("foo_bar", {});
   auto reader = std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(config, *reader, true);
 

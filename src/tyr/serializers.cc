@@ -31,9 +31,6 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-midgard::PointLL to_ll(const LatLng& ll) {
-  return midgard::PointLL{ll.lng(), ll.lat()};
-}
 using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
 
 FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {

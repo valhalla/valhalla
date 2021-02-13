@@ -260,8 +260,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  int restriction_idx = -1;
-
+  uint8_t restriction_idx = -1;
   if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
                          restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
@@ -482,7 +481,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  int restriction_idx = -1;
+  uint8_t restriction_idx = -1;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
                                 time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
@@ -604,6 +603,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       if (forward_pred_idx != kInvalidLabel) {
         fwd_pred = edgelabels_forward_[forward_pred_idx];
 
+        // Forward path to this edge can't be improved, so we can settle it right now.
+        edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
+
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
@@ -633,6 +635,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       reverse_pred_idx = adjacencylist_reverse_.pop();
       if (reverse_pred_idx != kInvalidLabel) {
         rev_pred = edgelabels_reverse_[reverse_pred_idx];
+
+        // Reverse path to this edge can't be improved, so we can settle it right now.
+        edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
@@ -666,9 +671,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       expand_forward = true;
       expand_reverse = false;
 
-      // Settle this edge.
-      edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
-
       // setting this edge as settled
       if (expansion_callback_) {
         expansion_callback_(graphreader, "bidirectional_astar", fwd_pred.edgeid(), "s", false);
@@ -688,9 +690,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
       expand_reverse = true;
-
-      // Settle this edge
-      edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled, sending the opposing because this is the reverse tree
       if (expansion_callback_) {
@@ -759,7 +758,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = (pred.sortcost() + cost_diff_) + kThresholdDelta;
+    threshold_ = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost()) + kThresholdDelta;
   }
 
   // setting this edge as connected
@@ -812,7 +811,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = rev_pred.sortcost() + kThresholdDelta;
+    threshold_ = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_) + kThresholdDelta;
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
@@ -1193,6 +1192,15 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       // We can actually stop here if this edge is no longer path of any complex restriction
       break;
     }
+
+    // Check for double u-turn. It might happen in the following case:
+    // forward and reverse searches traverse edges that belong to the same complex
+    // restriction. Then forward/reverse search reaches last edge and due to the
+    // restriction can't go futher and make a u-turn. After that forward and reverse
+    // searches meet at some edge and compose double u-turn.
+    if (std::find(patch_path.begin(), patch_path.end(), next_rev_pred.opp_edgeid()) !=
+        patch_path.end())
+      return true;
 
     // Since we are on the reverse expansion here, we want the opp_edgeid
     // since we're tracking everything in the forward direction

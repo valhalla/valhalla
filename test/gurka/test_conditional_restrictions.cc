@@ -30,37 +30,45 @@ protected:
 
     const std::string timeDenied =
         "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string timeAllowed =
+    const std::string yesAllowed =
         "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string privateAllowed =
+        "private @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string deliveryAllowed =
+        "delivery @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string designatedAllowed =
+        "designated @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string destinationAllowed =
+        "destination @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
     const gurka::ways ways = {
         {"AD",
          {{"highway", "service"},
           {"motorcar", "no"},
           {"bicycle", "yes"},
           {"foot", "yes"},
-          {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"bicycle:conditional", yesAllowed},
+          {"foot:conditional", privateAllowed}}},
         {"AB",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", deliveryAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
-        {"BC", {{"highway", "service"}, {"motorcar:conditional", timeAllowed}}},
+          {"foot:conditional", designatedAllowed}}},
+        {"BC", {{"highway", "service"}, {"motorcar:conditional", destinationAllowed}}},
         {"CD",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", yesAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", privateAllowed}}},
         {"DE",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", deliveryAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", designatedAllowed}}},
         {"CE",
          {{"highway", "service"},
-          {"motorcar:conditional", timeAllowed},
+          {"motorcar:conditional", destinationAllowed},
           {"bicycle:conditional", timeDenied},
-          {"foot:conditional", timeAllowed}}},
+          {"foot:conditional", yesAllowed}}},
 
     };
 
@@ -75,14 +83,15 @@ gurka::map ConditionalRestrictions::map = {};
 /*************************************************************/
 
 TEST_F(ConditionalRestrictions, NoRestrictionAutoNoDate) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionAuto) {
-  auto result = gurka::route(map, "A", "E", "auto",
-                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-15T06:00"}});
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
+                       {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-15T06:00"}});
   gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
@@ -93,8 +102,8 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
       {
         try {
           auto result =
-              gurka::route(map, "A", "E", "auto",
-                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
+              gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
+                               {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -105,14 +114,15 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBikeNoDate) {
-  auto result = gurka::route(map, "A", "E", "bicycle");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle");
   gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBike) {
-  auto result = gurka::route(map, "A", "E", "bicycle",
-                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle",
+                       {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
   gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
@@ -123,8 +133,8 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
       {
         try {
           auto result =
-              gurka::route(map, "A", "E", "bicycle",
-                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
+              gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "bicycle",
+                               {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -135,14 +145,15 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrianNoDate) {
-  auto result = gurka::route(map, "A", "E", "pedestrian");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian");
   gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrian) {
-  auto result = gurka::route(map, "A", "E", "pedestrian",
-                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian",
+                       {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
   gurka::assert::osrm::expect_steps(result, {"AD", "DE"});
   gurka::assert::raw::expect_path(result, {"AD", "DE"});
 }
@@ -153,8 +164,8 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
       {
         try {
           auto result =
-              gurka::route(map, "A", "E", "pedestrian",
-                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
+              gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian",
+                               {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());

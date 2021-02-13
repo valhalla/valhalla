@@ -41,7 +41,7 @@ gurka::map InstructionsPencilPointUturn::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsPencilPointUturn, UturnLeft) {
-  auto result = gurka::route(map, "C", "A", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "A"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

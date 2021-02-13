@@ -58,7 +58,7 @@ gurka::map InstructionsCollapseMergeToward::map = {};
 // Merge left toward
 // "5" : "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsCollapseMergeToward, MergeLeftToward) {
-  auto result = gurka::route(map, "F", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

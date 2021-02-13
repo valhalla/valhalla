@@ -95,6 +95,9 @@ TEST(Compression, fail_inflate) {
     s.next_in = static_cast<Byte*>(static_cast<void*>(&bad[0]));
     s.avail_in = static_cast<unsigned int>(bad.size() * sizeof(std::string::value_type));
   };
+  auto inflate_src_fail3 = [](z_stream& s) -> void {
+    /* Nothing to do, simulates 'cannot inflate' - reproducible if no disk space. */
+  };
   auto inflate_dst_fail = [](z_stream& s) -> int {
     throw std::runtime_error("im the gingerbread man");
     return Z_NO_FLUSH;
@@ -124,6 +127,13 @@ TEST(Compression, fail_inflate) {
       valhalla::baldr::inflate(std::bind(inflate_src, std::placeholders::_1, std::ref(deflated)),
                                inflate_dst_fail))
       << "dst should fail";
+
+  bool inflate_result;
+  EXPECT_NO_THROW(
+      inflate_result =
+          valhalla::baldr::inflate(inflate_src_fail3, std::bind(inflate_dst, std::placeholders::_1,
+                                                                std::ref(inflated))));
+  EXPECT_FALSE(inflate_result);
 }
 
 } // namespace

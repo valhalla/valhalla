@@ -26,7 +26,7 @@ TEST(Standalone, Maxspeed) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxwidth");
-  auto result = gurka::route(map, "A", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
@@ -42,42 +42,42 @@ TEST(Standalone, Maxspeed) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
 
-  result = gurka::route(map, request);
+  result = gurka::do_action(valhalla::Options::route, map, request);
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 
-  result = gurka::route(map, "A", "I", "bus");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "bus");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 
-  result = gurka::route(map, "A", "I", "taxi");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "taxi");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 
-  result = gurka::route(map, "A", "I", "hov");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "hov");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
 
-  result = gurka::route(map, "A", "I", "bicycle");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "bicycle");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BI"});
 
-  result = gurka::route(map, "A", "I", "pedestrian");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "pedestrian");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BI"});
 
-  result = gurka::route(map, "A", "I", "motorcycle");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "motorcycle");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BI"});
 
-  result = gurka::route(map, "A", "I", "motor_scooter");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "motor_scooter");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BI"});

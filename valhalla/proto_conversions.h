@@ -1,5 +1,6 @@
 #pragma once
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/incidents.pb.h>
 #include <valhalla/sif/costconstants.h>
@@ -235,4 +236,14 @@ const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet 
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
+
+inline midgard::PointLL to_ll(const LatLng& ll) {
+  return midgard::PointLL{ll.lng(), ll.lat()};
+}
+
+inline void from_ll(valhalla::Location* l, const midgard::PointLL& p) {
+  l->mutable_ll()->set_lat(p.lat());
+  l->mutable_ll()->set_lng(p.lng());
+}
+
 } // namespace valhalla

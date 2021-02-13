@@ -69,37 +69,39 @@ gurka::map SimpleRestrictions::map = {};
 
 /*************************************************************/
 TEST_F(SimpleRestrictions, ForceDetour) {
-  auto result = gurka::route(map, "C", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"BC", "ADG", "DEF"});
   gurka::assert::raw::expect_path(result, {"BC", "AB", "ADG", "DEF", "DEF"});
 }
 TEST_F(SimpleRestrictions, NoDetourWhenReversed) {
-  auto result = gurka::route(map, "F", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "C"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"DEF", "BE", "BC"});
   gurka::assert::raw::expect_path(result, {"DEF", "BE", "BC"});
 }
 TEST_F(SimpleRestrictions, NoDetourFromDifferentStart) {
-  auto result = gurka::route(map, "1", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "F"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"AB", "BE", "DEF"});
   gurka::assert::raw::expect_path(result, {"AB", "BE", "DEF"});
 }
 TEST_F(SimpleRestrictions, ForceDetourComplex) {
   // this test fails if you remove the time dependence because
   // bidirectional a* has a problem with complex restrictions
-  auto result = gurka::route(map, R"({"locations":[{"lon":0.008084,"lat":-0.003593},
+  auto result = gurka::do_action(valhalla::Options::route, map,
+                                 R"({"locations":[{"lon":0.008084,"lat":-0.003593},
     {"lon":0.00359,"lat":0.0}],"costing":"auto","date_time":{"type":0}})");
   gurka::assert::raw::expect_path(result, {"GHI", "ADG", "DEF", "BE", "AB"});
 }
 TEST_F(SimpleRestrictions, IgnoreRestriction) {
-  auto result =
-      gurka::route(map, "C", "F", "auto", {{"/costing_options/auto/ignore_restrictions", "1"}});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "auto",
+                                 {{"/costing_options/auto/ignore_restrictions", "1"}});
   gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
   gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
 }
 
 TEST_F(SimpleRestrictions, IgnoreRestrictionMatching) {
-  auto result = gurka::match(map, {"C", "B", "E", "F"}, "break", "auto",
-                             {{"/costing_options/auto/ignore_restrictions", "1"}});
+  auto result =
+      gurka::do_action(valhalla::Options::trace_route, map, {"C", "B", "E", "F"}, "auto",
+                       {{"/costing_options/auto/ignore_restrictions", "1"}}, {}, nullptr, "break");
   gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"}, true, "matchings");
   gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
 }

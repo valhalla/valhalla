@@ -34,8 +34,8 @@ TEST(Standalone, BirectionalDeadend) {
   // Go into the first edge of the deadend with break_through
   {
     auto result =
-        gurka::route(map, {"A", "1", "E"}, "auto",
-                     {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
+        gurka::do_action(valhalla::Options::route, map, {"A", "1", "E"}, "auto",
+                         {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
 
     // Ensure bidirectional a* was used
     ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
@@ -57,8 +57,8 @@ TEST(Standalone, BirectionalDeadend) {
   // Go into the last edge of the deadend with break_through
   {
     auto result =
-        gurka::route(map, {"A", "2", "E"}, "auto",
-                     {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
+        gurka::do_action(valhalla::Options::route, map, {"A", "2", "E"}, "auto",
+                         {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
 
     // Ensure bidirectional a* was used
     ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
@@ -79,7 +79,7 @@ TEST(Standalone, BirectionalDeadend) {
 
   // // Come out of the deadend from 1
   {
-    auto result = gurka::route(map, "1", "A", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "A"}, "auto");
 
     // Ensure bidirectional a* was used
     ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
@@ -95,7 +95,7 @@ TEST(Standalone, BirectionalDeadend) {
 
   // Come out of the deadend from 2
   {
-    auto result = gurka::route(map, "2", "E", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"2", "E"}, "auto");
 
     // Ensure bidirectional a* was used
     ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
@@ -112,8 +112,8 @@ TEST(Standalone, BirectionalDeadend) {
   // U-turn at a barrier on E
   {
     auto result =
-        gurka::route(map, {"H", "D", "H"}, "auto",
-                     {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
+        gurka::do_action(valhalla::Options::route, map, {"H", "D", "H"}, "auto",
+                         {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
 
     // Ensure bidirectional a* was used
     ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");

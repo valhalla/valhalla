@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
-#define VALHALLA_MJOLNIR_SEQUENCE_H_
+#pragma once
 
 #include <algorithm>
 #include <cerrno>
@@ -140,9 +139,12 @@ public:
   }
 
   // construct with file
-  mem_map(const std::string& file_name, size_t size, int advice = POSIX_MADV_NORMAL)
+  mem_map(const std::string& file_name,
+          size_t size,
+          int advice = POSIX_MADV_NORMAL,
+          bool readonly = false)
       : ptr(nullptr), count(0), file_name("") {
-    map(file_name, size, advice);
+    map(file_name, size, advice, readonly);
   }
 
   // unmap when done
@@ -166,7 +168,10 @@ public:
   }
 
   // reset to another file or another size
-  void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+  void map(const std::string& new_file_name,
+           size_t new_count,
+           int advice = POSIX_MADV_NORMAL,
+           bool readonly = false) {
     // just in case there was already something
     unmap();
 
@@ -174,14 +179,15 @@ public:
     if (new_count > 0) {
       auto fd =
 #if defined(_WIN32)
-          _open(new_file_name.c_str(), O_RDWR, 0);
+          _open(new_file_name.c_str(), (readonly ? O_RDONLY : O_RDWR), 0);
 #else
-          open(new_file_name.c_str(), O_RDWR, 0);
+          open(new_file_name.c_str(), (readonly ? O_RDONLY : O_RDWR), 0);
 #endif
       if (fd == -1) {
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
       }
-      ptr = mmap(nullptr, new_count * sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE),
+                 MAP_SHARED, fd, 0);
       if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
@@ -198,6 +204,12 @@ public:
       count = new_count;
       file_name = new_file_name;
     }
+  }
+
+  // reset to another file or another size with readonly permissions
+  void
+  map_readonly(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+    map(new_file_name, new_count, advice, true /* readonly */);
   }
 
   // drop the map
@@ -251,6 +263,8 @@ template <class T> class sequence {
 public:
   // static_assert(std::is_pod<T>::value, "sequence requires POD types for now");
   static const size_t npos = -1;
+
+  using value_type = T;
 
   sequence() = delete;
 
@@ -311,7 +325,11 @@ public:
     return npos;
   }
 
-  // sort the file based on the predicate
+  // sort the file based on the predicate, and outputs to output_seq
+  //
+  // Strategy is to first sort sub-ranges of length buffer_size in place.
+  // These should all fit in memory. Then, merge the sub-ranges into the
+  // output sequence via priority queue.
   void sort(const std::function<bool(const T&, const T&)>& predicate,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T));
 
@@ -361,6 +379,12 @@ public:
     friend class sequence;
 
   public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     // static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
     iterator() = delete;
     iterator& operator=(const iterator& other) {
@@ -771,7 +795,7 @@ struct tar {
     }
 
     // map the file
-    mm.map(tar_file, s.st_size);
+    mm.map_readonly(tar_file, s.st_size);
 
     // determine opposite of preferred path separator (needed to update OS-specific path separator)
     const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
@@ -814,5 +838,3 @@ struct tar {
 
 } // namespace midgard
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_SEQUENCE_H_
