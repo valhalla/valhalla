@@ -104,7 +104,10 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
         ++node_index;
       });
 
-  LOG_INFO("Nodes processed. Now adding data to edges.");
+  // every edge should have a begin and end node
+  assert(starts->size() == ends->size());
+
+  LOG_INFO("Nodes processed. Sorting begin and end nodes by edge.");
 
   // Sort by edge. This enables a sequential update of edges
   auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
@@ -115,45 +118,18 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
 
   sequence<Edge> edges(edges_file, false);
 
-  LOG_INFO("Sorting starts and ends done. Populating edges...");
+  LOG_INFO("Sorting begin and end nodes done. Populating edges...");
 
   auto s_it = starts->begin(), e_it = ends->begin();
   while (s_it != starts->end() && e_it != ends->end()) {
-    if ((*s_it).first == (*e_it).first) {
-      auto element = edges[(*s_it).first];
-      auto edge = *element;
-      edge.sourcenode_ = (*s_it).second;
-      edge.targetnode_ = (*e_it).second;
-      element = edge;
-      ++s_it;
-      ++e_it;
-    } else if ((*s_it).first < (*e_it).first) {
-      auto element = edges[(*s_it).first];
-      auto edge = *element;
-      edge.sourcenode_ = (*s_it).second;
-      element = edge;
-      ++s_it;
-    } else {
-      auto element = edges[(*e_it).first];
-      auto edge = *element;
-      edge.targetnode_ = (*e_it).second;
-      element = edge;
-      ++e_it;
-    }
-  }
-
-  while (s_it != starts->end()) {
+    // there should be exactly one edge per begin and end node sequence and we sorted them the same
+    assert((*s_it).first == (*e_it).first);
     auto element = edges[(*s_it).first];
     auto edge = *element;
     edge.sourcenode_ = (*s_it).second;
-    element = edge;
-    ++s_it;
-  }
-  while (e_it != ends->end()) {
-    auto element = edges[(*e_it).first];
-    auto edge = *element;
     edge.targetnode_ = (*e_it).second;
     element = edge;
+    ++s_it;
     ++e_it;
   }
 
