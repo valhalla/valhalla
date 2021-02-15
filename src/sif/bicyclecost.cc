@@ -750,9 +750,9 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
 
   // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
-  }
+  //  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
+  //    penalty += service_penalty_;
+  //  }
 
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
@@ -835,9 +835,9 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
-  }
+  //  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
+  //    penalty += service_penalty_;
+  //  }
 
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
