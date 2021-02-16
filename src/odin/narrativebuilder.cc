@@ -79,7 +79,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctDestinationTransitionInstruction(maneuver));
+            FormVerbalSuccinctDestinationTransitionInstruction());
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -158,7 +158,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctRampStraightTransitionInstruction(maneuver));
+            FormVerbalSuccinctRampStraightTransitionInstruction());
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -345,7 +345,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctExitRoundaboutTransitionInstruction(maneuver));
+            FormVerbalSuccinctExitRoundaboutTransitionInstruction());
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalExitRoundaboutInstruction(maneuver));
@@ -361,7 +361,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
+            FormVerbalSuccinctEnterFerryTransitionInstruction());
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -3909,7 +3909,7 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction() {
   // "0": "You have arrived at your destination."
 
   std::string instruction;
@@ -4015,8 +4015,7 @@ std::string NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneu
   return instruction;
 }
 
-std::string
-NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction() {
   // "0": "Stay straight to take the ramp."
 
   std::string instruction;
@@ -4210,8 +4209,7 @@ NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuve
   return instruction;
 }
 
-std::string
-NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction() {
   // "0": "Exit the roundabout."
 
   std::string instruction;
@@ -4229,7 +4227,7 @@ NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction() {
   // "0": "Take the Ferry."
 
   std::string instruction;

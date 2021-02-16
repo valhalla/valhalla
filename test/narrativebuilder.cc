@@ -161,6 +161,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_portions_highway(portions_highway);
   maneuver.set_internal_intersection(internal_intersection);
   maneuver.set_drive_on_right(drive_on_right);
+  maneuver.set_long_street_name(has_long_street_name);
 
   // exit_numbers
   auto* exit_number_list = maneuver.mutable_signs()->mutable_exit_number_list();

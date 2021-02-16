@@ -363,7 +363,7 @@ protected:
   /////////////////////////////////////////////////////////////////////////////
   std::string FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctDestinationTransitionInstruction();
 
   std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
 
@@ -371,7 +371,7 @@ protected:
 
   std::string FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctRampStraightTransitionInstruction();
 
   std::string FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver);
 
@@ -385,9 +385,9 @@ protected:
 
   std::string FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction();
 
-  std::string FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctEnterFerryTransitionInstruction();
 
   /////////////////////////////////////////////////////////////////////////////
   /**
