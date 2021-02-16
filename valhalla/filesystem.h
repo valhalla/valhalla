@@ -421,6 +421,10 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
 }
 
+inline bool rename(const path& p, const path& q) {
+  return ::rename(p.c_str(), q.c_str()) == 0;
+}
+
 inline bool remove(const path& p) {
   bool ret = ::remove(p.c_str()) == 0;
 
