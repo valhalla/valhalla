@@ -924,9 +924,6 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
       if (get_word_count(street_name) > kMaxWordCount ||
           street_name.length() > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
-        std::cout << "******************STREET NAME :: " << street_name << std::endl;
-        std::cout << "******************WORD COUNT :: " << get_word_count(street_name) << std::endl;
-        std::cout << "******************STREET NAME LENGTH :: " << street_name.length() << std::endl;
       }
     }
   }
