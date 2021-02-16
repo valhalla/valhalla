@@ -104,14 +104,14 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 constexpr float kHighwayFactor[] = {
-    10.0f, // Motorway
-    0.5f,  // Trunk
-    0.0f,  // Primary
-    0.0f,  // Secondary
-    0.0f,  // Tertiary
-    0.0f,  // Unclassified
-    0.0f,  // Residential
-    0.0f   // Service, other
+    1.0f, // Motorway
+    0.5f, // Trunk
+    0.0f, // Primary
+    0.0f, // Secondary
+    0.0f, // Tertiary
+    0.0f, // Unclassified
+    0.0f, // Residential
+    0.0f  // Service, other
 };
 
 constexpr float kSurfaceFactor[] = {
