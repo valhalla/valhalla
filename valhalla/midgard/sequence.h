@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
-#define VALHALLA_MJOLNIR_SEQUENCE_H_
+#pragma once
 
 #include <algorithm>
 #include <cerrno>
@@ -14,6 +13,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -264,6 +264,8 @@ public:
   // static_assert(std::is_pod<T>::value, "sequence requires POD types for now");
   static const size_t npos = -1;
 
+  using value_type = T;
+
   sequence() = delete;
 
   sequence(const sequence&) = delete;
@@ -323,7 +325,11 @@ public:
     return npos;
   }
 
-  // sort the file based on the predicate
+  // sort the file based on the predicate, and outputs to output_seq
+  //
+  // Strategy is to first sort sub-ranges of length buffer_size in place.
+  // These should all fit in memory. Then, merge the sub-ranges into the
+  // output sequence via priority queue.
   void sort(const std::function<bool(const T&, const T&)>& predicate,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
     flush();
@@ -331,7 +337,58 @@ public:
     if (memmap.size() == 0) {
       return;
     }
-    std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
+
+    // If there wont be any merging we may as well take the simple approach
+    if (buffer_size > memmap.size() + write_buffer.size()) {
+      std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
+      return;
+    }
+
+    auto tmp_path = filesystem::path(file_name).replace_filename(
+        filesystem::path(file_name).filename().string() + ".tmp");
+    {
+      // we need a temporary sequence to merge the sorted subsections into
+      sequence<T> output_seq(tmp_path.string(), true);
+
+      // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
+      // Pq keeps track of element and its index.
+      auto cmp = [&predicate](const std::pair<T, int>& a, std::pair<T, int>& b) {
+        return predicate(b.first, a.first);
+      };
+      std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
+
+      // Sort the subsections
+      for (size_t i = 0; i < memmap.size(); i += buffer_size) {
+        std::sort(static_cast<T*>(memmap) + i,
+                  static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
+        pq.emplace(*at(i), i);
+      }
+
+      // Perform the merge
+      while (!pq.empty()) {
+        auto tmp = pq.top();
+        pq.pop();
+        output_seq.push_back(tmp.first);
+        auto new_idx = tmp.second + 1;
+        if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
+          pq.emplace(*at(new_idx), new_idx);
+        }
+      }
+      output_seq.flush();
+    }
+
+    // Forget about this file for a second so we can swap in the temp file
+    file.reset();
+    memmap.unmap();
+
+    // Move the sorted result back into place
+    filesystem::remove(file_name);
+    filesystem::rename(tmp_path, file_name);
+
+    // Reload the sequence
+    sequence<T> reloaded(file_name, false);
+    std::swap(file, reloaded.file);
+    std::swap(memmap, reloaded.memmap);
     return;
   }
 
@@ -381,6 +438,12 @@ public:
     friend class sequence;
 
   public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     // static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
     iterator() = delete;
     iterator& operator=(const iterator& other) {
@@ -650,5 +713,3 @@ struct tar {
 
 } // namespace midgard
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_SEQUENCE_H_
