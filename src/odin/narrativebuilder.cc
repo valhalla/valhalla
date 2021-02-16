@@ -94,10 +94,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           // Set instruction
           maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
 
-          // Set verbal succinct transition instruction
-          maneuver.set_verbal_succinct_transition_instruction(
-              FormVerbalSuccinctBecomesTransitionInstruction(maneuver, prev_maneuver));
-
           // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(
               FormVerbalBecomesInstruction(maneuver, prev_maneuver));
@@ -242,8 +238,8 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
 
           // Set verbal succinct transition instruction
-          // maneuver.set_verbal_succinct_transition_instruction(
-          // FormVerbalSuccinctKeepToStayOnTransitionInstruction(maneuver));
+          maneuver.set_verbal_succinct_transition_instruction(
+              FormVerbalSuccinctKeepTransitionInstruction(maneuver));
 
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(
@@ -3803,7 +3799,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(Maneuver& mane
 
   // Assign the street names if maneuver does not contain an obvious maneuver
   std::string street_names;
-  if (!maneuver.contains_obvious_maneuver()) {
+  if (!maneuver.contains_obvious_maneuver() && !maneuver.has_long_street_name()) {
     // Use the maneuver roundabout_exit_street_names
     // if the maneuver has a combined enter/exit roundabout instruction
     // otherwise use the maneuver street names
@@ -3936,67 +3932,9 @@ std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctPostTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Continue for <LENGTH>.",
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.post_transition_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kLengthTag,
-                     FormLength(maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
-                                dictionary_.post_transition_verbal_subset.us_customary_lengths));
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string
-NarrativeBuilder::FormVerbalSuccinctBecomesTransitionInstruction(Maneuver& maneuver,
-                                                                 Maneuver* prev_maneuver,
-                                                                 uint32_t element_max_count,
-                                                                 const std::string& delim) {
-  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-
-  // Assign the street names and the previous maneuver street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(), nullptr, false, element_max_count, delim,
-                      prev_maneuver->verbal_formatter());
-  std::string prev_street_names =
-      FormStreetNames(*prev_maneuver, prev_maneuver->street_names(), nullptr, false,
-                      element_max_count, delim, prev_maneuver->verbal_formatter());
-
-  // Determine which phrase to use
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.becomes_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
-  boost::replace_all(instruction, kStreetNamesTag, street_names);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
 std::string NarrativeBuilder::FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Continue."
+  // "0": "Continue.",
+  // "1": "Continue for <LENGTH>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -4137,18 +4075,29 @@ std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuv
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver,
+                                                                          const std::string& delim) {
   // "0": "Take the exit on the <RELATIVE_DIRECTION>."
+  // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
   // "15": "Take the exit.",
+  // "16": "Take exit <NUMBER_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string exit_number_sign;
 
   // Determine if driving side matches relative direction
   if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
       ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
     phrase_id = 15;
+  }
+
+  if (maneuver.HasExitNumberSign()) {
+    phrase_id += 1;
+    // Assign number sign
+    exit_number_sign =
+        maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
   }
 
   // Set instruction to the determined tagged phrase
@@ -4158,6 +4107,7 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuv
   boost::replace_all(instruction, kRelativeDirectionTag,
                      FormRelativeTwoDirection(maneuver.type(),
                                               dictionary_.exit_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4192,31 +4142,6 @@ std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuv
                      FormRelativeThreeDirection(maneuver.type(),
                                                 dictionary_.keep_verbal_subset.relative_directions));
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string
-NarrativeBuilder::FormVerbalSuccinctKeepToStayOnTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.keep_to_stay_on_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-                     FormRelativeThreeDirection(maneuver.type(),
-                                                dictionary_.keep_to_stay_on_verbal_subset
-                                                    .relative_directions));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4261,13 +4186,26 @@ std::string NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneu
 std::string
 NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver) {
   // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string ordinal_value;
+  if ((maneuver.roundabout_exit_count() >= kRoundaboutExitCountLowerBound) &&
+      (maneuver.roundabout_exit_count() <= kRoundaboutExitCountUpperBound)) {
+    // Increment for ordinal phrase
+    phrase_id += 1;
+    // Set ordinal_value
+    ordinal_value = dictionary_.enter_roundabout_verbal_subset.ordinal_values.at(
+        maneuver.roundabout_exit_count() - 1);
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

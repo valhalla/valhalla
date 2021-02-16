@@ -426,7 +426,8 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Enter the roundabout and take the 2nd exit.", "Enter the roundabout.",
+                    "Enter the roundabout and take the 2nd exit.",
+                    "Enter the roundabout and take the 2nd exit.",
                     "Enter the roundabout and take the 2nd exit.",
                     "Enter the roundabout and take the 2nd exit.", "");
 
@@ -474,7 +475,7 @@ TEST(Instructions, validate_turn_at_instructions) {
   // Turn left at
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn left at 銀座七丁目.", "Make a left U-turn.", "Turn left at 銀座七丁目.",
+                    "Turn left at 銀座七丁目.", "Turn left.", "Turn left at 銀座七丁目.",
                     "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
                     "Continue for 20 meters.");
 }
@@ -516,7 +517,7 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn right to take the US 322 East ramp.", "Turn right.",
+                    "Turn right to take the US 322 East ramp.", "Turn right to take the ramp.",
                     "Turn right to take the U.S. 3 22 East ramp.",
                     "Turn right to take the U.S. 3 22 East ramp.", "Continue for 1 mile.");
 
