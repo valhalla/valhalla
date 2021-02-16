@@ -122,7 +122,9 @@ protected:
   EdgeStatus edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
-  float threshold_;
+  float cost_threshold_;
+  uint32_t iterations_threshold_;
+  uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
 
   /**
