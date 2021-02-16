@@ -1917,11 +1917,11 @@ std::string NarrativeBuilder::FormExitInstruction(Maneuver& maneuver,
   // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-  // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward
-  // <TOWARD_SIGN>.", "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.", "10": "Take the
-  // <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.", "12": "Take the <NAME_SIGN>
-  // exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.", "14": "Take the <NAME_SIGN> exit on the
-  // <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+  // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+  // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+  // "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
   // "15": "Take the exit.",
   // "16": "Take exit <NUMBER_SIGN>.",
   // "17": "Take the <BRANCH_SIGN> exit.",
