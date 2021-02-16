@@ -929,6 +929,13 @@ void Dijkstras::SetDestinationLocations(
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
+      // TODO: When running expansion in reverse, handle the case where the
+      // destination lies on a closure but the expansion started from an open
+      // edge. Currently, we begin with closure prunning turned on and hence
+      // don't expand into closures. This results in pessimistic reach. What
+      // we want is for the expansion to continue when it encounters the first
+      // closure and stop when it exits the closure (which can span multiple
+      // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  restriction_idx, multipath_ ? path_id : 0);

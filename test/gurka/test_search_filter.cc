@@ -816,7 +816,6 @@ INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          ExcludeClosuresOnWaypoints,
                          ::testing::ValuesIn(buildParams()));
 
-// TODO: Enable once https://github.com/valhalla/valhalla/issues/2732 is addressed
 class ClosuresWithRestrictions : public ::testing::TestWithParam<costing_and_datetype> {
 protected:
   static gurka::map closure_map;
