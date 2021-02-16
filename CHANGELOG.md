@@ -15,6 +15,7 @@
    * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
    * FIXED: Increase limits for timedep_* algorithms. Split track_factor into edge factor and transition penalty [#2845](https://github.com/valhalla/valhalla/pull/2845)
    * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
+   * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
