@@ -751,6 +751,7 @@ protected:
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float living_street_penalty_;    // Penalty (seconds) to use a living street
   float track_penalty_;            // Penalty (seconds) to use tracks
+  float service_penalty_;          // Penalty (seconds) to use service roads
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -836,6 +837,8 @@ protected:
     // Get living street factor from costing options.
     set_use_living_streets(costing_options.use_living_streets());
 
+    service_penalty_ = costing_options.service_penalty();
+
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
@@ -887,6 +890,10 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
     // shortest ignores any penalties in favor of path length
+
+    c.cost += service_penalty_ *
+                  (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
+
     c.cost *= !shortest_;
     return c;
   }

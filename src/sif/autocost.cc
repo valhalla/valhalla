@@ -43,11 +43,12 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
 constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a rail ferry 0-1
-constexpr float kDefaultUseHighways = 1.0f;  // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseHighways = 0.3f;  // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseDistance = 0.1f;   // Default preference of using distance vs time 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -102,16 +103,50 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
 
 constexpr float kHighwayFactor[] = {
-    10.0f, // Motorway
-    0.5f,  // Trunk
-    0.0f,  // Primary
-    0.0f,  // Secondary
-    0.0f,  // Tertiary
-    0.0f,  // Unclassified
+
+   1.0f,  // Motorway
+   0.9f,  // Trunk
+   0.8f,  // Primary
+   0.5f,  // Secondary
+   0.4f,  // Tertiary
+   0.3f,  // Unclassified
+   0.2f,  // Residential
+   0.1f   // Service, other
+
+
+    /*
+     *
+     *  best so far
+     *   1.0f,  // Motorway
+   0.9f,  // Trunk
+   0.8f,  // Primary
+   0.5f,  // Secondary
+   0.4f,  // Tertiary
+   0.3f,  // Unclassified
+   0.2f,  // Residential
+   0.1f   // Service, other
+     *
+     *     1.0f,  // Motorway
+    0.9f,  // Trunk
+    0.8f,  // Primary
+    0.5f,  // Secondary
+    0.4f,  // Tertiary
+    0.3f,  // Unclassified
+    0.2f,  // Residential
+    0.1f   // Service, other
+
+
+    1.0f,  // Motorway
+    0.9f,  // Trunk
+    0.5f,  // Primary
+    0.2f,  // Secondary
+    0.15f, // Tertiary
+    0.05f, // Unclassified
     0.0f,  // Residential
-    0.0f   // Service, other
+    0.0f   // Service, other*/
 };
 
 constexpr float kSurfaceFactor[] = {
@@ -455,6 +490,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
             edge->toll() * toll_factor_;
 
+  float service_factor_ = 2; // 1.5; //2   // Avoid service roads factor.
+
   switch (edge->use()) {
     case Use::kAlley:
       factor *= alley_factor_;
@@ -464,6 +501,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
     case Use::kLivingStreet:
       factor *= living_street_factor_;
+      break;
+    case Use::kServiceRoad:
+      factor *= service_factor_;
       break;
     default:
       break;
@@ -689,6 +729,11 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    pbf_costing_options->set_service_penalty(
+            kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                     .get_value_or(kDefaultServicePenalty)));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -713,6 +758,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
   }
 }
 
