@@ -363,15 +363,7 @@ protected:
   /////////////////////////////////////////////////////////////////////////////
   std::string FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver);
-
-  std::string FormVerbalSuccinctPostTransitionInstruction(Maneuver& maneuver);
-
-  std::string FormVerbalSuccinctBecomesTransitionInstruction(
-      Maneuver& maneuver,
-      Maneuver* prev_maneuver,
-      uint32_t element_max_count = kVerbalPreElementMaxCount,
-      const std::string& delim = kVerbalDelim);
+  std::string FormVerbalSuccinctDestinationTransitionInstruction();
 
   std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
 
@@ -379,24 +371,23 @@ protected:
 
   std::string FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctRampStraightTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctRampStraightTransitionInstruction();
 
   std::string FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver,
+                                                          const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
                                                           const std::string& delim = kVerbalDelim);
-
-  std::string FormVerbalSuccinctKeepToStayOnTransitionInstruction(Maneuver& maneuver);
 
   std::string FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver);
 
   std::string FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction();
 
-  std::string FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctEnterFerryTransitionInstruction();
 
   /////////////////////////////////////////////////////////////////////////////
   /**

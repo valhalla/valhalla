@@ -135,7 +135,7 @@ Maneuver::Maneuver()
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false) {
+      pedestrian_crossing_(false), has_long_street_name_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
