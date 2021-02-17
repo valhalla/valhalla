@@ -313,6 +313,8 @@ public:
   float surface_factor_;      // How much the surface factors are applied.
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
+  float service_penalty_;     // Penalty (seconds) to use a generic service road
+  float service_factor_;      // 1.5; //2   // Avoid service roads factor.
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -355,6 +357,9 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   // Preference for distance vs time
   distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
   inv_distance_factor_ = 1.f - costing_options.use_distance();
+
+  service_penalty_ = costing_options.service_penalty();
+  service_factor_ = 2;
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -457,7 +462,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
             edge->toll() * toll_factor_;
 
-  float service_factor_ = 2; // 1.5; //2   // Avoid service roads factor.
   switch (edge->use()) {
     case Use::kAlley:
       factor *= alley_factor_;
@@ -489,6 +493,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
+  c.cost += service_penalty_ *
+            (edge->use() == baldr::Use::kServiceRoad && pred.use() != baldr::Use::kServiceRoad);
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
@@ -538,6 +544,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.cost += service_penalty_ *
+            (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -946,6 +954,8 @@ public:
       factor *= track_factor_;
     } else if (edge->use() == Use::kLivingStreet) {
       factor *= living_street_factor_;
+    } else if (edge->use() == Use::kServiceRoad) {
+      factor *= service_factor_;
     }
 
     return Cost(sec * factor, sec);
@@ -1110,6 +1120,8 @@ public:
       factor *= track_factor_;
     } else if (edge->use() == Use::kLivingStreet) {
       factor *= living_street_factor_;
+    } else if (edge->use() == Use::kServiceRoad) {
+      factor *= service_factor_;
     }
 
     return Cost(sec * factor, sec);
@@ -1322,6 +1334,14 @@ TEST(AutoCost, testAutoCostParams) {
        kUseFerryRange.min, kUseFerryRange.max));
    }
  **/
+
+  // service_penalty_
+  distributor = make_distributor_from_range(kServicePenaltyRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("service_penalty", distributor(generator));
+    EXPECT_THAT(tester->alley_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
 
   // flow_mask_
   using tc = std::tuple<std::string, std::string, uint8_t>;
