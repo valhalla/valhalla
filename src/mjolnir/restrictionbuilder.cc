@@ -278,8 +278,6 @@ void HandleOnlyRestrictionProperties(const std::vector<Result>& results,
   }
 }
 
-} // namespace
-
 void build(const std::string& complex_restriction_from_file,
            const std::string& complex_restriction_to_file,
            const boost::property_tree::ptree& hierarchy_properties,
