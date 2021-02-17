@@ -39,11 +39,12 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
-constexpr float kDefaultUseTracks = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f;      // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;        // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.5f;        // Factor between 0 and 1
+constexpr float kDefaultUseLivingStreets = 0.1f; // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
@@ -84,6 +85,7 @@ constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -434,6 +436,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor *= living_street_factor_;
   }
 
   return {sec * factor, sec};
@@ -611,6 +615,11 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(
         kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
                             .get_value_or(kDefaultUseTracks)));
+
+    // use_living_street
+    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
+            .get_value_or(kDefaultUseLivingStreets)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -628,6 +637,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
+    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }

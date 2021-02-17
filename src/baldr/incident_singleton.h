@@ -265,7 +265,7 @@ protected:
           valhalla::baldr::GraphId tile_id(((uint64_t(1) << 25) - 1) & entry);
           seen.insert(tile_id);
           // spare last 39 bits are the timestamp, leaves us with something like 17k years
-          uint64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
+          int64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
           // check the timestamp part of the tile id to see if its newer
           if (last_scan <= timestamp) {
             // concoct a file name from the tile_id

@@ -703,6 +703,12 @@ protected:
    */
   virtual void set_use_tracks(float use_tracks);
 
+  /**
+   * Calculate `living_street` costs based on living streets preference.
+   * @param use_living_streets value of living streets preference in range [0; 1]
+   */
+  virtual void set_use_living_streets(float use_living_streets);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -728,7 +734,8 @@ protected:
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
-  float track_factor_; // Avoid tracks factor.
+  float track_factor_;         // Avoid tracks factor.
+  float living_street_factor_; // Avoid living streets factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -742,6 +749,8 @@ protected:
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
+  float living_street_penalty_;    // Penalty (seconds) to use a living street
+  float track_penalty_;            // Penalty (seconds) to use tracks
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -824,6 +833,9 @@ protected:
     // Calculate cost factor for track roads
     set_use_tracks(costing_options.use_tracks());
 
+    // Get living street factor from costing options.
+    set_use_living_streets(costing_options.use_living_streets());
+
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
@@ -870,7 +882,10 @@ protected:
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
-
+    c.cost += living_street_penalty_ *
+              (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
+    c.cost +=
+        track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
