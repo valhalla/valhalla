@@ -795,6 +795,49 @@ void expect_steps(valhalla::Api& raw_result,
   EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
 }
 /**
+ * Tests if the result, which may be comprised of multiple routes,
+ * have summaries that match the expected_summaries.
+ *
+ * Note: For simplicity's sake, this logic looks at the first leg of each route.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_summaries the route/leg summaries expected
+ */
+void expect_summaries(valhalla::Api& raw_result, const std::vector<std::string>& expected_summaries) {
+
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
+  if (result.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
+
+  const std::string& route_name = "routes";
+
+  EXPECT_TRUE(result.HasMember(route_name));
+  EXPECT_TRUE(result[route_name].IsArray());
+  EXPECT_EQ(result[route_name].Size(), expected_summaries.size());
+
+  size_t i = 0;
+  for (auto route_iter = result[route_name].Begin(); route_iter != result[route_name].End();
+       ++route_iter, ++i) {
+
+    EXPECT_TRUE(route_iter->HasMember("legs"));
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.IsArray());
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.Size() > 0);
+
+    // here's where we only grab the first leg
+    auto leg_iter = route_iter->FindMember("legs")->value.Begin();
+
+    EXPECT_TRUE(leg_iter->IsObject());
+    EXPECT_TRUE(leg_iter->HasMember("summary"));
+    EXPECT_TRUE(leg_iter->FindMember("summary")->value.IsString());
+
+    std::string actual_summary = leg_iter->FindMember("summary")->value.GetString();
+
+    EXPECT_EQ(actual_summary, expected_summaries[i])
+        << "Actual summary didn't match expected summary";
+  }
+}
+/**
  * Tests if a found path traverses the expected roads in the expected order
  *
  * @param result the result of a /route or /match request

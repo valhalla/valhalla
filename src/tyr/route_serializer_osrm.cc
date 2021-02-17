@@ -1296,157 +1296,6 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return std::make_pair(names, refs);
 }
 
-// This is an initial implementation to be as good or better than the current OSRM response
-// In the future we shall use the percent of name distance as compared to the total distance
-// to determine how many named segments to display.
-// Also, might need to combine some similar named segments
-std::string
-summarize_leg(google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>::const_iterator leg) {
-  // Create a map of maneuver names to index,distance pairs
-
- std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
-  uint32_t maneuver_index = 0;
-  for (const auto& maneuver : leg->maneuver()) {
-    if (maneuver.street_name_size() > 0) {
-      const std::string& name = maneuver.street_name(0).value();
-      auto maneuver_summary = maneuver_summary_map.find(name);
-      if (maneuver_summary == maneuver_summary_map.end()) {
-        maneuver_summary_map[name] = std::make_pair(maneuver_index, maneuver.length());
-      } else {
-        maneuver_summary->second.second += maneuver.length();
-      }
-    }
-    // Increment maneuver index
-    ++maneuver_index;
-  }
-
-  // Create a list of named segments (maneuver name, index, distance items)
-  std::vector<NamedSegment> named_segments;
-  named_segments.reserve(maneuver_summary_map.size());
-  for (const auto& map_item : maneuver_summary_map) {
-    named_segments.emplace_back(
-        NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
-  }
-
-  // Sort list by descending maneuver distance
-  std::sort(named_segments.begin(), named_segments.end(),
-            [](const NamedSegment& a, const NamedSegment& b) { return b.distance < a.distance; });
-
-  // Reduce the list size to the summary list max
-  named_segments.resize(std::min(named_segments.size(), MAX_USED_SEGMENTS));
-
-  // Sort final list by ascending maneuver index
-  std::sort(named_segments.begin(), named_segments.end(),
-            [](const NamedSegment& a, const NamedSegment& b) { return a.index < b.index; });
-
-  // Create single summary string from list
-  std::stringstream ss;
-  for (size_t i = 0; i < named_segments.size(); ++i) {
-    if (i != 0)
-      ss << ", ";
-    ss << named_segments[i].name;
-  }
-
-  return ss.str();
-}
-
-void generate_unique_leg_summaries(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& _legs,
-                                   std::vector<std::string> & leg_summaries ) {
-  // Round up the named-segments for every leg in two separate lists:
-  // 1) sorted by distance -> per_leg_named_segments_by_dist
-  // 2) sorted by maneuver index -> per_leg_named_segments_by_maneuver_index
-  // Note: the entries in per_leg_named_segments_by_maneuver_index are just pointers
-  // to the elements of per_leg_named_segments_by_dist.
-  std::vector<std::vector<NamedSegment>> per_leg_named_segments_by_dist;
-  std::vector<std::vector<NamedSegment*>> per_leg_named_segments_by_maneuver_index;
-  for (const valhalla::DirectionsLeg& leg : _legs) {
-    std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
-    uint32_t maneuver_index = 0;
-    for (const auto& maneuver : leg.maneuver()) {
-      if (maneuver.street_name_size() > 0) {
-        const std::string& name = maneuver.street_name(0).value();
-        auto maneuver_summary = maneuver_summary_map.find(name);
-        if (maneuver_summary == maneuver_summary_map.end()) {
-          maneuver_summary_map[name] = std::make_pair(maneuver_index, maneuver.length());
-        } else {
-          maneuver_summary->second.second += maneuver.length();
-        }
-      }
-      // Increment maneuver index
-      ++maneuver_index;
-    }
-
-    // Create a list of named segments (maneuver name, index, distance items) sorted
-    // by distance
-    std::vector<NamedSegment> named_segments_by_dist;
-    named_segments_by_dist.reserve(maneuver_summary_map.size());
-    for (const auto& map_item : maneuver_summary_map) {
-      named_segments_by_dist.emplace_back(
-          NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
-    }
-
-    // Sort list by descending maneuver distance
-    std::sort(named_segments_by_dist.begin(), named_segments_by_dist.end(),
-              [](const NamedSegment& a, const NamedSegment& b) { return b.distance < a.distance; });
-
-    per_leg_named_segments_by_dist.emplace_back(named_segments_by_dist);
-
-    // Create a list of named segments sorted by maneuver index (note these
-    // are just pointers to the by-dist vector elements).
-    std::vector<NamedSegment*> named_segments_by_maneuver_index;
-    named_segments_by_maneuver_index.reserve(named_segments_by_dist.size());
-    for (auto& named_segment : named_segments_by_dist)
-      named_segments_by_maneuver_index.push_back(&named_segment);
-
-    // sort by maneuver index
-    std::sort(named_segments_by_maneuver_index.begin(), named_segments_by_maneuver_index.end(),
-              [](const NamedSegment* a, const NamedSegment* b) { return a->index < b->index; });
-
-    per_leg_named_segments_by_maneuver_index.emplace_back(named_segments_by_maneuver_index);
-  }
-
-  for (size_t i = 0; i < _legs.size(); i++) {
-    std::vector<NamedSegment>& named_segments_i = per_leg_named_segments_by_dist[i];
-
-    // compare the ith vector of named segments vs every jth vector of named segments.
-    // count how many elements in the named segment vector are needed to uniquely
-    // identify the ith leg.
-    size_t num_named_segs_needed = 1;
-    for (size_t j = 0; j < _legs.size(); j++) {
-      if (i == j)
-        continue;
-
-      std::vector<NamedSegment>& named_segments_j = per_leg_named_segments_by_dist[j];
-
-      size_t k = 0;
-      size_t num_comparable = std::min(named_segments_i.size(), named_segments_j.size());
-      for (k = 0; k <num_comparable; k++){
-        if (named_segments_i[k].name != named_segments_j[k].name) {
-          break;
-        }
-      }
-      k++;
-
-      if (k > num_named_segs_needed)
-        num_named_segs_needed = k;
-    }
-
-    // Create summary string from list
-    std::vector<NamedSegment*>& named_segments_by_maneuver_index_i = per_leg_named_segments_by_maneuver_index[i];
-    std::stringstream ss;
-    for (size_t j = 0; j < num_named_segs_needed; ++j) {
-      if (j != 0)
-        ss << ", ";
-      ss << named_segments_by_maneuver_index_i[j]->name;
-    }
-
-    leg_summaries.emplace_back(ss.str());
-  }
-
-  for ( const auto &leg_summary : leg_summaries)
-    std::cout << leg_summary << "\n";
-}
-
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                               const std::vector<std::string>& leg_summaries,
@@ -1703,6 +1552,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   return output_legs;
 }
 
+//=============================================================================
 // Cache the summaries by route/leg/#-of-named-segs. Has a couple benefits:
 // 1) lets the business logic be business-y (ask for the same thing repeatedly
 //    without performance concerns)
@@ -1732,13 +1582,14 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 // Since there are four named-segments there can be up to four summaries.
 // It just depends on how many named-segments you wish to comprise the
 // summary. Here are the summaries that would be stored in the cache:
-//------------------------------------------------------
-// number of segments in summary minus 1       summary
-//------------------------------------------------------
-// 1 (index 0)                                  R2
-// 2 (index 1)                                  R2, R3
-// 3 (index 2)                                  R0, R2, R3
-// 4 (index 3)                                  R0, R1, R2, R3
+//--------------------------------------------------
+// number of segments in summary      summary
+//--------------------------------------------------
+// 1 (index 0)                        R2
+// 2 (index 1)                        R2, R3
+// 3 (index 2)                        R0, R2, R3
+// 4 (index 3)                        R0, R1, R2, R3
+//=============================================================================
 class route_summary_cache {
   // vector 1: routes
   // vector 2: legs for the route
@@ -1750,8 +1601,13 @@ class route_summary_cache {
   // vector 3: summary for the desired # of named segments (offset by -1)
   std::vector<std::vector<std::vector<std::string>>> cache;
 
+  int hits = 0;
+  int misses = 0;
+
 public:
   route_summary_cache(const google::protobuf::RepeatedPtrField<DirectionsRoute>& routes) {
+    // A route/leg/maneuver may go on/off the same named road many times.
+    // Combine the distances for same named roads - store in a NamedSegment.
     route_leg_segs_by_dist.reserve(routes.size());
     for (size_t i = 0; i < routes.size(); i++) {
       const DirectionsRoute& route = routes.at(i);
@@ -1772,7 +1628,6 @@ public:
               maneuver_summary->second.second += maneuver.length();
             }
           }
-          // Increment maneuver index
           ++maneuver_index;
         }
 
@@ -1807,10 +1662,13 @@ public:
         cache[i].emplace_back(std::vector<std::string>{});
         cache[i][j].reserve(route_leg_segs_by_dist[i][j].size());
         for (size_t k = 0; k < route_leg_segs_by_dist[i][j].size(); k++) {
-          cache[i][j].emplace_back("");
+          cache[i][j].emplace_back(std::string{});
         }
       }
     }
+  }
+
+  ~route_summary_cache() {
   }
 
   size_t num_named_segments_for_route_leg(size_t route_idx, size_t leg_idx) {
@@ -1826,10 +1684,9 @@ public:
   }
 
   // Return the n-part named-segment summary for the given route/leg.
-  // The summary returned is guaranteed to be:
-  // 1) comprised of at least two named-segments
-  // 2) comprised of as few named segments as possible, while also
-  //    being unique among all route/leg summaries
+  // The summary returned is guaranteed to be comprised of as few named
+  // segments as possible, while also being unique among all route/same-leg
+  // summaries.
   std::string get_n_segment_summary(size_t route_idx, size_t leg_idx, size_t num_named_segs) {
     if (route_idx >= cache.size()) {
       return "";
@@ -1839,11 +1696,15 @@ public:
       return "";
     }
 
+    if (num_named_segs == 0) {
+      return "";
+    }
+
     // num_named_segs is the number of named segments you'd like the summary to
-    // be comprised of. The smallest number requestable value is 1 - so we store
-    // all summaries offset by n = num_named_segs - 1.
+    // be comprised of. The smallest requestable value is 1 - so we store all
+    // summaries offset by n = num_named_segs - 1.
     size_t n = num_named_segs - 1;
-    if (n > cache[route_idx][leg_idx].size()) {
+    if (n >= cache[route_idx][leg_idx].size()) {
       return "";
     }
 
@@ -1863,20 +1724,23 @@ public:
       std::string summary;
       for (size_t i = 0; i < num_named_segs; i++) {
         summary += segs_by_maneuver_index[i]->name;
-        if (i != num_named_segs-1)
+        if (i != num_named_segs - 1)
           summary += ", ";
       }
 
+      misses++;
+
       cache[route_idx][leg_idx][n] = summary;
+    } else {
+      hits++;
     }
 
     return cache[route_idx][leg_idx][n];
   }
 };
 
-
-std::vector<std::vector<std::string>> summarize_route_legs(
-    const google::protobuf::RepeatedPtrField<DirectionsRoute>& routes) {
+std::vector<std::vector<std::string>>
+summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& routes) {
 
   route_summary_cache rscache(routes);
 
@@ -1884,59 +1748,67 @@ std::vector<std::vector<std::string>> summarize_route_legs(
   // vector 2: legs
   // string: unique summary for the route/leg
   std::vector<std::vector<std::string>> all_summaries;
+  all_summaries.reserve(routes.size());
 
-  // Each (i,j) pair is a route/leg. Generate its summary, making it from as
-  // many named-segments as needed to make it unique from the summaries of
-  // all other route/leg (m,n) pairs. Note that the minimum summary will be
-  // comprised of two named segments.
-  for (size_t i = 0; i < routes.size(); i++) {
+  // Find the simplest summary for every leg of every route. Important note:
+  // each route should have the same number of legs. Hence, we only need to make
+  // unique the same leg (leg_idx) between all routes.
+  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
 
+    size_t num_legs_i = routes.at(route_i).legs_size();
     std::vector<std::string> leg_summaries;
-    for (size_t j = 0; j < routes.at(i).legs_size(); j++) {
+    leg_summaries.reserve(num_legs_i);
 
-      size_t num_named_segs_needed = 2;
-      for ( size_t m = 0; m < routes.size(); m++) {
+    for (size_t leg_idx = 0; leg_idx < num_legs_i; leg_idx++) {
 
-        for (size_t n = 0; n < routes.at(m).legs_size(); n++) {
+      // we desire each summary to be comprised of at least two named segments.
+      // however, if only one is available that's all we can use.
+      size_t num_named_segments_i = rscache.num_named_segments_for_route_leg(route_i, leg_idx);
+      size_t num_named_segs_needed = std::min(MAX_USED_SEGMENTS, num_named_segments_i);
 
-          // avoid self
-          if ((i == m) && (j == n))
-            continue;
+      // Compare every jth route/leg summary vs the current ith route/leg summary.
+      // We desire to compute num_named_segs_needed, which is the number of named
+      // segments needed to uniquely identify the ith's summary.
+      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
 
-          size_t num_comparable = std::min(rscache.num_named_segments_for_route_leg(i,j),
-                                           rscache.num_named_segments_for_route_leg(m,n));
+        // avoid self
+        if (route_i == route_j)
+          continue;
 
-          // k is the number of named segments you'd like in the summary. It keeps
-          // going up by 1 until the (i,j) summary is different than the (m,n) summary.
-          size_t k = 1;
-          bool same = true;
-          for (; (k < num_comparable) && same; k++) {
-            const std::string& name_ij = rscache.get_n_segment_summary(i, j, k);
-            const std::string& name_mn = rscache.get_n_segment_summary(m, n, k);
-            const char * nij = name_ij.c_str();
-            const char * nmn = name_mn.c_str();
-            same = (name_ij == name_mn);
-            if (!same)
-              break;
-          }
+        size_t num_legs_j = routes.at(route_j).legs_size();
 
-          if (k > num_named_segs_needed) {
-            num_named_segs_needed = k;
-          }
+        // there should be the same number of legs in every route. however, some
+        // unit tests break this rule, so we cannot enable this assert.
+        // assert(num_legs_i == num_legs_j);
+        if (leg_idx >= num_legs_j)
+          continue;
+
+        size_t num_named_segments_j = rscache.num_named_segments_for_route_leg(route_j, leg_idx);
+
+        size_t num_comparable = std::min(num_named_segments_i, num_named_segments_j);
+
+        // k is the number of named segments in the summary. It keeps going
+        // up by 1 until route_i's summary is different than the route_j's.
+        size_t k = 1;
+        for (; (k < num_comparable); k++) {
+          const std::string& summary_i = rscache.get_n_segment_summary(route_i, leg_idx, k);
+          const std::string& summary_j = rscache.get_n_segment_summary(route_j, leg_idx, k);
+          if (summary_i != summary_j)
+            break;
+        }
+
+        if (k > num_named_segs_needed) {
+          num_named_segs_needed = k;
         }
       }
 
-      std::string leg_summary = rscache.get_n_segment_summary(i, j, num_named_segs_needed);
+      std::string leg_summary =
+          rscache.get_n_segment_summary(route_i, leg_idx, num_named_segs_needed);
+
       leg_summaries.emplace_back(leg_summary);
     }
 
     all_summaries.emplace_back(leg_summaries);
-  }
-
-  for (size_t i = 0; i < all_summaries.size(); i++) {
-    for (size_t j = 0; j < all_summaries[i].size(); j++) {
-      printf( "%d, %d, %s\n", i, j, all_summaries[i][j].c_str());
-    }
   }
 
   return all_summaries;
@@ -1976,7 +1848,7 @@ std::string serialize(valhalla::Api& api) {
   bool imperial = options.units() == Options::miles;
 
   // 2D (by route, by leg) vector of every route and leg summarized. We cannot
-  // process a route/leg summary in isolation, since this can lead to the same
+  // generate a route/leg summary in isolation, since this can lead to the same
   // summary for different route/legs. We instead make each summary as simple
   // as possible while also make sure they are unique.
   std::vector<std::vector<std::string>> route_leg_summaries =
@@ -2002,8 +1874,7 @@ std::string serialize(valhalla::Api& api) {
     route_summary(route, api, imperial, i);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(api.directions().routes(i).legs(),
-                                          route_leg_summaries[i],
+    route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
                                           imperial, options));
 
