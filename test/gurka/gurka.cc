@@ -310,11 +310,7 @@ inline void build_pbf(const nodelayout& node_locations,
     auto way_id = osm_id++;
     auto found = way.second.find("osm_id");
     if (found != way.second.cend()) {
-      uint64_t id = std::stoull(found->second);
-      if (id < osm_id) {
-        throw std::invalid_argument("Osm way id has already been used");
-      }
-      way_id = id;
+      way_id = std::stoull(found->second);
     }
 
     way_osm_id_map[way.first] = way_id;
