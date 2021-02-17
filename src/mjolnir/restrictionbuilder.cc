@@ -32,6 +32,8 @@ struct EdgeId {
 
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
+                    uint32_t access,
+                    bool forward,
                     GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
                     std::vector<EdgeId>& edge_ids,
@@ -43,6 +45,8 @@ bool ExpandFromNode(GraphReader& reader,
 
 bool ExpandFromNodeInner(GraphReader& reader,
                          std::mutex& lock,
+                         uint32_t access,
+                         bool forward,
                          GraphId& last_node,
                          std::unordered_set<GraphId>& visited_nodes,
                          std::vector<EdgeId>& edge_ids,
@@ -58,7 +62,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
     GraphId edge_id(tile->id().tileid(), tile->id().level(), node_info->edge_index() + j);
     const DirectedEdge* de = tile->directededge(edge_id);
 
-    if (de->endnode() != prev_node &&
+    bool accessible = (forward ? de->forwardaccess() : de->reverseaccess()) & access;
+    if (accessible && de->endnode() != prev_node &&
         !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
           de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
       auto edge_info = tile->edgeinfo(de->edgeinfo_offset());
@@ -67,8 +72,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
         bool found;
         // expand with the next way_id
-        found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
-                               way_id_index + 1, tile, current_node, de->endnode());
+        found = ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                               way_ids, way_id_index + 1, tile, current_node, de->endnode());
         if (found)
           return true;
 
@@ -76,8 +81,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.insert(de->endnode());
 
           // expand with the same way_id
-          found = ExpandFromNode(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
-                                 way_id_index, tile, current_node, de->endnode());
+          found = ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                                 way_ids, way_id_index, tile, current_node, de->endnode());
           if (found)
             return true;
 
@@ -108,6 +113,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
 //    return false
 bool ExpandFromNode(GraphReader& reader,
                     std::mutex& lock,
+                    uint32_t access,
+                    bool forward,
                     GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
                     std::vector<EdgeId>& edge_ids,
@@ -133,8 +140,8 @@ bool ExpandFromNode(GraphReader& reader,
 
   bool found;
   // expand from the current node
-  found = ExpandFromNodeInner(reader, lock, last_node, visited_nodes, edge_ids, way_ids, way_id_index,
-                              tile, prev_node, current_node, node_info);
+  found = ExpandFromNodeInner(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                              way_ids, way_id_index, tile, prev_node, current_node, node_info);
   if (found)
     return true;
 
@@ -149,8 +156,8 @@ bool ExpandFromNode(GraphReader& reader,
       lock.unlock();
     }
 
-    found = ExpandFromNodeInner(reader, lock, last_node, visited_nodes, edge_ids, way_ids,
-                                way_id_index, trans_tile, prev_node, trans->endnode(),
+    found = ExpandFromNodeInner(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                                way_ids, way_id_index, trans_tile, prev_node, trans->endnode(),
                                 trans_tile->node(trans->endnode()));
     if (found)
       return true;
@@ -162,15 +169,17 @@ bool ExpandFromNode(GraphReader& reader,
 std::vector<GraphId> GetGraphIds(GraphId& start_node,
                                  GraphReader& reader,
                                  std::mutex& lock,
-                                 const std::vector<uint64_t>& way_ids) {
+                                 const std::vector<uint64_t>& way_ids,
+                                 uint32_t access,
+                                 bool forward) {
   lock.lock();
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   lock.unlock();
 
   std::unordered_set<GraphId> visited_nodes{start_node};
   std::vector<EdgeId> edge_ids;
-  ExpandFromNode(reader, lock, start_node, visited_nodes, edge_ids, way_ids, 0, tile, GraphId(),
-                 start_node);
+  ExpandFromNode(reader, lock, access, forward, start_node, visited_nodes, edge_ids, way_ids, 0, tile,
+                 GraphId(), start_node);
   if (edge_ids.empty())
     return {};
 
@@ -294,7 +303,8 @@ void build(const std::string& complex_restriction_from_file,
               }
 
               // walk in the forward direction.
-              std::vector<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+              std::vector<GraphId> tmp_ids =
+                  GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
@@ -319,7 +329,8 @@ void build(const std::string& complex_restriction_from_file,
                 }
 
                 res_way_ids.push_back(e_offset.wayid());
-                tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                tmp_ids =
+                    GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), false);
 
                 if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
 
@@ -436,7 +447,8 @@ void build(const std::string& complex_restriction_from_file,
                 res_way_ids.push_back(restriction_to.to());
 
                 // walk in the forward direction (reverse in relation to the restriction)
-                std::vector<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                std::vector<GraphId> tmp_ids =
+                    GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), false);
 
                 // now that we have the tile and currentNode walk in the reverse
                 // direction(forward in relation to the restriction) as this is really what
@@ -460,7 +472,8 @@ void build(const std::string& complex_restriction_from_file,
                     res_way_ids.push_back(restriction.to());
                   }
 
-                  tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                  tmp_ids =
+                      GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
                   if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
                     std::vector<GraphId> vias;
