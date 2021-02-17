@@ -71,9 +71,10 @@ TEST_F(InstructionsRoundabout, RoundaboutEnterOnly) {
   // TODO: known issue - future update to end on a roundabout
   //  Verify the enter_roundabout instructions
   //      gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-  //                                                                "Enter the roundabout.",
-  //                                                                "Enter the roundabout.",
-  //                                                                "Enter the roundabout.", "");
+  //                                                                "Enter the roundabout.", "Enter
+  //                                                                the roundabout.", "Enter the
+  //                                                                roundabout.", "Enter the
+  //                                                                roundabout.", "");
 }
 
 // enter_roundabout_verbal
@@ -91,11 +92,12 @@ TEST_F(InstructionsRoundabout, RoundaboutOrdinalOnly) {
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout.", "Exit the roundabout.", "",
       "Exit the roundabout. Then You will arrive at your destination.", "Continue for 200 meters.");
 }
 
@@ -112,13 +114,14 @@ TEST_F(InstructionsRoundabout, RoundaboutOntoStreetName) {
   // Verify the enter_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Enter the roundabout and take the 1st exit onto Homestead Lane.",
+      "Enter the roundabout and take the 1st exit.",
       "Enter the roundabout and take the 1st exit onto Homestead Lane.",
       "Enter the roundabout and take the 1st exit onto Homestead Lane.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.", "",
-      "Exit the roundabout onto Homestead Lane. Then You will arrive at your destination.",
+      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.", "Exit the roundabout.",
+      "", "Exit the roundabout onto Homestead Lane. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
 
@@ -137,14 +140,15 @@ TEST_F(InstructionsRoundabout, RoundaboutOntoBeginStreetName) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
       "Enter the roundabout and take the 2nd exit onto East Governor Road/A 1 East.",
+      "Enter the roundabout and take the 2nd exit.",
       "Enter the roundabout and take the 2nd exit onto East Governor Road.",
       "Enter the roundabout and take the 2nd exit onto East Governor Road, A 1 East.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index,
-      "Exit the roundabout onto East Governor Road/A 1 East. Continue on A 1 East.", "",
-      "Exit the roundabout onto East Governor Road, A 1 East.",
+      "Exit the roundabout onto East Governor Road/A 1 East. Continue on A 1 East.",
+      "Exit the roundabout.", "", "Exit the roundabout onto East Governor Road, A 1 East.",
       "Continue on A 1 East for 300 meters.");
 }
 
@@ -162,12 +166,14 @@ TEST_F(InstructionsRoundabout, RoundaboutToward) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
       "Enter the roundabout and take the 1st exit toward A 95/B 2/München/Kürten.",
+      "Enter the roundabout and take the 1st exit.",
       "Enter the roundabout and take the 1st exit toward A 95.",
       "Enter the roundabout and take the 1st exit toward A 95, München.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.", "",
+      result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.",
+      "Exit the roundabout.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -194,10 +200,12 @@ TEST_F(InstructionsRoundabout, RoundaboutExitSuppressed) {
                                             "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
                                             "Continue for 200 meters.");
 
   // Verify the exit_roundabout is suppressed
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
+                                                            "You have arrived at your destination.",
                                                             "You have arrived at your destination.",
                                                             "You will arrive at your destination.",
                                                             "You have arrived at your destination.",
@@ -267,12 +275,14 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.", "");
 
   maneuver_index = 4;
   // Verify the exit_roundabout is suppressed
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Your destination is on the right.",
+                                                            "You have arrived at your destination.",
                                                             "Your destination will be on the right.",
                                                             "Your destination is on the right.", "");
 }
