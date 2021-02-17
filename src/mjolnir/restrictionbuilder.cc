@@ -390,7 +390,7 @@ void build(const std::string& complex_restriction_from_file,
                 auto tmp_ids =
                     GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), false);
 
-                if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
+                if (tmp_ids.size() > 1 && tmp_ids.back().Tile_Base() == tile_id) {
                   std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                   if (vias.size() > kMaxViasPerRestriction) {
@@ -550,7 +550,8 @@ void build(const std::string& complex_restriction_from_file,
               // if via = restriction.to then don't add to the res_way_ids vector.  This
               // happens
               // when we have a restriction:<type> with a via as a node in the osm data.
-              if (restriction.vias().size() > 1 || restriction.vias().at(0) != restriction.to()) {
+              if (restriction.vias().size() > 1 ||
+                  (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())) {
                 for (const auto& v : temp_vias) {
                   res_way_ids.push_back(v);
                 }
@@ -570,7 +571,7 @@ void build(const std::string& complex_restriction_from_file,
                 tmp_ids =
                     GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
-                if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
+                if (tmp_ids.size() > 1 && tmp_ids.back().Tile_Base() == tile_id) {
                   auto addForwardRestriction = [&](const std::vector<GraphId>& tmp_ids) {
                     std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
