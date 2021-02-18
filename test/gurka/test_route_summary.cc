@@ -41,9 +41,6 @@ valhalla::gurka::map BuildData(const std::string& workdir) {
 
   const auto node_layout = gurka::detail::map_to_coordinates(ascii_map, 100, PointLL{5.108, 52.01});
 
-  auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, {}, {}, pbf_filename);
-
   std::unordered_map<std::string, std::string> config_map =
       {{"mjolnir.data_processing.use_direction_on_ways", "true"},
        {"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}};
