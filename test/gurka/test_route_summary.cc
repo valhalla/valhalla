@@ -92,15 +92,20 @@ TEST(TestRouteSummary, GetSummary) {
   gurka::assert::osrm::expect_steps(result2, {"RT 1", "RT 3", "RT 5"});
   gurka::assert::osrm::expect_summaries(result0, {"RT 1, RT 5"});
 
-  // You can see above that all three results above have the same summary:
-  // "RT 1, RT 5". Below we mash together the three above results into a single
-  // result. When we ask for the summary for the mashed up result below,
-  // the summarization logic will be forced generate unique summaries for
-  // each route/leg - in this case by adding the middle section of each route/leg.
+  // You can see above that all three results have the same summary: "RT 1, RT 5".
+  // Below we mash together the three above results into a single result. When we
+  // ask for the summary for the mashed up result below, the summarization logic
+  // will be forced generate unique summaries for each route/leg - in this case by
+  // adding the middle section of each route/leg.
 
+  // I'm not sure the best way to mash three results together... but for my needs,
+  // this seemed to suffice.
   valhalla::Api result;
+
+  // take any options
   *result.mutable_options() = result0.options();
 
+  // add in the three routes
   auto* route = result.mutable_trip()->mutable_routes()->Add();
   *route = result0.trip().routes(0);
   route = result.mutable_trip()->mutable_routes()->Add();
@@ -113,6 +118,7 @@ TEST(TestRouteSummary, GetSummary) {
   EXPECT_EQ(result.trip().routes(1).legs_size(), 1);
   EXPECT_EQ(result.trip().routes(2).legs_size(), 1);
 
+  // add in the three directions
   auto* directions = result.mutable_directions()->mutable_routes()->Add();
   *directions = result0.directions().routes(0);
   directions = result.mutable_directions()->mutable_routes()->Add();
@@ -120,8 +126,11 @@ TEST(TestRouteSummary, GetSummary) {
   directions = result.mutable_directions()->mutable_routes()->Add();
   *directions = result2.directions().routes(0);
 
-  gurka::assert::osrm::expect_summaries(result,
-                                        {"RT 1, RT 2, RT 5", "RT 1, RT 4, RT 5", "RT 1, RT 3, RT 5"});
+  const std::string expected_route_summary0 = "RT 1, RT 2, RT 5";
+  const std::string expected_route_summary1 = "RT 1, RT 4, RT 5";
+  const std::string expected_route_summary2 = "RT 1, RT 3, RT 5";
+  gurka::assert::osrm::expect_summaries(result, {expected_route_summary0, expected_route_summary1,
+                                                 expected_route_summary2});
 
   filesystem::remove_all(workdir);
 }
