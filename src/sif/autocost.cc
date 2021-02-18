@@ -43,10 +43,10 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
 constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a rail ferry 0-1
-constexpr float kDefaultUseHighways = 0.3f;  // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseHighways = 0.5f;  // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.1f;   // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
 constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 
@@ -105,6 +105,9 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
 
+// Maximum highway avoidance bias (modulates the highway factors based on road class)
+constexpr float kMaxHighwayBiasFactor = 8.0f;
+
 constexpr float kHighwayFactor[] = {
 
    1.0f,  // Motorway
@@ -112,41 +115,9 @@ constexpr float kHighwayFactor[] = {
    0.8f,  // Primary
    0.5f,  // Secondary
    0.4f,  // Tertiary
-   0.3f,  // Unclassified
-   0.2f,  // Residential
-   0.1f   // Service, other
-
-
-    /*
-     *
-     *  best so far
-     *   1.0f,  // Motorway
-   0.9f,  // Trunk
-   0.8f,  // Primary
-   0.5f,  // Secondary
-   0.4f,  // Tertiary
-   0.3f,  // Unclassified
-   0.2f,  // Residential
-   0.1f   // Service, other
-     *
-     *     1.0f,  // Motorway
-    0.9f,  // Trunk
-    0.8f,  // Primary
-    0.5f,  // Secondary
-    0.4f,  // Tertiary
-    0.3f,  // Unclassified
-    0.2f,  // Residential
-    0.1f   // Service, other
-
-
-    1.0f,  // Motorway
-    0.9f,  // Trunk
-    0.5f,  // Primary
-    0.2f,  // Secondary
-    0.15f, // Tertiary
-    0.05f, // Unclassified
-    0.0f,  // Residential
-    0.0f   // Service, other*/
+   0.2f,  // Unclassified
+   0.0f,  // Residential
+   0.0f   // Service, other
 };
 
 constexpr float kSurfaceFactor[] = {
@@ -382,8 +353,18 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   alley_factor_ = costing_options.alley_factor();
 
   // Preference to use highways. Is a value from 0 to 1
-  float use_highways_ = costing_options.use_highways();
-  highway_factor_ = 1.0f - use_highways_;
+  // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
+  // to avoid/penalize highways.
+  float use_highways = costing_options.use_highways();
+  if (use_highways >= 0.5f) {
+    float f = (0.5f - use_highways);
+    highway_factor_ = f * f * f;
+  } else {
+    float f = 1.0f - (use_highways * 2.0f);
+    highway_factor_ = kMaxHighwayBiasFactor * (f * f);
+  }
 
   // Preference for distance vs time
   distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
@@ -550,10 +531,18 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
+    bool is_turn = false;
+    if (edge->turntype(idx) == baldr::Turn::Type::kLeft || edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kRight || edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+      seconds *= edge->stopimpact(idx);
+      is_turn = true;
+    }
+
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0) {
-      seconds *= edge->stopimpact(idx);
+      if (!is_turn)
+        seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
     }
     c.cost += seconds;
@@ -604,10 +593,18 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
+    bool is_turn = false;
+    if (edge->turntype(idx) == baldr::Turn::Type::kLeft || edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kRight || edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+      seconds *= edge->stopimpact(idx);
+      is_turn = true;
+    }
+
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0) {
-      seconds *= edge->stopimpact(idx);
+      if (!is_turn)
+        seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
     }
     c.cost += seconds;
