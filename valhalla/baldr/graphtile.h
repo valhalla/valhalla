@@ -42,17 +42,14 @@ namespace baldr {
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
-#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
-using GraphTileRefCounter = boost::thread_safe_counter;
-#else
-using GraphTileRefCounter = boost::thread_unsafe_counter;
-#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
+void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT;
+void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT;
 
 class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
-class GraphTile : public boost::intrusive_ref_counter<GraphTile, GraphTileRefCounter> {
+class GraphTile {
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
@@ -833,7 +830,37 @@ protected:
    *         the uncompressed data, or nullptr
    */
   static graph_tile_ptr DecompressTile(const GraphId& graphid, const std::vector<char>& compressed);
+
+  // because boost intrusive pointer uses templates in its provided reference counting implementations
+  // we cannot switch between thread safe and unsafe at run time. this sucks because the only mode of
+  // storage operation that really needs thread saftey is the global_synchronized_cache option.
+  // normally having the extra thread saftey isnt a problem but it costs about 5% performance so here
+  // we have the best of both worlds by allowing  you to pick which kind of reference counting you
+  // want at instantiation
+
+  /*const bool thread_safe_{true};
+  mutable std::atomic<int> atomic_ref_count_{0};*/
+  mutable int ref_count_{0};
+  friend void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT;
+  friend void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT;
 };
+
+inline void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT {
+  /* if (p->thread_safe_) {
+     p->atomic_ref_count_.fetch_add(1, std::memory_order_acq_rel);
+   } else {*/
+  ++p->ref_count_;
+  /*}*/
+}
+
+inline void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT {
+  int count = /* p->thread_safe_ ? p->atomic_ref_count_.fetch_sub(1, std::memory_order_acq_rel) - 1
+                               :*/
+      --p->ref_count_;
+  if (count == 0) {
+    delete p;
+  }
+}
 
 } // namespace baldr
 } // namespace valhalla
