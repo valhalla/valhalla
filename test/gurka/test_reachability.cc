@@ -9,8 +9,7 @@ TEST(Reachability, dont_snap_waypoints_to_deadends) {
       / \
      D   E)";
 
-  // BE and EH are highway=path, so no cars
-  // EI is a shortcut that's not accessible to bikes
+  // BD and BE are oneways that lead away, and toward the main road A-B-C
   const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                             {"BC", {{"highway", "primary"}}},
                             {"BD", {{"highway", "secondary"}, {"oneway","yes"}}},
