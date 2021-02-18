@@ -1610,7 +1610,7 @@ public:
     // Combine the distances for same named roads - store in a NamedSegment.
     route_leg_segs_by_dist.reserve(routes.size());
     for (size_t i = 0; i < routes.size(); i++) {
-      const DirectionsRoute& route = routes.at(i);
+      const DirectionsRoute& route = routes[i];
       std::vector<std::vector<NamedSegment>> leg_segs_by_dist;
       leg_segs_by_dist.reserve(route.legs_size());
       for (size_t j = 0; j < route.legs_size(); j++) {
@@ -1755,7 +1755,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // unique the same leg (leg_idx) between all routes.
   for (size_t route_i = 0; route_i < routes.size(); route_i++) {
 
-    size_t num_legs_i = routes.at(route_i).legs_size();
+    size_t num_legs_i = routes[route_i].legs_size();
     std::vector<std::string> leg_summaries;
     leg_summaries.reserve(num_legs_i);
 
@@ -1775,7 +1775,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
         if (route_i == route_j)
           continue;
 
-        size_t num_legs_j = routes.at(route_j).legs_size();
+        size_t num_legs_j = routes[route_j].legs_size();
 
         // there should be the same number of legs in every route. however, some
         // unit tests break this rule, so we cannot enable this assert.
