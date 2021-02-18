@@ -111,11 +111,11 @@ constexpr float kMaxHighwayBiasFactor = 8.0f;
 constexpr float kHighwayFactor[] = {
 
    1.0f,  // Motorway
-   0.9f,  // Trunk
-   0.8f,  // Primary
-   0.5f,  // Secondary
-   0.4f,  // Tertiary
-   0.2f,  // Unclassified
+   0.5f,  // Trunk
+   0.0f,  // Primary
+   0.0f,  // Secondary
+   0.0f,  // Tertiary
+   0.0f,  // Unclassified
    0.0f,  // Residential
    0.0f   // Service, other
 };
