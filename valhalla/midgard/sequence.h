@@ -23,6 +23,8 @@
 
 #include <valhalla/filesystem.h>
 
+#include "mjolnir/osmdata.h"
+
 #ifdef _WIN32
 #include <io.h>
 #define stat _stat64
@@ -533,22 +535,15 @@ protected:
   mem_map<T> memmap;
 };
 
-const auto in_mode = std::ios::binary;
-const auto out_mode = std::ios::binary;
+const auto in_mode = std::ios_base::binary | std::ios_base::ate;
+const auto out_mode = std::ios_base::binary;
 
 template <typename T> class BufferedReader {
 public:
   BufferedReader() {
   }
 
-  explicit BufferedReader(std::string filename, std::ios::openmode mode = in_mode)
-      : is_(std::move(filename), mode) {
-    auto end = is_.tellg();
-    element_count_ = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
-    if (end != static_cast<decltype(end)>(element_count_ * sizeof(T))) {
-      throw std::runtime_error("sequence: " + filename + " has an incorrect size for type");
-    }
-  }
+  explicit BufferedReader(std::string filename, std::ios::openmode mode = in_mode);
 
   void open(std::string filename, std::ios::openmode mode) {
     is_.open(std::move(filename), mode);
@@ -582,6 +577,20 @@ private:
   std::ifstream is_;
   size_t element_count_;
 };
+template <typename T>
+BufferedReader<T>::BufferedReader(std::string filename, std::ios::openmode mode)
+    : is_(filename, mode) {
+
+  auto end = is_.tellg();
+  element_count_ = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
+//  std::cout << "End " << end << ' ' << element_count_ << std::endl;
+  if (end != static_cast<decltype(end)>(element_count_ * sizeof(T))) {
+    throw std::runtime_error("sequence: " + filename + " has an incorrect size for type");
+  }
+}
+
+//template <>
+//BufferedReader<mjolnir::OSMWayNode>::BufferedReader(std::string filename, std::ios::openmode mode);
 
 class BufferedWriter {
 public:
@@ -623,6 +632,7 @@ private:
   std::ofstream os_;
 };
 
+
 template <typename T>
 std::queue<std::string> Split(sequence<T>& seq,
                               std::function<bool(T const&, T const&)> const& predicate,
@@ -640,13 +650,18 @@ std::queue<std::string> Split(sequence<T>& seq,
     }
     std::sort(part.begin(), part.end(), predicate);
 
-    BufferedWriter seq_part(filename, true);
+    BufferedWriter seq_part(filename);
     for (const auto& j : part) {
       seq_part.Write(j);
     }
   }
   return filenames;
 }
+
+//template <>
+//std::queue<std::string> Split<mjolnir::OSMWayNode>(sequence<mjolnir::OSMWayNode>& seq,
+//                                                   std::function<bool(mjolnir::OSMWayNode const&, mjolnir::OSMWayNode const&)> const& predicate,
+//                                                   size_t buffer_size);
 
 template <typename T>
 void Merge(std::queue<std::string>&& parts,
@@ -669,6 +684,7 @@ void Merge(std::queue<std::string>&& parts,
     indexes.assign(part_count, 1);
 
     for (size_t i = 0; i < part_count; ++i) {
+//      std::cout << "Creating part " << i << " ";
       fins.emplace_back(std::make_unique<BufferedReader<T>>(parts.front()));
       parts.pop();
 
@@ -677,18 +693,20 @@ void Merge(std::queue<std::string>&& parts,
 
     auto output_name =
         (parts.size() == 0 ? output_file : std::string("_") + std::to_string(file_count++));
-    BufferedWriter output(output_name, true);
+    BufferedWriter output(output_name);
     while (!pq.empty()) {
       auto top = pq.top();
       pq.pop();
       int file_index = top.second;
 
       output.Write<T>(top.first);
+//      std::cout << indexes[file_index] << ' ' << fins[file_index]->size() << '\n';
       if (indexes[file_index] != fins[file_index]->size()) {
         pq.emplace(fins[file_index]->Read(), file_index);
         ++indexes[file_index];
       }
     }
+//    std::cout << "Done with " << output_name << ' ' << "parts left = " << parts.size() << '\n';
     parts.push(output_name);
 
     if (parts.size() == 1) {
@@ -696,6 +714,11 @@ void Merge(std::queue<std::string>&& parts,
     }
   }
 }
+//template <>
+//void Merge(std::queue<std::string>&& parts,
+//           std::function<bool(mjolnir::OSMWayNode const&, mjolnir::OSMWayNode const&)> const& predicate,
+//           size_t buffer_size,
+//           const std::string& output_file);
 
 template <typename T>
 void ExternalSort(sequence<T>& seq,
