@@ -149,7 +149,10 @@ void cut_segments(const std::vector<MatchResult>& match_results,
                                      [&curr_match](const EdgeSegment& segment) {
                                        return (segment.edgeid == curr_match.edgeid);
                                      });
+
     assert(last_segment != segments.cend());
+    if (last_segment == segments.cend())
+      continue;
 
     // we need to close the previous edge
     size_t old_size = new_segments.size();

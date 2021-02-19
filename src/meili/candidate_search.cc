@@ -78,7 +78,10 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !costing || costing->Allowed(edge, tile);
 
     if (edge_included) {
-      std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
+      // Employ a snap distance here. Small amounts of floating-point noise can
+      // naturally creep into our computations, this helps keep things well conditioned.
+      const float snap_tol = 0.001; // 1 mm
+      std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape, snap_tol);
 
       if (sq_distance <= sq_search_radius) {
         const float dist = edge->forward() ? offset : 1.f - offset;
