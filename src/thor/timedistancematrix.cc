@@ -504,8 +504,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // of the path. Set the origin flag.
     // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
-                         {}, baldr::kInvalidRestriction,
-                         !costing_->IsClosed(directededge, tile));
+                         {}, baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile));
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
