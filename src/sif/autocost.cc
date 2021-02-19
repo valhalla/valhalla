@@ -109,7 +109,6 @@ constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePena
 constexpr float kMaxHighwayBiasFactor = 8.0f;
 
 constexpr float kHighwayFactor[] = {
-
    1.0f,  // Motorway
    0.5f,  // Trunk
    0.0f,  // Primary

@@ -26,7 +26,6 @@ protected:
     };
     for (int i = 0; i < 6; ++i) {
       ids.push_back(std::to_string(dist(gen)));
-      std::cout << ids.back() << std::endl;
     }
 
     const gurka::ways ways = {
