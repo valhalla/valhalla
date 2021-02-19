@@ -21,9 +21,9 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/filesystem.h>
+#include <chrono>
 
-#include "mjolnir/osmdata.h"
+#include <valhalla/filesystem.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -639,7 +639,7 @@ std::queue<std::string> Split(sequence<T>& seq,
                               size_t buffer_size) {
   std::queue<std::string> filenames;
   for (size_t i = 0; i < seq.size();) {
-    size_t part_end = std::min(seq.size(), i + buffer_size / sizeof(T));
+    size_t part_end = std::min(seq.size(), i + buffer_size);
     std::string filename = "_" + std::to_string(filenames.size());
     filenames.push(filename);
 
@@ -724,8 +724,15 @@ template <typename T>
 void ExternalSort(sequence<T>& seq,
                   std::function<bool(T const&, T const&)> const& predicate,
                   size_t buffer_size) {
+  auto now = std::chrono::high_resolution_clock::now();
   std::queue<std::string> parts = Split(seq, predicate, buffer_size);
+  auto nxt = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> splitted = nxt - now;
+  std::cout << "Split in " << splitted.count() << std::endl;
   Merge(std::move(parts), predicate, buffer_size, seq.file_name);
+  auto nxt2 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> merged = nxt2 - nxt;
+  std::cout << "Merge in " << merged.count() << std::endl;
 }
 
 template <class T>
