@@ -464,7 +464,7 @@ map buildtiles(const nodelayout& layout,
   detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
             << std::endl;
-  midgard::logging::Configure({{"type", "std_out"}});
+  midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);

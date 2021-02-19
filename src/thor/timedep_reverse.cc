@@ -513,7 +513,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                 dist, mode_, c, false, !(costing_->IsClosed(opp_dir_edge, tile)),
+                                 dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
                                  -1);
     adjacencylist_rev_.add(idx);
 
