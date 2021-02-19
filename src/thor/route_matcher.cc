@@ -191,7 +191,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
-          elapsed.secs = shape[index].time() - shape[0].time();
+          elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
