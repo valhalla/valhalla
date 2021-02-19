@@ -17,3 +17,8 @@
 -j '{"locations":[{"lat":42.936651,"lon":1.963462,"street":""},{"lat":33.012838,"lon":-3.085099,"street":""}],"costing":"auto","units":"kilometers"}'
 -j '{"locations":[{"lat":39.470240,"lon":-0.376805,"street":"Carrer de les Barques"},{"lat":39.569510,"lon":2.649966,"street":"Carrer del Palau Reial"}],"costing":"auto","units":"kilometers"}'
 -j '{"locations":[{"lat":39.569510,"lon":2.649966,"street":"Carrer del Palau Reial"},{"lat":39.470240,"lon":-0.376805,"street":"Carrer de les Barques"}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":33.474764718967805,"lon":-112.09563771120449},{"lat":33.47464,"lon":-112.0917}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":33.46709205062098,"lon":-112.08030418561796},{"lat":33.46575556113619,"lon":-112.07879573997866}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":48.485269544209245,"lon":14.00217734091379},{"lat":48.48315964840435,"lon":14.001625286787998}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":38.03322095149275,"lon":-122.5410282727713},{"lat":38.03242706303146,"lon":-122.53895966882567}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":33.480675681084435,"lon":-112.04377765861224},{"lat":33.48752352324888,"lon":-112.04379145390928}],"costing":"auto","units":"kilometers"}'
