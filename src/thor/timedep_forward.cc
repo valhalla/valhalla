@@ -235,7 +235,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, restriction_idx, !(costing_->IsClosed(meta.edge, tile)));
+                           transition_cost, restriction_idx,
+                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;

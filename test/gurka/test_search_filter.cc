@@ -924,7 +924,9 @@ protected:
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
 
-    A--B--C--D--E--F--G
+             I--J
+             |  |
+    A--B--C--D--E--F--G--H
 
     )";
 
@@ -934,7 +936,9 @@ protected:
                               {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"DE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"EF", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+                              {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"GH", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"DIJE", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
@@ -980,7 +984,6 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepForward) {
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
   }
   {
@@ -1000,8 +1003,28 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepForward) {
          std::to_string(closure_map.nodes.at("G").lng()) % costing % costing % date_type)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
+  }
+
+  // Close an interdmediate edge. Route should avoid it while not ignoring the
+  // consecutive closures at origin
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    const std::string& req =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("A").lat()) %
+         std::to_string(closure_map.nodes.at("A").lng()) %
+         std::to_string(closure_map.nodes.at("G").lat()) %
+         std::to_string(closure_map.nodes.at("G").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DIJE", "EF", "FG"});
   }
   // TODO: Ensure this test work with timedep reverse (date_type = "2")
   // Refer https://github.com/valhalla/valhalla/issues/2733
@@ -1015,19 +1038,18 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
   {
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"B", "G"}, costing,
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"B", "H"}, costing,
                                    {{"/date_time/type", date_type},
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
   }
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
-      close_bidir_edge(reader, tile, index, current, "EF", closure_map);
       close_bidir_edge(reader, tile, index, current, "FG", closure_map);
+      close_bidir_edge(reader, tile, index, current, "GH", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -1036,12 +1058,31 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
              R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("B").lat()) %
          std::to_string(closure_map.nodes.at("B").lng()) %
-         std::to_string(closure_map.nodes.at("G").lat()) %
-         std::to_string(closure_map.nodes.at("G").lng()) % costing % costing % date_type)
+         std::to_string(closure_map.nodes.at("H").lat()) %
+         std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+  }
+  // Close an interdmediate edge. Route should avoid it while not ignoring the
+  // consecutive closures at destination
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    const std::string& req =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("B").lat()) %
+         std::to_string(closure_map.nodes.at("B").lng()) %
+         std::to_string(closure_map.nodes.at("H").lat()) %
+         std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DIJE", "EF", "FG", "GH"});
   }
 
   // TODO: Ensure this test work with timedep fwd (date_type = "0")
