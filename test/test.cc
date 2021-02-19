@@ -569,7 +569,7 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
         auto coefs = valhalla::baldr::compress_speed_buckets(historical->data());
         tile.AddPredictedSpeed(edges.size() - 1, coefs, tile.header()->directededgecount());
       }
-      edges.back().set_has_predicted_speed(bool(historical));
+      edges.back().set_has_predicted_speed(static_cast<bool>(historical));
     }
     tile.UpdatePredictedSpeeds(edges);
   }
