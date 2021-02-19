@@ -69,6 +69,9 @@ constexpr float kTaxiFactor = 0.85f;
 // Do not avoid alleys by default
 constexpr float kDefaultAlleyFactor = 1.0f;
 
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.2f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -104,6 +107,7 @@ constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 constexpr float kHighwayFactor[] = {
     10.0f, // Motorway
@@ -313,7 +317,6 @@ public:
   float surface_factor_;      // How much the surface factors are applied.
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
-  float service_factor_;      // 1.5; //2   // Avoid service roads factor.
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -356,8 +359,6 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   // Preference for distance vs time
   distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
   inv_distance_factor_ = 1.f - costing_options.use_distance();
-
-  service_factor_ = 1.2;
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -687,9 +688,15 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
 
+    // service_penalty
     pbf_costing_options->set_service_penalty(
         kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
                                  .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -715,6 +722,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -1203,6 +1211,8 @@ public:
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
   using AutoCost::maneuver_penalty_;
+  using AutoCost::service_factor_;
+  using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
 };
 
@@ -1333,8 +1343,16 @@ TEST(AutoCost, testAutoCostParams) {
   distributor = make_distributor_from_range(kServicePenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("service_penalty", distributor(generator));
-    EXPECT_THAT(tester->alley_penalty_,
+    EXPECT_THAT(tester->service_penalty_,
                 test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  distributor = make_distributor_from_range(kServiceFactorRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("service_factor", distributor(generator));
+    EXPECT_THAT(tester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 
   // flow_mask_

@@ -736,6 +736,7 @@ protected:
   float ferry_factor_, rail_ferry_factor_;
   float track_factor_;         // Avoid tracks factor.
   float living_street_factor_; // Avoid living streets factor.
+  float service_factor_;       // Avoid service roads factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -750,7 +751,7 @@ protected:
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float living_street_penalty_;    // Penalty (seconds) to use a living street
-  float service_penalty_;     // Penalty (seconds) to use a generic service road
+  float service_penalty_;          // Penalty (seconds) to use a generic service road
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
@@ -836,8 +837,9 @@ protected:
     // Get living street factor from costing options.
     set_use_living_streets(costing_options.use_living_streets());
 
-    // Penalty to use service roads
+    // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
+    service_factor_ = costing_options.service_factor();
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
