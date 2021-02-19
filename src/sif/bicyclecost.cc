@@ -373,7 +373,6 @@ public:
   float use_roads_;                // Preference of using roads between 0 and 1
   float road_factor_;              // Road factor based on use_roads_
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
-  float service_penalty_;          // Penalty (seconds) to use a generic service road
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -459,9 +458,6 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
 
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
-
-  // Penalty to use service roads
-  service_penalty_ = costing_options.service_penalty();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -749,11 +745,6 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
-  // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
-  }
-
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -832,11 +823,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                         static_cast<uint32_t>(edge->classification()));
     // Reduce the turn stress if there is a traffic signal
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
-  }
-
-  // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
   }
 
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
