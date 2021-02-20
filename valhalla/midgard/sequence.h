@@ -1,8 +1,10 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
 #include <cmath>
+#include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -13,12 +15,14 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <thread>
 #include <vector>
 
 #include <chrono>
@@ -27,13 +31,16 @@
 
 #ifdef _WIN32
 #include <io.h>
-#define stat _stat64
+#define stat _stat6void foo() {
+}
+4
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif // _WIN32
 #include <fcntl.h>
+#include <thread>
 
 // if we are on android
 #ifdef __ANDROID__
@@ -583,14 +590,14 @@ BufferedReader<T>::BufferedReader(std::string filename, std::ios::openmode mode)
 
   auto end = is_.tellg();
   element_count_ = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
-//  std::cout << "End " << end << ' ' << element_count_ << std::endl;
+  //  std::cout << "End " << end << ' ' << element_count_ << std::endl;
   if (end != static_cast<decltype(end)>(element_count_ * sizeof(T))) {
     throw std::runtime_error("sequence: " + filename + " has an incorrect size for type");
   }
 }
 
-//template <>
-//BufferedReader<mjolnir::OSMWayNode>::BufferedReader(std::string filename, std::ios::openmode mode);
+// template <>
+// BufferedReader<mjolnir::OSMWayNode>::BufferedReader(std::string filename, std::ios::openmode mode);
 
 class BufferedWriter {
 public:
@@ -632,12 +639,33 @@ private:
   std::ofstream os_;
 };
 
+struct Timer {
+  std::chrono::high_resolution_clock::time_point tp;
+
+  void start() {
+    tp = std::chrono::high_resolution_clock::now();
+  }
+
+  double time() const {
+    auto now = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = now - tp;
+    return duration.count();
+  }
+};
+
 
 template <typename T>
 std::queue<std::string> Split(sequence<T>& seq,
                               std::function<bool(T const&, T const&)> const& predicate,
                               size_t buffer_size) {
+  Timer timer;
+  double sum = 0;
   std::queue<std::string> filenames;
+  std::mutex mutex;
+  std::condition_variable cv;
+  std::atomic_uint free{std::thread::hardware_concurrency()};
+  std::cout << "Thread count = " << free << std::endl;
+
   for (size_t i = 0; i < seq.size();) {
     size_t part_end = std::min(seq.size(), i + buffer_size);
     std::string filename = "_" + std::to_string(filenames.size());
@@ -648,19 +676,45 @@ std::queue<std::string> Split(sequence<T>& seq,
     for (; i < part_end; ++i) {
       part.push_back(seq[i]);
     }
-    std::sort(part.begin(), part.end(), predicate);
 
-    BufferedWriter seq_part(filename);
-    for (const auto& j : part) {
-      seq_part.Write(j);
+    {
+      std::unique_lock<std::mutex> lock(mutex);
+      cv.wait(lock, [&]() { return free > 0; });
+      --free;
     }
+    std::thread([&, part = std::move(part)]() mutable {
+      {
+        std::lock_guard<std::mutex> guard(mutex);
+        timer.start();
+      }
+      std::sort(part.begin(), part.end(), predicate);
+      {
+        std::lock_guard<std::mutex> guard(mutex);
+        double cur = timer.time();
+        sum += cur;
+      }
+
+      ++free;
+      cv.notify_one();
+
+      BufferedWriter seq_part(filename);
+      for (const auto& j : part) {
+        seq_part.Write(j);
+      }
+    }).detach();
   }
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    cv.wait(lock, [&]() { return free == std::thread::hardware_concurrency(); });
+  }
+  std::cout << "Sum sort time " << sum << " seconds" << std::endl;
   return filenames;
 }
 
-//template <>
-//std::queue<std::string> Split<mjolnir::OSMWayNode>(sequence<mjolnir::OSMWayNode>& seq,
-//                                                   std::function<bool(mjolnir::OSMWayNode const&, mjolnir::OSMWayNode const&)> const& predicate,
+// template <>
+// std::queue<std::string> Split<mjolnir::OSMWayNode>(sequence<mjolnir::OSMWayNode>& seq,
+//                                                   std::function<bool(mjolnir::OSMWayNode const&,
+//                                                   mjolnir::OSMWayNode const&)> const& predicate,
 //                                                   size_t buffer_size);
 
 template <typename T>
@@ -684,15 +738,15 @@ void Merge(std::queue<std::string>&& parts,
     indexes.assign(part_count, 1);
 
     for (size_t i = 0; i < part_count; ++i) {
-//      std::cout << "Creating part " << i << " ";
+      //      std::cout << "Creating part " << i << " ";
       fins.emplace_back(std::make_unique<BufferedReader<T>>(parts.front()));
       parts.pop();
 
       pq.emplace(fins.back()->Read(), i);
     }
 
-    auto output_name =
-        (parts.size() == 0 ? output_file : std::string("_") + std::to_string(file_count++));
+    auto output_name = std::string("_") + std::to_string(file_count++);
+    //    (parts.size() == 0 ? output_file : std::string("_") + std::to_string(file_count++));
     BufferedWriter output(output_name);
     while (!pq.empty()) {
       auto top = pq.top();
@@ -700,13 +754,13 @@ void Merge(std::queue<std::string>&& parts,
       int file_index = top.second;
 
       output.Write<T>(top.first);
-//      std::cout << indexes[file_index] << ' ' << fins[file_index]->size() << '\n';
+      //      std::cout << indexes[file_index] << ' ' << fins[file_index]->size() << '\n';
       if (indexes[file_index] != fins[file_index]->size()) {
         pq.emplace(fins[file_index]->Read(), file_index);
         ++indexes[file_index];
       }
     }
-//    std::cout << "Done with " << output_name << ' ' << "parts left = " << parts.size() << '\n';
+    //    std::cout << "Done with " << output_name << ' ' << "parts left = " << parts.size() << '\n';
     parts.push(output_name);
 
     if (parts.size() == 1) {
@@ -714,11 +768,10 @@ void Merge(std::queue<std::string>&& parts,
     }
   }
 }
-//template <>
-//void Merge(std::queue<std::string>&& parts,
-//           std::function<bool(mjolnir::OSMWayNode const&, mjolnir::OSMWayNode const&)> const& predicate,
-//           size_t buffer_size,
-//           const std::string& output_file);
+// template <>
+// void Merge(std::queue<std::string>&& parts,
+//           std::function<bool(mjolnir::OSMWayNode const&, mjolnir::OSMWayNode const&)> const&
+//           predicate, size_t buffer_size, const std::string& output_file);
 
 template <typename T>
 void ExternalSort(sequence<T>& seq,
