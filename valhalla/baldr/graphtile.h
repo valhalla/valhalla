@@ -42,10 +42,9 @@ namespace baldr {
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
-void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT;
-void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT;
-
+struct ref_counter;
 class tile_getter_t;
+
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
@@ -56,8 +55,8 @@ public:
   /**
    * Constructs with a given GraphId. Reads the graph tile from file
    * into memory.
-   * @param  tile_dir   Tile directory.
-   * @param  graphid    GraphId (tileid and level)
+   * @param  tile_dir    Tile directory.
+   * @param  graphid     GraphId (tileid and level)
    * @return nullptr if the tile could not be loaded. may throw
    */
   static graph_tile_ptr Create(const std::string& tile_dir,
@@ -65,19 +64,12 @@ public:
                                std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
-   * Constructs with a given the graph Id, pointer to the tile data, and the
-   * size of the tile data. This is used for memory mapped (mmap) tiles.
-   * @param  graphid  Tile Id.
-   * @param  ptr      Pointer to the start of the tile's data.
-   */
-  static graph_tile_ptr Create(const GraphId& graphid, std::vector<char>&& memory);
-
-  /**
    * Constructs given the graph Id, pointer to the tile data, and the
    * size of the tile data. This is used for memory mapped (mmap) tiles.
-   * @param  graphid  Tile Id.
-   * @param  ptr      Pointer to the start of the tile's data.
-   * @param  size     Size in bytes of the tile data.
+   * @param  graphid     Tile Id.
+   * @param  ptr         Pointer to the start of the tile's data.
+   * @param  size        Size in bytes of the tile data.
+   * @return the tile loaded from the moved memory
    */
   static graph_tile_ptr Create(const GraphId& graphid,
                                std::unique_ptr<const GraphMemory>&& memory,
@@ -798,14 +790,11 @@ protected:
 
   /**
    * Constructor given the graph Id, pointer to the tile data, and the
-   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * size of the tile data. This is only used by GraphTileBuilder
+   * @param tile_dir  The root of the tile directory from which to load the tile
    * @param  graphid  Tile Id.
-   * @param  ptr      Pointer to the start of the tile's data.
-   * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const std::string& tile_dir,
-            const GraphId& graphid,
-            std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
+  GraphTile(const std::string& tile_dir, const GraphId& graphid);
 
   /**
    * Initialize pointers to internal tile data structures.
@@ -826,38 +815,49 @@ protected:
   /** Decrompresses tile bytes into the internal graphtile byte buffer
    * @param  graphid     the id of the tile to be decompressed
    * @param  compressed  the compressed bytes
-   * @return a pointer to a graphtile if it  has been successfully initialized with
-   *         the uncompressed data, or nullptr
+   * @return a pointer to the managed memory of the graph tile if it has been successfully
+   *         decompressed otherwise nullptr
    */
-  static graph_tile_ptr DecompressTile(const GraphId& graphid, const std::vector<char>& compressed);
+  static std::unique_ptr<const GraphMemory> DecompressTile(const GraphId& graphid,
+                                                           const std::vector<char>& compressed);
 
-  // because boost intrusive pointer uses templates in its provided reference counting implementations
-  // we cannot switch between thread safe and unsafe at run time. this sucks because the only mode of
-  // storage operation that really needs thread saftey is the global_synchronized_cache option.
-  // normally having the extra thread saftey isnt a problem but it costs about 5% performance so here
-  // we have the best of both worlds by allowing  you to pick which kind of reference counting you
-  // want at instantiation
-
-  /*const bool thread_safe_{true};
-  mutable std::atomic<int> atomic_ref_count_{0};*/
-  mutable int ref_count_{0};
+  // we encapsulate tile pointers inside of boost::intrusive_ptr which requires reference counting
+  // the default reference counting provided allows for both thread safe and unsafe modes of operation
+  // but.. its templated which makes it impossible to decide at runtime which you need
+  // global_synchronized_cache requires thread safe tiles when they manage their own lifetime
+  // this tile cache tells graphtile to use an atomic counter (which is about %5 more expensive)
+  // all other tile caches are used by individual threads so they dont need to do atomic operations
+  std::unique_ptr<ref_counter> ref_counter_;
   friend void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT;
   friend void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT;
 };
 
-inline void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT {
-  /* if (p->thread_safe_) {
-     p->atomic_ref_count_.fetch_add(1, std::memory_order_acq_rel);
-   } else {*/
-  ++p->ref_count_;
-  /*}*/
-}
+struct ref_counter {
+  ref_counter(const bool thread_safe)
+      : thread_safe_{thread_safe}, atomic_ref_count_{0}, ref_count_{0} {
+  }
+  inline int operator++() {
+    return thread_safe_ ? atomic_ref_count_.fetch_add(1, std::memory_order_acq_rel) + 1
+                        : ++ref_count_;
+  }
+  inline int operator--() {
+    return thread_safe_ ? atomic_ref_count_.fetch_sub(1, std::memory_order_acq_rel) - 1
+                        : --ref_count_;
+  }
 
+protected:
+  const bool thread_safe_;
+  std::atomic<int> atomic_ref_count_;
+  int ref_count_;
+};
+
+// because the default constructor for graphtile doesnt initialize ref_counter_
+// we need to check it first before we use it for inc or dec
+inline void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT {
+  p->ref_counter_ && ++(*p->ref_counter_);
+}
 inline void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT {
-  int count = /* p->thread_safe_ ? p->atomic_ref_count_.fetch_sub(1, std::memory_order_acq_rel) - 1
-                               :*/
-      --p->ref_count_;
-  if (count == 0) {
+  if (p->ref_counter_ && --(*p->ref_counter_) == 0) {
     delete p;
   }
 }

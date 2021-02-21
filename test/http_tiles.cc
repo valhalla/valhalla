@@ -145,7 +145,8 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto result = tile_getter.get(tile_uri);
 
           if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-            auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+            auto tile = GraphTile::Create(GraphId(), std::make_unique<const VectorGraphMemory>(
+                                                         std::move(result.bytes_)));
             ASSERT_TRUE(tile);
             EXPECT_EQ(tile->id(), expected_tile_id);
           } else {
@@ -258,7 +259,9 @@ TEST(HttpTiles, test_interrupt) {
 
     auto result = tile_getter.get(tile_uri);
     if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+      auto tile =
+          GraphTile::Create(GraphId(),
+                            std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)));
       ASSERT_TRUE(tile);
       EXPECT_EQ(tile->id(), expected_tile_id);
     } else {

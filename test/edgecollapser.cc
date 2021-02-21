@@ -73,7 +73,7 @@ struct graph_tile_builder {
 
     auto res = memory.emplace(id, std::make_shared<std::vector<char>>(std::move(mem)));
     auto mem2 = std::make_unique<SharedVectorGraphMemory>(res.first->second);
-    tiles.emplace(id, vb::GraphTile::Create(id, std::move(mem2)));
+    tiles.emplace(id, GraphTile::Create(id, std::move(mem2)));
     nodes.clear();
     edges.clear();
   }

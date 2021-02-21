@@ -52,19 +52,8 @@ std::string GenerateTmpSuffix() {
 namespace valhalla {
 namespace baldr {
 
-class VectorGraphMemory final : public GraphMemory {
-public:
-  VectorGraphMemory(std::vector<char>&& memory) : memory_(std::move(memory)) {
-    data = const_cast<char*>(memory_.data());
-    size = memory_.size();
-  }
-
-private:
-  const std::vector<char> memory_;
-};
-
-graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
-                                         const std::vector<char>& compressed) {
+std::unique_ptr<const GraphMemory> GraphTile::DecompressTile(const GraphId& graphid,
+                                                             const std::vector<char>& compressed) {
   // for setting where to read compressed data from
   auto src_func = [&compressed](z_stream& s) -> void {
     s.next_in =
@@ -96,7 +85,7 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
     return nullptr;
   }
 
-  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)));
+  return std::make_unique<const VectorGraphMemory>(std::move(data));
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -134,15 +123,12 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
     std::vector<char> compressed(filesize);
     gz_file.read(&compressed[0], filesize);
     gz_file.close();
-    return DecompressTile(graphid, std::move(compressed));
+    auto graph_memory = DecompressTile(graphid, std::move(compressed));
+    return Create(graphid, std::move(graph_memory), std::move(traffic_memory));
   }
 
   // Nothing to load anywhere
   return nullptr;
-}
-
-graph_tile_ptr GraphTile::Create(const GraphId& graphid, std::vector<char>&& memory) {
-  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)));
 }
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid,
@@ -155,19 +141,18 @@ graph_tile_ptr GraphTile::Create(const GraphId& graphid,
 GraphTile::GraphTile(const GraphId& graphid,
                      std::unique_ptr<const GraphMemory> memory,
                      std::unique_ptr<const GraphMemory> traffic_memory)
-    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
+    : header_(nullptr), traffic_tile(std::move(traffic_memory)),
+      ref_counter_(new ref_counter{false}) {
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
   memory_ = std::move(memory);
   Initialize(graphid);
 }
 
-GraphTile::GraphTile(const std::string& tile_dir,
-                     const GraphId& graphid,
-                     std::unique_ptr<const GraphMemory>&& traffic_memory) {
+GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) {
   // const_cast is only ok here because Create actually makes a new non-const GraphTile
   // which is then coerced to const via the template parameter of the managed pointer
-  if (auto tile = Create(tile_dir, graphid, std::move(traffic_memory))) {
+  if (auto tile = Create(tile_dir, graphid)) {
     *this = std::move(const_cast<GraphTile&>(*tile));
   }
 }
@@ -227,7 +212,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    return DecompressTile(graphid, result.bytes_);
+    auto graph_memory = DecompressTile(graphid, result.bytes_);
+    return Create(graphid, std::move(graph_memory));
   }
 
   return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)));
