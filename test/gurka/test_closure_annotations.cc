@@ -9,7 +9,7 @@ using LiveTrafficCustomize = test::LiveTrafficCustomize;
 
 namespace {
 
-  inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
+inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
   live_speed->breakpoint1 = breakpoint1;
   live_speed->breakpoint2 = 255;
   live_speed->speed2 = speed >> 1;
