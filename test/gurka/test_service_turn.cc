@@ -34,7 +34,8 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
-const std::vector<std::string>& costing = {"auto", "hov", "taxi", "bus", "truck", "motorcycle"};
+const std::vector<std::string>& costing = {"auto",  "hov",        "taxi",         "bus",
+                                           "truck", "motorcycle", "motor_scooter"};
 
 class ServiceRoadsTest : public ::testing::Test {
 protected:
@@ -69,11 +70,17 @@ gurka::map ServiceRoadsTest::service_streets_map = {};
 
 TEST_F(ServiceRoadsTest, test_default_value) {
   for (const auto& c : costing)
-    validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c),
-                  {"AB", "BC", "CD", "DE", "EF"});
+    if (c == "motor_scooter")
+      // For current exmple and with these costings route is not affected
+      validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c),
+                    {"AB", "BE", "EF"});
+    else
+      validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c),
+                    {"AB", "BC", "CD", "DE", "EF"});
 }
 
 TEST_F(ServiceRoadsTest, test_use_service_roads) {
+  // favor service roads
   for (const auto& c : costing)
     if (c == "truck")
       // truck is also impacted by 'low_class_penalty' option which is non-zero by default
@@ -90,6 +97,7 @@ TEST_F(ServiceRoadsTest, test_use_service_roads) {
 }
 
 TEST_F(ServiceRoadsTest, test_avoid_service_roads) {
+  // avoid service roads
   for (const auto& c : costing)
     validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c,
                                    {{"/costing_options/" + c + "/service_penalty", "300"},
