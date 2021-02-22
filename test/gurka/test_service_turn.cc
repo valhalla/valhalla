@@ -34,8 +34,8 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
-const std::vector<std::string>& costing = {"auto",  "hov",        "taxi",         "bus",
-                                           "truck", "motorcycle", "motor_scooter"};
+const std::vector<std::string>& costing = {"auto",  "hov",        "taxi",          "bus",
+                                           "truck", "motorcycle", "motor_scooter", "pedestrian"};
 
 class ServiceRoadsTest : public ::testing::Test {
 protected:
@@ -70,7 +70,7 @@ gurka::map ServiceRoadsTest::service_streets_map = {};
 
 TEST_F(ServiceRoadsTest, test_default_value) {
   for (const auto& c : costing)
-    if (c == "motor_scooter")
+    if (c == "motor_scooter" || c == "pedestrian")
       // For current exmple and with these costings route is not affected
       validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c),
                     {"AB", "BE", "EF"});
