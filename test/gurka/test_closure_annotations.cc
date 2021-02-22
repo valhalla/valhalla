@@ -9,19 +9,19 @@ using LiveTrafficCustomize = test::LiveTrafficCustomize;
 
 namespace {
 
-inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint64_t speed, uint8_t subsegment) {
-  live_speed->breakpoint1 = subsegment;
+  inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
+  live_speed->breakpoint1 = breakpoint1;
   live_speed->breakpoint2 = 255;
   live_speed->speed2 = speed >> 1;
   live_speed->speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
 }
 
-inline void SetLiveSpeedUpto(baldr::TrafficSpeed* live_speed, uint64_t speed, uint8_t subsegment) {
-  live_speed->breakpoint1 = subsegment;
+inline void SetLiveSpeedUpto(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
+  live_speed->breakpoint1 = breakpoint1;
   live_speed->speed1 = speed >> 1;
 }
 
-inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
+inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint8_t speed) {
   live_speed->breakpoint1 = 255;
   live_speed->overall_speed = speed >> 1;
   live_speed->speed1 = speed >> 1;
@@ -38,8 +38,8 @@ void close_partial_dir_edge_from(baldr::GraphReader& reader,
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, map.nodes, edge_name, end_node));
   if (edge.Tile_Base() == tile_id && edge.id() == index) {
-    uint8_t subsegment = static_cast<uint8_t>(255 * percent_along);
-    SetLiveSpeedFrom(current, 0, subsegment);
+    uint8_t breakpoint1 = static_cast<uint8_t>(255 * percent_along);
+    SetLiveSpeedFrom(current, 0, breakpoint1);
   }
 }
 
@@ -54,8 +54,8 @@ void close_partial_dir_edge_upto(baldr::GraphReader& reader,
   baldr::GraphId tile_id(tile.header->tile_id);
   auto edge = std::get<0>(gurka::findEdge(reader, map.nodes, edge_name, end_node));
   if (edge.Tile_Base() == tile_id && edge.id() == index) {
-    uint8_t subsegment = static_cast<uint8_t>(255 * percent_along);
-    SetLiveSpeedUpto(current, 0, subsegment);
+    uint8_t breakpoint1 = static_cast<uint8_t>(255 * percent_along);
+    SetLiveSpeedUpto(current, 0, breakpoint1);
   }
 }
 
