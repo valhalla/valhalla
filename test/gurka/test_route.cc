@@ -629,7 +629,7 @@ TEST(Standalone, DoNotAllowDoubleUturns) {
 
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
-    const auto names = gurka::detail::get_path(result);
+    const auto names = gurka::detail::get_paths(result).front();
     if (std::count(names.begin(), names.end(), "CI") == 3)
       FAIL() << "Double uturn detected!";
     else
