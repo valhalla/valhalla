@@ -1,6 +1,8 @@
 {
   "posix_locale": "uk_UA.UTF-8",
-  "aliases": "ukua",
+  "aliases": [
+    "uk"
+  ],
   "instructions": {
     "arrive": {
       "phrases": {
