@@ -191,13 +191,14 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
-          elapsed.secs = shape[index].time() - shape[0].time();
+          elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0, {}, kInvalidRestriction};
+        prev_edge_label = {kInvalidLabel,       edge_id, de, {}, 0, 0, mode, 0, {},
+                           kInvalidRestriction, true};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -386,7 +387,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Set previous edge label
         prev_edge_label =
-            {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}, baldr::kInvalidRestriction};
+            {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}, baldr::kInvalidRestriction, true};
 
         // Continue walking shape to find the end node
         GraphId end_node;

@@ -15,7 +15,7 @@ namespace thor {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
+constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
 TimeDepReverse::TimeDepReverse(uint32_t max_reserved_labels_count)
@@ -276,7 +276,9 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
                                mode_, transition_cost,
-                               (pred.not_thru_pruning() || !meta.edge->not_thru()), restriction_idx);
+                               (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                               (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                               restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
@@ -511,7 +513,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                 dist, mode_, c, false, -1);
+                                 dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
+                                 -1);
     adjacencylist_rev_.add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

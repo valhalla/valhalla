@@ -696,6 +696,15 @@ public:
 
   virtual Cost BSSCost() const;
 
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -751,6 +760,7 @@ protected:
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float living_street_penalty_;    // Penalty (seconds) to use a living street
+  float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road
 
   // A mask which determines which flow data the costing should use from the tile
@@ -889,21 +899,13 @@ protected:
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
     c.cost += living_street_penalty_ *
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
+    c.cost +=
+        track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
     c.cost += service_penalty_ *
               (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
-
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
-  }
-
-  /*
-   * Determine whether an edge is currently closed due to traffic.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
-   */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 };
 

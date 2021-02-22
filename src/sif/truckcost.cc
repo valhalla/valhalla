@@ -412,7 +412,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -435,7 +436,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
