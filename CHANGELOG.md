@@ -32,7 +32,7 @@
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
-  
+
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
