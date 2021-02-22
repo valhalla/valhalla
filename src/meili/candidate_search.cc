@@ -38,6 +38,13 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
   midgard::projector_t projector(location);
   graph_tile_ptr tile;
 
+  // Employ a snap distance when calling helpers::Project(). Small amounts of
+  // floating-point noise can naturally creep into our computations; snapping
+  // helps keep things well conditioned. What this represents is, "if our point
+  // projection onto a segment is within this distance of either segment end,
+  // just snap to that end."
+  const float snap_tol = 0.001; // 1 mm
+
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
     if (!edgeid.Is_Valid()) {
@@ -78,13 +85,18 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !costing || costing->Allowed(edge, tile);
 
     if (edge_included) {
-      // Employ a snap distance here. Small amounts of floating-point noise can
-      // naturally creep into our computations, this helps keep things well conditioned.
-      const float snap_tol = 0.001; // 1 mm
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape, snap_tol);
 
       if (sq_distance <= sq_search_radius) {
+        // The 'offset' here is actually the percentage of the length along
+        // the segment where the projection landed. 0.0 means one end of the segment,
+        // 1.0 means the other end.
         const float dist = edge->forward() ? offset : 1.f - offset;
+
+        // Normally exact comparisons of doubles is avoided. However, the call to
+        // helpers::Project() employs a snap_tol, which ensures that the projection
+        // will be snapped to the segment end if the projection is within 'snap_tol',
+        // making these exact comparisons reasonable.
         if (dist == 1.f) {
           snapped_node = edge->endnode();
         } else if (dist == 0.f) {
@@ -100,10 +112,18 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     if (oppedge_included) {
       // No need to project again if we already did it above
       if (!edge_included) {
-        std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
+        std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape, snap_tol);
       }
       if (sq_distance <= sq_search_radius) {
+        // The 'offset' here is actually the percentage of the length along
+        // the segment where the projection landed. 0.0 means one end of the segment,
+        // 1.0 means the other end.
         const float dist = opp_edge->forward() ? offset : 1.f - offset;
+
+        // Normally exact comparisons of doubles is avoided. However, the call to
+        // helpers::Project() employs a snap_tol, which ensures that the projection
+        // will be snapped to the segment end if the projection is within 'snap_tol',
+        // making these exact comparisons reasonable.
         if (dist == 1.f) {
           snapped_node = opp_edge->endnode();
         } else if (dist == 0.f) {
