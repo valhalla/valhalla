@@ -496,8 +496,8 @@ void build(const std::string& complex_restriction_from_file,
                 if (restriction.type() >= RestrictionType::kOnlyRightTurn &&
                     restriction.type() <= RestrictionType::kOnlyStraightOn) {
                   while (tmp_ids.size() > 1) {
-                    auto last_tile = tile;
                     auto last_edge_id = tmp_ids.front();
+                    auto last_tile = tile;
                     if (last_edge_id.Tile_Base() != tile_id) {
                       lock.lock();
                       last_tile = reader.GetGraphTile(last_edge_id);
@@ -518,7 +518,8 @@ void build(const std::string& complex_restriction_from_file,
                       auto de = end_node_tile->directededge(next_edge_id);
                       // reader, lock, from_node, edge_id, from_tile
                       auto opp_id = GetOpposingEdge(reader, lock, end_node_tile, end_node, de);
-                      if (opp_id == last_edge_id && (de->forwardaccess() & restriction.modes())) {
+                      if (opp_id != last_edge_id && !de->is_shortcut() &&
+                          (de->forwardaccess() & restriction.modes())) {
                         tmp_ids.front() = opp_id;
                         AddReverseRestriction(tmp_ids);
                       }
@@ -536,22 +537,22 @@ void build(const std::string& complex_restriction_from_file,
                         auto de = to_tile->directededge(next_edge_id);
                         // reader, lock, from_node, edge_id, from_tile
                         auto opp_id = GetOpposingEdge(reader, lock, to_tile, to_node, de);
-                        if (opp_id == last_edge_id && (de->forwardaccess() & restriction.modes())) {
+                        if (opp_id != last_edge_id && !de->is_shortcut() &&
+                            (de->forwardaccess() & restriction.modes())) {
                           tmp_ids.front() = opp_id;
                           AddReverseRestriction(tmp_ids);
                         }
                       }
                     }
-                    tmp_ids.pop_back();
+                    tmp_ids.erase(tmp_ids.begin());
                   }
-                  tmp_ids.erase(tmp_ids.begin());
+                } else {
+                  AddReverseRestriction(tmp_ids);
                 }
-              } else {
-                AddReverseRestriction(tmp_ids);
               }
             }
+            ++res_it;
           }
-          ++res_it;
         }
 
         if (directededge.end_restriction()) {
