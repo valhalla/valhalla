@@ -270,8 +270,9 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  uint8_t flow_sources;
   Cost newcost =
-      pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
+      pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -307,6 +308,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                   static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask)),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -493,9 +495,10 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
   const Cost transition_cost =
-      costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
+      costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge, pred.has_flow_speed());
+  uint8_t flow_sources;
   const Cost newcost =
-      pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
+      pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -523,6 +526,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                   static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask)),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -864,7 +868,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week) *
+    uint8_t flow_sources;
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
                 (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
@@ -884,7 +889,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1, !(costing_->IsClosed(directededge, tile)));
+                                     -1, !(costing_->IsClosed(directededge, tile)),
+                                     static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask)));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -947,8 +953,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
+    uint8_t flow_sources;
     Cost cost =
-        costing_->EdgeCost(directededge, tile, time_info.second_of_week) * edge.percent_along();
+        costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -965,7 +972,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
-                                     !(costing_->IsClosed(directededge, tile)), -1);
+                                     !(costing_->IsClosed(directededge, tile)),
+                                     static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask)),
+                                     -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
