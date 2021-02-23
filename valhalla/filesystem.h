@@ -134,6 +134,7 @@ std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&
   return is;
 }
 
+bool exists(const filesystem::path& p);
 class directory_iterator;
 class recursive_directory_iterator;
 class directory_entry {
@@ -176,6 +177,7 @@ public:
   friend bool is_empty(const class path&);
 
 private:
+  friend bool exists(const filesystem::path& p);
   friend directory_iterator;
   friend recursive_directory_iterator;
   directory_entry(const filesystem::path& path, bool iterate)
@@ -185,7 +187,10 @@ private:
     if (stat(path_.c_str(), &s) == 0) {
       // if it is a directory and we are going to iterate over it
       if (S_ISDIR(s.st_mode) && iterate) {
-        dir_.reset(opendir(path_.c_str()), [](DIR* d) { closedir(d); });
+        dir_.reset(opendir(path_.c_str()), [](DIR* d) {
+          if (d)
+            closedir(d);
+        });
         return;
       }
       // make a dirent from stat info for starting out
@@ -250,6 +255,7 @@ private:
     }
     return entry_.get();
   }
+
   std::shared_ptr<DIR> dir_;
   std::shared_ptr<dirent> entry_;
   filesystem::path path_;
@@ -339,7 +345,7 @@ inline bool operator!=(const recursive_directory_iterator& lhs,
 }
 
 inline bool exists(const path& p) {
-  return directory_entry(p).exists();
+  return directory_entry(p, false).exists();
 }
 
 inline bool is_directory(const path& p) {
@@ -376,9 +382,9 @@ inline bool create_directories(const path& p) {
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
 #ifdef _WIN32
-      if (_mkdir(partial.c_str()) != 0) {
+      if (_mkdir(partial.c_str()) != 0 && errno != EEXIST) {
 #else
-      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0 && errno != EEXIST) {
 #endif
         return false;
         // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
@@ -415,23 +421,58 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
 }
 
-inline bool remove(const path& p) {
-  return ::remove(p.c_str()) == 0;
+inline bool rename(const path& p, const path& q) {
+  return ::rename(p.c_str(), q.c_str()) == 0;
 }
 
-inline bool remove_all(const path& p) {
+inline bool remove(const path& p) {
+  bool ret = ::remove(p.c_str()) == 0;
+
+  // it can occur that another thread is removing the same file
+  // object at the same time. Occasionally it will occur that
+  // while one thread is deleting (thread 1), the other thread
+  // (thread 2) will receive -1 from ::remove() and (errno==ENOENT
+  // or errno==EINVAL). And yet, the file still exists until thread 1
+  // is finished deleting. In this exact moment, if thread 2 calls
+  // stat() on the file object in question it will get 0 which means
+  // "file object exists". We kinda want thread 2 to wait for the
+  // file object to truly go out of existence. Hence, this spin loop.
+  if (!ret) {
+    if ((errno == EINVAL) || (errno == ENOENT)) {
+      const int max_tries = 10000;
+      int tries = 0;
+      struct stat s;
+      while ((stat(p.c_str(), &s) == 0) && (tries < max_tries))
+        tries++;
+    } else
+      throw std::runtime_error("filesystem_error filesystem::remove");
+  }
+
+  return ret;
+}
+
+inline std::uintmax_t remove_all(const path& p) {
+  std::uintmax_t num_removed = 0;
+
   // for each entry in this directory
   for (directory_iterator i(p), end; i != end; ++i) {
     // if its a directory we recurse depth first
     if (i->is_directory()) {
-      if (!remove_all(i->path()))
-        return false;
-    } // otherwise its a file or link try to delete it
-    else if (!remove(i->path()))
-      return false;
+      auto sub_num_removed = remove_all(i->path());
+      num_removed += sub_num_removed;
+    }
+    // otherwise its a file or link try to delete it
+    else {
+      if (remove(i->path()))
+        num_removed++;
+    }
   }
+
   // delete the root
-  return remove(p);
+  if (remove(p))
+    num_removed++;
+
+  return num_removed;
 }
 
 } // namespace filesystem

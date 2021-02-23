@@ -1073,7 +1073,6 @@ void TripLegBuilder::Build(
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
   // Keep track of the time
-  auto date_time = origin.has_date_time() ? origin.date_time() : "";
   baldr::DateTime::tz_sys_info_cache_t tz_cache;
   const auto forward_time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
 

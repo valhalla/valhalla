@@ -45,7 +45,7 @@ struct TimeInfo {
    * Create TimeInfo object with default parameters.
    * @return    TimeInfo structure
    */
-  static TimeInfo invalid() {
+  static inline TimeInfo invalid() {
     return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
   }
 
@@ -251,6 +251,11 @@ struct TimeInfo {
             static_cast<uint64_t>(std::abs(sfn)),
             sfn < 0,
             tz_cache};
+  }
+
+  // returns localtime as a string
+  std::string date_time() const {
+    return DateTime::seconds_to_date(local_time, dt::get_tz_db().from_index(timezone_index), false);
   }
 
   // for unit tests

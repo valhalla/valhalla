@@ -67,7 +67,8 @@ TEST(GraphBuilder, TestConstructEdges) {
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
-  EXPECT_TRUE(filesystem::remove_all(tile_dir));
+  filesystem::remove_all(tile_dir);
+  EXPECT_TRUE(!filesystem::exists(tile_dir));
 }
 
 // Test that only a subset of tiles are built when explicitly asked for.

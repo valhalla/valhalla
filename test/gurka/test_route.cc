@@ -247,7 +247,7 @@ TEST(AutoDataFix, deprecation) {
 class AlgorithmTest : public ::testing::Test {
 protected:
   static gurka::map map;
-  static uint32_t current, historical, constrained;
+  static uint32_t current, historical, constrained, freeflow;
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
@@ -281,7 +281,10 @@ protected:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algorithm_selection",
-                            {{"mjolnir.shortcuts", "false"}});
+                            {
+                                {"mjolnir.shortcuts", "false"},
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                            });
     map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
 
     // add live traffic
@@ -297,30 +300,38 @@ protected:
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
 
-      // 200 dct coeficients
-      std::vector<int16_t> historical(200, -1337);
+      // speeds for every 5 min bucket of the week
+      std::array<float, kBucketsPerWeek> historical;
+      historical.fill(7);
+      for (size_t i = 0; i < historical.size(); ++i) {
+        // TODO: if we are in morning or evening set a different speed and add another test
+      }
       return historical;
     });
 
-    // tests below use saturday at 9am
-    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    // tests below use saturday at 9am and thursday 4am (27 if for leap seconds)
+    size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60 + 27;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
       auto tile = reader->GetGraphTile(tile_id);
       for (const auto& e : tile->GetDirectedEdges()) {
-        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
+        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, 0);
         EXPECT_EQ(current, 50);
-        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week);
+        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week_constrained);
         EXPECT_EQ(historical, 7);
-        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week);
+        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week_constrained);
         EXPECT_EQ(constrained, 25);
+        freeflow = tile->GetSpeed(&e, baldr::kFreeFlowMask, second_of_week_freeflow);
+        EXPECT_EQ(freeflow, 75);
       }
     }
   }
 };
 
 gurka::map AlgorithmTest::map = {};
-uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0;
+uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
+         AlgorithmTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api) {
   uint32_t kmh = -1;
@@ -411,6 +422,15 @@ TEST_F(AlgorithmTest, Bidir) {
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), current);
   }
+
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-28T04:00"},
+                                 {"/costing_options/auto/speed_types/0", "freeflow"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), freeflow);
+  }
 }
 
 /*************************************************************/
@@ -471,6 +491,229 @@ TEST(Standalone, DontIgnoreRestriction) {
 
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"D", "E"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
+TEST(Standalone, BridgingEdgeIsRestricted) {
+  const std::string ascii_map = R"(
+   A----B----C--------D----E----F-----G
+)";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BC", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"CD", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"DE", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"EF", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"FG", {{"highway", "primary"}, {"oneway", "yes"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "CD", "via"},
+           {gurka::way_member, "DE", "via"},
+           {gurka::way_member, "EF", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_entry"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/bridging_edge_is_restricted",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
+TEST(Standalone, AvoidExtraDetours) {
+  // Check that we don't take extra detours to get the target point. Here is
+  // a special usecase that breaks previous logic about connection edges in bidirectional astar.
+  const std::string ascii_map = R"(
+                             F
+                             2
+                             |
+                             E
+                             |
+      A-1--B--------C--------D---------H---------------------------------------I
+                                       |                                       |
+                                       K---------------------------------------J
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+
+      {"DE", {{"highway", "service"}, {"service", "driveway"}}},
+      {"EF", {{"highway", "service"}, {"service", "driveway"}}},
+
+      {"DH", {{"highway", "primary"}}},
+      {"HI", {{"highway", "primary"}}},
+      {"IJ", {{"highway", "primary"}}},
+      {"JK", {{"highway", "primary"}, {"maxspeed", "10"}}},
+      {"KH", {{"highway", "primary"}}},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, {}, "test/data/avoid_extra_detours");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::vector<GraphId> not_thru_edgeids;
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "C")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "C", "B")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
+  not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
+
+  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())
+      edge.set_not_thru(true);
+  });
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
+}
+
+TEST(Standalone, DoNotAllowDoubleUturns) {
+  // This test checks that bidirectional astar doesn't allow double uturns.
+  // It might happens if we handle connection edges incorrectly.
+  const std::string ascii_map = R"(
+  J---------------2---------I-------------------------------F
+                            |
+                            |
+  A---1-------B-------------C------D------------------------E
+              |                    |
+              K--------------------L
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"BC", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"CI", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"DE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"FI", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"IJ", {{"highway", "primary"}, {"oneway", "yes"}}},
+
+      {"BK", {{"highway", "secondary"}}},
+      {"KL", {{"highway", "secondary"}}},
+      {"LD", {{"highway", "secondary"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "CI", "via"},
+           {gurka::way_member, "IJ", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(nodes, ways, {}, relations, "test/data/do_not_allow_double_uturns");
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
+    const auto names = gurka::detail::get_paths(result).front();
+    if (std::count(names.begin(), names.end(), "CI") == 3)
+      FAIL() << "Double uturn detected!";
+    else
+      FAIL() << "Unexpected path found!";
+  } catch (const std::exception& e) { EXPECT_STREQ(e.what(), "No path could be found for input"); }
+}
+
+TEST(Standalone, OneWayIdToManyEdgeIds) {
+  const std::string ascii_map = R"(
+        A<--B<--C<---D
+                ^
+                |
+                E
+                ^
+                |
+                F
+)";
+
+  const gurka::ways ways = {
+      {"FE", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"EC", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "2"}}},
+      {"CB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"DC", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "FE", "from"},
+           {gurka::way_member, "EC", "via"},
+           {gurka::way_member, "CB", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_left_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/one_way_id_to_many_edge_ids",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
+TEST(Standalone, HonorAccessPropertyWhenConstructingRestriction) {
+  const std::string ascii_map = R"(
+        A<-----B<----D
+               ^
+               |
+        E----->F---->G
+)";
+
+  const gurka::ways ways = {
+      {"EF", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"FG", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"FB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "2"}}},
+      {"DB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "EF", "from"},
+           {gurka::way_member, "FB", "via"},
+           {gurka::way_member, "BA", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/honor_restriction_access_mode",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "A"}, "auto");
     gurka::assert::raw::expect_path(result, {"Unexpected path found"});
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");

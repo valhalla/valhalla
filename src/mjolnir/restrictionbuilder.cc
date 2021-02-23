@@ -23,220 +23,176 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-// Function to replace wayids with graphids.  Will transition up and down the hierarchy as needed.
-std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
-                                GraphReader& reader,
-                                std::mutex& lock,
-                                const std::vector<uint64_t>& res_way_ids) {
+namespace {
 
-  std::deque<GraphId> graphids;
+struct EdgeId {
+  uint64_t way_id;
+  GraphId graph_id;
+};
 
-  lock.lock();
-  graph_tile_ptr endnodetile = reader.GetGraphTile(n_graphId);
-  lock.unlock();
+bool ExpandFromNode(GraphReader& reader,
+                    std::mutex& lock,
+                    uint32_t access,
+                    bool forward,
+                    GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    std::vector<EdgeId>& edge_ids,
+                    const std::vector<uint64_t>& way_ids,
+                    size_t way_id_index,
+                    const graph_tile_ptr& prev_tile,
+                    GraphId prev_node,
+                    GraphId current_node);
 
-  const NodeInfo* n_info = endnodetile->node(n_graphId);
-  bool bBeginFound = false;
-  uint64_t begin_wayid = 0;
-  uint64_t end_wayid = 0;
+bool ExpandFromNodeInner(GraphReader& reader,
+                         std::mutex& lock,
+                         uint32_t access,
+                         bool forward,
+                         GraphId& last_node,
+                         std::unordered_set<GraphId>& visited_nodes,
+                         std::vector<EdgeId>& edge_ids,
+                         const std::vector<uint64_t>& way_ids,
+                         size_t way_id_index,
+                         const graph_tile_ptr& tile,
+                         GraphId prev_node,
+                         GraphId current_node,
+                         const NodeInfo* node_info) {
+  uint64_t way_id = way_ids[way_id_index];
 
-  std::set<GraphId> visited_set;
+  for (size_t j = 0; j < node_info->edge_count(); ++j) {
+    GraphId edge_id(tile->id().tileid(), tile->id().level(), node_info->edge_index() + j);
+    const DirectedEdge* de = tile->directededge(edge_id);
 
-  GraphId prev_Node, avoidId;
-  GraphId currentNode = n_graphId;
+    bool accessible = (forward ? de->forwardaccess() : de->reverseaccess()) & access;
+    if (accessible && de->endnode() != prev_node &&
+        !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
+          de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
+      auto edge_info = tile->edgeinfo(de->edgeinfo_offset());
+      if (edge_info.wayid() == way_id) {
+        edge_ids.push_back({way_id, edge_id});
 
-  for (uint32_t i = 1; i < res_way_ids.size(); i++) {
+        bool found;
+        // expand with the next way_id
+        found = ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                               way_ids, way_id_index + 1, tile, current_node, de->endnode());
+        if (found)
+          return true;
 
-    begin_wayid = res_way_ids.at(i - 1);
-    end_wayid = res_way_ids.at(i);
+        if (visited_nodes.find(de->endnode()) == visited_nodes.end()) {
+          visited_nodes.insert(de->endnode());
 
-    uint32_t j = 0;
-    while (j < n_info->edge_count()) {
+          // expand with the same way_id
+          found = ExpandFromNode(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                                 way_ids, way_id_index, tile, current_node, de->endnode());
+          if (found)
+            return true;
 
-      const DirectedEdge* de = endnodetile->directededge(n_info->edge_index() + j);
-
-      GraphId g_id(endnodetile->id().tileid(), endnodetile->id().level(), n_info->edge_index() + j);
-
-      if (de->endnode() != prev_Node && g_id != avoidId &&
-          !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
-            de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
-        // get the edge info offset
-        auto current_offset = endnodetile->edgeinfo(de->edgeinfo_offset());
-        if (end_wayid == current_offset.wayid()) {
-          // only save the last graphid as the others are not needed.
-          if (i == 1 && graphids.size() > 1) {
-            std::deque<GraphId> tmp(graphids.end() - 1, graphids.end());
-            graphids = tmp;
-          }
-
-          prev_Node = currentNode;
-          graphids.push_back(g_id);
-
-          currentNode = de->endnode();
-          // get the new tile if needed.
-          if (endnodetile->id() != currentNode.Tile_Base()) {
-            lock.lock();
-            endnodetile = reader.GetGraphTile(currentNode);
-            lock.unlock();
-          }
-
-          // get new end node and start over.
-          n_info = endnodetile->node(currentNode);
-          break;
-        } else if (begin_wayid == current_offset.wayid()) {
-          if (visited_set.find(currentNode) == visited_set.end()) {
-            prev_Node = currentNode;
-            visited_set.emplace(currentNode);
-            graphids.push_back(g_id);
-
-            currentNode = de->endnode();
-            // get the new tile if needed.
-            if (endnodetile->id() != currentNode.Tile_Base()) {
-              lock.lock();
-              endnodetile = reader.GetGraphTile(currentNode);
-              lock.unlock();
-            }
-
-            // get new end node and start over.
-            n_info = endnodetile->node(currentNode);
-            j = 0;
-            bBeginFound = true;
-            continue;
-          }
+          visited_nodes.erase(de->endnode());
         }
+
+        edge_ids.pop_back();
       }
-
-      // if we made it here we need to check transition edges.
-      if (j + 1 == n_info->edge_count()) {
-        if (n_info->transition_count() > 0) {
-          bool bfound = false;
-          uint32_t k = 0;
-          while (k < n_info->transition_count()) {
-            // only look at transition edges from this end node
-            graph_tile_ptr temp_endnodetile = endnodetile;
-            // Handle transitions - expand from the end node each transition
-            const NodeTransition* trans = endnodetile->transition(n_info->transition_index() + k);
-
-            if (temp_endnodetile->id() != trans->endnode().Tile_Base()) {
-              lock.lock();
-              temp_endnodetile = reader.GetGraphTile(trans->endnode());
-              lock.unlock();
-            }
-
-            currentNode = trans->endnode();
-            const NodeInfo* tmp_n_info = temp_endnodetile->node(currentNode);
-
-            // look for the end way id.
-            uint32_t l = 0;
-            while (l < tmp_n_info->edge_count()) {
-
-              const DirectedEdge* de = temp_endnodetile->directededge(tmp_n_info->edge_index() + l);
-
-              GraphId g_id(temp_endnodetile->id().tileid(), temp_endnodetile->id().level(),
-                           tmp_n_info->edge_index() + l);
-
-              // only look at non transition edges.
-              if (de->endnode() != prev_Node && g_id != avoidId &&
-                  !(de->IsTransitLine() || de->is_shortcut() ||
-                    de->use() == Use::kTransitConnection || de->use() == Use::kEgressConnection ||
-                    de->use() == Use::kPlatformConnection)) {
-                auto current_offset = temp_endnodetile->edgeinfo(de->edgeinfo_offset());
-
-                if (end_wayid == current_offset.wayid()) {
-                  // only save the last graphid as the others are not needed.
-                  if (i == 1 && graphids.size() > 1) {
-                    std::deque<GraphId> tmp(graphids.end() - 1, graphids.end());
-                    graphids = tmp;
-                  }
-
-                  prev_Node = currentNode;
-                  graphids.push_back(g_id);
-
-                  currentNode = de->endnode();
-                  endnodetile = temp_endnodetile;
-
-                  // get the new tile if needed.
-                  if (endnodetile->id() != currentNode.Tile_Base()) {
-                    lock.lock();
-                    endnodetile = reader.GetGraphTile(currentNode);
-                    lock.unlock();
-                  }
-
-                  // get new end node and start over.
-                  n_info = endnodetile->node(currentNode);
-                  bfound = true;
-                  break; // while (l < tmp_n_info->edge_count())
-                }
-              }
-              l++;
-            }
-
-            if (bfound) {
-              break; // while (k < n_info->transition_count())
-            }
-            k++;
-          }
-          if (!bfound) { // bad restriction or on another level
-            if (bBeginFound && !avoidId.Is_Valid()) {
-              avoidId = graphids.at(0);
-              graphids.clear();
-              bBeginFound = false;
-              visited_set.clear();
-              i = 0; // start over avoiding the first graphid
-                     //(i.e., we walked the graph in the wrong direction)
-              lock.lock();
-              endnodetile = reader.GetGraphTile(n_graphId);
-              lock.unlock();
-              n_info = endnodetile->node(n_graphId);
-              currentNode = n_graphId;
-              prev_Node = GraphId();
-            } else {
-              /*LOG_WARN("Could not recover restriction from way_id " +
-                       std::to_string(res_way_ids.front()) + " to way_id " +
-                       std::to_string(res_way_ids.back()));*/
-              graphids.clear();
-              return graphids;
-            }
-          }
-          break; // while (j < n_info->edge_count())
-        } else if (n_info->transition_count() == 0) {
-          // We need to make sure we did not walk in the wrong direction along a huge wayid that has
-          // no transitions.
-          if (bBeginFound && !avoidId.Is_Valid()) {
-            avoidId = graphids.at(0);
-            graphids.clear();
-            bBeginFound = false;
-            visited_set.clear();
-            i = 0; // start over avoiding the first graphid
-                   //(i.e., we walked the graph in the wrong direction)
-            lock.lock();
-            endnodetile = reader.GetGraphTile(n_graphId);
-            lock.unlock();
-            n_info = endnodetile->node(n_graphId);
-            currentNode = n_graphId;
-            prev_Node = GraphId();
-          } else {
-            /*LOG_WARN("Could not recover restriction from way_id " +
-                     std::to_string(res_way_ids.front()) + " to way_id " +
-                     std::to_string(res_way_ids.back()));*/
-            graphids.clear();
-            return graphids;
-          }
-          break; // while (j < n_info->edge_count())
-        }
-      } // if (j + 1 == n_info->edge_count())
-      j++;
     }
   }
+  return false;
+}
 
-  if (!bBeginFound) { // happens when opp edge is found and via a this node.
-    /*LOG_WARN("Could not recover restriction from way_id " + std::to_string(res_way_ids.front()) +
-             " to way_id " + std::to_string(res_way_ids.back()));*/
-    graphids.clear();
+// The function does depth-first-search to convert way_ids to the edge_ids
+//
+//
+// pseudo-code
+//  def DepthFirstSearch(way_id, node):
+//   if not way_id:
+//     # we matched all way ids
+//     return true
+//   for edge in edges(node): # edges = directed_edges + transition_node_edges
+//     if edge.way_id == way_id:
+//       if DepthFirstSearch(next(way_id), edge.end_node):
+//         return true
+//       if DepthFirstSearch(way_id, edge.end_node):
+//         return true
+//    return false
+bool ExpandFromNode(GraphReader& reader,
+                    std::mutex& lock,
+                    uint32_t access,
+                    bool forward,
+                    GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    std::vector<EdgeId>& edge_ids,
+                    const std::vector<uint64_t>& way_ids,
+                    size_t way_id_index,
+                    const graph_tile_ptr& prev_tile,
+                    GraphId prev_node,
+                    GraphId current_node) {
+  if (way_id_index == way_ids.size()) {
+    // assign last node to use it for the reverse search later
+    last_node = current_node;
+    return true;
   }
 
-  n_graphId = currentNode;
-  return graphids;
+  auto tile = prev_tile;
+  if (tile->id() != current_node.Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(current_node);
+    lock.unlock();
+  }
+
+  auto node_info = tile->node(current_node);
+
+  bool found;
+  // expand from the current node
+  found = ExpandFromNodeInner(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                              way_ids, way_id_index, tile, prev_node, current_node, node_info);
+  if (found)
+    return true;
+
+  // expand from the transition nodes
+  for (size_t k = 0; k < node_info->transition_count(); ++k) {
+    const NodeTransition* trans = tile->transition(node_info->transition_index() + k);
+
+    graph_tile_ptr trans_tile = tile;
+    if (trans_tile->id() != trans->endnode().Tile_Base()) {
+      lock.lock();
+      trans_tile = reader.GetGraphTile(trans->endnode());
+      lock.unlock();
+    }
+
+    found = ExpandFromNodeInner(reader, lock, access, forward, last_node, visited_nodes, edge_ids,
+                                way_ids, way_id_index, trans_tile, prev_node, trans->endnode(),
+                                trans_tile->node(trans->endnode()));
+    if (found)
+      return true;
+  }
+
+  return false;
+}
+
+std::vector<GraphId> GetGraphIds(GraphId& start_node,
+                                 GraphReader& reader,
+                                 std::mutex& lock,
+                                 const std::vector<uint64_t>& way_ids,
+                                 uint32_t access,
+                                 bool forward) {
+  lock.lock();
+  graph_tile_ptr tile = reader.GetGraphTile(start_node);
+  lock.unlock();
+
+  std::unordered_set<GraphId> visited_nodes{start_node};
+  std::vector<EdgeId> edge_ids;
+  ExpandFromNode(reader, lock, access, forward, start_node, visited_nodes, edge_ids, way_ids, 0, tile,
+                 GraphId(), start_node);
+  if (edge_ids.empty())
+    return {};
+
+  // ignore duplicated way_ids in the prefix so [1, 1, 1, 2, 54] => [1, 2, 54]
+  auto it = std::find_if(edge_ids.begin() + 1, edge_ids.end(),
+                         [&](const EdgeId& id) { return id.way_id != edge_ids.front().way_id; });
+  --it;
+  std::vector<GraphId> res;
+  res.reserve(edge_ids.end() - it);
+  for (; it != edge_ids.end(); ++it) {
+    res.push_back(it->graph_id);
+  }
+  return res;
 }
 
 void build(const std::string& complex_restriction_from_file,
@@ -347,7 +303,8 @@ void build(const std::string& complex_restriction_from_file,
               }
 
               // walk in the forward direction.
-              std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+              std::vector<GraphId> tmp_ids =
+                  GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
@@ -372,7 +329,8 @@ void build(const std::string& complex_restriction_from_file,
                 }
 
                 res_way_ids.push_back(e_offset.wayid());
-                tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                tmp_ids =
+                    GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), false);
 
                 if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
 
@@ -489,7 +447,8 @@ void build(const std::string& complex_restriction_from_file,
                 res_way_ids.push_back(restriction_to.to());
 
                 // walk in the forward direction (reverse in relation to the restriction)
-                std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                std::vector<GraphId> tmp_ids =
+                    GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), false);
 
                 // now that we have the tile and currentNode walk in the reverse
                 // direction(forward in relation to the restriction) as this is really what
@@ -513,7 +472,8 @@ void build(const std::string& complex_restriction_from_file,
                     res_way_ids.push_back(restriction.to());
                   }
 
-                  tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
+                  tmp_ids =
+                      GetGraphIds(currentNode, reader, lock, res_way_ids, restriction.modes(), true);
 
                   if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
                     std::vector<GraphId> vias;
@@ -595,6 +555,8 @@ void build(const std::string& complex_restriction_from_file,
   // Send back the statistics
   result.set_value(stats);
 }
+
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {

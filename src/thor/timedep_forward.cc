@@ -14,7 +14,7 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
+constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
 TimeDepForward::TimeDepForward(uint32_t max_reserved_labels_count)
@@ -235,7 +235,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, restriction_idx);
+                           transition_cost, restriction_idx,
+                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;
@@ -512,7 +513,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
-                         baldr::kInvalidRestriction);
+                         baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)));
     // Set the origin flag
     edge_label.set_origin();
 
