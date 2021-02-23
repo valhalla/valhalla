@@ -161,3 +161,65 @@ def decode(encoded):
 
 print(decode(sys.argv[1]))
 ```
+
+## R
+
+Here is an example of decoding in R.
+
+``` r
+library(tidyverse)
+
+decode <- function(encoded) {
+  chars <- stringr::str_split(encoded, "")[[1]]
+  lats <- vector(mode = "integer", length = 1)
+  lons <- vector(mode = "integer", length = 1)
+  i <- 0
+  
+  while (i < length(chars)){
+    shift <- 0
+    result <- 0
+    byte <- 0x20L
+    
+    while (byte >= 0x20) {  
+      i <- i + 1
+      byte <- chars[[i]] %>% utf8ToInt() - 63
+      result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
+      shift <- shift + 5
+      if (byte < 0x20) break
+    }
+    
+    if (bitwAnd(result, 1)) {
+      result <- result %>% bitwShiftR(1) %>% bitwNot()
+    } else {
+      result <- result %>% bitwShiftR(1)
+    }
+    
+    lats <- c(lats, (lats[[length(lats)]] + result))
+    
+    shift <- 0
+    result <- 0
+    byte <- 10000L
+    
+    while (byte >= 0x20) {  
+      i <- i + 1
+      byte <- chars[[i]] %>% utf8ToInt() - 63
+      result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
+      shift <- shift + 5
+      if (byte < 0x20) break
+    }
+    
+    if (bitwAnd(result, 1)) {
+      result <- result %>% bitwShiftR(1) %>% bitwNot()
+    } else {
+      result <- result %>% bitwShiftR(1)
+    }
+    
+    lons <- c(lons, (lons[[length(lons)]] + result))
+  }
+  
+  decoded <- tibble::tibble(lat = lats[2:length(lats)]/1000000,
+                            lng = lons[2:length(lons)]/1000000)
+  
+  return (decoded)
+}
+```

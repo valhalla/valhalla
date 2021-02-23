@@ -24,6 +24,14 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // cost creates large performance drops - so perhaps some other metric can be found?
 constexpr float kThresholdDelta = 420.0f;
 
+// Relative cost extension to find alternative routes.
+constexpr float kAlternativeCostExtend = 0.1f;
+// Maximum number of additional iterations allowed once the first connection has been found.
+// For alternative routes we use bigger cost extension than in the case with one route. This
+// may lead to a significant increase in the number of iterations (~time). So, we should limit
+// iterations in order no to drop performance too much.
+constexpr uint32_t kAlternativeIterationsDelta = 100000;
+
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id)
@@ -40,7 +48,9 @@ namespace thor {
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(uint32_t max_reserved_labels_count)
     : PathAlgorithm(), max_reserved_labels_count_(max_reserved_labels_count) {
-  threshold_ = 0;
+  cost_threshold_ = 0;
+  iterations_threshold_ = 0;
+  desired_paths_count_ = 1;
   mode_ = TravelMode::kDrive;
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
@@ -110,7 +120,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
   // Set the cost threshold to the maximum float value. Once the initial connection is found
   // the threshold is set.
-  threshold_ = std::numeric_limits<float>::max();
+  cost_threshold_ = std::numeric_limits<float>::max();
+  iterations_threshold_ = std::numeric_limits<uint32_t>::max();
 
   // Support for hierarchy transitions
   hierarchy_limits_forward_ = costing_->GetHierarchyLimits();
@@ -141,7 +152,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
   // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
@@ -306,6 +317,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -348,7 +360,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
@@ -521,6 +533,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -550,6 +563,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
+
+  desired_paths_count_ = 1;
+  if (options.has_alternates() && options.alternates())
+    desired_paths_count_ += options.alternates();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
@@ -597,6 +614,11 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       (*interrupt)();
     }
 
+    // Terminate if the iterations threshold has been exceeded.
+    if ((edgelabels_reverse_.size() + edgelabels_forward_.size()) > iterations_threshold_) {
+      return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+    }
+
     // Get the next predecessor (based on which direction was expanded in prior step)
     if (expand_forward) {
       forward_pred_idx = adjacencylist_forward_.pop();
@@ -607,7 +629,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
         // Terminate if the cost threshold has been exceeded.
-        if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
+        if (fwd_pred.sortcost() + cost_diff_ > cost_threshold_) {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
@@ -640,7 +662,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
         // Terminate if the cost threshold has been exceeded.
-        if (rev_pred.sortcost() > threshold_) {
+        if (rev_pred.sortcost() > cost_threshold_) {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
@@ -753,12 +775,20 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
+
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
 
-  // Set a threshold to extend search
-  if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost()) + kThresholdDelta;
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+    float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = sortcost + kThresholdDelta;
+    } else {
+      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
   }
 
   // setting this edge as connected
@@ -806,12 +836,20 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
+
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
 
-  // Set a threshold to extend search
-  if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_) + kThresholdDelta;
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+    float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = sortcost + kThresholdDelta;
+    } else {
+      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
@@ -882,7 +920,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1);
+                                     -1, !(costing_->IsClosed(directededge, tile)));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -962,7 +1000,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(), -1);
+                                     dist, mode_, c, !opp_dir_edge->not_thru(),
+                                     !(costing_->IsClosed(directededge, tile)), -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
@@ -978,21 +1017,14 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
 // Form the path from the adjacency list.
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
-                                                                const Options& options,
+                                                                const Options& /*options*/,
                                                                 const valhalla::Location& origin,
                                                                 const valhalla::Location& dest,
                                                                 const baldr::TimeInfo& time_info,
                                                                 const bool invariant) {
-
-  // we need to figure out the maximum number of paths we could form here and
-  // if its more than 1 we need to sort them so we do the best first
-  size_t desired_paths = 1;
-  bool allow_alternates = options.has_alternates() && options.alternates() > 0;
-
   LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
-  if (allow_alternates) {
-    desired_paths += options.alternates();
+  if (desired_paths_count_ > 1) {
     // Cull alternate paths longer than maximum stretch
     // TODO: we should skip adding the connection at all if it's greater than stretch
     filter_alternates_by_stretch(best_connections_);
@@ -1001,7 +1033,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
   // get maximum amount of sharing parameter based on origin->destination distance
-  float max_sharing = allow_alternates ? get_max_sharing(origin, dest) : 0.f;
+  float max_sharing = desired_paths_count_ > 1 ? get_max_sharing(origin, dest) : 0.f;
 
   LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 
@@ -1024,7 +1056,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   // that were requested or we run out of paths that we can actually make
   std::vector<std::vector<PathInfo>> paths;
   for (auto best_connection = best_connections_.cbegin();
-       paths.size() < desired_paths && best_connection != best_connections_.cend();
+       paths.size() < desired_paths_count_ && best_connection != best_connections_.cend();
        ++best_connection) {
     // Get the indexes where the connection occurs.
     uint32_t idx1 = edgestatus_forward_.Get(best_connection->edgeid).index();
