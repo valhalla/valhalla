@@ -136,6 +136,7 @@ const std::string kShapeAttributesTime = "shape_attributes.time";
 const std::string kShapeAttributesLength = "shape_attributes.length";
 const std::string kShapeAttributesSpeed = "shape_attributes.speed";
 const std::string kShapeAttributesSpeedLimit = "shape_attributes.speed_limit";
+const std::string kShapeAttributesClosure = "shape_attributes.closure";
 
 // Categories
 const std::string kNodeCategory = "node.";
