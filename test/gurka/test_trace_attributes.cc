@@ -39,4 +39,3 @@ TEST(Standalone, SacScaleAttributes) {
   EXPECT_STREQ(edges[1]["sac_scale"].GetString(), "alpine_hiking");
   EXPECT_FALSE(edges[2].HasMember("sac_scale"));
 }
-
