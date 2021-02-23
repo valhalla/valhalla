@@ -140,6 +140,7 @@ inline TripLeg_CycleLane GetTripLegCycleLane(const baldr::CycleLane cyclelane) {
 constexpr TripLeg_SacScale kTripLegSacScale[] = {TripLeg_SacScale_kNoSacScale,
                                                  TripLeg_SacScale_kHiking,
                                                  TripLeg_SacScale_kMountainHiking,
+                                                 TripLeg_SacScale_kDemandingMountainHiking,
                                                  TripLeg_SacScale_kAlpineHiking,
                                                  TripLeg_SacScale_kDemandingAlpineHiking,
                                                  TripLeg_SacScale_kDifficultAlpineHiking};
