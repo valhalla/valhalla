@@ -211,17 +211,6 @@ const std::string req_with_closure_annotations = R"({
 }
 )";
 
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include <iostream>
-
-void print_json(const rapidjson::Document& doc) {
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  doc.Accept(writer);
-  std::cout << buffer.GetString() << std::endl;
-}
-
 void expect_closures(const rapidjson::Document& response,
                      const std::vector<std::pair<int, int>>& expected_closures,
                      int expected_coord_count) {
