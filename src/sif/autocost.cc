@@ -517,7 +517,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!pred.has_flow_speed() || flow_mask_ == 0) {
+      if (!pred.has_flow_speed()) {
         turn_cost = kTCCrossing;
       } else {
         turn_cost = kTCStraight;
@@ -550,7 +550,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!pred.has_flow_speed() || flow_mask_ == 0) {
+    if (!pred.has_flow_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
@@ -582,7 +582,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!has_flow_speed || flow_mask_ == 0) {
+      if (!has_flow_speed) {
         turn_cost = kTCCrossing;
       } else {
         turn_cost = kTCStraight;
@@ -615,7 +615,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!has_flow_speed || flow_mask_ == 0) {
+    if (!has_flow_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
