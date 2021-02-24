@@ -32,7 +32,7 @@ protected:
         {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "tertiary"}}},
         {"DEF", {{"highway", "primary"}}},  {"GHI", {{"highway", "primary"}}},
         {"ADG", {{"highway", "motorway"}}}, {"BE", {{"highway", "secondary"}}},
-        {"EH", {{"highway", "service"}}},
+        {"EH", {{"highway", "tertiary"}}},
     };
 
     // generate the lls for the nodes in the map
