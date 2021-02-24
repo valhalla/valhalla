@@ -614,8 +614,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // know whether or not the costing actually cares about the speed of the edge. Perhaps a
     // refactor of costing to have a GetSpeed function which EdgeCost calls internally but which we
     // can also call externally
+    uint8_t flow_sources;
     auto speed = directededge->length() /
-                 costing->EdgeCost(directededge, graphtile, second_of_week).secs * 3.6;
+                 costing->EdgeCost(directededge, graphtile, second_of_week, flow_sources).secs * 3.6;
     trip_edge->set_speed(speed);
   }
 
