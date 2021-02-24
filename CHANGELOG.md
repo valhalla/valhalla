@@ -18,6 +18,8 @@
    * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
    * FIXED: Honor access mode while matching OSMRestriction with the graph [#2849](https://github.com/valhalla/valhalla/pull/2849)
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
+    
+   * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
@@ -32,6 +34,8 @@
    * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
+   * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

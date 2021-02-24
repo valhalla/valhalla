@@ -154,6 +154,10 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    // Mark the predecessor as a deadend to be consistent with how the
+    // edgelabels are set when an *actual* deadend (i.e. some dangling OSM geometry)
+    // is labelled
+    pred.set_deadend(true);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
            ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
@@ -366,6 +370,10 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    // Mark the predecessor as a deadend to be consistent with how the
+    // edgelabels are set when an *actual* deadend (i.e. some dangling OSM geometry)
+    // is labelled
+    pred.set_deadend(true);
     // Check if edge is null before using it (can happen with regional data sets)
     return opp_edge &&
            ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,

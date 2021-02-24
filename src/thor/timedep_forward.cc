@@ -70,6 +70,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     const DirectedEdge* opp_edge;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
+    pred.set_deadend(true);
     return opp_edge &&
            ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
                               {opp_edge, opp_edge_id, edgestatus_.GetPtr(opp_edge_id, tile)}, tile,

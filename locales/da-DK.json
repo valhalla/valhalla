@@ -1,6 +1,8 @@
 {
   "posix_locale": "da_DK.UTF-8",
-  "aliases": "da",
+  "aliases": [
+    "da"
+  ],
   "instructions": {
     "approach_verbal_alert": {
       "phrases": {
