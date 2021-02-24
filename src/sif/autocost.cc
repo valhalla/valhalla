@@ -515,11 +515,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!pred.has_flow_speed()) {
-        turn_cost = kTCCrossing;
-      } else {
-        turn_cost = kTCStraight;
-      }
+      turn_cost = kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
@@ -580,11 +576,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!has_flow_speed) {
-        turn_cost = kTCCrossing;
-      } else {
-        turn_cost = kTCStraight;
-      }
+      turn_cost = kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
