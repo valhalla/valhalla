@@ -43,7 +43,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
   // helps keep things well conditioned. What this represents is, "if our point
   // projection onto a segment is within this distance of either segment end,
   // just snap to that end."
-  const float snap_tol = 0.001; // 1 mm
+  const float snap_tol = 0.0; // 1 mm
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
@@ -93,7 +93,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         // 1.0 means the other end.
         const float dist = edge->forward() ? offset : 1.f - offset;
 
-        // Normally exact comparisons of doubles is avoided. However, the call to
+        // Normally, exact comparisons of doubles is avoided. However, the call to
         // helpers::Project() employs a snap_tol, which ensures that the projection
         // will be snapped to the segment end if the projection is within 'snap_tol',
         // making these exact comparisons reasonable.
@@ -120,7 +120,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         // 1.0 means the other end.
         const float dist = opp_edge->forward() ? offset : 1.f - offset;
 
-        // Normally exact comparisons of doubles is avoided. However, the call to
+        // Normally, exact comparisons of doubles is avoided. However, the call to
         // helpers::Project() employs a snap_tol, which ensures that the projection
         // will be snapped to the segment end if the projection is within 'snap_tol',
         // making these exact comparisons reasonable.
