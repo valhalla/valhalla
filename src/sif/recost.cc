@@ -120,12 +120,17 @@ void recost_forward(baldr::GraphReader& reader,
     // the cost for traversing this intersection
     Cost transition_cost = node ? costing.TransitionCost(edge, node, label) : Cost{};
     // update the cost to the end of this edge
-    cost += transition_cost + costing.EdgeCost(edge, tile, offset_time.second_of_week) * edge_pct;
+    uint8_t flow_sources;
+    cost += transition_cost +
+            costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources) * edge_pct;
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO, !ignore_access);
+                      transition_cost, time_restrictions_TODO, !ignore_access,
+                      static_cast<bool>(flow_sources &
+                                        (baldr::kFreeFlowMask | baldr::kConstrainedFlowMask |
+                                         baldr::kPredictedFlowMask | baldr::kCurrentFlowMask)));
     // hand back the label
     label_cb(label);
     // next edge

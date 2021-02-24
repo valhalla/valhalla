@@ -137,8 +137,10 @@ public:
    * @param   seconds Time of week in seconds.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost
-  EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr&, const uint32_t) const override {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const graph_tile_ptr&,
+                        const uint32_t,
+                        uint8_t&) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 
@@ -164,12 +166,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_flow_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t,
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
-                                     const baldr::DirectedEdge*) const override {
+                                     const baldr::DirectedEdge*,
+                                     const bool) const override {
     return {};
   }
 
