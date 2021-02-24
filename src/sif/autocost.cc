@@ -479,8 +479,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
             edge->toll() * toll_factor_;
 
-  float service_factor_ = 2; // 1.5; //2   // Avoid service roads factor.
-
   switch (edge->use()) {
     case Use::kAlley:
       factor *= alley_factor_;
