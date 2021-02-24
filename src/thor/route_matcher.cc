@@ -186,8 +186,10 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         // get the cost of traversing the node and the edge
         auto& costing = mode_costing[static_cast<int>(mode)];
         auto transition_cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
+        uint8_t flow_sources;
         auto cost =
-            transition_cost + costing->EdgeCost(de, end_node_tile, offset_time_info.second_of_week);
+            transition_cost +
+            costing->EdgeCost(de, end_node_tile, offset_time_info.second_of_week, flow_sources);
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
@@ -197,8 +199,19 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel,       edge_id, de, {}, 0, 0, mode, 0, {},
-                           kInvalidRestriction, true};
+        prev_edge_label = {kInvalidLabel,
+                           edge_id,
+                           de,
+                           {},
+                           0,
+                           0,
+                           mode,
+                           0,
+                           {},
+                           kInvalidRestriction,
+                           true,
+                           static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
+                                                             kPredictedFlowMask | kCurrentFlowMask))};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -375,8 +388,10 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                                     : time_info;
 
         // Get the cost of traversing the edge
+        uint8_t flow_sources;
         elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile,
-                                                                  offset_time_info.second_of_week) *
+                                                                  offset_time_info.second_of_week,
+                                                                  flow_sources) *
                    (1 - edge.percent_along());
         // overwrite time with timestamps
         if (options.use_timestamps())
@@ -386,8 +401,19 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
 
         // Set previous edge label
-        prev_edge_label =
-            {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}, baldr::kInvalidRestriction, true};
+        prev_edge_label = {kInvalidLabel,
+                           graphid,
+                           de,
+                           {},
+                           0,
+                           0,
+                           mode,
+                           0,
+                           {},
+                           baldr::kInvalidRestriction,
+                           true,
+                           static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
+                                                             kPredictedFlowMask | kCurrentFlowMask))};
 
         // Continue walking shape to find the end node
         GraphId end_node;
@@ -425,9 +451,11 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
-          elapsed += transition_cost +
-                     costing->EdgeCost(end_de, end_edge_tile, offset_time_info.second_of_week) *
-                         end_edge.percent_along();
+          uint8_t flow_sources;
+          elapsed +=
+              transition_cost + costing->EdgeCost(end_de, end_edge_tile,
+                                                  offset_time_info.second_of_week, flow_sources) *
+                                    end_edge.percent_along();
           // overwrite time with timestamps
           if (options.use_timestamps())
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
@@ -447,9 +475,11 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     for (const auto& end : end_nodes) {
       if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile,
-                                                                  time_info.second_of_week) *
-                   (end.second.first.percent_along() - edge.percent_along());
+        uint8_t flow_sources;
+        elapsed +=
+            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile,
+                                                           time_info.second_of_week, flow_sources) *
+            (end.second.first.percent_along() - edge.percent_along());
         if (options.use_timestamps())
           elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
