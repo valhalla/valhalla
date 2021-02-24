@@ -35,6 +35,9 @@ constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+// Note: all roads of class "Service, other" are already penalized with low_class_penalty, so for
+// generic service roads these penalties will add up
+constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
@@ -71,6 +74,12 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
+
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Weighting factor based on road class. These apply penalties to lower class
 // roads.
 constexpr float kRoadClassFactor[] = {
@@ -106,6 +115,8 @@ constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 } // namespace
 
@@ -460,6 +471,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
     factor *= living_street_factor_;
+  } else if (edge->use() == Use::kServiceRoad) {
+    factor *= service_factor_;
   }
 
   return {sec * factor, sec};
@@ -682,6 +695,16 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -703,6 +726,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
@@ -734,6 +759,8 @@ public:
   using TruckCost::ferry_transition_cost_;
   using TruckCost::gate_cost_;
   using TruckCost::maneuver_penalty_;
+  using TruckCost::service_factor_;
+  using TruckCost::service_penalty_;
   using TruckCost::toll_booth_cost_;
 };
 
@@ -839,6 +866,22 @@ TEST(TruckCost, testTruckCostParams) {
     ctorTester.reset(make_truckcost_from_json("low_class_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->low_class_penalty_,
                 test::IsBetween(kLowClassPenaltyRange.min, kLowClassPenaltyRange.max));
+  }
+
+  // service_penalty_
+  distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("service_penalty", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("service_factor", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 
   // weight_
