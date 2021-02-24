@@ -30,8 +30,8 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(true),
-        path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0),
+        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
+        has_flow_speed_(0), path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0),
         transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -49,6 +49,8 @@ public:
    * @param path_distance    Accumulated path distance
    * @param transition_cost  Transition cost
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
+   * @param closure_pruning  Should closure pruning be enabled on this path?
+   * @param has_flow_speed   Do we have any of the measured speed types set?
    * @param path_id          When searching more than one path at a time this denotes which path the
    *                         this label is tracking
    */
@@ -63,6 +65,7 @@ public:
             const Cost& transition_cost,
             const uint8_t restriction_idx,
             const bool closure_pruning,
+            const bool has_flow_speed,
             const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
@@ -73,8 +76,9 @@ public:
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
-        closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
-        cost_(cost), sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
+        closure_pruning_(closure_pruning), has_flow_speed_(has_flow_speed), path_id_(path_id),
+        restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost), distance_(dist),
+        transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -360,6 +364,14 @@ public:
     return closure_pruning_;
   }
 
+  /**
+   * Do we have any of the measured speed types set?
+   * @return Returns true if we have any of the measured speed types set.
+   */
+  bool has_flow_speed() const {
+    return has_flow_speed_;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -386,19 +398,20 @@ protected:
   uint64_t mode_ : 4;
 
   /**
-   * endnode_:        GraphId of the end node of the edge. This allows the
-   *                  expansion to occur by reading the node and not having
-   *                  to re-read the directed edge.
-   * use_:            Use of the prior edge.
-   * classification_: Road classification
-   * shortcut_:       Was the prior edge a shortcut edge?
-   * dest_only_:      Was the prior edge destination only?
-   * origin_:         True if this is an origin edge.
-   * toll_:           Edge is toll.
-   * not_thru_:       Flag indicating edge is not_thru.
-   * deadend_:        Flag indicating edge is a dead-end.
-   * on_complex_rest: Part of a complex restriction.
-   * closure_pruning_:Was closure pruning active on prior edge?
+   * endnode_:          GraphId of the end node of the edge. This allows the
+   *                    expansion to occur by reading the node and not having
+   *                    to re-read the directed edge.
+   * use_:              Use of the prior edge.
+   * classification_:   Road classification
+   * shortcut_:         Was the prior edge a shortcut edge?
+   * dest_only_:        Was the prior edge destination only?
+   * origin_:           True if this is an origin edge.
+   * toll_:             Edge is toll.
+   * not_thru_:         Flag indicating edge is not_thru.
+   * deadend_:          Flag indicating edge is a dead-end.
+   * on_complex_rest:   Part of a complex restriction.
+   * closure_pruning_:  Was closure pruning active on prior edge?
+   * has_flow_speed_:   Do we have any of the measured speed types set?
    */
   uint64_t endnode_ : 46;
   uint64_t use_ : 6;
@@ -411,7 +424,7 @@ protected:
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
   uint64_t closure_pruning_ : 1;
-  uint64_t spare_0 : 1;
+  uint64_t has_flow_speed_ : 1;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
@@ -453,6 +466,7 @@ public:
    * @param tc                Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
    * @param closure_pruning   Is closure pruning active.
+   * @param has_flow_speed    Do we have any of the measured speed types set?
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
    * @param path_id           When searching more than one path at a time this denotes which path the
    *                          this label is tracking
@@ -468,6 +482,7 @@ public:
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
               const bool closure_pruning,
+              const bool has_flow_speed,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -481,6 +496,7 @@ public:
                   transition_cost,
                   restriction_idx,
                   closure_pruning,
+                  has_flow_speed,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -499,6 +515,7 @@ public:
    * @param path_distance     Accumulated path distance.
    * @param not_thru_pruning  Is not thru pruning enabled.
    * @param closure_pruning   Is closure pruning active.
+   * @param has_flow_speed    Do we have any of the measured speed types set?
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
    * @param path_id           When searching more than one path at a time this denotes which path the
    *                          this label is tracking
@@ -513,6 +530,7 @@ public:
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool closure_pruning,
+              const bool has_flow_speed,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -526,6 +544,7 @@ public:
                   transition_cost,
                   restriction_idx,
                   closure_pruning,
+                  has_flow_speed,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -541,6 +560,8 @@ public:
    * @param dist             Distance to the destination in meters.
    * @param mode             Mode of travel along this edge.
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
+   * @param closure_pruning   Is closure pruning active.
+   * @param has_flow_speed    Do we have any of the measured speed types set?
    * @param path_id          When searching more than one path at a time this denotes which path the
    *                         this label is tracking
    */
@@ -553,6 +574,7 @@ public:
               const sif::TravelMode mode,
               const uint8_t restriction_idx,
               const bool closure_pruning,
+              const bool has_flow_speed,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -565,6 +587,7 @@ public:
                   Cost{},
                   restriction_idx,
                   closure_pruning,
+                  has_flow_speed,
                   path_id),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
@@ -697,6 +720,7 @@ public:
                   transition_cost,
                   restriction_idx,
                   true,
+                  false,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
