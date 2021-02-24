@@ -315,14 +315,6 @@ void HandleOnlyRestrictionProperties(const std::vector<Result>& results,
   }
 }
 
-void PrintRestriction(const ComplexRestrictionBuilder& res, std::ostream& ss) {
-  ss << res.from_graphid();
-  for (auto id : res.via_list_) {
-    ss << ' ' << id;
-  }
-  ss << " " << res.to_graphid() << '\n';
-}
-
 void build(const std::string& complex_restriction_from_file,
            const std::string& complex_restriction_to_file,
            const boost::property_tree::ptree& hierarchy_properties,
@@ -482,10 +474,6 @@ void build(const std::string& complex_restriction_from_file,
                   }
                 }
                 if (!bfound) { // no dups.
-                  std::ostringstream ss;
-                  ss << "RW " << restriction.relation_id_ << ' ';
-                  PrintRestriction(complex_restriction, ss);
-                  LOG_INFO(ss.str());
                   reverse_tmp_cr.emplace(to, complex_restriction);
                   tilebuilder.AddReverseComplexRestriction(complex_restriction);
                   reverse_count++;
@@ -642,20 +630,8 @@ void build(const std::string& complex_restriction_from_file,
 
                       // happens if we got while processing only_* restriction
                       if (complex_restriction.to_graphid().Tile_Base() != tile_id) {
-                        {
-                          std::ostringstream ss;
-                          ss << "FW " << restriction.relation_id_ << ' ';
-                          PrintRestriction(complex_restriction, ss);
-                          LOG_INFO(ss.str());
-                        }
                         stats.restrictions.push_back(std::move(complex_restriction));
                       } else {
-                        {
-                          std::ostringstream ss;
-                          ss << "FW " << restriction.relation_id_ << ' ';
-                          PrintRestriction(complex_restriction, ss);
-                          LOG_INFO(ss.str());
-                        }
                         DirectedEdge& edge = tilebuilder.directededge_builder(to.id());
                         edge.set_end_restriction(edge.end_restriction() | restriction.modes());
 
