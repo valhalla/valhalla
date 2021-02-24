@@ -96,7 +96,7 @@ void build_pbf(const nodelayout& node_locations,
  * @param result the result of a /route or /match request
  * @return list of edge names
  */
-std::vector<std::string> get_path(const valhalla::Api& result);
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
 } // namespace detail
 
 /**

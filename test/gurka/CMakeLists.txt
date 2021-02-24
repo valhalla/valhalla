@@ -12,6 +12,7 @@ if(ENABLE_DATA_TOOLS)
     set_source_files_properties(
       test_route_incidents.cc
       test_incident_loading.cc
+      test_closure_annotations.cc
     PROPERTIES COMPILE_FLAGS "-Werror")
   endif (UNIX)
 
