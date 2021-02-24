@@ -773,6 +773,21 @@ void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incide
   doc.emplace("incidents", serialized_incidents);
 }
 
+void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
+  if (!leg.closures_size()) {
+    return;
+  }
+  auto closures = json::array({});
+  closures->reserve(leg.closures_size());
+  for (const valhalla::TripLeg_Closure& closure : leg.closures()) {
+    auto closure_obj = json::map({});
+    closure_obj->emplace("geometry_index_start", static_cast<uint64_t>(closure.begin_shape_index()));
+    closure_obj->emplace("geometry_index_end", static_cast<uint64_t>(closure.end_shape_index()));
+    closures->emplace_back(std::move(closure_obj));
+  }
+  doc.emplace("closures", closures);
+}
+
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
@@ -1543,6 +1558,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
+
+    // Add closures
+    serializeClosures(path_leg, *output_leg);
 
     // Keep the leg
     output_legs->emplace_back(std::move(output_leg));

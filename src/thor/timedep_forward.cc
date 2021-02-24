@@ -70,6 +70,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     const DirectedEdge* opp_edge;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
+    pred.set_deadend(true);
     return opp_edge &&
            ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
                               {opp_edge, opp_edge_id, edgestatus_.GetPtr(opp_edge_id, tile)}, tile,
@@ -235,7 +236,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, restriction_idx);
+                           transition_cost, restriction_idx,
+                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;
@@ -512,7 +514,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
-                         baldr::kInvalidRestriction);
+                         baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)));
     // Set the origin flag
     edge_label.set_origin();
 
