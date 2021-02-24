@@ -48,7 +48,7 @@ constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll
 constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
-constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;  // Seconds
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -109,14 +109,14 @@ constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePena
 constexpr float kMaxHighwayBiasFactor = 8.0f;
 
 constexpr float kHighwayFactor[] = {
-   1.0f,  // Motorway
-   0.5f,  // Trunk
-   0.0f,  // Primary
-   0.0f,  // Secondary
-   0.0f,  // Tertiary
-   0.0f,  // Unclassified
-   0.0f,  // Residential
-   0.0f   // Service, other
+    1.0f, // Motorway
+    0.5f, // Trunk
+    0.0f, // Primary
+    0.0f, // Secondary
+    0.0f, // Tertiary
+    0.0f, // Unclassified
+    0.0f, // Residential
+    0.0f  // Service, other
 };
 
 constexpr float kSurfaceFactor[] = {
@@ -239,7 +239,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -261,12 +262,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_flow_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_flow_speed) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -441,9 +444,10 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const {
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
   auto final_speed = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -509,7 +513,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!edge->has_flow_speed() || flow_mask_ == 0) {
+      if (!pred.has_flow_speed() || flow_mask_ == 0) {
         turn_cost = kTCCrossing;
       } else {
         turn_cost = kTCStraight;
@@ -532,15 +536,17 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
     bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft || edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight || edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kRight ||
+        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0) {
+    if (!pred.has_flow_speed() || flow_mask_ == 0) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
@@ -561,7 +567,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const {
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_flow_speed) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -571,7 +578,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      if (!edge->has_flow_speed() || flow_mask_ == 0) {
+      if (!has_flow_speed || flow_mask_ == 0) {
         turn_cost = kTCCrossing;
       } else {
         turn_cost = kTCStraight;
@@ -594,15 +601,17 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost;
     bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft || edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight || edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
+        edge->turntype(idx) == baldr::Turn::Type::kRight ||
+        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0) {
+    if (!has_flow_speed || flow_mask_ == 0) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
@@ -728,8 +737,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
             .get_value_or(kDefaultUseLivingStreets)));
 
     pbf_costing_options->set_service_penalty(
-            kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
-                                     .get_value_or(kDefaultServicePenalty)));
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
 
   } else {
     // Set pbf values to defaults
@@ -966,8 +975,9 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override {
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
@@ -1132,8 +1142,9 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override {
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
