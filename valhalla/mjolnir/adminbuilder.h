@@ -13,6 +13,5 @@ namespace mjolnir {
 
 void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files);
-
 }
 } // namespace valhalla
