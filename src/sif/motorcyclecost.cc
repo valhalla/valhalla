@@ -37,6 +37,7 @@ constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;         // Factor between 0 and 1
@@ -66,6 +67,12 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
+
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
@@ -86,6 +93,8 @@ constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestin
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -443,6 +452,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
     factor *= living_street_factor_;
+  } else if (edge->use() == Use::kServiceRoad) {
+    factor *= service_factor_;
   }
 
   return {sec * factor, sec};
@@ -626,6 +637,16 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -646,6 +667,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -675,6 +698,8 @@ public:
   using MotorcycleCost::ferry_transition_cost_;
   using MotorcycleCost::gate_cost_;
   using MotorcycleCost::maneuver_penalty_;
+  using MotorcycleCost::service_factor_;
+  using MotorcycleCost::service_penalty_;
   using MotorcycleCost::toll_booth_cost_;
 };
 
@@ -782,6 +807,22 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
     ctorTester.reset(make_motorcyclecost_from_json("ferry_cost", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
                 test::IsBetween(kFerryCostRange.min, kFerryCostRange.max));
+  }
+
+  // service_penalty_
+  distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorcyclecost_from_json("service_penalty", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorcyclecost_from_json("service_factor", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 
   /*

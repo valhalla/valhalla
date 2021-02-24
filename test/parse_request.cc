@@ -29,6 +29,8 @@ constexpr float kDefaultAuto_UseHighways = 0.5f;              // Factor between 
 constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseLivingStreets = 0.1f;         // Factor between 0 and 1
+constexpr float kDefaultAuto_ServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultAuto_ServiceFactor = 1.2f;            // Positive factor
 
 // Motor Scooter defaults
 constexpr float kDefaultMotorScooter_ManeuverPenalty = 5.0f;          // Seconds
@@ -44,6 +46,8 @@ constexpr float kDefaultMotorScooter_UseHills = 0.5f;                 // Factor 
 constexpr float kDefaultMotorScooter_UsePrimary = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultMotorScooter_UseLivingStreets = 0.1f;         // Factor between 0 and 1
 constexpr uint32_t kDefaultMotorScooter_TopSpeed = 45;                // Kilometers per hour
+constexpr float kDefaultMotorScooter_ServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultMotorScooter_ServiceFactor = 1.f;             // Positive factor
 
 // Motorcycle defaults
 constexpr float kDefaultMotorcycle_ManeuverPenalty = 5.0f;          // Seconds
@@ -61,6 +65,8 @@ constexpr float kDefaultMotorcycle_UseTolls = 0.5f;                 // Factor be
 constexpr float kDefaultMotorcycle_UseTrails = 0.0f;                // Factor between 0 and 1
 constexpr float kDefaultMotorcycle_UseLivingStreets = 0.1f;         // Factor between 0 and 1
 constexpr float kDefaultMotorcycle_DestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultMotorcycle_ServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultMotorcycle_ServiceFactor = 1.f;             // Positive factor
 
 // Pedestrian defaults
 constexpr uint32_t kDefaultPedestrian_MaxDistanceFoot = 100000;      // 100 km
@@ -86,6 +92,8 @@ constexpr float kDefaultPedestrian_UseFerry = 1.0f;
 constexpr float kDefaultPedestrian_UseLivingStreets = 0.6f;              // Factor between 0 and 1
 constexpr uint32_t kDefaultPedestrian_TransitStartEndMaxDistance = 2415; // 1.5 miles
 constexpr uint32_t kDefaultPedestrian_TransitTransferMaxDistance = 805;  // 0.5 miles
+constexpr float kDefaultPedestrian_ServicePenalty = 15.0f;               // Seconds
+constexpr float kDefaultPedestrian_ServiceFactor = 1.f;                  // Positive factor
 
 // Bicycle defaults
 constexpr float kDefaultBicycle_ManeuverPenalty = 5.0f;        // Seconds
@@ -101,6 +109,7 @@ constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between
 constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultBicycle_ServicePenalty = 15.0f;   // Seconds
 const std::string kDefaultBicycle_BicycleType = "Hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
     25.0f, // Road bicycle: ~15.5 MPH
@@ -127,6 +136,8 @@ constexpr float kDefaultTruck_TruckWidth = 2.6f;               // Meters (102.36
 constexpr float kDefaultTruck_TruckLength = 21.64f;            // Meters (71 feet)
 constexpr float kDefaultTruck_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultTruck_UseLivingStreets = 0.f;          // Factor between 0 and 1
+constexpr float kDefaultTruck_ServicePenalty = 0.0f;           // Seconds
+constexpr float kDefaultTruck_ServiceFactor = 1.f;             // Positive factor
 
 // Transit defaults
 constexpr float kDefaultTransit_ModeFactor = 1.0f; // Favor this mode?
@@ -483,6 +494,10 @@ void test_default_base_auto_cost_options(const Costing costing, const Options::A
            request.options().costing_options(static_cast<int>(costing)).use_tracks());
   validate("use_living_streets", kDefaultAuto_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultAuto_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+  validate("service_factor", kDefaultAuto_ServiceFactor,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
 }
 
 void test_default_motor_scooter_cost_options(const Costing costing, const Options::Action action) {
@@ -519,6 +534,10 @@ void test_default_motor_scooter_cost_options(const Costing costing, const Option
            request.options().costing_options(static_cast<int>(costing)).use_primary());
   validate("use_living_streets", kDefaultMotorScooter_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultMotorScooter_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+  validate("service_factor", kDefaultMotorcycle_ServiceFactor,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
 }
 
 void test_default_motorcycle_cost_options(const Costing costing, const Options::Action action) {
@@ -551,6 +570,10 @@ void test_default_motorcycle_cost_options(const Costing costing, const Options::
            request.options().costing_options(static_cast<int>(costing)).use_trails());
   validate("use_living_streets", kDefaultMotorcycle_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultMotorcycle_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+  validate("service_factor", kDefaultMotorcycle_ServiceFactor,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
 }
 
 void test_default_pedestrian_cost_options(const Costing costing, const Options::Action action) {
@@ -599,6 +622,10 @@ void test_default_pedestrian_cost_options(const Costing costing, const Options::
            request.options().costing_options(static_cast<int>(costing)).driveway_factor());
   validate("use_living_streets", kDefaultPedestrian_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultPedestrian_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+  validate("service_factor", kDefaultPedestrian_ServiceFactor,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
   validate("transit_start_end_max_distance", kDefaultPedestrian_TransitStartEndMaxDistance,
            request.options()
                .costing_options(static_cast<int>(costing))
@@ -643,6 +670,8 @@ void test_default_bicycle_cost_options(const Costing costing, const Options::Act
            request.options().costing_options(static_cast<int>(costing)).avoid_bad_surfaces());
   validate("use_living_streets", kDefaultBicycle_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultBicycle_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
   validate("cycling_speed",
            kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)],
            request.options().costing_options(static_cast<int>(costing)).cycling_speed());
@@ -691,6 +720,10 @@ void test_default_truck_cost_options(const Costing costing, const Options::Actio
            request.options().costing_options(static_cast<int>(costing)).use_tracks());
   validate("use_living_streets", kDefaultTruck_UseLivingStreets,
            request.options().costing_options(static_cast<int>(costing)).use_living_streets());
+  validate("service_penalty", kDefaultTruck_ServicePenalty,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+  validate("service_factor", kDefaultTruck_ServiceFactor,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
 }
 
 void test_default_transit_cost_options(const Costing costing, const Options::Action action) {
@@ -1584,6 +1617,38 @@ void test_filter_operator_parsing(const Costing costing,
            request.options().costing_options(static_cast<int>(costing)).filter_operator_ids());
 }
 
+void test_service_penalty_parsing(const Costing costing,
+                                  const float specified_value,
+                                  const float expected_value,
+                                  const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "service_penalty";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options().costing_options(static_cast<int>(costing)).service_penalty());
+}
+
+void test_service_factor_parsing(const Costing costing,
+                                 const float specified_value,
+                                 const float expected_value,
+                                 const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "service_factor";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options().costing_options(static_cast<int>(costing)).service_factor());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 TEST(ParseRequest, test_polygons) {
@@ -2178,6 +2243,43 @@ TEST(ParseRequest, test_use_living_streets) {
     test_use_living_streets_parsing(costing, 0.6f, 0.6f);
     test_use_living_streets_parsing(costing, -2.f, default_value);
     test_use_living_streets_parsing(costing, 2.f, default_value);
+  }
+}
+
+TEST(ParseRequest, test_service_penalty) {
+  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  for (auto costing : get_base_auto_costing_list())
+    costing_with_defaults.emplace_back(costing, kDefaultAuto_ServicePenalty);
+  costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_ServicePenalty);
+  costing_with_defaults.emplace_back(Costing::motor_scooter, kDefaultMotorScooter_ServicePenalty);
+  costing_with_defaults.emplace_back(Costing::motorcycle, kDefaultMotorcycle_ServicePenalty);
+  costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServicePenalty);
+  costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_ServicePenalty);
+
+  for (const auto& [costing, default_value] : costing_with_defaults) {
+    test_service_penalty_parsing(costing, default_value, default_value);
+    test_service_penalty_parsing(costing, 0.2f, 0.2f);
+    test_service_penalty_parsing(costing, 600.f, 600.f);
+    test_service_penalty_parsing(costing, -2.f, default_value);
+    test_service_penalty_parsing(costing, 50000.f, default_value);
+  }
+}
+
+TEST(ParseRequest, test_service_factor) {
+  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  for (auto costing : get_base_auto_costing_list())
+    costing_with_defaults.emplace_back(costing, kDefaultAuto_ServiceFactor);
+  costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_ServiceFactor);
+  costing_with_defaults.emplace_back(Costing::motor_scooter, kDefaultMotorScooter_ServiceFactor);
+  costing_with_defaults.emplace_back(Costing::motorcycle, kDefaultMotorcycle_ServiceFactor);
+  costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServiceFactor);
+
+  for (const auto& [costing, default_value] : costing_with_defaults) {
+    test_service_factor_parsing(costing, default_value, default_value);
+    test_service_factor_parsing(costing, 0.5f, 0.5f);
+    test_service_factor_parsing(costing, 10.f, 10.f);
+    test_service_factor_parsing(costing, -2.f, default_value);
+    test_service_factor_parsing(costing, 200000.f, default_value);
   }
 }
 

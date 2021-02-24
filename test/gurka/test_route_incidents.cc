@@ -29,7 +29,7 @@ protected:
 
     // connect the ways via the nodes
     const gurka::ways ways = {
-        {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "tertiary"}}},
+        {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "service"}}},
         {"DEF", {{"highway", "primary"}}},  {"GHI", {{"highway", "primary"}}},
         {"ADG", {{"highway", "motorway"}}}, {"BE", {{"highway", "secondary"}}},
         {"EH", {{"highway", "tertiary"}}},
