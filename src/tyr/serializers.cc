@@ -209,7 +209,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
   writer.Key(key_prefix + "id");
-  writer.String(std::to_string(incident_metadata.id()));
+  writer.Uint64(incident_metadata.id());
   {
     // Type is mandatory
     writer.Key(key_prefix + "type");

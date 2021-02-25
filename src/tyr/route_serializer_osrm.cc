@@ -1753,7 +1753,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     expected_json.Parse(R"({
       "incidents": [
         {
-          "id": "18446744073709551615",
+          "id": 18446744073709551615,
           "type": "weather",
           "iso_3166_1_alpha2": "AU",
           "creation_time": "2020-08-12T14:17:09Z",
@@ -1840,7 +1840,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
     expected_json.Parse(R"({
       "incidents": [
         {
-          "id": "1337",
+          "id": 1337,
           "description": "Fooo",
           "creation_time": "2020-08-12T14:17:09Z",
           "type": "weather",
@@ -1850,7 +1850,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
           "geometry_index_end": 92
         },
         {
-          "id": "2448",
+          "id": 2448,
           "creation_time": "2020-08-12T14:16:40Z",
           "start_time": "2020-08-12T14:18:20Z",
           "end_time": "2020-08-12T14:46:40Z",
