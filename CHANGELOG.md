@@ -22,6 +22,7 @@
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
 
 * **Enhancement**
+   * CHANGED: Clarify usage of directions options [#2886](https://github.com/valhalla/valhalla/pull/2886)
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
