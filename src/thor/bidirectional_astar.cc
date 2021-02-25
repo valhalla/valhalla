@@ -102,9 +102,12 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   const uint32_t bucketsize = costing_->UnitSize();
   const float range = kBucketCount * bucketsize;
 
-  const float mincostf = astarheuristic_forward_.Get(origll);
+  const float mincostf =
+      (astarheuristic_forward_.Get(origll) - astarheuristic_reverse_.Get(origll)) / 2.;
   adjacencylist_forward_.reuse(mincostf, range, bucketsize, &edgelabels_forward_);
-  const float mincostr = astarheuristic_reverse_.Get(destll);
+
+  const float mincostr =
+      (astarheuristic_reverse_.Get(destll) - astarheuristic_forward_.Get(destll)) / 2.;
   adjacencylist_reverse_.reuse(mincostr, range, bucketsize, &edgelabels_reverse_);
 
   edgestatus_forward_.clear();
@@ -312,14 +315,15 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
-  float dist = 0.0f;
-  float sortcost =
-      newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
+  float dist_f = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+  float dist_r = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+  float sortcost = newcost.cost +
+                   (astarheuristic_forward_.Get(dist_f) - astarheuristic_reverse_.Get(dist_r)) / 2.f;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost,
+                                   dist_f, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
@@ -532,14 +536,15 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
-  float dist = 0.0f;
-  float sortcost =
-      newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
+  float dist_f = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+  float dist_r = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+  float sortcost = newcost.cost +
+                   (astarheuristic_reverse_.Get(dist_r) - astarheuristic_forward_.Get(dist_f)) / 2.f;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost,
+                                   dist_r, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    restriction_idx);
@@ -920,15 +925,19 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
-    float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
+    float dist_f =
+        astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    float dist_r =
+        astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    float sortcost =
+        cost.cost + (astarheuristic_forward_.Get(dist_f) - astarheuristic_reverse_.Get(dist_r)) / 2.f;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1, !(costing_->IsClosed(directededge, tile)));
+    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist_f,
+                                     mode_, -1, !(costing_->IsClosed(directededge, tile)));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -998,8 +1007,11 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
-    float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
+
+    float dist_f = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    float dist_r = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    float sortcost =
+        cost.cost + (astarheuristic_reverse_.Get(dist_r) - astarheuristic_forward_.Get(dist_f)) / 2.f;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path. Make sure the opposing
@@ -1008,7 +1020,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(),
+                                     dist_r, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)), -1);
     adjacencylist_reverse_.add(idx);
 
