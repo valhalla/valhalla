@@ -43,6 +43,29 @@ struct NamedSegment {
   std::string name;
   uint32_t index;
   float distance;
+
+  NamedSegment(const std::string& _n, uint32_t _i, float _d): name(_n), index(_i), distance(_d) {
+  }
+
+  NamedSegment(const NamedSegment& ns): name(ns.name), index(ns.index), distance(ns.distance) {
+  }
+
+  NamedSegment(NamedSegment && ns): name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
+  }
+
+  NamedSegment& operator=(const NamedSegment& ns) {
+    name = ns.name;
+    index = ns.index;
+    distance = ns.distance;
+    return *this;
+  }
+
+  NamedSegment& operator=(NamedSegment&& ns) {
+    name = std::move(ns.name);
+    index = ns.index;
+    distance = ns.distance;
+    return *this;
+  }
 };
 
 struct Coordinate {
@@ -1654,8 +1677,7 @@ public:
         std::vector<NamedSegment> segs_by_dist;
         segs_by_dist.reserve(maneuver_summary_map.size());
         for (const auto& map_item : maneuver_summary_map) {
-          segs_by_dist.emplace_back(
-              NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
+          segs_by_dist.emplace_back(map_item.first, map_item.second.first, map_item.second.second);
         }
 
         // Sort list by descending maneuver distance
@@ -1664,23 +1686,23 @@ public:
                     return b.distance < a.distance;
                   });
 
-        leg_segs_by_dist.emplace_back(segs_by_dist);
+        leg_segs_by_dist.emplace_back(std::move(segs_by_dist));
       }
 
-      route_leg_segs_by_dist.emplace_back(leg_segs_by_dist);
+      route_leg_segs_by_dist.emplace_back(std::move(leg_segs_by_dist));
     }
 
     // fill the cache with empty results so we can safely index it with the same
     // dimensionality as the route_leg_segs_by_dist object.
     cache.reserve(route_leg_segs_by_dist.size());
     for (size_t i = 0; i < route_leg_segs_by_dist.size(); i++) {
-      cache.emplace_back(std::vector<std::vector<std::string>>{});
+      cache.emplace_back();
       cache[i].reserve(route_leg_segs_by_dist[i].size());
       for (size_t j = 0; j < route_leg_segs_by_dist[i].size(); j++) {
-        cache[i].emplace_back(std::vector<std::string>{});
+        cache[i].emplace_back();
         cache[i][j].reserve(route_leg_segs_by_dist[i][j].size());
         for (size_t k = 0; k < route_leg_segs_by_dist[i][j].size(); k++) {
-          cache[i][j].emplace_back(std::string{});
+          cache[i][j].emplace_back();
         }
       }
     }
@@ -1748,7 +1770,7 @@ public:
 
       misses++;
 
-      cache[route_idx][leg_idx][n] = summary;
+      cache[route_idx][leg_idx][n] = std::move(summary);
     } else {
       hits++;
     }
@@ -1823,10 +1845,10 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
       std::string leg_summary =
           rscache.get_n_segment_summary(route_i, leg_idx, num_named_segs_needed);
 
-      leg_summaries.emplace_back(leg_summary);
+      leg_summaries.emplace_back(std::move(leg_summary));
     }
 
-    all_summaries.emplace_back(leg_summaries);
+    all_summaries.emplace_back(std::move(leg_summaries));
   }
 
   return all_summaries;
