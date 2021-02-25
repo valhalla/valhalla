@@ -679,7 +679,10 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
-                                           const bool has_flow_speed) const {
+                                           const bool /*has_flow_speed*/) const {
+
+  // TODO: do we want to update the cost if we have flow or speed from traffic.
+
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
