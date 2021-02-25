@@ -44,13 +44,13 @@ struct NamedSegment {
   uint32_t index;
   float distance;
 
-  NamedSegment(const std::string& _n, uint32_t _i, float _d): name(_n), index(_i), distance(_d) {
+  NamedSegment(const std::string& _n, uint32_t _i, float _d) : name(_n), index(_i), distance(_d) {
   }
 
-  NamedSegment(const NamedSegment& ns): name(ns.name), index(ns.index), distance(ns.distance) {
+  NamedSegment(const NamedSegment& ns) : name(ns.name), index(ns.index), distance(ns.distance) {
   }
 
-  NamedSegment(NamedSegment && ns): name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
+  NamedSegment(NamedSegment&& ns) : name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
   }
 
   NamedSegment& operator=(const NamedSegment& ns) {
