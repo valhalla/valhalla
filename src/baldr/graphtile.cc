@@ -346,6 +346,8 @@ void GraphTile::Initialize(const GraphId& graphid) {
     predictedspeeds_.set_offset(reinterpret_cast<uint32_t*>(ptr1));
     predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
 
+    predicted_speed_cache.resize(header_->directededgecount());
+
     lane_connectivity_size_ = header_->predictedspeeds_offset() - header_->lane_connectivity_offset();
   } else {
     lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();

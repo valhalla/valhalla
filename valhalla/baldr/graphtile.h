@@ -582,7 +582,20 @@ public:
     if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;
-      float speed = predictedspeeds_.speed(idx, seconds);
+      uint32_t bucket = seconds / kSpeedBucketSizeSeconds;
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+      float speed = predictedspeeds_.speed(idx, bucket);
+#else
+      float speed;
+      {
+        BucketSpeed& entry = predicted_speed_cache[idx];
+        if (entry.last_bucket != bucket) {
+          entry.speed = predictedspeeds_.speed(idx, bucket);
+          entry.last_bucket = bucket;
+        }
+        speed = entry.speed;
+      }
+#endif
       if (valid_speed(speed)) {
         *flow_sources |= kPredictedFlowMask;
         return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
@@ -773,6 +786,12 @@ protected:
 
   // Map of operator one stops in this tile.
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
+
+  struct BucketSpeed {
+    uint32_t last_bucket = std::numeric_limits<uint32_t>::max();
+    float speed;
+  };
+  mutable std::vector<BucketSpeed> predicted_speed_cache;
 
   // Pointer to live traffic data (can be nullptr if not active)
   TrafficTile traffic_tile{nullptr};
