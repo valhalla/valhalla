@@ -34,7 +34,7 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultBssCost = 120.0f;                // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
-constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;           // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
