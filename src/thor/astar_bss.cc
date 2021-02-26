@@ -219,7 +219,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction);
+                             transition_cost, baldr::kInvalidRestriction, true);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -453,7 +453,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction);
+                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true);
     // Set the origin flag
     edge_label.set_origin();
 
@@ -501,9 +501,6 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
     auto tile = graphreader.GetGraphTile(edgeid);
     assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    auto* endonode = tile->node(directededge->endnode());
-    GraphId startnode =
-        tile->directededge(endonode->edge_index() + directededge->opp_index())->endnode();
 
     destinations_[edge.graph_id()] =
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());

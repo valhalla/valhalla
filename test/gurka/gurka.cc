@@ -310,11 +310,7 @@ inline void build_pbf(const nodelayout& node_locations,
     auto way_id = osm_id++;
     auto found = way.second.find("osm_id");
     if (found != way.second.cend()) {
-      uint64_t id = std::stoull(found->second);
-      if (id < osm_id) {
-        throw std::invalid_argument("Osm way id has already been used");
-      }
-      way_id = id;
+      way_id = std::stoull(found->second);
     }
 
     way_osm_id_map[way.first] = way_id;
@@ -414,6 +410,22 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
   return str;
 }
 
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
+  std::vector<std::vector<std::string>> paths;
+  for (const auto& route : result.trip().routes()) {
+    std::vector<std::string> path;
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        if (node.has_edge()) {
+          path.push_back(detail::to_string(node.edge().name()));
+        }
+      }
+    }
+    paths.push_back(std::move(path));
+  }
+  return paths;
+}
+
 } // namespace detail
 
 /**
@@ -506,8 +518,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-            auto* reverse_directed_edge = tile->directededge(i);
+            graph_tile_ptr reverse_tile = nullptr;
+            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                    reverse_directed_edge);
           }
@@ -988,16 +1001,7 @@ void expect_eta(const valhalla::Api& result,
  */
 void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-
-  std::vector<std::string> actual_names;
-  for (const auto& leg : result.trip().routes(0).legs()) {
-    for (const auto& node : leg.node()) {
-      if (node.has_edge()) {
-        actual_names.push_back(detail::to_string(node.edge().name()));
-      }
-    }
-  }
-
+  const auto actual_names = detail::get_paths(result).front();
   EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 

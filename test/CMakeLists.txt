@@ -15,7 +15,7 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread GEOS::GEOS)
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
@@ -31,7 +31,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
-    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix minbb multipoint_routes
+    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
@@ -54,6 +54,7 @@ if (UNIX)
   set_source_files_properties(
     openlr.cc
     incidents.cc
+    incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif (UNIX)
 
@@ -284,6 +285,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
+  add_dependencies(run-matrix_bss paris_bss_tiles)
   add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)

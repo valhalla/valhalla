@@ -62,7 +62,7 @@ void print_edge(GraphReader& reader,
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
     EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {},
-                         kInvalidRestriction);
+                         kInvalidRestriction, true);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -93,11 +93,6 @@ void walk_edges(const std::string& shape,
   if (shape_pts.size() <= 1) {
     std::cerr << "Not enough shape points to compute the path...exiting" << std::endl;
   }
-  std::vector<Measurement> trace;
-  trace.reserve(shape_pts.size());
-  std::transform(shape_pts.begin(), shape_pts.end(), std::back_inserter(trace), [](const PointLL& p) {
-    return Measurement{p, 10, 10};
-  });
 
   // Use the shape to form a single edge correlation at the start and end of
   // the shape (using heading).
@@ -126,9 +121,10 @@ void walk_edges(const std::string& shape,
     path_location.push_back(projections.at(loc));
     PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
   }
-  std::vector<PathInfo> path;
+
+  std::vector<std::vector<PathInfo>> paths;
   std::vector<PathLocation> correlated;
-  bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, trace, options, path);
+  bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, paths);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
@@ -137,6 +133,7 @@ void walk_edges(const std::string& shape,
   uint64_t current_osmid = 0;
   Cost edge_total;
   Cost trans_total;
+  const auto& path = paths.front();
   for (const auto& path_info : path) {
     // std::cout << "lat: " << result.lnglat.lat() << " lon: " << result.lnglat.lng() << std::endl;
     if (path_info.edgeid == current_id || path_info.edgeid == kInvalidGraphId) {

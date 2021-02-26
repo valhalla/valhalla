@@ -22,18 +22,19 @@ protected:
     A-1----B--------E-----2-F
            |        |       |
            |        |       |
-           |        |       3
            |        |       |
-           C--------D       G
+           |        |       |
+           C--------D       G-----H
                      \
                       I
     )";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "track"}}},       {"BE", {{"highway", "track"}, {"surface", "paved"}}},
-        {"EF", {{"highway", "track"}}},       {"FG", {{"highway", "residential"}}},
+        {"AB", {{"highway", "residential"}}}, {"BE", {{"highway", "track"}, {"surface", "paved"}}},
+        {"EF", {{"highway", "residential"}}}, {"FG", {{"highway", "track"}}},
         {"BC", {{"highway", "residential"}}}, {"CD", {{"highway", "residential"}}},
         {"DE", {{"highway", "residential"}}}, {"DI", {{"highway", "secondary"}}},
+        {"GH", {{"highway", "residential"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -43,7 +44,7 @@ protected:
     test::customize_historical_traffic(use_tracks_map.config, [](baldr::DirectedEdge& e) {
       e.set_free_flow_speed(40);
       e.set_constrained_flow_speed(40);
-      return std::vector<int16_t>{};
+      return boost::none;
     });
   }
 };
@@ -81,8 +82,8 @@ TEST_F(UseTracksTest, test_avoid_tracks) {
 TEST_F(UseTracksTest, test_use_tracks_if_no_other_roads) {
   // use track if it's needed to complete the route
   for (const auto& c : costing) {
-    validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"D", "3"}, c,
+    validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"2", "H"}, c,
                                    {{"/costing_options/" + c + "/use_tracks", "0"}}),
-                  {"DE", "EF", "FG"});
+                  {"EF", "FG", "GH"});
   }
 }

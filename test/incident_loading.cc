@@ -11,11 +11,13 @@ const std::string scratch_dir = std::string("data") + filesystem::path::preferre
 class incident_loading : public testing::Test {
 protected:
   void SetUp() override {
-    ASSERT_TRUE(!filesystem::exists(scratch_dir) || filesystem::remove_all(scratch_dir));
+    filesystem::remove_all(scratch_dir);
+    ASSERT_TRUE(!filesystem::exists(scratch_dir));
     ASSERT_TRUE(filesystem::create_directories(scratch_dir));
   }
   void TearDown() override {
-    ASSERT_TRUE(!filesystem::exists(scratch_dir) || filesystem::remove_all(scratch_dir));
+    filesystem::remove_all(scratch_dir);
+    ASSERT_TRUE(!filesystem::exists(scratch_dir));
   }
 };
 
@@ -282,7 +284,8 @@ TEST_F(incident_loading, watch) {
           EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
               << " should be equivalent";
           // remove the dir and quit before next update
-          EXPECT_TRUE(filesystem::remove_all(scratch_dir))
+          filesystem::remove_all(scratch_dir);
+          EXPECT_TRUE(!filesystem::exists(scratch_dir))
               << " Could not teardown incident loading test dir";
           return true;
         }

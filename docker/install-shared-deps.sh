@@ -45,6 +45,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     libsqlite3-dev \
     libsqlite3-mod-spatialite \
     libtool \
+    lld \
     locales \
     luajit \
     make \

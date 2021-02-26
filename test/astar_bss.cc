@@ -270,11 +270,8 @@ TEST(AstarBss, test_Auto) {
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"auto"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kDrive};
-  std::vector<std::string> expected_route{"Rue de la Perle",   "Rue Vieille du Temple",
-                                          "Rue Barbette",      "Rue Elzévir",
-                                          "Place de Thorigny", "Rue de Thorigny",
-                                          "Rue Debelleyme",    "Rue de Turenne",
-                                          "Rue Commines",      "Rue Amelot"};
+  std::vector<std::string> expected_route{"Rue de la Perle", "Rue des Archives", "Rue Pastourelle",
+                                          "Rue de Turenne",  "Rue Commines",     "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 

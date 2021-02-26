@@ -278,14 +278,14 @@ public:
 
   void add(const statistics& stats);
 
-  void build_db(const boost::property_tree::ptree& pt);
+  void build_db();
 
 private:
-  void create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_tile_tables(sqlite3* db_handle);
 
-  void create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_country_tables(sqlite3* db_handle);
 
-  void create_exit_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_exit_tables(sqlite3* db_handle);
 
   void insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt);
 
