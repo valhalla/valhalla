@@ -94,7 +94,7 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
-                             const bool /*has_flow_speed*/) const override {
+                             const bool /*has_measured_speed*/) const override {
     return {5.0f, 5.0f};
   }
 

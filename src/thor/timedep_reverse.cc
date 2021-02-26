@@ -215,7 +215,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_flow_speed());
+                                      pred.has_measured_speed());
   uint8_t flow_sources;
   auto edge_cost = costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
   Cost newcost = pred.cost() + edge_cost;

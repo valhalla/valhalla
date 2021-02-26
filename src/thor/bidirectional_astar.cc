@@ -517,7 +517,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   const Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_flow_speed());
+                                      pred.has_measured_speed());
   uint8_t flow_sources;
   const Cost newcost = pred.cost() +
                        costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources) +

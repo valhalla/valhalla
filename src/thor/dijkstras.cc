@@ -361,7 +361,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_flow_speed());
+                                        opp_pred_edge, pred.has_measured_speed());
     uint8_t flow_sources;
     Cost newcost =
         pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources);

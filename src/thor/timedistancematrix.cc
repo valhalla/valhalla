@@ -268,7 +268,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Get cost. Use the opposing edge for EdgeCost.
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_flow_speed());
+                                        opp_pred_edge, pred.has_measured_speed());
     uint8_t flow_sources;
     Cost newcost = pred.cost() +
                    costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources) +

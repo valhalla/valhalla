@@ -302,14 +302,14 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
-   * @param  has_flow_speed Do we have any of the measured speed types set?
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
-                                     const bool has_flow_speed = false) const;
+                                     const bool has_measured_speed = false) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.

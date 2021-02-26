@@ -266,14 +266,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
-   * @param  has_flow_speed Do we have any of the measured speed types set?
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_flow_speed) const override;
+                                     const bool has_measured_speed) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -544,7 +544,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!pred.has_flow_speed()) {
+    if (!pred.has_measured_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
@@ -566,7 +566,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_flow_speed) const {
+                                     const bool has_measured_speed) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -605,7 +605,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
-    if (!has_flow_speed) {
+    if (!has_measured_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
