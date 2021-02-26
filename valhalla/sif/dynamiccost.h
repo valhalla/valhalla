@@ -907,10 +907,6 @@ protected:
     c.cost += service_penalty_ *
               (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
     // shortest ignores any penalties in favor of path length
-
-    c.cost += service_penalty_ *
-              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
-
     c.cost *= !shortest_;
     return c;
   }
