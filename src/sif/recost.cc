@@ -128,9 +128,7 @@ void recost_forward(baldr::GraphReader& reader,
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
                       transition_cost, time_restrictions_TODO, !ignore_access,
-                      static_cast<bool>(flow_sources &
-                                        (baldr::kFreeFlowMask | baldr::kConstrainedFlowMask |
-                                         baldr::kPredictedFlowMask | baldr::kCurrentFlowMask)));
+                      static_cast<bool>(flow_sources & baldr::kDefaultFlowMask));
     // hand back the label
     label_cb(label);
     // next edge
