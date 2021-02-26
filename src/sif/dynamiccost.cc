@@ -104,7 +104,8 @@ bool DynamicCost::AllowMultiPass() const {
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
 Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
+  uint8_t flow_sources;
+  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -121,7 +122,8 @@ Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const Edg
 Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
-                                        const baldr::DirectedEdge*) const {
+                                        const baldr::DirectedEdge*,
+                                        const bool) const {
   return {0.0f, 0.0f};
 }
 

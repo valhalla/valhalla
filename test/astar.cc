@@ -1385,7 +1385,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_nk.complex_restriction(true);
     edge_labels_fwd.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_nk,
                                  vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false,
-                                 true);
+                                 true, false);
   }
   DirectedEdge edge_kh;
   {
@@ -1395,7 +1395,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_kh.complex_restriction(true);
     edge_labels_fwd.emplace_back(edge_labels_fwd.size() - 1, std::get<0>(result), std::get<2>(result),
                                  &edge_kh, vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false,
-                                 false, true);
+                                 false, true, false);
   }
   // Create our fwd_pred for the bridging check
   DirectedEdge edge_hi;
@@ -1406,7 +1406,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   vs::BDEdgeLabel fwd_pred(edge_labels_fwd.size() - 1, // Index to predecessor in edge_labels_fwd
                            std::get<0>(edge_hi_result), std::get<2>(edge_hi_result), &edge_hi,
                            vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false,
-                           true);
+                           true, false);
 
   DirectedEdge edge_il;
   {
@@ -1416,7 +1416,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_il.complex_restriction(true);
     edge_labels_rev.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_il,
                                  vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false,
-                                 true);
+                                 true, false);
   }
   // Create the rev_pred for the bridging check
   DirectedEdge edge_ih;
@@ -1425,7 +1425,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   vs::BDEdgeLabel rev_pred(edge_labels_rev.size() - 1, // Index to predecessor in edge_labels_rev
                            std::get<2>(edge_hi_result), std::get<0>(edge_hi_result), &edge_ih,
                            vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false,
-                           true);
+                           true, false);
 
   {
     // Test for forward search
