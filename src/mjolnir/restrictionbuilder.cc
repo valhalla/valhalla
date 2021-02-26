@@ -639,30 +639,36 @@ void build(const std::string& complex_restriction_from_file,
                     addForwardRestriction(tmp_ids);
                   } else {
                     while (tmp_ids.size() > 1) {
-                      GraphId last_edge = *tmp_ids.rbegin();
-                      GraphId pre_last = *std::next(tmp_ids.rbegin());
+                      GraphId last_edge_id = *tmp_ids.rbegin();
+                      GraphId pre_last_edge_id = *std::next(tmp_ids.rbegin());
 
-                      lock.lock();
-                      auto pre_last_tile = reader.GetGraphTile(pre_last);
-                      lock.unlock();
-                      auto pre_last_edge = pre_last_tile->directededge(pre_last);
+                      auto pre_last_tile = tile;
+                      if (pre_last_edge_id.Tile_Base() != pre_last_tile->id()) {
+                        lock.lock();
+                        pre_last_tile = reader.GetGraphTile(pre_last_edge_id);
+                        lock.unlock();
+                      }
+                      auto pre_last_edge = pre_last_tile->directededge(pre_last_edge_id);
 
                       auto end_node = pre_last_edge->endnode();
-                      lock.lock();
-                      auto last_tile = reader.GetGraphTile(end_node);
-                      lock.unlock();
-                      auto node_info = last_tile->node(end_node);
-                      GraphId edge_id(last_tile->id().tileid(), last_tile->id().level(),
+                      auto next_tile = pre_last_tile;
+                      if (end_node.Tile_Base() != next_tile.id()) {
+                        lock.lock();
+                        next_tile = reader.GetGraphTile(end_node);
+                        lock.unlock();
+                      }
+                      auto node_info = next_tile->node(end_node);
+                      GraphId edge_id(next_tile->id().tileid(), next_tile->id().level(),
                                       node_info->edge_index());
                       for (size_t i = 0; i < node_info->edge_count(); ++i, ++edge_id) {
-                        auto de = last_tile->directededge(edge_id);
-                        if (edge_id != last_edge && !de->is_shortcut() &&
+                        auto de = next_tile->directededge(edge_id);
+                        if (edge_id != last_edge_id && !de->is_shortcut() &&
                             (de->forwardaccess() & restriction.modes())) {
                           tmp_ids.back() = edge_id;
                           addForwardRestriction(tmp_ids);
                         }
                       }
-                      for (const auto& trans : last_tile->GetNodeTransitions(node_info)) {
+                      for (const auto& trans : next_tile->GetNodeTransitions(node_info)) {
                         auto to_node = trans.endnode();
                         lock.lock();
                         auto to_tile = reader.GetGraphTile(to_node);
@@ -672,7 +678,7 @@ void build(const std::string& complex_restriction_from_file,
                                         to_node_info->edge_index());
                         for (size_t i = 0; i < to_node_info->edge_count(); ++i, ++edge_id) {
                           auto de = to_tile->directededge(edge_id);
-                          if (edge_id != last_edge && !de->is_shortcut() &&
+                          if (edge_id != last_edge_id && !de->is_shortcut() &&
                               (de->forwardaccess() & restriction.modes())) {
                             tmp_ids.back() = edge_id;
                             addForwardRestriction(tmp_ids);
