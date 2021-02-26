@@ -479,7 +479,7 @@ void build(const std::string& complex_restriction_from_file,
                   while (tmp_ids.size() > 1) {
                     auto last_edge_id = tmp_ids.front();
                     auto last_tile = tile;
-                    if (last_edge_id.Tile_Base() != tile_id) {
+                    if (last_tile->id() != last_edge_id.Tile_Base()) {
                       lock.lock();
                       last_tile = reader.GetGraphTile(last_edge_id);
                       lock.unlock();
@@ -487,7 +487,7 @@ void build(const std::string& complex_restriction_from_file,
                     auto last_de = last_tile->directededge(last_edge_id);
                     auto end_node = last_de->endnode();
                     auto end_node_tile = last_tile;
-                    if (end_node.Tile_Base() != end_node_tile->id()) {
+                    if (end_node_tile->id() != end_node.Tile_Base()) {
                       lock.lock();
                       end_node_tile = reader.GetGraphTile(end_node);
                       lock.unlock();
@@ -652,7 +652,7 @@ void build(const std::string& complex_restriction_from_file,
 
                       auto end_node = pre_last_edge->endnode();
                       auto next_tile = pre_last_tile;
-                      if (end_node.Tile_Base() != next_tile.id()) {
+                      if (end_node.Tile_Base() != next_tile->id()) {
                         lock.lock();
                         next_tile = reader.GetGraphTile(end_node);
                         lock.unlock();
