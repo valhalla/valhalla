@@ -253,7 +253,7 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_measured_speed) const override;
+                                     const bool /*has_measured_speed*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
