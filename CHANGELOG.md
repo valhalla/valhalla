@@ -38,6 +38,7 @@
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
    * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
    * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
+   * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
