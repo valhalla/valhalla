@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -239,11 +239,16 @@ add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  #TODO: need to make sure they actually have python
-  add_subdirectory(src/bindings/python)
-  install(FILES COPYING CHANGELOG.md
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-    COMPONENT python)
+  # favors Py3, falls back to Py2
+  find_package(Python COMPONENTS Development Interpreter)
+  if (Python_FOUND)
+    add_subdirectory(src/bindings/python)
+    install(FILES COPYING CHANGELOG.md
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
+      COMPONENT python)
+  else()
+    message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
+  endif()
 endif()
 
 ## Executable targets
