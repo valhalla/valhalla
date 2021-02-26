@@ -281,10 +281,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources &
-                                                 (kFreeFlowMask | kConstrainedFlowMask |
-                                                  kPredictedFlowMask | kCurrentFlowMask)),
-                               restriction_idx);
+                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
@@ -522,10 +519,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources &
-                                                   (kFreeFlowMask | kConstrainedFlowMask |
-                                                    kPredictedFlowMask | kCurrentFlowMask)),
-                                 -1);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
     adjacencylist_rev_.add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

@@ -323,9 +323,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
-                                   static_cast<bool>(flow_sources &
-                                                     (kFreeFlowMask | kConstrainedFlowMask |
-                                                      kPredictedFlowMask | kCurrentFlowMask)),
+                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -549,9 +547,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
-                                   static_cast<bool>(flow_sources &
-                                                     (kFreeFlowMask | kConstrainedFlowMask |
-                                                      kPredictedFlowMask | kCurrentFlowMask)),
+                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -940,9 +936,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1, !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources &
-                                                       (kFreeFlowMask | kConstrainedFlowMask |
-                                                        kPredictedFlowMask | kCurrentFlowMask)));
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1025,10 +1019,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources &
-                                                       (kFreeFlowMask | kConstrainedFlowMask |
-                                                        kPredictedFlowMask | kCurrentFlowMask)),
-                                     -1);
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

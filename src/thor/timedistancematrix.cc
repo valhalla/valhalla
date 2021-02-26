@@ -126,9 +126,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources &
-                                               (kFreeFlowMask | kConstrainedFlowMask |
-                                                kPredictedFlowMask | kCurrentFlowMask)));
+                             static_cast<bool>(flow_sources & kDefaultFlowMask));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -293,9 +291,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources &
-                                               (kFreeFlowMask | kConstrainedFlowMask |
-                                                kPredictedFlowMask | kCurrentFlowMask)));
+                             static_cast<bool>(flow_sources & kDefaultFlowMask));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -469,8 +465,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {},
                          baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
-                         static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
-                                                           kPredictedFlowMask | kCurrentFlowMask)));
+                         static_cast<bool>(flow_sources & kDefaultFlowMask));
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -524,8 +519,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
                          {}, baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
-                         static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
-                                                           kPredictedFlowMask | kCurrentFlowMask)));
+                         static_cast<bool>(flow_sources & kDefaultFlowMask));
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

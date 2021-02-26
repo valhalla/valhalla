@@ -286,8 +286,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             {},
             baldr::kInvalidRestriction,
             true,
-            static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
-                                              kPredictedFlowMask | kCurrentFlowMask))};
+            static_cast<bool>(flow_sources & kDefaultFlowMask)};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

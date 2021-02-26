@@ -210,8 +210,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            {},
                            kInvalidRestriction,
                            true,
-                           static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
-                                                             kPredictedFlowMask | kCurrentFlowMask))};
+                           static_cast<bool>(flow_sources & kDefaultFlowMask)};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -412,8 +411,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            {},
                            baldr::kInvalidRestriction,
                            true,
-                           static_cast<bool>(flow_sources & (kFreeFlowMask | kConstrainedFlowMask |
-                                                             kPredictedFlowMask | kCurrentFlowMask))};
+                           static_cast<bool>(flow_sources & kDefaultFlowMask)};
 
         // Continue walking shape to find the end node
         GraphId end_node;
