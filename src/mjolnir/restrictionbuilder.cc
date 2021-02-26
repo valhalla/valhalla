@@ -364,13 +364,6 @@ void build(const std::string& complex_restriction_from_file,
       // Go through directed edges and "enhance" directed edge attributes
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
-        {
-          std::ostringstream ss;
-          ss << "Edgee ";
-          ss << tile_id << " " << nodeinfo.edge_index() + j;
-
-          LOG_INFO(ss.str());
-        }
 
         if (directededge.IsTransitLine() || directededge.is_shortcut() ||
             directededge.use() == Use::kTransitConnection ||
