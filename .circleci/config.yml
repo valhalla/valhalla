@@ -29,11 +29,12 @@ jobs:
       - run:
           name: Push Valhalla Docker Images
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-latest
               docker push valhalla/valhalla:run-latest
             elif [[ ! -z "${CIRCLE_TAG}" ]]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-${CIRCLE_TAG}
               docker push valhalla/valhalla:run-${CIRCLE_TAG}
             fi

@@ -54,6 +54,7 @@ if (UNIX)
   set_source_files_properties(
     openlr.cc
     incidents.cc
+    incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif (UNIX)
 

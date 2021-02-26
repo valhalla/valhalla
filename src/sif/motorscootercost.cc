@@ -35,6 +35,7 @@ constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;         // Factor between 0 and 1
@@ -65,6 +66,12 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
+
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
@@ -84,6 +91,8 @@ constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestin
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -382,7 +391,8 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -406,7 +416,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
@@ -449,6 +459,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
     factor *= living_street_factor_;
+  } else if (edge->use() == Use::kServiceRoad) {
+    factor *= service_factor_;
   }
 
   return {sec * factor, sec};
@@ -620,6 +632,17 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -637,6 +660,8 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -666,6 +691,8 @@ public:
   using MotorScooterCost::ferry_transition_cost_;
   using MotorScooterCost::gate_cost_;
   using MotorScooterCost::maneuver_penalty_;
+  using MotorScooterCost::service_factor_;
+  using MotorScooterCost::service_penalty_;
   using MotorScooterCost::top_speed_;
 };
 
@@ -771,6 +798,22 @@ TEST(MotorscooterCost, testMotorScooterCostParams) {
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("top_speed", (*iDistributor)(generator)));
     EXPECT_THAT(ctorTester->top_speed_, test::IsBetween(kTopSpeedRange.min, kTopSpeedRange.max));
+  }
+
+  // service_penalty_
+  fDistributor.reset(make_real_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorscootercost_from_json("service_penalty", (*fDistributor)(generator)));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  fDistributor.reset(make_real_distributor_from_range(kServiceFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorscootercost_from_json("service_factor", (*fDistributor)(generator)));
+    EXPECT_THAT(ctorTester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 
   /**

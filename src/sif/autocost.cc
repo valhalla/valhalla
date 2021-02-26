@@ -39,6 +39,7 @@ constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultRailFerryCost = 300.0f;          // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
@@ -67,6 +68,9 @@ constexpr float kTaxiFactor = 0.85f;
 
 // Do not avoid alleys by default
 constexpr float kDefaultAlleyFactor = 1.0f;
+
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.2f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -102,16 +106,18 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 constexpr float kHighwayFactor[] = {
-    10.0f, // Motorway
-    0.5f,  // Trunk
-    0.0f,  // Primary
-    0.0f,  // Secondary
-    0.0f,  // Tertiary
-    0.0f,  // Unclassified
-    0.0f,  // Residential
-    0.0f   // Service, other
+    1.0f, // Motorway
+    0.5f, // Trunk
+    0.0f, // Primary
+    0.0f, // Secondary
+    0.0f, // Tertiary
+    0.0f, // Unclassified
+    0.0f, // Residential
+    0.0f  // Service, other
 };
 
 constexpr float kSurfaceFactor[] = {
@@ -390,7 +396,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -414,7 +421,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
@@ -464,6 +471,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
     case Use::kLivingStreet:
       factor *= living_street_factor_;
+      break;
+    case Use::kServiceRoad:
+      factor *= service_factor_;
       break;
     default:
       break;
@@ -678,6 +688,16 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -702,6 +722,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -791,7 +813,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -815,7 +838,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
@@ -935,6 +958,8 @@ public:
       factor *= track_factor_;
     } else if (edge->use() == Use::kLivingStreet) {
       factor *= living_street_factor_;
+    } else if (edge->use() == Use::kServiceRoad) {
+      factor *= service_factor_;
     }
 
     return Cost(sec * factor, sec);
@@ -956,7 +981,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -980,7 +1006,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
@@ -1099,6 +1125,8 @@ public:
       factor *= track_factor_;
     } else if (edge->use() == Use::kLivingStreet) {
       factor *= living_street_factor_;
+    } else if (edge->use() == Use::kServiceRoad) {
+      factor *= service_factor_;
     }
 
     return Cost(sec * factor, sec);
@@ -1120,7 +1148,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -1144,7 +1173,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
@@ -1186,6 +1215,8 @@ public:
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
   using AutoCost::maneuver_penalty_;
+  using AutoCost::service_factor_;
+  using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
 };
 
@@ -1311,6 +1342,22 @@ TEST(AutoCost, testAutoCostParams) {
        kUseFerryRange.min, kUseFerryRange.max));
    }
  **/
+
+  // service_penalty_
+  distributor = make_distributor_from_range(kServicePenaltyRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("service_penalty", distributor(generator));
+    EXPECT_THAT(tester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  distributor = make_distributor_from_range(kServiceFactorRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("service_factor", distributor(generator));
+    EXPECT_THAT(tester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
+  }
 
   // flow_mask_
   using tc = std::tuple<std::string, std::string, uint8_t>;
