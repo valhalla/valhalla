@@ -3,7 +3,6 @@
 import sys
 import os
 import valhalla
-from valhalla.utils import decode_polyline
 import json
 import re
 
@@ -31,4 +30,3 @@ assert('legs' in route['trip'] and len(route['trip']['legs']) > 0)
 assert('maneuvers' in route['trip']['legs'][0] and len(route['trip']['legs'][0]['maneuvers']) > 0)
 assert('instruction' in route['trip']['legs'][0]['maneuvers'][0])
 assert(has_cyrillic(route['trip']['legs'][0]['maneuvers'][0]['instruction']))
-assert(len(decode_polyline(route['trip']['legs'][0]['shape'])) == 344)

@@ -13,7 +13,6 @@
    * FIXED: Dont add predictive traffic to the tile if it's empty [#2826](https://github.com/valhalla/valhalla/pull/2826)
    * FIXED: Fix logic bidirectional astar to avoid double u-turns and extra detours [#2802](https://github.com/valhalla/valhalla/pull/2802)
    * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
-   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
    * FIXED: Increase limits for timedep_* algorithms. Split track_factor into edge factor and transition penalty [#2845](https://github.com/valhalla/valhalla/pull/2845)
    * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
    * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
@@ -21,6 +20,7 @@
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
     
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)

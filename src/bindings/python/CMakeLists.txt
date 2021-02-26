@@ -6,7 +6,6 @@ set_target_properties(python_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAK
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/utils.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils.py COPYONLY)
 
 # Part of OpenCVDetectPython.cmake
 set(_executable ${PYTHON_EXECUTABLE})
