@@ -92,7 +92,7 @@ constexpr float kDefaultPedestrian_UseFerry = 1.0f;
 constexpr float kDefaultPedestrian_UseLivingStreets = 0.6f;              // Factor between 0 and 1
 constexpr uint32_t kDefaultPedestrian_TransitStartEndMaxDistance = 2415; // 1.5 miles
 constexpr uint32_t kDefaultPedestrian_TransitTransferMaxDistance = 805;  // 0.5 miles
-constexpr float kDefaultPedestrian_ServicePenalty = 15.0f;               // Seconds
+constexpr float kDefaultPedestrian_ServicePenalty = 0.0f;                // Seconds
 constexpr float kDefaultPedestrian_ServiceFactor = 1.f;                  // Positive factor
 
 // Bicycle defaults
