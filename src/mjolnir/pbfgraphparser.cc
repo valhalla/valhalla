@@ -1432,8 +1432,10 @@ public:
       way_.set_speed(default_speed_);
     }
 
-    // set the speed limit, default to max speed
-    way_.set_speed_limit(has_max_speed_ ? max_speed_ : kUnlimitedSpeedLimit);
+    // set the speed limit
+    if (has_max_speed_) {
+      way_.set_speed_limit(max_speed_);
+    }
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
