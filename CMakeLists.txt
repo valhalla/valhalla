@@ -247,6 +247,7 @@ if(ENABLE_PYTHON_BINDINGS)
       DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
       COMPONENT python)
   else()
+    set(ENABLE_PYTHON_BINDINGS OFF)
     message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
   endif()
 endif()
