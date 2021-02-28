@@ -374,6 +374,7 @@ public:
   float road_factor_;              // Road factor based on use_roads_
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
   float service_penalty_;          // Penalty (seconds) to use a generic service road
+  float road_class_factor_[8];        // Road class factor based on each road class
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -459,6 +460,10 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
 
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
+
+  for (uint32_t s = 0; s < costing_options.road_class_factor().size(); s++) {
+    road_class_factor_[s] = costing_options.road_class_factor()[s];
+  }
 
   // Penalty to use service roads
   service_penalty_ = costing_options.service_penalty();
@@ -633,18 +638,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
       accommodation_factor = 0.7f + use_roads_ * 0.2f;
     }
 
-    // Penalize roads that have more than one lane (in the direction of travel)
-    if (edge->lanecount() > 1) {
-      roadway_stress += (static_cast<float>(edge->lanecount()) - 1) * 0.05f * road_factor_;
-    }
-
-    // Designated truck routes add to roadway stress
-    if (edge->truck_route()) {
-      roadway_stress += kTruckStress;
-    }
-
     // Add in penalization for road classification
-    roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+    roadway_stress += road_factor_ * road_class_factor_[static_cast<uint32_t>(edge->classification())];
     // Then multiply by speed so that higher classified roads are more severely punished for being
     // fast.
     roadway_stress *= speedpenalty_[road_speed];
@@ -692,7 +687,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
-  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+  float class_factor = road_class_factor_[static_cast<uint32_t>(edge->classification())];
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
@@ -781,7 +776,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
-  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+  float class_factor = road_class_factor_[static_cast<uint32_t>(edge->classification())];
   float bike_accom = 1.0f;
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     bike_accom = 0.05f;
@@ -931,6 +926,19 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
             .get_value_or(kDefaultBicycleType));
 
+    // road_class_factors
+    auto filter_attributes_json =
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options, "/road_class_factor");
+    if (filter_attributes_json) {
+      for (const auto& filter_attribute : *filter_attributes_json) {
+        pbf_costing_options->add_road_class_factor(filter_attribute.GetFloat());
+      }
+    } else {
+      for (const auto& filter_attribute : kRoadClassFactor) {
+        pbf_costing_options->add_road_class_factor(filter_attribute);
+      }
+    }
+
     // convert string to enum, set ranges and defaults based on enum
     BicycleType type;
     if (pbf_costing_options->transport_type() == "Cross") {
@@ -995,6 +1003,10 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+
+    for (const auto& filter_attribute : kRoadClassFactor) {
+      pbf_costing_options->add_road_class_factor(filter_attribute);
+    }
   }
 }
 
