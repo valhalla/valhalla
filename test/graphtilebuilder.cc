@@ -69,8 +69,8 @@ void assert_tile_equalish(const GraphTile& a,
       ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
     // make sure the edges' shape and names match
     for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
-      auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+      auto a_info = a.edgeinfo(a.directededge(i));
+      auto b_info = b.edgeinfo(b.directededge(i));
       ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
       ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
       for (size_t j = 0; j < a_info.GetNames().size(); ++j)
@@ -294,7 +294,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto decoded_shape = valhalla::midgard::decode<std::vector<PointLL>>(encoded_shape5);
   auto encoded_shape7 = valhalla::midgard::encode7(decoded_shape);
   graph_tile_ptr fake = new fake_tile(encoded_shape5);
-  auto info = fake->edgeinfo(fake->directededge(0)->edgeinfo_offset());
+  auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
   auto bins = GraphTileBuilder::BinEdges(fake, tweeners);

@@ -233,7 +233,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // the shape interval to get regular spacing. Use the faster resample method.
   // This does not use spherical interpolation - so it is not as accurate but
   // interpolation is over short distances so accuracy should be fine.
-  auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+  auto shape = tile->edgeinfo(edge).shape();
   auto resampled = resample_polyline(shape, edge->length(), shape_interval_);
   if (!edge->forward()) {
     std::reverse(resampled.begin(), resampled.end());
