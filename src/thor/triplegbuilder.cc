@@ -265,7 +265,7 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // Find the first cut to the right of where we start on this edge
-  auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+  auto edgeinfo = tile->edgeinfo(edge);
   double distance_total_pct = src_pct;
   auto cut_itr = std::find_if(cuts.cbegin(), cuts.cend(),
                               [distance_total_pct](const decltype(cuts)::value_type& s) {
@@ -496,7 +496,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   TripLeg_Edge* trip_edge = trip_node->mutable_edge();
 
   // Get the edgeinfo
-  auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
+  auto edgeinfo = graphtile->edgeinfo(directededge);
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
@@ -1283,7 +1283,7 @@ void TripLegBuilder::Build(
 
     // Process the shape for edges where a route discontinuity occurs
     uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
-    auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
+    auto edgeinfo = graphtile->edgeinfo(directededge);
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();

@@ -412,7 +412,7 @@ void FindOSMConnection(const PointLL& stop_ll,
       if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
           const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
-          auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
+          auto edgeinfo = newtile->edgeinfo(directededge);
 
           // Get shape and find closest point
           auto this_shape = edgeinfo.shape();
@@ -467,7 +467,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     const NodeInfo* node = tile->node(i);
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
-      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto edgeinfo = tile->edgeinfo(directededge);
 
       if (edgeinfo.wayid() == wayid) {
 

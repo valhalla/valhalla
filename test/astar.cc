@@ -1018,7 +1018,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     for (auto path_info : paths) {
       LOG_INFO("Got pathinfo " + std::to_string(path_info.edgeid.id()));
       auto directededge = tile->directededge(path_info.edgeid);
-      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto edgeinfo = tile->edgeinfo(directededge);
       auto names = edgeinfo.GetNames();
       walked_path.push_back(names.front());
     }
