@@ -374,7 +374,7 @@ public:
   float road_factor_;              // Road factor based on use_roads_
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
   float service_penalty_;          // Penalty (seconds) to use a generic service road
-  float road_class_factor_[8];        // Road class factor based on each road class
+  float road_class_factor_[8];     // Road class factor based on each road class
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -639,7 +639,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     }
 
     // Add in penalization for road classification
-    roadway_stress += road_factor_ * road_class_factor_[static_cast<uint32_t>(edge->classification())];
+    roadway_stress +=
+        road_factor_ * road_class_factor_[static_cast<uint32_t>(edge->classification())];
     // Then multiply by speed so that higher classified roads are more severely punished for being
     // fast.
     roadway_stress *= speedpenalty_[road_speed];
@@ -928,7 +929,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
     // road_class_factors
     auto filter_attributes_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options, "/road_class_factor");
+        rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
+                                                              "/road_class_factor");
     if (filter_attributes_json) {
       for (const auto& filter_attribute : *filter_attributes_json) {
         pbf_costing_options->add_road_class_factor(filter_attribute.GetFloat());
