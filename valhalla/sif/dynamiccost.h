@@ -266,7 +266,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const = 0;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -301,12 +302,14 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge) const;
+                                     const baldr::DirectedEdge* opp_pred_edge,
+                                     const bool has_measured_speed = false) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.

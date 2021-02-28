@@ -66,7 +66,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     if (accessible && de->endnode() != prev_node &&
         !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
           de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
-      auto edge_info = tile->edgeinfo(de->edgeinfo_offset());
+      auto edge_info = tile->edgeinfo(de);
       if (edge_info.wayid() == way_id) {
         edge_ids.push_back({way_id, edge_id});
 
@@ -253,7 +253,7 @@ void build(const std::string& complex_restriction_from_file,
             directededge.use() == Use::kPlatformConnection) {
           continue;
         }
-        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto e_offset = tilebuilder.edgeinfo(&directededge);
         //    |      |       |
         //    |      |  to   |
         // ---O------O---x---O---

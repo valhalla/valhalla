@@ -43,10 +43,10 @@ TEST(Trimming, routes) {
 
   // we start by getting the shape for the two edges we want a route on
   auto tile = reader.GetGraphTile(start_id);
-  auto start_shape = tile->edgeinfo(start_edge->edgeinfo_offset()).shape();
+  auto start_shape = tile->edgeinfo(start_edge).shape();
   if (!start_edge->forward())
     std::reverse(start_shape.begin(), start_shape.end());
-  auto end_shape = tile->edgeinfo(end_edge->edgeinfo_offset()).shape();
+  auto end_shape = tile->edgeinfo(end_edge).shape();
   if (!end_edge->forward())
     std::reverse(end_shape.begin(), end_shape.end());
   auto start_length = midgard::length<decltype(start_shape)>(start_shape);

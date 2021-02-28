@@ -670,7 +670,7 @@ std::string dump_geojson_graph(const map& graph) {
     for (const auto& edge : tile->GetDirectedEdges()) {
       valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
                                        &edge - tile->directededge(0));
-      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+      auto info = tile->edgeinfo(&edge);
 
       // add some properties
       rapidjson::Value properties(rapidjson::kObjectType);
