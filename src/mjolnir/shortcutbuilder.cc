@@ -301,7 +301,8 @@ uint32_t ConnectEdges(GraphReader& reader,
                       uint32_t& restrictions,
                       float& average_density,
                       float& total_duration,
-                      float& total_truck_duration) {
+                      float& total_truck_duration,
+                      uint32_t& min_speed_limit) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -322,6 +323,10 @@ uint32_t ConnectEdges(GraphReader& reader,
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
+
+  // update the minimum max speed
+  min_speed_limit =
+      directededge->max_speed() < min_speed_limit ? directededge->max_speed() : min_speed_limit;
 
   // Copy the restrictions and opposing local index. Want to set the shortcut
   // edge's restrictions and opp_local_idx to the last directed edge in the chain
@@ -442,6 +447,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
+      uint32_t min_speed_limit = kUnlimitedSpeedLimit;
       // For turn duration calculation during contraction
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
@@ -472,8 +478,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
-        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density, total_duration, total_truck_duration);
+        length +=
+            ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+                         average_density, total_duration, total_truck_duration, min_speed_limit);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -548,6 +555,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t new_truck_speed =
           static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
       newedge.set_truck_speed(new_truck_speed);
+
+      // TODO: set the speed_limit based on the lowest encountered speed_limit of all edges
+      newedge.set_max_speed(min_speed_limit);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have

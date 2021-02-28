@@ -1460,17 +1460,18 @@ function filter_tags_generic(kv)
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
 
-  if kv["maxspeed"] == "none" then
-    --- special case unlimited speed limit (german autobahn)
-    kv["max_speed"] = "unlimited"
-  else
-    kv["max_speed"] = normalize_speed(kv["maxspeed"])
+  -- max speeds are allowed to be unlimited
+  local speeds_tags = { max_speed="maxspeed", forward_speed="maxspeed:forward", backward_speed="maxspeed:backward" }
+  for k, v in pairs(speeds_tags) do
+    if kv[v] == "none" then
+      kv[k] = "unlimited"
+    else
+      kv[k] = normalize_speed(kv[v])
+    end
   end
 
   kv["advisory_speed"] = normalize_speed(kv["maxspeed:advisory"])
   kv["average_speed"] = normalize_speed(kv["maxspeed:practical"])
-  kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])
-  kv["forward_speed"] = normalize_speed(kv["maxspeed:forward"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]

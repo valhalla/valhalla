@@ -282,6 +282,8 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
   pbf_costing_options->set_top_speed(
       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
+  pbf_costing_options->set_legal_speed(
+      kLegalSpeedRange(rapidjson::get<uint32_t>(value, "/legal_speed", kUnlimitedSpeedLimit)));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,

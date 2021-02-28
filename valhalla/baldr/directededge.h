@@ -608,6 +608,12 @@ public:
    */
   void set_truck_speed(const uint32_t speed);
 
+  uint32_t max_speed() const {
+    return max_speed_;
+  }
+
+  void set_max_speed(const uint32_t speed);
+
   /**
    * Get the classification (importance) of the road/path.
    * @return  Returns road classification / importance.
@@ -1121,7 +1127,8 @@ protected:
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
-  uint64_t spare4_ : 9;
+  uint64_t max_speed_ : 8;      // speed_ can be maxspeed:advisory or maxspeed:practical
+  uint64_t spare4_ : 1;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

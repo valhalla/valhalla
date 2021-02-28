@@ -40,6 +40,7 @@ public:
                       const uint32_t length,
                       const uint32_t speed,
                       const uint32_t truck_speed,
+                      const uint32_t speed_limit,
                       const baldr::Use use,
                       const baldr::RoadClass rc,
                       const uint32_t localidx,
