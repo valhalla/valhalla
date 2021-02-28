@@ -106,6 +106,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // load a test builder
   std::string test_dir = "test/data/builder_tiles";
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
+  test.directededges().emplace_back();
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
@@ -119,7 +120,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
-  auto ei = test2.edgeinfo(static_cast<size_t>(0));
+  auto ei = test2.edgeinfo(&test2.directededge(0));
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
