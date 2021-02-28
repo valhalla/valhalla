@@ -119,7 +119,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
-  auto ei = test2.edgeinfo(0);
+  auto ei = test2.edgeinfo(static_cast<size_t>(0));
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
