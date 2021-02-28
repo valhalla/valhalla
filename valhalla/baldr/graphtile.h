@@ -854,10 +854,10 @@ protected:
 // because the default constructor for graphtile doesnt initialize ref_counter_
 // we need to check it first before we use it for inc or dec
 inline void intrusive_ptr_add_ref(const GraphTile* p) BOOST_SP_NOEXCEPT {
-  p->ref_counter_ && ++(*p->ref_counter_);
+  ++(*p->ref_counter_);
 }
 inline void intrusive_ptr_release(const GraphTile* p) BOOST_SP_NOEXCEPT {
-  if (p->ref_counter_ && --(*p->ref_counter_) == 0) {
+  if (--(*p->ref_counter_) == 0) {
     delete p;
   }
 }

@@ -105,7 +105,6 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
     size_t filesize = file.tellg();
-
     std::vector<char> data(filesize);
     file.seekg(0, std::ios::beg);
     file.read(data.data(), filesize);
@@ -137,14 +136,13 @@ graph_tile_ptr GraphTile::Create(const GraphId& graphid,
   return new GraphTile(graphid, std::move(memory), std::move(traffic_memory));
 }
 
-// the right c-tor for GraphTile
+// the only real constructor for GraphTile all paths eventually lead here
 GraphTile::GraphTile(const GraphId& graphid,
                      std::unique_ptr<const GraphMemory> memory,
                      std::unique_ptr<const GraphMemory> traffic_memory)
     : header_(nullptr), traffic_tile(std::move(traffic_memory)),
       ref_counter_(new ref_counter{false}) {
-  // Initialize the internal tile data structures using a pointer to the
-  // tile and the tile size
+  // Initialize the internal tile data structures using supplied memory
   memory_ = std::move(memory);
   Initialize(graphid);
 }
@@ -153,11 +151,16 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) {
   // const_cast is only ok here because Create actually makes a new non-const GraphTile
   // which is then coerced to const via the template parameter of the managed pointer
   if (auto tile = Create(tile_dir, graphid)) {
+    // when we do move assignment the intrusive_ptr encapsulating the temporary tile doesnt know it
+    // because of this we need to detach the tile from the intrusive_ptr otherwise it will try to
+    // destruct itself when it goes out of scope but there is nothing to destruct
     *this = std::move(const_cast<GraphTile&>(*tile));
+    delete const_cast<GraphTile*>(tile.get());
+    tile.detach();
   }
 }
 
-GraphTile::GraphTile() = default;
+GraphTile::GraphTile() : ref_counter_(new ref_counter{false}){};
 
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
   // At first we save tile to a temporary file and then move it
