@@ -43,7 +43,7 @@ void print_edge(GraphReader& reader,
   // std::cout << "id: " << current_id << "\n";
   auto tile = reader.GetGraphTile(current_id);
   auto edge = tile->directededge(current_id);
-  auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+  auto edgeinfo = tile->edgeinfo(edge);
 
   if (edgeinfo.wayid() != current_osmid) {
     current_osmid = edgeinfo.wayid();
@@ -57,12 +57,12 @@ void print_edge(GraphReader& reader,
   if (pred_id != kInvalidGraphId) {
     auto pred_tile = reader.GetGraphTile(pred_id);
     auto pred_edge = pred_tile->directededge(pred_id);
-    auto predinfo = tile->edgeinfo(pred_edge->edgeinfo_offset());
+    auto predinfo = tile->edgeinfo(pred_edge);
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
     EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {},
-                         kInvalidRestriction, true);
+                         kInvalidRestriction, true, false);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);

@@ -150,7 +150,7 @@ std::string thor_worker_t::expansion(Api& request) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
     const auto* edge = tile->directededge(edgeid);
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+    auto shape = tile->edgeinfo(edge).shape();
     if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
     if (!full_shape && shape.size() > 2)
