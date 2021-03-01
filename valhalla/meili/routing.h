@@ -61,7 +61,8 @@ public:
                        0,
                        sif::Cost{},
                        restriction_idx,
-                       true),
+                       true,
+                       false),
         nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {

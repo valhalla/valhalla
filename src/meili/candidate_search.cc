@@ -66,7 +66,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     }
 
     // Get at the shape
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
+    auto shape = tile->edgeinfo(edge).lazy_shape();
     if (shape.empty()) {
       // Otherwise Project will fail
       continue;
@@ -173,7 +173,7 @@ void IndexBin(const graph_tile_ptr& tile,
 
     // Get the edge shape and add to grid. Use lazy_shape to avoid allocations
     // NOTE: bins do not contain transition edges and transit connection edges
-    auto shape = bin_tile->edgeinfo(bin_tile->directededge(edge_id)->edgeinfo_offset()).lazy_shape();
+    auto shape = bin_tile->edgeinfo(bin_tile->directededge(edge_id)).lazy_shape();
     if (!shape.empty()) {
       PointLL v = shape.pop();
       while (!shape.empty()) {
