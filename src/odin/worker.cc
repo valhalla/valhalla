@@ -78,6 +78,10 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from odin proxy
   auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";
   // or returns just location information back to the server
