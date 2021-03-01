@@ -126,7 +126,9 @@ public:
 
         // Sort list by descending maneuver distance
         std::sort(segs_by_dist.begin(), segs_by_dist.end(),
-                  [](const NamedSegment& a, const NamedSegment& b) { return b.distance < a.distance; });
+                  [](const NamedSegment& a, const NamedSegment& b) {
+                    return b.distance < a.distance;
+                  });
 
         leg_segs_by_dist.emplace_back(std::move(segs_by_dist));
       }
