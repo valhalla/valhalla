@@ -10,7 +10,6 @@ valhalla_module(NAME tyr
     route_serializer.cc
     route_serializer_valhalla.cc
     route_serializer_osrm.cc
-    route_summary_cache.cc
     transit_available_serializer.cc
     trace_serializer.cc
     actor.cc
