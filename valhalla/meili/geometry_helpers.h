@@ -29,8 +29,6 @@ Project(const midgard::projector_t& p,
   float closest_partial_length = 0.f;
   float total_length = 0.f;
 
-  printf("input point: %.8f, %.8f\n", p.lat, p.lng);
-
   // for each segment
   auto u = first_point;
   size_t i = 0;
@@ -39,9 +37,6 @@ Project(const midgard::projector_t& p,
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
     auto v = shape.pop();
     auto point = p(u, v);
-
-    // { "A", {13.26261125, 38.15960393}},
-    printf("{\"%d\", {%.12f, %.12f}},\n", i, point.lat(), point.lng() );
 
     // check if this point is better
     const auto distance = p.approx.DistanceSquared(point);

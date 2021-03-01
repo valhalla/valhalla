@@ -46,8 +46,8 @@ void write_config(const std::string& filename) {
       \"mjolnir\": { \
       \"concurrency\": 1, \
       \"id_table_size\": 1000, \
-       \"tile_dir\": \"test/data/amsterdam_tiles\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
+       \"tile_dir\": \"test/data/palermo_tiles\", \
+        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/palermo_admin.sqlite\", \
          \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
       } \
     }";
@@ -73,7 +73,11 @@ OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   return *found;
 }
 
-void CountryAccess(const std::string& config_file) {
+TEST(MapMatchTol, Test) {
+
+  // make a config file
+  write_config(config_file);
+
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
 
@@ -124,126 +128,6 @@ void CountryAccess(const std::string& config_file) {
 
   GraphTileBuilder tilebuilder(graph_reader.tile_dir(), id, true);
 
-  for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
-    NodeInfo& nodeinfo = tilebuilder.node_builder(i);
-    uint32_t count = nodeinfo.edge_count();
-    for (uint32_t j = 0; j < count; j++) {
-      DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
-
-      auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
-
-      uint32_t forward = directededge.forwardaccess();
-      uint32_t reverse = directededge.reverseaccess();
-
-      // cycleway (not oneway) should have kBicycleAccess and kMopedAccess
-      if (e_offset.wayid() == 7047088) {
-        EXPECT_EQ(forward, kBicycleAccess | kMopedAccess)
-                  << "Defaults:  Access is not correct for way 7047088.";
-        EXPECT_EQ(reverse, (kBicycleAccess | kMopedAccess))
-                  << "Defaults:  Access is not correct for way 7047088.";
-        // cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
-      } else if (e_offset.wayid() == 35600238) {
-        if (directededge.forward()) {
-          EXPECT_EQ(forward, kBicycleAccess)
-                    << "Defaults:  Forward access is not correct for way 35600238.";
-          EXPECT_EQ(reverse, 0) << "Defaults:  Reverse access is not correct for way 35600238.";
-        } else {
-          EXPECT_EQ(reverse, kBicycleAccess)
-                    << "Defaults:  Reverse access is not correct for way 35600238.";
-          EXPECT_EQ(forward, 0) << "Defaults:  Forward access is not correct for way 35600238.";
-        }
-        // trunk that has pedestrian, moped and bike access but motorroad key changes turns off
-        // pedestrians and bikes
-      } else if (e_offset.wayid() == 139156014) {
-        if (directededge.forward()) {
-          EXPECT_EQ(forward,
-                    (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
-                     kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
-                    << "Defaults:  Forward access is not correct for way 139156014.";
-          EXPECT_EQ(reverse, kPedestrianAccess | kWheelchairAccess)
-                    << "Defaults:  Reverse access is not correct for way 139156014.";
-        } else {
-          EXPECT_EQ(reverse,
-                    (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
-                     kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
-                    << "Defaults:  Reverse access is not correct for way 139156014.";
-          EXPECT_EQ(forward, kPedestrianAccess | kWheelchairAccess)
-                    << "Defaults:  Forward access is not correct for way 139156014.";
-        }
-      } else if (e_offset.wayid() == 512688404) { // motorroad key test
-        if (directededge.forward()) {
-          EXPECT_EQ(forward, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
-                    << "Defaults:  Forward access is not correct for way 512688404.";
-          EXPECT_EQ(reverse, 0) << "Defaults:  Reverse access is not correct for way 512688404.";
-        } else {
-          EXPECT_EQ(reverse, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
-                    << "Defaults:  Reverse access is not correct for way 512688404.";
-          EXPECT_EQ(forward, 0) << "Defaults:  Forward access is not correct for way 512688404.";
-        }
-      }
-    }
-  }
-
-  // Enhance the local level of the graph. This adds information to the local
-  // level that is usable across all levels (density, administrative
-  // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(conf, osmdata, access_file);
-
-  // load a tile and test that the country level access is set.
-  GraphId id2(820099, 2, 0);
-  auto t2 = GraphTile::Create("test/data/amsterdam_tiles", id2);
-  ASSERT_TRUE(t2);
-
-  GraphReader graph_reader2(conf.get_child("mjolnir"));
-  GraphTileBuilder tilebuilder2(graph_reader2.tile_dir(), id2, true);
-
-  for (uint32_t i = 0; i < tilebuilder2.header()->nodecount(); i++) {
-    NodeInfo& nodeinfo = tilebuilder2.node_builder(i);
-    uint32_t count = nodeinfo.edge_count();
-    for (uint32_t j = 0; j < count; j++) {
-      DirectedEdge& directededge = tilebuilder2.directededge_builder(nodeinfo.edge_index() + j);
-
-      auto e_offset = tilebuilder2.edgeinfo(directededge.edgeinfo_offset());
-
-      uint32_t forward = directededge.forwardaccess();
-      uint32_t reverse = directededge.reverseaccess();
-
-      // cycleway (not oneway) should have kPedestrianAccess and kBicycleAccess
-      if (e_offset.wayid() == 7047088) {
-        EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-                  << "Enhanced:  Access is not correct for way 7047088.";
-        EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-                  << "Enhanced:  Access is not correct for way 7047088.";
-        // cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
-      } else if (e_offset.wayid() == 31976259) {
-        if (directededge.forward()) {
-          EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-                    << "Enhanced:  Forward access is not correct for way 31976259.";
-          // only pedestrian access because this is a oneway cycleway
-          EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess))
-                    << "Enhanced:  Reverse access is not correct for way 31976259.";
-        } else {
-          EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-                    << "Enhanced:  Reverse access is not correct for way 31976259.";
-          EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess))
-                    << "Enhanced:  Forward access is not correct for way 31976259.";
-        }
-        // trunk should have no kPedestrianAccess
-      } else if (e_offset.wayid() == 139156014) {
-        if (directededge.forward()) {
-          EXPECT_EQ(forward, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
-                              kMotorcycleAccess))
-                    << "Enhanced:  Forward access is not correct for way 139156014.";
-          EXPECT_EQ(reverse, 0) << "Enhanced:  Reverse access is not correct for way 139156014.";
-        } else {
-          EXPECT_EQ(reverse, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
-                              kMotorcycleAccess))
-                    << "Enhanced:  Reverse access is not correct for way 139156014.";
-          EXPECT_EQ(forward, 0) << "Enhanced:  Forward access is not correct for way 139156014.";
-        }
-      }
-    }
-  }
 
   // Remove temporary files
   remove_temp_file(ways_file);
@@ -253,14 +137,6 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(access_file);
   remove_temp_file(cr_from_file);
   remove_temp_file(cr_to_file);
-}
-
-TEST(CountryAccess, Basic) {
-  // make a config file
-  write_config(config_file);
-
-  // write the tiles with it
-  CountryAccess(config_file);
 }
 
 } // namespace
