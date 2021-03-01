@@ -307,5 +307,25 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
   return bytes;
 }
 
+std::string
+actor_t::status(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // parse the request
+  Api request;
+  ParseApi(request_str, Options::centroid, request);
+  // check the request and locate the locations in the graph
+  auto json = pimpl->loki_worker.status(request);
+  // if they want you do to do the cleanup automatically
+  if (auto_cleanup) {
+    cleanup();
+  }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
+  return json;
+}
+
 } // namespace tyr
 } // namespace valhalla

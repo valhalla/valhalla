@@ -19,6 +19,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     // loki project 1xx
     {100, "Failed to parse json request"},
     {101, "Try a POST or GET request instead"},
+    {102, "The service is shutting down"},
     {106, "Try any of"},
     {107, "Not Implemented"},
 

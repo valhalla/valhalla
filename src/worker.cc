@@ -88,7 +88,7 @@ const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES{
 
 // from valhalla error code to http status code
 const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
-    {100, 400}, {101, 405}, {106, 404}, {107, 501},
+    {100, 400}, {101, 405}, {102, 503}, {106, 404}, {107, 501},
 
     {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
 
@@ -142,6 +142,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     // loki project 1xx
     {100, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {101, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {102, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
     {106, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {107, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {110, R"({"code":"InvalidOptions","message":"Options are invalid."})"},

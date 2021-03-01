@@ -43,6 +43,7 @@ public:
   void trace(Api& request);
   std::string height(Api& request);
   std::string transit_available(Api& request);
+  std::string status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 

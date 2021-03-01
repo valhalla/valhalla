@@ -303,6 +303,9 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::transit_available:
         result = to_response(transit_available(request), info, request);
         break;
+      case Options::status:
+        result = to_response(status(request), info, request);
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         return jsonify_error({107}, info, request);
