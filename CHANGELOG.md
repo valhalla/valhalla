@@ -41,6 +41,7 @@
    * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
    * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
    * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
+   * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
