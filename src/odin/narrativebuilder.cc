@@ -4618,8 +4618,10 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
       }
 
       // Set verbal succinct transition instruction as a verbal multi-cue
-      prev_maneuver->set_verbal_succinct_transition_instruction(
-          FormVerbalMultiCue(prev_maneuver, maneuver, true));
+      if (prev_maneuver->HasVerbalSuccinctTransitionInstruction()) {
+        prev_maneuver->set_verbal_succinct_transition_instruction(
+            FormVerbalMultiCue(prev_maneuver, maneuver, true));
+      }
 
       // Set verbal pre transition instruction as a verbal multi-cue
       prev_maneuver->set_verbal_pre_transition_instruction(
