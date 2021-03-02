@@ -162,7 +162,7 @@ std::string turn_lane_direction(uint16_t turn_lane) {
   return "";
 }
 
-size_t get_word_count(std::string& street_name) {
+size_t get_word_count(const std::string& street_name) {
   size_t word_count = 0;
   std::string::const_iterator pos = street_name.begin();
   std::string::const_iterator end = street_name.end();

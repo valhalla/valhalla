@@ -75,7 +75,7 @@ const std::unordered_map<std::string, std::string>& get_locales_json();
  */
 std::string turn_lane_direction(uint16_t turn_lane);
 
-size_t get_word_count(std::string& street_name);
+size_t get_word_count(const std::string& street_name);
 
 } // namespace odin
 } // namespace valhalla
