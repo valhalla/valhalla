@@ -44,7 +44,7 @@ GraphId GetOpposingEdge(GraphReader& reader,
     lock.unlock();
   }
   const NodeInfo* nodeinfo = end_node_tile->node(end_node);
-  auto way_id = tile->edgeinfo(edge->edgeinfo_offset()).wayid();
+  auto way_id = tile->edgeinfo(edge).wayid();
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
@@ -81,6 +81,13 @@ bool ExpandFromNode(GraphReader& reader,
                     GraphId prev_node,
                     GraphId current_node);
 
+bool IsEdgeAllowed(const DirectedEdge* de, uint32_t access, bool forward) {
+  bool accessible = (forward ? de->forwardaccess() : de->reverseaccess()) & access;
+  return accessible &&
+         !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
+           de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection);
+}
+
 bool ExpandFromNodeInner(GraphReader& reader,
                          std::mutex& lock,
                          uint32_t access,
@@ -100,10 +107,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
     GraphId edge_id(tile->id().tileid(), tile->id().level(), node_info->edge_index() + j);
     const DirectedEdge* de = tile->directededge(edge_id);
 
-    bool accessible = (forward ? de->forwardaccess() : de->reverseaccess()) & access;
-    if (accessible && de->endnode() != prev_node &&
-        !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
-          de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
+    if (de->endnode() != prev_node && IsEdgeAllowed(de, access, forward)) {
       auto edge_info = tile->edgeinfo(de);
       if (edge_info.wayid() == way_id) {
         edge_ids.push_back({way_id, edge_id});
@@ -497,10 +501,8 @@ void build(const std::string& complex_restriction_from_file,
                       GraphId next_edge_id(end_node_tile->id().tileid(), end_node_tile->id().level(),
                                            end_node_tile->node(end_node)->edge_index() + i);
                       auto de = end_node_tile->directededge(next_edge_id);
-                      // reader, lock, from_node, edge_id, from_tile
                       auto opp_id = GetOpposingEdge(reader, lock, end_node_tile, end_node, de);
-                      if (opp_id != last_edge_id && !de->is_shortcut() &&
-                          (de->forwardaccess() & restriction.modes())) {
+                      if (opp_id != last_edge_id && IsEdgeAllowed(de, restriction.modes(), true)) {
                         tmp_ids.front() = opp_id;
                         AddReverseRestriction(tmp_ids);
                       }
@@ -516,10 +518,8 @@ void build(const std::string& complex_restriction_from_file,
                                            to_node_info->edge_index());
                       for (size_t i = 0; i < to_node_info->edge_count(); ++i, ++next_edge_id) {
                         auto de = to_tile->directededge(next_edge_id);
-                        // reader, lock, from_node, edge_id, from_tile
                         auto opp_id = GetOpposingEdge(reader, lock, to_tile, to_node, de);
-                        if (opp_id != last_edge_id && !de->is_shortcut() &&
-                            (de->forwardaccess() & restriction.modes())) {
+                        if (opp_id != last_edge_id && IsEdgeAllowed(de, restriction.modes(), true)) {
                           tmp_ids.front() = opp_id;
                           AddReverseRestriction(tmp_ids);
                         }
@@ -662,8 +662,7 @@ void build(const std::string& complex_restriction_from_file,
                                       node_info->edge_index());
                       for (size_t i = 0; i < node_info->edge_count(); ++i, ++edge_id) {
                         auto de = next_tile->directededge(edge_id);
-                        if (edge_id != last_edge_id && !de->is_shortcut() &&
-                            (de->forwardaccess() & restriction.modes())) {
+                        if (edge_id != last_edge_id && IsEdgeAllowed(de, restriction.modes(), true)) {
                           tmp_ids.back() = edge_id;
                           addForwardRestriction(tmp_ids);
                         }
@@ -678,8 +677,8 @@ void build(const std::string& complex_restriction_from_file,
                                         to_node_info->edge_index());
                         for (size_t i = 0; i < to_node_info->edge_count(); ++i, ++edge_id) {
                           auto de = to_tile->directededge(edge_id);
-                          if (edge_id != last_edge_id && !de->is_shortcut() &&
-                              (de->forwardaccess() & restriction.modes())) {
+                          if (edge_id != last_edge_id &&
+                              IsEdgeAllowed(de, restriction.modes(), true)) {
                             tmp_ids.back() = edge_id;
                             addForwardRestriction(tmp_ids);
                           }
