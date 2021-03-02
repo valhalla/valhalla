@@ -17,7 +17,7 @@ valhalla::Location make_centroid(const valhalla::baldr::GraphId& edge_id,
   using namespace valhalla;
   valhalla::baldr::graph_tile_ptr tile;
   const auto* edge = reader.directededge(baldr::GraphId(edge_id), tile);
-  auto info = tile->edgeinfo(edge->edgeinfo_offset());
+  auto info = tile->edgeinfo(edge);
   const auto& shape = info.shape();
   auto length = midgard::length(shape);
   auto mid_point = midgard::resample_spherical_polyline(shape, length / 2.)[1];
