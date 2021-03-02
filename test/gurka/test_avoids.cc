@@ -102,43 +102,6 @@ protected:
 
 gurka::map AvoidTest::avoid_map = {};
 
-TEST_F(AvoidTest, TestLength) {
-  std::vector<vl::line_bg_t> lines(2);
-  // ~ 7.6 km length
-  bg::read_wkt(
-      "LINESTRING (13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128,13.38625361 52.4652558)",
-      lines[0]);
-  // ~ 10.1 km length
-  bg::read_wkt(
-      "LINESTRING (13.371981 52.439271, 13.371981 52.479088, 13.381839 52.479088, 13.381839 52.439271, 13.371981 52.439271)",
-      lines[1]);
-  double actual_length = bg::length(lines[0], Haversine());
-  actual_length += bg::length(lines[1], Haversine());
-
-  // Add polygons to PBF and calculate total circumference
-  Options options;
-  double calc_length = 0;
-  std::vector<vl::ring_bg_t> e_rings(2);
-  bg::read_wkt(
-      "POLYGON ((13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128,13.38625361 52.4652558))",
-      e_rings[0]);
-  bg::read_wkt(
-      "POLYGON ((13.371981 52.439271, 13.371981 52.479088, 13.381839 52.479088, 13.381839 52.439271, 13.371981 52.439271))",
-      e_rings[1]);
-  auto avoid_polygons = options.mutable_avoid_polygons();
-  for (const auto& ring : e_rings) {
-    auto* polygon = avoid_polygons->Add();
-    for (auto& coord : ring) {
-      auto* ll = polygon->add_coords();
-      ll->set_lng(coord.lng());
-      ll->set_lat(coord.lat());
-    }
-    calc_length += vl::GetRingLength(vl::PBFToRing(*polygon));
-  }
-
-  EXPECT_EQ(actual_length, calc_length);
-}
-
 TEST_F(AvoidTest, TestConfig) {
   // Add a polygon with longer perimeter than the limit
   std::vector<vl::ring_bg_t> rings{{{13.38625361, 52.4652558},
@@ -146,7 +109,7 @@ TEST_F(AvoidTest, TestConfig) {
                                     {13.4181769, 52.48000128},
                                     {13.4181769, 52.4652558}}};
 
-  auto lls = gurka::detail::to_lls(avoid_map.nodes, {"A", "D"});
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -186,7 +149,7 @@ TEST_P(AvoidTest, TestAvoidPolygon) {
   rings.push_back(ring);
 
   // build request manually for now
-  auto lls = gurka::detail::to_lls(avoid_map.nodes, {"A", "D"});
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -227,7 +190,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
                    {node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy}});
 
   // build request manually for now
-  auto lls = gurka::detail::to_lls(avoid_map.nodes, {"A", "D"});
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -260,7 +223,7 @@ TEST_P(AvoidTest, TestAvoidLocation) {
   std::vector<vm::PointLL> points{{lon, node_a.lat()}};
 
   // build request manually for now
-  auto lls = gurka::detail::to_lls(avoid_map.nodes, {"A", "B"});
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["B"]};
 
   rapidjson::Document doc;
   doc.SetObject();

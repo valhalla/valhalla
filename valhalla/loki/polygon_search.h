@@ -10,6 +10,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
+#include <valhalla/worker.h>
 
 #include <functional>
 
@@ -41,25 +42,10 @@ using bins_collector =
  *
  */
 std::unordered_set<valhalla::baldr::GraphId>
-edges_in_rings(const std::vector<ring_bg_t>& rings,
+edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings,
                baldr::GraphReader& reader,
-               const std::shared_ptr<sif::DynamicCost>& costing);
-
-/**
- * Convert PBF Polygon to boost geometry ring.
- *
- * @param ring_pbf The Options::Polygon ring
- *
- */
-ring_bg_t PBFToRing(const Options::Ring& ring_pbf);
-
-/**
- * Computes the length of a ring's circumference.
- *
- * @param ring The boost geometry ring.
- *
- */
-double GetRingLength(const ring_bg_t& ring);
+               const std::shared_ptr<sif::DynamicCost>& costing,
+               float max_length);
 
 } // namespace loki
 } // namespace valhalla

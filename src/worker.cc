@@ -173,6 +173,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {136,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {137,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {140,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -211,6 +213,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {167,
+     R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})"},
 
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
@@ -321,14 +325,7 @@ void add_date_to_locations(Options& options,
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
 // PBF objects of the sort "repeated Location". Rings can be optionally closed.
 template <typename ring_pbf_t>
-void parse_ring(ring_pbf_t& ring,
-                rapidjson::Value& coord_array,
-                rapidjson::Document::AllocatorType& allocator,
-                bool close_ring = true) {
-  // optionally close the ring
-  if (coord_array[0] != coord_array[coord_array.Size() - 1] && close_ring) {
-    coord_array.PushBack(coord_array[0], allocator);
-  }
+void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
   for (const auto& coords : coord_array.GetArray()) {
     if (coords.Size() < 2) {
       throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
@@ -344,6 +341,14 @@ void parse_ring(ring_pbf_t& ring,
     auto* ll = ring->add_coords();
     ll->set_lng(lon);
     ll->set_lat(lat);
+  }
+
+  // operator== is not defined for valhalla::LatLng..
+  bool is_open = (ring->coords().begin()->lat() != ring->coords().rbegin()->lat() ||
+                  ring->coords().begin()->lng() != ring->coords().rbegin()->lng());
+
+  if (!ring->coords().empty() && !is_open) {
+    ring->add_coords()->CopyFrom(*ring->coords().begin());
   }
 }
 
@@ -927,9 +932,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (rings_req) {
     auto* rings_pbf = options.mutable_avoid_polygons();
     try {
-      for (auto& req_poly : rings_req->GetArray()) {
+      for (const auto& req_poly : rings_req->GetArray()) {
         auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly, allocator);
+        parse_ring(ring, req_poly);
       }
     } catch (...) { throw valhalla_exception_t{137}; }
   }

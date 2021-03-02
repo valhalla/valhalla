@@ -97,13 +97,6 @@ void build_pbf(const nodelayout& node_locations,
  * @return list of edge names
  */
 std::vector<std::string> get_path(const valhalla::Api& result);
-
-/** Turns layout nodes into PointLLs.
- * @param nodes the node layout map
- * @param node_names the node names to associate with layout nodes
- */
-std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
-                                     const std::vector<std::string>& node_names);
 } // namespace detail
 
 /**

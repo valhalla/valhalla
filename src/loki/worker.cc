@@ -85,19 +85,10 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.avoid_polygons_size()) {
-    double rings_length = 0;
-    std::vector<ring_bg_t> rings;
-    for (const auto& ring_pbf : options.avoid_polygons()) {
-      const ring_bg_t ring = PBFToRing(ring_pbf);
-      rings.push_back(ring);
-      rings_length += GetRingLength(ring) * kKmPerMeter;
-    }
-    if (rings_length > max_avoid_polygons_length) {
-      throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_length));
-    }
     // TODO: should the PBF edge assignment happen in edges_in_rings?
     // feels like a waste to produce an unordered_set we just iterate over right after
-    const auto edges = edges_in_rings(rings, *reader, costing);
+    const auto edges =
+        edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : edges) {
       auto* avoid = co->add_avoid_edges();

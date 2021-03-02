@@ -3,13 +3,48 @@
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
+namespace vl = valhalla::loki;
+
+namespace {
+vl::ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
+  vl::ring_bg_t new_ring;
+  for (const auto& coord : ring_pbf.coords()) {
+    new_ring.push_back({coord.lng(), coord.lat()});
+  }
+  // corrects geometry and handedness as expected by bg for rings
+  bg::correct(new_ring);
+  return new_ring;
+}
+
+double GetRingLength(const vl::ring_bg_t& ring) {
+  // bg doesn't (yet) support length of ring geoms
+  vl::line_bg_t line{ring.begin(), ring.end()};
+  auto length = bg::length(line, Haversine());
+  return length;
+}
+} // namespace
 
 namespace valhalla {
 namespace loki {
 
-std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rings,
-                                               baldr::GraphReader& reader,
-                                               const std::shared_ptr<sif::DynamicCost>& costing) {
+std::unordered_set<vb::GraphId>
+edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings_pbf,
+               baldr::GraphReader& reader,
+               const std::shared_ptr<sif::DynamicCost>& costing,
+               float max_length) {
+
+  // convert to bg object and check length restriction
+  double rings_length = 0;
+  std::vector<ring_bg_t> rings_bg;
+  for (const auto& ring_pbf : rings_pbf) {
+    rings_bg.push_back(PBFToRing(ring_pbf));
+    const ring_bg_t ring_bg = rings_bg.back();
+    rings_length += GetRingLength(ring_bg) * vm::kKmPerMeter;
+  }
+  if (rings_length > max_length) {
+    throw valhalla_exception_t(167, std::to_string(max_length));
+  }
+
   // Get the lowest level and tiles
   const auto tiles = vb::TileHierarchy::levels().back().tiles;
   const auto bin_level = vb::TileHierarchy::levels().back().level;
@@ -19,8 +54,8 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
   std::unordered_set<vb::GraphId> avoid_edge_ids;
 
   // first pull out all *unique* bins which intersect the rings
-  for (size_t ring_idx = 0; ring_idx < rings.size(); ring_idx++) {
-    auto ring = rings[ring_idx];
+  for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
+    auto ring = rings_bg[ring_idx];
     auto line_intersected = tiles.Intersect(ring);
     for (const auto& tb : line_intersected) {
       for (const auto& b : tb.second) {
@@ -74,11 +109,10 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
 
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
-        // and needs to be applied to bins which are entirely inside a ring as well
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
         bool intersects = false;
         for (const auto& ring_loc : bin.second) {
-          intersects = bg::intersects(rings[ring_loc], edge_info.shape());
+          intersects = bg::intersects(rings_bg[ring_loc], edge_info.shape());
           if (intersects) {
             break;
           }
@@ -94,23 +128,6 @@ std::unordered_set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rin
   }
 
   return avoid_edge_ids;
-}
-
-ring_bg_t PBFToRing(const Options::Ring& ring_pbf) {
-  ring_bg_t new_ring;
-  for (const auto& coord : ring_pbf.coords()) {
-    new_ring.push_back({coord.lng(), coord.lat()});
-  }
-  // corrects geometry and handedness as expected by bg for rings
-  bg::correct(new_ring);
-  return new_ring;
-}
-
-double GetRingLength(const ring_bg_t& ring) {
-  // bg doesn't (yet) support length of ring geoms
-  line_bg_t line{ring.begin(), ring.end()};
-  auto length = bg::length(line, Haversine());
-  return length;
 }
 } // namespace loki
 } // namespace valhalla
