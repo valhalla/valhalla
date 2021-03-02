@@ -178,6 +178,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::status: {
         status(request);
         result.messages.emplace_back(serialize_to_pbf(request));
+        break;
       }
       default:
         throw valhalla_exception_t{400}; // this should never happen
