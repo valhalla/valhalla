@@ -21,6 +21,7 @@ set(sources
   maneuver.cc
   sign.cc
   signs.cc
+  status_action.cc
   util.cc
   transitrouteinfo.cc
   worker.cc)

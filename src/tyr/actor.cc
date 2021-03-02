@@ -314,8 +314,12 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   // parse the request
   Api request;
   ParseApi(request_str, Options::centroid, request);
-  // check the request and locate the locations in the graph
-  auto json = pimpl->loki_worker.status(request);
+  // check lokis status
+  pimpl->loki_worker.status(request);
+  // check thors status
+  pimpl->thor_worker.status(request);
+  // check odins status
+  auto json = pimpl->odin_worker.status(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();

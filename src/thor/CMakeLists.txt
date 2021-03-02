@@ -17,6 +17,7 @@ set(sources
   optimizer.cc
   route_action.cc
   route_matcher.cc
+  status_action.cc
   timedep_forward.cc
   timedep_reverse.cc
   timedistancematrix.cc

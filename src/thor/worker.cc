@@ -56,7 +56,7 @@ constexpr float kDistanceScale = 10.f;
 std::string serialize_to_pbf(Api& request) {
   std::string buf;
   if (!request.SerializeToString(&buf)) {
-    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker");
     throw valhalla_exception_t{401, boost::optional<std::string>(
                                         "Failed serializing to pbf in Thor::Worker")};
   }
@@ -174,6 +174,10 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         centroid(request);
         result.messages.emplace_back(serialize_to_pbf(request));
         break;
+      }
+      case Options::status: {
+        status(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
       }
       default:
         throw valhalla_exception_t{400}; // this should never happen

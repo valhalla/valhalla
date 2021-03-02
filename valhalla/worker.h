@@ -81,6 +81,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {200, "Failed to parse intermediate request format"},
     {201, "Failed to parse TripLeg"},
     {202, "Could not build directions for TripLeg"},
+    {203, "The service is shutting down"},
 
     {210, "Trip path does not have any nodes"},
     {211, "Trip path has only one node"},
@@ -110,6 +111,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     // thor project 4xx
     {400, "Unknown action"},
     {401, "Failed to parse intermediate request format"},
+    {402, "The service is shutting down"},
 
     {420, "Failed to parse correlated location"},
     {421, "Failed to parse location"},

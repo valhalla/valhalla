@@ -23,6 +23,7 @@ public:
   virtual void cleanup() override;
 
   void narrate(Api& request) const;
+  std::string status(Api& request) const;
 };
 } // namespace odin
 } // namespace valhalla
