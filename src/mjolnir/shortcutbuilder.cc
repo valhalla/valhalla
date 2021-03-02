@@ -115,7 +115,7 @@ GraphId GetOpposingEdge(const GraphId& node,
     if (directededge->endnode() == node && directededge->classification() == edge->classification() &&
         directededge->length() == edge->length() &&
         ((directededge->link() && edge->link()) || (directededge->use() == edge->use())) &&
-        wayid == tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
+        wayid == tile->edgeinfo(directededge).wayid()) {
       return edgeid;
     }
   }
@@ -227,8 +227,8 @@ bool CanContract(GraphReader& reader,
     }*/
 
   // Get the opposing directed edges - these are the inbound edges to the node.
-  uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
-  uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
+  uint64_t wayid1 = tile->edgeinfo(edge1).wayid();
+  uint64_t wayid2 = tile->edgeinfo(edge2).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
   const DirectedEdge* oppdiredge1 = reader.GetGraphTile(oppedge1)->directededge(oppedge1);
@@ -334,7 +334,7 @@ uint32_t ConnectEdges(GraphReader& reader,
   restrictions = directededge->restrictions();
 
   // Get the shape for this edge. Reverse if directed edge is not forward.
-  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset()).encoded_shape();
+  auto encoded = tile->edgeinfo(directededge).encoded_shape();
   std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL>>(encoded);
   if (!directededge->forward()) {
     std::reverse(edgeshape.begin(), edgeshape.end());
@@ -421,7 +421,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
-      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto edgeinfo = tile->edgeinfo(directededge);
       std::list<PointLL> shape =
           valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
       if (!directededge->forward()) {
@@ -470,7 +470,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           // direction from the node).
           const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
-                    std::to_string(tile->edgeinfo(de->edgeinfo_offset()).wayid()));
+                    std::to_string(tile->edgeinfo(de).wayid()));
           break;
         }
 
@@ -687,7 +687,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
         // to the new. Use prior edgeinfo offset as the key to make sure
         // edges that have the same end nodes are differentiated (this
         // should be a valid key since tile sizes aren't changed)
-        auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+        auto edgeinfo = tile->edgeinfo(directededge);
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),

@@ -327,6 +327,12 @@ public:
   EdgeInfo edgeinfo(const size_t offset) const;
 
   /**
+   * Get a pointer to edge info.
+   * @return  Returns edge info.
+   */
+  EdgeInfo edgeinfo(const DirectedEdge* edge) const;
+
+  /**
    * Get the complex restrictions in the forward or reverse order.
    * @param   forward - do we want the restrictions in reverse order?
    * @param   id - edge id
