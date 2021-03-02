@@ -928,8 +928,8 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
           street_name->value().length() > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
       }
-      ++count;
     }
+    ++count;
   }
 }
 
