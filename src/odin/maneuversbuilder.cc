@@ -918,13 +918,19 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
 }
 
 void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers) {
+  std::string street_name_string;
+  uint32_t count = 0;
   for (auto& maneuver : maneuvers) {
-    if (maneuver.HasStreetNames()) {
-      std::string street_name = maneuver.street_names().front()->value();
-      if (get_word_count(street_name) > kMaxWordCount ||
-          street_name.length() > kMaxStreetNameLength) {
+    for (const auto& street_name : maneuver.street_names()) {
+      if (count == kVerbalPreElementMaxCount) {
+        break;
+      }
+      street_name_string = street_name->value();
+      if (get_word_count(street_name_string) > kMaxWordCount ||
+          street_name_string.length() > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
       }
+      ++count;
     }
   }
 }

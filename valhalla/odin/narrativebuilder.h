@@ -9,18 +9,12 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/odin/util.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
 namespace odin {
-
-const bool kLimitByConseuctiveCount = true;
-constexpr uint32_t kElementMaxCount = 4;
-constexpr uint32_t kVerbalAlertElementMaxCount = 1;
-constexpr uint32_t kVerbalPreElementMaxCount = 2;
-constexpr uint32_t kVerbalPostElementMaxCount = 2;
-const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
 public:
