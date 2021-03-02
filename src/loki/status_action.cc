@@ -2,7 +2,7 @@
 
 namespace valhalla {
 namespace loki {
-void loki_worker_t::status(Api& request) const {
+void loki_worker_t::status(Api&) const {
 #ifdef HAVE_HTTP
   // if we are in the process of shutting down we signal that here
   // should react by draining traffic (though they are likely doing this as they are usually the ones

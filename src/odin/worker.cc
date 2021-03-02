@@ -46,7 +46,7 @@ void odin_worker_t::narrate(Api& request) const {
   } catch (...) { throw valhalla_exception_t{202}; }
 }
 
-std::string odin_worker_t::status(Api& request) const {
+std::string odin_worker_t::status(Api&) const {
 #ifdef HAVE_HTTP
   // if we are in the process of shutting down we signal that here
   // should react by draining traffic (though they are likely doing this as they are usually the ones
