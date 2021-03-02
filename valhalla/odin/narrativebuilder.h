@@ -553,10 +553,13 @@ protected:
    *                 cue in the returned instruction.
    * @param next_maneuver The next maneuver that will be the second verbal cue
    *                      in the returned instruction.
+   * @param process_succinct Flag to determine if we aree processing the succinct instruction.
+   *                         Defaulted to false.
    *
    * @return the verbal multi-cue instruction based on the specified maneuvers.
    */
-  std::string FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver);
+  std::string
+  FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver, bool process_succinct = false);
 
   /**
    * Returns true if a verbal multi-cue instruction should be formed for the
