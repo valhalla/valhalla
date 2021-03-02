@@ -11,7 +11,7 @@ The default logic for the OpenStreetMap tags, keys, and values used when routing
 The route request run locally takes the form of `localhost:8002/route?json={}`, where the JSON inputs inside the `{}` include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:
 
 ```
-{"locations":[{"lat":42.358528,"lon":-83.271400,"street":"Appleton"},{"lat":42.996613,"lon":-78.749855,"street":"Ranch Trail"}],"costing":"auto","costing_options":{"auto":{"country_crossing_penalty":2000.0}},"directions_options":{"units":"miles"},"id":"my_work_route"}
+{"locations":[{"lat":42.358528,"lon":-83.271400,"street":"Appleton"},{"lat":42.996613,"lon":-78.749855,"street":"Ranch Trail"}],"costing":"auto","costing_options":{"auto":{"country_crossing_penalty":2000.0}},"units":"miles","id":"my_work_route"}
 ```
 
 This request provides automobile routing between the Detroit, Michigan area and Buffalo, New York, with an optional street name parameter to improve navigation at the start and end points. It attempts to avoid routing north through Canada by adding a penalty for crossing international borders. The resulting route is displayed in miles.
@@ -190,7 +190,7 @@ These options are available for pedestrian costing methods.
 | `use_ferry` | This value indicates the willingness to take ferries. This is range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0.5. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
-| `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 15. |
+| `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
 |`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
@@ -222,7 +222,7 @@ When using `filters`, you need to include a [Onestop ID](https://transit.land/do
 A multimodal request at the current date and time:
 
 ```
-{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","directions_options":{"units":"miles"}}
+{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","units":"miles"}
 ```
 
 A multimodal request departing on 2016-03-29 at 08:00:
@@ -240,10 +240,12 @@ A multimodal request for a route favoring buses and a person walking at a set sp
 A multimodal request with a filter for certain Onestop IDs:
 
 ```
-{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"stops":{"ids":["s-dr5rsq8pqg-8st~nyu&#60;r21n","s-dr5rsr9wyg-14st&#126;unionsq&#60;r20n"],"action":"exclude"},"routes":{"ids":["r-dr5r-r"],"action":"exclude"},"operators":{"ids":["o-dr5r-path"],"action":"include"}}}},"directions_options":{"units":"miles"}}
+{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"stops":{"ids":["s-dr5rsq8pqg-8st~nyu&#60;r21n","s-dr5rsr9wyg-14st&#126;unionsq&#60;r20n"],"action":"exclude"},"routes":{"ids":["r-dr5r-r"],"action":"exclude"},"operators":{"ids":["o-dr5r-path"],"action":"include"}}}},"units":"miles"}
 ```
 
 #### Directions options
+
+Directions options should be specified at the top level of the JSON, and usage of the `directions_options` nested structure is deprecated.
 
 | Options | Description |
 | :------------------ | :----------- |

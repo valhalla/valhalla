@@ -175,7 +175,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   }
 
   // Compute the cost to the end of this edge
-  auto edge_cost = costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
+  uint8_t flow_sources;
+  auto edge_cost = costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources);
   auto transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   Cost newcost = pred.cost() + edge_cost + transition_cost;
 
@@ -237,7 +238,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
                            transition_cost, restriction_idx,
-                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))));
+                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                           static_cast<bool>(flow_sources & kDefaultFlowMask));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;
@@ -465,8 +467,9 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     }
 
     // Get cost
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, seconds_of_week) * (1.0f - edge.percent_along());
+    uint8_t flow_sources;
+    Cost cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+                (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -491,7 +494,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             GraphId id(dest_path_edge.graph_id());
             const DirectedEdge* dest_edge = tile->directededge(id);
-            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week) *
+            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
                                   (1.0f - dest_path_edge.percent_along());
             // Remove the cost of the final "unused" part of the destination edge
             cost -= remainder_cost;
@@ -514,7 +517,8 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
-                         baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)));
+                         baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
+                         static_cast<bool>(flow_sources & kDefaultFlowMask));
     // Set the origin flag
     edge_label.set_origin();
 

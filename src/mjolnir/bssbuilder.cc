@@ -190,7 +190,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
       const NodeInfo* node = local_tile.node(i);
       for (uint32_t j = 0; j < node->edge_count(); ++j) {
         const DirectedEdge* directededge = local_tile.directededge(node->edge_index() + j);
-        auto edgeinfo = local_tile.edgeinfo(directededge->edgeinfo_offset());
+        auto edgeinfo = local_tile.edgeinfo(directededge);
 
         if (directededge->use() == Use::kTransitConnection ||
             directededge->use() == Use::kEgressConnection ||
@@ -235,7 +235,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
       continue;
     }
 
-    auto edgeinfo_ped = local_tile.edgeinfo(best_ped.directededge->edgeinfo_offset());
+    auto edgeinfo_ped = local_tile.edgeinfo(best_ped.directededge);
     // Store the information of the edge start <-> bss for pedestrian
     auto start_ped = BSSConnection{bss_ll,
                                    {local_tile.id().tileid(), local_level, best_ped.startnode},
@@ -249,7 +249,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
     auto end_ped =
         BSSConnection{bss_ll, best_ped.directededge->endnode(), edgeinfo_ped, false, best_ped};
 
-    auto edgeinfo_bicycle = local_tile.edgeinfo(best_bicycle.directededge->edgeinfo_offset());
+    auto edgeinfo_bicycle = local_tile.edgeinfo(best_bicycle.directededge);
 
     // Store the information of the edge start <-> bss for bicycle
     auto start_bicycle =

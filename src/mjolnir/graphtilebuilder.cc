@@ -947,7 +947,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
     }
 
     // get the shape or bail if none
-    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    auto info = tile->edgeinfo(edge);
     const auto& shape = info.shape();
     if (shape.empty()) {
       continue;
