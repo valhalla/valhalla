@@ -49,7 +49,7 @@ TEST(Reach, check_all_reach) {
       auto reach = reach_finder(edge, edge_id, 50, reader, costing, kInbound | kOutbound);
 
       // shape is nice to have
-      auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+      auto shape = tile->edgeinfo(edge).shape();
       if (!edge->forward())
         std::reverse(shape.begin(), shape.end());
       auto shape_str = midgard::encode(shape);

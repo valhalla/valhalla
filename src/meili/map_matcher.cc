@@ -108,7 +108,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
       continue;
     }
 
-    const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+    const auto edgeinfo = tile->edgeinfo(directededge);
 
     auto shape = edgeinfo.lazy_shape();
     if (shape.empty()) {

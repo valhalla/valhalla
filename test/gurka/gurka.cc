@@ -410,16 +410,20 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
   return str;
 }
 
-std::vector<std::string> get_path(const valhalla::Api& result) {
-  std::vector<std::string> actual_names;
-  for (const auto& leg : result.trip().routes(0).legs()) {
-    for (const auto& node : leg.node()) {
-      if (node.has_edge()) {
-        actual_names.push_back(detail::to_string(node.edge().name()));
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
+  std::vector<std::vector<std::string>> paths;
+  for (const auto& route : result.trip().routes()) {
+    std::vector<std::string> path;
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        if (node.has_edge()) {
+          path.push_back(detail::to_string(node.edge().name()));
+        }
       }
     }
+    paths.push_back(std::move(path));
   }
-  return actual_names;
+  return paths;
 }
 
 } // namespace detail
@@ -666,7 +670,7 @@ std::string dump_geojson_graph(const map& graph) {
     for (const auto& edge : tile->GetDirectedEdges()) {
       valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
                                        &edge - tile->directededge(0));
-      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+      auto info = tile->edgeinfo(&edge);
 
       // add some properties
       rapidjson::Value properties(rapidjson::kObjectType);
@@ -789,6 +793,49 @@ void expect_steps(valhalla::Api& raw_result,
   }
 
   EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
+}
+/**
+ * Tests if the result, which may be comprised of multiple routes,
+ * have summaries that match the expected_summaries.
+ *
+ * Note: For simplicity's sake, this logic looks at the first leg of each route.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_summaries the route/leg summaries expected
+ */
+void expect_summaries(valhalla::Api& raw_result, const std::vector<std::string>& expected_summaries) {
+
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
+  if (result.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
+
+  const std::string& route_name = "routes";
+
+  EXPECT_TRUE(result.HasMember(route_name));
+  EXPECT_TRUE(result[route_name].IsArray());
+  EXPECT_EQ(result[route_name].Size(), expected_summaries.size());
+
+  size_t i = 0;
+  for (auto route_iter = result[route_name].Begin(); route_iter != result[route_name].End();
+       ++route_iter, ++i) {
+
+    EXPECT_TRUE(route_iter->HasMember("legs"));
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.IsArray());
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.Size() > 0);
+
+    // here's where we only grab the first leg
+    auto leg_iter = route_iter->FindMember("legs")->value.Begin();
+
+    EXPECT_TRUE(leg_iter->IsObject());
+    EXPECT_TRUE(leg_iter->HasMember("summary"));
+    EXPECT_TRUE(leg_iter->FindMember("summary")->value.IsString());
+
+    std::string actual_summary = leg_iter->FindMember("summary")->value.GetString();
+
+    EXPECT_EQ(actual_summary, expected_summaries[i])
+        << "Actual summary didn't match expected summary";
+  }
 }
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -1002,7 +1049,7 @@ void expect_eta(const valhalla::Api& result,
  */
 void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-  const auto actual_names = detail::get_path(result);
+  const auto actual_names = detail::get_paths(result).front();
   EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 
