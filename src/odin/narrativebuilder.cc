@@ -4627,7 +4627,9 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   }
 }
 
-std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
+std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
+                                                 Maneuver& next_maneuver,
+                                                 bool process_succinct) {
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
   // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
 
@@ -4635,7 +4637,10 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
   instruction.reserve(kInstructionInitialCapacity);
 
   // Set current verbal cue
-  const std::string& current_verbal_cue = maneuver->verbal_pre_transition_instruction();
+  const std::string& current_verbal_cue =
+      ((process_succinct && maneuver->HasVerbalSuccinctTransitionInstruction())
+           ? maneuver->verbal_succinct_transition_instruction()
+           : maneuver->verbal_pre_transition_instruction());
 
   // Set next verbal cue
   std::string next_verbal_cue = next_maneuver.HasVerbalTransitionAlertInstruction()
