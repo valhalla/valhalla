@@ -6,6 +6,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include "filesystem.h"
+
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -49,54 +51,93 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
     }
     return a.graph_id < b.graph_id;
   });
+
   // run through the sorted nodes, going back to the edges they reference and updating each edge
   // to point to the first (out of the duplicates) nodes index. at the end of this there will be
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
-  sequence<Edge> edges(edges_file, false);
+
+  auto start_node_edge_file = filesystem::path(edges_file);
+  start_node_edge_file.replace_filename(start_node_edge_file.filename().string() + ".starts.tmp");
+  auto end_node_edge_file = filesystem::path(edges_file);
+  end_node_edge_file.replace_filename(end_node_edge_file.filename().string() + ".ends.tmp");
+  using edge_ends_t = sequence<std::pair<uint32_t, uint32_t>>;
+  std::unique_ptr<edge_ends_t> starts(new edge_ends_t(start_node_edge_file.string(), true));
+  std::unique_ptr<edge_ends_t> ends(new edge_ends_t(end_node_edge_file.string(), true));
+
   uint32_t run_index = 0;
   uint32_t node_index = 0;
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  nodes.transform([&edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
-    // remember if this was a new tile
-    if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
-      tiles.insert({node.graph_id, node_index});
-      node.graph_id.set_id(0);
-      run_index = node_index;
-      ++node_count;
-    } // but is it a new node
-    else if (last_node.node.osmid_ != node.node.osmid_) {
-      node.graph_id.set_id(last_node.graph_id.id() + 1);
-      run_index = node_index;
-      ++node_count;
-    } // not new keep the same graphid
-    else {
-      node.graph_id.set_id(last_node.graph_id.id());
-    }
+  nodes.transform(
+      [&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+        // remember if this was a new tile
+        if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
+          tiles.insert({node.graph_id, node_index});
+          node.graph_id.set_id(0);
+          run_index = node_index;
+          ++node_count;
+        } // but is it a new node
+        else if (last_node.node.osmid_ != node.node.osmid_) {
+          node.graph_id.set_id(last_node.graph_id.id() + 1);
+          run_index = node_index;
+          ++node_count;
+        } // not new keep the same graphid
+        else {
+          node.graph_id.set_id(last_node.graph_id.id());
+        }
 
-    // if this node marks the start of an edge, go tell the edge where the first node in the
-    // series is
-    if (node.is_start()) {
-      auto element = edges[node.start_of];
-      auto edge = *element;
-      edge.sourcenode_ = run_index;
-      element = edge;
-    }
-    // if this node marks the end of an edge, go tell the edge where the first node in the
-    // series is
-    if (node.is_end()) {
-      auto element = edges[node.end_of];
-      auto edge = *element;
-      edge.targetnode_ = run_index;
-      element = edge;
-    }
+        // if this node marks the start of an edge, keep track of the edge and the node
+        // so we can later tell the edge where the first node in the series is
+        if (node.is_start()) {
+          starts->push_back(std::make_pair(node.start_of, run_index));
+        }
+        // if this node marks the end of an edge, keep track of the edge and the node
+        // so we can later tell the edge where the final node in the series is
+        if (node.is_end()) {
+          ends->push_back(std::make_pair(node.end_of, run_index));
+        }
 
-    // next node
-    last_node = node;
-    ++node_index;
-  });
+        // next node
+        last_node = node;
+        ++node_index;
+      });
+
+  // every edge should have a begin and end node
+  assert(starts->size() == ends->size());
+
+  LOG_INFO("Nodes processed. Sorting begin and end nodes by edge.");
+
+  // Sort by edge. This enables a sequential update of edges
+  auto cmp = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
+    return a.first < b.first;
+  };
+  starts->sort(cmp);
+  ends->sort(cmp);
+
+  sequence<Edge> edges(edges_file, false);
+
+  LOG_INFO("Sorting begin and end nodes done. Populating edges...");
+
+  auto s_it = starts->begin(), e_it = ends->begin();
+  while (s_it != starts->end() && e_it != ends->end()) {
+    // there should be exactly one edge per begin and end node sequence and we sorted them the same
+    assert((*s_it).first == (*e_it).first);
+    auto element = edges[(*s_it).first];
+    auto edge = *element;
+    edge.sourcenode_ = (*s_it).second;
+    edge.targetnode_ = (*e_it).second;
+    element = edge;
+    ++s_it;
+    ++e_it;
+  }
+
+  // clean up tmp files
+  starts.reset();
+  ends.reset();
+  filesystem::remove(start_node_edge_file);
+  filesystem::remove(end_node_edge_file);
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -1077,6 +1118,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                    return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+
   return SortGraph(nodes_file, edges_file);
 }
 

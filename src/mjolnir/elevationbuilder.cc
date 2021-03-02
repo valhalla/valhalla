@@ -88,7 +88,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
       auto found = geo_attribute_cache.find(edge_info_offset);
       if (found == geo_attribute_cache.cend()) {
         // Get the shape and length
-        auto shape = tilebuilder.edgeinfo(edge_info_offset).shape();
+        auto shape = tilebuilder.edgeinfo(&directededge).shape();
         auto length = directededge.length();
 
         // Grade estimation and max slopes

@@ -35,6 +35,9 @@ constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+// Note: all roads of class "Service, other" are already penalized with low_class_penalty, so for
+// generic service roads these penalties will add up
+constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
@@ -71,6 +74,12 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
+
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Weighting factor based on road class. These apply penalties to lower class
 // roads.
 constexpr float kRoadClassFactor[] = {
@@ -106,6 +115,8 @@ constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 } // namespace
 
@@ -215,7 +226,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -237,12 +249,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool /*has_measured_speed*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -401,7 +415,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
 
@@ -424,7 +439,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosed(opp_edge, tile)) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
 
@@ -435,8 +450,9 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
-                         const uint32_t seconds) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true);
+                         const uint32_t seconds,
+                         uint8_t& flow_sources) const {
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true, &flow_sources);
   auto s = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[s];
 
@@ -459,6 +475,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
     factor *= living_street_factor_;
+  } else if (edge->use() == Use::kServiceRoad) {
+    factor *= service_factor_;
   }
 
   return {sec * factor, sec};
@@ -518,7 +536,11 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
-                                      const baldr::DirectedEdge* edge) const {
+                                      const baldr::DirectedEdge* edge,
+                                      const bool /*has_measured_speed*/) const {
+
+  // TODO: do we want to update the cost if we have flow or speed from traffic.
+
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -681,6 +703,16 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -702,6 +734,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
@@ -733,6 +767,8 @@ public:
   using TruckCost::ferry_transition_cost_;
   using TruckCost::gate_cost_;
   using TruckCost::maneuver_penalty_;
+  using TruckCost::service_factor_;
+  using TruckCost::service_penalty_;
   using TruckCost::toll_booth_cost_;
 };
 
@@ -838,6 +874,22 @@ TEST(TruckCost, testTruckCostParams) {
     ctorTester.reset(make_truckcost_from_json("low_class_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->low_class_penalty_,
                 test::IsBetween(kLowClassPenaltyRange.min, kLowClassPenaltyRange.max));
+  }
+
+  // service_penalty_
+  distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("service_penalty", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("service_factor", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 
   // weight_

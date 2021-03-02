@@ -15,6 +15,12 @@
    * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
    * FIXED: Increase limits for timedep_* algorithms. Split track_factor into edge factor and transition penalty [#2845](https://github.com/valhalla/valhalla/pull/2845)
    * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
+   * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
+   * FIXED: Honor access mode while matching OSMRestriction with the graph [#2849](https://github.com/valhalla/valhalla/pull/2849)
+   * FIXED: Ensure route summaries are unique among all returned route/legs [#2874](https://github.com/valhalla/valhalla/pull/2874)
+   * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
+   * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
@@ -25,7 +31,17 @@
    * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
    * ADDED: avoid_polygons logic [#2750](https://github.com/valhalla/valhalla/pull/2750)
    * ADDED: Added support for destination for conditional access restrictions [#2857](https://github.com/valhalla/valhalla/pull/2857)
-   * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [2850](https://github.com/valhalla/valhalla/pull/2850)
+   * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [#2850](https://github.com/valhalla/valhalla/pull/2850)
+   * CHANGED: When creating the intial graph edges by setting at which nodes they start and end, first mark the indices of those nodes in another sequence and then sort them by edgeid so that we can do the setting of start and end node sequentially in the edges file. This is much more efficient on certain hardware configurations [#2851](https://github.com/valhalla/valhalla/pull/2851)
+   * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
+   * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
+   * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
+   * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
+   * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
+   * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
+   * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
+   * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

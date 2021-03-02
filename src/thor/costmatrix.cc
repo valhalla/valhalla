@@ -329,6 +329,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
+                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                              static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
                               restriction_idx);
       adj->add(idx);
     }
@@ -576,7 +578,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
       // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge);
+                                                opp_pred_edge, pred.has_measured_speed());
       Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile);
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -597,6 +599,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
+                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                              static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
                               restriction_idx);
       adj->add(idx);
 
@@ -703,7 +707,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             -1);
+                             true, static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask), -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -786,7 +790,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, -1);
+                             false, true, static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
+                             -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

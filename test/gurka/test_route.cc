@@ -629,10 +629,93 @@ TEST(Standalone, DoNotAllowDoubleUturns) {
 
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto");
-    const auto names = gurka::detail::get_path(result);
+    const auto names = gurka::detail::get_paths(result).front();
     if (std::count(names.begin(), names.end(), "CI") == 3)
       FAIL() << "Double uturn detected!";
     else
       FAIL() << "Unexpected path found!";
   } catch (const std::exception& e) { EXPECT_STREQ(e.what(), "No path could be found for input"); }
+}
+
+TEST(Standalone, OneWayIdToManyEdgeIds) {
+  const std::string ascii_map = R"(
+        A<--B<--C<---D
+                ^
+                |
+                E
+                ^
+                |
+                F
+)";
+
+  const gurka::ways ways = {
+      {"FE", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"EC", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "2"}}},
+      {"CB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"DC", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "FE", "from"},
+           {gurka::way_member, "EC", "via"},
+           {gurka::way_member, "CB", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_left_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/one_way_id_to_many_edge_ids",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
+TEST(Standalone, HonorAccessPropertyWhenConstructingRestriction) {
+  const std::string ascii_map = R"(
+        A<-----B<----D
+               ^
+               |
+        E----->F---->G
+)";
+
+  const gurka::ways ways = {
+      {"EF", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"FG", {{"highway", "secondary"}, {"oneway", "yes"}, {"osm_id", "1"}}},
+      {"FB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "2"}}},
+      {"DB", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}, {"osm_id", "3"}}},
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "EF", "from"},
+           {gurka::way_member, "FB", "via"},
+           {gurka::way_member, "BA", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/honor_restriction_access_mode",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "A"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
 }
