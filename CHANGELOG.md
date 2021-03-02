@@ -35,13 +35,13 @@
    * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
-   * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844).
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
    * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
    * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
    * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
    * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
+   * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844).
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
