@@ -57,7 +57,8 @@ constexpr float kTCFavorableSharp = 1.5f;
 constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
-constexpr float kTCReverse = 5.0f;
+constexpr float kTCReverse = 9.5f;
+constexpr float kTCUnfavorableReverse = 15.f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -254,7 +255,7 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool /*has_measured_speed*/,
+                                     const bool has_measured_speed,
                                      const InternalTurn /*internal_turn*/) const override;
 
   /**
@@ -471,8 +472,8 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, idx);
 
-  // Transition time = densityfactor * stopimpact * turncost
-  if (edge->stopimpact(idx) > 0) {
+  // Transition time = turncost * stopimpact * densityfactor
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -484,20 +485,59 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      if (node->drive_on_right()) {
+        // Did we make a pencil point uturn?
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      } else {
+        // Did we make a pencil point uturn?
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      }
       if (edge->roundabout())
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost * edge->stopimpact(idx);
-    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0)
-      seconds *= trans_density_factor_[node->density()];
+    if (has_left || has_right || has_reverse) {
+      seconds *= edge->stopimpact(idx);
+      is_turn = true;
+    }
 
-    c.cost += shortest_ ? 0.f : seconds;
+    if (node->drive_on_right()) {
+      // Did we make a pencil point uturn?
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    } else {
+      // Did we make a pencil point uturn?
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    }
+
+    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
+    // using traffic
+    if (!pred.has_measured_speed()) {
+      if (!is_turn)
+        seconds *= edge->stopimpact(idx);
+      seconds *= trans_density_factor_[node->density()];
+    }
+    c.cost += seconds;
   }
   return c;
 }
@@ -510,7 +550,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
-                                           const bool /*has_measured_speed*/,
+                                           const bool has_measured_speed,
                                            const InternalTurn /*internal_turn*/) const {
 
   // Motorcycles should be able to make uturns on short internal edges; therefore, InternalTurn
@@ -522,8 +562,8 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
-  // Transition time = densityfactor * stopimpact * turncost
-  if (edge->stopimpact(idx) > 0) {
+  // Transition time = turncost * stopimpact * densityfactor
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -535,20 +575,59 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      if (node->drive_on_right()) {
+        // Did we make a pencil point uturn?
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      } else {
+        // Did we make a pencil point uturn?
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      }
       if (edge->roundabout())
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost * edge->stopimpact(idx);
-    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0)
-      seconds *= trans_density_factor_[node->density()];
+    if (has_left || has_right || has_reverse) {
+      seconds *= edge->stopimpact(idx);
+      is_turn = true;
+    }
 
-    c.cost += shortest_ ? 0.f : seconds;
+    if (node->drive_on_right()) {
+      // Did we make a pencil point uturn?
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    } else {
+      // Did we make a pencil point uturn?
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    }
+
+    // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
+    // using traffic
+    if (!has_measured_speed) {
+      if (!is_turn)
+        seconds *= edge->stopimpact(idx);
+      seconds *= trans_density_factor_[node->density()];
+    }
+    c.cost += seconds;
   }
   return c;
 }
