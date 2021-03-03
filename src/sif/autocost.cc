@@ -528,11 +528,13 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
       if (node->drive_on_right()) {
+        // Did we make a pencil point uturn?
         if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
           turn_cost *= kTCUnfavorableReverse;
         else
           turn_cost += 1.5f;
       } else {
+        // Did we make a pencil point uturn?
         if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
           turn_cost *= kTCUnfavorableReverse;
         else
@@ -559,14 +561,18 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
 
     if (node->drive_on_right()) {
+      // Did we make a uturn on a short, internal edge?
       if (has_reverse || (pred.internal_turn() == InternalTurn::kLeftTurn && has_left))
         seconds *= kTCUnfavorableReverse;
+      // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
                !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorableReverse;
     } else {
+      // Did we make a uturn on a short, internal edge?
       if (has_reverse || (pred.internal_turn() == InternalTurn::kRightTurn && has_right))
         seconds *= kTCUnfavorableReverse;
+      // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
                edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorableReverse;
@@ -617,11 +623,13 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
       if (node->drive_on_right()) {
+        // Did we make a pencil point uturn?
         if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
           turn_cost *= kTCUnfavorableReverse;
         else
           turn_cost += 1.5f;
       } else {
+        // Did we make a pencil point uturn?
         if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
           turn_cost *= kTCUnfavorableReverse;
         else
@@ -648,14 +656,18 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     }
 
     if (node->drive_on_right()) {
+      // Did we make a uturn on a short, internal edge?
       if (has_reverse || (internal_turn == InternalTurn::kLeftTurn && has_left))
         seconds *= kTCUnfavorableReverse;
+      // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
                !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorableReverse;
     } else {
+      // Did we make a uturn on a short, internal edge?
       if (has_reverse || (internal_turn == InternalTurn::kRightTurn && has_right))
         seconds *= kTCUnfavorableReverse;
+      // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
                edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorableReverse;
