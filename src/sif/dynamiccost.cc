@@ -123,7 +123,8 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
-                                        const bool) const {
+                                        const bool,
+                                        const InternalTurn) const {
   return {0.0f, 0.0f};
 }
 

@@ -303,13 +303,15 @@ public:
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn Did we make a uturn on a short internal edge?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
-                                     const bool has_measured_speed = false) const;
+                                     const bool has_measured_speed = false,
+                                     const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
