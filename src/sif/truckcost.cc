@@ -251,7 +251,7 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn  Did we make an uturn on a short internal edge.
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
