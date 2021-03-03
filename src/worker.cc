@@ -291,6 +291,10 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
+  if (json.empty()) {
+    d.SetObject();
+    return d;
+  }
   d.Parse(json.c_str());
   if (d.HasParseError()) {
     throw e;

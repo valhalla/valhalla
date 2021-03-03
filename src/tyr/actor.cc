@@ -319,7 +319,9 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   // check thors status
   pimpl->thor_worker.status(request);
   // check odins status
-  auto json = pimpl->odin_worker.status(request);
+  pimpl->odin_worker.status(request);
+  // get the json
+  auto json = tyr::serializeStatus(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();

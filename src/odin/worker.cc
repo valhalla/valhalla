@@ -46,7 +46,7 @@ void odin_worker_t::narrate(Api& request) const {
   } catch (...) { throw valhalla_exception_t{202}; }
 }
 
-std::string odin_worker_t::status(Api&) const {
+void odin_worker_t::status(Api&) const {
 #ifdef HAVE_HTTP
   // if we are in the process of shutting down we signal that here
   // should react by draining traffic (though they are likely doing this as they are usually the ones
@@ -55,7 +55,6 @@ std::string odin_worker_t::status(Api&) const {
     throw valhalla_exception_t{203};
   }
 #endif
-  return "{}";
 }
 
 #ifdef HAVE_HTTP
@@ -81,7 +80,9 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
     // its either a simple status request or its a route to narrate
     switch (request.options().action()) {
       case Options::status: {
-        return to_response(status(request), info, request);
+        status(request);
+        auto response = tyr::serializeStatus(request);
+        return to_response(response, info, request);
       }
       default: {
         // narrate them and serialize them along
