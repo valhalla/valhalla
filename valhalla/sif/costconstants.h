@@ -42,6 +42,16 @@ enum class BicycleType : uint8_t {
   kMountain = 3
 };
 
+// Did we make a turn on a short internal edge
+enum class InternalTurn : uint8_t {
+  kNoTurn = 0,
+  kLeftTurn = 1,
+  kRightTurn = 2,
+};
+
+// This is the edge length, in meters, that we consider short for internal edges.
+const float kShortInternalLength = 8.0f;
+
 // Transit travel type
 // TODO: these are in graphconstants
 // decide what to do
