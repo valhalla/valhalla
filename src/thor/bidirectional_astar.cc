@@ -317,13 +317,24 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
+  InternalTurn turn = InternalTurn::kNoTurn;
+  uint32_t opp_local_idx = pred.opp_local_idx();
+  baldr::Turn::Type turntype = meta.edge->turntype(opp_local_idx);
+  if (nodeinfo->drive_on_right()) {
+    if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+        (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+      turn = InternalTurn::kLeftTurn;
+  } else if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+             (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+    turn = InternalTurn::kRightTurn;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
-                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                   static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -541,13 +552,24 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
+  InternalTurn turn = InternalTurn::kNoTurn;
+  uint32_t opp_local_idx = pred.opp_local_idx();
+  baldr::Turn::Type turntype = meta.edge->turntype(opp_local_idx);
+  if (nodeinfo->drive_on_right()) {
+    if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+        (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+      turn = InternalTurn::kLeftTurn;
+  } else if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+             (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+    turn = InternalTurn::kRightTurn;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
-                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                   static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -936,7 +958,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1, !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask));
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1019,7 +1042,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn, -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

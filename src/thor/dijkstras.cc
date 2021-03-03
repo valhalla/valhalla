@@ -197,14 +197,26 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     graph_tile_ptr t2 = tile;
     GraphId oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                               pred.path_id());
+                               static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -379,14 +391,26 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                               pred.path_id());
+                               static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -864,8 +888,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                                 multipath_ ? path_id : 0);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -950,8 +974,8 @@ void Dijkstras::SetDestinationLocations(
       // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                                 multipath_ ? path_id : 0);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id),
                       multipath_ ? path_id : 0);

@@ -132,10 +132,22 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false);
+                             distance, transition_cost, restriction_idx, true, false, turn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -325,10 +337,22 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false);
+                             distance, transition_cost, restriction_idx, true, false, turn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -514,7 +538,8 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -565,7 +590,8 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

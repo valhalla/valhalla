@@ -275,13 +275,25 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
   }
 
+  InternalTurn turn = InternalTurn::kNoTurn;
+  uint32_t opp_local_idx = pred.opp_local_idx();
+  baldr::Turn::Type turntype = meta.edge->turntype(opp_local_idx);
+  if (nodeinfo->drive_on_right()) {
+    if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+        (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+      turn = InternalTurn::kLeftTurn;
+  } else if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+             (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+    turn = InternalTurn::kRightTurn;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx);
+                               static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                               restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
@@ -519,7 +531,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 sif::InternalTurn::kNoTurn, -1);
     adjacencylist_rev_.add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

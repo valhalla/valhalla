@@ -198,6 +198,22 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
+        InternalTurn turn = InternalTurn::kNoTurn;
+        if (nodeinfo) {
+          uint32_t opp_local_idx = prev_edge_label.opp_local_idx();
+          valhalla::baldr::Turn::Type turntype = de->turntype(opp_local_idx);
+
+          if (nodeinfo->drive_on_right()) {
+            if (de->internal() && de->length() <= kShortInternalLength &&
+                (turntype == valhalla::baldr::Turn::Type::kSharpLeft ||
+                 turntype == valhalla::baldr::Turn::Type::kLeft))
+              turn = InternalTurn::kLeftTurn;
+          } else if (de->internal() && de->length() <= kShortInternalLength &&
+                     (turntype == valhalla::baldr::Turn::Type::kSharpRight ||
+                      turntype == valhalla::baldr::Turn::Type::kRight))
+            turn = InternalTurn::kRightTurn;
+        }
+
         // Set previous edge label
         prev_edge_label = {kInvalidLabel,
                            edge_id,
@@ -210,7 +226,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            {},
                            kInvalidRestriction,
                            true,
-                           static_cast<bool>(flow_sources & kDefaultFlowMask)};
+                           static_cast<bool>(flow_sources & kDefaultFlowMask),
+                           turn};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -399,6 +416,22 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         // Add begin edge
         path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
 
+        InternalTurn turn = InternalTurn::kNoTurn;
+        if (nodeinfo) {
+          uint32_t opp_local_idx = prev_edge_label.opp_local_idx();
+          valhalla::baldr::Turn::Type turntype = de->turntype(opp_local_idx);
+
+          if (nodeinfo->drive_on_right()) {
+            if (de->internal() && de->length() <= kShortInternalLength &&
+                (turntype == valhalla::baldr::Turn::Type::kSharpLeft ||
+                 turntype == valhalla::baldr::Turn::Type::kLeft))
+              turn = InternalTurn::kLeftTurn;
+          } else if (de->internal() && de->length() <= kShortInternalLength &&
+                     (turntype == valhalla::baldr::Turn::Type::kSharpRight ||
+                      turntype == valhalla::baldr::Turn::Type::kRight))
+            turn = InternalTurn::kRightTurn;
+        }
+
         // Set previous edge label
         prev_edge_label = {kInvalidLabel,
                            graphid,
@@ -411,7 +444,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            {},
                            baldr::kInvalidRestriction,
                            true,
-                           static_cast<bool>(flow_sources & kDefaultFlowMask)};
+                           static_cast<bool>(flow_sources & kDefaultFlowMask),
+                           turn};
 
         // Continue walking shape to find the end node
         GraphId end_node;

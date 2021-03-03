@@ -216,10 +216,22 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       sortcost += current_heuristic.Get(t2->get_node_ll(directededge->endnode()), dist);
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction, true, false);
+                             transition_cost, baldr::kInvalidRestriction, true, false, turn);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -453,7 +465,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true, false,
+                         sif::InternalTurn::kNoTurn);
     // Set the origin flag
     edge_label.set_origin();
 

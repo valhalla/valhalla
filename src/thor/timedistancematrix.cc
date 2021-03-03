@@ -121,12 +121,24 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask));
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -286,12 +298,24 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    uint32_t opp_local_idx = pred.opp_local_idx();
+    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+    if (nodeinfo->drive_on_right()) {
+      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        turn = InternalTurn::kLeftTurn;
+    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      turn = InternalTurn::kRightTurn;
+
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask));
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -465,7 +489,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {},
                          baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
-                         static_cast<bool>(flow_sources & kDefaultFlowMask));
+                         static_cast<bool>(flow_sources & kDefaultFlowMask), InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -519,7 +543,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
                          {}, baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
-                         static_cast<bool>(flow_sources & kDefaultFlowMask));
+                         static_cast<bool>(flow_sources & kDefaultFlowMask), InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

@@ -274,6 +274,21 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
+    InternalTurn turn = InternalTurn::kNoTurn;
+    if (nodeinfo) {
+      uint32_t opp_local_idx = pred.opp_local_idx();
+      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+      if (nodeinfo->drive_on_right()) {
+        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+          turn = InternalTurn::kLeftTurn;
+      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+                 (turntype == baldr::Turn::Type::kSharpRight ||
+                  turntype == baldr::Turn::Type::kRight))
+        turn = InternalTurn::kRightTurn;
+    }
+
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel,
             edge_id,
@@ -286,7 +301,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             {},
             baldr::kInvalidRestriction,
             true,
-            static_cast<bool>(flow_sources & kDefaultFlowMask)};
+            static_cast<bool>(flow_sources & kDefaultFlowMask),
+            turn};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

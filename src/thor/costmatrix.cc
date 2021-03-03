@@ -301,7 +301,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, tile);
+      uint8_t flow_sources;
+      Cost newcost =
+          pred.cost() + tc +
+          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -323,6 +326,19 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       }
       GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
+      InternalTurn turn = InternalTurn::kNoTurn;
+      uint32_t opp_local_idx = pred.opp_local_idx();
+      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+      if (nodeinfo->drive_on_right()) {
+        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+          turn = InternalTurn::kLeftTurn;
+      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+                 (turntype == baldr::Turn::Type::kSharpRight ||
+                  turntype == baldr::Turn::Type::kRight))
+        turn = InternalTurn::kRightTurn;
+
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
@@ -330,7 +346,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                              static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
+                              static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
                               restriction_idx);
       adj->add(idx);
     }
@@ -579,7 +595,9 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge, pred.has_measured_speed());
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile);
+      uint8_t flow_sources;
+      Cost newcost = pred.cost() + tc +
+                     costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -593,6 +611,19 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         continue;
       }
 
+      InternalTurn turn = InternalTurn::kNoTurn;
+      uint32_t opp_local_idx = pred.opp_local_idx();
+      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+
+      if (nodeinfo->drive_on_right()) {
+        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+          turn = InternalTurn::kLeftTurn;
+      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+                 (turntype == baldr::Turn::Type::kSharpRight ||
+                  turntype == baldr::Turn::Type::kRight))
+        turn = InternalTurn::kRightTurn;
+
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
@@ -600,7 +631,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                              static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
+                              static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
                               restriction_idx);
       adj->add(idx);
 
@@ -690,7 +721,9 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile);
+      uint8_t flow_sources;
+      Cost edgecost =
+          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -707,7 +740,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             true, static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask), -1);
+                             true, static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             InternalTurn::kNoTurn, -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -773,7 +807,9 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Get cost. Get distance along the remainder of this edge.
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile);
+      uint8_t flow_sources;
+      Cost edgecost =
+          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
@@ -790,8 +826,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, true, static_cast<bool>(costing_->flow_mask() & kDefaultFlowMask),
-                             -1);
+                             false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             InternalTurn::kNoTurn, -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
