@@ -59,6 +59,7 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
+constexpr float kTCUnfavorableReverse = 15.f;
 
 // How much to favor hov roads.
 constexpr float kHOVFactor = 0.85f;
@@ -267,13 +268,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an uturn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_measured_speed) const override;
+                                     const bool has_measured_speed,
+                                     const InternalTurn internal_turn) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -524,22 +527,49 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      if (node->drive_on_right()) {
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      } else {
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      }
       if (edge->roundabout())
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost;
-    bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (has_left || has_right || has_reverse) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
+    }
+
+    if (node->drive_on_right()) {
+      if (has_reverse || (pred.internal_turn() == InternalTurn::kLeftTurn && has_left))
+        seconds *= kTCUnfavorableReverse;
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    } else {
+      if (has_reverse || (pred.internal_turn() == InternalTurn::kRightTurn && has_right))
+        seconds *= kTCUnfavorableReverse;
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
@@ -566,7 +596,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_measured_speed) const {
+                                     const bool has_measured_speed,
+                                     const InternalTurn internal_turn) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -585,22 +616,49 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      if (node->drive_on_right()) {
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      } else {
+        if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight)
+          turn_cost *= kTCUnfavorableReverse;
+        else
+          turn_cost += 1.5f;
+      }
       if (edge->roundabout())
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost;
-    bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (has_left || has_right || has_reverse) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
+    }
+
+    if (node->drive_on_right()) {
+      if (has_reverse || (internal_turn == InternalTurn::kLeftTurn && has_left))
+        seconds *= kTCUnfavorableReverse;
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
+    } else {
+      if (has_reverse || (internal_turn == InternalTurn::kRightTurn && has_right))
+        seconds *= kTCUnfavorableReverse;
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorableReverse;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
