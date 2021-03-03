@@ -56,7 +56,7 @@ constexpr float kDistanceScale = 10.f;
 std::string serialize_to_pbf(Api& request) {
   std::string buf;
   if (!request.SerializeToString(&buf)) {
-    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker");
     throw valhalla_exception_t{401, boost::optional<std::string>(
                                         "Failed serializing to pbf in Thor::Worker")};
   }
@@ -175,6 +175,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(serialize_to_pbf(request));
         break;
       }
+      case Options::status: {
+        status(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
+        break;
+      }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }
@@ -189,6 +194,10 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from thor proxy
   auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
   // sends them on to odin
