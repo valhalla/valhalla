@@ -374,7 +374,9 @@ TEST(Instructions, validate_multi_cue_instructions) {
   // Test imminent turn
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_imminent_turn.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn right onto Linden Road.", "Turn right.", "Turn right onto Linden Road.",
+                    "Turn right onto Linden Road.",
+                    "Turn right. Then Turn left onto West Caracas Avenue.",
+                    "Turn right onto Linden Road.",
                     "Turn right onto Linden Road. Then Turn left onto West Caracas Avenue.",
                     "Continue for 400 feet.");
 
@@ -383,7 +385,7 @@ TEST(Instructions, validate_multi_cue_instructions) {
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
       expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-      "Drive north on Hartman Bridge Road/PA 896.", "Drive north.", "",
+      "Drive north on Hartman Bridge Road/PA 896.", "Drive north. Then Turn left onto U.S. 30.", "",
       "Drive north on Hartman Bridge Road, Pennsylvania 8 96. Then Turn left onto U.S. 30.",
       "Continue for 200 feet.");
 
@@ -392,8 +394,8 @@ TEST(Instructions, validate_multi_cue_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn left onto US 30/Lincoln Highway East.", "Turn left.",
-                    "Turn left onto U.S. 30.",
+                    "Turn left onto US 30/Lincoln Highway East.",
+                    "Turn left. Then, in 500 feet, Turn right.", "Turn left onto U.S. 30.",
                     "Turn left onto U.S. 30, Lincoln Highway East. Then, in 500 feet, Turn right.",
                     "Continue for 500 feet.");
 
@@ -402,7 +404,9 @@ TEST(Instructions, validate_multi_cue_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn right.", "Turn right.", "Turn right.",
+                    "Turn right.",
+                    "Turn right. Then, in 100 feet, Adidas Outlet will be on the left.",
+                    "Turn right.",
                     "Turn right. Then, in 100 feet, Adidas Outlet will be on the left.",
                     "Continue for 100 feet.");
 }
@@ -417,7 +421,8 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Bike east on the cycleway.", "Bike east.", "",
+                    "Bike east on the cycleway.",
+                    "Bike east. Then Enter the roundabout and take the 2nd exit.", "",
                     "Bike east on the cycleway. Then Enter the roundabout and take the 2nd exit.",
                     "Continue for 200 feet.");
 
@@ -436,7 +441,8 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
       expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-      "Exit the roundabout onto the cycleway.", "Exit the roundabout.", "",
+      "Exit the roundabout onto the cycleway.",
+      "Exit the roundabout. Then, in 200 feet, You will arrive at your destination.", "",
       "Exit the roundabout onto the cycleway. Then, in 200 feet, You will arrive at your destination.",
       "Continue for 200 feet.");
 }
@@ -452,7 +458,8 @@ TEST(Instructions, validate_turn_at_instructions) {
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_right_at.pbf"}, expected_routes_size,
       expected_legs_size, expected_maneuvers_size, maneuver_index, "Turn right at 新橋三丁目交番前.",
-      "Turn right.", "Turn right at 新橋三丁目交番前.",
+      "Turn right. Then, in 50 meters, You will arrive at your destination.",
+      "Turn right at 新橋三丁目交番前.",
       "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
       "Continue for 50 meters.");
 
@@ -460,14 +467,17 @@ TEST(Instructions, validate_turn_at_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/turn_right_at_using_internal_edge.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn right at 万年橋東.", "Turn right.", "Turn right at 万年橋東.",
+                    "Turn right at 万年橋東.",
+                    "Turn right. Then You will arrive at your destination.",
+                    "Turn right at 万年橋東.",
                     "Turn right at 万年橋東. Then You will arrive at your destination.",
                     "Continue for 50 meters.");
 
   // Make a right U-turn at
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/uturn_right_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Make a right U-turn at 銀座五丁目.", "Make a right U-turn.",
+                    "Make a right U-turn at 銀座五丁目.",
+                    "Make a right U-turn. Then You will arrive at 15.",
                     "Make a right U-turn at 銀座五丁目.",
                     "Make a right U-turn at 銀座五丁目. Then You will arrive at 15.",
                     "Continue for 30 meters.");
@@ -475,7 +485,8 @@ TEST(Instructions, validate_turn_at_instructions) {
   // Turn left at
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn left at 銀座七丁目.", "Turn left.", "Turn left at 銀座七丁目.",
+                    "Turn left at 銀座七丁目.", "Turn left. Then You will arrive at 花椿通り.",
+                    "Turn left at 銀座七丁目.",
                     "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
                     "Continue for 20 meters.");
 }

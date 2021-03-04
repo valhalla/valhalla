@@ -4406,8 +4406,8 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_3_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right.",
-      "Turn right onto Sunstone Drive.",
+      expected_maneuvers, "Turn right onto Sunstone Drive.",
+      "Turn right. Then Turn right to stay on Sunstone Drive.", "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to stay on Sunstone Drive.",
@@ -4834,7 +4834,8 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_5_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Drive northeast on Jonestown Road/US 22.", "Drive northeast.", "",
+      expected_maneuvers, "Drive northeast on Jonestown Road/US 22.",
+      "Drive northeast. Then Make a left U-turn at Devonshire Road.", "",
       "Drive northeast on Jonestown Road, U.S. 22. Then Make a left U-turn at Devonshire Road.",
       "Continue for 200 feet.");
   SetExpectedManeuverInstructions(
@@ -8617,8 +8618,8 @@ TEST(NarrativeBuilder, TestBuildVerbalMultiCue_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateVerbalMultiCueManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Turn left onto North Plum Street.", "Turn left.",
-      "Turn left onto North Plum Street.",
+      expected_maneuvers, "Turn left onto North Plum Street.",
+      "Turn left. Then Turn left onto East Fulton Street.", "Turn left onto North Plum Street.",
       "Turn left onto North Plum Street. Then Turn left onto East Fulton Street.",
       "Continue for 200 feet.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn left onto East Fulton Street.",
