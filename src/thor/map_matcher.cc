@@ -100,8 +100,8 @@ interpolate_matches(const std::vector<valhalla::meili::MatchResult>& matches,
         }
         // it was the right thing we were looking for
         interpolated.emplace_back(
-            interpolation_t{segment->edgeid, matches[idx].distance_along * edge_length + total_length,
-                            matches[idx].distance_along, idx, matches[idx].epoch_time});
+            interpolation_t{segment->edgeid, matches[idx].percent_along * edge_length + total_length,
+                            matches[idx].percent_along, idx, matches[idx].epoch_time});
         last_idx = idx;
       }
       // add the end node of the edge

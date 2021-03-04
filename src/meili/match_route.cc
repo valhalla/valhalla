@@ -108,8 +108,8 @@ bool MergeRoute(const State& source,
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
     assert(target_result.edgeid.Is_Valid());
-    segments.emplace_back(target_result.edgeid, target_result.distance_along,
-                          target_result.distance_along);
+    segments.emplace_back(target_result.edgeid, target_result.percent_along,
+                          target_result.percent_along);
   }
 
   route.insert(route.end(), segments.crbegin(), segments.crend());
@@ -141,9 +141,12 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       continue;
     }
-    // we want to handle to loop by locating the correct target edge by comparing the distance alone
+    // we want to handle to loop by locating the correct target edge by comparing the distance alone.
+    // Note: there should be a proper tolerance check to see if the 'percent_along's are close
+    // to one another, but comparing percentages isn't geometrically correct. Some refactoring
+    // would be required if we want to strenghen this condition.
     bool loop = prev_match.edgeid == curr_match.edgeid &&
-                prev_match.distance_along > curr_match.distance_along;
+                prev_match.percent_along > curr_match.percent_along;
     // if it is a loop, we start the search after the first edge
     auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
                                      [&curr_match](const EdgeSegment& segment) {
@@ -162,10 +165,10 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     // otherwise, we use the segment's source or target because if it is a node snap, the
     // match result can only hold one candidate, we need either side of the node.
     new_segments[old_size].source =
-        prev_match.HasState() ? first_segment->source : prev_match.distance_along;
+        prev_match.HasState() ? first_segment->source : prev_match.percent_along;
     new_segments.back().last_match_idx = curr_idx;
     new_segments.back().target =
-        curr_match.HasState() ? last_segment->target : curr_match.distance_along;
+        curr_match.HasState() ? last_segment->target : curr_match.percent_along;
 
     first_segment = last_segment;
     prev_idx = curr_idx;

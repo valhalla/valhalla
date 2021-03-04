@@ -296,7 +296,7 @@ void thor_worker_t::build_trace(
     const auto* first_segment = path.second.front();
     const auto& first_match = match_results[first_segment->first_match_idx];
     if (first_match.ends_discontinuity) {
-      edge_trimming[first_match.edge_index] = {{true, first_match.lnglat, first_match.distance_along},
+      edge_trimming[first_match.edge_index] = {{true, first_match.lnglat, first_match.percent_along},
                                                {false, {}, 1.f}};
     }
 
@@ -307,7 +307,7 @@ void thor_worker_t::build_trace(
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
     if (last_match.begins_discontinuity) {
       auto found = edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
-                                                                  last_match.distance_along};
+                                                                  last_match.percent_along};
     }
   }
 

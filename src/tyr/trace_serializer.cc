@@ -399,7 +399,7 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
     // Process matched point distance along edge
     if (controller.attributes.at(kMatchedDistanceAlongEdge) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along, 3});
+      match_points_map->emplace("distance_along_edge", json::fp_t{match_result.percent_along, 3});
     }
 
     // Process matched point distance from trace point

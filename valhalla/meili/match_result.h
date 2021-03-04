@@ -21,7 +21,7 @@ struct MatchResult {
   // Which edge this match point stays
   baldr::GraphId edgeid;
   // Percentage distance along the edge
-  double distance_along;
+  double percent_along;
   // Optional epoch time for this match point copied from original measurement
   double epoch_time;
   // Sequential state id
@@ -57,7 +57,7 @@ struct MatchResult {
     os << std::fixed << std::setprecision(6);
     os << "lnglat: " << r.lnglat.lng() << "," << r.lnglat.lat() << std::setprecision(3)
        << ", distance_from: " << r.distance_from << ", edgeid: " << r.edgeid
-       << ", distance_along: " << r.distance_along << ", epoch_time: " << r.epoch_time
+       << ", percent_along: " << r.percent_along << ", epoch_time: " << r.epoch_time
        << ", stateid.time: " << r.stateid.time() << ", stateid.id: " << r.stateid.id()
        << ", is_break_point:" << r.is_break_point
        << ", begins_discontinuity:" << r.begins_discontinuity
