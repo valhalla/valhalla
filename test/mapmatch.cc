@@ -1507,16 +1507,16 @@ TEST(Mapmatch, prove_map_match_uses_tol) {
           })"};
 
   tyr::actor_t actor(palermo_conf, true);
+
+  // Without the snap tolerance, this would previously segfault. The
+  // geometry that leads to this scenario is very specific, hence the
+  // reason for using the exact palermo tile in this test.
   auto response = test::json_to_pt(actor.trace_route(request));
 
-  // this would previously segfault
-  const auto& matchings = response.get_child("matchings");
-
   // not expecting much here, just that we didn't segfault
+  const auto& matchings = response.get_child("matchings");
   EXPECT_EQ(matchings.size(), 1);
 }
-
-
 
 } // namespace
 
