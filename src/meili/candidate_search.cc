@@ -93,7 +93,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         // 1.0 means the other end.
         const float dist = edge->forward() ? offset : 1.f - offset;
 
-        // Normally, exact comparisons of doubles is avoided. However, the call to
+        // Normally, exact comparisons of doubles should be avoided. However, the call to
         // helpers::Project() employs a snap_tol, which ensures that the projection
         // will be snapped to the segment end if the projection is within 'snap_tol',
         // making these exact comparisons reasonable.
@@ -120,7 +120,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         // 1.0 means the other end.
         const float dist = opp_edge->forward() ? offset : 1.f - offset;
 
-        // Normally, exact comparisons of doubles is avoided. However, the call to
+        // Normally, exact comparisons of doubles should be avoided. However, the call to
         // helpers::Project() employs a snap_tol, which ensures that the projection
         // will be snapped to the segment end if the projection is within 'snap_tol',
         // making these exact comparisons reasonable.
