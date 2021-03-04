@@ -13,6 +13,10 @@
 namespace valhalla {
 namespace loki {
 
+struct SearchOptions {
+  uint32_t max_reachability_ = 100;
+};
+
 /**
  * Find an location within the route network given an input location
  * same tiled route data and a search strategy
@@ -20,7 +24,7 @@ namespace loki {
  * @param locations      the positions which need to be correlated to the route network
  * @param reader         and object used to access tiled route data TODO: switch this out for a
  * proper cache
- * @param edge_filter    a costing object by which we can determine which portions of the graph are
+ * @param costing        a costing object by which we can determine which portions of the graph are
  *                       accessable and therefor potential candidates
  * @return pathLocations the correlated data with in the tile that matches the inputs. If a
  * projection is not found, it will not have any entry in the returned value.
@@ -28,7 +32,8 @@ namespace loki {
 std::unordered_map<baldr::Location, baldr::PathLocation>
 Search(const std::vector<baldr::Location>& locations,
        baldr::GraphReader& reader,
-       const std::shared_ptr<sif::DynamicCost>& costing);
+       const std::shared_ptr<sif::DynamicCost>& costing,
+       const SearchOptions& options = {});
 
 } // namespace loki
 } // namespace valhalla

@@ -247,12 +247,12 @@ struct bin_handler_t {
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
-                const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing) {
+                const std::shared_ptr<DynamicCost>& costing,
+                const SearchOptions& options)
+      : reader(reader), costing(costing), max_reach_limit(options.max_reachability_) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
-    max_reach_limit = 0;
     for (const auto& loc : uniq_locations) {
       pps.emplace_back(loc, reader);
       max_reach_limit = std::max(max_reach_limit, loc.min_outbound_reach_);
@@ -304,8 +304,16 @@ struct bin_handler_t {
         // do we want this edge
         if (costing->Allowed(edge, tile)) {
           auto reach = get_reach(id, edge);
-          PathLocation::PathEdge
-              path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
+          const bool high_reachability =
+              reach.inbound >= max_reach_limit && reach.outbound >= max_reach_limit;
+          PathLocation::PathEdge path_edge{id,
+                                           0,
+                                           node_ll,
+                                           distance,
+                                           PathLocation::NONE,
+                                           reach.outbound,
+                                           reach.inbound,
+                                           high_reachability};
           if (heading_filter(location, angle)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
@@ -322,13 +330,16 @@ struct bin_handler_t {
 
         if (costing->Allowed(other_edge, other_tile)) {
           auto reach = get_reach(other_id, other_edge);
+          const bool high_reachability =
+              reach.inbound >= max_reach_limit && reach.outbound >= max_reach_limit;
           PathLocation::PathEdge path_edge{other_id,
                                            1,
                                            node_ll,
                                            distance,
                                            PathLocation::NONE,
                                            reach.outbound,
-                                           reach.inbound};
+                                           reach.inbound,
+                                           high_reachability};
           // angle is 180 degrees opposite direction of the one above
           if (heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
             filtered.emplace_back(std::move(path_edge));
@@ -392,9 +403,10 @@ struct bin_handler_t {
                                  : candidate.sq_distance,
                              sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
-      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
-                                       distance,          side,         reach.outbound,
-                                       reach.inbound};
+      bool high_reachability = reach.outbound >= max_reach_limit && reach.inbound >= max_reach_limit;
+      PathLocation::PathEdge
+          path_edge{candidate.edge_id, length_ratio,  candidate.point,  distance, side,
+                    reach.outbound,    reach.inbound, high_reachability};
       // correlate the edge we found
       if (side_filter(path_edge, location, reader) || heading_filter(location, angle)) {
         filtered.push_back(std::move(path_edge));
@@ -407,10 +419,11 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Allowed(other_edge, other_tile)) {
-        auto reach = get_reach(opposing_edge_id, other_edge);
+        reach = get_reach(opposing_edge_id, other_edge);
+        high_reachability = reach.outbound >= max_reach_limit && reach.inbound >= max_reach_limit;
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
-                                               reach.inbound};
+                                               reach.inbound,    high_reachability};
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) ||
             heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
@@ -784,7 +797,8 @@ namespace loki {
 std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
-       const std::shared_ptr<DynamicCost>& costing) {
+       const std::shared_ptr<DynamicCost>& costing,
+       const SearchOptions& options) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
@@ -794,7 +808,7 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
 
   // setup the unique list of locations
-  bin_handler_t handler(locations, reader, costing);
+  bin_handler_t handler(locations, reader, costing, options);
   // search over the bins doing multiple locations per bin
   handler.search();
   // turn each locations candidate set into path locations
