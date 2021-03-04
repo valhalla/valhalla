@@ -145,8 +145,8 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     // Note: there should be a proper tolerance check to see if the 'percent_along's are close
     // to one another, but comparing percentages isn't geometrically correct. Some refactoring
     // would be required if we want to strenghen this condition.
-    bool loop = prev_match.edgeid == curr_match.edgeid &&
-                prev_match.percent_along > curr_match.percent_along;
+    bool loop =
+        prev_match.edgeid == curr_match.edgeid && prev_match.percent_along > curr_match.percent_along;
     // if it is a loop, we start the search after the first edge
     auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
                                      [&curr_match](const EdgeSegment& segment) {
