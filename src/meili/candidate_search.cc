@@ -43,7 +43,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
   // helps keep things well conditioned. What this represents is, "if our point
   // projection onto a segment is within this distance of either segment end,
   // just snap to that end."
-  const float snap_tol = 0.0; // 1 mm
+  const float snap_tol = 0.001; // 1 mm
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;

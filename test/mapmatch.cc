@@ -1463,6 +1463,61 @@ TEST(Mapmatch, openlr_parameter_falsy_native_api) {
     EXPECT_THROW(response.get_child("trip.linear_references"), std::runtime_error);
   }
 }
+
+// This test proves we snap using a tolerance in CandidateCollector::WithinSquaredDistance()
+// when projecting.
+TEST(Mapmatch, prove_map_match_uses_tol) {
+  const auto palermo_conf = test::make_config(VALHALLA_SOURCE_DIR "test/data/palermo_tiles",
+                                              {
+                                                  {"meili.default.max_search_radius", "200"},
+                                                  {"meili.default.search_radius", "15.0"},
+                                                  {"meili.default.turn_penalty_factor", "200"},
+                                              });
+
+  const std::string request = {
+      R"({"costing":"auto",
+          "costing_options":{},
+          "date_time":{"type":0},
+          "shape_match":"map_snap",
+          "format":"osrm",
+          "shape_format":"polyline5",
+          "filters":{},
+          "trace_options":{"interpolation_distance":0},
+          "directions_type":"instructions",
+          "units":"miles",
+          "roundabout_exits":false,
+          "linear_references":false,
+          "language":"en-US",
+          "shape":[{
+            "lat":38.1596596,
+            "lon":13.2626372,
+            "type":"break",
+            "radius":15,
+            "search_cutoff":21000000,
+            "preferred_side":"either",
+            "time":1605553682
+          }, {
+            "lat":38.1596996,
+            "lon":13.2626091,
+            "type":"break",
+            "radius":15,
+            "search_cutoff":21000000,
+            "preferred_side":"either",
+            "time":1605553834}]
+          })"};
+
+  tyr::actor_t actor(palermo_conf, true);
+  auto response = test::json_to_pt(actor.trace_route(request));
+
+  // this would previously segfault
+  const auto& matchings = response.get_child("matchings");
+
+  // not expecting much here, just that we didn't segfault
+  EXPECT_EQ(matchings.size(), 1);
+}
+
+
+
 } // namespace
 
 int main(int argc, char* argv[]) {
