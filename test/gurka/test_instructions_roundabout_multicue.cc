@@ -79,7 +79,8 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOrdinalOn
 
   // Verify the start then enter roundabout multicue
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive east on Main Street/A 1.", "Drive east.", "",
+      result, maneuver_index, "Drive east on Main Street/A 1.",
+      "Drive east. Then Enter the roundabout and take the 3rd exit.", "",
       "Drive east on Main Street, A 1. Then Enter the roundabout and take the 3rd exit.",
       "Continue for 100 meters.");
 
@@ -93,7 +94,8 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOrdinalOn
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout.", "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout. Then You will arrive at your destination.", "Continue for 200 meters.");
 }
 
@@ -107,7 +109,8 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOntoStree
 
   // Verify the start then enter roundabout multicue
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive east on Main Street/A 1.", "Drive east.", "",
+      result, maneuver_index, "Drive east on Main Street/A 1.",
+      "Drive east. Then Enter the roundabout and take the 1st exit onto 1st Avenue.", "",
       "Drive east on Main Street, A 1. Then Enter the roundabout and take the 1st exit onto 1st Avenue.",
       "Continue for 100 meters.");
 
@@ -120,7 +123,8 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOntoStree
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout onto 1st Avenue.", "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout onto 1st Avenue.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout onto 1st Avenue. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -136,8 +140,8 @@ TEST_F(InstructionsRoundaboutMulticue, TurnThenEnterRoundaboutMulticueOrdinalOnl
 
   // Verify the turn then enter roundabout multicue
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn right onto Main Street/A 1.", "Turn right.",
-      "Turn right onto Main Street.",
+      result, maneuver_index, "Turn right onto Main Street/A 1.",
+      "Turn right. Then Enter the roundabout and take the 1st exit.", "Turn right onto Main Street.",
       "Turn right onto Main Street, A 1. Then Enter the roundabout and take the 1st exit.",
       "Continue for 200 meters.");
 
@@ -151,7 +155,8 @@ TEST_F(InstructionsRoundaboutMulticue, TurnThenEnterRoundaboutMulticueOrdinalOnl
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout.", "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout. Then You will arrive at your destination.", "Continue for 200 meters.");
 }
 
@@ -169,7 +174,8 @@ TEST_F(InstructionsRoundaboutMulticue, ExitThenEnterRoundaboutNoMulticue) {
 
   // Verify the turn then enter roundabout multicue
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn right onto Main Street/A 1.", "Turn right.",
+      result, maneuver_index, "Turn right onto Main Street/A 1.",
+      "Turn right. Then Enter the roundabout and take the 2nd exit onto Main Street.",
       "Turn right onto Main Street.",
       "Turn right onto Main Street, A 1. Then Enter the roundabout and take the 2nd exit onto Main Street.",
       "Continue for 200 meters.");
@@ -201,7 +207,7 @@ TEST_F(InstructionsRoundaboutMulticue, ExitThenEnterRoundaboutNoMulticue) {
   // Verify the 2nd exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.",
-      "Exit the roundabout.", "",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }

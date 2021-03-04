@@ -87,8 +87,8 @@ TEST_F(InstructionsUturn, LUturn) {
 
   // Verify the L U-turn instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Make a left U-turn at BE onto EF.", "Make a left U-turn.",
-      "Make a left U-turn at BE.",
+      result, maneuver_index, "Make a left U-turn at BE onto EF.",
+      "Make a left U-turn. Then You will arrive at your destination.", "Make a left U-turn at BE.",
       "Make a left U-turn at BE onto EF. Then You will arrive at your destination.",
       "Continue for 60 meters.");
 }
@@ -115,7 +115,8 @@ TEST_F(InstructionsUturn, LUturn2) {
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "Drive north.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Make a left U-turn at Snowden River Parkway.", "",
       "Drive north on Broken Land Parkway. Then Make a left U-turn at Snowden River Parkway.",
       "Continue for 70 meters.");
 
@@ -123,7 +124,8 @@ TEST_F(InstructionsUturn, LUturn2) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index,
       "Make a left U-turn at Snowden River Parkway to stay on Broken Land Parkway.",
-      "Make a left U-turn.", "Make a left U-turn at Snowden River Parkway.",
+      "Make a left U-turn. Then, in 80 meters, You will arrive at your destination.",
+      "Make a left U-turn at Snowden River Parkway.",
       "Make a left U-turn at Snowden River Parkway to stay on Broken Land Parkway. Then, in 80 meters, You will arrive at your destination.",
       "Continue for 80 meters.");
 }

@@ -97,7 +97,8 @@ TEST_F(InstructionsRoundabout, RoundaboutOrdinalOnly) {
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout.", "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout. Then You will arrive at your destination.", "Continue for 200 meters.");
 }
 
@@ -120,8 +121,9 @@ TEST_F(InstructionsRoundabout, RoundaboutOntoStreetName) {
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.", "Exit the roundabout.",
-      "", "Exit the roundabout onto Homestead Lane. Then You will arrive at your destination.",
+      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
+      "Exit the roundabout onto Homestead Lane. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
 
@@ -173,7 +175,7 @@ TEST_F(InstructionsRoundabout, RoundaboutToward) {
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.",
-      "Exit the roundabout.", "",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
