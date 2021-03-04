@@ -16,6 +16,32 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+namespace {
+
+std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restrictions,
+                                                               size_t restrictions_size) {
+  std::vector<ComplexRestrictionBuilder> builders;
+  size_t offset = 0;
+  while (offset < restrictions_size) {
+    const ComplexRestriction* cr = reinterpret_cast<ComplexRestriction*>(restrictions + offset);
+    ComplexRestrictionBuilder builder(*cr);
+    if (cr->via_count()) {
+      std::vector<GraphId> vias;
+      vias.reserve(cr->via_count());
+      const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(cr + 1);
+      for (uint32_t i = 0; i < cr->via_count(); i++, ++via) {
+        vias.push_back(*via);
+      }
+      builder.set_via_list(vias);
+    }
+    builders.push_back(std::move(builder));
+    offset += cr->SizeOf();
+  }
+  return builders;
+};
+
+} // namespace
+
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
 // levels. If the deserialize flag is set then all objects are serialized
@@ -187,6 +213,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
+
+  complex_restriction_forward_builder_ =
+      DeserializeRestrictions(complex_restriction_forward_, complex_restriction_forward_size_);
+  complex_restriction_reverse_builder_ =
+      DeserializeRestrictions(complex_restriction_reverse_, complex_restriction_reverse_size_);
 }
 
 // Output the tile to file. Stores as binary data.
@@ -916,7 +947,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
     }
 
     // get the shape or bail if none
-    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    auto info = tile->edgeinfo(edge);
     const auto& shape = info.shape();
     if (shape.empty()) {
       continue;

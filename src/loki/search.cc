@@ -295,7 +295,7 @@ struct bin_handler_t {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
-        auto info = tile->edgeinfo(edge->edgeinfo_offset());
+        auto info = tile->edgeinfo(edge);
         // calculate the heading of the snapped point to the shape for use in heading filter
         size_t index = edge->forward() ? 0 : info.shape().size() - 2;
         float angle =
@@ -540,7 +540,7 @@ struct bin_handler_t {
       // a trivial half plane test as maybe a single dot product and comparison?
 
       // get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()));
+      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
       auto shape = edge_info->lazy_shape();
       PointLL v;
       if (!shape.empty()) {

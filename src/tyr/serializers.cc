@@ -83,6 +83,12 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
+std::string serializeStatus(const Api&) {
+  // TODO: once we decide on what's in the status message we'll fill out the proto message in
+  // loki/thor/odin and we'll serialize it here
+  return "{}";
+}
+
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
   const bool linear_reference =
       options.linear_references() &&

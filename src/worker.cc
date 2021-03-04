@@ -88,7 +88,7 @@ const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES{
 
 // from valhalla error code to http status code
 const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
-    {100, 400}, {101, 405}, {106, 404}, {107, 501},
+    {100, 400}, {101, 405}, {102, 503}, {106, 404}, {107, 501},
 
     {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
 
@@ -107,7 +107,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {199, 400},
 
-    {200, 500}, {201, 500}, {202, 500},
+    {200, 500}, {201, 500}, {202, 500}, {203, 503},
 
     {210, 400}, {211, 400}, {212, 400}, {213, 400},
 
@@ -123,7 +123,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {399, 400},
 
-    {400, 400}, {401, 500},
+    {400, 400}, {401, 500}, {402, 503},
 
     {420, 400}, {421, 400}, {422, 400}, {423, 400}, {424, 400},
 
@@ -142,6 +142,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     // loki project 1xx
     {100, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {101, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {102, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
     {106, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {107, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {110, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -224,6 +225,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {200, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {201, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {202, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {203, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
 
     {210, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {211, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
@@ -254,6 +256,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     // thor project 4xx
     {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
+    {402, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
 
     {420,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -288,6 +291,10 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
+  if (json.empty()) {
+    d.SetObject();
+    return d;
+  }
   d.Parse(json.c_str());
   if (d.HasParseError()) {
     throw e;
