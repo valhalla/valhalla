@@ -60,7 +60,7 @@ config = {
     'elevation': '/data/valhalla/elevation/'
   },
   'loki': {
-    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid'],
+    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid', 'status'],
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
@@ -321,7 +321,7 @@ help_text = {
     'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
   },
   'loki': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid',
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status',
     'use_connectivity': 'a boolean value to know whether or not to construct the connectivity maps',
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
