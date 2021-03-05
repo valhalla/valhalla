@@ -369,7 +369,7 @@ public:
         auto tmp = pq.top();
         pq.pop();
         output_seq.push_back(tmp.first);
-        auto new_idx = tmp.second + 1;
+        size_t new_idx = tmp.second + 1;
         if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
           pq.emplace(*at(new_idx), new_idx);
         }
