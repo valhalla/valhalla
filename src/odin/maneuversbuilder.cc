@@ -927,6 +927,7 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
       if (get_word_count(street_name->value()) > kMaxWordCount ||
           street_name->value().length() > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
+        break;
       }
       ++street_name_count;
     }
@@ -940,6 +941,7 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
         if (get_word_count(roundabout_exit_street_name->value()) > kMaxWordCount ||
             roundabout_exit_street_name->value().length() > kMaxStreetNameLength) {
           maneuver.set_long_street_name(true);
+          break;
         }
         ++roundabout_exit_street_name_count;
       }
