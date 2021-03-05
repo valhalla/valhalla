@@ -25,7 +25,7 @@ constexpr float kDefaultAuto_FerryCost = 300.0f;              // Seconds
 constexpr float kDefaultAuto_CountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultAuto_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultAuto_UseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultAuto_UseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultAuto_UseHighways = 0.5f;              // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseLivingStreets = 0.1f;         // Factor between 0 and 1
@@ -92,7 +92,7 @@ constexpr float kDefaultPedestrian_UseFerry = 1.0f;
 constexpr float kDefaultPedestrian_UseLivingStreets = 0.6f;              // Factor between 0 and 1
 constexpr uint32_t kDefaultPedestrian_TransitStartEndMaxDistance = 2415; // 1.5 miles
 constexpr uint32_t kDefaultPedestrian_TransitTransferMaxDistance = 805;  // 0.5 miles
-constexpr float kDefaultPedestrian_ServicePenalty = 15.0f;               // Seconds
+constexpr float kDefaultPedestrian_ServicePenalty = 0.0f;                // Seconds
 constexpr float kDefaultPedestrian_ServiceFactor = 1.f;                  // Positive factor
 
 // Bicycle defaults

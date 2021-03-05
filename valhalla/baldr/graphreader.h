@@ -824,7 +824,7 @@ public:
     if (edge == nullptr) {
       throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
     }
-    return tile->edgeinfo(edge->edgeinfo_offset());
+    return tile->edgeinfo(edge);
   }
 
   /**

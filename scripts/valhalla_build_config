@@ -60,7 +60,7 @@ config = {
     'elevation': '/data/valhalla/elevation/'
   },
   'loki': {
-    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid'],
+    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid', 'status'],
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
@@ -153,7 +153,9 @@ config = {
     'service': {
       'listen': 'tcp://*:8002',
       'loopback': 'ipc:///tmp/loopback',
-      'interrupt': 'ipc:///tmp/interrupt'
+      'interrupt': 'ipc:///tmp/interrupt',
+      'drain_seconds': 28,
+      'shutdown_seconds': 1
     }
   },
   'service_limits': {
@@ -319,7 +321,7 @@ help_text = {
     'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
   },
   'loki': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid',
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status',
     'use_connectivity': 'a boolean value to know whether or not to construct the connectivity maps',
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
@@ -412,7 +414,9 @@ help_text = {
     'service': {
       'listen': 'The protocol, host location and port your service will bind to',
       'loopback': 'IPC linux domain socket file location used to communicate results back to the client',
-      'interrupt': 'IPC linux domain socket file location used to cancel work in progress'
+      'interrupt': 'IPC linux domain socket file location used to cancel work in progress',
+      'drain_seconds': 'How long to wait for currently running threads to finish before signaling them to shutdown',
+      'shutdown_seconds': 'How long to wait for currently running threads to quit before exiting the process'
     }
   },
   'service_limits': {

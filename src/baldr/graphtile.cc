@@ -616,6 +616,10 @@ EdgeInfo GraphTile::edgeinfo(const size_t offset) const {
   return EdgeInfo(edgeinfo_ + offset, textlist_, textlist_size_);
 }
 
+EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
+  return edgeinfo(edge->edgeinfo_offset());
+}
+
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
 std::vector<ComplexRestriction*>

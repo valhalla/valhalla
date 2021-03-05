@@ -131,13 +131,12 @@ bool IsLoopTerminal(const graph_tile_ptr& tile,
       if (loop_node_info->edge_count() == 2 ||
           (loop_node_info->edge_count() == 3 && !outboundIsRestrictive())) {
         // Victory
-        auto shape = tile->edgeinfo(first_edge->edgeinfo_offset()).shape();
-        auto second_shape = tile->edgeinfo(last_edge->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(first_edge).shape();
+        auto second_shape = tile->edgeinfo(last_edge).shape();
         for (auto& point : second_shape) {
           shape.push_back(point);
         }
-        rd.AddTask(AABB2<PointLL>(shape), tile->edgeinfo(first_edge->edgeinfo_offset()).wayid(),
-                   shape);
+        rd.AddTask(AABB2<PointLL>(shape), tile->edgeinfo(first_edge).wayid(), shape);
         return true;
       }
     }
@@ -186,9 +185,8 @@ bool IsLoop(GraphReader& reader,
     }
     // continue the loop if you haven't finished it
     if (next == &directededge) {
-      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next->edgeinfo_offset()).shape()),
-                 tile->edgeinfo(next->edgeinfo_offset()).wayid(),
-                 tile->edgeinfo(next->edgeinfo_offset()).shape());
+      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next).shape()), tile->edgeinfo(next).wayid(),
+                 tile->edgeinfo(next).shape());
       return true;
     }
     if (next) {
@@ -349,7 +347,7 @@ void AddStatistics(statistics& stats,
       stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
     }
     // Check if edge has any names
-    if (tile.edgeinfo(directededge.edgeinfo_offset()).name_count() > 0) {
+    if (tile.edgeinfo(&directededge).name_count() > 0) {
       stats.add_tile_named(tileid, rclass, edge_length);
       stats.add_country_named(begin_node_iso, rclass, edge_length);
     }

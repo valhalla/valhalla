@@ -59,7 +59,7 @@ void recover(bool cache) {
           continue;
 
         // we'll have the shape to compare to
-        auto shortcut_shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+        auto shortcut_shape = tile->edgeinfo(edge).shape();
         if (!edge->forward())
           std::reverse(shortcut_shape.begin(), shortcut_shape.end());
 
@@ -82,7 +82,7 @@ void recover(bool cache) {
         for (auto edgeid : edgeids) {
           auto tile = graphreader.GetGraphTile(edgeid);
           const auto* de = tile->directededge(edgeid);
-          auto de_shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+          auto de_shape = tile->edgeinfo(de).shape();
           if (!de->forward()) {
             std::reverse(de_shape.begin(), de_shape.end());
           }

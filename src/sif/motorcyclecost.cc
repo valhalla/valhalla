@@ -223,7 +223,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -245,12 +246,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool /*has_measured_speed*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -418,8 +421,9 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
-                              const uint32_t seconds) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+                              const uint32_t seconds,
+                              uint8_t& flow_sources) const {
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
   auto final_speed = std::min(edge_speed, top_speed_);
 
   float sec = (edge->length() * speedfactor_[final_speed]);
@@ -503,7 +507,11 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
-                                           const baldr::DirectedEdge* edge) const {
+                                           const baldr::DirectedEdge* edge,
+                                           const bool /*has_measured_speed*/) const {
+
+  // TODO: do we want to update the cost if we have flow or speed from traffic.
+
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
