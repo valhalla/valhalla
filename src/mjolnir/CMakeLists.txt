@@ -26,6 +26,7 @@ if (UNIX)
   # which allows us to migrate piecemeal
   set_source_files_properties(
     graphenhancer.cc
+    hierarchybuilder.cc
     luatagtransform.cc
     osmdata.cc
     osmrestriction.cc
