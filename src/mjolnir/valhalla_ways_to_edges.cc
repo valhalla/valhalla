@@ -90,8 +90,8 @@ bool ParseArguments(int argc, char* argv[]) {
     if (min_level > max_level) {
       std::cerr << "min_level " << min_level << " exceeds max level of " << max_level << std::endl;
       std::cerr << "\n" << options << std::endl;
+      return false;
     }
-    return false;
   }
 
   if (vm.count("config")) {
