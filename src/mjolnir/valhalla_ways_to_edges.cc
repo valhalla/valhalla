@@ -142,7 +142,8 @@ int main(int argc, char** argv) {
       for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
         const DirectedEdge* edge = tile->directededge(edge_id);
         if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-            edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
+            edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
+            edge->is_shortcut()) {
           continue;
         }
 
