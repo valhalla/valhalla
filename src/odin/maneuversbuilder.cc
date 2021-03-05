@@ -58,7 +58,7 @@ constexpr float kSmallEndRampForkThreshold = 0.125f;
 
 // Thresholds for succinct phrase usage
 constexpr uint32_t kMaxWordCount = 5;
-constexpr uint32_t kMaxStreetNameLength = 28;
+constexpr uint32_t kMaxStreetNameLength = 25;
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
