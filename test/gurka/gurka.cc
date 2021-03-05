@@ -1051,5 +1051,48 @@ void expect_path(const valhalla::Api& result, const std::vector<std::string>& ex
 } // namespace raw
 } // namespace assert
 
+// Helper incident factory function
+valhalla::IncidentsTile::Location
+createIncidentLocation(uint32_t edge_index, float start_offset, float end_offset) {
+  valhalla::IncidentsTile::Location edge;
+  edge.set_edge_index(edge_index);
+  edge.set_start_offset(start_offset);
+  edge.set_end_offset(end_offset);
+  return edge;
+}
+
+std::shared_ptr<test::IncidentsReader>
+setup_graph_with_incidents(const gurka::map& map, const std::vector<IncidentArgs>& incidents) {
+  // make our reader that we can manipulate
+  auto reader = std::make_shared<test::IncidentsReader>(map.config.get_child("mjolnir"));
+
+  // prepare for incidents
+  reader->incidents.clear();
+
+  // modify traffic speed info to say that this edge has an incident
+  for (const auto& incident : incidents) {
+    // Walk over all the edges that make up this incident and mark the edge appropriately
+    for (const auto& edge : incident.edges) {
+      assert(edge.name.size() == 2);
+      auto begin_node = edge.name.substr(0, 1);
+      auto end_node = edge.name.substr(1);
+      auto edge_id = std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, begin_node, end_node));
+      auto has_incident_cb = [edge_id](baldr::GraphReader&, baldr::TrafficTile& tile, int edge_index,
+                                       valhalla::baldr::TrafficSpeed* current) -> void {
+        if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
+          current->has_incidents = true;
+      };
+      test::customize_live_traffic_data(map.config, has_incident_cb);
+
+      // modify the incident tile to have incidents on this edge
+      reader->add_incident(edge_id,
+                           createIncidentLocation(edge_id.id(), edge.start_offset, edge.end_offset),
+                           incident.incident_id);
+    }
+  }
+
+  reader->sort_incidents();
+  return reader;
+}
 } // namespace gurka
 } // namespace valhalla

@@ -139,114 +139,19 @@ void check_incident_locations(const valhalla::Api& api,
   ASSERT_EQ(incident_count, locations.size()) << "Expected number of incidents does not match actual";
 }
 
-// provides us an easy way to mock having incident tiles, each test can override the tile in question
-// a bit more work is needed if we want to do it for more than one tile at a time
-struct test_reader : public baldr::GraphReader {
-  test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
-    tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
-    enable_incidents_ = true;
-  }
-  virtual std::shared_ptr<const valhalla::IncidentsTile>
-  GetIncidentTile(const baldr::GraphId& tile_id) const override {
-    auto i = incidents.find(tile_id.Tile_Base());
-    if (i == incidents.cend())
-      return {};
-    return std::shared_ptr<valhalla::IncidentsTile>(&i->second, [](valhalla::IncidentsTile*) {});
-  }
-  void add(const baldr::GraphId& id,
-           valhalla::IncidentsTile::Location&& _incident_location,
-           uint64_t incident_id,
-           const std::string& incident_description = "") {
-
-    // Grab the incidents-tile we need to add to
-    valhalla::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
-
-    // See if we have this incident metadata already
-    int metadata_index =
-        std::find_if(incidents_tile.metadata().begin(), incidents_tile.metadata().end(),
-                     [incident_id](const valhalla::IncidentsTile::Metadata& m) {
-                       return incident_id == m.id();
-                     }) -
-        incidents_tile.metadata().begin();
-
-    // We're not yet tracking this incident, so add it new
-    if (metadata_index == incidents_tile.metadata_size()) {
-      auto* metadata = incidents_tile.mutable_metadata()->Add();
-      metadata->set_id(incident_id);
-      metadata->set_description(incident_description);
-    }
-
-    // Finally, add the relation from edge to the incident metadata
-    auto* locations = incidents_tile.mutable_locations()->Add();
-    locations->Swap(&_incident_location);
-    locations->set_metadata_index(metadata_index);
-  }
-  void sort() {
-    for (auto& kv : incidents) {
-      std::sort(kv.second.mutable_locations()->begin(), kv.second.mutable_locations()->end(),
-                [](const valhalla::IncidentsTile::Location& a,
-                   const valhalla::IncidentsTile::Location& b) {
-                  if (a.edge_index() == b.edge_index()) {
-                    if (a.start_offset() == b.start_offset()) {
-                      if (a.end_offset() == b.end_offset()) {
-                        return a.metadata_index() < b.metadata_index();
-                      }
-                      return a.end_offset() < b.end_offset();
-                    }
-                    return a.start_offset() < b.start_offset();
-                  }
-                  return a.edge_index() < b.edge_index();
-                });
-    }
-  }
-  mutable std::unordered_map<baldr::GraphId, valhalla::IncidentsTile> incidents;
-};
-
-// Helper factory function
-valhalla::IncidentsTile::Location
-createIncidentLocation(uint32_t edge_index, float start_offset, float end_offset) {
-  valhalla::IncidentsTile::Location edge;
-  edge.set_edge_index(edge_index);
-  edge.set_start_offset(start_offset);
-  edge.set_end_offset(end_offset);
-  return edge;
-}
-
-// used to make a graphreader and mark some edges as having incidents
-std::shared_ptr<test_reader> setup_test(const gurka::map& map,
-                                        const std::vector<std::string>& names,
-                                        std::vector<baldr::GraphId>& edge_ids) {
-  // make our reader that we can manipulate
-  auto reader = std::make_shared<test_reader>(map.config.get_child("mjolnir"));
-
-  // modify traffic speed info to say that this edge has an incident
-  for (const auto& name : names) {
-    auto begin_node = name.substr(0, 1);
-    auto end_node = name.substr(1);
-    auto edge_id = std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, begin_node, end_node));
-    auto has_incident_cb = [edge_id](baldr::GraphReader&, baldr::TrafficTile& tile, int edge_index,
-                                     valhalla::baldr::TrafficSpeed* current) -> void {
-      if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
-        current->has_incidents = true;
-    };
-    test::customize_live_traffic_data(map.config, has_incident_cb);
-    edge_ids.push_back(edge_id);
-  }
-
-  // prepare for incidents
-  reader->incidents.clear();
-  return reader;
-}
-
 // via some macro magic we are inside the scope of the incidents class above
 TEST_F(IncidentsTest, simple_cut) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {{
+                                                    {{
+                                                        "CB",
+                                                        .25,
+                                                        .75,
+                                                    }},
+                                                    1234,
+                                                    "foobar",
+                                                }});
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
 
   // do the route
   auto result =
@@ -262,12 +167,16 @@ TEST_F(IncidentsTest, simple_cut) {
 
 TEST_F(IncidentsTest, whole_edge) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {{
+                                                    {{
+                                                        "CB",
+                                                        .0,
+                                                        1.,
+                                                    }},
+                                                    1234,
+                                                    "foobar",
+                                                }});
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., 1.), 1234);
 
   // do the route
   auto result =
@@ -283,12 +192,16 @@ TEST_F(IncidentsTest, whole_edge) {
 
 TEST_F(IncidentsTest, left) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {{
+                                                    {{
+                                                        "CB",
+                                                        .0,
+                                                        .5,
+                                                    }},
+                                                    1234,
+                                                    "foobar",
+                                                }});
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., .5), 1234);
 
   // do the route
   auto result =
@@ -304,12 +217,16 @@ TEST_F(IncidentsTest, left) {
 
 TEST_F(IncidentsTest, right) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {{
+                                                    {{
+                                                        "CB",
+                                                        .5,
+                                                        1.,
+                                                    }},
+                                                    1234,
+                                                    "foobar",
+                                                }});
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 1234);
 
   // do the route
   auto result =
@@ -325,15 +242,34 @@ TEST_F(IncidentsTest, right) {
 
 TEST_F(IncidentsTest, multiedge) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .5,
+                                                            1.,
+                                                        }},
+                                                        1234,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", 0., 1.},
+                                                        },
+                                                        8888,
+                                                        "second incident",
+                                                    },
+                                                    {
+                                                        {{
+                                                            "EH",
+                                                            .0,
+                                                            .5,
+                                                        }},
+                                                        5555,
+                                                        "third incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 1234);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 8888);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 5555);
-  reader->sort();
 
   // do the route
   auto result =
@@ -351,17 +287,36 @@ TEST_F(IncidentsTest, multiedge) {
 
 TEST_F(IncidentsTest, multiincident) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .4,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, 1.},
+                                                            {"BE", 0., 1.},
+                                                            {"EH", 0., .5},
+                                                        },
+                                                        456,
+                                                        "second incident, spanning 3 edges",
+                                                    },
+                                                    {
+                                                        {{
+                                                            "EH",
+                                                            .75,
+                                                            .9,
+                                                        }},
+                                                        789,
+                                                        "third incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .4), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .75, .9), 789);
-  reader->sort();
 
   // do the route
   auto result =
@@ -379,17 +334,36 @@ TEST_F(IncidentsTest, multiincident) {
 
 TEST_F(IncidentsTest, interleaved) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .75,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, 1.},
+                                                            {"BE", 0., 1.},
+                                                            {"EH", 0., .5},
+                                                        },
+                                                        456,
+                                                        "second incident, spanning 3 edges",
+                                                    },
+                                                    {
+                                                        {{
+                                                            "EH",
+                                                            .25,
+                                                            .9,
+                                                        }},
+                                                        789,
+                                                        "third incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .25, .9), 789);
-  reader->sort();
 
   // do the route
   auto result =
@@ -407,17 +381,36 @@ TEST_F(IncidentsTest, interleaved) {
 
 TEST_F(IncidentsTest, collisions) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .5,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, 1.},
+                                                            {"BE", 0., 1.},
+                                                            {"EH", 0., .5},
+                                                        },
+                                                        456,
+                                                        "second incident, spanning 3 edges",
+                                                    },
+                                                    {
+                                                        {{
+                                                            "EH",
+                                                            .5,
+                                                            .9,
+                                                        }},
+                                                        789,
+                                                        "third incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .5), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .5, .9), 789);
-  reader->sort();
 
   // do the route
   auto result =
@@ -435,14 +428,25 @@ TEST_F(IncidentsTest, collisions) {
 
 TEST_F(IncidentsTest, full_overlap) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .5,
+                                                            1.,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, 1.},
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-  reader->sort();
 
   // do the route
   auto result =
@@ -459,20 +463,37 @@ TEST_F(IncidentsTest, full_overlap) {
 
 TEST_F(IncidentsTest, multileg) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .75,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, 1.},
+                                                            {"BE", 0., 1.},
+                                                            {"EH", 0., .5},
+                                                        },
+                                                        456,
+                                                        "second incident, spanning 3 edges",
+                                                    },
+                                                    {
+                                                        {{"BE", 0., 1.},
+                                                         {
+                                                             "EH",
+                                                             .0,
+                                                             .9,
+                                                         }},
+                                                        789,
+                                                        "third incident, spanning two edges",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 789);
-
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .9), 789);
-  reader->sort();
 
   // do the route
   auto result =
@@ -493,14 +514,25 @@ TEST_F(IncidentsTest, multileg) {
 
 TEST_F(IncidentsTest, clipped) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .75,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"HI", .25, .75},
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123);
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), .25, .75), 456);
-  reader->sort();
 
   // do the route
   auto result =
@@ -517,15 +549,25 @@ TEST_F(IncidentsTest, clipped) {
 
 TEST_F(IncidentsTest, missed) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .1,
+                                                            .2,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"HI", .6, .7},
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .1, .2), 123);
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), .6, .7), 456);
-  reader->sort();
-
   // do the route
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"1", "9"}, "auto",
@@ -538,13 +580,18 @@ TEST_F(IncidentsTest, missed) {
 
 TEST_F(IncidentsTest, simple_point) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .25,
+                                                            .25,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .25), 123);
-  reader->sort();
 
   // do the route
   auto result =
@@ -560,13 +607,18 @@ TEST_F(IncidentsTest, simple_point) {
 
 TEST_F(IncidentsTest, left_point) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .0,
+                                                            .0,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., 0.), 123);
-  reader->sort();
 
   // do the route
   auto result =
@@ -582,13 +634,18 @@ TEST_F(IncidentsTest, left_point) {
 
 TEST_F(IncidentsTest, right_point) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            1.,
+                                                            1.,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 1., 1.), 123);
-  reader->sort();
 
   // do the route
   auto result =
@@ -604,15 +661,32 @@ TEST_F(IncidentsTest, right_point) {
 
 TEST_F(IncidentsTest, multipoint) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .5,
+                                                            .5,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", .0, .0},
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .2, .2},
+                                                        },
+                                                        789,
+                                                        "third incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, .5), 123);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 0.), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .2, .2), 789);
-  reader->sort();
 
   // do the route
   auto result =
@@ -630,18 +704,53 @@ TEST_F(IncidentsTest, multipoint) {
 
 TEST_F(IncidentsTest, point_collisions) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                            "CB",
+                                                            .5,
+                                                            .5,
+                                                        }},
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .5, .5},
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", 1., 1.},
+                                                        },
+                                                        789,
+                                                        "third incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", 1., 1.},
+                                                        },
+                                                        987,
+                                                        "fourth incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .9, .9},
+                                                        },
+                                                        654,
+                                                        "fifth incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .9, .9},
+                                                        },
+                                                        321,
+                                                        "sixth incident",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, .5), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, .5), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 1., 1.), 789);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 1., 1.), 987);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .9, .9), 654);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .9, .9), 321);
-  reader->sort();
 
   // do the route
   auto result =
@@ -662,16 +771,31 @@ TEST_F(IncidentsTest, point_collisions) {
 
 TEST_F(IncidentsTest, point_shared) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {{
+                                                             "CB",
+                                                             1.,
+                                                             1.,
+                                                         },
+                                                         {
+                                                             "BE",
+                                                             0.,
+                                                             0.,
+                                                         }},
+                                                        123,
+                                                        "first incident, two points",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", 1., 1.},
+                                                            {"EH", 0, 0},
+                                                        },
+                                                        456,
+                                                        "second incident, two points",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 1., 1.), 123);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 0.), 123);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 1., 1.), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., 0.), 456);
-  reader->sort();
 
   // do the route
   auto result =
@@ -688,39 +812,145 @@ TEST_F(IncidentsTest, point_shared) {
 
 TEST_F(IncidentsTest, armageddon) {
   // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
+  auto reader = setup_graph_with_incidents(map, {
+                                                    {
+                                                        {
+                                                            {
+                                                                "CB",
+                                                                .25,
+                                                                .75,
+                                                            },
+                                                        },
+                                                        123,
+                                                        "first incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {
+                                                                "CB",
+                                                                .5,
+                                                                1.,
+                                                            },
+                                                            {
+                                                                "BE",
+                                                                0.,
+                                                                1.,
+                                                            },
+                                                            {
+                                                                "EH",
+                                                                0.,
+                                                                .5,
+                                                            },
+                                                        },
+                                                        456,
+                                                        "second incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {
+                                                                "CB",
+                                                                .5,
+                                                                .5,
+                                                            },
+                                                        },
+                                                        987,
+                                                        "third incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {
+                                                                "CB",
+                                                                1.,
+                                                                1.,
+                                                            },
+                                                            {
+                                                                "BE",
+                                                                0.,
+                                                                0.,
+                                                            },
+                                                        },
+                                                        666,
+                                                        "fourth incident",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", 0., 1.},
+                                                            {
+                                                                "EH",
+                                                                0.,
+                                                                .6,
+                                                            },
+                                                        },
+                                                        789,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"BE", .6, .6},
+                                                        },
+                                                        321,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .65, .65},
+                                                        },
+                                                        0,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .69, .69},
+                                                        },
+                                                        1,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .7, 1.},
+                                                            {"HI", .0, .1},
+                                                        },
+                                                        2,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"EH", .8, 1.},
+                                                            {"HI", .0, .7},
+                                                        },
+                                                        3,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .3, .3},
+                                                        },
+                                                        654,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"CB", .25, .25},
+                                                        },
+                                                        4,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"HI", .9, .9},
+                                                        },
+                                                        6,
+                                                        "lost count at this point",
+                                                    },
+                                                    {
+                                                        {
+                                                            {"HI", .6, .95},
+                                                        },
+                                                        7,
+                                                        "lost count at this point",
+                                                    },
+                                                });
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 123);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 456);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, .5), 987);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 1., 1.), 666);
-
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), .0, .0), 666);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 456);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., 1.), 789);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), .6, .6), 321);
-
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 456);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .6), 789);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .65, .65), 0);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .69, .69), 1);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .7, 1.), 2);
-  reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), .8, 1.), 3);
-
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0., .1), 2);
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), 0., .7), 3);
-
-  // out of bounds
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .3, .3), 654);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .25), 4);
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .1, .3), 5);
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), .9, .9), 6);
-  reader->add(edge_ids[3], createIncidentLocation(edge_ids[3].id(), .6, .95), 7);
-
-  reader->sort();
 
   // do the route
   auto result =
