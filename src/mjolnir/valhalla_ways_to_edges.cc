@@ -27,6 +27,7 @@ using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
+size_t min_level = 2;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -52,7 +53,9 @@ bool ParseArguments(int argc, char* argv[]) {
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
       "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.")
+      "Path to the json configuration file.")(
+      "min_level", boost::program_options::value<size_t>(&min_level),
+      "Min level to export: 0 will export all levels, 1 will export all levels but 0 and so on.")
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -115,29 +118,34 @@ int main(int argc, char** argv) {
 
   // Iterate through tiles at the local level
   GraphReader reader(pt.get_child("mjolnir"));
-  for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-    // If tile exists add it to the queue
-    GraphId edge_id(id, local_level, 0);
-    if (!reader.DoesTileExist(edge_id)) {
-      continue;
-    }
 
-    graph_tile_ptr tile = reader.GetGraphTile(edge_id);
-    for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
-      const DirectedEdge* edge = tile->directededge(edge_id);
-      if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
+  for (auto& c = min_level; c <= TileHierarchy::levels().size(); c++) {
+    const auto level = TileHierarchy::levels()[c].level;
+    const auto tiles = TileHierarchy::levels()[c].tiles;
+    for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+      // If tile exists add it to the queue
+      GraphId edge_id(id, level, 0);
+      if (!reader.DoesTileExist(edge_id)) {
         continue;
       }
 
-      // Skip if the edge does not allow auto use
-      if (!(edge->forwardaccess() & kAutoAccess)) {
-        continue;
-      }
+      graph_tile_ptr tile = reader.GetGraphTile(edge_id);
+      for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
+        const DirectedEdge* edge = tile->directededge(edge_id);
+        if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
+            edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
+          continue;
+        }
 
-      // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge).wayid();
-      ways_edges[wayid].push_back({edge->forward(), edge_id});
+        // Skip if the edge does not allow auto use
+        if (!(edge->forwardaccess() & kAutoAccess)) {
+          continue;
+        }
+
+        // Get the way Id
+        uint64_t wayid = tile->edgeinfo(edge).wayid();
+        ways_edges[wayid].push_back({edge->forward(), edge_id});
+      }
     }
   }
 
