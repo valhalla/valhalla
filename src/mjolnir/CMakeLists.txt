@@ -25,7 +25,10 @@ if (UNIX)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
+    graphenhancer.cc
+    luatagtransform.cc
     osmdata.cc
+    osmrestriction.cc
     PROPERTIES COMPILE_FLAGS "-Werror -Wall")
 endif (UNIX)
 
