@@ -1375,7 +1375,7 @@ void enhance(const boost::property_tree::ptree& pt,
   uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
 
   // Get some things we need throughout
-  enhancer_stats stats{std::numeric_limits<float>::min(), 0};
+  enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
   const auto& local_level = TileHierarchy::levels().back().level;
   const auto& tiles = TileHierarchy::levels().back().tiles;
 
@@ -1801,7 +1801,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   }
 
   // Check all of the outcomes, to see about maximum density (km/km2)
-  enhancer_stats stats{std::numeric_limits<float>::min(), 0};
+  enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
