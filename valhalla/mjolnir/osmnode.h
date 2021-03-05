@@ -94,7 +94,8 @@ struct OSMNode {
    */
   midgard::PointLL latlng() const {
     // if either coord is borked we return invalid pointll
-    if (lng7_ == -1 || lat7_ == -1)
+    if (lng7_ == std::numeric_limits<uint32_t>::max() ||
+        lat7_ == std::numeric_limits<uint32_t>::max())
       return {};
     return {lng7_ * 1e-7 - 180, lat7_ * 1e-7 - 90};
   }
