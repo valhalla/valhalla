@@ -27,7 +27,7 @@ using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
-size_t min_level = 2;
+uint16_t min_level = 2;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -45,8 +45,8 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n"
       " Usage: ways_to_edges [options]\n"
       "\n"
-      "ways_to_edges is a program that creates a list of edges for each OSM way "
-      "on the local level tiles."
+      "ways_to_edges is a program that creates a list of edges for each OSM way. "
+      "Configure the levels with min_level."
       "\n"
       "\n");
 
@@ -54,7 +54,7 @@ bool ParseArguments(int argc, char* argv[]) {
                                                               "Print the version of this software.")(
       "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")(
-      "min_level", boost::program_options::value<size_t>(&min_level),
+      "min_level", boost::program_options::value<uint16_t>(&min_level),
       "Min level to export: 0 will export all levels, 1 will export all levels but 0 and so on.")
       // positional arguments
       ("input_files",
@@ -83,6 +83,15 @@ bool ParseArguments(int argc, char* argv[]) {
   if (vm.count("version")) {
     std::cout << "ways_to_edges " << VALHALLA_VERSION << "\n";
     return true;
+  }
+
+  if (vm.count("min_level")) {
+    auto max_level = static_cast<int16_t>(TileHierarchy::levels().back().level);
+    if (min_level > max_level) {
+      std::cerr << "min_level " << min_level << " exceeds max level of " << max_level << std::endl;
+      std::cerr << "\n" << options << std::endl;
+    }
+    return false;
   }
 
   if (vm.count("config")) {
