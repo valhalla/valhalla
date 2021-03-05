@@ -491,7 +491,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         }
 
         // We have to flip the via indices because we built them in backwards order
-        decltype(vias) flipped;
+        std::remove_reference<decltype(vias)>::type flipped;
         flipped.reserve(vias.size());
         for (const auto& kv : vias)
           flipped.emplace(path.size() - kv.first, kv.second);
