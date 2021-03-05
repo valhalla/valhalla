@@ -10,11 +10,9 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const double score,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
-                                 const unsigned int inbound_reach,
-                                 const bool with_high_reachability)
+                                 const unsigned int inbound_reach)
     : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
-      outbound_reach(outbound_reach), inbound_reach(inbound_reach),
-      with_high_reachability(with_high_reachability) {
+      outbound_reach(outbound_reach), inbound_reach(inbound_reach) {
 }
 bool PathLocation::PathEdge::begin_node() const {
   return percent_along == 0.f;
@@ -61,6 +59,10 @@ bool PathLocation::shares_edges(const PathLocation& other) const {
     }
   }
   return true;
+}
+
+bool PathLocation::is_high_reachable(const PathEdge& edge) const {
+  return edge.inbound_reach >= min_inbound_reach_ && edge.outbound_reach >= min_outbound_reach_;
 }
 
 } // namespace baldr

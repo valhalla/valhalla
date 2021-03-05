@@ -13,10 +13,6 @@
 namespace valhalla {
 namespace loki {
 
-struct SearchOptions {
-  uint32_t max_reachability_ = 100;
-};
-
 /**
  * Find an location within the route network given an input location
  * same tiled route data and a search strategy
@@ -32,8 +28,7 @@ struct SearchOptions {
 std::unordered_map<baldr::Location, baldr::PathLocation>
 Search(const std::vector<baldr::Location>& locations,
        baldr::GraphReader& reader,
-       const std::shared_ptr<sif::DynamicCost>& costing,
-       const SearchOptions& options = {});
+       const std::shared_ptr<sif::DynamicCost>& costing);
 
 } // namespace loki
 } // namespace valhalla

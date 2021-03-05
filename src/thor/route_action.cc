@@ -88,14 +88,20 @@ inline bool is_break_point(const valhalla::Location& l) {
   return l.type() == valhalla::Location::kBreak || l.type() == valhalla::Location::kBreakThrough;
 }
 
+inline bool is_high_reachable(const valhalla::Location& loc,
+                              const valhalla::Location_PathEdge& edge) {
+  return edge.inbound_reach() >= loc.minimum_reachability() &&
+         edge.outbound_reach() >= loc.minimum_reachability();
+}
+
 inline void remove_edges_with_low_reachability(valhalla::Location& loc) {
   auto new_end = std::remove_if(loc.mutable_path_edges()->begin(), loc.mutable_path_edges()->end(),
-                                [](const auto& pe) { return !pe.with_high_reachability(); });
+                                [&loc](const auto& pe) { return !is_high_reachable(loc, pe); });
   int start_idx = std::distance(loc.mutable_path_edges()->begin(), new_end);
   loc.mutable_path_edges()->DeleteSubrange(start_idx, loc.path_edges_size() - start_idx);
 
   new_end = std::remove_if(loc.mutable_filtered_edges()->begin(), loc.mutable_filtered_edges()->end(),
-                           [](const auto& pe) { return !pe.with_high_reachability(); });
+                           [&loc](const auto& pe) { return !is_high_reachable(loc, pe); });
   start_idx = std::distance(loc.mutable_filtered_edges()->begin(), new_end);
   loc.mutable_filtered_edges()->DeleteSubrange(start_idx, loc.filtered_edges_size() - start_idx);
 }
@@ -523,7 +529,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
       if (allow_retry && is_through_point(*destination) &&
-          !destination->path_edges(0).with_high_reachability()) {
+          !is_high_reachable(*destination, destination->path_edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
@@ -659,7 +665,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
       if (allow_retry && is_through_point(*origin) &&
-          !origin->path_edges(0).with_high_reachability()) {
+          !is_high_reachable(*origin, origin->path_edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
