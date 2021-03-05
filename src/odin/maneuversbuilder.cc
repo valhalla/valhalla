@@ -58,7 +58,7 @@ constexpr float kSmallEndRampForkThreshold = 0.125f;
 
 // Thresholds for succinct phrase usage
 constexpr uint32_t kMaxWordCount = 5;
-constexpr uint32_t kMaxStreetNameLength = 25;
+constexpr uint32_t kMaxStreetNameLength = 28;
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -929,6 +929,20 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
         maneuver.set_long_street_name(true);
       }
       ++street_name_count;
+    }
+    if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
+        !maneuver.has_long_street_name()) {
+      uint32_t roundabout_exit_street_name_count = 0;
+      for (const auto& roundabout_exit_street_name : maneuver.roundabout_exit_street_names()) {
+        if (roundabout_exit_street_name_count == kVerbalPreElementMaxCount) {
+          break;
+        }
+        if (get_word_count(roundabout_exit_street_name->value()) > kMaxWordCount ||
+            roundabout_exit_street_name->value().length() > kMaxStreetNameLength) {
+          maneuver.set_long_street_name(true);
+        }
+        ++roundabout_exit_street_name_count;
+      }
     }
   }
 }
