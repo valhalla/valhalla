@@ -116,7 +116,6 @@ int main(int argc, char** argv) {
     }
 
     graph_tile_ptr tile = reader.GetGraphTile(edge_id);
-    std::cout << tile->id() << std::endl;
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
