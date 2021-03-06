@@ -433,6 +433,8 @@ public:
     return memmap.size() + write_buffer.size();
   }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
   // a read/writeable object within the sequence, accessed through memory mapped file
   struct iterator {
     friend class sequence;
@@ -528,6 +530,7 @@ public:
     sequence* parent;
     size_t index;
   };
+#pragma GCC diagnostic pop
 
   // search for an object using binary search O(logn)
   // assumes the file was written in sorted order
