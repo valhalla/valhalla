@@ -27,7 +27,6 @@ using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
-uint16_t min_level = 2;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -45,17 +44,14 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n"
       " Usage: ways_to_edges [options]\n"
       "\n"
-      "ways_to_edges is a program that creates a list of edges for each OSM way. "
-      "Configure the levels with min_level."
+      "ways_to_edges is a program that creates a list of edges for each auto-driveable OSM way."
       "\n"
       "\n");
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
       "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.")(
-      "min_level", boost::program_options::value<uint16_t>(&min_level),
-      "Min level to export: 0 will export all levels, 1 will export all levels but 0 and so on.")
+      "Path to the json configuration file.")
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -85,15 +81,6 @@ bool ParseArguments(int argc, char* argv[]) {
     return true;
   }
 
-  if (vm.count("min_level")) {
-    auto max_level = static_cast<int16_t>(TileHierarchy::levels().back().level);
-    if (min_level > max_level) {
-      std::cerr << "min_level " << min_level << " exceeds max level of " << max_level << std::endl;
-      std::cerr << "\n" << options << std::endl;
-      return false;
-    }
-  }
-
   if (vm.count("config")) {
     if (filesystem::is_regular_file(config_file_path)) {
       return true;
@@ -117,50 +104,41 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
 
-  // Get something we can use to fetch tiles
-  auto tile_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().back().level;
-  auto tiles = TileHierarchy::levels().back().tiles;
-
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
-  // Iterate through tiles at the local level
   GraphReader reader(pt.get_child("mjolnir"));
+  // Iterate through all tiles
+  for (auto edge_id : reader.GetTileSet()) {
+    // If tile exists add it to the queue
+    if (!reader.DoesTileExist(edge_id)) {
+      continue;
+    }
 
-  for (auto& c = min_level; c <= TileHierarchy::levels().size(); c++) {
-    const auto level = TileHierarchy::levels()[c].level;
-    const auto tiles = TileHierarchy::levels()[c].tiles;
-    for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-      // If tile exists add it to the queue
-      GraphId edge_id(id, level, 0);
-      if (!reader.DoesTileExist(edge_id)) {
+    graph_tile_ptr tile = reader.GetGraphTile(edge_id);
+    std::cout << tile->id() << std::endl;
+    for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
+      const DirectedEdge* edge = tile->directededge(edge_id);
+      if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
+          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
+          edge->is_shortcut()) {
         continue;
       }
 
-      graph_tile_ptr tile = reader.GetGraphTile(edge_id);
-      for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
-        const DirectedEdge* edge = tile->directededge(edge_id);
-        if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-            edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
-            edge->is_shortcut()) {
-          continue;
-        }
-
-        // Skip if the edge does not allow auto use
-        if (!(edge->forwardaccess() & kAutoAccess)) {
-          continue;
-        }
-
-        // Get the way Id
-        uint64_t wayid = tile->edgeinfo(edge).wayid();
-        ways_edges[wayid].push_back({edge->forward(), edge_id});
+      // Skip if the edge does not allow auto use
+      if (!(edge->forwardaccess() & kAutoAccess)) {
+        continue;
       }
+
+      // Get the way Id
+      uint64_t wayid = tile->edgeinfo(edge).wayid();
+      ways_edges[wayid].push_back({edge->forward(), edge_id});
     }
   }
 
   std::ofstream ways_file;
-  std::string fname = pt.get<std::string>("mjolnir.tile_dir") + "/way_edges.txt";
+  std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
+                      filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
     ways_file << way.first;
