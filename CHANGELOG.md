@@ -43,6 +43,7 @@
    * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
    * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
    * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
+   * CHANGED: CMake: Modernize configuring libvalhalla.pc [#2906](https://github.com/valhalla/valhalla/pull/2906)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
