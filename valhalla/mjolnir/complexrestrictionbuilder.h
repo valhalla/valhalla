@@ -23,6 +23,11 @@ namespace mjolnir {
  */
 class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
 public:
+  ComplexRestrictionBuilder() = default;
+
+  ComplexRestrictionBuilder(const ComplexRestriction& restriction) : ComplexRestriction(restriction) {
+  }
+
   /**
    * Set the from edge graph id.
    * @param  from_id  from graph id.

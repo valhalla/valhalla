@@ -40,7 +40,7 @@ if(ENABLE_DATA_TOOLS)
 endif()
 
 if(ENABLE_SERVICES)
-  list(APPEND tests loki_service skadi_service thor_service)
+  list(APPEND tests loki_service skadi_service)
 endif()
 
 ## TODO: fix apple tests!
@@ -54,6 +54,7 @@ if (UNIX)
   set_source_files_properties(
     openlr.cc
     incidents.cc
+    incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif (UNIX)
 

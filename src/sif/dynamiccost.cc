@@ -53,9 +53,12 @@ namespace sif {
 // default options/parameters
 namespace {
 
+// max penalty to apply when use tracks
+constexpr float kMaxTrackPenalty = 300.f; // 5 min
+
 // min and max factors to apply when use tracks
 constexpr float kMinTrackFactor = 0.8f;
-constexpr float kMaxTrackFactor = 10.f;
+constexpr float kMaxTrackFactor = 4.f;
 
 // max penalty to apply when use living streets
 constexpr float kMaxLivingStreetPenalty = 500.f;
@@ -101,7 +104,8 @@ bool DynamicCost::AllowMultiPass() const {
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
 Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
+  uint8_t flow_sources;
+  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -118,7 +122,8 @@ Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const Edg
 Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
-                                        const baldr::DirectedEdge*) const {
+                                        const baldr::DirectedEdge*,
+                                        const bool) const {
   return {0.0f, 0.0f};
 }
 
@@ -232,6 +237,10 @@ Cost DynamicCost::BSSCost() const {
 }
 
 void DynamicCost::set_use_tracks(float use_tracks) {
+  // Calculate penalty value based on use preference. Return value
+  // in range [kMaxTrackPenalty; 0], if use < 0.5; or
+  // 0, if use > 0.5.
+  track_penalty_ = use_tracks < 0.5f ? (kMaxTrackPenalty * (1.f - 2.f * use_tracks)) : 0.f;
   // Calculate factor value based on use preference. Return value
   // in range [kMaxTrackFactor; 1], if use < 0.5; or
   // in range [1; kMinTrackFactor], if use > 0.5

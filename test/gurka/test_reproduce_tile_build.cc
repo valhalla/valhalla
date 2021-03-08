@@ -75,8 +75,8 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
 
   // make sure the edges' shape and names match
   for (size_t i = 0; i < ah->directededgecount(); ++i) {
-    const EdgeInfo a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
-    const EdgeInfo b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+    const EdgeInfo a_info = a.edgeinfo(a.directededge(i));
+    const EdgeInfo b_info = b.edgeinfo(b.directededge(i));
     ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
     ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
     for (size_t j = 0; j < a_info.GetNames().size(); ++j)

@@ -199,10 +199,10 @@ void close_dir_edge(baldr::GraphReader& reader,
                     uint32_t index,
                     baldr::TrafficSpeed* current,
                     const std::string& edge_name,
-                    const std::string& start_node,
+                    const std::string& end_node,
                     const gurka::map& closure_map) {
   baldr::GraphId tile_id(tile.header->tile_id);
-  auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, start_node));
+  auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, end_node));
   if (edge.Tile_Base() == tile_id && edge.id() == index) {
     SetLiveSpeed(current, 0);
   }
@@ -224,9 +224,7 @@ void close_bidir_edge(baldr::GraphReader& reader,
 
 } // namespace
 
-using costing_and_datetype = std::tuple<std::string, std::string>;
-
-class ExcludeClosuresOnWaypoints : public ::testing::TestWithParam<costing_and_datetype> {
+class ExcludeClosuresOnWaypoints : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map closure_map;
   static int const default_speed;
@@ -295,8 +293,8 @@ std::shared_ptr<baldr::GraphReader> ExcludeClosuresOnWaypoints::reader;
  *  Tests search_filter.exclude_closures at departure
  */
 TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -310,13 +308,11 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
-
-  // AB edge is closed in both directions. Route should avoid AB with
-  // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "AB", closure_map);
+      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -325,8 +321,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
-    gurka::assert::osrm::expect_steps(result, {"BC"});
-    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
+    gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE"});
 
     // Specify search filter to disable exclude_closures at departure
     const std::string& req_disable_exclude_closures =
@@ -348,8 +344,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
  *  Tests search_filter.exclude_closures at destination
  */
 TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -363,13 +359,11 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
-
-  // DE edge is closed in both directions. Route should avoid DE with
-  // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
+      close_bidir_edge(reader, tile, index, current, "CD", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -403,25 +397,24 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
  *  Tests search_filter.exclude_closures at midway location
  */
 TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
-
   // None of the edges are closed. Route has multiple waypoints
   {
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2", "3"}, costing,
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "D", "3"}, costing,
                                    {{"/date_time/type", date_type},
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "DE"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "DE", "EJ", "JK"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
   }
-
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "CD", closure_map);
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
@@ -433,7 +426,6 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
                                     {costing_speed_type, "current"}},
                                    reader)),
                  valhalla_exception_t);
-
     // Specify search filter to disable exclude_closures at midway waypoint
     const std::string& req_disable_exclude_closures =
         (boost::format(
@@ -458,8 +450,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
  *  explicitly set)
  */
 TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -480,6 +472,7 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "CD", closure_map);
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -488,8 +481,8 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CFGD", "DE"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"AB", "CFGD"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD"});
 
     // set ignore_closures in costing, while leaving exclude_closures unset
     // (which defaults to true). ignore_closures should override
@@ -509,9 +502,9 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
   }
 }
 
-TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+TEST_P(ExcludeClosuresOnWaypoints, AvoidIntermediateClosures) {
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -526,105 +519,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
   }
 
-  // Close departure & destination edges
-  {
-    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
-      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
-    };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
-
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                                   {{"/date_time/type", date_type},
-                                    {"/date_time/value", "current"},
-                                    {costing_speed_type, "current"}},
-                                   reader);
-    gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
-    gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE", "EJ", "JK"});
-
-    // Specify search filter to disable exclude_closures at departure
-    const std::string& req_disable_exclude_closures =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("3").lat()) %
-         std::to_string(closure_map.nodes.at("3").lng()) % costing % costing % date_type)
-            .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures,
-                                  reader),
-                 valhalla_exception_t);
-  }
-}
-
-TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresWithLowReachability) {
-  // Tests that edge candidates with low reachability can be selected when
-  // routing out of consecutive closures
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
-  std::string costing_speed_type =
-      (boost::format("/costing_options/%s/speed_types/0") % costing).str();
-
-  // Close departure & destination edges
-  {
-    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
-      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
-    };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
-
-    // Specify search filter to disable exclude_closures at departure
-    const std::string& req_disable_exclude_closures =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("2").lat()) %
-         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
-            .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures,
-                                  reader),
-                 valhalla_exception_t);
-
-    // Specify minimum reachability so that nearby edges (which were previously
-    // rejected due to low-reachbility), can be selected
-    // Note: we must turn off candidate ranking because of a bug in bidira* that
-    // doesnt continue the other direction of the search if one becomes exhausted
-    const std::string& req_low_reachbility =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}, "minimum_reachability": 2, "rank_candidates":false},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("2").lat()) %
-         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
-            .str();
-    auto result =
-        gurka::do_action(valhalla::Options::route, closure_map, req_low_reachbility, reader);
-    gurka::assert::osrm::expect_steps(result, {"BC"});
-    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
-  }
-}
-
-TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
-  std::string costing_speed_type =
-      (boost::format("/costing_options/%s/speed_types/0") % costing).str();
-
-  // None of the edges are closed
-  {
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                                   {{"/date_time/type", date_type},
-                                    {"/date_time/value", "current"},
-                                    {costing_speed_type, "current"}},
-                                   reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
-  }
-
-  // Close edges at departure, midway & destination edges
+  // Close edges at departure, intermediate & destination edges
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
@@ -658,8 +553,8 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
 }
 
 TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -708,8 +603,8 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
 TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
   // Test disabled since trivial case use timedep-fwd, which currently
   // does not work with closures at destination
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
@@ -763,8 +658,8 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
  *  cannot both be specified
  */
 TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+  std::string costing = GetParam();
+  std::string date_type = "3"; // invariant time
 
   // ignore_closures:true & exclude_closures:true on all locations
   {
@@ -895,33 +790,18 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
   }
 }
 
-// Generate different combinations of costing (auto, bus, etc) & date_type (0, 3)
-std::vector<costing_and_datetype> buildParams() {
-  std::vector<costing_and_datetype> params;
-
-  std::vector<std::string> costings = {
+std::vector<std::string> buildParams() {
+  // Return the different costings we want to test closures against
+  return {
       "auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",
   };
-  params.reserve(costings.size());
-  for (const auto& costing : costings) {
-    // Add date_type:3 for time-invariant bidir a*
-    params.emplace_back(std::make_tuple(costing, "3"));
-    // Add date_type:0 for timedep-fwd a* using current time
-    // TODO: Currently, ignoring closures at destinations does not work for
-    // time dependent a* implmentations. Enable this once
-    // https://github.com/valhalla/valhalla/issues/2733 is addressed
-    // params.emplace_back(std::make_tuple(costing, "0"));
-  }
-  return params;
 }
 
 INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          ExcludeClosuresOnWaypoints,
                          ::testing::ValuesIn(buildParams()));
 
-// TODO: Enable once https://github.com/valhalla/valhalla/issues/2732 is addressed
-class DISABLED_ExcludeConsecutiveEdgeClosures
-    : public ::testing::TestWithParam<costing_and_datetype> {
+class ClosuresWithRestrictions : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map closure_map;
   static int const default_speed;
@@ -930,35 +810,37 @@ protected:
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
-
-    A--------B
-    |        |
-    C-1---D--E-----F
-          |        |
-          G  H-----I
-             |
-          J--K--L
-             |
-             M
+    A---------B
+    |         |
+    C         D
+    |         |
+    E----F----G
+         |
+         H
   )";
 
     const std::string speed_str = std::to_string(default_speed);
     const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"AC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"BE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"DE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"EF", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"CE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"BD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"DG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"FI", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"HI", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"HK", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"KM", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"JK", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"KL", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+                              {"EF", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"FH", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+
+    const gurka::relations relations = {{{
+                                             {gurka::way_member, "FH", "from"},
+                                             {gurka::way_member, "EF", "to"},
+                                             {gurka::node_member, "F", "via"},
+                                         },
+                                         {
+                                             {"type", "restriction"},
+                                             {"restriction", "no_left_turn"},
+                                         }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {.05f, .2f});
-    closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+    closure_map = gurka::buildtiles(layout, ways, {}, relations, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
     test::build_live_traffic_data(closure_map.config);
@@ -984,123 +866,227 @@ protected:
   }
 };
 
-gurka::map DISABLED_ExcludeConsecutiveEdgeClosures::closure_map = {};
-const int DISABLED_ExcludeConsecutiveEdgeClosures::default_speed = 36;
-const std::string DISABLED_ExcludeConsecutiveEdgeClosures::tile_dir =
-    "test/data/traffic_exclude_closures";
-std::shared_ptr<baldr::GraphReader> DISABLED_ExcludeConsecutiveEdgeClosures::reader;
+gurka::map ClosuresWithRestrictions::closure_map = {};
+const int ClosuresWithRestrictions::default_speed = 36;
+const std::string ClosuresWithRestrictions::tile_dir = "test/data/traffic_exclude_closures";
+std::shared_ptr<baldr::GraphReader> ClosuresWithRestrictions::reader;
 
-TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, UturnDueToClosure) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
+  std::string costing = GetParam();
+  std::string date_type = "3";
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
-
-  {
-    const std::string& req_with_heading =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":90},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("E").lat()) %
-         std::to_string(closure_map.nodes.at("E").lng()) % costing % costing % date_type)
-            .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader);
-    gurka::assert::osrm::expect_steps(result, {"CD"});
-    gurka::assert::raw::expect_path(result, {"CD", "DE"});
-  }
-
-  // Close consecutive edges CD & DE in fwd direction
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
-      close_dir_edge(reader, tile, index, current, "CD", "D", closure_map);
-      close_dir_edge(reader, tile, index, current, "DE", "E", closure_map);
+      close_bidir_edge(reader, tile, index, current, "EF", closure_map);
+      close_bidir_edge(reader, tile, index, current, "FG", closure_map);
+      close_bidir_edge(reader, tile, index, current, "FH", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    const std::string& req_with_heading =
+    const std::string& req =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":90},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("E").lat()) %
-         std::to_string(closure_map.nodes.at("E").lng()) % costing % costing % date_type)
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("H").lat()) %
+         std::to_string(closure_map.nodes.at("H").lng()) %
+         std::to_string(closure_map.nodes.at("C").lat()) %
+         std::to_string(closure_map.nodes.at("C").lng()) % costing % costing % date_type)
             .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader);
-    gurka::assert::osrm::expect_steps(result, {"AC", "AB", "BE"});
-    gurka::assert::raw::expect_path(result, {"AC", "AB", "BE"});
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::osrm::expect_steps(result, {"FH", "FG", "DG", "AB", "AC"});
+    gurka::assert::raw::expect_path(result, {"FH", "FG", "DG", "BD", "AB", "AC"});
 
     const std::string& req_disable_exclude_closures =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":90,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("1").lat()) %
-         std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("E").lat()) %
-         std::to_string(closure_map.nodes.at("E").lng()) % costing % costing % date_type)
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("G").lat()) %
+         std::to_string(closure_map.nodes.at("G").lng()) %
+         std::to_string(closure_map.nodes.at("C").lat()) %
+         std::to_string(closure_map.nodes.at("C").lng()) % costing % costing % date_type)
             .str();
     result =
         gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
-    gurka::assert::osrm::expect_steps(result, {"CD", "AC", "AB", "BE"});
-    gurka::assert::raw::expect_path(result, {"CD", "CD", "AC", "AB", "BE"});
+    gurka::assert::osrm::expect_steps(result, {"FG", "CE"});
+    gurka::assert::raw::expect_path(result, {"FG", "EF", "CE"});
   }
 }
 
-TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, DistantSnapDueToClosure) {
-  std::string costing = std::get<0>(GetParam());
-  std::string date_type = std::get<1>(GetParam());
+INSTANTIATE_TEST_SUITE_P(SearchFilter, ClosuresWithRestrictions, ::testing::ValuesIn(buildParams()));
+
+class ClosuresWithTimedepRoutes : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map closure_map;
+  static int const default_speed;
+  static std::string const tile_dir;
+  static std::shared_ptr<baldr::GraphReader> reader;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+
+             I--J
+             |  |
+    A--B--C--D--E--F--G--H
+
+    )";
+
+    const std::string speed_str = std::to_string(default_speed);
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"BC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"DE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"EF", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"GH", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"DIJE", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {.05f, .2f});
+    closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+
+    closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+    test::build_live_traffic_data(closure_map.config);
+    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+  }
+
+  void set_default_speed_on_all_edges() {
+    test::customize_live_traffic_data(closure_map.config,
+                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                        (void)reader, (void)tile, (void)index;
+                                        SetLiveSpeed(current, default_speed);
+                                      });
+  }
+
+  virtual void SetUp() {
+    set_default_speed_on_all_edges();
+  }
+
+  virtual void TearDown() {
+    set_default_speed_on_all_edges();
+  }
+};
+
+gurka::map ClosuresWithTimedepRoutes::closure_map = {};
+const int ClosuresWithTimedepRoutes::default_speed = 36;
+const std::string ClosuresWithTimedepRoutes::tile_dir = "test/data/traffic_exclude_closures";
+std::shared_ptr<baldr::GraphReader> ClosuresWithTimedepRoutes::reader;
+
+TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepForward) {
+  std::string costing = GetParam();
+  // use current departure time which makes use of timedep fwd A*
+  std::string date_type = "0";
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
   {
-    const std::string& req_with_heading =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":0},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("M").lat()) %
-         std::to_string(closure_map.nodes.at("M").lng()) %
-         std::to_string(closure_map.nodes.at("B").lat()) %
-         std::to_string(closure_map.nodes.at("B").lng()) % costing % costing % date_type)
-            .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader);
-    gurka::assert::osrm::expect_steps(result, {"KM", "HI", "FI", "EF", "BE"});
-    gurka::assert::raw::expect_path(result, {"KM", "HK", "HI", "FI", "EF", "BE"});
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"A", "G"}, costing,
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
   }
-
-  // Close consecutive edges HK & KM
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
-      close_bidir_edge(reader, tile, index, current, "HK", closure_map);
-      close_bidir_edge(reader, tile, index, current, "KM", closure_map);
+      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
+      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    const std::string& req_with_heading =
+    const std::string& req =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":0},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("M").lat()) %
-         std::to_string(closure_map.nodes.at("M").lng()) %
-         std::to_string(closure_map.nodes.at("B").lat()) %
-         std::to_string(closure_map.nodes.at("B").lng()) % costing % costing % date_type)
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("A").lat()) %
+         std::to_string(closure_map.nodes.at("A").lng()) %
+         std::to_string(closure_map.nodes.at("G").lat()) %
+         std::to_string(closure_map.nodes.at("G").lng()) % costing % costing % date_type)
             .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader),
-                 valhalla_exception_t);
-
-    const std::string& req_disable_exclude_closures =
-        (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"heading":0,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
-         std::to_string(closure_map.nodes.at("M").lat()) %
-         std::to_string(closure_map.nodes.at("M").lng()) %
-         std::to_string(closure_map.nodes.at("B").lat()) %
-         std::to_string(closure_map.nodes.at("B").lng()) % costing % costing % date_type)
-            .str();
-    auto result =
-        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
-    gurka::assert::osrm::expect_steps(result, {"HI", "FI", "EF", "BE"});
-    gurka::assert::raw::expect_path(result, {"HI", "FI", "EF", "BE"});
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG"});
   }
+
+  // Close an interdmediate edge. Route should avoid it while not ignoring the
+  // consecutive closures at origin
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    const std::string& req =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("A").lat()) %
+         std::to_string(closure_map.nodes.at("A").lng()) %
+         std::to_string(closure_map.nodes.at("G").lat()) %
+         std::to_string(closure_map.nodes.at("G").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DIJE", "EF", "FG"});
+  }
+  // TODO: Ensure this test work with timedep reverse (date_type = "2")
+  // Refer https://github.com/valhalla/valhalla/issues/2733
 }
 
-INSTANTIATE_TEST_SUITE_P(SearchFilter,
-                         DISABLED_ExcludeConsecutiveEdgeClosures,
-                         ::testing::ValuesIn(buildParams()));
+TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
+  std::string costing = GetParam();
+  // use arrive by time which makes use of timedep reverse A*
+  std::string date_type = "2";
+  std::string costing_speed_type =
+      (boost::format("/costing_options/%s/speed_types/0") % costing).str();
+
+  {
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, {"B", "H"}, costing,
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+  }
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "FG", closure_map);
+      close_bidir_edge(reader, tile, index, current, "GH", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    const std::string& req =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("B").lat()) %
+         std::to_string(closure_map.nodes.at("B").lng()) %
+         std::to_string(closure_map.nodes.at("H").lat()) %
+         std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+  }
+  // Close an interdmediate edge. Route should avoid it while not ignoring the
+  // consecutive closures at destination
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    const std::string& req =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("B").lat()) %
+         std::to_string(closure_map.nodes.at("B").lng()) %
+         std::to_string(closure_map.nodes.at("H").lat()) %
+         std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DIJE", "EF", "FG", "GH"});
+  }
+
+  // TODO: Ensure this test work with timedep fwd (date_type = "0")
+  // Refer https://github.com/valhalla/valhalla/issues/2733
+}
+
+INSTANTIATE_TEST_SUITE_P(SearchFilter, ClosuresWithTimedepRoutes, ::testing::ValuesIn(buildParams()));

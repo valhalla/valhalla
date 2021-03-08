@@ -63,6 +63,7 @@ public:
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
   void centroid(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 

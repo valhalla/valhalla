@@ -252,8 +252,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed += transition_cost;
     }
 
+    uint8_t flow_sources;
     // Get time along the edge, handling partial distance along the first and last edge.
-    elapsed += costing->EdgeCost(directededge, tile, offset_time_info.second_of_week) *
+    elapsed += costing->EdgeCost(directededge, tile, offset_time_info.second_of_week, flow_sources) *
                (edge_segment.target - edge_segment.source);
 
     // Use timestamps to update elapsed time. Use the timestamp at the interpolation
@@ -283,7 +284,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             mode,
             0,
             {},
-            baldr::kInvalidRestriction};
+            baldr::kInvalidRestriction,
+            true,
+            static_cast<bool>(flow_sources & kDefaultFlowMask)};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

@@ -312,7 +312,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -334,12 +335,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool /*has_measured_speed*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -373,7 +376,6 @@ public:
   float use_roads_;                // Preference of using roads between 0 and 1
   float road_factor_;              // Road factor based on use_roads_
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
-  float service_penalty_;          // Penalty (seconds) to use a generic service road
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -459,9 +461,6 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
 
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
-
-  // Penalty to use service roads
-  service_penalty_ = costing_options.service_penalty();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -567,8 +566,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const graph_tile_ptr& tile,
-                           const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+                           const uint32_t seconds,
+                           uint8_t& flow_sources) const {
+  auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
 
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
@@ -749,11 +749,6 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
-  // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
-  }
-
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -770,7 +765,11 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
-                                        const baldr::DirectedEdge* edge) const {
+                                        const baldr::DirectedEdge* edge,
+                                        const bool /*has_measured_speed*/) const {
+
+  // TODO: do we want to update the cost if we have flow or speed from traffic.
+
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -834,11 +833,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
-  // Penalize transitions onto service roads
-  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
-    penalty += service_penalty_;
-  }
-
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -876,7 +870,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
                                .get_value_or(kDefaultAlleyPenalty)));
 
-    // alley_penalty
+    // service_penalty
     pbf_costing_options->set_service_penalty(
         kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
                                  .get_value_or(kDefaultServicePenalty)));

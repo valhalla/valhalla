@@ -173,7 +173,7 @@ void update_tile(const std::string& tile_dir,
   size_t pred_count = 0;
   for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
     auto found = speeds.find(j);
-    pred_count += found != speeds.cend() && found->second.coefficients.has_value();
+    pred_count += found != speeds.cend() && static_cast<bool>(found->second.coefficients);
   }
 
   // Update directed edges as needed

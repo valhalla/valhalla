@@ -130,7 +130,7 @@ void CountryAccess(const std::string& config_file) {
     for (uint32_t j = 0; j < count; j++) {
       DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-      auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+      auto e_offset = tilebuilder.edgeinfo(&directededge);
 
       uint32_t forward = directededge.forwardaccess();
       uint32_t reverse = directededge.reverseaccess();
@@ -203,7 +203,7 @@ void CountryAccess(const std::string& config_file) {
     for (uint32_t j = 0; j < count; j++) {
       DirectedEdge& directededge = tilebuilder2.directededge_builder(nodeinfo.edge_index() + j);
 
-      auto e_offset = tilebuilder2.edgeinfo(directededge.edgeinfo_offset());
+      auto e_offset = tilebuilder2.edgeinfo(&directededge);
 
       uint32_t forward = directededge.forwardaccess();
       uint32_t reverse = directededge.reverseaccess();

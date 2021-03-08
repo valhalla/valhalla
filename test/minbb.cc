@@ -32,7 +32,7 @@ struct bb_tester {
       auto t = reader.GetGraphTile(id);
       for (const auto& node : t->GetNodes()) {
         const auto* edge = t->directededge(node.edge_index());
-        const std::vector<PointLL> shape = t->edgeinfo(edge->edgeinfo_offset()).shape();
+        const std::vector<PointLL> shape = t->edgeinfo(edge).shape();
         for (const auto& p : shape) {
           if (bb.maxpt().IsValid()) {
             bb.Expand(p);

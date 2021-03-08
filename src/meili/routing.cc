@@ -274,7 +274,7 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
     // Have to get the heading from the edge shape...
     graph_tile_ptr tile;
     const auto directededge = reader.directededge(label.edgeid(), tile);
-    const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+    const auto edgeinfo = tile->edgeinfo(directededge);
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
       float heading = (directededge->forward()) ? shape.back().Heading(shape.rbegin()[1])
@@ -303,7 +303,7 @@ inline uint16_t get_outbound_edge_heading(const graph_tile_ptr& tile,
   if (idx < 8) {
     return nodeinfo->heading(idx);
   } else {
-    const auto edgeinfo = tile->edgeinfo(outbound_edge->edgeinfo_offset());
+    const auto edgeinfo = tile->edgeinfo(outbound_edge);
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
       float heading = (outbound_edge->forward()) ? shape.front().Heading(shape[1])
