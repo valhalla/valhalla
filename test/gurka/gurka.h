@@ -90,6 +90,13 @@ void build_pbf(const nodelayout& node_locations,
                const relations& relations,
                const std::string& filename,
                const uint64_t initial_osm_id = 0);
+
+/**
+ * Extract list of edge names from route result.
+ * @param result the result of a /route or /match request
+ * @return list of edge names
+ */
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
 } // namespace detail
 
 /**
@@ -197,6 +204,17 @@ void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true,
                   const std::string& route_name = "routes");
+
+/**
+ * Tests if the result, which may be comprised of multiple routes,
+ * have summaries that match the expected_summaries.
+ *
+ * Note: For simplicity's sake, this logic looks at the first leg of each route.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_summaries the route/leg summaries expected
+ */
+void expect_summaries(valhalla::Api& raw_result, const std::vector<std::string>& expected_summaries);
 
 /**
  * Tests if a found path traverses the expected roads in the expected order

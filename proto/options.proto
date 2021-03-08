@@ -123,6 +123,8 @@ message CostingOptions {
   optional float service_penalty = 65;
   optional float use_tracks = 66;
   optional float use_distance = 67;
+  optional float use_living_streets = 68;
+  optional float service_factor = 69;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
@@ -156,6 +158,7 @@ message Options {
     transit_available = 9;
     expansion = 10;
     centroid = 11;
+    status = 12;
   }
 
   enum DateTimeType {

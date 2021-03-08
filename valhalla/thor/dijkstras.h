@@ -65,11 +65,11 @@ public:
    * @param  costings       List of costing objects
    * @param  mode           Travel mode
    */
-  virtual void Expand(ExpansionType expansion_type,
-                      valhalla::Api& api,
-                      baldr::GraphReader& reader,
-                      const sif::mode_costing_t& costings,
-                      const sif::TravelMode mode);
+  void Expand(ExpansionType expansion_type,
+              valhalla::Api& api,
+              baldr::GraphReader& reader,
+              const sif::mode_costing_t& costings,
+              const sif::TravelMode mode);
 
 protected:
   /**

@@ -89,4 +89,7 @@ using HistoricalTrafficCustomize =
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 
+using EdgesCustomize = std::function<void(const GraphId&, DirectedEdge&)>;
+void customize_edges(const boost::property_tree::ptree& config, const EdgesCustomize& setter_cb);
+
 } // namespace test

@@ -9,7 +9,11 @@ if(ENABLE_DATA_TOOLS)
   if (UNIX)
     # Enables stricter compiler checks on a file-by-file basis
     # which allows us to migrate piecemeal
-    set_source_files_properties(test_route_incidents.cc PROPERTIES COMPILE_FLAGS "-Werror")
+    set_source_files_properties(
+      test_route_incidents.cc
+      test_incident_loading.cc
+      test_closure_annotations.cc
+    PROPERTIES COMPILE_FLAGS "-Werror")
   endif (UNIX)
 
   ## Add executable targets

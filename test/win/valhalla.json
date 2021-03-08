@@ -19,7 +19,10 @@
       "isochrone",
       "trace_route",
       "trace_attributes",
-      "transit_available"
+      "transit_available",
+      "expansion",
+      "centroid",
+      "status"
     ],
     "logging": {
       "color": true,
