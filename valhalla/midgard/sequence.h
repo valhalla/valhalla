@@ -433,7 +433,7 @@ public:
     return memmap.size() + write_buffer.size();
   }
 
-#if !defined(__has_warning) || __has_warning("-Wmaybe-uninitialized")
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #endif
@@ -532,7 +532,7 @@ public:
     sequence* parent;
     size_t index;
   };
-#if !defined(__has_warning) || __has_warning("-Wmaybe-uninitialized")
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 
