@@ -433,8 +433,10 @@ public:
     return memmap.size() + write_buffer.size();
   }
 
+#if !defined(__has_warning) || __has_warning("-Wmaybe-uninitialized")
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
+#endif
   // a read/writeable object within the sequence, accessed through memory mapped file
   struct iterator {
     friend class sequence;
@@ -530,7 +532,9 @@ public:
     sequence* parent;
     size_t index;
   };
+#if !defined(__has_warning) || __has_warning("-Wmaybe-uninitialized")
 #pragma GCC diagnostic pop
+#endif
 
   // search for an object using binary search O(logn)
   // assumes the file was written in sorted order
