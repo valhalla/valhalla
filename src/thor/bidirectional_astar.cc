@@ -656,13 +656,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
           }
         }
       } else {
-        // Search is exhausted. If a connection has been found, return it
-        if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
-                    std::to_string(edgelabels_forward_.size()) + "," +
-                    std::to_string(edgelabels_reverse_.size()));
-          return {};
+        // We could fail the route here, but its also possible that if we continue the other search
+        // branch we will actually find a path (this happens near not through regions and closures)
+        // through which we can only pass in one direction. The flip side is we could be just wasting
+        // our time if we dont know whether or not those types of edges are what pruned this search
+        if (best_connections_.empty() && adjacencylist_reverse_.size() > 0) {
+          expand_forward = false;
+          expand_reverse = true;
+          continue;
         }
         return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
@@ -689,13 +690,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
           }
         }
       } else {
-        // Search is exhausted. If a connection has been found, return it
-        if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
-                    std::to_string(edgelabels_reverse_.size()) + "," +
-                    std::to_string(edgelabels_forward_.size()));
-          return {};
+        // We could fail the route here, but its also possible that if we continue the other search
+        // branch we will actually find a path (this happens near not through regions and closures)
+        // through which we can only pass in one direction. The flip side is we could be just wasting
+        // our time if we dont know whether or not those types of edges are what pruned this search
+        if (best_connections_.empty() && adjacencylist_forward_.size() > 0) {
+          expand_forward = true;
+          expand_reverse = false;
+          continue;
         }
         return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }

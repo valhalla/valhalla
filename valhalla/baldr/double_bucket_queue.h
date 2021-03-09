@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
@@ -85,6 +86,7 @@ public:
     bucketrange_ = range;
     bucketsize_ = static_cast<float>(bucketsize);
     inv_ = 1.0f / bucketsize_;
+    size_ = 0;
 
     // Set the maximum cost (above this goes into the overflow bucket)
     maxcost_ = mincost_ + bucketrange_;
@@ -112,6 +114,7 @@ public:
     // Reset current bucket and cost
     currentcost_ = mincost_;
     currentbucket_ = buckets_.begin();
+    size_ = 0;
   }
 
   /**
@@ -123,6 +126,7 @@ public:
    */
   void add(const uint32_t label) {
     get_bucket((*labelcontainer_)[label].sortcost()).push_back(label);
+    ++size_;
   }
 
   /**
@@ -157,12 +161,14 @@ public:
         // Reset currentbucket to the last bucket - in case another access of
         // adjacency list is done.
         --currentbucket_;
+        assert(size_ == 0);
         return baldr::kInvalidLabel;
       } else {
         // Move labels from the overflow bucket to the low level buckets.
         // Return invalid label if still empty.
         empty_overflow();
         if (empty()) {
+          assert(size_ == 0);
           return baldr::kInvalidLabel;
         }
       }
@@ -171,7 +177,16 @@ public:
     // Return label from lowest non-empty bucket
     const uint32_t label = currentbucket_->back();
     currentbucket_->pop_back();
+    --size_;
     return label;
+  }
+
+  /**
+   * Gets the total number of labels in the queue
+   * @return the number of labels currently held in the queue
+   */
+  size_t size() const {
+    return size_;
   }
 
 private:
@@ -181,6 +196,7 @@ private:
   double mincost_;    // Minimum cost within the low level buckets
   float maxcost_;     // Above this goes into overflow bucket
   float currentcost_; // Current cost
+  size_t size_;       // Current number of labels
 
   // Low level buckets
   buckets_t buckets_;
