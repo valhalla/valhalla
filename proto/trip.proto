@@ -331,6 +331,11 @@ message TripLeg {
     optional uint32 end_shape_index = 4;
   };
 
+  message Closure {
+    optional uint32 begin_shape_index = 1;
+    optional uint32 end_shape_index = 2;
+  };
+
   optional uint64 osm_changeset = 1;
   optional uint64 trip_id = 2;
   optional uint32 leg_id = 3;
@@ -343,6 +348,7 @@ message TripLeg {
   optional ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
   repeated string algorithms = 12;
+  repeated Closure closures = 13;
 }
 
 message TripRoute {

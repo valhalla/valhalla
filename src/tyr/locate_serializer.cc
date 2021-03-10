@@ -59,7 +59,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       // get the osm way id
       auto tile = reader.GetGraphTile(edge.id);
       auto* directed_edge = tile->directededge(edge.id);
-      auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
+      auto edge_info = tile->edgeinfo(directed_edge);
       // they want MOAR!
       if (verbose) {
         // live traffic information

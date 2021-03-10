@@ -78,7 +78,8 @@ public:
 
   Cost EdgeCost(const DirectedEdge* edge,
                 const graph_tile_ptr& /*tile*/,
-                const uint32_t /*seconds*/) const override {
+                const uint32_t /*seconds*/,
+                uint8_t& /*flow_sources*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
@@ -92,7 +93,8 @@ public:
   Cost TransitionCostReverse(const uint32_t /*idx*/,
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
-                             const DirectedEdge* /*opp_pred_edge*/) const override {
+                             const DirectedEdge* /*opp_pred_edge*/,
+                             const bool /*has_measured_speed*/) const override {
     return {5.0f, 5.0f};
   }
 
