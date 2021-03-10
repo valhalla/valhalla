@@ -92,8 +92,6 @@ if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get
 sudo apt-get install -y python-all-dev
 ```
 
-For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
-
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
