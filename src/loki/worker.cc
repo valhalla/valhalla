@@ -130,9 +130,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid = co->add_avoid_edges();
-                avoid->set_id(shortcut);
-                avoid->set_percent_along(0);
+                auto* avoid_shortcut = co->add_avoid_edges();
+                avoid_shortcut->set_id(shortcut);
+                avoid_shortcut->set_percent_along(0);
               }
             }
           }
@@ -319,6 +319,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::transit_available:
         result = to_response(transit_available(request), info, request);
         break;
+      case Options::status:
+        status(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         return jsonify_error({107}, info, request);
@@ -334,6 +338,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
   // sends them on to thor

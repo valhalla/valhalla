@@ -158,6 +158,7 @@ message Options {
     transit_available = 9;
     expansion = 10;
     centroid = 11;
+    status = 12;
   }
 
   enum DateTimeType {

@@ -138,7 +138,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "trace_attributes",
           "transit_available",
           "expansion",
-          "centroid"
+          "centroid",
+          "status"
         ],
         "logging": {
           "color": false,
