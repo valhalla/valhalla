@@ -26,9 +26,10 @@ TEST(Standalone, SacScaleAttributes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sac_scale_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5"},
-                              "pedestrian", {{"/costing_options/pedestrian/max_hiking_difficulty", "5"}},
-                               {}, &trace_json, "via");
+  auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5"},
+                       "pedestrian", {{"/costing_options/pedestrian/max_hiking_difficulty", "5"}}, {},
+                       &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
