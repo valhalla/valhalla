@@ -17,6 +17,9 @@ namespace vm = valhalla::midgard;
 namespace vl = valhalla::loki;
 
 namespace {
+// register a few boost.geometry types
+using ring_bg_t = std::vector<vm::PointLL>;
+
 rapidjson::Value get_avoid_locs(const std::vector<vm::PointLL>& locs,
                                 rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value locs_j(rapidjson::kArrayType);
@@ -30,7 +33,7 @@ rapidjson::Value get_avoid_locs(const std::vector<vm::PointLL>& locs,
   return locs_j;
 }
 
-rapidjson::Value get_avoid_polys(const std::vector<vl::ring_bg_t>& rings,
+rapidjson::Value get_avoid_polys(const std::vector<ring_bg_t>& rings,
                                  rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value rings_j(rapidjson::kArrayType);
   for (auto& ring : rings) {
@@ -96,7 +99,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut",
-                                  {{"service_limits.max_avoid_polygons_length", "1"}});
+                                  {{"service_limits.max_avoid_polygons_length", "1000"}});
   }
 };
 
@@ -104,10 +107,10 @@ gurka::map AvoidTest::avoid_map = {};
 
 TEST_F(AvoidTest, TestConfig) {
   // Add a polygon with longer perimeter than the limit
-  std::vector<vl::ring_bg_t> rings{{{13.38625361, 52.4652558},
-                                    {13.38625361, 52.48000128},
-                                    {13.4181769, 52.48000128},
-                                    {13.4181769, 52.4652558}}};
+  std::vector<ring_bg_t> rings{{{13.38625361, 52.4652558},
+                                {13.38625361, 52.48000128},
+                                {13.4181769, 52.48000128},
+                                {13.4181769, 52.4652558}}};
 
   auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
 
@@ -140,12 +143,12 @@ TEST_P(AvoidTest, TestAvoidPolygon) {
   //  x---|---x  |
   //      |      |
   //      D------E
-  vl::ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
-                     {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
-                     {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
-                     {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
-                     {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}};
-  std::vector<vl::ring_bg_t> rings;
+  ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
+                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
+                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
+                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
+                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}};
+  std::vector<ring_bg_t> rings;
   rings.push_back(ring);
 
   // build request manually for now
@@ -177,7 +180,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   //  x---|-x  y-|---y
   //      |      |
   //      D------E
-  std::vector<vl::ring_bg_t> rings;
+  std::vector<ring_bg_t> rings;
   rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
                    {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
                    {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},

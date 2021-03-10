@@ -1,13 +1,39 @@
-#include "loki/polygon_search.h"
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/ring.hpp>
+
+#include <valhalla/loki/polygon_search.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/worker.h>
 
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vl = valhalla::loki;
 
+BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
+                                 double,
+                                 bg::cs::geographic<bg::degree>,
+                                 first,
+                                 second)
+BOOST_GEOMETRY_REGISTER_RING(std::vector<vm::PointLL>)
+
 namespace {
-vl::ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
-  vl::ring_bg_t new_ring;
+// register a few boost.geometry types
+using line_bg_t = bg::model::linestring<vm::PointLL>;
+using ring_bg_t = std::vector<vm::PointLL>;
+
+// map of tile for map of bin ids & their ring ids
+using bins_collector =
+    std::unordered_map<uint32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
+
+static const auto Haversine = [] {
+  return bg::strategy::distance::haversine<float>(vm::kRadEarthMeters);
+};
+
+ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
+  ring_bg_t new_ring;
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
@@ -16,9 +42,9 @@ vl::ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   return new_ring;
 }
 
-double GetRingLength(const vl::ring_bg_t& ring) {
+double GetRingLength(const ring_bg_t& ring) {
   // bg doesn't (yet) support length of ring geoms
-  vl::line_bg_t line{ring.begin(), ring.end()};
+  line_bg_t line{ring.begin(), ring.end()};
   auto length = bg::length(line, Haversine());
   return length;
 }
@@ -39,7 +65,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
   for (const auto& ring_pbf : rings_pbf) {
     rings_bg.push_back(PBFToRing(ring_pbf));
     const ring_bg_t ring_bg = rings_bg.back();
-    rings_length += GetRingLength(ring_bg) * vm::kKmPerMeter;
+    rings_length += GetRingLength(ring_bg);
   }
   if (rings_length > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
@@ -117,7 +143,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
             break;
           }
         }
-        // TODO: insert PBF avoid edge right here instead of this?
         if (intersects) {
           avoid_edge_ids.emplace(edge_id);
           avoid_edge_ids.emplace(

@@ -85,8 +85,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.avoid_polygons_size()) {
-    // TODO: should the PBF edge assignment happen in edges_in_rings?
-    // feels like a waste to produce an unordered_set we just iterate over right after
     const auto edges =
         edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
     auto* co = options.mutable_costing_options(options.costing());
