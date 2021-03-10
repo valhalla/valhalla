@@ -266,7 +266,8 @@ config = {
     'max_reachability': 100,
     'max_radius': 200,
     'max_timedep_distance': 500000,
-    'max_alternates': 2
+    'max_alternates': 2,
+    'max_avoid_polygons_length': 10000
   }
 }
 
@@ -527,7 +528,8 @@ help_text = {
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
-    'max_alternates': 'Maximum number of alternate routes to allow in a request'
+    'max_alternates': 'Maximum number of alternate routes to allow in a request',
+    'max_avoid_polygons_length': 'Maximum total perimeter of all avoid_polygons in meters'
   }
 }
 
