@@ -11,6 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
 #include "worker.h"
@@ -39,11 +40,6 @@ const std::string kSpeedLimitUnitsKph = "km/h";
 const std::string kSpeedLimitUnitsMph = "mph";
 
 constexpr std::size_t MAX_USED_SEGMENTS = 2;
-struct NamedSegment {
-  std::string name;
-  uint32_t index;
-  float distance;
-};
 
 struct Coordinate {
   std::int32_t lng;
@@ -773,6 +769,21 @@ void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incide
   doc.emplace("incidents", serialized_incidents);
 }
 
+void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
+  if (!leg.closures_size()) {
+    return;
+  }
+  auto closures = json::array({});
+  closures->reserve(leg.closures_size());
+  for (const valhalla::TripLeg_Closure& closure : leg.closures()) {
+    auto closure_obj = json::map({});
+    closure_obj->emplace("geometry_index_start", static_cast<uint64_t>(closure.begin_shape_index()));
+    closure_obj->emplace("geometry_index_end", static_cast<uint64_t>(closure.end_shape_index()));
+    closures->emplace_back(std::move(closure_obj));
+  }
+  doc.emplace("closures", closures);
+}
+
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
@@ -1296,61 +1307,9 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return std::make_pair(names, refs);
 }
 
-// This is an initial implementation to be as good or better than the current OSRM response
-// In the future we shall use the percent of name distance as compared to the total distance
-// to determine how many named segments to display.
-// Also, might need to combine some similar named segments
-std::string
-summarize_leg(google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>::const_iterator leg) {
-  // Create a map of maneuver names to index,distance pairs
-  std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
-  uint32_t maneuver_index = 0;
-  for (const auto& maneuver : leg->maneuver()) {
-    if (maneuver.street_name_size() > 0) {
-      const std::string& name = maneuver.street_name(0).value();
-      auto maneuver_summary = maneuver_summary_map.find(name);
-      if (maneuver_summary == maneuver_summary_map.end()) {
-        maneuver_summary_map[name] = std::make_pair(maneuver_index, maneuver.length());
-      } else {
-        maneuver_summary->second.second += maneuver.length();
-      }
-    }
-    // Increment maneuver index
-    ++maneuver_index;
-  }
-
-  // Create a list of named segments (maneuver name, index, distance items)
-  std::vector<NamedSegment> named_segments;
-  named_segments.reserve(maneuver_summary_map.size());
-  for (const auto& map_item : maneuver_summary_map) {
-    named_segments.emplace_back(
-        NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
-  }
-
-  // Sort list by descending maneuver distance
-  std::sort(named_segments.begin(), named_segments.end(),
-            [](const NamedSegment& a, const NamedSegment& b) { return b.distance < a.distance; });
-
-  // Reduce the list size to the summary list max
-  named_segments.resize(std::min(named_segments.size(), MAX_USED_SEGMENTS));
-
-  // Sort final list by ascending maneuver index
-  std::sort(named_segments.begin(), named_segments.end(),
-            [](const NamedSegment& a, const NamedSegment& b) { return a.index < b.index; });
-
-  // Create single summary string from list
-  std::stringstream ss;
-  for (size_t i = 0; i < named_segments.size(); ++i) {
-    if (i != 0)
-      ss << ", ";
-    ss << named_segments[i].name;
-  }
-
-  return ss.str();
-}
-
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                              const std::vector<std::string>& leg_summaries,
                               google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
                               bool imperial,
                               const valhalla::Options& options) {
@@ -1363,6 +1322,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   }
 
   // Iterate through the legs in DirectionsLeg and TripLeg
+  int leg_index = 0;
   auto leg = legs.begin();
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
@@ -1548,7 +1508,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // Get a summary based on longest maneuvers.
     double duration = leg->summary().time();
     double distance = units_to_meters(leg->summary().length(), !imperial);
-    output_leg->emplace("summary", summarize_leg(leg));
+    output_leg->emplace("summary", leg_summaries[leg_index]);
     output_leg->emplace("distance", json::fp_t{distance, 3});
     output_leg->emplace("duration", json::fp_t{duration, 3});
     output_leg->emplace("weight",
@@ -1595,11 +1555,90 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
 
+    // Add closures
+    serializeClosures(path_leg, *output_leg);
+
     // Keep the leg
     output_legs->emplace_back(std::move(output_leg));
     leg++;
+    leg_index++;
   }
   return output_legs;
+}
+
+std::vector<std::vector<std::string>>
+summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& routes) {
+
+  route_summary_cache rscache(routes);
+
+  // vector 1: routes
+  // vector 2: legs
+  // string: unique summary for the route/leg
+  std::vector<std::vector<std::string>> all_summaries;
+  all_summaries.reserve(routes.size());
+
+  // Find the simplest summary for every leg of every route. Important note:
+  // each route should have the same number of legs. Hence, we only need to make
+  // unique the same leg (leg_idx) between all routes.
+  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
+
+    size_t num_legs_i = routes[route_i].legs_size();
+    std::vector<std::string> leg_summaries;
+    leg_summaries.reserve(num_legs_i);
+
+    for (size_t leg_idx = 0; leg_idx < num_legs_i; leg_idx++) {
+
+      // we desire each summary to be comprised of at least two named segments.
+      // however, if only one is available that's all we can use.
+      size_t num_named_segments_i = rscache.num_named_segments_for_route_leg(route_i, leg_idx);
+      size_t num_named_segs_needed = std::min(MAX_USED_SEGMENTS, num_named_segments_i);
+
+      // Compare every jth route/leg summary vs the current ith route/leg summary.
+      // We desire to compute num_named_segs_needed, which is the number of named
+      // segments needed to uniquely identify the ith's summary.
+      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
+
+        // avoid self
+        if (route_i == route_j)
+          continue;
+
+        size_t num_legs_j = routes[route_j].legs_size();
+
+        // there should be the same number of legs in every route. however, some
+        // unit tests break this rule, so we cannot enable this assert.
+        // assert(num_legs_i == num_legs_j);
+        if (leg_idx >= num_legs_j)
+          continue;
+
+        size_t num_named_segments_j = rscache.num_named_segments_for_route_leg(route_j, leg_idx);
+
+        size_t num_comparable = std::min(num_named_segments_i, num_named_segments_j);
+
+        // k is the number of named segments in the summary. It keeps going
+        // up by 1 until route_i's summary is different than the route_j's.
+        size_t k = 1;
+        for (; (k < num_comparable); k++) {
+          const std::string& summary_i = rscache.get_n_segment_summary(route_i, leg_idx, k);
+          const std::string& summary_j = rscache.get_n_segment_summary(route_j, leg_idx, k);
+          if (summary_i != summary_j)
+            break;
+        }
+
+        if (k > num_named_segs_needed) {
+          num_named_segs_needed = k;
+        }
+      }
+
+      std::string leg_summary =
+          rscache.get_n_segment_summary(route_i, leg_idx, num_named_segs_needed);
+
+      leg_summaries.emplace_back(std::move(leg_summary));
+    }
+
+    all_summaries.emplace_back(std::move(leg_summaries));
+  }
+
+  return all_summaries;
 }
 
 // Serialize route response in OSRM compatible format.
@@ -1635,6 +1674,13 @@ std::string serialize(valhalla::Api& api) {
   // OSRM is always using metric for non narrative stuff
   bool imperial = options.units() == Options::miles;
 
+  // 2D (by route, by leg) vector of every route and leg summarized. We cannot
+  // generate a route/leg summary in isolation, since this can lead to the same
+  // summary for different route/legs. We instead make each summary as simple
+  // as possible while also make sure they are unique.
+  std::vector<std::vector<std::string>> route_leg_summaries =
+      summarize_route_legs(api.directions().routes());
+
   // For each route...
   for (int i = 0; i < api.trip().routes_size(); ++i) {
     // Create a route to add to the array
@@ -1655,7 +1701,7 @@ std::string serialize(valhalla::Api& api) {
     route_summary(route, api, imperial, i);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(api.directions().routes(i).legs(),
+    route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
                                           imperial, options));
 

@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
       }
 
       // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge->edgeinfo_offset()).wayid();
+      uint64_t wayid = tile->edgeinfo(edge).wayid();
       ways_edges[wayid].push_back({edge->forward(), edge_id});
     }
   }

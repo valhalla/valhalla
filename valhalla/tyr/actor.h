@@ -51,6 +51,9 @@ public:
   std::string centroid(const std::string& request_str,
                        const std::function<void()>* interrupt = nullptr,
                        Api* api = nullptr);
+  std::string status(const std::string& request_str,
+                     const std::function<void()>* interrupt = nullptr,
+                     Api* api = nullptr);
 
 protected:
   struct pimpl_t;

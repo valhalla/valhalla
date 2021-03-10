@@ -132,6 +132,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kShapeAttributesLength, false},
     {kShapeAttributesSpeed, false},
     {kShapeAttributesSpeedLimit, false},
+    {kShapeAttributesClosure, false},
 };
 
 AttributesController::AttributesController() {
