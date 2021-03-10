@@ -163,10 +163,9 @@ It's recommended to work with the following toolset:
 1. Install the following packages with `vcpkg` and your platform triplet (e.g. `x64-windows`). Note, you can remove all packages after `zlib` in `.\.vcpkg_deps.txt` if you don't want to build `TOOLS` & `DATA_TOOLS`:
 ```
 # Basic packages
-cd C:\path\to\vcpkg
-git checkout f4bd6423
+git -C C:\path\to\vcpkg checkout f4bd6423
 cd C:\path\to\project
-vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
+C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 ```
 2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
 ```
@@ -174,8 +173,8 @@ vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 ```
 3. Run the build for all targets.
 ```
-cd C:\path\to\project\build 
-cmake --build .
+cd C:\path\to\project 
+cmake -B build .
 ```
 
 ## Running
