@@ -25,6 +25,7 @@ using line_bg_t = bg::model::linestring<vm::PointLL>;
 using ring_bg_t = std::vector<vm::PointLL>;
 
 // map of tile for map of bin ids & their ring ids
+// TODO: simplify the logic behind this a little
 using bins_collector =
     std::unordered_map<uint32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
 
@@ -85,34 +86,20 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     auto line_intersected = tiles.Intersect(ring);
     for (const auto& tb : line_intersected) {
       for (const auto& b : tb.second) {
-        bins_intersected[tb.first][b].push_back(ring_idx);
+        bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(ring_idx);
       }
     }
   }
-
-  std::vector<uint32_t> tile_keys(bins_intersected.size());
-  std::for_each(bins_intersected.begin(), bins_intersected.end(),
-                [&tile_keys](
-                    const std::pair<uint32_t,
-                                    std::unordered_map<unsigned short, std::vector<size_t>>>& e) {
-                  tile_keys.push_back(e.first);
-                });
-  std::sort(tile_keys.begin(), tile_keys.end());
-  for (const auto& tile_id : tile_keys) {
-    auto& tile_bins = bins_intersected[tile_id];
-    auto tile = reader.GetGraphTile({static_cast<uint32_t>(tile_id), bin_level, 0});
+  for (const auto& intersection : bins_intersected) {
+    auto tile = reader.GetGraphTile({intersection.first, bin_level, 0});
     if (!tile) {
       continue;
     }
-    for (const auto& bin : tile_bins) {
+    for (const auto& bin : intersection.second) {
       // tile will be mutated most likely in the loop
-      if (tile->id().tileid() != tile_id) {
-        tile = reader.GetGraphTile({static_cast<uint32_t>(tile_id), bin_level, 0});
-      }
+      reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
       for (const auto& edge_id : tile->GetBin(bin.first)) {
-        // weed out duplicates early on
-        // TODO: is this really worth it?
-        if (avoid_edge_ids.find(edge_id) != avoid_edge_ids.end()) {
+        if (avoid_edge_ids.count(edge_id) != 0) {
           continue;
         }
         // TODO: optimize the tile switching by enqueuing edges
