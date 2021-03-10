@@ -170,6 +170,8 @@ void loki_worker_t::trace(Api& request) {
   };
 }
 
+// TODO: remove this, it was a hack to support display_ll for map matching, what we can do is
+// actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
   std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin()),
@@ -212,7 +214,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de).shape();
         auto closest = orig_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method
@@ -239,7 +241,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de).shape();
         auto closest = dest_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method

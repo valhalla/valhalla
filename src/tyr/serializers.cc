@@ -31,9 +31,6 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-midgard::PointLL to_ll(const LatLng& ll) {
-  return midgard::PointLL{ll.lng(), ll.lat()};
-}
 using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
 
 FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
@@ -86,6 +83,12 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
+std::string serializeStatus(const Api&) {
+  // TODO: once we decide on what's in the status message we'll fill out the proto message in
+  // loki/thor/odin and we'll serialize it here
+  return "{}";
+}
+
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
@@ -95,11 +98,28 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
-    for (const std::string& openlr : openlr_edges(leg)) {
+    auto edge_references = openlr_edges(leg);
+    references->reserve(references->size() + edge_references.size());
+    for (const std::string& openlr : edge_references) {
       references->emplace_back(openlr);
     }
   }
   route_json->emplace("linear_references", references);
+}
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  // you have to have requested it and you have to be some kind of route response
+  if (!api.options().linear_references() ||
+      (api.options().action() != Options::trace_route && api.options().action() != Options::route))
+    return;
+
+  writer.start_array("linear_references");
+  for (const TripLeg& leg : api.trip().routes(route_index).legs()) {
+    for (const std::string& openlr : openlr_edges(leg)) {
+      writer(openlr);
+    }
+  }
+  writer.end_array();
 }
 } // namespace tyr
 } // namespace valhalla

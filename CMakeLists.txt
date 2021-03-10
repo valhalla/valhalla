@@ -7,13 +7,14 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
@@ -31,6 +32,8 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
+option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON tiles reference counters are thread safe" OFF)
+
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -227,16 +230,26 @@ elseif(NOT Boost_FOUND)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
+if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
+ add_definitions(-DENABLE_THREAD_SAFE_TILE_REF_COUNT)
+endif ()
+
 ## libvalhalla
 add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  #TODO: need to make sure they actually have python
-  add_subdirectory(src/bindings/python)
-  install(FILES COPYING CHANGELOG.md
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-    COMPONENT python)
+  # favors Py3, falls back to Py2
+  find_package(Python COMPONENTS Development Interpreter)
+  if (Python_FOUND)
+    add_subdirectory(src/bindings/python)
+    install(FILES COPYING CHANGELOG.md
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
+      COMPONENT python)
+  else()
+    set(ENABLE_PYTHON_BINDINGS OFF)
+    message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
+  endif()
 endif()
 
 ## Executable targets

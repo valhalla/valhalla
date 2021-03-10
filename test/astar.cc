@@ -126,32 +126,15 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
                                        gurka::relation_member{gurka::way_member, "hi", "via"}},
                                       {{"type", "restriction"}, {"restriction", "no_right_turn"}}}};
 
-//
-const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
-
 gurka::nodelayout node_locations;
-
-const std::string config_file = "test/test_trivial_path";
-
-void write_config(const std::string& filename,
-                  const std::string& tile_dir = "test/data/trivial_tiles") {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"concurrency\": 1, \
-      \"id_table_size\": 1000, \
-       \"tile_dir\": \"" +
-                tile_dir + "\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
-      } \
-    }";
-  } catch (...) {}
-  file.close();
-}
+const std::string test_dir = "test/data/fake_tiles_astar";
+const auto fake_conf =
+    test::make_config(test_dir,
+                      {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},
+                       {"mjolnir.timezone", VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite"},
+                       {"mjolnir.hierarchy", "false"},
+                       {"mjolnir.shortcuts", "false"}});
 
 void make_tile() {
 
@@ -159,14 +142,6 @@ void make_tile() {
     filesystem::remove_all(test_dir);
 
   filesystem::create_directories(test_dir);
-
-  boost::property_tree::ptree conf;
-  write_config(config_file, test_dir);
-  rapidjson::read_json(config_file, conf);
-
-  // We don't want these in our test tile
-  conf.put("mjolnir.hierarchy", false);
-  conf.put("mjolnir.shortcuts", false);
 
   const double gridsize = 666;
 
@@ -200,7 +175,7 @@ void make_tile() {
 
   {
     constexpr bool release_osmpbf_memory = false;
-    mjolnir::build_tile_set(conf,
+    mjolnir::build_tile_set(fake_conf,
                             {test_dir + "/map1.pbf", test_dir + "/map2.pbf", test_dir + "/map3.pbf"},
                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
                             release_osmpbf_memory);
@@ -234,6 +209,20 @@ void create_costing_options(Options& options, Costing costing) {
   const rapidjson::Document doc;
   sif::ParseCostingOptions(doc, "/costing_options", options);
   options.set_costing(costing);
+}
+// Convert locations to format needed by PathAlgorithm
+std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
+                                               vb::GraphReader& graphreader,
+                                               const std::shared_ptr<vs::DynamicCost>& costing) {
+  const auto projections = loki::Search(locations, graphreader, costing);
+  std::vector<valhalla::Location> result;
+  for (const auto& loc : locations) {
+    valhalla::Location pbfLoc;
+    const auto& correlated = projections.at(loc);
+    PathLocation::toPBF(correlated, &pbfLoc, graphreader);
+    result.emplace_back(std::move(pbfLoc));
+  }
+  return result;
 }
 
 enum class TrivialPathTest {
@@ -343,12 +332,12 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  auto astar = vt::TimeDepForward();
+  vt::TimeDepForward astar;
   TestTrivialPath(astar);
 }
 
 TEST(Astar, TestTrivialPathReverse) {
-  auto astar = vt::TimeDepReverse();
+  vt::TimeDepReverse astar;
   TestTrivialPath(astar);
 }
 
@@ -433,67 +422,8 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-boost::property_tree::ptree get_conf(const char* tiles) {
-  std::stringstream ss;
-  ss << R"({
-      "mjolnir":{
-        "tile_dir":"test/data/)"
-     << tiles << R"(",
-        "concurrency": 1
-      },
-      "loki":{
-        "actions":["route"],
-        "logging":{"long_request": 100},
-        "service_defaults":{
-          "minimum_reachability": 50,
-          "radius": 0,
-          "search_cutoff": 35000,
-          "node_snap_tolerance": 5,
-          "street_side_tolerance": 5,
-          "street_side_max_distance": 1000,
-          "heading_tolerance": 60
-        }
-      },
-      "thor":{"logging":{
-        "long_request": 100,
-        "type": "std_out"
-        }
-      },
-      "midgard":{
-        "logging":{
-          "type": "std_out"
-        }
-      },
-      "odin":{"logging":{"long_request": 100}},
-      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-      "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
-              "mode":"auto","grid":{"cache_size":100240,"size":500},
-              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
-      "service_limits": {
-        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-      }
-    })";
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(ss, conf);
-  return conf;
-}
-
 TEST(Astar, TestTrivialPathNoUturns) {
-  boost::property_tree::ptree conf = gurka::detail::build_config("test/data/utrecht_tiles", {});
+  boost::property_tree::ptree conf = test::make_config("test/data/utrecht_tiles");
   vr::actor_t actor(conf);
   valhalla::Api api;
   actor.route(
@@ -527,7 +457,7 @@ struct route_tester {
 };
 
 TEST(Astar, test_oneway) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway works, South-West to North-East
   std::string request =
@@ -562,7 +492,7 @@ TEST(Astar, test_oneway) {
 }
 
 TEST(Astar, test_oneway_wrong_way) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway wrong way, North-east to South-West
   // Should produce no-route
@@ -578,7 +508,7 @@ TEST(Astar, test_oneway_wrong_way) {
 }
 
 TEST(Astar, test_deadend) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -629,7 +559,7 @@ TEST(Astar, test_deadend) {
 TEST(Astar, test_time_dep_forward_with_current_time) {
   // Test a request with date_time as "current" (type: 0)
   //
-  auto conf = get_conf("whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -675,7 +605,7 @@ TEST(Astar, test_time_dep_forward_with_current_time) {
 }
 
 TEST(Astar, test_deadend_timedep_forward) {
-  auto conf = get_conf("whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -728,7 +658,7 @@ TEST(Astar, test_deadend_timedep_forward) {
   EXPECT_EQ(uturn_street, "Quay Street") << "We did not find the expected u-turn";
 }
 TEST(Astar, test_deadend_timedep_reverse) {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -785,7 +715,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
-  auto conf = get_conf("roma_tiles");
+  auto conf = test::make_config("test/data/roma_tiles");
   route_tester tester(conf);
   std::string request =
       R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
@@ -864,7 +794,7 @@ Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // so lets use a timedependent a-star and verify that
 
   LOG_INFO("Testing " + costing_str + " route at hour " + std::to_string(hour));
-  auto conf = get_conf("roma_tiles");
+  auto conf = test::make_config("test/data/roma_tiles");
   route_tester tester(conf);
   // The following request results in timedep astar during the restricted hours
   // and should be denied
@@ -938,7 +868,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
   //
   // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
   //
-  auto conf = get_conf("bayfront_singapore_tiles");
+  auto conf = test::make_config("test/data/bayfront_singapore_tiles");
   route_tester tester(conf);
   std::string request;
   switch (date_time_type) {
@@ -1088,7 +1018,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     for (auto path_info : paths) {
       LOG_INFO("Got pathinfo " + std::to_string(path_info.edgeid.id()));
       auto directededge = tile->directededge(path_info.edgeid);
-      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto edgeinfo = tile->edgeinfo(directededge);
       auto names = edgeinfo.GetNames();
       walked_path.push_back(names.front());
     }
@@ -1137,12 +1067,21 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 
     verify_paths(paths);
   }
+  {
+    vt::BidirectionalAStar astar;
+    auto paths = astar
+                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                                  *reader, costs, mode)
+                     .front();
+
+    verify_paths(paths);
+  }
 }
 
 Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
-  auto conf = get_conf("ny_ar_tiles");
+  auto conf = test::make_config("test/data/ny_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1213,7 +1152,7 @@ TEST(Astar, test_timed_access_restriction_2) {
 
 Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
-  auto conf = get_conf("pa_ar_tiles");
+  auto conf = test::make_config("test/data/pa_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1233,7 +1172,7 @@ Api timed_conditional_restriction_pa(const std::string& mode, const std::string&
 
 Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
-  auto conf = get_conf("nh_ar_tiles");
+  auto conf = test::make_config("test/data/nh_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1401,7 +1340,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
-  auto conf = get_conf("melborne_tiles");
+  auto conf = test::make_config("test/data/melborne_tiles");
   route_tester tester(conf);
   {
     // Tests "Route around the block" due to complex restriction,
@@ -1445,7 +1384,8 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_nk = *std::get<1>(result);
     edge_nk.complex_restriction(true);
     edge_labels_fwd.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_nk,
-                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
+                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false,
+                                 true, false);
   }
   DirectedEdge edge_kh;
   {
@@ -1455,7 +1395,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_kh.complex_restriction(true);
     edge_labels_fwd.emplace_back(edge_labels_fwd.size() - 1, std::get<0>(result), std::get<2>(result),
                                  &edge_kh, vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false,
-                                 false);
+                                 false, true, false);
   }
   // Create our fwd_pred for the bridging check
   DirectedEdge edge_hi;
@@ -1465,7 +1405,8 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   edge_hi.complex_restriction(true);
   vs::BDEdgeLabel fwd_pred(edge_labels_fwd.size() - 1, // Index to predecessor in edge_labels_fwd
                            std::get<0>(edge_hi_result), std::get<2>(edge_hi_result), &edge_hi,
-                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false);
+                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false,
+                           true, false);
 
   DirectedEdge edge_il;
   {
@@ -1474,7 +1415,8 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
     edge_il = *std::get<1>(result);
     edge_il.complex_restriction(true);
     edge_labels_rev.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_il,
-                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
+                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false,
+                                 true, false);
   }
   // Create the rev_pred for the bridging check
   DirectedEdge edge_ih;
@@ -1482,7 +1424,8 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   edge_ih.complex_restriction(true);
   vs::BDEdgeLabel rev_pred(edge_labels_rev.size() - 1, // Index to predecessor in edge_labels_rev
                            std::get<2>(edge_hi_result), std::get<0>(edge_hi_result), &edge_ih,
-                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false);
+                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false,
+                           true, false);
 
   {
     // Test for forward search
@@ -1616,6 +1559,120 @@ TEST(Astar, BiDirTrivial) {
   ASSERT_TRUE(path.size() == 1);
   EXPECT_LT(path.front().elapsed_cost.cost, 1);
   EXPECT_LT(path.front().elapsed_cost.secs, 1);
+}
+
+TEST(BiDiAstar, test_recost_path) {
+  const std::string ascii_map = R"(
+           X-----------Y
+          /             \
+    1----A               E---2
+          \             /
+           B--C--------D
+           |  |        |
+           3  4        5
+  )";
+  const gurka::ways ways = {
+      // make ABC to be a shortcut
+      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      // make CDE to be a shortcut
+      {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"1A", {{"highway", "secondary"}}},
+      {"B3", {{"highway", "secondary"}}},
+      {"C4", {{"highway", "secondary"}}},
+      {"D5", {{"highway", "secondary"}}},
+      // set speeds less than on ABCDE path to force the algorithm
+      // to go through ABCDE nodes instead of AXY
+      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"E2", {{"highway", "secondary"}}},
+  };
+
+  auto nodes = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+  const std::string test_dir = "test/data/astar_shortcuts_recosting";
+  const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
+
+  vb::GraphReader graphreader(map.config.get_child("mjolnir"));
+
+  // before continue check that ABC is actually a shortcut
+  const auto ABC = gurka::findEdgeByNodes(graphreader, nodes, "A", "C");
+  ASSERT_TRUE(std::get<1>(ABC)->is_shortcut()) << "Expected ABC to be a shortcut";
+  // before continue check that CDE is actually a shortcut
+  const auto CDE = gurka::findEdgeByNodes(graphreader, nodes, "C", "E");
+  ASSERT_TRUE(std::get<1>(CDE)->is_shortcut()) << "Expected CDE to be a shortcut";
+
+  auto const set_constrained_speed = [&graphreader, &test_dir](const std::vector<GraphId>& edge_ids) {
+    for (const auto& edgeid : edge_ids) {
+      GraphId tileid(edgeid.tileid(), edgeid.level(), 0);
+      auto tile = graphreader.GetGraphTile(tileid);
+      vj::GraphTileBuilder tile_builder(test_dir, tileid, false);
+      std::vector<DirectedEdge> edges;
+      for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j) {
+        DirectedEdge& edge = tile_builder.directededge(j);
+        // update only superseded edges
+        if (edgeid.id() == j)
+          edge.set_constrained_flow_speed(10);
+        edges.emplace_back(std::move(edge));
+      }
+      tile_builder.UpdatePredictedSpeeds(edges);
+    }
+  };
+  // set constrained speed for all superseded edges;
+  // this speed will be used for them in costing model
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(ABC)));
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(CDE)));
+  // reset cache to see updated speeds
+  graphreader.Clear();
+
+  Options options;
+  create_costing_options(options, Costing::auto_);
+  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+
+  std::vector<vb::Location> locations;
+  // set origin location
+  locations.push_back({nodes["1"]});
+  // set destination location
+  locations.push_back({nodes["2"]});
+  auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
+
+  vt::BidirectionalAStar astar;
+
+  // hack hierarchy limits to allow to go through the shortcut
+  mode_costing[int(travel_mode)]->RelaxHierarchyLimits(0.f, 0.f);
+  const auto path =
+      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
+          .front();
+
+  // check that final path doesn't contain shortcuts
+  for (const auto& info : path) {
+    const auto* edge = graphreader.directededge(info.edgeid);
+    ASSERT_FALSE(edge->is_shortcut()) << "Final path shouldn't contain shortcuts";
+  }
+  // check that final path contains right number of edges
+  ASSERT_EQ(path.size(), 6) << "Final path has wrong number of edges";
+
+  // calculate edge duration based on length and speed
+  const auto get_edge_duration = [&graphreader, &mode_costing,
+                                  travel_mode](const vb::GraphId& edgeid,
+                                               const vb::DirectedEdge* edge) {
+    auto tile = graphreader.GetGraphTile(edgeid);
+    const float speed_meters_per_sec =
+        (1000.f / 3600.f) * tile->GetSpeed(edge, mode_costing[int(travel_mode)]->flow_mask());
+    return edge->length() / speed_meters_per_sec;
+  };
+
+  // Check that final path really was recosted. To do that we compare actual
+  // edges durations with durations in the final path.
+  const std::vector<std::string> superseded_nodes = {"A", "B", "C", "D", "E"};
+  for (size_t i = 0; (i + 1) < superseded_nodes.size(); ++i) {
+    const auto edge =
+        gurka::findEdgeByNodes(graphreader, nodes, superseded_nodes[i], superseded_nodes[i + 1]);
+    ASSERT_EQ(path[i + 1].edgeid, std::get<0>(edge)) << "Not expected edge in the path";
+    EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
+                get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
+  }
 }
 
 class AstarTestEnv : public ::testing::Environment {

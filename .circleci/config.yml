@@ -13,27 +13,30 @@ commands:
       - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
 
 jobs:
-  build-base:
+  build-docker-images:
     docker:
       - image: docker:18.06.3-ce-git
     steps:
       - setup_remote_docker
       - checkout
       - run:
-          name: Build Valhalla base Dockerfile
+          name: Build Valhalla Docker Images
           command: |
             docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+            if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
+              docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
+            fi
       - run:
-          name: Build Valhalla base Dockerfile x86
-          command: |
-            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
-      - run:
-          name: Push Valhalla base image
+          name: Push Valhalla Docker Images
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:build-x86-latest
+              docker push valhalla/valhalla:run-latest
+            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-${CIRCLE_TAG}
+              docker push valhalla/valhalla:run-${CIRCLE_TAG}
             fi
 
   build-release-binary-linux:
@@ -50,7 +53,9 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+              -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+              -DCPACK_GENERATOR=DEB \
+              -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -73,7 +78,9 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+                -DCPACK_GENERATOR=DEB \
+                -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
       - save_cache:
           key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -99,6 +106,7 @@ jobs:
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: make -C build -j3
       - run: make -C build utrecht_tiles
@@ -133,7 +141,7 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
       - run: make -C build -j2
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
@@ -147,31 +155,6 @@ jobs:
             - ~/.ccache
       - run: make -C build install
       - run: make -C build package
-
-  build-release-x86:
-    docker:
-      - image: valhalla/valhalla:build-x86-latest
-    steps:
-      - checkout
-      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-release-linux-x86_32-{{ .Branch }}
-            - ccache-release-linux-x86_32
-      - run: mkdir build
-      - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
-      - run: make -C build -j4
-      - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
-      - save_cache:
-          key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
   build-osx:
     executor: macos
@@ -241,10 +224,9 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-base
+      - build-docker-images
       - lint-build-debug
       - build-release
-      - build-release-x86
       - build-osx
       - build-release-binary-osx:
           filters:

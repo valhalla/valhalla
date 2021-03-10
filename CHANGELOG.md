@@ -1,7 +1,56 @@
-## Release Date: 2020-08-?? Valhalla 3.1.0
+## Release Date: 2021-??-?? Valhalla 3.1.1
+* **Removed**
+
+* **Bug Fix**
+   * FIXED: Fix compression_utils.cc::inflate(...) throw - make it catchable [#2839](https://github.com/valhalla/valhalla/pull/2839)
+   * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
+   * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
+   * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
+   * FIXED: Failing to write tiles because of racing directory creation [#2810](https://github.com/valhalla/valhalla/pull/2810)
+   * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
+   * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2817](https://github.com/valhalla/valhalla/pull/2817)
+   * FIXED: Mark the restriction start and end as via ways to fix IsBridgingEdge function in Bidirectional Astar [#2796](https://github.com/valhalla/valhalla/pull/2796)
+   * FIXED: Dont add predictive traffic to the tile if it's empty [#2826](https://github.com/valhalla/valhalla/pull/2826)
+   * FIXED: Fix logic bidirectional astar to avoid double u-turns and extra detours [#2802](https://github.com/valhalla/valhalla/pull/2802)
+   * FIXED: Re-enable transition cost for motorcycle profile [#2837](https://github.com/valhalla/valhalla/pull/2837)
+   * FIXED: Increase limits for timedep_* algorithms. Split track_factor into edge factor and transition penalty [#2845](https://github.com/valhalla/valhalla/pull/2845)
+   * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
+   * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
+   * FIXED: Honor access mode while matching OSMRestriction with the graph [#2849](https://github.com/valhalla/valhalla/pull/2849)
+   * FIXED: Ensure route summaries are unique among all returned route/legs [#2874](https://github.com/valhalla/valhalla/pull/2874)
+   * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
+   * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
+
+* **Enhancement**
+   * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
+   * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
+   * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
+   * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
+   * ADDED: nit: Links debug build with lld [#2813](https://github.com/valhalla/valhalla/pull/2813)
+   * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
+   * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
+   * ADDED: Added support for destination for conditional access restrictions [#2857](https://github.com/valhalla/valhalla/pull/2857)
+   * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [#2850](https://github.com/valhalla/valhalla/pull/2850)
+   * CHANGED: When creating the intial graph edges by setting at which nodes they start and end, first mark the indices of those nodes in another sequence and then sort them by edgeid so that we can do the setting of start and end node sequentially in the edges file. This is much more efficient on certain hardware configurations [#2851](https://github.com/valhalla/valhalla/pull/2851)
+   * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
+   * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
+   * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
+   * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
+   * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
+   * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
+   * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
+   * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
+   * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
+   * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
+
+## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
-   * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
+   * REMOVED: appveyor builds. [#2550](https://github.com/valhalla/valhalla/pull/2550)
+   * REMOVED: Removed x86 CI builds. [#2792](https://github.com/valhalla/valhalla/pull/2792)
 
 * **Bug Fix**
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
@@ -116,8 +165,14 @@
    * FIXED: Fix invalid continue/bear maneuvers [#2729](https://github.com/valhalla/valhalla/issues/2729)
    * FIXED: Fixes an issue that lead to double turns within a very short distance, when instead, it should be a u-turn. We now collapse double L turns or double R turns in short non-internal intersections to u-turns. [#2740](https://github.com/valhalla/valhalla/pull/2740)
    * FIXED: fixes an issue that lead to adding an extra maneuver. We now combine a current maneuver short length non-internal edges (left or right) with the next maneuver that is a kRampStraight. [#2741](https://github.com/valhalla/valhalla/pull/2741)
+   * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
+   * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
+   * FIXED: Added unit test for BuildAdminFromPBF() to test GEOS 3.9 update. [#2787](https://github.com/valhalla/valhalla/pull/2787)
+   * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
+   * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
 
 * **Enhancement**
+   * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -218,15 +273,29 @@
    * ADDED: Added signboards to guidance views.  [#2687](https://github.com/valhalla/valhalla/pull/2687)
    * ADDED: Regular speed on shortcut edges is calculated with turn durations taken into account. Truck, motorcycle and motorscooter profiles use OSRM-like turn duration. [#2662](https://github.com/valhalla/valhalla/pull/2662)
    * CHANGED: Remove astar algorithm and replace its use with timedep_forward as its redundant [#2706](https://github.com/valhalla/valhalla/pull/2706)
+   * ADDED: Recover and recost all shortcuts in final path for bidirectional astar algorithm [#2711](https://github.com/valhalla/valhalla/pull/2711)
    * ADDED: An option for shortcut recovery to be cached at start up to reduce the time it takes to do so on the fly [#2714](https://github.com/valhalla/valhalla/pull/2714)
    * ADDED: If width <= 1.9 then no access for auto, truck, bus, taxi, emergency and hov. [#2713](https://github.com/valhalla/valhalla/pull/2713)
+   * ADDED: Centroid/Converge/Rendezvous/Meet API which allows input locations to find a least cost convergence point from all locations [#2734](https://github.com/valhalla/valhalla/pull/2734)
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
    * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
    * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
-   * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759)
-   * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service=* tags (such as driveway, alley, parking aisle).
+   * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759) and [#2760](https://github.com/valhalla/valhalla/pull/2760)
+   * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service= tags (such as driveway, alley, parking aisle) [#2419](https://github.com/valhalla/valhalla/pull/2419)
+   * ADDED: Isochrones support isodistance lines as well [#2699](https://github.com/valhalla/valhalla/pull/2699)
+   * ADDED: Add support for ignoring live traffic closures for waypoints [#2685](https://github.com/valhalla/valhalla/pull/2685)
+   * ADDED: Add use_distance to auto cost to allow choosing between two primary cost components, time or distance [#2771](https://github.com/valhalla/valhalla/pull/2771)
+   * CHANGED: nit: Enables compiler warnings in part of loki module [#2767](https://github.com/valhalla/valhalla/pull/2767)
+   * CHANGED: Reducing the number of uturns by increasing the cost to for them to 9.5f. Note: Did not increase the cost for motorcycles or motorscooters. [#2770](https://github.com/valhalla/valhalla/pull/2770)
+   * ADDED: Add option to use thread-safe GraphTile's reference counter. [#2772](https://github.com/valhalla/valhalla/pull/2772)
+   * CHANGED: nit: Enables compiler warnings in part of thor module [#2768](https://github.com/valhalla/valhalla/pull/2768)
+   * ADDED: Add costing option `use_tracks` to avoid or favor tracks in route. [#2769](https://github.com/valhalla/valhalla/pull/2769)
+   * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
+   * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
+   * CHANGED: Collapse merge maneuvers [#2773](https://github.com/valhalla/valhalla/pull/2773)
+   * CHANGED: Add shortcuts to the tiles' bins so we can find them when doing spatial lookups. [#2744](https://github.com/valhalla/valhalla/pull/2744)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

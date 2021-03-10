@@ -6,6 +6,7 @@ import public "tripcommon.proto";
 message Contour {
   optional float time = 1;     // minutes
   optional string color = 2;   // hex color with out # - for example: "ff0000" for red
+  optional float distance = 3; // kilometers
 }
 
 enum ShapeMatch {
@@ -120,11 +121,16 @@ message CostingOptions {
   optional bool ignore_closures = 63;
   optional bool shortest = 64;
   optional float service_penalty = 65;
+  optional float use_tracks = 66;
+  optional float use_distance = 67;
+  optional float use_living_streets = 68;
+  optional float service_factor = 69;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
   optional string name = 91;
   repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from avoid_locations
+  optional bool filter_closures = 93 [default = true];
 }
 
 message Options {
@@ -151,6 +157,8 @@ message Options {
     height = 8;
     transit_available = 9;
     expansion = 10;
+    centroid = 11;
+    status = 12;
   }
 
   enum DateTimeType {

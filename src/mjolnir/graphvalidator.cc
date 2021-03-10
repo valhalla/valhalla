@@ -95,7 +95,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
 
     // Transit connections. Match opposing edge if same way Id
     if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection &&
-        wayid == end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
+        wayid == end_tile->edgeinfo(directededge).wayid()) {
       opp_index = i;
       continue;
     }
@@ -104,8 +104,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
     }
     if ((edge.use() == Use::kPlatformConnection && directededge->use() == Use::kPlatformConnection) ||
         (edge.use() == Use::kEgressConnection && directededge->use() == Use::kEgressConnection)) {
-      auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
-      auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
+      auto shape1 = tile->edgeinfo(&edge).shape();
+      auto shape2 = end_tile->edgeinfo(directededge).shape();
       if (shapes_match(shape1, shape2)) {
         opp_index = i;
         continue;
@@ -144,13 +144,13 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       } else {
         // Regular edges - match wayids and edge info offset (if in same tile)
         // or shape (if not in same tile)
-        wayid2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid();
+        wayid2 = end_tile->edgeinfo(directededge).wayid();
         if (wayid == wayid2) {
           if (sametile && edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
             match = true;
           } else {
-            auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
-            auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
+            auto shape1 = tile->edgeinfo(&edge).shape();
+            auto shape2 = end_tile->edgeinfo(directededge).shape();
             if (shapes_match(shape1, shape2)) {
               match = true;
             }
@@ -163,7 +163,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         // Check if multiple edges match - log any duplicates
         if (opp_index != absurd_index && startnode.level() != transit_level) {
           if (edge.is_shortcut()) {
-            std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
+            std::vector<std::string> names = tile->edgeinfo(&edge).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
             LOG_DEBUG("Duplicate shortcut for " + name +
                       " at LL = " + std::to_string(tile->get_node_ll(endnode).lat()) + "," +
@@ -224,8 +224,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         if (edge.is_shortcut() == directededge->is_shortcut()) {
           LOG_WARN((boost::format("    Length = %1% Endnode: %2% WayId = %3% EdgeInfoOffset = %4%") %
                     directededge->length() % directededge->endnode() %
-                    end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid() %
-                    directededge->edgeinfo_offset())
+                    end_tile->edgeinfo(directededge).wayid() % directededge->edgeinfo_offset())
                        .str());
           n++;
         }
@@ -385,14 +384,14 @@ void validate(
         // node. Set the deadend flag and internal flag (if the opposing
         // edge is internal then make sure this edge is as well)
         std::string end_node_iso;
-        uint64_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+        uint64_t wayid = tile->edgeinfo(&directededge).wayid();
         uint32_t opp_index =
             GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);
         directededge.set_opp_index(opp_index);
         if (directededge.use() == Use::kTransitConnection ||
             directededge.use() == Use::kEgressConnection ||
-            directededge.use() == Use::kPlatformConnection) {
+            directededge.use() == Use::kPlatformConnection || directededge.bss_connection()) {
           directededge.set_opp_local_idx(opp_index);
         }
 

@@ -83,7 +83,7 @@ bool inflate(const std::function<void(z_stream&)>& src_func,
       if (stream.avail_in == 0)
         src_func(stream);
       if (stream.avail_in == 0)
-        throw;
+        throw std::exception();
     } catch (...) {
       inflateEnd(&stream);
       return false;

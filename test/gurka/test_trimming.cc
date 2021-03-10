@@ -43,10 +43,10 @@ TEST(Trimming, routes) {
 
   // we start by getting the shape for the two edges we want a route on
   auto tile = reader.GetGraphTile(start_id);
-  auto start_shape = tile->edgeinfo(start_edge->edgeinfo_offset()).shape();
+  auto start_shape = tile->edgeinfo(start_edge).shape();
   if (!start_edge->forward())
     std::reverse(start_shape.begin(), start_shape.end());
-  auto end_shape = tile->edgeinfo(end_edge->edgeinfo_offset()).shape();
+  auto end_shape = tile->edgeinfo(end_edge).shape();
   if (!end_edge->forward())
     std::reverse(end_shape.begin(), end_shape.end());
   auto start_length = midgard::length<decltype(start_shape)>(start_shape);
@@ -82,8 +82,9 @@ TEST(Trimming, routes) {
   auto costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route
-  std::vector<thor::PathInfo> path{{costing->travel_mode(), {.001, .001}, start_id, 0, -1},
-                                   {costing->travel_mode(), {45, 45}, end_id, 0, -1}};
+  std::vector<thor::PathInfo>
+      path{{costing->travel_mode(), {.001, .001}, start_id, 0, baldr::kInvalidRestriction},
+           {costing->travel_mode(), {45, 45}, end_id, 0, baldr::kInvalidRestriction}};
   valhalla::Location origin = fake_location(start_id, start, offset);
   valhalla::Location dest = fake_location(end_id, end, 1);
 

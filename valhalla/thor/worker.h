@@ -21,6 +21,7 @@
 #include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/centroid.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedep.h>
@@ -61,6 +62,8 @@ public:
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
+  void centroid(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -127,6 +130,7 @@ protected:
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
+  Centroid centroid_gen;
 };
 
 } // namespace thor

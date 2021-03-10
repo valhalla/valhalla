@@ -89,6 +89,89 @@ public:
 };
 
 /**
+ * Class that manages flat tile cache without hash lookup
+ * It is NOT thread-safe!
+ */
+class FlatTileCache : public TileCache {
+public:
+  /**
+   * Constructor.
+   * @param max_size  maximum size of the cache
+   */
+  FlatTileCache(size_t max_size);
+
+  /**
+   * Reserves enough cache to hold (max_cache_size / tile_size) items.
+   * @param tile_size appeoximate size of one tile
+   */
+  void Reserve(size_t tile_size) override;
+
+  /**
+   * Checks if tile exists in the cache.
+   * @param graphid  the graphid of the tile
+   * @return true if tile exists in the cache
+   */
+  bool Contains(const GraphId& graphid) const override;
+
+  /**
+   * Puts a copy of a tile of into the cache.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  graph_tile_ptr Put(const GraphId& graphid, graph_tile_ptr tile, size_t size) override;
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  graph_tile_ptr Get(const GraphId& graphid) const override;
+
+  /**
+   * Lets you know if the cache is too large.
+   * @return true if the cache is over committed with respect to the limit
+   */
+  bool OverCommitted() const override;
+
+  /**
+   * Clears the cache.
+   */
+  void Clear() override;
+
+  /**
+   *  Does its best to reduce the cache size to remove overcommitted state.
+   *  Some implementations may simply clear the entire cache
+   */
+  void Trim() override;
+
+protected:
+  inline uint32_t get_offset(const GraphId& graphid) const {
+    return graphid.level() < 4 ? index_offsets_[graphid.level()] + graphid.tileid()
+                               : cache_indices_.size();
+  }
+  inline uint32_t get_index(const GraphId& graphid) const {
+    auto offset = get_offset(graphid);
+    return offset < cache_indices_.size() ? cache_indices_[offset] : -1;
+  }
+
+  // The actual cached GraphTile objects
+  std::vector<graph_tile_ptr> cache_;
+
+  // Indicies into the array of actual cached items
+  std::vector<uint32_t> cache_indices_;
+
+  // Offsets in the indices list for where a set of tile indices begin
+  std::array<uint32_t, 8> index_offsets_;
+
+  // The current cache size in bytes
+  size_t cache_size_;
+
+  // The max cache size in bytes
+  size_t max_cache_size_;
+};
+
+/**
  * Class that manages simple tile cache.
  * It is NOT thread-safe!
  */
@@ -147,7 +230,7 @@ public:
 
 protected:
   // The actual cached GraphTile objects
-  std::unordered_map<GraphId, graph_tile_ptr> cache_;
+  std::unordered_map<uint64_t, graph_tile_ptr> cache_;
 
   // The current cache size in bytes
   size_t cache_size_;
@@ -248,7 +331,7 @@ protected:
   void MoveToLruHead(const KeyValueIter& entry_iter) const;
 
   // The GraphId -> Iterator into the linked list which owns the cached objects
-  std::unordered_map<GraphId, KeyValueIter> cache_;
+  std::unordered_map<uint64_t, KeyValueIter> cache_;
 
   // Linked list of <GraphId, Tile> pairs.
   // The most recently used item is at the beginning and the least one - at the back.
@@ -741,7 +824,7 @@ public:
     if (edge == nullptr) {
       throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
     }
-    return tile->edgeinfo(edge->edgeinfo_offset());
+    return tile->edgeinfo(edge);
   }
 
   /**

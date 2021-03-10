@@ -19,7 +19,10 @@
       "isochrone",
       "trace_route",
       "trace_attributes",
-      "transit_available"
+      "transit_available",
+      "expansion",
+      "centroid",
+      "status"
     ],
     "logging": {
       "color": true,
@@ -162,7 +165,7 @@
       "max_contours": 4,
       "max_distance": 25000.0,
       "max_locations": 1,
-      "max_time": 120
+      "max_time_contour": 120, "max_distance_contour":200
     },
     "max_avoid_locations": 50,
     "max_radius": 200,

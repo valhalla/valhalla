@@ -436,7 +436,7 @@ public:
    * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
   void AddPredictedSpeed(const uint32_t idx,
-                         const std::vector<int16_t>& profile,
+                         const std::array<int16_t, kCoefficientCount>& coefficients,
                          const size_t predicted_count_hint = 256);
 
   /**

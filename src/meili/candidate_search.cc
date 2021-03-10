@@ -44,22 +44,22 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       continue;
     }
 
-    // Get the edge and its opposing edge. Transition edges are not
-    // allowed so we do not need to check node levels.
-    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, tile);
-    if (!opp_edgeid.Is_Valid()) {
-      continue;
-    }
-    const auto* opp_edge = tile->directededge(opp_edgeid);
-
-    // Make sure it's the last one since we need the tile of this edge
+    // Get the edge. Transition edges are not allowed so we do not need to check node levels.
     const auto* edge = reader_.directededge(edgeid, tile);
     if (!edge) {
       continue;
     }
 
+    // Get the opposing edge as well
+    auto opp_tile = tile;
+    const baldr::DirectedEdge* opp_edge = nullptr;
+    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, opp_edge, opp_tile);
+    if (!opp_edgeid.Is_Valid()) {
+      continue;
+    }
+
     // Get at the shape
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
+    auto shape = tile->edgeinfo(edge).lazy_shape();
     if (shape.empty()) {
       // Otherwise Project will fail
       continue;
@@ -75,7 +75,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     baldr::PathLocation correlated(baldr::Location(location, stop_type));
 
     // For avoiding recomputing projection later
-    const bool edge_included = !costing || costing->Filter(edge, tile) != 0.f;
+    const bool edge_included = !costing || costing->Allowed(edge, tile);
 
     if (edge_included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
@@ -91,7 +91,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
-    bool oppedge_included = !costing || costing->Filter(opp_edge, tile) != 0.f;
+    bool oppedge_included = !costing || costing->Allowed(opp_edge, opp_tile);
 
     // Correlate its opp edge
     if (oppedge_included) {
@@ -150,7 +150,7 @@ void IndexBin(const graph_tile_ptr& tile,
 
     // Get the edge shape and add to grid. Use lazy_shape to avoid allocations
     // NOTE: bins do not contain transition edges and transit connection edges
-    auto shape = bin_tile->edgeinfo(bin_tile->directededge(edge_id)->edgeinfo_offset()).lazy_shape();
+    auto shape = bin_tile->edgeinfo(bin_tile->directededge(edge_id)).lazy_shape();
     if (!shape.empty()) {
       PointLL v = shape.pop();
       while (!shape.empty()) {

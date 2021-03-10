@@ -39,7 +39,7 @@ TEST(Traffic, TileConstruction) {
   TrafficTile tile(std::move(memory));
 
   auto const volatile& speed = tile.trafficspeed(2);
-  EXPECT_TRUE(speed.valid());
+  EXPECT_TRUE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
   EXPECT_EQ(speed.get_overall_speed(), 98);
   EXPECT_EQ(speed.get_speed(0), 98);
@@ -50,7 +50,7 @@ TEST(Traffic, TileConstruction) {
   // Test with an invalid version
   testdata.header.traffic_tile_version = 78;
   auto const volatile& invalid_speed = tile.trafficspeed(2);
-  EXPECT_FALSE(invalid_speed.valid());
+  EXPECT_FALSE(invalid_speed.speed_valid());
 }
 
 TEST(Traffic, NullTileConstruction) {
@@ -58,32 +58,57 @@ TEST(Traffic, NullTileConstruction) {
   TrafficTile tile(nullptr); // Should not segfault
 
   auto volatile& speed = tile.trafficspeed(99);
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
+}
+
+TEST(Traffic, Closed) {
+  using namespace valhalla::baldr;
+  TrafficSpeed speed = {};
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed1 = 0;
+  EXPECT_FALSE(speed.closed());
+  EXPECT_FALSE(speed.closed(0));
+
+  speed.breakpoint1 = 255;
+  EXPECT_TRUE(speed.closed());
+  EXPECT_TRUE(speed.closed(0));
+
+  speed.overall_speed = 0;
+  EXPECT_TRUE(speed.closed());
+  EXPECT_TRUE(speed.closed(0));
 }
 
 TEST(Traffic, SpeedValid) {
   using namespace valhalla::baldr;
   TrafficSpeed speed = {};
-  EXPECT_FALSE(speed.valid());
+  speed.overall_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
+  EXPECT_FALSE(speed.speed_valid());
 
   speed.speed1 = 1;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.congestion1 = 1;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.congestion1 = 4;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.breakpoint1 = 255;
-  EXPECT_TRUE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed1 = 0;
+  speed.breakpoint1 = 255;
+  speed.overall_speed = 0;
+  EXPECT_TRUE(speed.speed_valid());
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound

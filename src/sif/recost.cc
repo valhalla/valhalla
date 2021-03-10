@@ -4,11 +4,6 @@
 namespace valhalla {
 namespace sif {
 
-// what this function calls to get the next edge
-using EdgeCallback = std::function<baldr::GraphId(void)>;
-// what this function calls to emit the next label
-using LabelCallback = std::function<void(const EdgeLabel& label)>;
-
 /**
  * Will take a sequence of edges and create the set of edge labels that would represent it
  * Allows for the caller to essentially re-compute the costing of a given path
@@ -22,6 +17,7 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param time_info         the time tracking information representing the local time before
  *                          traversing the first edge
  * @param invariant         static date_time, dont offset the time as the path lengthens
+ * @param ignore_access     ignore access restrictions for edges and nodes if it's true
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
@@ -30,7 +26,8 @@ void recost_forward(baldr::GraphReader& reader,
                     float source_pct,
                     float target_pct,
                     const baldr::TimeInfo& time_info,
-                    const bool invariant) {
+                    const bool invariant,
+                    const bool ignore_access) {
   // out of bounds edge scaling
   if (source_pct < 0.f || source_pct > 1.f || target_pct < 0.f || target_pct > 1.f) {
     throw std::logic_error("Source and target percentages must be between 0 and 1 inclusive");
@@ -52,7 +49,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fail if the first edge is filtered
-  if (costing.Filter(edge, tile) == 0.f) {
+  if (!ignore_access && costing.Allowed(edge, tile) == 0.f) {
     throw std::runtime_error("This path requires different edge access than this costing allows");
   }
 
@@ -72,15 +69,18 @@ void recost_forward(baldr::GraphReader& reader,
       throw std::runtime_error("Node cannot be found");
     }
 
-    // this node is not allowed
-    if (node && !costing.Allowed(node)) {
-      throw std::runtime_error("This path requires different node access than this costing allows");
-    }
-
     // grab the edge
     edge = reader.directededge(edge_id, tile);
     if (!edge) {
       throw std::runtime_error("Edge cannot be found");
+    }
+
+    // re-derive uturns, would have been nice to return this but we dont know the next edge yet
+    label.set_deadend(label.opp_local_idx() == edge->localedgeidx());
+
+    // this node is not allowed, unless we made a uturn at it
+    if (!ignore_access && node && !label.deadend() && !costing.Allowed(node)) {
+      throw std::runtime_error("This path requires different node access than this costing allows");
     }
 
     // Update the time information even if time is invariant to account for timezones
@@ -91,13 +91,15 @@ void recost_forward(baldr::GraphReader& reader,
     // TODO: if this edge begins a restriction, we need to start popping off edges into queue
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
-    int time_restrictions_TODO = -1;
+    uint8_t time_restrictions_TODO = -1;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
-    // this edge is not allowed
+    // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
+    // evaluate time restrictions
     if (predecessor != baldr::kInvalidLabel &&
-        !costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
-                         time_restrictions_TODO)) {
+        (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
+                          time_restrictions_TODO) &&
+         !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }
 
@@ -107,20 +109,26 @@ void recost_forward(baldr::GraphReader& reader,
       edge_pct -= source_pct;
       source_pct = -1;
     }
-    auto next_id = edge_cb();
+
+    const auto next_id = edge_cb();
     if (!next_id.Is_Valid()) {
       edge_pct -= 1.f - target_pct;
+      // just to keep compatibility with the logic that handled trivial path in bidiastar
+      edge_pct = std::max(0.f, edge_pct);
     }
 
     // the cost for traversing this intersection
     Cost transition_cost = node ? costing.TransitionCost(edge, node, label) : Cost{};
     // update the cost to the end of this edge
-    cost += transition_cost + costing.EdgeCost(edge, tile, offset_time.second_of_week) * edge_pct;
+    uint8_t flow_sources;
+    cost += transition_cost +
+            costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources) * edge_pct;
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO);
+                      transition_cost, time_restrictions_TODO, !ignore_access,
+                      static_cast<bool>(flow_sources & baldr::kDefaultFlowMask));
     // hand back the label
     label_cb(label);
     // next edge

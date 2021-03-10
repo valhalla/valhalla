@@ -43,6 +43,7 @@ public:
   void trace(Api& request);
   std::string height(Api& request);
   std::string transit_available(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -88,7 +89,8 @@ protected:
   size_t min_transit_walking_dis;
   size_t max_transit_walking_dis;
   size_t max_contours;
-  size_t max_time;
+  size_t max_contour_min;
+  size_t max_contour_km;
   size_t max_trace_shape;
   float max_gps_accuracy;
   float max_search_radius;

@@ -16,6 +16,32 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+namespace {
+
+std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restrictions,
+                                                               size_t restrictions_size) {
+  std::vector<ComplexRestrictionBuilder> builders;
+  size_t offset = 0;
+  while (offset < restrictions_size) {
+    const ComplexRestriction* cr = reinterpret_cast<ComplexRestriction*>(restrictions + offset);
+    ComplexRestrictionBuilder builder(*cr);
+    if (cr->via_count()) {
+      std::vector<GraphId> vias;
+      vias.reserve(cr->via_count());
+      const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(cr + 1);
+      for (uint32_t i = 0; i < cr->via_count(); i++, ++via) {
+        vias.push_back(*via);
+      }
+      builder.set_via_list(vias);
+    }
+    builders.push_back(std::move(builder));
+    offset += cr->SizeOf();
+  }
+  return builders;
+};
+
+} // namespace
+
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
 // levels. If the deserialize flag is set then all objects are serialized
@@ -187,6 +213,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
+
+  complex_restriction_forward_builder_ =
+      DeserializeRestrictions(complex_restriction_forward_, complex_restriction_forward_size_);
+  complex_restriction_reverse_builder_ =
+      DeserializeRestrictions(complex_restriction_reverse_, complex_restriction_reverse_size_);
 }
 
 // Output the tile to file. Stores as binary data.
@@ -910,13 +941,13 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
     // dont bin these
-    if (edge->is_shortcut() || edge->use() == Use::kTransitConnection ||
-        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
+    if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
+        edge->use() == Use::kEgressConnection) {
       continue;
     }
 
     // get the shape or bail if none
-    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    auto info = tile->edgeinfo(edge);
     const auto& shape = info.shape();
     if (shape.empty()) {
       continue;
@@ -1021,11 +1052,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 
 // Add a predicted speed profile for a directed edge.
 void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
-                                         const std::vector<int16_t>& profile,
+                                         const std::array<int16_t, kCoefficientCount>& coefficients,
                                          const size_t predicted_count_hint) {
-  if (profile.size() != kCoefficientCount)
-    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
-                             std::to_string(profile.size()));
   if (idx >= header_->directededgecount())
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
 
@@ -1040,7 +1068,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
   // Append the profile
-  speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
+  speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
+                                coefficients.end());
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with

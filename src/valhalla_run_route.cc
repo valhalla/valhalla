@@ -71,11 +71,13 @@ class PathStatistics {
   float trip_dist;
   float arc_dist;
   uint32_t manuevers;
+  double elapsed_cost_seconds;
+  double elapsed_cost_cost;
 
 public:
   PathStatistics(std::pair<float, float> p1, std::pair<float, float> p2)
       : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(), trip_dist(),
-        arc_dist(), manuevers() {
+        arc_dist(), manuevers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
   }
 
   void setSuccess(std::string s) {
@@ -99,11 +101,18 @@ public:
   void setManuevers(uint32_t n) {
     manuevers = n;
   }
+  void setElapsedCostSeconds(double secs) {
+    elapsed_cost_seconds = secs;
+  }
+  void setElapsedCostCost(double cost) {
+    elapsed_cost_cost = cost;
+  }
   void log() {
-    valhalla::midgard::logging::Log((boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d") %
+    valhalla::midgard::logging::Log((boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d,%f,%f") %
                                      origin.first % origin.second % destination.first %
                                      destination.second % success % passes % runtime % trip_time %
-                                     trip_dist % arc_dist % manuevers)
+                                     trip_dist % arc_dist % manuevers % elapsed_cost_seconds %
+                                     elapsed_cost_cost)
                                         .str(),
                                     " [STATISTICS] ");
   }
@@ -145,8 +154,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
       pathalgorithm->Clear();
-      float relax_factor = (using_astar) ? 16.0f : 8.0f;
-      float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
+      const float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
       cost->set_allow_destination_only(true);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
@@ -190,11 +198,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
-    std::vector<Measurement> trace;
-    trace.reserve(shape.size());
-    std::transform(shape.begin(), shape.end(), std::back_inserter(trace), [](const PointLL& p) {
-      return Measurement{p, 0, 0};
-    });
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
@@ -224,8 +227,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
-    std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
+    std::vector<std::vector<PathInfo>> paths;
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, options, paths);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -508,6 +511,8 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
   data.setManuevers(trip_directions.maneuver_size());
+  data.setElapsedCostSeconds(etl.node().rbegin()->cost().elapsed_cost().seconds());
+  data.setElapsedCostCost(etl.node().rbegin()->cost().elapsed_cost().cost());
 
   return trip_directions;
 }

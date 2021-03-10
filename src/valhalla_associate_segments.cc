@@ -109,7 +109,7 @@ uint16_t bearing(const std::vector<vm::PointLL>& shape) {
 
 uint16_t bearing(const vb::GraphTile* tile, vb::GraphId edge_id, float dist) {
   const auto* edge = tile->directededge(edge_id);
-  std::vector<vm::PointLL> shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+  std::vector<vm::PointLL> shape = tile->edgeinfo(edge).shape();
   if (!edge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
