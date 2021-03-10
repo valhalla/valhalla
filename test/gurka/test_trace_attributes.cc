@@ -27,7 +27,8 @@ TEST(Standalone, SacScaleAttributes) {
 
   std::string trace_json;
   auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5"},
-                              "auto", {}, {}, &trace_json, "via");
+                              "pedestrian", {{"/costing_options/pedestrian/max_hiking_difficulty", "5"}},
+                               {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
