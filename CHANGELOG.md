@@ -17,16 +17,18 @@
    * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
    * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
    * FIXED: Honor access mode while matching OSMRestriction with the graph [#2849](https://github.com/valhalla/valhalla/pull/2849)
+   * FIXED: Ensure route summaries are unique among all returned route/legs [#2874](https://github.com/valhalla/valhalla/pull/2874)
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
-    
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
    * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
    * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
+   * ADDED: nit: Links debug build with lld [#2813](https://github.com/valhalla/valhalla/pull/2813)
    * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
    * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
    * ADDED: Added support for destination for conditional access restrictions [#2857](https://github.com/valhalla/valhalla/pull/2857)
@@ -38,6 +40,11 @@
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
    * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
+   * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
+   * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
+   * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
+   * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
+   * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

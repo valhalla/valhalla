@@ -792,7 +792,7 @@ std::string GraphReader::encoded_edge_shape(const valhalla::baldr::GraphId& edge
   }
 
   const baldr::DirectedEdge* directedEdge = t_debug->directededge(edgeid);
-  auto shape = t_debug->edgeinfo(directedEdge->edgeinfo_offset()).shape();
+  auto shape = t_debug->edgeinfo(directedEdge).shape();
   if (!directedEdge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
@@ -886,7 +886,7 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
         // Look at the shape of each edge leaving the node
         const auto* diredge = tile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).lazy_shape();
+          auto shape = tile->edgeinfo(diredge).lazy_shape();
           while (!shape.empty()) {
             min_bb.Expand(shape.pop());
           }

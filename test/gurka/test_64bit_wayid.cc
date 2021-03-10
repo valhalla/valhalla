@@ -9,7 +9,7 @@ void find_ids(baldr::GraphReader& reader, std::multiset<uint64_t> osm_way_ids) {
     auto tile = reader.GetGraphTile(tile_id);
     for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
       // we should find every way id in the tile set
-      auto info = tile->edgeinfo(tile->directededge(edge)->edgeinfo_offset());
+      auto info = tile->edgeinfo(tile->directededge(edge));
       auto id = info.wayid();
       auto found = osm_way_ids.find(id);
       if (found == osm_way_ids.cend()) {

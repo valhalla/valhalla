@@ -28,7 +28,7 @@ TEST(Actor, Basic) {
           {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
   actor.cleanup();
   auto route = test::json_to_pt(route_json);
-  route_json.find("Tulpehocken");
+  ASSERT_NE(route_json.find("Tulpehocken"), std::string::npos);
 
   actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
       {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
@@ -37,7 +37,7 @@ TEST(Actor, Basic) {
       {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
   actor.cleanup();
   auto attributes = test::json_to_pt(attributes_json);
-  attributes_json.find("Tulpehocken");
+  ASSERT_NE(attributes_json.find("Tulpehocken"), std::string::npos);
 
   actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
       {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
@@ -47,7 +47,10 @@ TEST(Actor, Basic) {
       {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
   actor.cleanup();
   auto transit = test::json_to_pt(transit_json);
-  transit_json.find(std::to_string(false));
+  ASSERT_NE(transit_json.find(std::to_string(false)), std::string::npos);
+
+  auto status_json = actor.status("");
+  ASSERT_EQ(status_json, "{}");
 
   // TODO: test the rest of them
 }
