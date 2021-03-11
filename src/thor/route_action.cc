@@ -88,32 +88,22 @@ inline bool is_break_point(const valhalla::Location& l) {
   return l.type() == valhalla::Location::kBreak || l.type() == valhalla::Location::kBreakThrough;
 }
 
-inline bool is_high_reachable(const valhalla::Location& loc,
-                              const valhalla::Location_PathEdge& edge) {
+inline bool is_highly_reachable(const valhalla::Location& loc,
+                                const valhalla::Location_PathEdge& edge) {
   return edge.inbound_reach() >= loc.minimum_reachability() &&
          edge.outbound_reach() >= loc.minimum_reachability();
 }
 
-inline void remove_edges_with_low_reachability(valhalla::Location& loc) {
-  auto new_end = std::remove_if(loc.mutable_path_edges()->begin(), loc.mutable_path_edges()->end(),
-                                [&loc](const auto& pe) { return !is_high_reachable(loc, pe); });
+template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
+  auto new_end =
+      std::remove_if(loc.mutable_path_edges()->begin(), loc.mutable_path_edges()->end(), pred);
   int start_idx = std::distance(loc.mutable_path_edges()->begin(), new_end);
   loc.mutable_path_edges()->DeleteSubrange(start_idx, loc.path_edges_size() - start_idx);
 
   new_end = std::remove_if(loc.mutable_filtered_edges()->begin(), loc.mutable_filtered_edges()->end(),
-                           [&loc](const auto& pe) { return !is_high_reachable(loc, pe); });
+                           pred);
   start_idx = std::distance(loc.mutable_filtered_edges()->begin(), new_end);
   loc.mutable_filtered_edges()->DeleteSubrange(start_idx, loc.filtered_edges_size() - start_idx);
-}
-
-inline void remove_all_edges_except_one(valhalla::Location& loc, const GraphId& edgeid) {
-  while (loc.path_edges_size() > 1) {
-    if (loc.path_edges().rbegin()->graph_id() == edgeid) {
-      loc.mutable_path_edges()->SwapElements(0, loc.path_edges_size() - 1);
-    }
-    loc.mutable_path_edges()->RemoveLast();
-  }
-  loc.mutable_filtered_edges()->Clear();
 }
 
 /**
@@ -432,18 +422,18 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
-  auto route_two_points = [&, this](auto& origin, auto& destination) -> bool {
+  auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
-    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
     if (is_through_point(*destination) && first_edge.Is_Valid()) {
-      remove_all_edges_except_one(*destination, first_edge);
+      remove_path_edges(*destination,
+                        [&first_edge](const auto& edge) { return edge.graph_id() != first_edge; });
     }
 
     // Get best path and keep it
@@ -524,23 +514,26 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto origin = ++correlated.rbegin();
   while (origin != correlated.rend()) {
     auto destination = std::prev(origin);
-    if (!route_two_points(origin, destination)) {
+    if (!route_two_locations(origin, destination)) {
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
-      if (allow_retry && is_through_point(*destination) &&
-          !is_high_reachable(*destination, destination->path_edges(0))) {
+      if (allow_retry && destination != correlated.rbegin() && is_through_point(*destination) &&
+          destination->path_edges_size() > 0 &&
+          !is_highly_reachable(*destination, destination->path_edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
         for (auto loc = std::next(correlated.begin()); loc != std::prev(correlated.end()); ++loc) {
-          remove_edges_with_low_reachability(*loc);
+          remove_path_edges(*loc,
+                            [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
           // it doesn't make sense to continue if there are no more path edges
           if (loc->path_edges_size() == 0)
             // no route found
             throw valhalla_exception_t{442};
         }
-        // reset state and try to route again
+        // resets the entire state of all the legs of the route and starts completely
+        // over from the beginning doing all the legs over
         route = nullptr;
         first_edge = {};
         vias.clear();
@@ -579,11 +572,11 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
-    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
     if (is_through_point(*origin) && last_edge.Is_Valid()) {
-      remove_all_edges_except_one(*origin, last_edge);
+      remove_path_edges(*origin,
+                        [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
 
     // Get best path and keep it
@@ -664,19 +657,21 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
-      if (allow_retry && is_through_point(*origin) &&
-          !is_high_reachable(*origin, origin->path_edges(0))) {
+      if (allow_retry && origin != correlated.begin() && is_through_point(*origin) &&
+          origin->path_edges_size() > 0 && !is_highly_reachable(*origin, origin->path_edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
         for (auto loc = std::next(correlated.begin()); loc != std::prev(correlated.end()); ++loc) {
-          remove_edges_with_low_reachability(*loc);
+          remove_path_edges(*loc,
+                            [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
           // it doesn't make sense to continue if there are no more path edges
           if (loc->path_edges_size() == 0)
             // no route found
             throw valhalla_exception_t{442};
         }
-        // reset state and try to route again
+        // resets the entire state of all the legs of the route and starts completely
+        // over from the beginning doing all the legs over
         route = nullptr;
         last_edge = {};
         vias.clear();

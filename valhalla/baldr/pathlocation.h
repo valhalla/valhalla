@@ -78,13 +78,6 @@ public:
    */
   bool shares_edges(const PathLocation& other) const;
 
-  /**
-   * Check if path edge has high reachability for this location.
-   * @param edge PathEdge that should be checked
-   * @return     true if the edge is high reachable
-   */
-  bool is_high_reachable(const PathEdge& edge) const;
-
   static void toPBF(const PathLocation& pl, valhalla::Location* l, baldr::GraphReader& reader) {
     l->mutable_ll()->set_lng(pl.latlng_.first);
     l->mutable_ll()->set_lat(pl.latlng_.second);

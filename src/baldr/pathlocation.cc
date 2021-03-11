@@ -61,9 +61,5 @@ bool PathLocation::shares_edges(const PathLocation& other) const {
   return true;
 }
 
-bool PathLocation::is_high_reachable(const PathEdge& edge) const {
-  return edge.inbound_reach >= min_inbound_reach_ && edge.outbound_reach >= min_outbound_reach_;
-}
-
 } // namespace baldr
 } // namespace valhalla
