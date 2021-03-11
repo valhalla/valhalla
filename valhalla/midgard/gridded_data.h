@@ -389,10 +389,6 @@ public:
         if (gen_factor > 0.f) {
           Polyline2<PointLL>::Generalize(line, gen_factor, {});
         }
-        // if this ends up as an inner we'll undo this later
-        //        if (cache[&line] > 0) {
-        //          line.reverse();
-        //        }
         // sampling the bottom left corner means everything is skewed, so unskew it
         for (auto& coord : line) {
           coord.first += h;
