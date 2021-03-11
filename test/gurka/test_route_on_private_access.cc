@@ -34,20 +34,17 @@ TEST(Standalone, RouteOnPrivateAccess) {
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoid_pencil_point_uturns",
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_route_on_private_access",
                                build_config);
 
   for (auto& c : costing) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, c);
-    // gurka::assert::osrm::expect_steps(result, {"AB", "BE"});
     gurka::assert::raw::expect_path(result, {"AB", "BE"});
 
     result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, c);
-    // gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CF"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
 
     result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, c);
-    // gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CD", "DG"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG"});
   }
 }
