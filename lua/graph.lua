@@ -1266,11 +1266,6 @@ function filter_tags_generic(kv)
      return 1
    end
 
-   --toss where access=private and highway=service and service != driveway
-   if (kv["access"] == "private" and kv["highway"] == "service" and (kv["service"] == nil or kv["service"] ~= "driveway")) then
-     return 1
-   end
-
    delete_tags = { 'FIXME', 'note', 'source' }
 
    for i,k in ipairs(delete_tags) do
