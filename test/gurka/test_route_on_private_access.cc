@@ -14,7 +14,7 @@ const std::vector<std::string>& costing = {"auto",          "hov",        "taxi"
                                            "bus",           "truck",      "bicycle",
                                            "motor_scooter", "motorcycle", "pedestrian"};
 
-TEST(Standalone, AvoidPencilPointUturns) {
+TEST(Standalone, RouteOnPrivateAccess) {
   constexpr double gridsize_metres = 10;
 
   const std::string ascii_map = R"(    
