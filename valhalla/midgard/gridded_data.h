@@ -123,13 +123,13 @@ public:
     // Lets take case_index=3: case[1][0][1] and case[1][2][1]. They correspond to the (0, -1, 0) and
     // (0, 1, 0) sh[] values respectively. Though both cases correspond to the case_value=3 but they
     // have different m1--m3 segment orientation.
-    //
-    //          sh[m2]=-1         |               sh[m2]=1
-    //           /\              |                   /\
-    //          /  \             |                  /  \
-    //         /    \            |                 /    \
-    // sh[m1]=0 ----> sh[m3]=0   |         sh[m1]=0 <---- sh[m3]=0
-    //
+    /*
+     *          sh[m2]=-1        |          sh[m2]=1
+     *           /\              |              /\
+     *          /  \             |             /  \
+     *         /    \            |            /    \
+     * sh[m1]=0 ----> sh[m3]=0   |    sh[m1]=0 <---- sh[m3]=0
+     */
     // This is needed to keep contours oriented correctly, according to the
     // right-hand rule:
     // "A linear ring MUST follow the right-hand rule with respect to the area it
