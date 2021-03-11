@@ -17,6 +17,7 @@
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
+#include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 
@@ -83,13 +84,24 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
-  // See if we have avoids and take care of them
-  if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
-    throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+  if (options.avoid_polygons_size()) {
+    const auto edges =
+        edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
+    auto* co = options.mutable_costing_options(options.costing());
+    for (const auto& edge_id : edges) {
+      auto* avoid = co->add_avoid_edges();
+      avoid->set_id(edge_id);
+      // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
+      avoid->set_percent_along(0);
+    }
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (options.avoid_locations_size()) {
+    // See if we have avoids and take care of them
+    if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
+      throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    }
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, costing);
@@ -171,7 +183,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "skadi") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi") {
       continue;
     }
     if (kv.first != "trace") {
@@ -211,6 +224,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+  max_avoid_polygons_length = config.get<float>("service_limits.max_avoid_polygons_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

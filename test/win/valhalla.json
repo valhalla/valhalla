@@ -165,9 +165,11 @@
       "max_contours": 4,
       "max_distance": 25000.0,
       "max_locations": 1,
-      "max_time_contour": 120, "max_distance_contour":200
+      "max_time_contour": 120,
+      "max_distance_contour":200
     },
     "max_avoid_locations": 50,
+    "max_avoid_polygons_length":10000,
     "max_radius": 200,
     "max_reachability": 100,
     "max_alternates": 2,

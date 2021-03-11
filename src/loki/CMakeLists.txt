@@ -12,7 +12,8 @@ set(sources
   status_action.cc
   trace_route_action.cc
   transit_available_action.cc
-  node_search.cc)
+  node_search.cc
+  polygon_search.cc)
 
 if (UNIX AND NOT APPLE)
   # Enables stricter compiler checks on a file-by-file basis
@@ -22,6 +23,7 @@ if (UNIX AND NOT APPLE)
     worker.cc
     locate_action.cc
     height_action.cc
+    polygon_search.cc
   PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif ()
 
