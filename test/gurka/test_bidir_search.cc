@@ -21,7 +21,8 @@ TEST(StandAlone, exhaust_reverse_search) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   const std::string tile_dir = "test/data/bidir_search";
   auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark AB, BC & CD not_thru in both directions
   std::vector<GraphId> not_thru_edgeids;
@@ -33,7 +34,8 @@ TEST(StandAlone, exhaust_reverse_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "C")));
 
   test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end()) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+        not_thru_edgeids.end()) {
       edge.set_not_thru(true);
     }
   });
@@ -55,7 +57,8 @@ TEST(StandAlone, exhaust_forward_search) {
                             {"EF", {{"highway", "secondary"}, {"maxspeed", "10"}}}};
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark CD, DE & EF not_thru in both directions
   std::vector<GraphId> not_thru_edgeids;
@@ -66,9 +69,9 @@ TEST(StandAlone, exhaust_forward_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "F")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "F", "E")));
 
-
   test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end()) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+        not_thru_edgeids.end()) {
       edge.set_not_thru(true);
     }
   });
@@ -90,7 +93,8 @@ TEST(StandAlone, failed_search) {
                             {"EF", {{"highway", "motorway"}}}};
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark CD, DE & EF not_thru in both directions
   std::vector<GraphId> not_thru_edgeids;
@@ -102,19 +106,20 @@ TEST(StandAlone, failed_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "D")));
 
   test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end()) {
+    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+        not_thru_edgeids.end()) {
       edge.set_not_thru(true);
     }
   });
 
   EXPECT_THROW(
-    {
-      try {
-        auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
-      } catch (const std::exception& e) {
-        EXPECT_STREQ("No path could be found for input", e.what());
-        throw;
-      }
-    },
-    std::exception);
+      {
+        try {
+          auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
+        } catch (const std::exception& e) {
+          EXPECT_STREQ("No path could be found for input", e.what());
+          throw;
+        }
+      },
+      std::exception);
 }

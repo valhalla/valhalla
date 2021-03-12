@@ -667,9 +667,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
           // mark the forward direction exhausted so we dont expand from here
           // anymore
           forward_exhausted = true;
-          LOG_WARN("Forward search exhausted: n = " +
-                   std::to_string(edgelabels_forward_.size()) + "," +
-                   std::to_string(edgelabels_reverse_.size()));
+          LOG_WARN("Forward search exhausted: n = " + std::to_string(edgelabels_forward_.size()) +
+                   "," + std::to_string(edgelabels_reverse_.size()));
         } else {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
@@ -702,9 +701,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
           // mark the reverse direction exhausted so we dont expand from here
           // anymore
           reverse_exhausted = true;
-          LOG_WARN("Reverse search exhausted: n = " +
-                   std::to_string(edgelabels_reverse_.size()) + "," +
-                   std::to_string(edgelabels_forward_.size()));
+          LOG_WARN("Reverse search exhausted: n = " + std::to_string(edgelabels_reverse_.size()) +
+                   "," + std::to_string(edgelabels_forward_.size()));
         } else {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
@@ -713,18 +711,17 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
     // If both directions have exhausted, we've failed to find a route. Abort
     if (forward_exhausted && reverse_exhausted) {
-        LOG_ERROR("Bi-directional route failure - search exhausted: n = " +
-                  std::to_string(edgelabels_forward_.size()) + "," +
-                  std::to_string(edgelabels_reverse_.size()));
-        return {};
+      LOG_ERROR("Bi-directional route failure - search exhausted: n = " +
+                std::to_string(edgelabels_forward_.size()) + "," +
+                std::to_string(edgelabels_reverse_.size()));
+      return {};
     }
 
     // Expand from the search direction with lower sort cost
     // Note: If one direction is exhausted, we force search in the remaining
     // direction
     if (!forward_exhausted &&
-        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() ||
-         reverse_exhausted)) {
+        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() || reverse_exhausted)) {
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
