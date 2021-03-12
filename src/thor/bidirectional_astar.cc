@@ -626,6 +626,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   BDEdgeLabel fwd_pred, rev_pred;
   bool expand_forward = true;
   bool expand_reverse = true;
+  bool forward_exhausted = false;
+  bool reverse_exhausted = false;
   while (true) {
     // Allow this process to be aborted
     if (interrupt && (++n % kInterruptIterationsInterval) == 0) {
@@ -662,13 +664,15 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
-                    std::to_string(edgelabels_forward_.size()) + "," +
-                    std::to_string(edgelabels_reverse_.size()));
-          return {};
+          // mark the forward direction exhausted so we dont expand from here
+          // anymore
+          forward_exhausted = true;
+          LOG_WARN("Forward search exhausted: n = " +
+                   std::to_string(edgelabels_forward_.size()) + "," +
+                   std::to_string(edgelabels_reverse_.size()));
+        } else {
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
-        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
     if (expand_reverse) {
@@ -695,20 +699,32 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
-                    std::to_string(edgelabels_reverse_.size()) + "," +
-                    std::to_string(edgelabels_forward_.size()));
-          return {};
+          // mark the reverse direction exhausted so we dont expand from here
+          // anymore
+          reverse_exhausted = true;
+          LOG_WARN("Reverse search exhausted: n = " +
+                   std::to_string(edgelabels_reverse_.size()) + "," +
+                   std::to_string(edgelabels_forward_.size()));
+        } else {
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
-        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
 
-    // Expand from the search direction with lower sort cost.
+    // If both directions have exhausted, we've failed to find a route. Abort
+    if (forward_exhausted && reverse_exhausted) {
+        LOG_ERROR("Bi-directional route failure - search exhausted: n = " +
+                  std::to_string(edgelabels_forward_.size()) + "," +
+                  std::to_string(edgelabels_reverse_.size()));
+        return {};
+    }
 
-    if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
-
+    // Expand from the search direction with lower sort cost
+    // Note: If one direction is exhausted, we force search in the remaining
+    // direction
+    if (!forward_exhausted &&
+        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() ||
+         reverse_exhausted)) {
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
