@@ -175,7 +175,7 @@ set(valhalla_src
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")

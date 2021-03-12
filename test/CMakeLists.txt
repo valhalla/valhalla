@@ -48,7 +48,7 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
