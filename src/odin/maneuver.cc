@@ -376,6 +376,14 @@ void Maneuver::set_roundabout_exit_begin_heading(uint32_t beginHeading) {
   roundabout_exit_begin_heading_ = beginHeading;
 }
 
+uint32_t Maneuver::roundabout_exit_turn_degree() const {
+  return roundabout_exit_turn_degree_;
+}
+
+void Maneuver::set_roundabout_exit_turn_degree(uint32_t turnDegree) {
+  roundabout_exit_turn_degree_ = turnDegree;
+}
+
 uint32_t Maneuver::begin_node_index() const {
   return begin_node_index_;
 }
