@@ -1,3 +1,5 @@
+
+#include "meili/geometry_helpers.h"
 #include "gurka.h"
 #include <gtest/gtest.h>
 
@@ -26,22 +28,20 @@ TEST(geometry, projection) {
   // These are the exact gps points that exposed the issue. Both project to the
   // very end of the above shape. After projection, both should have a "percentage_along"
   // of exactly 0.0.
-  constexpr PointLL gps_points[] = {{13.2626372, 38.159659599999998},
-                                    {13.262609100000001, 38.159699600000003}};
+  const PointLL gps_points[] = {{13.2626372, 38.159659599999998},
+                                {13.262609100000001, 38.159699600000003}};
 
   for (const auto gps_point : gps_points) {
     float sq_distance = 0.f;
     size_t segment;
     float percentage_along = -1.f;
-
-    EXPECT_EQ(true, false);
+    PointLL projection_point;
 
     // meili::helpers::Project() consumes the incoming shape so we have to
     // create it with each iteration.
     midgard::Shape7Decoder<midgard::PointLL> shape(enc_shape,
                                                    sizeof(enc_shape) / sizeof(*enc_shape));
-    std::tie(proj_point_a, sq_distance_a, segment_a, offset_a) =
-        ::valhalla::meili::helpers::Project(pa, shape);
+    std::tie(projection_point, sq_distance, segment, percentage_along) = valhalla::meili::helpers::Project(gps_point, shape);
 
     // Here's what we're testing: that both points return percentage_along
     // of exactly zero. Previously the first point was returning a percentage along
@@ -51,6 +51,6 @@ TEST(geometry, projection) {
 
     // might as well assert the other reasonable aspect, that both points project to
     // the same segment.
-    ASSERT_EQ(segment, 1);;
+    ASSERT_EQ(segment, 0);;
   }
 }
