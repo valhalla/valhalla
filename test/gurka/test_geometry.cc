@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 TEST(geometry, projection) {
   // This is the real world shape that was previously problematic.
