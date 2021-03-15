@@ -371,7 +371,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_measured_speed());
+                                        opp_pred_edge, pred.has_measured_speed(), pred.internal_turn());
     uint8_t flow_sources;
     Cost newcost =
         pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources);
@@ -392,14 +392,13 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     }
 
     InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+    baldr::Turn::Type turntype = opp_pred_edge->turntype(directededge->localedgeidx());
 
     if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+      if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
           (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
         turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+    } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
                (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
       turn = InternalTurn::kRightTurn;
 
