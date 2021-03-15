@@ -719,3 +719,105 @@ TEST(Standalone, HonorAccessPropertyWhenConstructingRestriction) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
 }
+
+TEST(MultipointRoute, WithIsolatedPoints) {
+  /*
+   * Locations 2 and 3 lie on isolated island, but location 1 belongs to a big connectivity component.
+   * This test checks that we snap points on isolated island to the main road.
+   */
+  const std::string ascii_map = R"(
+                                   C------------------D
+                                   |   X---2---3--Y   |
+  A-1------------------------------B                  |
+                                   |                  |
+                                   |                  |
+                                   F------------------E
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},   {"BC", {{"highway", "primary"}}},
+      {"CD", {{"highway", "primary"}}},   {"DE", {{"highway", "primary"}}},
+      {"EF", {{"highway", "primary"}}},   {"FB", {{"highway", "primary"}}},
+
+      {"XY", {{"highway", "secondary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  std::unordered_map<std::string, std::string> config_opts = {
+      {"mjolnir.concurrency", "1"},
+      {"loki.service_defaults.minimum_reachability", "5"},
+  };
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_isolated_points",
+                               config_opts);
+
+  // Locations 2 and 3 should be snapped to the main road CD.
+  // no datetime, check bidirectional astar
+  auto result = gurka::do_action(valhalla::Options::route, map, {"3", "2", "1"}, "auto", {}, {},
+                                 nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"CD", "CD", "BC", "AB"});
+
+  // with depart_at, check timedep forward astar
+  result = gurka::do_action(valhalla::Options::route, map, {"3", "2", "1"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2021-03-12T19:00"}}, {},
+                            nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"CD", "CD", "BC", "AB"});
+
+  // with arrive_by, check timedep reverse astar
+  result = gurka::do_action(valhalla::Options::route, map, {"1", "2", "3"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2021-03-12T19:00"}}, {},
+                            nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "CD"});
+}
+
+TEST(MultipointRoute, WithPointsOnDeadends) {
+  const std::string ascii_map = R"(
+    A-1--2-B-3--4-C
+          / \
+         D   E
+  )";
+
+  // BD and BE are oneways that lead away, and toward the main road A-B-C
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"BD", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BE", {{"highway", "secondary"}, {"oneway", "yes"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  std::unordered_map<std::string, std::string> config_opts = {
+      {"mjolnir.concurrency", "1"},
+      {"loki.service_defaults.minimum_reachability", "3"},
+  };
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_points_on_deadends",
+                               config_opts);
+
+  {
+    // Verify simple waypoint routing works
+    auto result1 = gurka::do_action(valhalla::Options::route, map, {"1", "2", "4"}, "auto", {}, {},
+                                    nullptr, "break_through");
+    gurka::assert::raw::expect_path(result1, {"AB", "AB", "BC"});
+
+    auto result2 = gurka::do_action(valhalla::Options::route, map, {"1", "3", "4"}, "auto", {}, {},
+                                    nullptr, "break_through");
+    gurka::assert::raw::expect_path(result2, {"AB", "BC", "BC"});
+  }
+  {
+    // BD is a oneway leading away from ABC with no escape
+    // input coordinate at D should get snapped to the ABC way
+    // Should give the same result as 1->2->4
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "D", "4"}, "auto", {}, {},
+                                   nullptr, "break_through");
+    gurka::assert::raw::expect_path(result, {"AB", "AB", "BC"});
+  }
+  {
+    // BE is a oneway leading towards ABC with no way in
+    // input coordinate at E should get snapped to the ABC way
+    // Should give the same result as 1->3->4
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "E", "4"}, "auto", {}, {},
+                                   nullptr, "break_through");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
+  }
+}
