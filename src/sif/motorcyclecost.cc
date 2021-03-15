@@ -58,7 +58,7 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
-constexpr float kTCUnfavorableReverse = 15.f;
+constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -510,12 +510,12 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
       // Did we make a pencil point uturn?
       if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorableReverse;
+        seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a pencil point uturn?
       if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorableReverse;
+        seconds *= kTCUnfavorablePencilPointUturn;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
@@ -588,12 +588,12 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
       // Did we make a pencil point uturn?
       if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorableReverse;
+        seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a pencil point uturn?
       if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorableReverse;
+        seconds *= kTCUnfavorablePencilPointUturn;
     }
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
