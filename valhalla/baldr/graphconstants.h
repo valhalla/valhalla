@@ -91,7 +91,7 @@ constexpr uint32_t kMaxDensity = 15;
 constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
 
 // The max assumed speed we know from static data
-constexpr uint8_t kMaxAssumedSpeed = 150; // ~85 MPH
+constexpr uint8_t kMaxAssumedSpeed = 140; // ~85 MPH
 // Actual speed from traffic
 constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
 // Maximum speed. This impacts the effectiveness of A* for driving routes
