@@ -526,7 +526,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   const Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_measured_speed());
+                                      pred.has_measured_speed(), pred.internal_turn());
   uint8_t flow_sources;
   const Cost newcost = pred.cost() +
                        costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources) +
@@ -553,13 +553,12 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
       newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
   InternalTurn turn = InternalTurn::kNoTurn;
-  uint32_t opp_local_idx = pred.opp_local_idx();
-  baldr::Turn::Type turntype = meta.edge->turntype(opp_local_idx);
+  baldr::Turn::Type turntype = opp_pred_edge->turntype(meta.edge->localedgeidx());
   if (nodeinfo->drive_on_right()) {
-    if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+    if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
         (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
       turn = InternalTurn::kLeftTurn;
-  } else if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+  } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
              (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
     turn = InternalTurn::kRightTurn;
 
@@ -724,7 +723,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand from the search direction with lower sort cost.
+
     if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
+
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
@@ -781,6 +782,11 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
   auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (pred.internal_turn() !=  InternalTurn::kNoTurn){
+    return false;
+  }
 
   // Disallow connections that are part of a complex restriction
   if (pred.on_complex_rest()) {
@@ -842,6 +848,11 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (rev_pred.internal_turn() !=  InternalTurn::kNoTurn) {
+    return false;
+  }
 
   // Disallow connections that are part of a complex restriction
   if (rev_pred.on_complex_rest()) {

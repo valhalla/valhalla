@@ -215,7 +215,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_measured_speed());
+                                      pred.has_measured_speed(), pred.internal_turn());
   uint8_t flow_sources;
   auto edge_cost = costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
   Cost newcost = pred.cost() + edge_cost;
@@ -276,13 +276,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   }
 
   InternalTurn turn = InternalTurn::kNoTurn;
-  uint32_t opp_local_idx = pred.opp_local_idx();
-  baldr::Turn::Type turntype = meta.edge->turntype(opp_local_idx);
+  baldr::Turn::Type turntype = opp_pred_edge->turntype(meta.edge->localedgeidx());
+
   if (nodeinfo->drive_on_right()) {
-    if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+    if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
         (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
       turn = InternalTurn::kLeftTurn;
-  } else if (meta.edge->internal() && meta.edge->length() <= kShortInternalLength &&
+  } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
              (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
     turn = InternalTurn::kRightTurn;
 

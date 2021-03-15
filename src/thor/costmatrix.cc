@@ -388,6 +388,11 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const BDEdgeLabel& pred,
                                          const uint32_t n) {
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (pred.internal_turn() !=  InternalTurn::kNoTurn){
+    return;
+  }
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
@@ -594,7 +599,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
       // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed());
+                                                opp_pred_edge, pred.has_measured_speed(), pred.internal_turn());
       uint8_t flow_sources;
       Cost newcost = pred.cost() + tc +
                      costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
@@ -612,14 +617,13 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       }
 
       InternalTurn turn = InternalTurn::kNoTurn;
-      uint32_t opp_local_idx = pred.opp_local_idx();
-      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+      baldr::Turn::Type turntype = opp_pred_edge->turntype(directededge->localedgeidx());
 
       if (nodeinfo->drive_on_right()) {
-        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+        if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
             (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
           turn = InternalTurn::kLeftTurn;
-      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+      } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
                  (turntype == baldr::Turn::Type::kSharpRight ||
                   turntype == baldr::Turn::Type::kRight))
         turn = InternalTurn::kRightTurn;

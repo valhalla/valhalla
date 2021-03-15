@@ -278,7 +278,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Get cost. Use the opposing edge for EdgeCost.
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_measured_speed());
+                                        opp_pred_edge, pred.has_measured_speed(), pred.internal_turn());
     uint8_t flow_sources;
     Cost newcost = pred.cost() +
                    costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources) +
@@ -299,14 +299,13 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
+    baldr::Turn::Type turntype = opp_pred_edge->turntype(directededge->localedgeidx());
 
     if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+      if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
           (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
         turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
+    } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
                (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
       turn = InternalTurn::kRightTurn;
 
