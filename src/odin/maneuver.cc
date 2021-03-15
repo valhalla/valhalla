@@ -142,7 +142,6 @@ Maneuver::Maneuver()
   roundabout_exit_begin_street_names_ = std::make_unique<StreetNames>();
 }
 
-
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
   return type_;
 }
