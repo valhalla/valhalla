@@ -133,13 +133,15 @@ Maneuver::Maneuver()
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
       has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
-      has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false) {
+      roundabout_exit_turn_degree_(0), has_collapsed_small_end_ramp_fork_(false),
+      has_collapsed_merge_maneuver_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
   roundabout_exit_street_names_ = std::make_unique<StreetNames>();
   roundabout_exit_begin_street_names_ = std::make_unique<StreetNames>();
 }
+
 
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
   return type_;
@@ -1113,6 +1115,12 @@ std::string Maneuver::ToString() const {
   man_str += " | end_heading=";
   man_str += std::to_string(end_heading_);
 
+  man_str += " | roundabout_exit_begin_heading=";
+  man_str += std::to_string(roundabout_exit_begin_heading_);
+
+  man_str += " | roundabout_exit_turn_degree=";
+  man_str += std::to_string(roundabout_exit_turn_degree_);
+
   man_str += " | begin_node_index=";
   man_str += std::to_string(begin_node_index_);
 
@@ -1306,6 +1314,12 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(end_heading_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_begin_heading_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_turn_degree_);
 
   man_str += delim;
   man_str += std::to_string(begin_node_index_);

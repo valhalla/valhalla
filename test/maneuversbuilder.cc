@@ -1869,6 +1869,7 @@ void TryCombineRoundaboutManeuvers(std::list<Maneuver>& maneuvers,
     EXPECT_NEAR(man->roundabout_length(), expected_man->roundabout_length(), .00001);
     EXPECT_NEAR(man->roundabout_exit_length(), expected_man->roundabout_exit_length(), .00001);
     EXPECT_EQ(man->roundabout_exit_begin_heading(), expected_man->roundabout_exit_begin_heading());
+    EXPECT_EQ(man->roundabout_exit_turn_degree(), expected_man->roundabout_exit_turn_degree());
   }
 }
 
@@ -1925,6 +1926,7 @@ TEST(Maneuversbuilder, TestCombineRoundaboutManeuvers) {
   expected_maneuver2.set_roundabout_exit_begin_heading(280);
   expected_maneuver2.set_roundabout_length(1.0);
   expected_maneuver2.set_roundabout_exit_length(2.0);
+  expected_maneuver2.set_roundabout_exit_turn_degree(0);
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
