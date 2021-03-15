@@ -132,22 +132,10 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-    if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-        turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-      turn = InternalTurn::kRightTurn;
-
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false, turn);
+                             distance, transition_cost, restriction_idx, true, false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -337,22 +325,10 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-    if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-        turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-      turn = InternalTurn::kRightTurn;
-
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false, turn);
+                             distance, transition_cost, restriction_idx, true, false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }

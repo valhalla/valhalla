@@ -216,22 +216,10 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       sortcost += current_heuristic.Get(t2->get_node_ll(directededge->endnode()), dist);
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-    if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-        turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-      turn = InternalTurn::kRightTurn;
-
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction, true, false, turn);
+                             transition_cost, baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
