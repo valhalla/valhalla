@@ -161,6 +161,16 @@ message TripLeg {
     kSeparated = 3; // A separate cycle lane (physical separation from the main carriageway
   }
 
+  enum SacScale {
+    kNoSacScale = 0;
+    kHiking = 1;
+    kMountainHiking = 2;
+    kDemandingMountainHiking = 3;
+    kAlpineHiking = 4;
+    kDemandingAlpineHiking = 5;
+    kDifficultAlpineHiking = 6;
+  }
+
   enum Sidewalk {
     kNoSidewalk = 0;
     kLeft = 1;
@@ -240,6 +250,8 @@ message TripLeg {
     // it starts and ends along the length of the edge as a percentage
     optional float source_along_edge = 49;
     optional float target_along_edge = 50;
+
+    optional SacScale sac_scale = 51;
   }
 
   message IntersectingEdge {
