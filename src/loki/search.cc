@@ -407,7 +407,7 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Allowed(other_edge, other_tile)) {
-        auto reach = get_reach(opposing_edge_id, other_edge);
+        reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
