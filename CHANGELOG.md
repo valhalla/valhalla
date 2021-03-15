@@ -40,6 +40,7 @@
    * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Added sac_scale to trace_attributes output and locate edge output [#2818](https://github.com/valhalla/valhalla/pull/2818)
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
    * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)

@@ -81,6 +81,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_density()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
       }
+      if (edge.has_sac_scale()) {
+        edge_map->emplace("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
+      }
       if (edge.has_sidewalk()) {
         edge_map->emplace("sidewalk", to_string(edge.sidewalk()));
       }
