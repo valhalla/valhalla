@@ -16,9 +16,7 @@ namespace helpers {
 
 // snapped point, squared distance, segment index, offset
 std::tuple<PointLL, float, typename std::vector<PointLL>::size_type, float>
-Project(const projector_t& p,
-        Shape7Decoder<midgard::PointLL>& shape,
-        float snap_distance) {
+Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap_distance) {
   PointLL first_point(shape.pop());
   auto closest_point = first_point;
   auto closest_segment_point = first_point;
@@ -56,7 +54,8 @@ Project(const projector_t& p,
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += closest_segment_point.Distance(closest_point);
-  float percent_along = total_length > 0.f ? static_cast<float>(closest_partial_length / total_length) : 0.f;
+  float percent_along =
+      total_length > 0.f ? static_cast<float>(closest_partial_length / total_length) : 0.f;
 
   // Not so much "snapping" as recognizing that floating-point has limited precision.
   // For example:
@@ -93,7 +92,6 @@ Project(const projector_t& p,
 
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment, percent_along);
 }
-
 
 } // namespace helpers
 } // namespace meili
