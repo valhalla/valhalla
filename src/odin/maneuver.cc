@@ -131,8 +131,8 @@ Maneuver::Maneuver()
       has_left_traversable_outbound_intersecting_edge_(false),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
-      has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
-      roundabout_exit_length_(0.0f), roundabout_exit_count_(0), roundabout_exit_begin_heading_(0),
+      roundabout_exit_count_(0), has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
+      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), has_collapsed_small_end_ramp_fork_(false),
       has_collapsed_merge_maneuver_(false) {
   street_names_ = std::make_unique<StreetNames>();
@@ -751,6 +751,14 @@ void Maneuver::set_contains_obvious_maneuver(bool contains_obvious_maneuver) {
   contains_obvious_maneuver_ = contains_obvious_maneuver;
 }
 
+uint32_t Maneuver::roundabout_exit_count() const {
+  return roundabout_exit_count_;
+}
+
+void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
+  roundabout_exit_count_ = roundabout_exit_count;
+}
+
 bool Maneuver::has_combined_enter_exit_roundabout() const {
   return has_combined_enter_exit_roundabout_;
 }
@@ -779,14 +787,6 @@ float Maneuver::roundabout_exit_length(const Options::Units& units) const {
 
 void Maneuver::set_roundabout_exit_length(float roundabout_exit_km_length) {
   roundabout_exit_length_ = roundabout_exit_km_length;
-}
-
-uint32_t Maneuver::roundabout_exit_count() const {
-  return roundabout_exit_count_;
-}
-
-void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
-  roundabout_exit_count_ = roundabout_exit_count;
 }
 
 const StreetNames& Maneuver::roundabout_exit_street_names() const {
@@ -1207,6 +1207,9 @@ std::string Maneuver::ToString() const {
   man_str += " | contains_obvious_maneuver=";
   man_str += std::to_string(contains_obvious_maneuver_);
 
+  man_str += " | roundabout_exit_count=";
+  man_str += std::to_string(roundabout_exit_count_);
+
   man_str += " | has_combined_enter_exit_roundabout=";
   man_str += std::to_string(has_combined_enter_exit_roundabout_);
 
@@ -1215,9 +1218,6 @@ std::string Maneuver::ToString() const {
 
   man_str += " | roundabout_exit_length=";
   man_str += std::to_string(roundabout_exit_length_);
-
-  man_str += " | roundabout_exit_count=";
-  man_str += std::to_string(roundabout_exit_count_);
 
   man_str += " | roundabout_exit_begin_heading=";
   man_str += std::to_string(roundabout_exit_begin_heading_);
@@ -1372,6 +1372,9 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(intersecting_forward_edge_);
 
   man_str += delim;
+  man_str += std::to_string(roundabout_exit_count_);
+
+  man_str += delim;
   man_str += std::to_string(has_combined_enter_exit_roundabout_);
 
   man_str += delim;
@@ -1379,9 +1382,6 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_length_);
-
-  man_str += delim;
-  man_str += std::to_string(roundabout_exit_count_);
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_begin_heading_);

@@ -246,6 +246,9 @@ public:
   bool contains_obvious_maneuver() const;
   void set_contains_obvious_maneuver(bool contains_obvious_maneuver);
 
+  uint32_t roundabout_exit_count() const;
+  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
+
   bool has_combined_enter_exit_roundabout() const;
   void set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout);
 
@@ -254,9 +257,6 @@ public:
 
   float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
   void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
-
-  uint32_t roundabout_exit_count() const;
-  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
 
   const StreetNames& roundabout_exit_street_names() const;
   void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -414,15 +414,17 @@ protected:
   bool has_left_traversable_outbound_intersecting_edge_;
   bool include_verbal_pre_transition_length_;
   bool contains_obvious_maneuver_;
+
+  uint32_t roundabout_exit_count_;
   bool has_combined_enter_exit_roundabout_;
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
-  uint32_t roundabout_exit_count_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
   Signs roundabout_exit_signs_;
   uint32_t roundabout_exit_begin_heading_;
   uint32_t roundabout_exit_turn_degree_;
+
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;
 
