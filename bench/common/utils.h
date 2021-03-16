@@ -35,9 +35,7 @@ cost_ptr_t MakeCosting(const std::string& cost_mode) {
   Costing costing;
   Costing_Enum_Parse(cost_mode, &costing);
   options.set_costing(costing);
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-  return factory.Create(options);
+  return sif::CostFactory().Create(options);
 }
 } // namespace bench
 } // namespace valhalla

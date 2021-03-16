@@ -6,6 +6,7 @@
 
 #include <benchmark/benchmark.h>
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/proto/options.pb.h>
 
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
@@ -13,7 +14,7 @@
 #include "midgard/logging.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
-#include "thor/astar.h"
+#include "thor/astar_bss.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
 
@@ -31,10 +32,16 @@ using valhalla::baldr::GraphReader;
 using valhalla::baldr::Location;
 using valhalla::baldr::PathLocation;
 using valhalla::midgard::PointLL;
-using valhalla::thor::AStarPathAlgorithm;
+using valhalla::thor::AStarBSSAlgorithm;
 using valhalla::thor::BidirectionalAStar;
 
 using valhalla::bench::MakeCosting;
+
+void create_costing_options(valhalla::Options& options) {
+  options.set_costing(valhalla::Costing::auto_);
+  rapidjson::Document doc;
+  valhalla::sif::ParseCostingOptions(doc, "/costing_options", options);
+}
 
 class RoutingFixture : public benchmark::Fixture {
 public:
@@ -48,8 +55,9 @@ public:
   std::pair<valhalla::Location, valhalla::Location> PointToLocation(PointLL src, PointLL dst) const {
     const auto& stop_type = Location::StopType::BREAK;
     std::vector<Location> locations = {Location(src, stop_type), Location(dst, stop_type)};
+    const auto& cost = mode_costing_[static_cast<size_t>(travel_mode_)];
     const std::unordered_map<Location, PathLocation>& projections =
-        valhalla::loki::Search(locations, *graph_reader_, mode_costing_);
+        valhalla::loki::Search(locations, *graph_reader_, cost);
     valhalla::Location origin;
     PathLocation::toPBF(projections.at(locations[0]), &origin, *graph_reader_);
     valhalla::Location dest;
@@ -57,15 +65,12 @@ public:
     return std::make_pair(origin, dest);
   }
 
-  valhalla::cost_ptr_t costing() const {
-    return (&mode_costing_)[static_cast<size_t>(travel_mode_)];
-  }
-
 private:
   void InitConfig() {
     rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/thor/config.json", config_);
-    mode_costing_ = MakeCosting("auto");
-    travel_mode_ = mode_costing_->travel_mode();
+    valhalla::Options options;
+    create_costing_options(options);
+    mode_costing_ = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode_);
   }
 
   void InitGraph() {
@@ -74,9 +79,9 @@ private:
 
 protected:
   boost::property_tree::ptree config_;
-  valhalla::cost_ptr_t mode_costing_;
-  valhalla::sif::TravelMode travel_mode_;
+  valhalla::sif::mode_costing_t mode_costing_;
   std::shared_ptr<GraphReader> graph_reader_;
+  valhalla::sif::TravelMode travel_mode_;
 };
 
 // clang-format off
@@ -96,30 +101,14 @@ BENCHMARK_DEFINE_F(RoutingFixture, BidirectionalAStar)(benchmark::State& state) 
   std::pair<PointLL, PointLL> bench_case = kBenchmarkCases[state.range(0)];
   std::pair<valhalla::Location, valhalla::Location> locations =
       PointToLocation(bench_case.first, bench_case.second);
-  valhalla::cost_ptr_t mode_costing = costing();
   BidirectionalAStar astar;
   for (auto _ : state) {
     benchmark::DoNotOptimize(astar.GetBestPath(locations.first, locations.second, *graph_reader_,
-                                               &mode_costing, travel_mode_));
+                                               mode_costing_, travel_mode_));
   }
 }
 
 BENCHMARK_REGISTER_F(RoutingFixture, BidirectionalAStar)->DenseRange(0, kBenchmarkCases.size() - 1);
-
-BENCHMARK_DEFINE_F(RoutingFixture, AStar)(benchmark::State& state) {
-  logging::Configure({{"type", ""}});
-  std::pair<PointLL, PointLL> bench_case = kBenchmarkCases[state.range(0)];
-  std::pair<valhalla::Location, valhalla::Location> locations =
-      PointToLocation(bench_case.first, bench_case.second);
-  valhalla::cost_ptr_t mode_costing = costing();
-  AStarPathAlgorithm astar;
-  for (auto _ : state) {
-    benchmark::DoNotOptimize(astar.GetBestPath(locations.first, locations.second, *graph_reader_,
-                                               &mode_costing, travel_mode_));
-  }
-}
-
-BENCHMARK_REGISTER_F(RoutingFixture, AStar)->DenseRange(0, kBenchmarkCases.size() - 1);
 
 } // namespace
 
