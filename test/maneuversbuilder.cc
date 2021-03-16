@@ -2010,12 +2010,6 @@ TEST(Maneuversbuilder, TestUnCollapseRoundaboutManeuvers) {
                    1.0, 2, 32, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 150, 310, 0, 0, 0, 0, 0, 0, 0, 0,
                    1, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
-  // Manually update remaining maneuver attributes
-  expected_maneuver2.set_has_combined_enter_exit_roundabout(false);
-  expected_maneuver2.set_roundabout_exit_begin_heading(0);
-  expected_maneuver2.set_roundabout_length(0.0);
-  expected_maneuver2.set_roundabout_exit_length(0.0);
-  expected_maneuver2.set_roundabout_exit_turn_degree(0);
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
@@ -2023,12 +2017,6 @@ TEST(Maneuversbuilder, TestUnCollapseRoundaboutManeuvers) {
                    2.0, 1, 90, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 280, 310, 0, 0, 0, 0, 0, 0, 0, 0,
                    1, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
-  // Manually update remaining maneuver attributes
-  expected_maneuver3.set_has_combined_enter_exit_roundabout(false);
-  expected_maneuver3.set_roundabout_exit_begin_heading(0);
-  expected_maneuver3.set_roundabout_length(0.0);
-  expected_maneuver3.set_roundabout_exit_length(0.0);
-  expected_maneuver3.set_roundabout_exit_turn_degree(0);
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver4 = expected_maneuvers.back();
