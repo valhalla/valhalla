@@ -57,7 +57,7 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
   for (const auto& cls : not_reclassifiable_ways) {
     std::map<std::string, std::string> desc = {{"highway", cls}, {"name", ""}};
     auto edge_class = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GE(edge_class, baldr::RoadClass::kPrimary);
+    EXPECT_GT(edge_class, baldr::RoadClass::kPrimary);
   }
 
   // roads with these values of 'service' tag do not participate in search for ferry connection so
@@ -69,6 +69,6 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
                                                {"service", use},
                                                {"name", ""}};
     auto edge_class = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GE(edge_class, baldr::RoadClass::kPrimary);
+    EXPECT_GT(edge_class, baldr::RoadClass::kPrimary);
   }
 }
