@@ -95,7 +95,7 @@ TEST(geometry, fwd_rev_projection_tols) {
                                 {13.262595700000003, 38.159450400000005}};
 
   size_t i = 0;
-  for (const auto gps_point : gps_points) {
+  for (const auto& gps_point : gps_points) {
     // meili::helpers::Project() consumes the incoming shape so we have to
     // create it with each iteration.
     midgard::Shape7Decoder<midgard::PointLL> fwd_shape(fwd_enc_shape.c_str(), fwd_enc_shape.size());
