@@ -120,20 +120,21 @@ Maneuver::Maneuver()
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      roundabout_exit_count_(0), travel_mode_(TripLeg_TravelMode_kDrive),
-      vehicle_type_(TripLeg_VehicleType_kCar), pedestrian_type_(TripLeg_PedestrianType_kFoot),
-      bicycle_type_(TripLeg_BicycleType_kRoad), transit_type_(TripLeg_TransitType_kRail),
-      transit_connection_(false), rail_(false), bus_(false), fork_(false),
-      begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
-      tee_(false), trail_type_(TrailType::kNone), imminent_verbal_multi_cue_(false),
-      distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
-      has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
+      travel_mode_(TripLeg_TravelMode_kDrive), vehicle_type_(TripLeg_VehicleType_kCar),
+      pedestrian_type_(TripLeg_PedestrianType_kFoot), bicycle_type_(TripLeg_BicycleType_kRoad),
+      transit_type_(TripLeg_TransitType_kRail), transit_connection_(false), rail_(false), bus_(false),
+      fork_(false), begin_intersecting_edge_name_consistency_(false),
+      intersecting_forward_edge_(false), tee_(false), trail_type_(TrailType::kNone),
+      imminent_verbal_multi_cue_(false), distant_verbal_multi_cue_(false), to_stay_on_(false),
+      drive_on_right_(true), has_time_restrictions_(false),
+      has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
-      has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
+      roundabout_exit_count_(0), has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
-      has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false) {
+      roundabout_exit_turn_degree_(0), has_collapsed_small_end_ramp_fork_(false),
+      has_collapsed_merge_maneuver_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -368,14 +369,6 @@ void Maneuver::set_end_heading(uint32_t endHeading) {
   end_heading_ = endHeading;
 }
 
-uint32_t Maneuver::roundabout_exit_begin_heading() const {
-  return roundabout_exit_begin_heading_;
-}
-
-void Maneuver::set_roundabout_exit_begin_heading(uint32_t beginHeading) {
-  roundabout_exit_begin_heading_ = beginHeading;
-}
-
 uint32_t Maneuver::begin_node_index() const {
   return begin_node_index_;
 }
@@ -552,14 +545,6 @@ void Maneuver::set_internal_left_turn_count(uint32_t internal_left_turn_count) {
   internal_left_turn_count_ = internal_left_turn_count;
 }
 
-uint32_t Maneuver::roundabout_exit_count() const {
-  return roundabout_exit_count_;
-}
-
-void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
-  roundabout_exit_count_ = roundabout_exit_count;
-}
-
 bool Maneuver::fork() const {
   return fork_;
 }
@@ -707,58 +692,6 @@ void Maneuver::set_to_stay_on(bool to_stay_on) {
   to_stay_on_ = to_stay_on;
 }
 
-const StreetNames& Maneuver::roundabout_exit_street_names() const {
-  return *roundabout_exit_street_names_;
-}
-
-void Maneuver::set_roundabout_exit_street_names(
-    const std::vector<std::pair<std::string, bool>>& names) {
-  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
-}
-
-void Maneuver::set_roundabout_exit_street_names(
-    std::unique_ptr<StreetNames>&& roundabout_exit_street_names) {
-  roundabout_exit_street_names_ = std::move(roundabout_exit_street_names);
-}
-
-bool Maneuver::HasRoundaboutExitStreetNames() const {
-  return (!roundabout_exit_street_names_->empty());
-}
-
-void Maneuver::ClearRoundaboutExitStreetNames() {
-  roundabout_exit_street_names_->clear();
-}
-
-const StreetNames& Maneuver::roundabout_exit_begin_street_names() const {
-  return *roundabout_exit_begin_street_names_;
-}
-
-void Maneuver::set_roundabout_exit_begin_street_names(
-    const std::vector<std::pair<std::string, bool>>& names) {
-  roundabout_exit_begin_street_names_ = std::make_unique<StreetNamesUs>(names);
-}
-
-void Maneuver::set_roundabout_exit_begin_street_names(
-    std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names) {
-  roundabout_exit_begin_street_names_ = std::move(roundabout_exit_begin_street_names);
-}
-
-bool Maneuver::HasRoundaboutExitBeginStreetNames() const {
-  return (!roundabout_exit_begin_street_names_->empty());
-}
-
-void Maneuver::ClearRoundaboutExitBeginStreetNames() {
-  roundabout_exit_begin_street_names_->clear();
-}
-
-const Signs& Maneuver::roundabout_exit_signs() const {
-  return roundabout_exit_signs_;
-}
-
-Signs* Maneuver::mutable_roundabout_exit_signs() {
-  return &roundabout_exit_signs_;
-}
-
 Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
   return merge_to_relative_direction_;
 }
@@ -818,6 +751,14 @@ void Maneuver::set_contains_obvious_maneuver(bool contains_obvious_maneuver) {
   contains_obvious_maneuver_ = contains_obvious_maneuver;
 }
 
+uint32_t Maneuver::roundabout_exit_count() const {
+  return roundabout_exit_count_;
+}
+
+void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
+  roundabout_exit_count_ = roundabout_exit_count;
+}
+
 bool Maneuver::has_combined_enter_exit_roundabout() const {
   return has_combined_enter_exit_roundabout_;
 }
@@ -846,6 +787,74 @@ float Maneuver::roundabout_exit_length(const Options::Units& units) const {
 
 void Maneuver::set_roundabout_exit_length(float roundabout_exit_km_length) {
   roundabout_exit_length_ = roundabout_exit_km_length;
+}
+
+const StreetNames& Maneuver::roundabout_exit_street_names() const {
+  return *roundabout_exit_street_names_;
+}
+
+void Maneuver::set_roundabout_exit_street_names(
+    const std::vector<std::pair<std::string, bool>>& names) {
+  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
+}
+
+void Maneuver::set_roundabout_exit_street_names(
+    std::unique_ptr<StreetNames>&& roundabout_exit_street_names) {
+  roundabout_exit_street_names_ = std::move(roundabout_exit_street_names);
+}
+
+bool Maneuver::HasRoundaboutExitStreetNames() const {
+  return (!roundabout_exit_street_names_->empty());
+}
+
+void Maneuver::ClearRoundaboutExitStreetNames() {
+  roundabout_exit_street_names_->clear();
+}
+
+const StreetNames& Maneuver::roundabout_exit_begin_street_names() const {
+  return *roundabout_exit_begin_street_names_;
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    const std::vector<std::pair<std::string, bool>>& names) {
+  roundabout_exit_begin_street_names_ = std::make_unique<StreetNamesUs>(names);
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names) {
+  roundabout_exit_begin_street_names_ = std::move(roundabout_exit_begin_street_names);
+}
+
+bool Maneuver::HasRoundaboutExitBeginStreetNames() const {
+  return (!roundabout_exit_begin_street_names_->empty());
+}
+
+void Maneuver::ClearRoundaboutExitBeginStreetNames() {
+  roundabout_exit_begin_street_names_->clear();
+}
+
+const Signs& Maneuver::roundabout_exit_signs() const {
+  return roundabout_exit_signs_;
+}
+
+Signs* Maneuver::mutable_roundabout_exit_signs() {
+  return &roundabout_exit_signs_;
+}
+
+uint32_t Maneuver::roundabout_exit_begin_heading() const {
+  return roundabout_exit_begin_heading_;
+}
+
+void Maneuver::set_roundabout_exit_begin_heading(uint32_t beginHeading) {
+  roundabout_exit_begin_heading_ = beginHeading;
+}
+
+uint32_t Maneuver::roundabout_exit_turn_degree() const {
+  return roundabout_exit_turn_degree_;
+}
+
+void Maneuver::set_roundabout_exit_turn_degree(uint32_t turnDegree) {
+  roundabout_exit_turn_degree_ = turnDegree;
 }
 
 bool Maneuver::has_collapsed_small_end_ramp_fork() const {
@@ -1153,9 +1162,6 @@ std::string Maneuver::ToString() const {
   man_str += " | internal_left_turn_count=";
   man_str += std::to_string(internal_left_turn_count_);
 
-  man_str += " | roundabout_exit_count=";
-  man_str += std::to_string(roundabout_exit_count_);
-
   man_str += " | fork=";
   man_str += std::to_string(fork_);
 
@@ -1201,6 +1207,9 @@ std::string Maneuver::ToString() const {
   man_str += " | contains_obvious_maneuver=";
   man_str += std::to_string(contains_obvious_maneuver_);
 
+  man_str += " | roundabout_exit_count=";
+  man_str += std::to_string(roundabout_exit_count_);
+
   man_str += " | has_combined_enter_exit_roundabout=";
   man_str += std::to_string(has_combined_enter_exit_roundabout_);
 
@@ -1209,6 +1218,12 @@ std::string Maneuver::ToString() const {
 
   man_str += " | roundabout_exit_length=";
   man_str += std::to_string(roundabout_exit_length_);
+
+  man_str += " | roundabout_exit_begin_heading=";
+  man_str += std::to_string(roundabout_exit_begin_heading_);
+
+  man_str += " | roundabout_exit_turn_degree=";
+  man_str += std::to_string(roundabout_exit_turn_degree_);
 
   man_str += " | has_collapsed_small_end_ramp_fork=";
   man_str += std::to_string(has_collapsed_small_end_ramp_fork_);
@@ -1348,9 +1363,6 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(internal_left_turn_count_);
 
   man_str += delim;
-  man_str += std::to_string(roundabout_exit_count_);
-
-  man_str += delim;
   man_str += std::to_string(fork_);
 
   man_str += delim;
@@ -1358,6 +1370,24 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(intersecting_forward_edge_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_count_);
+
+  man_str += delim;
+  man_str += std::to_string(has_combined_enter_exit_roundabout_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_length_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_length_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_begin_heading_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_turn_degree_);
 
   man_str += delim;
   man_str += "\"";
