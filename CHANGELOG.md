@@ -20,6 +20,7 @@
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
     
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
