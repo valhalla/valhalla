@@ -60,8 +60,12 @@ double get_shape_length(const std::vector<PointLL>& shape) {
 // Take a given real-world road shape. Create a second shape that is the
 // reverse shape-point order of the first.
 // Take a handful of "gps points" and project them onto both shapes.
-// Show that these fwd/rev projections:
-// 1) project to the same location
+// Assert that:
+// 0) for percentage_along's that are small, that they're not so small
+//    that 1.f-percentage_along==1.f. See this line of code in
+//    candidate_search.cc, WithinSquaredDistance():
+//      const float dist = edge->forward() ? offset : 1.f - offset;
+// 1) the fwd/rev projections project to the same location
 // 2) that the fwd_percentage_along + rev_percentage_along == 1.0 (within tol)
 //===========================================================================
 TEST(geometry, fwd_rev_projection_tols) {
@@ -75,14 +79,14 @@ TEST(geometry, fwd_rev_projection_tols) {
   // is equal when measured forwards and backwards. This is reasonable to expect.
   // The possible issues that might come into play is if our underlying Distance()
   // computation is 1) too approximate, and/or 2) employs some sort of curved
-  // earth bias based on the "first" point of each segment.
+  // earth bias based on the first point of each segment.
   double fwd_shape_length = get_shape_length(fwd_shape_points);
   double rev_shape_length = get_shape_length(rev_shape_points);
   EXPECT_TRUE(std::fabs(fwd_shape_length - rev_shape_length) < 1e-5);
 
   // Project these gps points onto the fwd-shape and the rev-shape.
-  // See that they project to the same point and that their projection
-  // percentages sum to 1.0.
+  // See that they project to the same point and that their projection's
+  // distance-along percentages sum to 1.0.
   const PointLL gps_points[] = {{13.262609100000001, 38.159699600000003},
                                 {13.262637200000002, 38.159659599999998},
                                 {13.262741800000005, 38.159575799999997},
@@ -103,6 +107,13 @@ TEST(geometry, fwd_rev_projection_tols) {
     std::tie(fwd_proj_point, fwd_sq_distance, fwd_segment, fwd_percentage_along) =
         valhalla::meili::helpers::Project(gps_point, fwd_shape);
 
+    // make sure the fwd_percentage_along is big enough that it doesn't
+    // disappear when subtracted from 1.0.
+    if (fwd_percentage_along > 0.f) {
+      float reverse_pct_along = 1.f - fwd_percentage_along;
+      ASSERT_NE(reverse_pct_along, 1.f);
+    }
+
     // meili::helpers::Project() consumes the incoming shape so we have to
     // create it with each iteration.
     midgard::Shape7Decoder<midgard::PointLL> rev_shape(rev_enc_shape.c_str(), rev_enc_shape.size());
@@ -114,11 +125,18 @@ TEST(geometry, fwd_rev_projection_tols) {
     std::tie(rev_proj_point, rev_sq_distance, rev_segment, rev_percentage_along) =
         valhalla::meili::helpers::Project(gps_point, rev_shape);
 
-    // The first gps point is a special case! It motivated the float precision
-    // logic in valhalla::meili::helpers::Project().
+    // make sure the rev_percentage_along is big enough that it doesn't
+    // disappear when subtracted from 1.0.
+    if (rev_percentage_along > 0.f) {
+      float forward_pct_along = 1.f - rev_percentage_along;
+      ASSERT_NE(forward_pct_along, 1.f);
+    }
+
+    // The first gps point is a special case! Without the fix, fwd_percentage_along
+    // is ~1e-9; the fix is to snap it to 0.f.
     if (i++ == 0) {
-      ASSERT_EQ(fwd_percentage_along, 0.0);
-      ASSERT_EQ(rev_percentage_along, 1.0);
+      ASSERT_EQ(fwd_percentage_along, 0.f);
+      ASSERT_EQ(rev_percentage_along, 1.f);
     }
 
     // 6 decimal digits is roughly 0.1 m, a reasonable expectation
@@ -126,10 +144,10 @@ TEST(geometry, fwd_rev_projection_tols) {
     ASSERT_TRUE(std::fabs(fwd_proj_point.lat() - rev_proj_point.lat()) < tenth_of_meter_in_deg);
     ASSERT_TRUE(std::fabs(fwd_proj_point.lng() - rev_proj_point.lng()) < tenth_of_meter_in_deg);
 
-    // wherever we project, the percentages must add up to 1.0 (without tol)
+    // wherever we project, the fwd+rev percentages must add up to 1.0 (within tol)
     float total_percent = fwd_percentage_along + rev_percentage_along;
     ASSERT_TRUE(std::fabs(total_percent - 1.0) < 0.0001);
   }
 }
 
-} // namespace
+} // anonymous namespace

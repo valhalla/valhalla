@@ -149,7 +149,11 @@ void cut_segments(const std::vector<MatchResult>& match_results,
                                      [&curr_match](const EdgeSegment& segment) {
                                        return (segment.edgeid == curr_match.edgeid);
                                      });
-    assert(last_segment != segments.cend());
+
+    if (last_segment == segments.cend()) {
+      throw std::logic_error("In meili::cutsegments(), unexpectedly unable to locate target edge.");
+      assert(false);
+    }
 
     // we need to close the previous edge
     size_t old_size = new_segments.size();

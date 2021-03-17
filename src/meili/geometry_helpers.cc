@@ -20,7 +20,7 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap
   PointLL first_point(shape.pop());
   auto closest_point = first_point;
   auto closest_segment_point = first_point;
-  float closest_distance = 1e10;
+  float closest_distance = p.approx.DistanceSquared(closest_segment_point);
   size_t closest_segment = 0;
   float closest_partial_length = 0.f;
   float total_length = 0.f;
@@ -50,7 +50,7 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap
     u = v;
   }
 
-  // Offset is a float between 0 and 1 representing the location of
+  // percent_along is a float between 0 and 1 representing the location of
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += closest_segment_point.Distance(closest_point);
@@ -64,8 +64,11 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap
   // Result: r == 1.0          // exactly 1.0?! yep.
   //
   // Downstream logic looks at percentages along the edge and the opp-edge. We want to be
-  // sure that values very close to 0.0 snap to 0.0 since the opp-edge percentage
-  // is (1.0-[when_very_close_to_zero]) which will equal exactly 1.0.
+  // sure that values very close to 0.0 snap to 0.0 since downstream math may flip this
+  // percentage_along to (1.0-percentage_along) if the the edge is not forward, making it
+  // exactly 1.0. This causes issues because the percentage_along the opp_edge is not
+  // exactly 0.0, which is not expected.
+  //
   // Float has "7.2" decimal digits of precision. Hence, we will consider 1e-7 as our
   // representative small figure, below which we snap to 0.0 and within that distance
   // of 1.0 will snap to 1.0.
