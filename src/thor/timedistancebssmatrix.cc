@@ -135,7 +135,8 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false, InternalTurn::kNoTurn);
+                             distance, transition_cost, restriction_idx, true, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -328,7 +329,8 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false, InternalTurn::kNoTurn);
+                             distance, transition_cost, restriction_idx, true, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }

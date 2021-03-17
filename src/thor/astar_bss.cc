@@ -219,7 +219,8 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+                             transition_cost, baldr::kInvalidRestriction, true, false,
+                             InternalTurn::kNoTurn);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }

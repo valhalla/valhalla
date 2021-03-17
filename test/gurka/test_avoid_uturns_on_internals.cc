@@ -7,8 +7,8 @@
 
 using namespace valhalla;
 
-const std::unordered_map<std::string, std::string>
-    build_config{{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
+const std::unordered_map<std::string, std::string> build_config{
+    {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
 
 const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
                                            "bus",           "truck",      "bicycle",
@@ -47,11 +47,11 @@ TEST(Standalone, AvoidUturnsOnInternals) {
       {"JK", {{"highway", "tertiary"}}},
       {"OP", {{"highway", "tertiary"}}},
       {"ST", {{"highway", "tertiary"}}},
-      {"FGH", {{"highway", "unclassified"},{"name", "Toekanweg"}}},
+      {"FGH", {{"highway", "unclassified"}, {"name", "Toekanweg"}}},
       {"GI", {{"highway", "unclassified"}, {"name", "Maraboeweg"}}},
       {"KLN", {{"highway", "unclassified"}}},
-      {"PQ", {{"highway", "unclassified"},{"name", "Valkweg"}}},
-      {"TU", {{"highway", "unclassified"},{"name", "Valkweg"}}},
+      {"PQ", {{"highway", "unclassified"}, {"name", "Valkweg"}}},
+      {"TU", {{"highway", "unclassified"}, {"name", "Valkweg"}}},
       {"QRVU", {{"highway", "service"}}},
       {"QU", {{"highway", "unclassified"}}},
   };
@@ -61,20 +61,24 @@ TEST(Standalone, AvoidUturnsOnInternals) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoid_uturns_on_internals",
                                build_config);
 
-   for (auto& c : costing) {
-     auto result = gurka::do_action(valhalla::Options::route, map, {"1", "3"}, c);
+  for (auto& c : costing) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "3"}, c);
     if (c == "bicycle" || c == "motor_scooter" || c == "motorcycle" || c == "pedestrian")
-        gurka::assert::raw::expect_path(result, {"Rijkerstreek", "JK", "Rijkerstreek", "Toekanweg", "Maraboeweg"});
+      gurka::assert::raw::expect_path(result, {"Rijkerstreek", "JK", "Rijkerstreek", "Toekanweg",
+                                               "Maraboeweg"});
     else
-      gurka::assert::raw::expect_path(result, {"Rijkerstreek", "Rijkerstreek", "OP", "Valkweg", "QU", "Valkweg", "Rijkerstreek", "Rijkerstreek", "Rijkerstreek", "Toekanweg", "Maraboeweg"});
-   }
+      gurka::assert::raw::expect_path(result, {"Rijkerstreek", "Rijkerstreek", "OP", "Valkweg", "QU",
+                                               "Valkweg", "Rijkerstreek", "Rijkerstreek",
+                                               "Rijkerstreek", "Toekanweg", "Maraboeweg"});
+  }
 
-   for (auto& c : costing) {
-     auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, c);
+  for (auto& c : costing) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, c);
     if (c == "bicycle" || c == "motor_scooter" || c == "motorcycle" || c == "pedestrian")
-        gurka::assert::raw::expect_path(result, {"Rijkerstreek", "JK", "Rijkerstreek"});
+      gurka::assert::raw::expect_path(result, {"Rijkerstreek", "JK", "Rijkerstreek"});
     else
-      gurka::assert::raw::expect_path(result, {"Rijkerstreek", "Rijkerstreek", "OP", "Valkweg", "QU", "Valkweg", "Rijkerstreek", "Rijkerstreek", "Rijkerstreek"});
-   }
-
+      gurka::assert::raw::expect_path(result,
+                                      {"Rijkerstreek", "Rijkerstreek", "OP", "Valkweg", "QU",
+                                       "Valkweg", "Rijkerstreek", "Rijkerstreek", "Rijkerstreek"});
+  }
 }

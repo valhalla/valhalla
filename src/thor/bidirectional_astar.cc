@@ -784,7 +784,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
 
   // Disallow connections that are part of an uturn on an internal edge
-  if (pred.internal_turn() !=  InternalTurn::kNoTurn){
+  if (pred.internal_turn() != InternalTurn::kNoTurn) {
     return false;
   }
 
@@ -850,7 +850,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
 
   // Disallow connections that are part of an uturn on an internal edge
-  if (rev_pred.internal_turn() !=  InternalTurn::kNoTurn) {
+  if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
     return false;
   }
 

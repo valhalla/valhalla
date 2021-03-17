@@ -390,7 +390,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const uint32_t n) {
 
   // Disallow connections that are part of an uturn on an internal edge
-  if (pred.internal_turn() !=  InternalTurn::kNoTurn){
+  if (pred.internal_turn() != InternalTurn::kNoTurn) {
     return;
   }
   // Disallow connections that are part of a complex restriction.
@@ -599,7 +599,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
       // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(), pred.internal_turn());
+                                                opp_pred_edge, pred.has_measured_speed(),
+                                                pred.internal_turn());
       uint8_t flow_sources;
       Cost newcost = pred.cost() + tc +
                      costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
