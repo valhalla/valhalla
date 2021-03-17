@@ -17,6 +17,7 @@
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
+#include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 
@@ -83,13 +84,24 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
-  // See if we have avoids and take care of them
-  if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
-    throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+  if (options.avoid_polygons_size()) {
+    const auto edges =
+        edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
+    auto* co = options.mutable_costing_options(options.costing());
+    for (const auto& edge_id : edges) {
+      auto* avoid = co->add_avoid_edges();
+      avoid->set_id(edge_id);
+      // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
+      avoid->set_percent_along(0);
+    }
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (options.avoid_locations_size()) {
+    // See if we have avoids and take care of them
+    if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
+      throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    }
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, costing);
@@ -116,9 +128,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid = co->add_avoid_edges();
-                avoid->set_id(shortcut);
-                avoid->set_percent_along(0);
+                auto* avoid_shortcut = co->add_avoid_edges();
+                avoid_shortcut->set_id(shortcut);
+                avoid_shortcut->set_percent_along(0);
               }
             }
           }
@@ -171,7 +183,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "skadi") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi") {
       continue;
     }
     if (kv.first != "trace") {
@@ -211,6 +224,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+  max_avoid_polygons_length = config.get<float>("service_limits.max_avoid_polygons_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");
@@ -303,6 +317,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::transit_available:
         result = to_response(transit_available(request), info, request);
         break;
+      case Options::status:
+        status(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         return jsonify_error({107}, info, request);
@@ -318,6 +336,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
   // sends them on to thor

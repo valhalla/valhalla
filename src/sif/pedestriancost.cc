@@ -34,6 +34,7 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultBssCost = 120.0f;                // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;           // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -74,6 +75,9 @@ constexpr uint32_t kTransitTransferMaxDistance = 805; // 0.5 miles
 
 // Avoid roundabouts
 constexpr float kRoundaboutFactor = 2.0f;
+
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
 
 // Minimum and maximum average pedestrian speed (to validate input).
 constexpr float kMinPedestrianSpeed = 0.5f;
@@ -135,6 +139,8 @@ constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty}
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -288,7 +294,8 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds) const override;
+                        const uint32_t seconds,
+                        uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -312,12 +319,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_measured_speed Do we have any of the measured speed types set?
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const override;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool /*has_measured_speed*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -351,6 +360,9 @@ public:
       }
       if (living_street_factor_ < 1.f) {
         factor *= living_street_factor_;
+      }
+      if (service_factor_ < 1.f) {
+        factor *= service_factor_;
       }
 
       return (speedfactor_ * factor);
@@ -468,6 +480,8 @@ public:
     c.cost +=
         maneuver_penalty_ * (!edge->link() && edge->use() != Use::kEgressConnection &&
                              edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx));
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
@@ -593,11 +607,12 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
-                              const uint32_t seconds) const {
+                              const uint32_t seconds,
+                              uint8_t& flow_sources) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
-    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
     float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
     return {sec * ferry_factor_, sec};
   }
@@ -621,6 +636,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
     factor *= living_street_factor_;
+  } else if (edge->use() == Use::kServiceRoad) {
+    factor *= service_factor_;
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
@@ -661,7 +678,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
-                                           const baldr::DirectedEdge* edge) const {
+                                           const baldr::DirectedEdge* edge,
+                                           const bool /*has_measured_speed*/) const {
+
+  // TODO: do we want to update the cost if we have flow or speed from traffic.
+
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
@@ -839,6 +860,16 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
         rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
             .get_value_or(kDefaultUseLivingStreets)));
+
+    // service_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
+
+    // service_factor
+    pbf_costing_options->set_service_factor(
+        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
+                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -866,6 +897,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
+    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -901,6 +934,8 @@ public:
   using PedestrianCost::ferry_transition_cost_;
   using PedestrianCost::gate_cost_;
   using PedestrianCost::maneuver_penalty_;
+  using PedestrianCost::service_factor_;
+  using PedestrianCost::service_penalty_;
 };
 
 TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
@@ -1129,6 +1164,24 @@ EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFe
     EXPECT_THAT(ctorTester->transit_transfer_max_distance_,
                 test::IsBetween(kTransitTransferMaxDistanceRange.min,
                                 kTransitTransferMaxDistanceRange.max));
+  }
+
+  // service_penalty_
+  real_distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("service_penalty", (*real_distributor)(generator), "foot"));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+  }
+
+  // service_factor_
+  real_distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("service_factor", (*real_distributor)(generator), "foot"));
+    EXPECT_THAT(ctorTester->service_factor_,
+                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
   }
 }
 } // namespace

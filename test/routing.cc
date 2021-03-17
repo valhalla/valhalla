@@ -108,7 +108,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
       const auto newcost = std::floor(min_cost + 1 + test::rand01(gen) * max_increment_cost);
       if (i % 2 == 0 && !track.empty()) {
         // Decrease cost
-        const auto idx = *std::next(track.begin(), test::rand01(gen) * track.size());
+        const auto idx = *std::next(track.begin(), test::rand01(gen) * (track.size() - 1));
         if (newcost < costs[idx].sortcost()) {
           adjlist.decrease(idx, newcost);
           costs[idx] = {newcost};

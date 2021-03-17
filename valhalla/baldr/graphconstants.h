@@ -416,6 +416,22 @@ enum class SacScale : uint8_t {
   kDemandingAlpineHiking = 5,
   kDifficultAlpineHiking = 6
 };
+inline std::string to_string(SacScale c) {
+  static const std::unordered_map<uint8_t, std::string> SacScaleStrings = {
+      {static_cast<uint8_t>(SacScale::kNone), "none"},
+      {static_cast<uint8_t>(SacScale::kHiking), "hiking"},
+      {static_cast<uint8_t>(SacScale::kMountainHiking), "mountain hiking"},
+      {static_cast<uint8_t>(SacScale::kDemandingMountainHiking), "demanding mountain hiking"},
+      {static_cast<uint8_t>(SacScale::kAlpineHiking), "alpine hiking"},
+      {static_cast<uint8_t>(SacScale::kDemandingAlpineHiking), "demanding alpine hiking"},
+      {static_cast<uint8_t>(SacScale::kDifficultAlpineHiking), "difficult alpine hiking"},
+  };
+  auto i = SacScaleStrings.find(static_cast<uint8_t>(c));
+  if (i == SacScaleStrings.cend()) {
+    return "null";
+  }
+  return i->second;
+}
 
 // Mountain bike scale
 const uint32_t kMaxMtbScale = 6;

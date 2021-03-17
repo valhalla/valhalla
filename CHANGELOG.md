@@ -1,5 +1,6 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.1
 * **Removed**
+   * REMOVED: The tossing of private roads in [#1960](https://github.com/valhalla/valhalla/pull/1960) was too aggressive and resulted in a lot of no routes.  Reverted this logic.  [#2934](https://github.com/valhalla/valhalla/pull/2934)
 
 * **Bug Fix**
    * FIXED: Fix compression_utils.cc::inflate(...) throw - make it catchable [#2839](https://github.com/valhalla/valhalla/pull/2839)
@@ -17,9 +18,13 @@
    * FIXED: Loki was looking up the wrong costing enum for avoids [#2856](https://github.com/valhalla/valhalla/pull/2856)
    * FIXED: Fix way_ids -> graph_ids conversion for complex restrictions: handle cases when a way is split into multiple edges [#2848](https://github.com/valhalla/valhalla/pull/2848)
    * FIXED: Honor access mode while matching OSMRestriction with the graph [#2849](https://github.com/valhalla/valhalla/pull/2849)
+   * FIXED: Ensure route summaries are unique among all returned route/legs [#2874](https://github.com/valhalla/valhalla/pull/2874)
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
-    
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Fixed "No route found" error in case of multipoint request with locations near low reachability edges [#2914](https://github.com/valhalla/valhalla/pull/2914)
+   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
+   * FIXED: Use CMakes built-in Python variables to configure installation [#2931](https://github.com/valhalla/valhalla/pull/2931)
    * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
 
 * **Enhancement**
@@ -27,16 +32,27 @@
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
    * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
+   * ADDED: nit: Links debug build with lld [#2813](https://github.com/valhalla/valhalla/pull/2813)
    * ADDED: Add costing option `use_living_streets` to avoid or favor living streets in route. [#2788](https://github.com/valhalla/valhalla/pull/2788)
    * CHANGED: Do not allocate mapped_cache vector in skadi when no elevation source is provided. [#2841](https://github.com/valhalla/valhalla/pull/2841)
+   * ADDED: avoid_polygons logic [#2750](https://github.com/valhalla/valhalla/pull/2750)
    * ADDED: Added support for destination for conditional access restrictions [#2857](https://github.com/valhalla/valhalla/pull/2857)
    * CHANGED: Large sequences are now merge sorted which can be dramatically faster with certain hardware configurations. This is especially useful in speeding up the earlier stages (parsing, graph construction) of tile building [#2850](https://github.com/valhalla/valhalla/pull/2850)
    * CHANGED: When creating the intial graph edges by setting at which nodes they start and end, first mark the indices of those nodes in another sequence and then sort them by edgeid so that we can do the setting of start and end node sequentially in the edges file. This is much more efficient on certain hardware configurations [#2851](https://github.com/valhalla/valhalla/pull/2851)
    * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Added sac_scale to trace_attributes output and locate edge output [#2818](https://github.com/valhalla/valhalla/pull/2818)
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
+   * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
+   * CHANGED: Reduce stop impact cost when flow data is present [#2891](https://github.com/valhalla/valhalla/pull/2891)
+   * CHANGED: Update visual compare script [#2803](https://github.com/valhalla/valhalla/pull/2803)
+   * CHANGED: Service roads are not penalized for `pedestrian` costing by default. [#2898](https://github.com/valhalla/valhalla/pull/2898)
+   * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
+   * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
+   * ADDED: Add min_level argument to valhalla_ways_to_edges [#2918](https://github.com/valhalla/valhalla/pull/2918)
+   * ADDED: Adding ability to store the roundabout_exit_turn_degree to the maneuver [#2941](https://github.com/valhalla/valhalla/pull/2941)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

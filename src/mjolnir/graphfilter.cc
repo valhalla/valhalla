@@ -143,7 +143,7 @@ void FilterTiles(GraphReader& reader,
         // encoded shape plus way Id.
         bool added;
         uint32_t idx = directededge->edgeinfo_offset();
-        auto edgeinfo = tile->edgeinfo(idx);
+        auto edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =

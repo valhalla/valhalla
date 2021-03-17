@@ -43,6 +43,7 @@ public:
   void trace(Api& request);
   std::string height(Api& request);
   std::string transit_available(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -74,6 +75,7 @@ protected:
   std::unordered_map<std::string, float> max_matrix_distance;
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_avoid_locations;
+  float max_avoid_polygons_length;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;

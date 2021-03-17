@@ -69,8 +69,8 @@ void assert_tile_equalish(const GraphTile& a,
       ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
     // make sure the edges' shape and names match
     for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
-      auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+      auto a_info = a.edgeinfo(a.directededge(i));
+      auto b_info = b.edgeinfo(b.directededge(i));
       ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
       ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
       for (size_t j = 0; j < a_info.GetNames().size(); ++j)
@@ -106,6 +106,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // load a test builder
   std::string test_dir = "test/data/builder_tiles";
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
+  test.directededges().emplace_back();
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
@@ -119,7 +120,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
-  auto ei = test2.edgeinfo(0);
+  auto ei = test2.edgeinfo(&test2.directededge(0));
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
@@ -294,7 +295,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto decoded_shape = valhalla::midgard::decode<std::vector<PointLL>>(encoded_shape5);
   auto encoded_shape7 = valhalla::midgard::encode7(decoded_shape);
   graph_tile_ptr fake = new fake_tile(encoded_shape5);
-  auto info = fake->edgeinfo(fake->directededge(0)->edgeinfo_offset());
+  auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
   auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
