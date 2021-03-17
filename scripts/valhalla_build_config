@@ -92,7 +92,8 @@ config = {
     'service': {
       'proxy': 'ipc:///tmp/thor'
     },
-    'max_reserved_labels_count': 1000000
+    'max_reserved_labels_count': 1000000,
+    'clear_reserved_memory': False
   },
   'odin': {
     'logging': {
@@ -354,7 +355,8 @@ help_text = {
     'service': {
       'proxy': 'IPC linux domain socket file location'
     },
-    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.'
+    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.',
+    'clear_reserved_memory': 'if `True` clean reserved memory in path algorithms'
   },
   'odin': {
     'logging': {

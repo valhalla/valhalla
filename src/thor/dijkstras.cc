@@ -9,6 +9,8 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
+
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
@@ -40,26 +42,27 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-Dijkstras::Dijkstras(uint32_t max_reserved_labels_count)
+Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
-      max_reserved_labels_count_(max_reserved_labels_count), multipath_(false) {
+      max_reserved_labels_count_(
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), multipath_(false) {
 }
 
 // Clear the temporary information generated during path construction.
 void Dijkstras::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
-  if (bdedgelabels_.size() > max_reserved_labels_count_) {
-    bdedgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (bdedgelabels_.size() > reservation) {
+    bdedgelabels_.resize(reservation);
     bdedgelabels_.shrink_to_fit();
   }
-  bdedgelabels_.clear();
 
-  if (mmedgelabels_.size() > max_reserved_labels_count_) {
-    mmedgelabels_.resize(max_reserved_labels_count_);
+  if (mmedgelabels_.size() > reservation) {
+    mmedgelabels_.resize(reservation);
     mmedgelabels_.shrink_to_fit();
   }
-  mmedgelabels_.clear();
 
   adjacencylist_.clear();
   mmadjacencylist_.clear();

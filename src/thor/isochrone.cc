@@ -43,8 +43,8 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-Isochrone::Isochrone(uint32_t max_reserved_labels_count)
-    : Dijkstras(max_reserved_labels_count), shape_interval_(50.0f) {
+Isochrone::Isochrone(const boost::property_tree::ptree& config)
+    : Dijkstras(config), shape_interval_(50.0f) {
 }
 
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to

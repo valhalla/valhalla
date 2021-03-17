@@ -334,5 +334,37 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
 
   std::string expected_shape =
       "e~le|A_ldoCyD~IoAtCkArC]z@kBpEeAsAdArAjBqE\\{@jAsCad@ai@yAgBo@iCuF_Ua@_B[uAyQgz@i@cCwAt@mg@bXyt@b`@yCvAyBqH{EgLiCvEoD|G{\\`r@wFqHoPqTy@gAyAkBe@o@i@q@{D_CeB{@wCfC{XfVt@jCjA~Dn@xB?lBcA|BV\\f@r@wBlE";
+
   test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver, expected_shape);
+}
+
+class AstarBSSTest : public thor::AStarBSSAlgorithm {
+public:
+  explicit AstarBSSTest(const boost::property_tree::ptree& config = {}) : AStarBSSAlgorithm(config) {
+  }
+
+  void Clear() {
+    AStarBSSAlgorithm::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(AstarBss, test_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  AstarBSSTest astar(config);
+  astar.Clear();
+}
+
+TEST(AstarBss, test_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  AstarBSSTest astar(config);
+  astar.Clear();
 }

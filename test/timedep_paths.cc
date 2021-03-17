@@ -129,6 +129,70 @@ TEST(TimeDepPaths, test_arrive_by_paths) {
   try_path(reader, loki_worker, false, test_request1, 1);
 }
 
+class TimeDepForwardTest : public thor::TimeDepForward {
+public:
+  explicit TimeDepForwardTest(const boost::property_tree::ptree& config = {})
+      : TimeDepForward(config) {
+  }
+
+  void Clear() {
+    TimeDepForward::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(TimeDepPaths, test_forward_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  TimeDepForwardTest time_dep(config);
+  time_dep.Clear();
+}
+
+TEST(TimeDepPaths, test_forward_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  TimeDepForwardTest time_dep(config);
+  time_dep.Clear();
+}
+
+class TimeDepReverseTest : public thor::TimeDepReverse {
+public:
+  explicit TimeDepReverseTest(const boost::property_tree::ptree& config = {})
+      : TimeDepReverse(config) {
+  }
+
+  void Clear() {
+    TimeDepReverse::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(TimeDepPaths, test_reverse_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  TimeDepReverseTest time_dep(config);
+  time_dep.Clear();
+}
+
+TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  TimeDepReverseTest time_dep(config);
+  time_dep.Clear();
+}
+
 int main(int argc, char* argv[]) {
   // logging::Configure({{"type", ""}}); // silence logs
   testing::InitGoogleTest(&argc, argv);

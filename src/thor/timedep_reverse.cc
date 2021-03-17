@@ -12,14 +12,13 @@ namespace valhalla {
 namespace thor {
 
 // TODO - compute initial label count based on estimated route length
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse(uint32_t max_reserved_labels_count)
-    : TimeDepForward(max_reserved_labels_count) {
+TimeDepReverse::TimeDepReverse(const boost::property_tree::ptree& config) : TimeDepForward(config) {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
@@ -32,11 +31,15 @@ TimeDepReverse::~TimeDepReverse() {
 
 void TimeDepReverse::Clear() {
   TimeDepForward::Clear();
-  if (edgelabels_rev_.size() > max_reserved_labels_count_) {
-    edgelabels_rev_.resize(max_reserved_labels_count_);
+
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_rev_.size() > reservation) {
+    edgelabels_rev_.resize(reservation);
     edgelabels_rev_.shrink_to_fit();
   }
+
   edgelabels_rev_.clear();
+
   adjacencylist_rev_.clear();
 }
 
@@ -52,7 +55,7 @@ void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_rev_.reserve(kInitialEdgeLabelCount);
+  edgelabels_rev_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.

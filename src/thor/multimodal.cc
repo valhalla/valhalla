@@ -41,10 +41,12 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
-MultiModalPathAlgorithm::MultiModalPathAlgorithm(uint32_t max_reserved_labels_count)
+MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kPedestrian), travel_type_(0),
-      max_reserved_labels_count_(max_reserved_labels_count) {
+      max_reserved_labels_count_(
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 // Destructor
@@ -75,12 +77,14 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
 
 // Clear the temporary information generated during path construction.
 void MultiModalPathAlgorithm::Clear() {
-  // Clear the edge labels and destination list
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
+  // Clear the edge labels and destination list
   edgelabels_.clear();
+
   destinations_.clear();
 
   // Clear elements from the adjacency list

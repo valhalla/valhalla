@@ -43,11 +43,9 @@ class BidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config   Config with std::string for key and data
    */
-  explicit BidirectionalAStar(
-      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit BidirectionalAStar(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
@@ -112,6 +110,9 @@ protected:
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
   uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;
