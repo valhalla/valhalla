@@ -207,7 +207,7 @@ void SetShapeAttributes(const AttributesController& controller,
                                 static_cast<std::uint8_t>(traffic_speed.congestion2),
                                 {},
                                 traffic_speed.closed(1)});
-        if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
+        if (traffic_speed.breakpoint2 < 255) {
           cuts.emplace_back(cut_t{1,
                                   speed,
                                   static_cast<std::uint8_t>(traffic_speed.congestion3),
@@ -856,6 +856,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (controller.attributes.at(kEdgeBicycleNetwork)) {
     trip_edge->set_bicycle_network(directededge->bike_network());
+  }
+
+  if (controller.attributes.at(kEdgeSacScale)) {
+    trip_edge->set_sac_scale(GetTripLegSacScale(directededge->sac_scale()));
   }
 
   if (controller.attributes.at(kEdgeSidewalk)) {
