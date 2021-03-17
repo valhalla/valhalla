@@ -9,6 +9,8 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
+
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
@@ -40,9 +42,11 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-Dijkstras::Dijkstras(uint32_t max_reserved_labels_count)
+Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
-      max_reserved_labels_count_(max_reserved_labels_count), multipath_(false) {
+      max_reserved_labels_count_(
+                config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
+      multipath_(false) {
 }
 
 // Clear the temporary information generated during path construction.
