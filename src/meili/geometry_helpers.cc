@@ -15,15 +15,15 @@ namespace meili {
 namespace helpers {
 
 // snapped point, squared distance, segment index, offset
-std::tuple<PointLL, float, typename std::vector<PointLL>::size_type, float>
-Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap_distance) {
+std::tuple<PointLL, double, typename std::vector<PointLL>::size_type, double>
+Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, double snap_distance) {
   PointLL first_point(shape.pop());
   auto closest_point = first_point;
   auto closest_segment_point = first_point;
-  float closest_distance = p.approx.DistanceSquared(closest_segment_point);
+  double closest_distance = p.approx.DistanceSquared(closest_segment_point);
   size_t closest_segment = 0;
-  float closest_partial_length = 0.f;
-  float total_length = 0.f;
+  double closest_partial_length = 0.0;
+  double total_length = 0.0;
 
   // for each segment
   auto u = first_point;
@@ -50,17 +50,17 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap
     u = v;
   }
 
-  // percent_along is a float between 0 and 1 representing the location of
+  // percent_along is a double between 0 and 1 representing the location of
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += closest_segment_point.Distance(closest_point);
-  float percent_along =
-      total_length > 0.f ? static_cast<float>(closest_partial_length / total_length) : 0.f;
+  double percent_along =
+      total_length > 0.0 ? static_cast<double>(closest_partial_length / total_length) : 0.0;
 
   // Not so much "snapping" as recognizing that floating-point has limited precision.
   // For example:
-  // float k = 7.63513697E-9;  // valid
-  // float r = 1.f - k;        // sure why not
+  // double k = 1e-18;         // valid
+  // double r = 1.0 - k;       // sure why not
   // Result: r == 1.0          // exactly 1.0?! yep.
   //
   // Downstream logic looks at percentages along the edge and the opp-edge. We want to be
@@ -69,12 +69,12 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, float snap
   // exactly 1.0. This causes issues because the percentage_along the opp_edge is not
   // exactly 0.0, which is not expected.
   //
-  // Float has "7.2" decimal digits of precision. Hence, we will consider 1e-7 as our
+  // double has ~16 decimal digits of precision. Hence, we will consider 1e-15 as our
   // representative small figure, below which we snap to 0.0 and within that distance
   // of 1.0 will snap to 1.0.
-  constexpr float float_precision_at_one = 1e-7;
-  constexpr float very_close_to_one = 1.0 - float_precision_at_one;
-  if (percent_along < float_precision_at_one) {
+  constexpr double double_precision_at_one = 1e-15;
+  constexpr double very_close_to_one = 1.0 - double_precision_at_one;
+  if (percent_along < double_precision_at_one) {
     percent_along = 0.0;
   } else if (percent_along > very_close_to_one) {
     percent_along = 1.0;

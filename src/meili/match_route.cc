@@ -141,9 +141,13 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       continue;
     }
+
+    // Allow for some fp-fuzz in this gt comparison
+    bool prev_gt_curr = prev_match.distance_along > curr_match.distance_along + 1e-3;
+
     // we want to handle to loop by locating the correct target edge by comparing the distance alone
-    bool loop = prev_match.edgeid == curr_match.edgeid &&
-                prev_match.distance_along > curr_match.distance_along;
+    bool loop = (prev_match.edgeid == curr_match.edgeid) && prev_gt_curr;
+
     // if it is a loop, we start the search after the first edge
     auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
                                      [&curr_match](const EdgeSegment& segment) {
@@ -152,7 +156,6 @@ void cut_segments(const std::vector<MatchResult>& match_results,
 
     if (last_segment == segments.cend()) {
       throw std::logic_error("In meili::cutsegments(), unexpectedly unable to locate target edge.");
-      assert(false);
     }
 
     // we need to close the previous edge

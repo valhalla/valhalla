@@ -16,10 +16,10 @@ namespace meili {
 namespace helpers {
 
 // snapped point, squared distance, segment index, offset
-std::tuple<midgard::PointLL, float, typename std::vector<midgard::PointLL>::size_type, float>
+std::tuple<midgard::PointLL, double, typename std::vector<midgard::PointLL>::size_type, double>
 Project(const midgard::projector_t& p,
         midgard::Shape7Decoder<midgard::PointLL>& shape,
-        float snap_distance = 0.f);
+        double snap_distance = 0.f);
 
 } // namespace helpers
 } // namespace meili
