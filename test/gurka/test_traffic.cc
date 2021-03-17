@@ -775,7 +775,7 @@ TEST(Traffic, CutGeoms) {
         auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
 
         EXPECT_EQ(leg.node_size(), 2); // 1 edge
-        EXPECT_EQ(shapes.size(), 3); // The third record should not create a slice
+        EXPECT_EQ(shapes.size(), 3);   // The third record should not create a slice
         // An attribute for each pair formed by the shape-points
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
