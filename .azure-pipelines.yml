@@ -35,7 +35,7 @@ jobs:
       - task: Cache@2
         displayName: "Cache build"
         inputs:
-          key: 'build | "$(Build.SourceBranch)"'
+          key: 'build | "$(Build.SourceBranch)" | "msvc-v16.9.0"'
           path: "$(BUILD_DIR)"
           restoreKeys: |
             build | "$(Build.SourceBranch)"
