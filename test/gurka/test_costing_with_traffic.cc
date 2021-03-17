@@ -220,12 +220,14 @@ TEST(Standalone, CostingWithTraffic) {
               .str();
       auto result = gurka::do_action(valhalla::Options::route, map, req_no_traffic, reader);
 
-      if (c == "truck" || c == "motor_scooter") // favor tertiary road - traffic added but not requested
+      if (c == "truck" ||
+          c == "motor_scooter") // favor tertiary road - traffic added but not requested
         gurka::assert::raw::expect_path(result, {"pN", "NO", "OP", "PQ", "QR", "RS", "ST", "TU", "UV",
                                                  "VW", "WX", "XY", "YZ", "bZA"});
       else // favor primary road - traffic added but not requested
-        gurka::assert::raw::expect_path(result, {"pN", "oNM", "LM", "KL", "JK", "IJ", "HI", "GH", "FG",
-                                                 "EF", "DE", "CD", "BC", "ByYc", "ByYc", "YZ", "bZA"});
+        gurka::assert::raw::expect_path(result,
+                                        {"pN", "oNM", "LM", "KL", "JK", "IJ", "HI", "GH", "FG", "EF",
+                                         "DE", "CD", "BC", "ByYc", "ByYc", "YZ", "bZA"});
     }
 
     std::string date_type = "3"; // invariant time
@@ -234,8 +236,7 @@ TEST(Standalone, CostingWithTraffic) {
           (boost::format(
                R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":3, "value": "current"}})") %
            std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()) %
-           std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) % c %
-           c)
+           std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) % c % c)
               .str();
       auto result = gurka::do_action(valhalla::Options::route, map, req_with_traffic, reader);
 
