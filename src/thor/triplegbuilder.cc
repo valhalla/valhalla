@@ -207,7 +207,7 @@ void SetShapeAttributes(const AttributesController& controller,
                                 static_cast<std::uint8_t>(traffic_speed.congestion2),
                                 {},
                                 traffic_speed.closed(1)});
-        if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
+        if (traffic_speed.breakpoint2 < 255) {
           cuts.emplace_back(cut_t{1,
                                   speed,
                                   static_cast<std::uint8_t>(traffic_speed.congestion3),
