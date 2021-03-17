@@ -1325,6 +1325,8 @@ function filter_tags_generic(kv)
         use = 28
      elseif kv["highway"] == "bridleway" then
         use = 29
+     elseif (kv["highway"] == "footway" and kv["footway"] == "crossing") then
+        use = 32
      end
   end
 

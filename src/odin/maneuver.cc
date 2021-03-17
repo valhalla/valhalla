@@ -134,7 +134,7 @@ Maneuver::Maneuver()
       roundabout_exit_count_(0), has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), has_collapsed_small_end_ramp_fork_(false),
-      has_collapsed_merge_maneuver_(false) {
+      has_collapsed_merge_maneuver_(false), pedestrian_crossing_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -646,6 +646,14 @@ bool Maneuver::is_walkway() const {
 
 bool Maneuver::unnamed_walkway() const {
   return trail_type_ == TrailType::kUnnamedWalkway;
+}
+
+bool Maneuver::pedestrian_crossing() const {
+  return pedestrian_crossing_;
+}
+
+void Maneuver::set_pedestrian_crossing(bool pedestrian_crossing) {
+  pedestrian_crossing_ = pedestrian_crossing;
 }
 
 bool Maneuver::is_cycleway() const {

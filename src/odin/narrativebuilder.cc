@@ -4071,9 +4071,18 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
   if (enhance_empty_street_names && street_names_string.empty() && empty_street_name_labels) {
 
     // If pedestrian travel mode on unnamed footway
-    // then set street names string to walkway
+    // then set street names string to walkway. Additionally, if the path
+    // is a pedestrian crossing, use appropriate phrasing.
     if ((maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
-      street_names_string = empty_street_name_labels->at(kWalkwayIndex);
+      auto num_empty_street_labels = empty_street_name_labels->size();
+
+      // Pedestrian crossing string is only available for english locale. Default to kWalkwayIndex
+      // for other languages
+      bool apply_pedestrian_crossing_label =
+          maneuver.pedestrian_crossing() && kPedestrianCrossingIndex < num_empty_street_labels;
+      auto dictionary_index =
+          apply_pedestrian_crossing_label ? kPedestrianCrossingIndex : kWalkwayIndex;
+      street_names_string = empty_street_name_labels->at(dictionary_index);
     }
 
     // If bicycle travel mode on unnamed cycleway
