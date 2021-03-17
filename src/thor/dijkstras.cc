@@ -45,7 +45,7 @@ namespace thor {
 Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
       max_reserved_labels_count_(
-                config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
       multipath_(false) {
 }
 

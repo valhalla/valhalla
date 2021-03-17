@@ -45,7 +45,7 @@ MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptr
     : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kPedestrian), travel_type_(0),
       max_reserved_labels_count_(
-                config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
 }
 
 // Destructor

@@ -18,8 +18,7 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse(const boost::property_tree::ptree& config)
-    : TimeDepForward(config) {
+TimeDepReverse::TimeDepReverse(const boost::property_tree::ptree& config) : TimeDepForward(config) {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   max_label_count_ = std::numeric_limits<uint32_t>::max();

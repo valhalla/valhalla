@@ -71,14 +71,10 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian),
-      bidir_astar(config),
-      bss_astar(config),
-      multi_modal_astar(config),
-      timedep_forward(config),
-      timedep_reverse(config),
-      isochrone_gen(config),
-      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
+    : mode(valhalla::sif::TravelMode::kPedestrian), bidir_astar(config), bss_astar(config),
+      multi_modal_astar(config), timedep_forward(config), timedep_reverse(config),
+      isochrone_gen(config), matcher_factory(config, graph_reader),
+      reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();

@@ -21,7 +21,7 @@ TimeDepForward::TimeDepForward(const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kDrive), travel_type_(0),
       max_reserved_labels_count_(
-                config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
 }
 
 // Destructor
