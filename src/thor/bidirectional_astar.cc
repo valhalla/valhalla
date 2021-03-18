@@ -46,8 +46,9 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-BidirectionalAStar::BidirectionalAStar(uint32_t max_reserved_labels_count)
-    : PathAlgorithm(), max_reserved_labels_count_(max_reserved_labels_count) {
+BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
+    : PathAlgorithm(), max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count",
+                                                                       kInitialEdgeLabelCountBD)) {
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
