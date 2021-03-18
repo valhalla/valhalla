@@ -31,10 +31,9 @@ class TimeDepForward : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config A config object of key, value pairs
    */
-  explicit TimeDepForward(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit TimeDepForward(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
@@ -201,10 +200,9 @@ class TimeDepReverse : public TimeDepForward {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config A config object of key, value pairs
    */
-  explicit TimeDepReverse(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
