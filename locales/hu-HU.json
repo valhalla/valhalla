@@ -4,30 +4,6 @@
     "hu"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "<LENGTH> távon belül, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilométerek",
-        "1 kilométer",
-        "<METERS> méterek",
-        "kevesebb, mint 10 méter"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mérföldek",
-        "1 mérföld",
-        "fél mérföld",
-        "negyed mérföld",
-        "<FEET> láb",
-        "kevesebb, mint 10 láb"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Érkezés: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpár út"
+        "a hegyi kerékpár út",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilométerek",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Komp",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Komp",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
         "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
       },
-      "empty_street_name_labels": [
-        "a sétány",
-        "a kerékpárút",
-        "a hegyi kerékpárút"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -465,6 +443,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot.",
         "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
       },
-      "empty_street_name_labels": [
-        "a sétány",
-        "a kerékpárút",
-        "a hegyi kerékpárút"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -561,6 +540,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerkpárút"
+        "a hegyi kerkpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -1077,14 +1068,15 @@
         "4": "Úttorkolat <TOWARD_SIGN> felé.",
         "5": "Úttorkolat <RELATIVE_DIRECTION> felé <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "a sétány",
-        "a kerékpárút",
-        "a hegyi kerékpárút"
-      ],
       "relative_directions": [
         "balra",
         "jobbra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Úttorkolat a(z) <TOWARD_SIGN> felé.",
         "5": "Úttorkolat <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
-      "empty_street_name_labels": [
-        "a sétány",
-        "a kerékpárút",
-        "a hegyi kerékpárút"
-      ],
       "relative_directions": [
         "balra",
         "jobbra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilométerek",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilométerek",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
-        "a hegyi kerékpárút"
+        "a hegyi kerékpárút",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "balra",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> távon belül, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

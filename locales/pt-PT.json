@@ -4,30 +4,6 @@
     "pt"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Em <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> quilómetros",
-        "1 quilómetro",
-        "<METERS> metros",
-        "menos de 10 metros"
-      ],
-      "us_customary_lengths": [
-        "<MILES> milhas",
-        "1 milha",
-        "meia milha",
-        "um quarto de milha",
-        "<FEET> pés",
-        "menos de 10 pés"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Chegar: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho para bicicleta de montanha"
+        "o trilho para bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bibicleta de montanha"
+        "o trilho de bibicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilómetros",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Entre na <STREET_NAMES> e saia em direção à <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue na <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Entre na <STREET_NAMES> e saia em direção a <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "o passeio",
-        "a ciclovia",
-        "o trilho de bicicleta de montanha"
-      ],
       "ordinal_values": [
         "1º",
         "2º",
@@ -465,6 +443,12 @@
         "8º",
         "9º",
         "10º"
+      ],
+      "empty_street_name_labels": [
+        "o passeio",
+        "a ciclovia",
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Entre na <STREET_NAMES> e saia em direção à <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Entre na <STREET_NAMES> e saia em direção a <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "o passeio",
-        "a ciclovia",
-        "o trilho de bicicleta de montanha"
-      ],
       "ordinal_values": [
         "1º",
         "2º",
@@ -561,6 +540,12 @@
         "8º",
         "9º",
         "10º"
+      ],
+      "empty_street_name_labels": [
+        "o passeio",
+        "a ciclovia",
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -1077,14 +1068,15 @@
         "4": "Vire em direção a <TOWARD_SIGN>.",
         "5": "Vire à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "o passeio",
-        "a ciclovia",
-        "o trilho de bicicleta de montanha"
-      ],
       "relative_directions": [
         "esquerda",
         "direita"
+      ],
+      "empty_street_name_labels": [
+        "o passeio",
+        "a ciclovia",
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Vire em direção a <TOWARD_SIGN>.",
         "5": "Vire à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "o passeio",
-        "a ciclovia",
-        "o trilho de bicicleta de montanha"
-      ],
       "relative_directions": [
         "esquerda",
         "direita"
+      ],
+      "empty_street_name_labels": [
+        "o passeio",
+        "a ciclovia",
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilómetros",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicileta de montanha"
+        "o trilho de bicileta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilómetros",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicilceta de montanha"
+        "o trilho de bicilceta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
-        "o trilho de bicicleta de montanha"
+        "o trilho de bicicleta de montanha",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "esquerda",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Em <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> quilómetros",
+        "1 quilómetro",
+        "<METERS> metros",
+        "menos de 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "um quarto de milha",
+        "<FEET> pés",
+        "menos de 10 pés"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

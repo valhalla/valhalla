@@ -4,30 +4,6 @@
     "ro"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Peste <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometri",
-        "1 kilometru",
-        "<METERS> metri",
-        "mai puțin de 10 metri"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mile",
-        "1 milă",
-        "jumătate de milă",
-        "un sfert de milă",
-        "<FEET> picioare",
-        "mai puțin de 10 picioare"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Sosire: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometri",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Feribot",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Feribot",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuă pe <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "alee",
-        "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
-      ],
       "ordinal_values": [
         "prima",
         "a doua",
@@ -465,6 +443,12 @@
         "a opta",
         "a noua",
         "a zecea"
+      ],
+      "empty_street_name_labels": [
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Intră pe <STREET_NAMES> și ia-o pe ieșirea pe <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Intră pe <STREET_NAMES> și ia-o pe ieșirea spre <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "alee",
-        "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
-      ],
       "ordinal_values": [
         "prima",
         "a doua",
@@ -561,6 +540,12 @@
         "a opta",
         "a noua",
         "a zecea"
+      ],
+      "empty_street_name_labels": [
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă de biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă de biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -1077,14 +1068,15 @@
         "4": "Intră pe banda spre <TOWARD_SIGN>.",
         "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "alee",
-        "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
-      ],
       "relative_directions": [
         "stânga",
         "dreapta"
+      ],
+      "empty_street_name_labels": [
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Intră pe banda spre <TOWARD_SIGN>.",
         "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "alee",
-        "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
-      ],
       "relative_directions": [
         "stânga",
         "dreapta"
+      ],
+      "empty_street_name_labels": [
+        "alee",
+        "pistă pentru biciclete",
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometri",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă de biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometri",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
-        "traseu pentru ciclism montan"
+        "traseu pentru ciclism montan",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "stânga",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Peste <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometri",
+        "1 kilometru",
+        "<METERS> metri",
+        "mai puțin de 10 metri"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mile",
+        "1 milă",
+        "jumătate de milă",
+        "un sfert de milă",
+        "<FEET> picioare",
+        "mai puțin de 10 picioare"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

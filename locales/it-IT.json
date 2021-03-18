@@ -4,30 +4,6 @@
     "it"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Tra <LENGTH> , <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> chilometri",
-        "1 chilometro",
-        "<METERS> metri",
-        "meno di 10 metri"
-      ],
-      "us_customary_lengths": [
-        "<MILES> miglia",
-        "1 miglio",
-        "mezzo miglio",
-        "un quarto di miglio",
-        "<FEET> piedi",
-        "meno di 10 piedi"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Arrivo: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS>chilometri",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Traghetto",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Traghetto",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Entra in <STREET_NAMES> e prendi ll'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua su <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
-      ],
       "ordinal_values": [
         "1a",
         "2a",
@@ -465,6 +443,12 @@
         "8a",
         "9a",
         "10a"
+      ],
+      "empty_street_name_labels": [
+        "la passerella",
+        "la pista ciclabile",
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
-      ],
       "ordinal_values": [
         "1a",
         "2a",
@@ -561,6 +540,12 @@
         "8a",
         "9a",
         "10a"
+      ],
+      "empty_street_name_labels": [
+        "la passerella",
+        "la pista ciclabile",
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -1077,14 +1068,15 @@
         "4": "Immettiti verso <TOWARD_SIGN>.",
         "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
-      ],
       "relative_directions": [
         "sinistra",
         "destra"
+      ],
+      "empty_street_name_labels": [
+        "la passerella",
+        "la pista ciclabile",
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Immettiti verso <TOWARD_SIGN>.",
         "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "la passerella",
-        "la pista ciclabile",
-        "il percorso per mountain bike"
-      ],
       "relative_directions": [
         "sinistra",
         "destra"
+      ],
+      "empty_street_name_labels": [
+        "la passerella",
+        "la pista ciclabile",
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> chilometri",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> chilometri",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "la passerella",
         "la pista ciclabile",
-        "il percorso per mountain bike"
+        "il percorso per mountain bike",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "sinistra",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Tra <LENGTH> , <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> chilometri",
+        "1 chilometro",
+        "<METERS> metri",
+        "meno di 10 metri"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miglia",
+        "1 miglio",
+        "mezzo miglio",
+        "un quarto di miglio",
+        "<FEET> piedi",
+        "meno di 10 piedi"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

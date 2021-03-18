@@ -4,30 +4,6 @@
     "engb"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometres",
-        "1 kilometre",
-        "<METERS> metres",
-        "less than 10 metres"
-      ],
-      "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "a quarter mile",
-        "<FEET> feet",
-        "less than 10 feet"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Arrive: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Enter <STREET_NAMES> and take the exit towards <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
       "ordinal_values": [
         "1st",
         "2nd",
@@ -465,6 +443,12 @@
         "8th",
         "9th",
         "10th"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Enter <STREET_NAMES> and take the exit towards <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
       "ordinal_values": [
         "1st",
         "2nd",
@@ -561,6 +540,12 @@
         "8th",
         "9th",
         "10th"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -1077,14 +1068,15 @@
         "4": "Merge towards <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> towards <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
       "relative_directions": [
         "left",
         "right"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Merge towards <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> towards <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
       "relative_directions": [
         "left",
         "right"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "left",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometres",
+        "1 kilometre",
+        "<METERS> metres",
+        "less than 10 metres"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

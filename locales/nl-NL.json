@@ -4,30 +4,6 @@
     "nl"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Over <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometer",
-        "1 kilometer",
-        "<METERS> meter",
-        "minder dan 10 meter"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mijl",
-        "1 mijl",
-        "een halve mijl",
-        "een kwart mijl",
-        "<FEET> voet",
-        "minder dan 10 voet"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Aankomst: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "Links",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Veerboot",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "ferry_label": "Veerboot",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Ga <STREET_NAMES> op en neem de afslag naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Ga verder op <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Ga <STREET_NAMES> op en neem de afslag richting <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbikepad"
-      ],
       "ordinal_values": [
         "1e",
         "2e",
@@ -465,6 +443,12 @@
         "8e",
         "9e",
         "10e"
+      ],
+      "empty_street_name_labels": [
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "<STREET_NAMES> opgaan en de afslag nemen naar <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "<STREET_NAMES> opgaan en de afslag nemen richting <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbikepad"
-      ],
       "ordinal_values": [
         "1e",
         "2e",
@@ -561,6 +540,12 @@
         "8e",
         "9e",
         "10e"
+      ],
+      "empty_street_name_labels": [
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "Links",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "Links",
@@ -1077,14 +1068,15 @@
         "4": "Voeg in richting <TOWARD_SIGN>.",
         "5": "Voeg <RELATIVE_DIRECTION> in richting <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbikepad"
-      ],
       "relative_directions": [
         "links",
         "rechts"
+      ],
+      "empty_street_name_labels": [
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Invoegen richting <TOWARD_SIGN>.",
         "5": "<RELATIVE_DIRECTION> invoegen richting <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "het voetpad",
-        "het fietspad",
-        "het mountainbikepad"
-      ],
       "relative_directions": [
         "Links",
         "Rechts"
+      ],
+      "empty_street_name_labels": [
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "Links",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "links",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "het voetpad",
         "het fietspad",
-        "het mountainbikepad"
+        "het mountainbikepad",
+        "the pedestrian crossing"
       ],
       "relative_directions": [
         "Links",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Over <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "minder dan 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mijl",
+        "1 mijl",
+        "een halve mijl",
+        "een kwart mijl",
+        "<FEET> voet",
+        "minder dan 10 voet"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
