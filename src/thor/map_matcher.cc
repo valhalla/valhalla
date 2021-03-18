@@ -274,20 +274,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    if (nodeinfo) {
-      uint32_t opp_local_idx = pred.opp_local_idx();
-      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-      if (nodeinfo->drive_on_right()) {
-        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-          turn = InternalTurn::kLeftTurn;
-      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-                 (turntype == baldr::Turn::Type::kSharpRight ||
-                  turntype == baldr::Turn::Type::kRight))
-        turn = InternalTurn::kRightTurn;
-    }
+    InternalTurn turn = nodeinfo ? costing->TurnType(pred.opp_local_idx(),nodeinfo,directededge) : InternalTurn::kNoTurn;
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel,

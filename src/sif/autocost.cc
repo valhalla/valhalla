@@ -249,6 +249,21 @@ public:
                         uint8_t& flow_sources) const override;
 
   /**
+   * Returns the turn type from the predecessor edge.
+   * Defaults to InternalTurn::kNoTurn. Costing models that wish to penalize
+   * short internal turns in the Transition Cost functions must override this method.
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  edge  Directed edge (the to edge)
+   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse search)
+   * @return  Returns the InternalTurn type
+   */
+  virtual InternalTurn TurnType(const uint32_t idx,
+                                const baldr::NodeInfo* node,
+                                const baldr::DirectedEdge* edge,
+                                const baldr::DirectedEdge* opp_pred_edge) const override;
+
+  /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
@@ -503,6 +518,27 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+}
+
+// Returns the turn type.  This turn type is used in the transition cost
+// functions to penalize making uturns on short internal edges.
+InternalTurn AutoCost::TurnType(const uint32_t idx,
+                                const baldr::NodeInfo* node,
+                                const baldr::DirectedEdge* edge,
+                                const baldr::DirectedEdge* opp_pred_edge) const {
+
+  baldr::Turn::Type turntype = opp_pred_edge ? opp_pred_edge->turntype(idx) : edge->turntype(idx);
+  if (node->drive_on_right()) {
+    // did we make a left onto a small internal edge?
+    if (edge->internal() && edge->length() <= kShortInternalLength &&
+        (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+      return InternalTurn::kLeftTurn;
+    // did we make a right onto a small internal edge?
+  } else if (edge->internal() && edge->length() <= kShortInternalLength &&
+             (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+    return InternalTurn::kRightTurn;
+
+  return InternalTurn::kNoTurn;
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor

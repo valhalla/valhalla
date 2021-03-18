@@ -121,24 +121,13 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    uint32_t opp_local_idx = pred.opp_local_idx();
-    baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-    if (nodeinfo->drive_on_right()) {
-      if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-        turn = InternalTurn::kLeftTurn;
-    } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-      turn = InternalTurn::kRightTurn;
-
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(pred.opp_local_idx(),nodeinfo,directededge));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -299,23 +288,13 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    InternalTurn turn = InternalTurn::kNoTurn;
-    baldr::Turn::Type turntype = opp_pred_edge->turntype(directededge->localedgeidx());
-
-    if (nodeinfo->drive_on_right()) {
-      if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-        turn = InternalTurn::kLeftTurn;
-    } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-      turn = InternalTurn::kRightTurn;
-
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(directededge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }

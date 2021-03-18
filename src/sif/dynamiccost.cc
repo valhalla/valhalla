@@ -108,6 +108,16 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr
   return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 }
 
+// Returns the turn type from the predecessor edge.
+// Defaults to InternalTurn::kNoTurn. Costing models that wish to penalize
+// short internal turns in the Transition Cost functions must override this method.
+InternalTurn DynamicCost::TurnType(const uint32_t,
+                                   const baldr::NodeInfo*,
+                                   const baldr::DirectedEdge*,
+                                   const baldr::DirectedEdge*) const {
+  return InternalTurn::kNoTurn;
+}
+
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.

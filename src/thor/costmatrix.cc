@@ -326,19 +326,6 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       }
       GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
-      InternalTurn turn = InternalTurn::kNoTurn;
-      uint32_t opp_local_idx = pred.opp_local_idx();
-      baldr::Turn::Type turntype = directededge->turntype(opp_local_idx);
-
-      if (nodeinfo->drive_on_right()) {
-        if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-          turn = InternalTurn::kLeftTurn;
-      } else if (directededge->internal() && directededge->length() <= kShortInternalLength &&
-                 (turntype == baldr::Turn::Type::kSharpRight ||
-                  turntype == baldr::Turn::Type::kRight))
-        turn = InternalTurn::kRightTurn;
-
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
@@ -346,7 +333,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                              static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                              static_cast<bool>(flow_sources & kDefaultFlowMask),
+                              costing_->TurnType(pred.opp_local_idx(),nodeinfo,directededge),
                               restriction_idx);
       adj->add(idx);
     }
@@ -617,18 +605,6 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         continue;
       }
 
-      InternalTurn turn = InternalTurn::kNoTurn;
-      baldr::Turn::Type turntype = opp_pred_edge->turntype(directededge->localedgeidx());
-
-      if (nodeinfo->drive_on_right()) {
-        if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-            (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-          turn = InternalTurn::kLeftTurn;
-      } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-                 (turntype == baldr::Turn::Type::kSharpRight ||
-                  turntype == baldr::Turn::Type::kRight))
-        turn = InternalTurn::kRightTurn;
-
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
@@ -636,7 +612,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                              static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                              static_cast<bool>(flow_sources & kDefaultFlowMask),
+                              costing_->TurnType(directededge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
                               restriction_idx);
       adj->add(idx);
 

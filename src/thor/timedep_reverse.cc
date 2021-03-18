@@ -275,24 +275,14 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
   }
 
-  InternalTurn turn = InternalTurn::kNoTurn;
-  baldr::Turn::Type turntype = opp_pred_edge->turntype(meta.edge->localedgeidx());
-
-  if (nodeinfo->drive_on_right()) {
-    if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-        (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
-      turn = InternalTurn::kLeftTurn;
-  } else if (opp_edge->internal() && opp_edge->length() <= kShortInternalLength &&
-             (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
-    turn = InternalTurn::kRightTurn;
-
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), turn,
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(meta.edge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
                                restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};

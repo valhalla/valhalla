@@ -279,6 +279,21 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const;
 
   /**
+   * Returns the turn type from the predecessor edge.
+   * Defaults to InternalTurn::kNoTurn. Costing models that wish to penalize
+   * short internal turns in the Transition Cost functions must override this method.
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  edge  Directed edge (the to edge)
+   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse search)
+   * @return  Returns the InternalTurn type
+   */
+  virtual InternalTurn TurnType(const uint32_t idx,
+                                const baldr::NodeInfo* node,
+                                const baldr::DirectedEdge* edge,
+                                const baldr::DirectedEdge* opp_pred_edge = nullptr) const;
+
+  /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
