@@ -19,7 +19,7 @@ namespace helpers {
 std::tuple<midgard::PointLL, double, typename std::vector<midgard::PointLL>::size_type, double>
 Project(const midgard::projector_t& p,
         midgard::Shape7Decoder<midgard::PointLL>& shape,
-        double snap_distance = 0.f);
+        double snap_distance = 0.0);
 
 } // namespace helpers
 } // namespace meili
