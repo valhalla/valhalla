@@ -238,7 +238,8 @@ public:
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
    * @param  edge  Directed edge (the to edge)
-   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse search)
+   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse
+   * search)
    * @return  Returns the InternalTurn type
    */
   virtual InternalTurn TurnType(const uint32_t idx,
@@ -504,9 +505,9 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the turn type.  This turn type is used in the transition cost
 // functions to penalize making uturns on short internal edges.
 InternalTurn TruckCost::TurnType(const uint32_t idx,
-                                const baldr::NodeInfo* node,
-                                const baldr::DirectedEdge* edge,
-                                const baldr::DirectedEdge* opp_pred_edge) const {
+                                 const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const baldr::DirectedEdge* opp_pred_edge) const {
 
   baldr::Turn::Type turntype = opp_pred_edge ? opp_pred_edge->turntype(idx) : edge->turntype(idx);
   if (node->drive_on_right()) {

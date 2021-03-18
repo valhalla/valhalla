@@ -198,7 +198,9 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
-        InternalTurn turn = nodeinfo ? costing->TurnType(prev_edge_label.opp_local_idx(),nodeinfo,de) : InternalTurn::kNoTurn;
+        InternalTurn turn = nodeinfo
+                                ? costing->TurnType(prev_edge_label.opp_local_idx(), nodeinfo, de)
+                                : InternalTurn::kNoTurn;
         // Set previous edge label
         prev_edge_label = {kInvalidLabel,
                            edge_id,
@@ -401,7 +403,10 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         // Add begin edge
         path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
 
-        InternalTurn turn = nodeinfo ? mode_costing[static_cast<int>(mode)]->TurnType(prev_edge_label.opp_local_idx(),nodeinfo,de) : InternalTurn::kNoTurn;
+        InternalTurn turn =
+            nodeinfo ? mode_costing[static_cast<int>(mode)]->TurnType(prev_edge_label.opp_local_idx(),
+                                                                      nodeinfo, de)
+                     : InternalTurn::kNoTurn;
         // Set previous edge label
         prev_edge_label = {kInvalidLabel,
                            graphid,

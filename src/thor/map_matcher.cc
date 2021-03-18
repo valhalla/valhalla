@@ -274,7 +274,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
-    InternalTurn turn = nodeinfo ? costing->TurnType(pred.opp_local_idx(),nodeinfo,directededge) : InternalTurn::kNoTurn;
+    InternalTurn turn = nodeinfo ? costing->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+                                 : InternalTurn::kNoTurn;
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel,

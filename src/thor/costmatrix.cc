@@ -334,7 +334,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                              costing_->TurnType(pred.opp_local_idx(),nodeinfo,directededge),
+                              costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                               restriction_idx);
       adj->add(idx);
     }
@@ -613,7 +613,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                              costing_->TurnType(directededge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
+                              costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                 opp_pred_edge),
                               restriction_idx);
       adj->add(idx);
 

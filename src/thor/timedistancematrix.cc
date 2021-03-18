@@ -127,7 +127,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             costing_->TurnType(pred.opp_local_idx(),nodeinfo,directededge));
+                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -294,7 +294,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             costing_->TurnType(directededge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge));
+                             costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }

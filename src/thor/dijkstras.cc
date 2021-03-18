@@ -204,7 +204,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               costing_->TurnType(pred.opp_local_idx(),nodeinfo,directededge),
+                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                                restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
@@ -388,7 +388,8 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               costing_->TurnType(directededge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
+                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
                                restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }

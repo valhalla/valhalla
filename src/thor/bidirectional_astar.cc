@@ -324,7 +324,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                   costing_->TurnType(pred.opp_local_idx(),nodeinfo,meta.edge),
+                                   costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -549,7 +549,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                   costing_->TurnType(meta.edge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
+                                   costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                      opp_pred_edge),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);

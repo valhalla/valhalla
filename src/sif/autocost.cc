@@ -255,7 +255,8 @@ public:
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
    * @param  edge  Directed edge (the to edge)
-   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse search)
+   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse
+   * search)
    * @return  Returns the InternalTurn type
    */
   virtual InternalTurn TurnType(const uint32_t idx,

@@ -240,7 +240,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                            transition_cost, restriction_idx,
                            (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           costing_->TurnType(pred.opp_local_idx(),nodeinfo,meta.edge));
+                           costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;

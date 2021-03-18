@@ -282,7 +282,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               costing_->TurnType(meta.edge->localedgeidx(),nodeinfo,opp_edge,opp_pred_edge),
+                               costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
                                restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
