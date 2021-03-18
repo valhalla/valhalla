@@ -20,7 +20,7 @@ Project(const projector_t& p, Shape7Decoder<midgard::PointLL>& shape, double sna
   PointLL first_point(shape.pop());
   auto closest_point = first_point;
   auto closest_segment_point = first_point;
-  double closest_distance = p.approx.DistanceSquared(closest_segment_point);
+  double closest_distance = 1e100;
   size_t closest_segment = 0;
   double closest_partial_length = 0.0;
   double total_length = 0.0;
