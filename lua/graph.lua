@@ -1307,6 +1307,8 @@ function filter_tags_generic(kv)
         use = 20
      elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") then
         use = 24
+     elseif (kv["highway"] == "footway" and kv["footway"] == "crossing") then
+        use = 32
      elseif kv["highway"] == "footway" then
         use = 25
      elseif kv["highway"] == "steps" then
@@ -1325,8 +1327,6 @@ function filter_tags_generic(kv)
         use = 28
      elseif kv["highway"] == "bridleway" then
         use = 29
-     elseif (kv["highway"] == "footway" and kv["footway"] == "crossing") then
-        use = 32
      end
   end
 

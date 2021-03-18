@@ -45,7 +45,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -85,7 +85,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -143,7 +143,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -229,7 +229,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +366,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -395,7 +395,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -448,7 +448,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,7 +545,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +725,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +753,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +902,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -949,7 +949,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -984,7 +984,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -1023,7 +1023,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -1076,7 +1076,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1116,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1163,7 +1163,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -1399,7 +1399,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -1439,7 +1439,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -1495,7 +1495,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1583,7 +1583,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometres",
@@ -1958,7 +1958,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -1998,7 +1998,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -2040,7 +2040,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",
@@ -2088,7 +2088,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "left",

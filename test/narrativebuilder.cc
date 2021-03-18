@@ -3577,8 +3577,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_13_pedestrian_crossing_miles_e
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_13_pedestrian_crossing(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the pedestrian crossing.",
-                                  "", "Walk southwest on the pedestrian crossing for 200 feet.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the crosswalk.", "",
+                                  "Walk southwest on the crosswalk for 200 feet.",
                                   "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);

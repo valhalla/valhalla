@@ -45,7 +45,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -85,7 +85,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -143,7 +143,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -229,7 +229,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +366,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "trajekt",
       "example_phrases": {
@@ -395,7 +395,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "trajekt",
       "example_phrases": {
@@ -448,7 +448,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,7 +545,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +725,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +753,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +902,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -949,7 +949,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -984,7 +984,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1023,7 +1023,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1076,7 +1076,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1116,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1164,7 +1164,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1400,7 +1400,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1440,7 +1440,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1496,7 +1496,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1584,7 +1584,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1962,7 +1962,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -2002,7 +2002,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -2044,7 +2044,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -2092,7 +2092,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",

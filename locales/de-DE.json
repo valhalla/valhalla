@@ -45,7 +45,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -85,7 +85,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -143,7 +143,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -229,7 +229,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +366,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -395,7 +395,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -448,7 +448,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,7 +545,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +725,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +753,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +902,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "Links",
@@ -949,7 +949,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -984,7 +984,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -1023,7 +1023,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "Links",
@@ -1076,7 +1076,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1116,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1163,7 +1163,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -1399,7 +1399,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -1439,7 +1439,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -1495,7 +1495,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1580,7 +1580,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -1955,7 +1955,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "Links",
@@ -1995,7 +1995,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "Links",
@@ -2037,7 +2037,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",
@@ -2085,7 +2085,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the pedestrian crossing"
+        "the crosswalk"
       ],
       "relative_directions": [
         "links",

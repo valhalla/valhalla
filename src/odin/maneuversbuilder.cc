@@ -2266,7 +2266,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     bool is_current_and_intersecting_edge_of_similar_use =
         (curr_edge->use() == xedge_use ||
          (curr_edge->IsFootwayUse() &&
-          (xedge_use == TripLeg_Use_kPedestrianCrossing || xedge_use == TripLeg_Use_kFootwayUse)));
+          (xedge_use == TripLeg_Use_kPedestrianCrossingUse || xedge_use == TripLeg_Use_kFootwayUse)));
 
     // if there is a similar traversable intersecting edge
     //    or there is a relative straight traversable intersecting edge

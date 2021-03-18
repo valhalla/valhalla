@@ -73,7 +73,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {29, "kBridlewayUse"},
       {30, "kRestAreaUse"},
       {31, "kServiceAreaUse"},
-      {32, "kPedestrianCrossing"},
+      {32, "kPedestrianCrossingUse"},
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
@@ -369,11 +369,11 @@ bool EnhancedTripLeg_Edge::IsSidewalkUse() const {
 }
 
 bool EnhancedTripLeg_Edge::IsFootwayUse() const {
-  return (use() == TripLeg_Use_kFootwayUse || use() == TripLeg_Use_kPedestrianCrossing);
+  return (use() == TripLeg_Use_kFootwayUse || use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
 bool EnhancedTripLeg_Edge::IsPedestrianCrossingUse() const {
-  return (use() == TripLeg_Use_kPedestrianCrossing);
+  return (use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
 bool EnhancedTripLeg_Edge::IsStepsUse() const {

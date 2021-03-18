@@ -15,7 +15,7 @@ namespace {
 // Expected strings
 const std::vector<std::string> kExpectedEmptyStreetNameLabels = {"the walkway", "the cycleway",
                                                                  "the mountain bike trail",
-                                                                 "the pedestrian crossing"};
+                                                                 "the crosswalk"};
 const std::vector<std::string> kExpectedCardinalDirections = {"north",     "northeast", "east",
                                                               "southeast", "south",     "southwest",
                                                               "west",      "northwest"};
