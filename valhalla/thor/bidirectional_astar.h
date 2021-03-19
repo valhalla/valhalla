@@ -129,7 +129,8 @@ protected:
   // end started on a not_thru or closed (due to live-traffic) edge
   bool extended_search_;
   // Stores the pruning state at origin & destination. Its true if _any_ of the candidate edges at
-  // these locations has pruning turned off (pruning is off if starting from a closed or not_thru edge)
+  // these locations has pruning turned off (pruning is off if starting from a closed or not_thru
+  // edge)
   bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
 
   /**
