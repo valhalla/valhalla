@@ -176,20 +176,24 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   // create 2 small polygons intersecting all connecting roads so it fails to find a path
   //      A------B
   //  x---|-x  y-|---y
-  //  |   |    | |   |
+  //  |   | |  | |   |
   //  x---|-x  y-|---y
   //      |      |
   //      D------E
+  
+  // one clockwise ring
   std::vector<ring_bg_t> rings;
   rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
                    {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
                    {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
                    {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
                    {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}});
+  
+  // one counterclockwise ring
   rings.push_back({{node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.1 * dy},
                    {node_b.lng() - 0.1 * dx, node_b.lat() - 0.1 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.1 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
                    {node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy}});
 
   // build request manually for now
