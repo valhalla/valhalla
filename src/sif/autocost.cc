@@ -550,7 +550,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
 
     if (node->drive_on_right()) {
-      // Did we make a uturn on a short, internal edge?
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse || (pred.internal_turn() == InternalTurn::kLeftTurn && has_left))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
@@ -558,7 +558,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
-      // Did we make a uturn on a short, internal edge?
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse || (pred.internal_turn() == InternalTurn::kRightTurn && has_right))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
@@ -633,7 +633,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     }
 
     if (node->drive_on_right()) {
-      // Did we make a uturn on a short, internal edge?
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse || (internal_turn == InternalTurn::kLeftTurn && has_left))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
@@ -641,7 +641,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
-      // Did we make a uturn on a short, internal edge?
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse || (internal_turn == InternalTurn::kRightTurn && has_right))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
