@@ -32,7 +32,6 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
-option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON tiles reference counters are thread safe" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -229,10 +228,6 @@ elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
-
-if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
- add_definitions(-DENABLE_THREAD_SAFE_TILE_REF_COUNT)
-endif ()
 
 ## libvalhalla
 add_subdirectory(src)

@@ -15,5 +15,16 @@ public:
   size_t size;
 };
 
+class VectorGraphMemory final : public GraphMemory {
+public:
+  VectorGraphMemory(std::vector<char>&& memory) : memory_(std::move(memory)) {
+    data = const_cast<char*>(memory_.data());
+    size = memory_.size();
+  }
+
+private:
+  const std::vector<char> memory_;
+};
+
 } // namespace baldr
 } // namespace valhalla
