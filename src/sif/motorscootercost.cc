@@ -58,6 +58,7 @@ constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
+constexpr float kTCUnfavorableUturn = 600.f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -518,13 +519,19 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
 
     if (node->drive_on_right()) {
+      // Did we make a uturn at a node.
+      if (has_reverse)
+        seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
-      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
+      // Did we make a uturn at a node.
+      if (has_reverse)
+        seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
-      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
@@ -596,13 +603,19 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
     }
 
     if (node->drive_on_right()) {
+      // Did we make a uturn at a node.
+      if (has_reverse)
+        seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
-      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
           !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
+      // Did we make a uturn at a node.
+      if (has_reverse)
+        seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
-      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
           edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
