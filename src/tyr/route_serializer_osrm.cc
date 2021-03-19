@@ -1582,7 +1582,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // unique the same leg (leg_idx) between all routes.
   for (size_t route_i = 0; route_i < routes.size(); route_i++) {
 
-    size_t num_legs_i = routes[route_i].legs_size();
+    size_t num_legs_i = routes.Get(route_i).legs_size();
     std::vector<std::string> leg_summaries;
     leg_summaries.reserve(num_legs_i);
 
@@ -1602,7 +1602,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
         if (route_i == route_j)
           continue;
 
-        size_t num_legs_j = routes[route_j].legs_size();
+        size_t num_legs_j = routes.Get(route_j).legs_size();
 
         // there should be the same number of legs in every route. however, some
         // unit tests break this rule, so we cannot enable this assert.

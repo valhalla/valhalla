@@ -95,7 +95,7 @@ public:
     // Combine the distances for same named roads - store in a NamedSegment.
     route_leg_segs_by_dist.reserve(routes.size());
     for (size_t i = 0; i < routes.size(); i++) {
-      const DirectionsRoute& route = routes[i];
+      const DirectionsRoute& route = routes.Get(i);
       std::vector<std::vector<NamedSegment>> leg_segs_by_dist;
       leg_segs_by_dist.reserve(route.legs_size());
       for (size_t j = 0; j < route.legs_size(); j++) {
