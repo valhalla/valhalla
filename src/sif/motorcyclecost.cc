@@ -513,7 +513,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-          !edge->edge_to_left(idx) && edge->name_consistency(idx))
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn at a node.
@@ -521,7 +521,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-          edge->edge_to_left(idx) && edge->name_consistency(idx))
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
 
@@ -597,7 +597,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-          !edge->edge_to_left(idx) && edge->name_consistency(idx))
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn at a node.
@@ -605,7 +605,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-          edge->edge_to_left(idx) && edge->name_consistency(idx))
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
 
