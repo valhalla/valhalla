@@ -25,6 +25,9 @@
    * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
    * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
    * FIXED: Use CMakes built-in Python variables to configure installation [#2931](https://github.com/valhalla/valhalla/pull/2931)
+   * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
+   * FIXED: Fix map-match segfault when gps-points project very near a node [#2946](https://github.com/valhalla/valhalla/pull/2946)
+   * FIXED: Use kServiceRoad edges while searching for ferry connection [#2933](https://github.com/valhalla/valhalla/pull/2933)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
@@ -52,6 +55,7 @@
    * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
    * ADDED: Add min_level argument to valhalla_ways_to_edges [#2918](https://github.com/valhalla/valhalla/pull/2918)
    * ADDED: Adding ability to store the roundabout_exit_turn_degree to the maneuver [#2941](https://github.com/valhalla/valhalla/pull/2941)
+   * CHANGED: Allow config object to be passed-in to path algorithms [#2949](https://github.com/valhalla/valhalla/pull/2949)
    * CHANGED: Allow disabling Werror
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0

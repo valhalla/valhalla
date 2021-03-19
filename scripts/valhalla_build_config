@@ -354,7 +354,7 @@ help_text = {
     'service': {
       'proxy': 'IPC linux domain socket file location'
     },
-    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.'
+    'max_reserved_labels_count': 'Maximum capacity for edge labels reserved in path algorithm'
   },
   'odin': {
     'logging': {
