@@ -180,7 +180,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   //  x---|-x  y-|---y
   //      |      |
   //      D------E
-  
+
   // one clockwise ring
   std::vector<ring_bg_t> rings;
   rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
@@ -188,7 +188,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
                    {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
                    {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
                    {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}});
-  
+
   // one counterclockwise ring
   rings.push_back({{node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy},
                    {node_b.lng() - 0.1 * dx, node_b.lat() - 0.1 * dy},
