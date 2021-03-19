@@ -74,8 +74,12 @@ public:
    * @param  options Request options in a pbf
    * @param  mode Travel mode
    * @param  access_mask Access mask
+   * @param  penalize_uturns Should we penalize uturns?
    */
-  DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask);
+  DynamicCost(const CostingOptions& options,
+              const TravelMode mode,
+              uint32_t access_mask,
+              bool penalize_uturns = false);
 
   virtual ~DynamicCost();
 
@@ -277,22 +281,6 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const;
-
-  /**
-   * Returns the turn type from the predecessor edge.
-   * Defaults to InternalTurn::kNoTurn. Costing models that wish to penalize
-   * short internal turns in the Transition Cost functions must override this method.
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  edge  Directed edge (the to edge)
-   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse
-   * search)
-   * @return  Returns the InternalTurn type
-   */
-  virtual InternalTurn TurnType(const uint32_t idx,
-                                const baldr::NodeInfo* node,
-                                const baldr::DirectedEdge* edge,
-                                const baldr::DirectedEdge* opp_pred_edge = nullptr) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -555,6 +543,40 @@ public:
   }
 
   /**
+   * Returns the turn type from the predecessor edge.
+   * Defaults to InternalTurn::kNoTurn. Costing models that wish to penalize
+   * short internal turns in the Transition Cost functions must set penalize_uturns to true in the
+   * DynamicCost constructor
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  edge  Directed edge (the to edge)
+   * @param  opp_pred_edge Optional.  Opposing predecessor Directed edge (only used for the reverse
+   * search)
+   * @return  Returns the InternalTurn type
+   */
+  inline InternalTurn TurnType(const uint32_t idx,
+                               const baldr::NodeInfo* node,
+                               const baldr::DirectedEdge* edge,
+                               const baldr::DirectedEdge* opp_pred_edge = nullptr) const {
+
+    if (!penalize_uturns_)
+      return InternalTurn::kNoTurn;
+
+    baldr::Turn::Type turntype = opp_pred_edge ? opp_pred_edge->turntype(idx) : edge->turntype(idx);
+    if (node->drive_on_right()) {
+      // did we make a left onto a small internal edge?
+      if (edge->internal() && edge->length() <= kShortInternalLength &&
+          (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
+        return InternalTurn::kLeftTurn;
+      // did we make a right onto a small internal edge?
+    } else if (edge->internal() && edge->length() <= kShortInternalLength &&
+               (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
+      return InternalTurn::kRightTurn;
+
+    return InternalTurn::kNoTurn;
+  }
+
+  /**
    * Returns the transfer cost between 2 transit stops.
    * @return  Returns the transfer cost and time (seconds).
    */
@@ -799,6 +821,8 @@ protected:
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
+  // Should we penalize uturns on short internal edges?
+  bool penalize_uturns_;
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
