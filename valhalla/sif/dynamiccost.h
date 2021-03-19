@@ -40,6 +40,10 @@ constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
+// Default uturn costs
+constexpr float kTCUnfavorablePencilPointUturn = 15.f;
+constexpr float kTCUnfavorableUturn = 600.f;
+
 constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                                  baldr::kMaxSpeedKph};
 
@@ -574,6 +578,51 @@ public:
       return InternalTurn::kRightTurn;
 
     return InternalTurn::kNoTurn;
+  }
+
+  /**
+   * Adds a penalty to 3 types of uturns.  1) uturn on a short, internal edge 2) uturn at a node
+   * 3) pencil point uturn. Note that motor_scooter and motorcycle costing models do not penalize
+   * uturns on a short, internal edge; hence, the boolean penalize_internal_uturns.
+   * @param  idx          Directed edge local index
+   * @param  node         Node (intersection) where transition occurs.
+   * @param  edge         Directed edge (the to edge)
+   * @param  has_reverse  Did we perform a reverse?
+   * @param  has_left     Did we make a left (left or sharp left)
+   * @param  has_right    Did we make a right (right or sharp right)
+   * @param  penalize_internal_uturns   Do we want to penalize uturns on a short, internal edge
+   * @param  internal_turn              Did we make an turn on a short internal edge.
+   * @param  seconds      Time.
+   */
+  inline void AddUturnPenalty(const uint32_t idx,
+                              const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* edge,
+                              const bool has_reverse,
+                              const bool has_left,
+                              const bool has_right,
+                              const bool penalize_internal_uturns,
+                              const InternalTurn internal_turn,
+                              float& seconds) const {
+
+    if (node->drive_on_right()) {
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
+      if (has_reverse ||
+          (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left))
+        seconds += kTCUnfavorableUturn;
+      // Did we make a pencil point uturn?
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorablePencilPointUturn;
+    } else {
+      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
+      if (has_reverse ||
+          (penalize_internal_uturns && internal_turn == InternalTurn::kRightTurn && has_right))
+        seconds += kTCUnfavorableUturn;
+      // Did we make a pencil point uturn?
+      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+               edge->edge_to_left(idx) && edge->name_consistency(idx))
+        seconds *= kTCUnfavorablePencilPointUturn;
+    }
   }
 
   /**

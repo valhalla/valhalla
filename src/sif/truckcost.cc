@@ -55,8 +55,6 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
-constexpr float kTCUnfavorablePencilPointUturn = 15.f;
-constexpr float kTCUnfavorableUturn = 600.f;
 
 // Default truck attributes
 constexpr float kDefaultTruckWeight = 21.77f;  // Metric Tons (48,000 lbs)
@@ -536,23 +534,8 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
       is_turn = true;
     }
 
-    if (node->drive_on_right()) {
-      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse || (pred.internal_turn() == InternalTurn::kLeftTurn && has_left))
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    } else {
-      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse || (pred.internal_turn() == InternalTurn::kRightTurn && has_right))
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    }
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, pred.internal_turn(),
+                    seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
@@ -624,23 +607,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
       is_turn = true;
     }
 
-    if (node->drive_on_right()) {
-      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse || (internal_turn == InternalTurn::kLeftTurn && has_left))
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    } else {
-      // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse || (internal_turn == InternalTurn::kRightTurn && has_right))
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    }
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, internal_turn, seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic

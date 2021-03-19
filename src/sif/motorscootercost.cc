@@ -57,8 +57,6 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
-constexpr float kTCUnfavorablePencilPointUturn = 15.f;
-constexpr float kTCUnfavorableUturn = 600.f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -518,23 +516,8 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
       is_turn = true;
     }
 
-    if (node->drive_on_right()) {
-      // Did we make a uturn at a node.
-      if (has_reverse)
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    } else {
-      // Did we make a uturn at a node.
-      if (has_reverse)
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    }
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
+                    seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
@@ -602,23 +585,8 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
       is_turn = true;
     }
 
-    if (node->drive_on_right()) {
-      // Did we make a uturn at a node.
-      if (has_reverse)
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    } else {
-      // Did we make a uturn at a node.
-      if (has_reverse)
-        seconds += kTCUnfavorableUturn;
-      // Did we make a pencil point uturn?
-      else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
-        seconds *= kTCUnfavorablePencilPointUturn;
-    }
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
+                    seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
