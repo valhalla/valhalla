@@ -15,7 +15,7 @@ set(sources
   node_search.cc
   polygon_search.cc)
 
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
