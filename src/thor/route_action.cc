@@ -422,7 +422,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
-  auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
+  auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
         this->get_path_algorithm(costing, *origin, *destination, options);
