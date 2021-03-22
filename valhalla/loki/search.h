@@ -20,7 +20,7 @@ namespace loki {
  * @param locations      the positions which need to be correlated to the route network
  * @param reader         and object used to access tiled route data TODO: switch this out for a
  * proper cache
- * @param edge_filter    a costing object by which we can determine which portions of the graph are
+ * @param costing        a costing object by which we can determine which portions of the graph are
  *                       accessable and therefor potential candidates
  * @return pathLocations the correlated data with in the tile that matches the inputs. If a
  * projection is not found, it will not have any entry in the returned value.

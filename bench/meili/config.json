@@ -87,6 +87,7 @@
     "max_radius": 200,
     "max_reachability": 100,
     "max_alternates": 2,
+    "max_avoid_polygons_length":10000,
     "multimodal": {
       "max_distance": 500000,
       "max_locations": 50,

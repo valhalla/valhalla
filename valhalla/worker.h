@@ -19,6 +19,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     // loki project 1xx
     {100, "Failed to parse json request"},
     {101, "Try a POST or GET request instead"},
+    {102, "The service is shutting down"},
     {106, "Try any of"},
     {107, "Not Implemented"},
 
@@ -44,6 +45,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {134, "Failed to parse shape"},
     {135, "Failed to parse trace"},
     {136, "durations size not compatible with trace size"},
+    {137, "Failed to parse polygon"},
 
     {140, "Action does not support multimodal costing"},
     {141, "Arrive by for multimodal not implemented yet"},
@@ -69,6 +71,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {164, "Invalid shape format"},
     {165, "Date and time required for destination for date_type of invariant"},
     {166, "Exceeded max distance"},
+    {167, "Exceeded maximum circumference for avoid_polygons"},
 
     {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
     {171, "No suitable edges near location"},
@@ -80,6 +83,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {200, "Failed to parse intermediate request format"},
     {201, "Failed to parse TripLeg"},
     {202, "Could not build directions for TripLeg"},
+    {203, "The service is shutting down"},
 
     {210, "Trip path does not have any nodes"},
     {211, "Trip path has only one node"},
@@ -109,6 +113,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     // thor project 4xx
     {400, "Unknown action"},
     {401, "Failed to parse intermediate request format"},
+    {402, "The service is shutting down"},
 
     {420, "Failed to parse correlated location"},
     {421, "Failed to parse location"},

@@ -88,13 +88,13 @@ const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES{
 
 // from valhalla error code to http status code
 const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
-    {100, 400}, {101, 405}, {106, 404}, {107, 501},
+    {100, 400}, {101, 405}, {102, 503}, {106, 404}, {107, 501},
 
     {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
 
     {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
 
-    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400},
+    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400}, {137, 400},
 
     {140, 400}, {141, 501}, {142, 501}, {143, 400},
 
@@ -107,7 +107,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {199, 400},
 
-    {200, 500}, {201, 500}, {202, 500},
+    {200, 500}, {201, 500}, {202, 500}, {203, 503},
 
     {210, 400}, {211, 400}, {212, 400}, {213, 400},
 
@@ -123,7 +123,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {399, 400},
 
-    {400, 400}, {401, 500},
+    {400, 400}, {401, 500}, {402, 503},
 
     {420, 400}, {421, 400}, {422, 400}, {423, 400}, {424, 400},
 
@@ -142,6 +142,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     // loki project 1xx
     {100, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {101, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {102, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
     {106, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {107, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {110, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -172,6 +173,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {135,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {136,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {137,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {140,
@@ -211,6 +214,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {167,
+     R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})"},
 
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
@@ -224,6 +229,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {200, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {201, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {202, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {203, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
 
     {210, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {211, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
@@ -254,6 +260,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     // thor project 4xx
     {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
     {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
+    {402, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
 
     {420,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -288,6 +295,10 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
+  if (json.empty()) {
+    d.SetObject();
+    return d;
+  }
   d.Parse(json.c_str());
   if (d.HasParseError()) {
     throw e;
@@ -315,6 +326,36 @@ void add_date_to_locations(Options& options,
       default:
         break;
     }
+  }
+}
+
+// Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
+// PBF objects of the sort "repeated LatLng". Open rings will be closed.
+template <typename ring_pbf_t>
+void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
+  for (const auto& coords : coord_array.GetArray()) {
+    if (coords.Size() < 2) {
+      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
+    }
+
+    double lon = coords[0].GetDouble();
+    lon = midgard::circular_range_clamp<double>(lon, -180, 180);
+    double lat = coords[1].GetDouble();
+    if (lat < -90.0 || lat > 90.0) {
+      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+    }
+
+    auto* ll = ring->add_coords();
+    ll->set_lng(lon);
+    ll->set_lat(lat);
+  }
+
+  bool is_open = (ring->coords().begin()->lat() != ring->coords().rbegin()->lat() ||
+                  ring->coords().begin()->lng() != ring->coords().rbegin()->lng());
+
+  // close open rings
+  if (!ring->coords().empty() && is_open) {
+    ring->add_coords()->CopyFrom(*ring->coords().begin());
   }
 }
 
@@ -892,6 +933,18 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // get the avoids in there
   parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+
+  // get the avoid polygons in there
+  auto rings_req = rapidjson::get_child_optional(doc, "/avoid_polygons");
+  if (rings_req) {
+    auto* rings_pbf = options.mutable_avoid_polygons();
+    try {
+      for (const auto& req_poly : rings_req->GetArray()) {
+        auto* ring = rings_pbf->Add();
+        parse_ring(ring, req_poly);
+      }
+    } catch (...) { throw valhalla_exception_t{137}; }
+  }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {

@@ -57,9 +57,9 @@ TEST(GraphBuilder, TestConstructEdges) {
       GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
   EXPECT_EQ(tiles.size(), 4);
   EXPECT_EQ(tiles[GraphId{5993698}], 0);
-  EXPECT_EQ(tiles[GraphId{5993706}], 3084);
-  EXPECT_EQ(tiles[GraphId{6005218}], 3113);
-  EXPECT_EQ(tiles[GraphId{6005226}], 8953);
+  EXPECT_EQ(tiles[GraphId{5993706}], 3125);
+  EXPECT_EQ(tiles[GraphId{6005218}], 3154);
+  EXPECT_EQ(tiles[GraphId{6005226}], 8997);
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,

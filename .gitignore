@@ -57,7 +57,7 @@ CMakeLists.txt.user
 /.vs*/
 /*build*/
 /CMakeSettings.json
-/.idea
+.idea
 /.tidytmp
 
 # nodejs
