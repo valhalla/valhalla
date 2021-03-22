@@ -562,21 +562,18 @@ public:
                                const baldr::NodeInfo* node,
                                const baldr::DirectedEdge* edge,
                                const baldr::DirectedEdge* opp_pred_edge = nullptr) const {
-
-    if (!penalize_uturns_)
+    if (!penalize_uturns_ || !edge->internal())
       return InternalTurn::kNoTurn;
-
     baldr::Turn::Type turntype = opp_pred_edge ? opp_pred_edge->turntype(idx) : edge->turntype(idx);
     if (node->drive_on_right()) {
       // did we make a left onto a small internal edge?
-      if (edge->internal() && edge->length() <= kShortInternalLength &&
+      if (edge->length() <= kShortInternalLength &&
           (turntype == baldr::Turn::Type::kSharpLeft || turntype == baldr::Turn::Type::kLeft))
         return InternalTurn::kLeftTurn;
       // did we make a right onto a small internal edge?
-    } else if (edge->internal() && edge->length() <= kShortInternalLength &&
+    } else if (edge->length() <= kShortInternalLength &&
                (turntype == baldr::Turn::Type::kSharpRight || turntype == baldr::Turn::Type::kRight))
       return InternalTurn::kRightTurn;
-
     return InternalTurn::kNoTurn;
   }
 
