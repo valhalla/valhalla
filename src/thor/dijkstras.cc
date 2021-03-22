@@ -207,8 +207,9 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                               pred.path_id());
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -363,7 +364,8 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_measured_speed());
+                                        opp_pred_edge, pred.has_measured_speed(),
+                                        pred.internal_turn());
     uint8_t flow_sources;
     Cost newcost =
         pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources);
@@ -389,8 +391,10 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                               pred.path_id());
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
+                               restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
@@ -868,8 +872,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                                 multipath_ ? path_id : 0);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -954,8 +958,8 @@ void Dijkstras::SetDestinationLocations(
       // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx,
-                                 multipath_ ? path_id : 0);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id),
                       multipath_ ? path_id : 0);

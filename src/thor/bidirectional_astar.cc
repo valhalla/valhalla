@@ -325,6 +325,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                   costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                    restriction_idx);
 
   adjacencylist_forward_.add(idx);
@@ -516,7 +517,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   const Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_measured_speed());
+                                      pred.has_measured_speed(), pred.internal_turn());
   uint8_t flow_sources;
   const Cost newcost = pred.cost() +
                        costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources) +
@@ -549,6 +550,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                   costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                      opp_pred_edge),
                                    restriction_idx);
 
   adjacencylist_reverse_.add(idx);
@@ -703,7 +706,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand from the search direction with lower sort cost.
+
     if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
+
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
@@ -760,6 +765,11 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
   auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (pred.internal_turn() != InternalTurn::kNoTurn) {
+    return false;
+  }
 
   // Disallow connections that are part of a complex restriction
   if (pred.on_complex_rest()) {
@@ -821,6 +831,11 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
+    return false;
+  }
 
   // Disallow connections that are part of a complex restriction
   if (rev_pred.on_complex_rest()) {
@@ -937,7 +952,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1, !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask));
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1020,7 +1036,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn, -1);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
