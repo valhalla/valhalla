@@ -828,7 +828,6 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
-
 /**
  * Get the road density around the specified lat,lng position. This is a
  * value from 0-15 indicating a relative road density. This can be used
