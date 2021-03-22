@@ -1360,7 +1360,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
-  if (curr_edge->IsPedestrianCrossingUse()) {
+  if (curr_edge->IsPedestrianCrossingUse() && prev_edge && prev_edge->IsFootwayUse()) {
     maneuver.set_pedestrian_crossing(true);
   }
 
