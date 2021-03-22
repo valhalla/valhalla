@@ -53,7 +53,9 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+              -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+              -DCPACK_GENERATOR=DEB \
+              -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -76,7 +78,9 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+                -DCPACK_GENERATOR=DEB \
+                -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
       - save_cache:
           key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -102,6 +106,7 @@ jobs:
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: make -C build -j3
       - run: make -C build utrecht_tiles
@@ -136,7 +141,7 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
       - run: make -C build -j2
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests

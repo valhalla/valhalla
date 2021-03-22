@@ -71,17 +71,11 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian),
-      bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      multi_modal_astar(
-          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      timedep_forward(
-          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      timedep_reverse(
-          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
+    : mode(valhalla::sif::TravelMode::kPedestrian), bidir_astar(config.get_child("thor")),
+      bss_astar(config.get_child("thor")), multi_modal_astar(config.get_child("thor")),
+      timedep_forward(config.get_child("thor")), timedep_reverse(config.get_child("thor")),
+      isochrone_gen(config.get_child("thor")), matcher_factory(config, graph_reader),
+      reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -92,8 +86,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "skadi" || kv.first == "trace" ||
-        kv.first == "isochrone" || kv.first == "centroid") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
+        kv.first == "centroid") {
       continue;
     }
 

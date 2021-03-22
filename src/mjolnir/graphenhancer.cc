@@ -20,14 +20,12 @@
 #include <vector>
 
 #include <boost/format.hpp>
-#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <sqlite3.h>
 
-#include "baldr/admininfo.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -35,7 +33,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
-#include "baldr/streetnames_us.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
@@ -829,6 +826,32 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 
   // Assume this is an intersection internal edge
   return true;
+}
+
+// Get the Headings for the node.
+void GetHeadings(const graph_tile_ptr& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
+  if (ntrans == 0) {
+    throw std::runtime_error("edge transitions set is empty");
+  }
+
+  std::vector<uint32_t> heading(ntrans);
+  nodeinfo.set_local_edge_count(ntrans);
+  for (uint32_t j = 0; j < ntrans; j++) {
+    const DirectedEdge* de = tile->directededge(nodeinfo.edge_index() + j);
+
+    auto e_offset = tile->edgeinfo(de);
+    auto shape = e_offset.shape();
+    if (!de->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    heading[j] = std::round(
+        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de->classification(), de->use())));
+
+    // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+    // same heading - should one be "adjusted" so the relative direction
+    // is maintained.
+    nodeinfo.set_heading(j, heading[j]);
+  }
 }
 
 /**
