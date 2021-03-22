@@ -29,6 +29,7 @@
    * FIXED: Fix map-match segfault when gps-points project very near a node [#2946](https://github.com/valhalla/valhalla/pull/2946)
    * FIXED: Use kServiceRoad edges while searching for ferry connection [#2933](https://github.com/valhalla/valhalla/pull/2933)
    * FIXED: Enhanced logic for IsTurnChannelManeuverCombinable [#2952](https://github.com/valhalla/valhalla/pull/2952)
+   * FIXED: Restore compatibility with gcc 6.3.0, libprotobuf 3.0.0, boost v1.62.0 [#2953](https://github.com/valhalla/valhalla/pull/2953)
 
 * **Enhancement**
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
@@ -58,6 +59,8 @@
    * ADDED: Adding ability to store the roundabout_exit_turn_degree to the maneuver [#2941](https://github.com/valhalla/valhalla/pull/2941)
    * ADDED: Penalize pencil point uturns and uturns at short internal edges. Note: `motorcycle` and `motor_scooter` models do not penalize on short internal edges. No new uturn penalty logic has been added to the pedestrian and bicycle costing models. [#2944](https://github.com/valhalla/valhalla/pull/2944)
    * CHANGED: Allow config object to be passed-in to path algorithms [#2949](https://github.com/valhalla/valhalla/pull/2949)
+   * CHANGED: Allow disabling Werror
+   * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
