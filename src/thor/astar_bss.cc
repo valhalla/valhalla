@@ -220,7 +220,8 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction, true, false);
+                             transition_cost, baldr::kInvalidRestriction, true, false,
+                             InternalTurn::kNoTurn);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -454,7 +455,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true, false,
+                         sif::InternalTurn::kNoTurn);
     // Set the origin flag
     edge_label.set_origin();
 

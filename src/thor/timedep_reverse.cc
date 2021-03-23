@@ -214,7 +214,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                      pred.has_measured_speed());
+                                      pred.has_measured_speed(), pred.internal_turn());
   uint8_t flow_sources;
   auto edge_cost = costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
   Cost newcost = pred.cost() + edge_cost;
@@ -280,7 +280,10 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask), restriction_idx);
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
+                               restriction_idx);
   adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
@@ -518,7 +521,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask), -1);
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 sif::InternalTurn::kNoTurn, -1);
     adjacencylist_rev_.add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

@@ -221,3 +221,18 @@ low-level helper functions available in case you want to do something a little m
   - `gurka::detail::build_config(workdir);` - builds a `boost::property_tree` for tile generation in `workdir`
   - `gurka::detail::map_to_coordinates(ascii_map, gridsize);` - calculates coordinates for all the A-Za-z0-9 nodes in the `ascii_map` given the `gridsize`
   - `gurka::detail::build_pbf(node_locations, ways, nodes, relations, pbf_filename);` - generates an OSM PBF for the nodes, ways, and relations you've defined.  The `nodemap` is the result of `gurka::detail::map_to_coordinates`
+  
+## Debuging help
+
+You can print your gurka map and visually inspect it at [geojson.io](https://geojson.io/) by dumping out the geojson via `dump_geojson_graph`.
+
+```cpp
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "3"}, "auto");
+    std::cout << gurka::dump_geojson_graph(map) << std::endl;
+```
+
+The graph expansion can be visually inspected with the [expansion demo](https://valhalla.github.io/demos/expansion/) by calling the expansion action.  Copy the geojson into the expansion demo and move the slider via the arrow keys.
+
+```cpp
+  auto result = gurka::do_action(valhalla::Options::expansion, map, {"1", "3"}, "auto");
+```

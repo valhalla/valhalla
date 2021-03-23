@@ -92,7 +92,8 @@ config = {
     'service': {
       'proxy': 'ipc:///tmp/thor'
     },
-    'max_reserved_labels_count': 1000000
+    'max_reserved_labels_count': 1000000,
+    'extended_search': False
   },
   'odin': {
     'logging': {
@@ -355,6 +356,7 @@ help_text = {
       'proxy': 'IPC linux domain socket file location'
     },
     'max_reserved_labels_count': 'Maximum capacity for edge labels reserved in path algorithm'
+    'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge'
   },
   'odin': {
     'logging': {
