@@ -19,7 +19,12 @@ struct OSMAccess {
   OSMAccess() {
     memset(this, 0, sizeof(OSMAccess));
     osmwayid_ = 0;
+#if defined(__GNUC__)
+    attributes_ = {.v = 0};
+#else
+    // Satisfy MSVC
     attributes_ = {{0}};
+#endif
   }
 
   /**
@@ -29,7 +34,12 @@ struct OSMAccess {
   OSMAccess(const uint64_t id) {
     memset(this, 0, sizeof(OSMAccess));
     set_way_id(id);
+#if defined(__GNUC__)
+    attributes_ = {.v = 0};
+#else
+    // Satisfy MSVC
     attributes_ = {{0}};
+#endif
   }
 
   /**
