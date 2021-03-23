@@ -155,13 +155,12 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     }
 
     // Check if the edge is allowed or if a restriction occurs
-    EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
                              nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, todo,
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, nullptr,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
@@ -338,13 +337,12 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(opp_edge_id);
 
     // Check if the edge is allowed or if a restriction occurs
-    EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
                                     offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, todo,
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, nullptr,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }

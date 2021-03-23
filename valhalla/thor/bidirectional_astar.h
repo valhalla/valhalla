@@ -241,6 +241,18 @@ protected:
   void AddConnectionCandidate(const CandidateConnection& candidate);
 
   /**
+   * Remove forward connection edge from the candidates.
+   * @param connedge    Edge id to remove
+   */
+  void RemoveForwardConnection(const baldr::GraphId& fwd_connedge);
+
+  /**
+   * Remove reverse connection edge from the candidates.
+   * @param connedge    Edge id to remove
+   */
+  void RemoveReverseConnection(const baldr::GraphId& rev_connedge);
+
+  /**
    * Form the path from the adjacency lists. Recovers the path from the
    * where the paths meet back towards the origin then reverses this path.
    * The path from where the paths meet to the destination is then appended

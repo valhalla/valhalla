@@ -281,10 +281,14 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = -1;
+  const auto reset_func = [this](const GraphId& edgeid) {
+    edgestatus_forward_.Update(edgeid, EdgeSet::kUnreachedOrReset);
+    RemoveForwardConnection(edgeid);
+  };
   if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
                          restriction_idx) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                           &edgestatus_forward_, localtime, time_info.timezone_index)) {
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true, reset_func,
+                           localtime, time_info.timezone_index)) {
     return false;
   }
 
@@ -516,10 +520,14 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = -1;
+  const auto reset_func = [this](const GraphId& edgeid) {
+    edgestatus_reverse_.Update(edgeid, EdgeSet::kUnreachedOrReset);
+    RemoveReverseConnection(edgeid);
+  };
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
                                 time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                           &edgestatus_reverse_, localtime, time_info.timezone_index)) {
+                           reset_func, localtime, time_info.timezone_index)) {
     return false;
   }
 
@@ -906,6 +914,22 @@ void BidirectionalAStar::AddConnectionCandidate(const CandidateConnection& candi
   // Keep the best ones at the front all others to the back
   if (conn_iter->cost < best_connections_.front().cost)
     std::iter_swap(best_connections_.begin(), conn_iter);
+}
+
+void BidirectionalAStar::RemoveForwardConnection(const baldr::GraphId& fwd_connedge) {
+  best_connections_.erase(std::remove_if(best_connections_.begin(), best_connections_.end(),
+                                         [&fwd_connedge](const CandidateConnection& candidate) {
+                                           return candidate.edgeid == fwd_connedge;
+                                         }),
+                          best_connections_.end());
+}
+
+void BidirectionalAStar::RemoveReverseConnection(const baldr::GraphId& rev_connedge) {
+  best_connections_.erase(std::remove_if(best_connections_.begin(), best_connections_.end(),
+                                         [&rev_connedge](const CandidateConnection& candidate) {
+                                           return candidate.opp_edgeid == rev_connedge;
+                                         }),
+                          best_connections_.end());
 }
 
 // Add edges at the origin to the forward adjacency list.

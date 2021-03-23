@@ -321,6 +321,7 @@ public:
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
+   * @param  reset_func  Function that resets edge status
    * @param  current_time Current time (seconds since epoch). A value of 0
    *                     indicates the route is not time dependent.
    * @param  tz_index    timezone index for the node
@@ -335,7 +336,7 @@ public:
                   const graph_tile_ptr& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
-                  thor::EdgeStatus* edgestatus = nullptr,
+                  std::function<void(const baldr::GraphId&)> reset_func = nullptr,
                   const uint64_t current_time = 0,
                   const uint32_t tz_index = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
@@ -347,7 +348,7 @@ public:
       return next_pred;
     };
     auto reset_edge_status =
-        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&reset_func, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
@@ -365,7 +366,7 @@ public:
           // If we do find a complex restriction has triggered, we must walk back
           // and reset the EdgeStatus of previous edges in the restriction that were
           // already marked as kPermanent.
-          if (edgestatus != nullptr) {
+          if (reset_func != nullptr) {
             auto first = edge_ids_in_complex_restriction.cbegin();
             auto last = edge_ids_in_complex_restriction.cend();
 
@@ -377,9 +378,7 @@ public:
             // no point in possibly expanding from A a second time and could lead
             // to infinite loops
             --last;
-            std::for_each(first, last, [&edgestatus](baldr::GraphId edge_id) {
-              edgestatus->Update(edge_id, thor::EdgeSet::kUnreachedOrReset);
-            });
+            std::for_each(first, last, reset_func);
           }
         };
 
