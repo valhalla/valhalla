@@ -22,10 +22,12 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // TODO - this is currently set based on some exceptional cases (e.g. routes taking
 // the PA Turnpike which have very long edges). Using a metric based on maximum edge
 // cost creates large performance drops - so perhaps some other metric can be found?
-constexpr float kThresholdDelta = 420.0f;
+constexpr float kThresholdDelta = 60.0f; // ~1min
 
+// Absolute cost extension to find alternative routes.
+constexpr float kAlternativeCostExtendDelta = 600.f; // ~10min
 // Relative cost extension to find alternative routes.
-constexpr float kAlternativeCostExtend = 0.1f;
+constexpr float kAlternativeCostExtendFactor = 0.1f;
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
@@ -301,6 +303,9 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_forward_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+
+      if (edgestatus_reverse_.Get(lab.opp_edgeid()).set() != EdgeSet::kUnreachedOrReset)
+        SetForwardConnection(graphreader, lab, false);
     }
     // Returning true since this means we approved the edge
     return true;
@@ -332,6 +337,9 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   adjacencylist_forward_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
+
+  if (edgestatus_reverse_.Get(opp_edge_id).set() != EdgeSet::kUnreachedOrReset)
+    SetForwardConnection(graphreader, edgelabels_forward_.back(), false);
 
   // setting this edge as reached
   if (expansion_callback_) {
@@ -534,6 +542,9 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_reverse_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+
+      if (edgestatus_forward_.Get(lab.opp_edgeid()).set() != EdgeSet::kUnreachedOrReset)
+        SetReverseConnection(graphreader, lab, false);
     }
     // Returning true since this means we approved the edge
     return true;
@@ -557,6 +568,9 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   adjacencylist_reverse_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
+
+  if (edgestatus_forward_.Get(opp_edge_id).set() != EdgeSet::kUnreachedOrReset)
+    SetReverseConnection(graphreader, edgelabels_reverse_.back(), false);
 
   // setting this edge as reached, sending the opposing because this is the reverse tree
   if (expansion_callback_) {
@@ -656,7 +670,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // reverse search tree. Do not expand further past this edge since it will just
         // result in other connections.
         if (edgestatus_reverse_.Get(fwd_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetForwardConnection(graphreader, fwd_pred)) {
+          if (SetForwardConnection(graphreader, fwd_pred, true)) {
             continue;
           }
         }
@@ -689,7 +703,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // forward search tree. Do not expand further past this edge since it will just
         // result in other connections.
         if (edgestatus_forward_.Get(rev_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetReverseConnection(graphreader, rev_pred)) {
+          if (SetReverseConnection(graphreader, rev_pred, true)) {
             continue;
           }
         }
@@ -759,7 +773,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 // The edge on the forward search connects to a reached edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
+bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader,
+                                              const BDEdgeLabel& pred,
+                                              bool update_threshold) {
   // Find pred on opposite side
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
@@ -792,19 +808,16 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 
-  // Keep the best ones at the front all others to the back
-  best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
-
-  if (c < best_connections_.front().cost)
-    std::swap(best_connections_.front(), best_connections_.back());
+  AddConnectionCandidate(CandidateConnection{pred.edgeid(), oppedge, c});
 
   // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+  if (update_threshold) {
     float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
     if (desired_paths_count_ == 1) {
       cost_threshold_ = sortcost + kThresholdDelta;
     } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      cost_threshold_ =
+          sortcost + std::max(kAlternativeCostExtendFactor * sortcost, kAlternativeCostExtendDelta);
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
     }
@@ -821,7 +834,9 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader,
+                                              const BDEdgeLabel& rev_pred,
+                                              bool update_threshold) {
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
@@ -853,19 +868,16 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
   }
 
-  // Keep the best ones at the front all others to the back
-  best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
-
-  if (c < best_connections_.front().cost)
-    std::swap(best_connections_.front(), best_connections_.back());
+  AddConnectionCandidate(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
 
   // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+  if (update_threshold) {
     float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
     if (desired_paths_count_ == 1) {
       cost_threshold_ = sortcost + kThresholdDelta;
     } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      cost_threshold_ =
+          sortcost + std::max(kAlternativeCostExtendFactor * sortcost, kAlternativeCostExtendDelta);
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
     }
@@ -877,6 +889,23 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   }
 
   return true;
+}
+
+void BidirectionalAStar::AddConnectionCandidate(const CandidateConnection& candidate) {
+  auto conn_iter =
+      std::find_if(best_connections_.begin(), best_connections_.end(),
+                   [&candidate](const auto& conn) { return conn.edgeid == candidate.edgeid; });
+
+  if (conn_iter == best_connections_.end()) {
+    best_connections_.push_back(candidate);
+    conn_iter = std::prev(best_connections_.end());
+  } else if (candidate.cost < conn_iter->cost) {
+    *conn_iter = candidate;
+  }
+
+  // Keep the best ones at the front all others to the back
+  if (conn_iter->cost < best_connections_.front().cost)
+    std::iter_swap(best_connections_.begin(), conn_iter);
 }
 
 // Add edges at the origin to the forward adjacency list.

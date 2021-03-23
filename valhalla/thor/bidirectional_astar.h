@@ -215,18 +215,30 @@ protected:
    * search tree. Check if this is the best connection so far and set the
    * search threshold.
    * @param  pred  Edge label of the predecessor.
+   * @param  update_threshold   Flag if cost threshold should be updated
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetForwardConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
+  bool SetForwardConnection(baldr::GraphReader& graphreader,
+                            const sif::BDEdgeLabel& pred,
+                            bool update_threshold);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
    * search tree. Check if this is the best connection so far and set the
    * search threshold.
    * @param  pred  Edge label of the predecessor.
+   * @param  update_threshold   Flag if cost threshold should be updated
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
+  bool SetReverseConnection(baldr::GraphReader& graphreader,
+                            const sif::BDEdgeLabel& pred,
+                            bool update_threshold);
+
+  /**
+   * Add possible candidate for a path connection edge.
+   * @param candidate   Connection edge with path cost
+   */
+  void AddConnectionCandidate(const CandidateConnection& candidate);
 
   /**
    * Form the path from the adjacency lists. Recovers the path from the
