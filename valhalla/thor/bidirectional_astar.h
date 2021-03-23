@@ -125,6 +125,14 @@ protected:
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
 
+  // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
+  // end started on a not_thru or closed (due to live-traffic) edge
+  bool extended_search_;
+  // Stores the pruning state at origin & destination. Its true if _any_ of the candidate edges at
+  // these locations has pruning turned off (pruning is off if starting from a closed or not_thru
+  // edge)
+  bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
+
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
    * and reverse search.

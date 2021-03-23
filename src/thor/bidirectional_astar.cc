@@ -48,7 +48,8 @@ namespace thor {
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count",
-                                                                       kInitialEdgeLabelCountBD)) {
+                                                                       kInitialEdgeLabelCountBD)),
+      extended_search_(config.get<bool>("extended_search", false)) {
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
@@ -56,6 +57,8 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
   cost_diff_ = 0.0f;
+  pruning_disabled_at_origin_ = false;
+  pruning_disabled_at_destination_ = false;
 }
 
 // Destructor
@@ -83,6 +86,9 @@ void BidirectionalAStar::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
+  // reset origin & destination pruning states
+  pruning_disabled_at_origin_ = false;
+  pruning_disabled_at_destination_ = false;
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -661,14 +667,26 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
-                    std::to_string(edgelabels_forward_.size()) + "," +
-                    std::to_string(edgelabels_reverse_.size()));
+        if (!best_connections_.empty()) {
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+        }
+        LOG_ERROR("Forward search exhausted: n = " + std::to_string(edgelabels_forward_.size()) +
+                  "," + std::to_string(edgelabels_reverse_.size()));
+        // Search might've exhausted if it hit a closure or not_thru edge leading upto the
+        // destination. Instead of tracking if any of the other edges is within a not_thru/closure
+        // region (indicated by the pruning state of the edge label), we simply check if we started
+        // from the other end on a closed or not_thru edge. If either is true, we extend the search in
+        // the other direction (if allowed by the config option "thor.extended_search")
+        //
+        // Caveat: This assumption is not true if for eg the search from other end has pruning turned
+        // on later, causing us to needlessly expand when we could have aborted sooner. However, it
+        // ensures that most impossible route will fail fast provided one of the locations didn't
+        // start from a not_thru/closed edge
+        if (!extended_search_ || !pruning_disabled_at_destination_) {
           return {};
         }
-        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+        LOG_DEBUG("Extending search in reverse direction. Destination pruning disabled? " +
+                  std::to_string(pruning_disabled_at_destination_));
       }
     }
     if (expand_reverse) {
@@ -694,21 +712,44 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connections_.empty()) {
-          // No route found.
-          LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
-                    std::to_string(edgelabels_reverse_.size()) + "," +
-                    std::to_string(edgelabels_forward_.size()));
+        if (!best_connections_.empty()) {
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+        }
+        LOG_ERROR("Reverse search exhausted: n = " + std::to_string(edgelabels_reverse_.size()) +
+                  "," + std::to_string(edgelabels_forward_.size()));
+        // Search might've exhausted if it hit a closure or not_thru edge leading upto the origin.
+        // Instead of tracking if any of the other edges is within a not_thru/closure region
+        // (indicated by the pruning state of the edge label), we simply check if we started from the
+        // other end on a closed or not_thru edge. If either is true, we extend the search in the
+        // other direction (if allowed by the config option "thor.extended_search")
+        //
+        // Caveat: This assumption is not true if for eg the search from other end has pruning turned
+        // on later, causing us to needlessly expand when we could have aborted sooner. However, it
+        // ensures that most impossible route will fail fast provided one of the locations didn't end
+        // on a not_thru/closed edge
+        if (!extended_search_ || !pruning_disabled_at_origin_) {
           return {};
         }
-        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+        LOG_DEBUG("Extending search in forward direction. Origin pruning disabled? " +
+                  std::to_string(pruning_disabled_at_origin_));
       }
     }
 
-    // Expand from the search direction with lower sort cost.
+    bool forward_exhausted = forward_pred_idx == kInvalidLabel;
+    bool reverse_exhausted = reverse_pred_idx == kInvalidLabel;
+    // If both directions have exhausted, we've failed to find a route. Abort
+    if (forward_exhausted && reverse_exhausted) {
+      LOG_ERROR("Bi-directional route failure - search exhausted: n = " +
+                std::to_string(edgelabels_forward_.size()) + "," +
+                std::to_string(edgelabels_reverse_.size()));
+      return {};
+    }
 
-    if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
-
+    // Expand from the search direction with lower sort cost
+    // Note: If one direction is exhausted, we force search in the remaining
+    // direction
+    if (!forward_exhausted &&
+        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() || reverse_exhausted)) {
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
@@ -964,6 +1005,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
     edgelabels_forward_.back().set_not_thru(false);
+
+    pruning_disabled_at_origin_ = pruning_disabled_at_origin_ ||
+                                  !edgelabels_forward_.back().closure_pruning() ||
+                                  !edgelabels_forward_.back().not_thru_pruning();
   }
 
   // Set the origin timezone
@@ -1048,6 +1093,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
     edgelabels_reverse_.back().set_not_thru(false);
+
+    pruning_disabled_at_destination_ = pruning_disabled_at_destination_ ||
+                                       !edgelabels_reverse_.back().closure_pruning() ||
+                                       !edgelabels_reverse_.back().not_thru_pruning();
   }
 }
 
