@@ -81,7 +81,7 @@ struct OSMNode {
    *
    */
   void set_latlng(const double lng, double lat) {
-    lng7_ = lat7_ = -1;
+    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
     if (lng >= -180 && lng <= 180)
       lng7_ = std::round((lng + 180) * 1e7);
     if (lat >= -90 && lat <= 90)
