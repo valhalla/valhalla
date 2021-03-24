@@ -200,7 +200,6 @@ bool write_node_names(const std::string& filename, const UniqueNames& names) {
   }
 
   // Store a count of strings followed by an array of string lengths
-  uint32_t offset = 0;
   uint32_t name_count = names.Size();
   std::vector<uint32_t> lengths(name_count);
   std::vector<char> namebuf;
@@ -231,7 +230,6 @@ bool write_unique_names(const std::string& filename, const UniqueNames& names) {
   }
 
   // Store a count of strings followed by an array of string lengths
-  uint32_t offset = 0;
   uint32_t name_count = names.Size();
   std::vector<uint32_t> lengths(name_count);
   std::vector<char> namebuf;
