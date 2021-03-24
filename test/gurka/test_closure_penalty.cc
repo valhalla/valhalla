@@ -71,42 +71,43 @@ protected:
       S-----T-----U
     )";
 
-    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"BC", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"DE", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"EF", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"GH", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"HI", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"JK", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"KL", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"MN", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"NO", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"PQ", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"QR", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"ST", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              {"TU", {{"highway", "primary"}, {"maxspeed", "30"}}},
-                              // left section is slow
-                              {"AD", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              {"DG", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              {"GJ", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              {"JM", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              {"MP", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              {"PS", {{"highway", "primary"}, {"maxspeed", "20"}}},
-                              // middle section is fastest
-                              {"BE", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              {"EH", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              {"HK", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              {"KN", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              {"NQ", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              {"QT", {{"highway", "primary"}, {"maxspeed", "45"}}},
-                              // preferred path is mid-section is closed
-                              {"CF", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              {"FI", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              {"IL", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              {"LO", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              {"OR", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              {"RU", {{"highway", "primary"}, {"maxspeed", "35"}}},
-                              };
+    const gurka::ways ways = {
+        {"AB", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"BC", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"DE", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"EF", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"GH", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"HI", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"JK", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"KL", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"MN", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"NO", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"PQ", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"QR", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"ST", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        {"TU", {{"highway", "primary"}, {"maxspeed", "30"}}},
+        // left section is slow
+        {"AD", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"DG", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"GJ", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"JM", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"MP", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"PS", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        // middle section is fastest
+        {"BE", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        {"EH", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        {"HK", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        {"KN", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        {"NQ", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        {"QT", {{"highway", "primary"}, {"maxspeed", "45"}}},
+        // preferred path is mid-section is closed
+        {"CF", {{"highway", "primary"}, {"maxspeed", "35"}}},
+        {"FI", {{"highway", "primary"}, {"maxspeed", "35"}}},
+        {"IL", {{"highway", "primary"}, {"maxspeed", "35"}}},
+        {"LO", {{"highway", "primary"}, {"maxspeed", "35"}}},
+        {"OR", {{"highway", "primary"}, {"maxspeed", "35"}}},
+        {"RU", {{"highway", "primary"}, {"maxspeed", "35"}}},
+    };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
@@ -133,7 +134,6 @@ protected:
   virtual void TearDown() {
     set_unknown_live_speed_on_all_edges();
   }
-
 };
 
 gurka::map ClosurePenalty::closure_map = {};
@@ -150,7 +150,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
   }
 
   // Close entire stretch of center road
-   test::LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+  test::LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                              int index, baldr::TrafficSpeed* current) -> void {
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
     close_bidir_edge(reader, tile, index, current, "EH", closure_map);
@@ -190,8 +190,8 @@ TEST_P(ClosurePenalty, AvoidClosure) {
 
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
-    gurka::assert::raw::expect_path(result, {"QT", "TU", "RU", "OR", "LO", "IL", "FI", "CF", "BC", "BE"});
-
+    gurka::assert::raw::expect_path(result,
+                                    {"QT", "TU", "RU", "OR", "LO", "IL", "FI", "CF", "BC", "BE"});
   }
 
   {
@@ -210,7 +210,6 @@ TEST_P(ClosurePenalty, AvoidClosure) {
   }
 }
 
-
 std::vector<std::string> buildParams() {
   // Return the different costings we want to test closures against
   return {
@@ -218,6 +217,4 @@ std::vector<std::string> buildParams() {
   };
 }
 
-INSTANTIATE_TEST_SUITE_P(Test,
-                         ClosurePenalty,
-                         ::testing::ValuesIn(buildParams()));
+INSTANTIATE_TEST_SUITE_P(Test, ClosurePenalty, ::testing::ValuesIn(buildParams()));

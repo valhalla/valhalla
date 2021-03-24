@@ -47,7 +47,7 @@ constexpr uint32_t kMinimumTopSpeed = 20;        // Kilometers per hour
 constexpr uint32_t kDefaultTopSpeed = 45;        // Kilometers per hour
 constexpr uint32_t kMaximumTopSpeed = 120;       // Kilometers per hour
 // Speed used for costing a closed edge
-constexpr uint32_t kMinimumScooterSpeed = 2;     // Kilometers per hour
+constexpr uint32_t kMinimumScooterSpeed = 2; // Kilometers per hour
 constexpr Surface kMinimumScooterSurface = Surface::kDirt;
 
 // Default turn costs
@@ -437,8 +437,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                 uint8_t& flow_sources) const {
   // Reduce edge speed to bare minimum, if we're NOT ignoring closures
   // and edge is closed
-  auto speed = IsClosed(edge, tile) ? kMinimumScooterSpeed :
-                                      tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+  auto speed = IsClosed(edge, tile) ? kMinimumScooterSpeed
+                                    : tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
 
   if (edge->use() == Use::kFerry) {
     assert(speed < speedfactor_.size());

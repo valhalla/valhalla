@@ -902,10 +902,10 @@ TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
     gurka::assert::raw::expect_path(result, {"FH", "FG", "DG", "BD", "AB", "AC"});
 
     // For G->C since closed edges have high cost, the route will take the longer loop (GDBAC).
-    // To prevent that and force it to take closed edges (since we want to test the left-turn restriction
-    // created above does not take effect for going straight), we close AB
+    // To prevent that and force it to take closed edges (since we want to test the left-turn
+    // restriction created above does not take effect for going straight), we close AB
     LiveTrafficCustomize close_edge_AB = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                            uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "AB", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge_AB);
