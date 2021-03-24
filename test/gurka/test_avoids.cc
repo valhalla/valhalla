@@ -98,7 +98,7 @@ protected:
                               {"BE", {{"highway", "residential"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
-    avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut",
+    avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
                                   {{"service_limits.max_avoid_polygons_length", "1000"}});
   }
 };
