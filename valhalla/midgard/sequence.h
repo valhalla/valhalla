@@ -433,10 +433,6 @@ public:
     return memmap.size() + write_buffer.size();
   }
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-copy"
-#endif
   // a read/writeable object within the sequence, accessed through memory mapped file
   struct iterator {
     friend class sequence;
@@ -525,6 +521,7 @@ public:
     size_t position() const {
       return index;
     }
+    iterator(const iterator&) = default;
 
   protected:
     iterator(sequence* base, size_t offset) : parent(base), index(offset) {
@@ -532,9 +529,6 @@ public:
     sequence* parent;
     size_t index;
   };
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
   // search for an object using binary search O(logn)
   // assumes the file was written in sorted order
