@@ -848,6 +848,7 @@ protected:
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
     test::build_live_traffic_data(closure_map.config);
+    closure_map.config.put("thor.extended_search", true);
 
     reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
