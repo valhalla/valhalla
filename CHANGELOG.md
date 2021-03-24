@@ -66,6 +66,7 @@
    * CHANGED: Allow disabling Werror
    * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
    * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
+   * CHANGED: Penalized closed edges while routing through them []()
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

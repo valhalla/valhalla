@@ -454,7 +454,10 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
                          const uint32_t seconds,
                          uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true, &flow_sources);
+  // Reduce edge speed to bare minimum, if we're NOT ignoring closures
+  // and edge is closed
+  auto edge_speed = IsClosed(edge, tile) ? kMinSpeedKph :
+                                           tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
   auto s = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[s];
 
