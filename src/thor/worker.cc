@@ -31,10 +31,6 @@ namespace {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
 
-// Maximum capacity of edge labels container that allowed to keep reserved.
-// It's used to prevent memory from infinite growth.
-constexpr uint32_t kMaxReservedLabelsCount = 1000000;
-
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
