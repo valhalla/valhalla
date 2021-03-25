@@ -505,7 +505,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
-  return Cost((cost_duration * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+  return Cost((cost_duration * inv_distance_factor_ + edge->length() * distance_factor_) * factor,
+              sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
