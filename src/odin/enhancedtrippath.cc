@@ -1655,6 +1655,20 @@ bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                                         const TripLeg_Use exclude_use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // If is traversable based on mode
+    // and the intersecting edge use does not equal the specified exclude use
+    if (xedge->IsTraversableOutbound(travel_mode) && (xedge->use() != exclude_use)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
                                                  uint32_t from_heading,
                                                  const TripLeg_TravelMode travel_mode) {

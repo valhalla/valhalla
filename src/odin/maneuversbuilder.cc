@@ -2041,13 +2041,22 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   // Intersecting forward edge
   if (IsIntersectingForwardEdge(node_index, prev_edge.get(), curr_edge.get())) {
     maneuver.set_intersecting_forward_edge(true);
+    LOG_TRACE("IntersectingForwardEdge");
     return false;
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Determine previous edge names and common base names
+  std::unique_ptr<StreetNames> prev_edge_names =
+      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+  std::unique_ptr<StreetNames> common_base_names =
+      prev_edge_names->FindCommonBaseNames(maneuver.street_names());
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process 'T' intersection
-  if (IsTee(node_index, prev_edge.get(), curr_edge.get())) {
+  if (IsTee(node_index, prev_edge.get(), curr_edge.get(), !common_base_names->empty())) {
     maneuver.set_tee(true);
+    LOG_TRACE("T intersection");
     return false;
   }
 
@@ -2058,17 +2067,13 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
                                     prev_edge->end_heading(), prev_edge->travel_mode())) &&
       !node->HasForwardTraversableIntersectingEdge(prev_edge->end_heading(),
                                                    prev_edge->travel_mode()) &&
-      node->HasTraversableIntersectingEdge(prev_edge->travel_mode())) {
+      node->HasTraversableExcludeUseXEdge(prev_edge->travel_mode(), TripLeg_Use_kTrackUse)) {
+    LOG_TRACE("Non-forward transition with intersecting traversable edge");
     return false;
   }
 
-  std::unique_ptr<StreetNames> prev_edge_names =
-      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
-
   /////////////////////////////////////////////////////////////////////////////
   // Process common base names
-  std::unique_ptr<StreetNames> common_base_names =
-      prev_edge_names->FindCommonBaseNames(maneuver.street_names());
   if (!common_base_names->empty()) {
     maneuver.set_street_names(std::move(common_base_names));
     return true;
@@ -2275,7 +2280,8 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
 
 bool ManeuversBuilder::IsTee(int node_index,
                              EnhancedTripLeg_Edge* prev_edge,
-                             EnhancedTripLeg_Edge* curr_edge) const {
+                             EnhancedTripLeg_Edge* curr_edge,
+                             bool prev_edge_has_common_base_name) const {
 
   auto node = trip_path_->GetEnhancedNode(node_index);
   // Verify only one intersecting edge
@@ -2289,6 +2295,11 @@ bool ManeuversBuilder::IsTee(int node_index,
 
     // Intersecting edge must be traversable
     if (!(node->GetIntersectingEdge(0)->IsTraversable(prev_edge->travel_mode()))) {
+      return false;
+    }
+
+    if (prev_edge_has_common_base_name &&
+        !node->HasTraversableExcludeUseXEdge(prev_edge->travel_mode(), TripLeg_Use_kTrackUse)) {
       return false;
     }
 
@@ -2392,7 +2403,9 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(int node_index,
     // and forward intersecting edge exists
     // then return true
     if (!curr_edge->IsForward(turn_degree) &&
-        node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
+        node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
+                                                             prev_edge->travel_mode(),
+                                                             prev_edge->road_class())) {
       return true;
     }
     // if path edge is forward
