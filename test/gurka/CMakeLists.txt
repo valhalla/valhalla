@@ -14,7 +14,7 @@ if(ENABLE_DATA_TOOLS)
       test_incident_loading.cc
       test_closure_annotations.cc
     PROPERTIES COMPILE_FLAGS "-Werror")
-  endif (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+  endif()
 
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
