@@ -453,13 +453,14 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const uint32_t seconds,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  // Reduce edge speed to bare minimum, if we're NOT ignoring closures
-  // and edge is closed
-  auto edge_speed = IsClosed(edge, tile)
-                        ? kMinSpeedKph
-                        : tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
   auto final_speed = std::min(edge_speed, top_speed_);
-  float sec = edge->length() * speedfactor_[final_speed];
+  // Use reduced speed for costing purposes, and normal edge speed for calculating duration (sec).
+  // This means closed edges cost more, but have the same traversal time as if they were open
+  auto speed_for_costing = IsClosed(edge, tile) ? kMinSpeedKph : final_speed;
+
+  float sec = (edge->length() * speedfactor_[final_speed]);
+  float cost_duration = (edge->length() * speedfactor_[speed_for_costing]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -504,7 +505,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
-  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+  return Cost((cost_duration * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -1168,14 +1169,14 @@ public:
                         const graph_tile_ptr& tile,
                         const uint32_t seconds,
                         uint8_t& flow_sources) const override {
-    // Reduce edge speed to bare minimum, if we're NOT ignoring closures
-    // and edge is closed
-    auto edge_speed = IsClosed(edge, tile)
-                          ? kMinSpeedKph
-                          : tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
     auto final_speed = std::min(edge_speed, top_speed_);
+    // Use reduced speed for costing purposes, and normal edge speed for calculating duration (sec).
+    // This means closed edges cost more, but have the same traversal time as if they were open
+    auto speed_for_costing = IsClosed(edge, tile) ? kMinSpeedKph : final_speed;
 
     float sec = (edge->length() * speedfactor_[final_speed]);
+    float cost_duration = (edge->length() * speedfactor_[speed_for_costing]);
 
     if (shortest_) {
       return Cost(edge->length(), sec);
@@ -1198,7 +1199,7 @@ public:
       factor *= service_factor_;
     }
 
-    return Cost(sec * factor, sec);
+    return Cost(cost_duration * factor, sec);
   }
 };
 
