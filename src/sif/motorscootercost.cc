@@ -433,8 +433,6 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                 const graph_tile_ptr& tile,
                                 const uint32_t seconds,
                                 uint8_t& flow_sources) const {
-  // Reduce edge speed to bare minimum, if we're NOT ignoring closures
-  // and edge is closed
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
 
   if (edge->use() == Use::kFerry) {
@@ -448,6 +446,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
        kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
   assert(scooter_speed < speedfactor_.size());
+  // Use reduced speed for costing purposes, and normal edge speed for calculating duration (sec).
+  // This means closed edges cost more, but have the same traversal time as if they were open
   auto speed_for_costing = IsClosed(edge, tile) ? kMinSpeedKph : scooter_speed;
 
   float sec = (edge->length() * speedfactor_[scooter_speed]);
