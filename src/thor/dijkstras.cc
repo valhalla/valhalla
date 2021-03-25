@@ -235,10 +235,10 @@ void Dijkstras::Expand(ExpansionType expansion_type,
       Compute(*api.mutable_options()->mutable_locations(), reader, costings, mode);
       break;
     case ExpansionType::reverse:
-      Compute(*api.mutable_options()->mutable_locations(), reader, costings, mode);
+      ComputeReverse(*api.mutable_options()->mutable_locations(), reader, costings, mode);
       break;
     case ExpansionType::multimodal:
-      Compute(*api.mutable_options()->mutable_locations(), reader, costings, mode);
+      ComputeMultiModal(*api.mutable_options()->mutable_locations(), reader, costings, mode);
       break;
     default:
       throw std::runtime_error("Unknown expansion type");
