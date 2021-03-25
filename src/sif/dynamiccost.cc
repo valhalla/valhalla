@@ -69,13 +69,17 @@ constexpr float kMaxLivingStreetFactor = 3.f;
 
 } // namespace
 
-DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
+DynamicCost::DynamicCost(const CostingOptions& options,
+                         const TravelMode mode,
+                         uint32_t access_mask,
+                         bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
       access_mask_(access_mask), flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
       ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
       ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
       top_speed_(options.top_speed()),
-      filter_closures_(ignore_closures_ ? false : options.filter_closures()) {
+      filter_closures_(ignore_closures_ ? false : options.filter_closures()),
+      penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -123,7 +127,8 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
-                                        const bool) const {
+                                        const bool,
+                                        const InternalTurn) const {
   return {0.0f, 0.0f};
 }
 

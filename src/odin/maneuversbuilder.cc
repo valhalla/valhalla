@@ -2573,6 +2573,19 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
 
     Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
 
+    // Turn channel cannot exceed kMaxTurnChannelLength (200m)
+    // and turn channel cannot have forward traversable intersecting edge
+    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    bool common_turn_channel_criteria =
+        ((curr_man->length(Options::kilometers) <= (kMaxTurnChannelLength * kKmPerMeter)) &&
+         !node->HasForwardTraversableIntersectingEdge(curr_man->end_heading(),
+                                                      curr_man->travel_mode()));
+
+    // Verify common turn channel criteria
+    if (!common_turn_channel_criteria) {
+      return false;
+    }
+
     // Process simple right turn channel
     // Combineable if begin of turn channel is relative right
     // and next maneuver is not relative left direction

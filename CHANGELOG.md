@@ -26,6 +26,12 @@
    * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
    * FIXED: Use CMakes built-in Python variables to configure installation [#2931](https://github.com/valhalla/valhalla/pull/2931)
    * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
+   * FIXED: Fix map-match segfault when gps-points project very near a node [#2946](https://github.com/valhalla/valhalla/pull/2946)
+   * FIXED: Use kServiceRoad edges while searching for ferry connection [#2933](https://github.com/valhalla/valhalla/pull/2933)
+   * FIXED: Enhanced logic for IsTurnChannelManeuverCombinable [#2952](https://github.com/valhalla/valhalla/pull/2952)
+   * FIXED: Restore compatibility with gcc 6.3.0, libprotobuf 3.0.0, boost v1.62.0 [#2953](https://github.com/valhalla/valhalla/pull/2953)
+   * FIXED: Dont abort bidirectional a-star search if only one direction is exhausted [#2936](https://github.com/valhalla/valhalla/pull/2936)
+   * FIXED: Fixed missing comma in the scripts/valhalla_build_config [#2963](https://github.com/valhalla/valhalla/pull/2963)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
@@ -54,6 +60,11 @@
    * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
    * ADDED: Add min_level argument to valhalla_ways_to_edges [#2918](https://github.com/valhalla/valhalla/pull/2918)
    * ADDED: Adding ability to store the roundabout_exit_turn_degree to the maneuver [#2941](https://github.com/valhalla/valhalla/pull/2941)
+   * ADDED: Penalize pencil point uturns and uturns at short internal edges. Note: `motorcycle` and `motor_scooter` models do not penalize on short internal edges. No new uturn penalty logic has been added to the pedestrian and bicycle costing models. [#2944](https://github.com/valhalla/valhalla/pull/2944)
+   * CHANGED: Allow config object to be passed-in to path algorithms [#2949](https://github.com/valhalla/valhalla/pull/2949)
+   * CHANGED: Allow disabling Werror
+   * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
+   * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
