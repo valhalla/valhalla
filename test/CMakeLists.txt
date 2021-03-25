@@ -56,7 +56,7 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
     incidents.cc
     incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif()
 
 ## Add executable targets
 foreach(test ${tests})
