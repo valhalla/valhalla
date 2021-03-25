@@ -435,8 +435,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                 uint8_t& flow_sources) const {
   // Reduce edge speed to bare minimum, if we're NOT ignoring closures
   // and edge is closed
-  auto speed = IsClosed(edge, tile) ? kMinSpeedKph
-                                    : tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+  auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
 
   if (edge->use() == Use::kFerry) {
     assert(speed < speedfactor_.size());
@@ -449,7 +448,10 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
        kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
   assert(scooter_speed < speedfactor_.size());
+  auto speed_for_costing = IsClosed(edge, tile) ? kMinSpeedKph : scooter_speed;
+
   float sec = (edge->length() * speedfactor_[scooter_speed]);
+  float cost_duration = (edge->length() * speedfactor_[speed_for_costing]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -472,7 +474,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= service_factor_;
   }
 
-  return {sec * factor, sec};
+  return {cost_duration * factor, sec};
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
