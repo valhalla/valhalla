@@ -283,9 +283,17 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     while (rbegin != rend && !prev_edge.Is_Valid()) {
       // the very first state will have an initial dummy label with invalid edge/node ids
       const auto& label = *rbegin;
-      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
+      // It can occur that the one, both, or neither of the label's edge and
+      // node ids are valid. Assign as many as are valid, break if neither.
+      // Downstream code determines which to use if both are valid.
+      bool valid_edge = label.edgeid().Is_Valid();
+      bool valid_node = label.nodeid().Is_Valid();
+      if (valid_edge)
+        prev_edge = label.edgeid();
+      if (valid_node)
+        node_id = label.nodeid();
+      if (!valid_edge && !valid_node)
         break;
-      prev_edge = label.edgeid();
       rbegin++;
     }
   }
@@ -320,10 +328,17 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     while (rbegin != rend) {
       // the very first state will have an initial dummy label with invalid edge/node ids
       const auto& label = *rbegin;
-      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
+      // It can occur that the one, both, or neither of the label's edge and
+      // node ids are valid. Assign as many as are valid, break if neither.
+      // Downstream code determines which to use if both are valid.
+      bool valid_edge = label.edgeid().Is_Valid();
+      bool valid_node = label.nodeid().Is_Valid();
+      if (valid_edge)
+        next_edge = label.edgeid();
+      if (valid_node)
+        node_id = label.nodeid();
+      if (!valid_edge && !valid_node)
         break;
-      next_edge = label.edgeid();
-      node_id = label.nodeid();
       rbegin++;
     }
   }
