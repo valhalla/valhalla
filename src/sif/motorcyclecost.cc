@@ -427,12 +427,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               uint8_t& flow_sources) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
   auto final_speed = std::min(edge_speed, top_speed_);
-  // Use reduced speed for costing purposes, and normal edge speed for calculating duration (sec).
-  // This means closed edges cost more, but have the same traversal time as if they were open
-  auto speed_for_costing = IsClosed(edge, tile) ? kMinSpeedKph : final_speed;
 
   float sec = (edge->length() * speedfactor_[final_speed]);
-  float cost_duration = (edge->length() * speedfactor_[speed_for_costing]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -441,7 +437,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
-    return {cost_duration * ferry_factor_, sec};
+    return {sec * ferry_factor_, sec};
   }
 
   float factor = density_factor_[edge->density()] +
@@ -461,8 +457,12 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kServiceRoad) {
     factor *= service_factor_;
   }
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
+  }
 
-  return {cost_duration * factor, sec};
+  return {sec * factor, sec};
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor

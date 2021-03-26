@@ -835,6 +835,7 @@ protected:
   float track_factor_;         // Avoid tracks factor.
   float living_street_factor_; // Avoid living streets factor.
   float service_factor_;       // Avoid service roads factor.
+  float closure_factor_;       // Avoid closed edges factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -878,6 +879,9 @@ protected:
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
+    // TODO: Get this from the costing model
+    // Set high cost penalty for traversing a closure
+    closure_factor_ = 9.0f;
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
