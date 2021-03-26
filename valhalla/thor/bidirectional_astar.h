@@ -85,6 +85,8 @@ public:
   void Clear() override;
 
 protected:
+  enum class ExpansionType { forward = 0, reverse = 1 };
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -152,12 +154,139 @@ protected:
    * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node
    */
-  bool ExpandForward(baldr::GraphReader& graphreader,
+  template <const ExpansionType expansion_direction>
+  bool Expand(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
+                     const baldr::DirectedEdge* opp_pred_edge,
                      const baldr::TimeInfo& time_info,
-                     const bool invariant);
+                     const bool invariant) {
+    // Get the tile and the node info. Skip if tile is null (can happen
+    // with regional data sets) or if no access at the node.
+    graph_tile_ptr tile = graphreader.GetGraphTile(node);
+    if (tile == nullptr) {
+      return false;
+    }
+    const baldr::NodeInfo* nodeinfo = tile->node(node);
+
+    // Keep track of superseded edges
+    uint32_t shortcuts = 0;
+
+    // Update the time information even if time is invariant to account for timezones
+    auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+    auto offset_time = (expansion_direction == ExpansionType::forward) ?
+        time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone())) :
+        time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+
+    // If we encounter a node with an access restriction like a barrier we allow a uturn
+    if (!costing_->Allowed(nodeinfo)) {
+      const baldr::DirectedEdge* opp_edge = nullptr;
+      const baldr::GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+      // Mark the predecessor as a deadend to be consistent with how the
+      // edgelabels are set when an *actual* deadend (i.e. some dangling OSM geometry)
+      // is labelled
+      pred.set_deadend(true);
+      // Check if edge is null before using it (can happen with regional data sets)
+      if (expansion_direction == ExpansionType::forward) {
+        return opp_edge && ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
+                                            {opp_edge, opp_edge_id,
+                                             edgestatus_forward_.GetPtr(opp_edge_id, tile)},
+                                            shortcuts, tile, offset_time);
+      } else {
+        return opp_edge &&
+                  ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, edgestatus_reverse_.GetPtr(opp_edge_id, tile)},
+                              shortcuts, tile, offset_time);
+      }
+    }
+
+    bool disable_uturn = false;
+    EdgeMetadata meta = (expansion_direction == ExpansionType::forward) ?
+      EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_) :
+      EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
+    EdgeMetadata uturn_meta{};
+
+    // Expand from end node in forward direction.
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
+
+      // Begin by checking if this is the opposing edge to pred.
+      // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
+      // this edge until last. If any other edges were emplaced, it means we should not
+      // even try to evaluate a u-turn since u-turns should only happen for deadends
+      uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
+
+      // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
+      disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+      (expansion_direction == ExpansionType::forward ?
+                       ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts,
+                                          tile, offset_time) :
+                     ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                        shortcuts, tile, offset_time)
+      ))
+                                        || disable_uturn;
+    }
+
+    // Handle transitions - expand from the end node of each transition
+    if (nodeinfo->transition_count() > 0) {
+      const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
+        // we cant get the tile at that level (local extracts could have this problem) THEN bail
+        graph_tile_ptr trans_tile = nullptr;
+        if (expansion_direction == ExpansionType::forward) {
+          if ((!trans->up() && hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) ||
+              !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+            continue;
+          }
+          hierarchy_limits_forward_[node.level()].up_transition_count += trans->up();
+        } else {
+          if ((!trans->up() && hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) ||
+              !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+            continue;
+          }
+          hierarchy_limits_reverse_[node.level()].up_transition_count += trans->up();
+        }
+        // setup for expansion at this level
+        const auto* trans_node = trans_tile->node(trans->endnode());
+        EdgeMetadata trans_meta = (expansion_direction == ExpansionType::forward) ?
+            EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_forward_) :
+            EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_reverse_);
+        uint32_t trans_shortcuts = 0;
+        // expand the edges from this node at this level
+        for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
+          disable_uturn = ((expansion_direction == ExpansionType::forward) ?
+                          ExpandForwardInner(graphreader, pred, trans_node, pred_idx, trans_meta,
+                                             trans_shortcuts, trans_tile, offset_time) :
+                          ExpandReverseInner(graphreader, pred, opp_pred_edge, trans_node, pred_idx,
+                                           trans_meta, trans_shortcuts, trans_tile, offset_time)) ||
+                          disable_uturn;
+        }
+      }
+    }
+
+    // Now, after having looked at all the edges, including edges on other levels,
+    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+    if (!disable_uturn && uturn_meta) {
+      // If we found no suitable edge to add, it means we're at a deadend
+      // so lets go back and re-evaluate a potential u-turn
+      pred.set_deadend(true);
+
+      // TODO Is there a shortcut that supersedes our u-turn?
+      // Decide if we should expand a shortcut or the non-shortcut edge...
+
+      // Expand the uturn possiblity
+      disable_uturn = ((expansion_direction == ExpansionType::forward) ?
+                        ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, shortcuts,
+                                         tile, offset_time) :
+                        ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                       uturn_meta, shortcuts, tile, offset_time)) ||
+                      disable_uturn;
+    }
+
+    return disable_uturn;
+  }
+
   // Private helper function for `ExpandForward`
   bool ExpandForwardInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
