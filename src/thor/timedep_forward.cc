@@ -240,7 +240,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
                            transition_cost, restriction_idx,
                            (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                           static_cast<bool>(flow_sources & kDefaultFlowMask));
+                           static_cast<bool>(flow_sources & kDefaultFlowMask),
+                           costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge));
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_.add(idx);
   return true;
@@ -519,7 +520,8 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
                          baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
-                         static_cast<bool>(flow_sources & kDefaultFlowMask));
+                         static_cast<bool>(flow_sources & kDefaultFlowMask),
+                         sif::InternalTurn::kNoTurn);
     // Set the origin flag
     edge_label.set_origin();
 

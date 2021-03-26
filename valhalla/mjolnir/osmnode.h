@@ -81,7 +81,7 @@ struct OSMNode {
    *
    */
   void set_latlng(const double lng, double lat) {
-    lng7_ = lat7_ = -1;
+    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
     if (lng >= -180 && lng <= 180)
       lng7_ = std::round((lng + 180) * 1e7);
     if (lat >= -90 && lat <= 90)
@@ -94,7 +94,8 @@ struct OSMNode {
    */
   midgard::PointLL latlng() const {
     // if either coord is borked we return invalid pointll
-    if (lng7_ == -1 || lat7_ == -1)
+    if (lng7_ == std::numeric_limits<uint32_t>::max() ||
+        lat7_ == std::numeric_limits<uint32_t>::max())
       return {};
     return {lng7_ * 1e-7 - 180, lat7_ * 1e-7 - 90};
   }

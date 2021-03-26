@@ -1479,8 +1479,7 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() &&
-        (way_.use() == Use::kRoad || way_.use() == Use::kServiceRoad) &&
+    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
       way_.set_use(Use::kCuldesac);
     }
