@@ -46,6 +46,8 @@ constexpr float kTCUnfavorableUturn = 600.f;
 
 constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                                  baldr::kMaxSpeedKph};
+constexpr midgard::ranged_default_t<uint32_t> kLegalSpeedRange{10, baldr::kUnlimitedSpeedLimit,
+                                                               baldr::kUnlimitedSpeedLimit};
 
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
@@ -728,6 +730,17 @@ public:
   virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node);
 
   /**
+   * Checks whether the edge's true maxspeed is above the user defined
+   * legal speed limit.
+   *
+   * @param edge The edge to get the speed from
+   */
+  inline bool IsAboveLegalSpeed(const baldr::DirectedEdge* edge) const {
+    bool is_above = edge->max_speed() > legal_speed_;
+    return is_above;
+  }
+
+  /**
    * Adds a list of edges (GraphIds) to the user specified avoid list.
    * This can be used by test programs - alternatively a list of avoid
    * edges will be passed in the property tree for the costing options
@@ -864,6 +877,7 @@ protected:
   bool ignore_access_{false};
   bool ignore_closures_{false};
   uint32_t top_speed_;
+  uint32_t legal_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
@@ -946,6 +960,8 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+    // Set the top speed a vehicle is legally allowed to go
+    legal_speed_ = costing_options.legal_speed();
   }
 
   /**

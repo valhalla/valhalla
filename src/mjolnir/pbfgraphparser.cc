@@ -416,7 +416,12 @@ public:
     };
     tag_handlers_["forward_speed"] = [this]() {
       try {
-        way_.set_forward_speed(std::stof(tag_.second));
+        if (tag_.second == "unlimited") {
+          // this way has an unlimited speed limit (german autobahn)
+          way_.set_forward_speed(static_cast<float>(kUnlimitedSpeedLimit));
+        } else {
+          way_.set_forward_speed(std::stof(tag_.second));
+        }
         way_.set_forward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
@@ -424,7 +429,12 @@ public:
     };
     tag_handlers_["backward_speed"] = [this]() {
       try {
-        way_.set_backward_speed(std::stof(tag_.second));
+        if (tag_.second == "unlimited") {
+          // this way has an unlimited speed limit (german autobahn)
+          way_.set_backward_speed(static_cast<float>(kUnlimitedSpeedLimit));
+        } else {
+          way_.set_backward_speed(std::stof(tag_.second));
+        }
         way_.set_backward_tagged_speed(true);
       } catch (const std::out_of_range& oor) {
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));

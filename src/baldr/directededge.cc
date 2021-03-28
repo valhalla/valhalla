@@ -336,6 +336,17 @@ void DirectedEdge::set_truck_speed(const uint32_t speed) {
   }
 }
 
+// Sets the legal max speed in KPH
+void DirectedEdge::set_max_speed(const uint32_t speed) {
+  if (speed == kUnlimitedSpeedLimit) {
+    max_speed_ = kUnlimitedSpeedLimit;
+  } else if (speed > kMaxAssumedSpeed) {
+    max_speed_ = kMaxAssumedSpeed;
+  } else {
+    max_speed_ = speed;
+  }
+}
+
 // ----------------------------- Classification ---------------------------- //
 
 // Sets the classification (importance) of this edge.

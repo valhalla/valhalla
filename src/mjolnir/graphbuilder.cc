@@ -554,21 +554,24 @@ void BuildTileSet(const std::string& ways_file,
             dor = w.drive_on_right();
 
           // Validate speed. Set speed limit and truck speed.
-          uint32_t speed = w.speed();
-          if (forward && w.forward_tagged_speed()) {
-            speed = w.forward_speed();
-          } else if (!forward && w.backward_tagged_speed()) {
-            speed = w.backward_speed();
-          }
-          if (speed > kMaxAssumedSpeed) {
-            LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
-            speed = kMaxAssumedSpeed;
-          }
           uint32_t speed_limit = w.speed_limit();
           if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
             LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
                      " wayId= " + std::to_string(w.way_id()));
             speed_limit = kMaxAssumedSpeed;
+          }
+
+          uint32_t speed = w.speed();
+          if (forward && w.forward_tagged_speed()) {
+            speed = w.forward_speed();
+            speed_limit = w.forward_speed();
+          } else if (!forward && w.backward_tagged_speed()) {
+            speed = w.backward_speed();
+            speed_limit = w.backward_speed();
+          }
+          if (speed > kMaxAssumedSpeed) {
+            LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
+            speed = kMaxAssumedSpeed;
           }
 
           uint32_t truck_speed = w.truck_speed();
@@ -728,9 +731,9 @@ void BuildTileSet(const std::string& ways_file,
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, restrictions, bike_network,
-                                 edge.attributes.reclass_ferry);
+                                 truck_speed, speed_limit, use,
+                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
+                                 restrictions, bike_network, edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
