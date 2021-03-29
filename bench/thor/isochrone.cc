@@ -28,7 +28,7 @@ void BM_IsochroneUtrecht(benchmark::State& state) {
 
   const auto config =
       test::make_config("test/data/utrecht_tiles", {},
-                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_dir"}});
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
   valhalla::loki::loki_worker_t loki_worker(config);
   valhalla::thor::thor_worker_t thor_worker(config);
 
