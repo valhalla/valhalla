@@ -112,7 +112,7 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
 template <const ExpansionType expansion_direction>
 void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                             const baldr::GraphId& node,
-                            const decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+                            const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
                             const uint32_t pred_idx,
                             const baldr::DirectedEdge* opp_pred_edge,
                             const bool from_transition,
@@ -275,7 +275,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 template void Dijkstras::ExpandInner<ExpansionType::forward>(
     baldr::GraphReader& graphreader,
     const baldr::GraphId& node,
-    const decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+    const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
     const uint32_t pred_idx,
     const baldr::DirectedEdge* opp_pred_edge,
     const bool from_transition,
@@ -283,7 +283,7 @@ template void Dijkstras::ExpandInner<ExpansionType::forward>(
 template void Dijkstras::ExpandInner<ExpansionType::reverse>(
     baldr::GraphReader& graphreader,
     const baldr::GraphId& node,
-    const decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+    const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
     const uint32_t pred_idx,
     const baldr::DirectedEdge* opp_pred_edge,
     const bool from_transition,
