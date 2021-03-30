@@ -1401,6 +1401,9 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(roundabout_exit_turn_degree_);
 
   man_str += delim;
+  man_str += std::to_string(roundabout_chord_heading_);
+
+  man_str += delim;
   man_str += "\"";
   man_str += verbal_transition_alert_instruction_;
   man_str += "\"";
