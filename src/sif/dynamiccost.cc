@@ -1,6 +1,7 @@
 #include "sif/dynamiccost.h"
 
 #include "baldr/graphconstants.h"
+#include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -74,7 +75,8 @@ DynamicCost::DynamicCost(const CostingOptions& options,
                          uint32_t access_mask,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      access_mask_(access_mask), flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor),
+      flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
       ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
       ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
       top_speed_(options.top_speed()),
@@ -287,6 +289,8 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
   pbf_costing_options->set_top_speed(
       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
+  pbf_costing_options->set_closure_factor(
+      kClosureFactorRange(rapidjson::get<float>(value, "/closure_factor", kDefaultClosureFactor)));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,

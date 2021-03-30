@@ -24,6 +24,8 @@
 #include <rapidjson/document.h>
 #include <unordered_map>
 
+using namespace valhalla::midgard;
+
 namespace valhalla {
 namespace sif {
 
@@ -46,6 +48,12 @@ constexpr float kTCUnfavorableUturn = 600.f;
 
 constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                                  baldr::kMaxSpeedKph};
+
+// Default penalty factor for avoiding closures (increases the cost of an edge as if its being traversed at kMinSpeedKph)
+constexpr float kDefaultClosureFactor = 9.0f;
+// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not penalize
+// closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the non-closure end
+constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
@@ -879,9 +887,6 @@ protected:
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
-    // TODO: Get this from the costing model
-    // Set high cost penalty for traversing a closure
-    closure_factor_ = 9.0f;
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
@@ -945,6 +950,8 @@ protected:
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
+    // Closure factor to use for closed edges
+    closure_factor_ = costing_options.closure_factor();
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();

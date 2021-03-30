@@ -49,7 +49,6 @@ protected:
   static int const default_speed;
   static std::string const tile_dir;
   static std::shared_ptr<baldr::GraphReader> reader;
-  ;
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
@@ -100,7 +99,7 @@ protected:
         {"KN", {{"highway", "primary"}, {"maxspeed", "45"}}},
         {"NQ", {{"highway", "primary"}, {"maxspeed", "45"}}},
         {"QT", {{"highway", "primary"}, {"maxspeed", "45"}}},
-        // preferred path is mid-section is closed
+        // right section slower than middle
         {"CF", {{"highway", "primary"}, {"maxspeed", "35"}}},
         {"FI", {{"highway", "primary"}, {"maxspeed", "35"}}},
         {"IL", {{"highway", "primary"}, {"maxspeed", "35"}}},
@@ -142,6 +141,7 @@ std::shared_ptr<baldr::GraphReader> ClosurePenalty::reader;
 
 TEST_P(ClosurePenalty, AvoidClosure) {
   std::string costing = GetParam();
+
   {
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, {"1", "C"}, costing,
@@ -155,7 +155,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
     close_bidir_edge(reader, tile, index, current, "EH", closure_map);
     close_bidir_edge(reader, tile, index, current, "HK", closure_map);
-    close_bidir_edge(reader, tile, index, current, "KN", closure_map);
+//    close_bidir_edge(reader, tile, index, current, "KN", closure_map);
     close_bidir_edge(reader, tile, index, current, "NQ", closure_map);
     close_bidir_edge(reader, tile, index, current, "QT", closure_map);
   };
@@ -219,6 +219,21 @@ TEST_P(ClosurePenalty, AvoidClosure) {
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
     gurka::assert::raw::expect_path(result, expected_path);
+  }
+
+  // Change closure factor to 1.0, this means no added penalty to closed edges
+  {
+    const std::string& req_include_closures =
+        (boost::format(
+              R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"closure_factor": 1.0, "speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"3", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("1").lat()) %
+         std::to_string(closure_map.nodes.at("1").lng()) %
+         std::to_string(closure_map.nodes.at("2").lat()) %
+         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing)
+            .str();
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
+    gurka::assert::raw::expect_path(result, {"QT", "NQ", "KN", "HK", "EH", "BE"});
   }
 }
 

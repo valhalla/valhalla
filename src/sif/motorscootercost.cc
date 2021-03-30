@@ -715,6 +715,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 

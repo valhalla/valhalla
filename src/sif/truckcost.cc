@@ -781,6 +781,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 
