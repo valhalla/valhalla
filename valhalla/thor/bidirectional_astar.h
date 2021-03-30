@@ -43,11 +43,9 @@ class BidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config A config object of key, value pairs
    */
-  explicit BidirectionalAStar(
-      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit BidirectionalAStar(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
@@ -126,6 +124,14 @@ protected:
   uint32_t iterations_threshold_;
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
+
+  // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
+  // end started on a not_thru or closed (due to live-traffic) edge
+  bool extended_search_;
+  // Stores the pruning state at origin & destination. Its true if _any_ of the candidate edges at
+  // these locations has pruning turned off (pruning is off if starting from a closed or not_thru
+  // edge)
+  bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
 
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward

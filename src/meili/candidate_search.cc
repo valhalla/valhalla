@@ -67,9 +67,9 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
 
     // Projection information
     midgard::PointLL point;
-    float sq_distance = 0.f;
+    double sq_distance = 0.0;
     size_t segment;
-    float offset;
+    double offset;
 
     baldr::GraphId snapped_node;
     baldr::PathLocation correlated(baldr::Location(location, stop_type));
@@ -81,10 +81,10 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
 
       if (sq_distance <= sq_search_radius) {
-        const float dist = edge->forward() ? offset : 1.f - offset;
-        if (dist == 1.f) {
+        const double dist = edge->forward() ? offset : 1.0 - offset;
+        if (dist == 1.0) {
           snapped_node = edge->endnode();
-        } else if (dist == 0.f) {
+        } else if (dist == 0.0) {
           snapped_node = opp_edge->endnode();
         }
         correlated.edges.emplace_back(edgeid, dist, point, sq_distance);
@@ -100,10 +100,10 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
       }
       if (sq_distance <= sq_search_radius) {
-        const float dist = opp_edge->forward() ? offset : 1.f - offset;
-        if (dist == 1.f) {
+        const double dist = opp_edge->forward() ? offset : 1.0 - offset;
+        if (dist == 1.0) {
           snapped_node = opp_edge->endnode();
-        } else if (dist == 0.f) {
+        } else if (dist == 0.0) {
           snapped_node = edge->endnode();
         }
         correlated.edges.emplace_back(opp_edgeid, dist, point, sq_distance);

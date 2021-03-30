@@ -5,6 +5,7 @@ set(sources
   topk_search.cc
   routing.cc
   candidate_search.cc
+  geometry_helpers.cc
   transition_cost_model.cc
   map_matcher.cc
   map_matcher_factory.cc
