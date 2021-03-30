@@ -198,6 +198,7 @@ message DirectionsLeg {
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;               // List of guidance views
     optional BssManeuverType bss_maneuver_type = 36;
+    optional uint32 roundabout_chord_heading = 37;           // The heading of the line segment that join enter & exit points on a curve
   }
 
   optional uint64 trip_id = 1;
