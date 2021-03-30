@@ -169,7 +169,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     const baldr::DirectedEdge* opp_edge;
     // Only populate these at this point for the reverse search - the forward search
     // may exit before needing them, so we can defer some work until later
-    if (not FORWARD) { // aka reverse
+    if (!FORWARD) { // aka reverse
       t2 = tile;
       oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
       if (t2 == nullptr) {
