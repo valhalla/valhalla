@@ -49,10 +49,12 @@ constexpr float kTCUnfavorableUturn = 600.f;
 constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                                  baldr::kMaxSpeedKph};
 
-// Default penalty factor for avoiding closures (increases the cost of an edge as if its being traversed at kMinSpeedKph)
+// Default penalty factor for avoiding closures (increases the cost of an edge as if its being
+// traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
-// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not penalize
-// closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the non-closure end
+// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
+// penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
+// non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
 /**

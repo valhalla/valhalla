@@ -75,11 +75,10 @@ DynamicCost::DynamicCost(const CostingOptions& options,
                          uint32_t access_mask,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor),
-      flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
-      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
-      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
-      top_speed_(options.top_speed()),
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
+      shortest_(options.shortest()), ignore_restrictions_(options.ignore_restrictions()),
+      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()),
+      ignore_closures_(options.ignore_closures()), top_speed_(options.top_speed()),
       filter_closures_(ignore_closures_ ? false : options.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits

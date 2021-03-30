@@ -155,7 +155,6 @@ TEST_P(ClosurePenalty, AvoidClosure) {
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
     close_bidir_edge(reader, tile, index, current, "EH", closure_map);
     close_bidir_edge(reader, tile, index, current, "HK", closure_map);
-//    close_bidir_edge(reader, tile, index, current, "KN", closure_map);
     close_bidir_edge(reader, tile, index, current, "NQ", closure_map);
     close_bidir_edge(reader, tile, index, current, "QT", closure_map);
   };
@@ -225,7 +224,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
   {
     const std::string& req_include_closures =
         (boost::format(
-              R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"closure_factor": 1.0, "speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"3", "value": "current"}})") %
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"closure_factor": 1.0, "speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"3", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("1").lat()) %
          std::to_string(closure_map.nodes.at("1").lng()) %
          std::to_string(closure_map.nodes.at("2").lat()) %
