@@ -290,6 +290,11 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     return false;
   }
 
+  bool thru = (pred.not_thru_pruning() || !meta.edge->not_thru());
+  if (costing_->allow_restricted_thru() && pred.restrictions() && meta.edge->not_thru()) {
+    thru = false;
+  }
+
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   uint8_t flow_sources;
@@ -327,8 +332,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost,
-                                   (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   dist, mode_, transition_cost, thru,
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
                                    costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -727,6 +731,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // on later, causing us to needlessly expand when we could have aborted sooner. However, it
         // ensures that most impossible route will fail fast provided one of the locations didn't end
         // on a not_thru/closed edge
+
         if (!extended_search_ || !pruning_disabled_at_origin_) {
           return {};
         }
