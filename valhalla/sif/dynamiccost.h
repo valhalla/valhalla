@@ -663,6 +663,10 @@ public:
    */
   virtual void set_allow_destination_only(const bool allow);
 
+  void set_allow_restricted_thru(const bool allow);
+
+  bool allow_restricted_thru();
+
   /**
    * Set to allow use of transit connections.
    * @param  allow  Flag indicating whether transit connections are allowed.
@@ -817,6 +821,8 @@ protected:
   // disable access onto destination only edges for driving routes. Pedestrian
   // and bicycle generally allow access (with small penalties).
   bool allow_destination_only_;
+
+  bool allow_restricted_thru_;
 
   // Travel mode
   TravelMode travel_mode_;
