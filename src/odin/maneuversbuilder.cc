@@ -2722,7 +2722,6 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
 
     // Process roundabout maneuvers
     if (curr_man->roundabout()) {
-
       // Get the non route numbers for the roundabout
       std::unique_ptr<StreetNames> non_route_numbers = curr_man->street_names().GetNonRouteNumbers();
 
