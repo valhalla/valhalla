@@ -67,6 +67,7 @@
    * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
    * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
    * ADDED: Set the roundabout heading of the line segment that join enter and exit points on a curve.  This will be stored as the `roundabout_chord_heading`. [#2975](https://github.com/valhalla/valhalla/pull/2975)
+   * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
