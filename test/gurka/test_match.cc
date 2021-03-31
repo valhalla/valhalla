@@ -138,9 +138,9 @@ TEST(MapMatch, NodeSnapFix) {
   // Another thing about this case... if I declare the ways in this manner the
   // original code works fine. The reason, I believe, is that this creates one
   // edge with a trivial node-to-node (along the same edge) route.
-//  const gurka::ways ways = {
-//      {"BCFD", {{"highway", "primary"}}}
-//  };
+  //  const gurka::ways ways = {
+  //      {"BCFD", {{"highway", "primary"}}}
+  //  };
 
   // To expose the issue and prove the fix, the ways must be declared in this
   // manner. This results in a routing solution along two edges.
