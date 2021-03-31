@@ -2781,7 +2781,7 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
           // we store the turn angles when exit roundabout maneuver is
           // suppressed
           curr_man->set_roundabout_exit_turn_degree(next_man->turn_degree());
-          curr_man->set_roundabout_exit_shape_index(next_man->end_shape_index());
+          curr_man->set_roundabout_exit_shape_index(curr_man->end_shape_index());
 
           // Set the traversable_outbound_intersecting_edge booleans
           curr_man->set_has_left_traversable_outbound_intersecting_edge(
