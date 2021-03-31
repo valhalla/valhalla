@@ -189,7 +189,6 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     trip_maneuver->set_turn_degree(maneuver.turn_degree());
     trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
-
     if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
     }
