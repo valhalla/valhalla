@@ -2701,9 +2701,6 @@ bool ManeuversBuilder::AreRoundaboutsProcessable(const TripLeg_TravelMode travel
 }
 
 void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
-  std::vector<midgard::PointLL> shape =
-      midgard::decode<std::vector<midgard::PointLL>>(trip_path_->shape());
-
   // Set previous maneuver
   auto prev_man = maneuvers.begin();
 
@@ -2725,12 +2722,6 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
 
     // Process roundabout maneuvers
     if (curr_man->roundabout()) {
-      // A chord is the line segment joining two points on a curve
-      // We want to set the roundabout heading of the line segment that join enter & exit points
-      // on a curve
-      auto enter_point = shape[curr_man->begin_shape_index()];
-      auto exit_point = shape[next_man->begin_shape_index()];
-      curr_man->set_roundabout_chord_heading(enter_point.Heading(exit_point));
 
       // Get the non route numbers for the roundabout
       std::unique_ptr<StreetNames> non_route_numbers = curr_man->street_names().GetNonRouteNumbers();
@@ -2786,12 +2777,11 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
           // suppressed
           curr_man->set_roundabout_exit_begin_heading(next_man->begin_heading());
 
-          // Store the next maneuver's turn degree and chord heading. This is where
+          // Store the next maneuver's turn degree and exit shape index. This is where
           // we store the turn angles when exit roundabout maneuver is
           // suppressed
           curr_man->set_roundabout_exit_turn_degree(next_man->turn_degree());
-
-          curr_man->set_roundabout_chord_heading(next_man->roundabout_chord_heading());
+          curr_man->set_roundabout_exit_shape_index(next_man->end_shape_index());
 
           // Set the traversable_outbound_intersecting_edge booleans
           curr_man->set_has_left_traversable_outbound_intersecting_edge(
