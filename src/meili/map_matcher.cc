@@ -281,19 +281,14 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       break;
     node_id = rbegin->nodeid();
     while (rbegin != rend && !prev_edge.Is_Valid()) {
-      // the very first state will have an initial dummy label with invalid edge/node ids
+      // the very first state will have an initial dummy label with invalid edge/node ids -
+      // except when the first state is a node, in which case the edge-id will be invalid
+      // and the node-id will be valid.
       const auto& label = *rbegin;
-      // It can occur that the one, both, or neither of the label's edge and
-      // node ids are valid. Assign as many as are valid, break if neither.
-      // Downstream code determines which to use if both are valid.
-      bool valid_edge = label.edgeid().Is_Valid();
-      bool valid_node = label.nodeid().Is_Valid();
-      if (valid_edge)
-        prev_edge = label.edgeid();
-      if (valid_node)
-        node_id = label.nodeid();
-      if (!valid_edge && !valid_node)
+      node_id = rbegin->nodeid();
+      if (!label.edgeid().Is_Valid())
         break;
+      prev_edge = label.edgeid();
       rbegin++;
     }
   }
@@ -326,19 +321,14 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (rbegin == rend)
       break;
     while (rbegin != rend) {
-      // the very first state will have an initial dummy label with invalid edge/node ids
+      // the very first state will have an initial dummy label with invalid edge/node ids -
+      // except when the first state is a node, in which case the edge-id will be invalid
+      // and the node-id will be valid.
       const auto& label = *rbegin;
-      // It can occur that the one, both, or neither of the label's edge and
-      // node ids are valid. Assign as many as are valid, break if neither.
-      // Downstream code determines which to use if both are valid.
-      bool valid_edge = label.edgeid().Is_Valid();
-      bool valid_node = label.nodeid().Is_Valid();
-      if (valid_edge)
-        next_edge = label.edgeid();
-      if (valid_node)
-        node_id = label.nodeid();
-      if (!valid_edge && !valid_node)
+      node_id = rbegin->nodeid();
+      if (!label.edgeid().Is_Valid())
         break;
+      next_edge = label.edgeid();
       rbegin++;
     }
   }

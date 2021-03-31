@@ -128,41 +128,30 @@ D--3--4--C--5--6--E)";
 
 TEST(MapMatch, NodeSnapFix) {
   const std::string ascii_map = R"(
-      A
-      |
-      |
-      |
-      |
-      |
       B-C------------1----F---------D
-      |
-      |
-      |
-      |
-      |
-      E)";
+  )";
 
-  // Using specific geometry that sorta represents the above but is
-  // required to demonstrate the fix.
-  gurka::nodelayout layout; // = gurka::detail::map_to_coordinates(ascii_map, 10);
-  layout["A"] = {-93.502174, 44.989030};
-  layout["B"] = {-93.502174, 44.988583};
-  layout["C"] = {-93.502071, 44.988581};
-  layout["1"] = {-93.499062, 44.987755};
-  layout["F"] = {-93.498497, 44.987827};
-  layout["D"] = {-93.495880, 44.987896};
-  layout["E"] = {-93.502228, 44.987960};
+  // The challenge posed by this case is that the gps point "B" is exactly the
+  // lat/lon as the point "B" in the graph.
+  gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 10);
 
+  // Another thing about this case... if I declare the ways in this manner the
+  // original code works fine. The reason, I believe, is that this creates one
+  // edge with a trivial node-to-node (along the same edge) route.
+//  const gurka::ways ways = {
+//      {"BCFD", {{"highway", "primary"}}}
+//  };
+
+  // To expose the issue and prove the fix, the ways must be declared in this
+  // manner. This results in a routing solution along two edges.
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
-      {"CF", {{"highway", "primary"}}}, {"FD", {{"highway", "primary"}}},
-      {"BE", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"CF", {{"highway", "primary"}}},
+      {"FD", {{"highway", "primary"}}},
   };
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mapmatch_node_snapping");
 
-  // Along with the specific geometry above, the other challenge posed by this case is
-  // that the gps point "B" is exactly the lat/lon as the point "B" in the graph.
   auto result = gurka::do_action(valhalla::Options::trace_route, map, {"B", "1", "F"}, "auto",
                                  {{"/trace_options/search_radius", "50"}}, {}, nullptr, "via");
 
