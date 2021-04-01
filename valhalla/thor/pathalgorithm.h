@@ -30,7 +30,8 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
+  PathAlgorithm()
+      : interrupt(nullptr), has_ferry_(false), allow_restricted_thru_(false), expansion_callback_() {
   }
 
   PathAlgorithm(const PathAlgorithm&) = delete;
@@ -89,6 +90,14 @@ public:
     return has_ferry_;
   }
 
+  void set_allow_restricted_thru(const bool allow) {
+    allow_restricted_thru_ = allow;
+  }
+
+  bool allow_restricted_thru() {
+    return allow_restricted_thru_;
+  }
+
   /**
    * Sets the functor which will track the algorithms expansion.
    *
@@ -105,6 +114,8 @@ protected:
   const std::function<void()>* interrupt;
 
   bool has_ferry_; // Indicates whether the path has a ferry
+
+  bool allow_restricted_thru_; // Indicates whether to allow access into a restricted no thru region.
 
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
