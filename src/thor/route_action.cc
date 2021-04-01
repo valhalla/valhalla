@@ -399,8 +399,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
-    cost->set_allow_restricted_thru(true);
-
+    path_algorithm->set_allow_restricted_thru(true);
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
         path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
