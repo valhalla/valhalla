@@ -213,16 +213,14 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       newcost = pred.cost() +
                 costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
                 transition_cost;
-    } else if (expansion_direction == ExpansionType::reverse) {
+    } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, pred.has_measured_speed(),
                                           pred.internal_turn());
-      newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources);
-      // TODO(danpat): why is this done differently in the reverse direction? This was refactored
-      //               to here from older code.
-      newcost.cost += transition_cost.cost;
+      newcost = pred.cost() +
+                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
+                transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
