@@ -92,6 +92,8 @@ void MultiModalPathAlgorithm::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
+  // Set the allow restricted thru to false
+  allow_restricted_thru_ = false;
 }
 
 // Calculate best path using multiple modes (e.g. transit).

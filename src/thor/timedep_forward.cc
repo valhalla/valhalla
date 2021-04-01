@@ -43,6 +43,8 @@ void TimeDepForward::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
+  // Set the allow restricted thru to false
+  allow_restricted_thru_ = false;
 }
 
 // Expand from the node along the forward search path. Immediately expands
