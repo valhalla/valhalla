@@ -329,8 +329,8 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // There is an edge case where we may encounter only_restrictions with edges being
   // marked as not_thru.  Basically the only way to get in this area is via this edge
   // based on the restriction, but it is also marked as not_thru. We set the not_thru
-  // to false here only if allow_restricted_thru is true and we are not restricted.  
-  // This bool is only set to true on the 2nd pass in route_action. See the gurka 
+  // to false here only if allow_restricted_thru is true and we are not restricted.
+  // This bool is only set to true on the 2nd pass in route_action. See the gurka
   // test allow_restricted_thru
   bool thru = (pred.not_thru_pruning() || !meta.edge->not_thru());
   if (allow_restricted_thru() && pred.restrictions() && meta.edge->not_thru()) {
