@@ -152,8 +152,8 @@ TEST(MapMatch, NodeSnapFix) {
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mapmatch_node_snapping");
 
-  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"B", "1", "F"}, "auto",
-                                 {{"/trace_options/search_radius", "50"}}, {}, nullptr, "via");
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"B", "1", "F"}, "auto", {}, {},
+                                 nullptr, "via");
 
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
