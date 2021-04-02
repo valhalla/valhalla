@@ -682,333 +682,331 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     }
   }
   return {}; // If we are here the route failed
+}
+
+// The edge on the forward search connects to a reached edge on the reverse
+// search tree. Check if this is the best connection so far and set the
+// search threshold.
+bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
+  // Find pred on opposite side
+  GraphId oppedge = pred.opp_edgeid();
+  EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
+  auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (pred.internal_turn() != InternalTurn::kNoTurn) {
+    return false;
   }
 
-  // The edge on the forward search connects to a reached edge on the reverse
-  // search tree. Check if this is the best connection so far and set the
-  // search threshold.
-  bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-    // Find pred on opposite side
-    GraphId oppedge = pred.opp_edgeid();
-    EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
-    auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
-
-    // Disallow connections that are part of an uturn on an internal edge
-    if (pred.internal_turn() != InternalTurn::kNoTurn) {
+  // Disallow connections that are part of a complex restriction
+  if (pred.on_complex_rest()) {
+    // Lets dig deeper and test if we are really triggering these restrictions
+    // since the complex restriction can span many edges
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, pred,
+                                 opp_pred, costing_)) {
       return false;
     }
-
-    // Disallow connections that are part of a complex restriction
-    if (pred.on_complex_rest()) {
-      // Lets dig deeper and test if we are really triggering these restrictions
-      // since the complex restriction can span many edges
-      if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, pred,
-                                   opp_pred, costing_)) {
-        return false;
-      }
-    }
-
-    // Get the opposing edge - a candidate shortest path has been found to the
-    // end node of this directed edge. Get total cost.
-    float c;
-    if (pred.predecessor() != kInvalidLabel) {
-      // Get the start of the predecessor edge on the forward path. Cost is to
-      // the end this edge, plus the cost to the end of the reverse predecessor,
-      // plus the transition cost.
-      c = edgelabels_forward_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
-          pred.transition_cost().cost;
-    } else {
-      // If no predecessor on the forward path get the predecessor on
-      // the reverse path to form the cost.
-      uint32_t predidx = opp_pred.predecessor();
-      float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
-      c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
-    }
-
-    // Keep the best ones at the front all others to the back
-    best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
-
-    if (c < best_connections_.front().cost)
-      std::swap(best_connections_.front(), best_connections_.back());
-
-    // Set thresholds to extend search
-    if (cost_threshold_ == std::numeric_limits<float>::max()) {
-      float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
-      if (desired_paths_count_ == 1) {
-        cost_threshold_ = sortcost + kThresholdDelta;
-      } else {
-        cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-        iterations_threshold_ =
-            edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-      }
-    }
-
-    // setting this edge as connected
-    if (expansion_callback_) {
-      expansion_callback_(graphreader, "bidirectional_astar", pred.edgeid(), "c", false);
-    }
-
-    return true;
   }
 
-  // The edge on the reverse search connects to a reached edge on the forward
-  // search tree. Check if this is the best connection so far and set the
-  // search threshold.
-  bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader,
-                                                const BDEdgeLabel& rev_pred) {
-    GraphId fwd_edge_id = rev_pred.opp_edgeid();
-    EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
-    auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+  // Get the opposing edge - a candidate shortest path has been found to the
+  // end node of this directed edge. Get total cost.
+  float c;
+  if (pred.predecessor() != kInvalidLabel) {
+    // Get the start of the predecessor edge on the forward path. Cost is to
+    // the end this edge, plus the cost to the end of the reverse predecessor,
+    // plus the transition cost.
+    c = edgelabels_forward_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
+        pred.transition_cost().cost;
+  } else {
+    // If no predecessor on the forward path get the predecessor on
+    // the reverse path to form the cost.
+    uint32_t predidx = opp_pred.predecessor();
+    float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
+    c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
+  }
 
-    // Disallow connections that are part of an uturn on an internal edge
-    if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
+  // Keep the best ones at the front all others to the back
+  best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
+
+  if (c < best_connections_.front().cost)
+    std::swap(best_connections_.front(), best_connections_.back());
+
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+    float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = sortcost + kThresholdDelta;
+    } else {
+      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
+  // setting this edge as connected
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, "bidirectional_astar", pred.edgeid(), "c", false);
+  }
+
+  return true;
+}
+
+// The edge on the reverse search connects to a reached edge on the forward
+// search tree. Check if this is the best connection so far and set the
+// search threshold.
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
+  GraphId fwd_edge_id = rev_pred.opp_edgeid();
+  EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
+  auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+
+  // Disallow connections that are part of an uturn on an internal edge
+  if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
+    return false;
+  }
+
+  // Disallow connections that are part of a complex restriction
+  if (rev_pred.on_complex_rest()) {
+    // Lets dig deeper and test if we are really triggering these restrictions
+    // since the complex restriction can span many edges
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, fwd_pred,
+                                 rev_pred, costing_)) {
       return false;
     }
+  }
 
-    // Disallow connections that are part of a complex restriction
-    if (rev_pred.on_complex_rest()) {
-      // Lets dig deeper and test if we are really triggering these restrictions
-      // since the complex restriction can span many edges
-      if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, fwd_pred,
-                                   rev_pred, costing_)) {
-        return false;
-      }
-    }
+  // Get the opposing edge - a candidate shortest path has been found to the
+  // end node of this directed edge. Get total cost.
+  float c;
+  if (rev_pred.predecessor() != kInvalidLabel) {
+    // Get the start of the predecessor edge on the reverse path. Cost is to
+    // the end this edge, plus the cost to the end of the forward predecessor,
+    // plus the transition cost.
+    c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
+        rev_pred.transition_cost().cost;
+  } else {
+    // If no predecessor on the reverse path get the predecessor on
+    // the forward path to form the cost.
+    uint32_t predidx = fwd_pred.predecessor();
+    float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
+    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
+  }
 
-    // Get the opposing edge - a candidate shortest path has been found to the
-    // end node of this directed edge. Get total cost.
-    float c;
-    if (rev_pred.predecessor() != kInvalidLabel) {
-      // Get the start of the predecessor edge on the reverse path. Cost is to
-      // the end this edge, plus the cost to the end of the forward predecessor,
-      // plus the transition cost.
-      c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
-          rev_pred.transition_cost().cost;
+  // Keep the best ones at the front all others to the back
+  best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
+
+  if (c < best_connections_.front().cost)
+    std::swap(best_connections_.front(), best_connections_.back());
+
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max()) {
+    float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = sortcost + kThresholdDelta;
     } else {
-      // If no predecessor on the reverse path get the predecessor on
-      // the forward path to form the cost.
-      uint32_t predidx = fwd_pred.predecessor();
-      float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
-      c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
+      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
+  // setting this edge as connected, sending the opposing because this is the reverse tree
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, "bidirectional_astar", fwd_edge_id, "c", false);
+  }
+
+  return true;
+}
+
+// Add edges at the origin to the forward adjacency list.
+void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
+                                   valhalla::Location& origin,
+                                   const TimeInfo& time_info) {
+  // Only skip inbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+                  has_other_edges = has_other_edges || !e.end_node();
+                });
+
+  // Iterate through edges and add to adjacency list
+  const NodeInfo* nodeinfo = nullptr;
+  const NodeInfo* closest_ni = nullptr;
+  for (const auto& edge : origin.path_edges()) {
+    // If origin is at a node - skip any inbound edge (dist = 1)
+    if (has_other_edges && edge.end_node()) {
+      continue;
     }
 
-    // Keep the best ones at the front all others to the back
-    best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
-
-    if (c < best_connections_.front().cost)
-      std::swap(best_connections_.front(), best_connections_.back());
-
-    // Set thresholds to extend search
-    if (cost_threshold_ == std::numeric_limits<float>::max()) {
-      float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
-      if (desired_paths_count_ == 1) {
-        cost_threshold_ = sortcost + kThresholdDelta;
-      } else {
-        cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-        iterations_threshold_ =
-            edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-      }
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      continue;
     }
 
-    // setting this edge as connected, sending the opposing because this is the reverse tree
+    // Get the directed edge
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (!endtile) {
+      continue;
+    }
+
+    // Get cost and sort cost (based on distance from endnode of this edge
+    // to the destination
+    nodeinfo = endtile->node(directededge->endnode());
+    uint8_t flow_sources;
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
+                (1.0f - edge.percent_along());
+
+    // Store a node-info for later timezone retrieval (approximate for closest)
+    if (closest_ni == nullptr) {
+      closest_ni = nodeinfo;
+    }
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.distance();
+    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
+
+    // Add EdgeLabel to the adjacency list. Set the predecessor edge index
+    // to invalid to indicate the origin of the path.
+    uint32_t idx = edgelabels_forward_.size();
+    edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
+    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
+                                     -1, !(costing_->IsClosed(directededge, tile)),
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn);
+    adjacencylist_forward_.add(idx);
+
+    // setting this edge as reached
     if (expansion_callback_) {
-      expansion_callback_(graphreader, "bidirectional_astar", fwd_edge_id, "c", false);
+      expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
     }
 
-    return true;
+    // Set the initial not_thru flag to false. There is an issue with not_thru
+    // flags on small loops. Set this to false here to override this for now.
+    edgelabels_forward_.back().set_not_thru(false);
+
+    pruning_disabled_at_origin_ = pruning_disabled_at_origin_ ||
+                                  !edgelabels_forward_.back().closure_pruning() ||
+                                  !edgelabels_forward_.back().not_thru_pruning();
   }
 
-  // Add edges at the origin to the forward adjacency list.
-  void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
-                                     valhalla::Location& origin,
-                                     const TimeInfo& time_info) {
-    // Only skip inbound edges if we have other options
-    bool has_other_edges = false;
-    std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                    has_other_edges = has_other_edges || !e.end_node();
-                  });
-
-    // Iterate through edges and add to adjacency list
-    const NodeInfo* nodeinfo = nullptr;
-    const NodeInfo* closest_ni = nullptr;
-    for (const auto& edge : origin.path_edges()) {
-      // If origin is at a node - skip any inbound edge (dist = 1)
-      if (has_other_edges && edge.end_node()) {
-        continue;
-      }
-
-      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
-      GraphId edgeid(edge.graph_id());
-      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
-        continue;
-      }
-
-      // Get the directed edge
-      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
-      const DirectedEdge* directededge = tile->directededge(edgeid);
-
-      // Get the tile at the end node. Skip if tile not found as we won't be
-      // able to expand from this origin edge.
-      graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
-      if (!endtile) {
-        continue;
-      }
-
-      // Get cost and sort cost (based on distance from endnode of this edge
-      // to the destination
-      nodeinfo = endtile->node(directededge->endnode());
-      uint8_t flow_sources;
-      Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
-                  (1.0f - edge.percent_along());
-
-      // Store a node-info for later timezone retrieval (approximate for closest)
-      if (closest_ni == nullptr) {
-        closest_ni = nodeinfo;
-      }
-
-      // We need to penalize this location based on its score (distance in meters from input)
-      // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
-      float dist =
-          astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
-      float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
-
-      // Add EdgeLabel to the adjacency list. Set the predecessor edge index
-      // to invalid to indicate the origin of the path.
-      uint32_t idx = edgelabels_forward_.size();
-      edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-      edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                                       mode_, -1, !(costing_->IsClosed(directededge, tile)),
-                                       static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                       sif::InternalTurn::kNoTurn);
-      adjacencylist_forward_.add(idx);
-
-      // setting this edge as reached
-      if (expansion_callback_) {
-        expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
-      }
-
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
-      edgelabels_forward_.back().set_not_thru(false);
-
-      pruning_disabled_at_origin_ = pruning_disabled_at_origin_ ||
-                                    !edgelabels_forward_.back().closure_pruning() ||
-                                    !edgelabels_forward_.back().not_thru_pruning();
-    }
-
-    // Set the origin timezone
-    if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
-      origin.set_date_time(
-          DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
-    }
+  // Set the origin timezone
+  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+    origin.set_date_time(
+        DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
+}
 
-  // Add destination edges to the reverse path adjacency list.
-  void BidirectionalAStar::SetDestination(GraphReader& graphreader,
-                                          const valhalla::Location& dest,
-                                          const TimeInfo& time_info) {
-    // Only skip outbound edges if we have other options
-    bool has_other_edges = false;
-    std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                    has_other_edges = has_other_edges || !e.begin_node();
-                  });
+// Add destination edges to the reverse path adjacency list.
+void BidirectionalAStar::SetDestination(GraphReader& graphreader,
+                                        const valhalla::Location& dest,
+                                        const TimeInfo& time_info) {
+  // Only skip outbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+                  has_other_edges = has_other_edges || !e.begin_node();
+                });
 
-    // Iterate through edges and add to adjacency list
-    Cost c;
-    for (const auto& edge : dest.path_edges()) {
-      // If the destination is at a node, skip any outbound edges (so any
-      // opposing inbound edges are not considered)
-      if (has_other_edges && edge.begin_node()) {
-        continue;
-      }
-
-      // Disallow any user avoided edges if the avoid location is behind the destination along the
-      // edge
-      GraphId edgeid(edge.graph_id());
-      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
-        continue;
-      }
-      // Get the directed edge
-      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
-      const DirectedEdge* directededge = tile->directededge(edgeid);
-
-      // Get the opposing directed edge, continue if we cannot get it
-      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-      if (!opp_edge_id.Is_Valid()) {
-        continue;
-      }
-
-      const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-
-      // Get cost and sort cost (based on distance from endnode of this edge
-      // to the origin. Make sure we use the reverse A* heuristic. Use the
-      // directed edge for costing, as this is the forward direction along the
-      // destination edge. Note that the end node of the opposing edge is in the
-      // same tile as the directed edge.
-      uint8_t flow_sources;
-      Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
-                  edge.percent_along();
-
-      // We need to penalize this location based on its score (distance in meters from input)
-      // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
-      float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
-      float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
-
-      // Add EdgeLabel to the adjacency list. Set the predecessor edge index
-      // to invalid to indicate the origin of the path. Make sure the opposing
-      // edge (edgeid) is set.
-      uint32_t idx = edgelabels_reverse_.size();
-      edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
-                              graphreader.GetGraphTile(opp_edge_id));
-      edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
-                                       sortcost, dist, mode_, c, !opp_dir_edge->not_thru(),
-                                       !(costing_->IsClosed(directededge, tile)),
-                                       static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                       sif::InternalTurn::kNoTurn, -1);
-      adjacencylist_reverse_.add(idx);
-
-      // setting this edge as settled, sending the opposing because this is the reverse tree
-      if (expansion_callback_) {
-        expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
-      }
-
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
-      edgelabels_reverse_.back().set_not_thru(false);
-
-      pruning_disabled_at_destination_ = pruning_disabled_at_destination_ ||
-                                         !edgelabels_reverse_.back().closure_pruning() ||
-                                         !edgelabels_reverse_.back().not_thru_pruning();
+  // Iterate through edges and add to adjacency list
+  Cost c;
+  for (const auto& edge : dest.path_edges()) {
+    // If the destination is at a node, skip any outbound edges (so any
+    // opposing inbound edges are not considered)
+    if (has_other_edges && edge.begin_node()) {
+      continue;
     }
+
+    // Disallow any user avoided edges if the avoid location is behind the destination along the
+    // edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+    // Get the directed edge
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the opposing directed edge, continue if we cannot get it
+    GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+    if (!opp_edge_id.Is_Valid()) {
+      continue;
+    }
+
+    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+
+    // Get cost and sort cost (based on distance from endnode of this edge
+    // to the origin. Make sure we use the reverse A* heuristic. Use the
+    // directed edge for costing, as this is the forward direction along the
+    // destination edge. Note that the end node of the opposing edge is in the
+    // same tile as the directed edge.
+    uint8_t flow_sources;
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
+                edge.percent_along();
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.distance();
+    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
+
+    // Add EdgeLabel to the adjacency list. Set the predecessor edge index
+    // to invalid to indicate the origin of the path. Make sure the opposing
+    // edge (edgeid) is set.
+    uint32_t idx = edgelabels_reverse_.size();
+    edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
+                            graphreader.GetGraphTile(opp_edge_id));
+    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
+                                     dist, mode_, c, !opp_dir_edge->not_thru(),
+                                     !(costing_->IsClosed(directededge, tile)),
+                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn, -1);
+    adjacencylist_reverse_.add(idx);
+
+    // setting this edge as settled, sending the opposing because this is the reverse tree
+    if (expansion_callback_) {
+      expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
+    }
+
+    // Set the initial not_thru flag to false. There is an issue with not_thru
+    // flags on small loops. Set this to false here to override this for now.
+    edgelabels_reverse_.back().set_not_thru(false);
+
+    pruning_disabled_at_destination_ = pruning_disabled_at_destination_ ||
+                                       !edgelabels_reverse_.back().closure_pruning() ||
+                                       !edgelabels_reverse_.back().not_thru_pruning();
   }
+}
 
-  // Form the path from the adjacency list.
-  std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
-                                                                  const Options& /*options*/,
-                                                                  const valhalla::Location& origin,
-                                                                  const valhalla::Location& dest,
-                                                                  const baldr::TimeInfo& time_info,
-                                                                  const bool invariant) {
-    LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
+// Form the path from the adjacency list.
+std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
+                                                                const Options& /*options*/,
+                                                                const valhalla::Location& origin,
+                                                                const valhalla::Location& dest,
+                                                                const baldr::TimeInfo& time_info,
+                                                                const bool invariant) {
+  LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
-    if (desired_paths_count_ > 1) {
-      // Cull alternate paths longer than maximum stretch
-      // TODO: we should skip adding the connection at all if it's greater than stretch
-      filter_alternates_by_stretch(best_connections_);
-    }
-    // For looking up edge ids on previously chosen best paths
-    std::vector<std::unordered_set<GraphId>> shared_edgeids;
+  if (desired_paths_count_ > 1) {
+    // Cull alternate paths longer than maximum stretch
+    // TODO: we should skip adding the connection at all if it's greater than stretch
+    filter_alternates_by_stretch(best_connections_);
+  }
+  // For looking up edge ids on previously chosen best paths
+  std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
-    // get maximum amount of sharing parameter based on origin->destination distance
-    float max_sharing = desired_paths_count_ > 1 ? get_max_sharing(origin, dest) : 0.f;
+  // get maximum amount of sharing parameter based on origin->destination distance
+  float max_sharing = desired_paths_count_ > 1 ? get_max_sharing(origin, dest) : 0.f;
 
-    LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
+  LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE("CONNECTIONS FOUND " + std::to_string(best_connections_.size()));
@@ -1143,7 +1141,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   }
   // give back the paths
   return paths;
-  }
+}
 
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
