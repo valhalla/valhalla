@@ -64,6 +64,7 @@ const std::string kEdgeLaneConnectivity = "edge.lane_connectivity";
 const std::string kEdgeCycleLane = "edge.cycle_lane";
 const std::string kEdgeBicycleNetwork = "edge.bicycle_network";
 const std::string kEdgeSacScale = "edge.sac_scale";
+const std::string kEdgeShoulder = "edge.shoulder";
 const std::string kEdgeSidewalk = "edge.sidewalk";
 const std::string kEdgeDensity = "edge.density";
 const std::string kEdgeSpeedLimit = "edge.speed_limit";

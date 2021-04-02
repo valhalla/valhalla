@@ -252,6 +252,7 @@ message TripLeg {
     optional float target_along_edge = 50;
 
     optional SacScale sac_scale = 51;
+    optional bool shoulder = 52;
   }
 
   message IntersectingEdge {
