@@ -59,9 +59,8 @@ TEST(Standalone, ShoulderAttributes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shoulder_attributes");
 
   std::string trace_json;
-  auto api =
-      gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"},
-                       "bicycle", {}, {}, &trace_json, "via");
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4"},
+                              "bicycle", {}, {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
