@@ -67,6 +67,7 @@
    * CHANGED: Allow disabling Werror
    * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
    * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
+   * CHANGED: Refactor isochrone/reachability forward/reverse search to reduce code repetition [#2969](https://github.com/valhalla/valhalla/pull/2969)
    * ADDED: Set the roundabout exit shape index when we are collapsing the roundabout maneuvers. [#2975](https://github.com/valhalla/valhalla/pull/2975)
    * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
 

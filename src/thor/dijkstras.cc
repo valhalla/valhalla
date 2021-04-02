@@ -109,13 +109,16 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
   return infos;
 }
 
-// Expand from a node in the forward direction
-void Dijkstras::ExpandForward(GraphReader& graphreader,
-                              const GraphId& node,
-                              const EdgeLabel& pred,
-                              const uint32_t pred_idx,
-                              const bool from_transition,
-                              const TimeInfo& time_info) {
+template <const ExpansionType expansion_direction>
+void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
+                            const baldr::GraphId& node,
+                            const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+                            const uint32_t pred_idx,
+                            const baldr::DirectedEdge* opp_pred_edge,
+                            const bool from_transition,
+                            const baldr::TimeInfo& time_info) {
+
+  constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -141,8 +144,10 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
   // Update the time information
   auto offset_time =
-      from_transition ? time_info
-                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+      from_transition
+          ? time_info
+          : (FORWARD ? time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()))
+                     : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone())));
 
   // Expand from end node in forward direction.
   GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
@@ -154,8 +159,23 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // (based on the costing method) or if a complex restriction exists for
     // this path.
     if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !(directededge->forwardaccess() & access_mode_)) {
+        !((FORWARD ? directededge->forwardaccess() : directededge->reverseaccess()) & access_mode_)) {
       continue;
+    }
+
+    // Get end node tile, opposing edge Id, and opposing directed edge.
+    graph_tile_ptr t2;
+    baldr::GraphId oppedgeid;
+    const baldr::DirectedEdge* opp_edge;
+    // Only populate these at this point for the reverse search - the forward search
+    // may exit before needing them, so we can defer some work until later
+    if (!FORWARD) { // aka reverse
+      t2 = tile;
+      oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
+      if (t2 == nullptr) {
+        continue;
+      }
+      opp_edge = t2->directededge(oppedgeid);
     }
 
     // Check if the edge is allowed or if a restriction occurs
@@ -163,25 +183,45 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint8_t restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
-                             nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, todo,
-                               offset_time.local_time, nodeinfo->timezone())) {
+      const bool allowed =
+          FORWARD ? costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
+                                      nodeinfo->timezone(), restriction_idx)
+                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
+                                             offset_time.local_time, nodeinfo->timezone(),
+                                             restriction_idx);
+      if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
+                                           todo, offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
+      const bool allowed =
+          FORWARD ? costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)
+                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
+                                             restriction_idx);
+
+      if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
     }
 
     // Compute the cost and path distance to the end of this edge
-    Cost transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost transition_cost, newcost;
     uint8_t flow_sources;
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
-                   transition_cost;
+
+    if (FORWARD) {
+      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+      newcost = pred.cost() +
+                costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
+                transition_cost;
+    } else {
+      transition_cost =
+          costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                          opp_pred_edge, pred.has_measured_speed(),
+                                          pred.internal_turn());
+      newcost = pred.cost() +
+                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
+                transition_cost;
+    }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -197,9 +237,12 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Only needed if you want to connect with a reverse path
-    graph_tile_ptr t2 = tile;
-    GraphId oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
+    // Only needed if you want to connect with a reverse path - for reverse mode,
+    // these were populated earlier
+    if (expansion_direction == ExpansionType::forward) {
+      t2 = tile;
+      oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
+    }
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
@@ -208,23 +251,46 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
+                               (expansion_direction == ExpansionType::forward)
+                                   ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+                                   : costing_->TurnType(directededge->localedgeidx(), nodeinfo,
+                                                        opp_edge, opp_pred_edge),
                                restriction_idx, pred.path_id());
     adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node of each transition
   if (!from_transition && nodeinfo->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time);
+      ExpandInner<expansion_direction>(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                       true, offset_time);
     }
   }
 }
 
+// Note: multimodal not ported yet, so there is no implementation for ExpansionType::multimodal
+template void Dijkstras::ExpandInner<ExpansionType::forward>(
+    baldr::GraphReader& graphreader,
+    const baldr::GraphId& node,
+    const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+    const uint32_t pred_idx,
+    const baldr::DirectedEdge* opp_pred_edge,
+    const bool from_transition,
+    const baldr::TimeInfo& time_info);
+template void Dijkstras::ExpandInner<ExpansionType::reverse>(
+    baldr::GraphReader& graphreader,
+    const baldr::GraphId& node,
+    const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+    const uint32_t pred_idx,
+    const baldr::DirectedEdge* opp_pred_edge,
+    const bool from_transition,
+    const baldr::TimeInfo& time_info);
+
 // performs one of the types of expansions
-// TODO: reduce code duplication between forward, reverse and multimodal as they are nearly identical
-void Dijkstras::Expand(ExpansionType expansion_type,
+// TODO: reduce code duplication between forward, reverse and multimodal as they are nearly
+// identical
+void Dijkstras::Expand(const ExpansionType expansion_type,
                        valhalla::Api& api,
                        baldr::GraphReader& reader,
                        const sif::mode_costing_t& costings,
@@ -232,10 +298,12 @@ void Dijkstras::Expand(ExpansionType expansion_type,
   // compute the expansion
   switch (expansion_type) {
     case ExpansionType::forward:
-      Compute(*api.mutable_options()->mutable_locations(), reader, costings, mode);
+      Compute<ExpansionType::forward>(*api.mutable_options()->mutable_locations(), reader, costings,
+                                      mode);
       break;
     case ExpansionType::reverse:
-      ComputeReverse(*api.mutable_options()->mutable_locations(), reader, costings, mode);
+      Compute<ExpansionType::reverse>(*api.mutable_options()->mutable_locations(), reader, costings,
+                                      mode);
       break;
     case ExpansionType::multimodal:
       ComputeMultiModal(*api.mutable_options()->mutable_locations(), reader, costings, mode);
@@ -245,11 +313,11 @@ void Dijkstras::Expand(ExpansionType expansion_type,
   }
 }
 
-// Compute the forward graph traversal
-void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                        GraphReader& graphreader,
+template <const ExpansionType expansion_direction>
+void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                        baldr::GraphReader& graphreader,
                         const sif::mode_costing_t& mode_costing,
-                        const TravelMode mode) {
+                        const sif::TravelMode mode) {
 
   // Set the mode and costing
   mode_ = mode;
@@ -258,10 +326,14 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
   // Prepare for a graph traversal
   Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
-  SetOriginLocations(graphreader, origin_locations, costing_);
+  if (expansion_direction == ExpansionType::forward) {
+    SetOriginLocations(graphreader, locations, costing_);
+  } else {
+    SetDestinationLocations(graphreader, locations, costing_);
+  }
 
   // Get the time information for all the origin locations
-  auto time_infos = SetTime(origin_locations, graphreader);
+  auto time_infos = SetTime(locations, graphreader);
 
   // Compute the isotile
   auto cb_decision = ExpansionRecommendation::continue_expansion;
@@ -269,189 +341,46 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_.pop();
-    if (predindex == kInvalidLabel) {
+    if (predindex == baldr::kInvalidLabel) {
       break;
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
-    EdgeLabel pred = bdedgelabels_[predindex];
-    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent, pred.path_id());
-
-    // Check if we should stop
-    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::forward);
-    if (cb_decision != ExpansionRecommendation::prune_expansion) {
-      // Expand from the end node in forward direction.
-      ExpandForward(graphreader, pred.endnode(), pred, predindex, false, time_infos.front());
-    }
-  }
-}
-
-// Expand from a node in reverse direction.
-void Dijkstras::ExpandReverse(GraphReader& graphreader,
-                              const GraphId& node,
-                              const BDEdgeLabel& pred,
-                              const uint32_t pred_idx,
-                              const DirectedEdge* opp_pred_edge,
-                              const bool from_transition,
-                              const TimeInfo& time_info) {
-  // Get the tile and the node info. Skip if tile is null (can happen
-  // with regional data sets) or if no access at the node.
-  graph_tile_ptr tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
-    return;
-  }
-
-  // Get the nodeinfo
-  const NodeInfo* nodeinfo = tile->node(node);
-
-  // We dont need to do transitions again we just need to queue the edges that leave them
-  if (!from_transition) {
-    // Let implementing class know we are expanding from here
-    EdgeLabel* prev_pred =
-        pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
-  }
-
-  // Bail if we cant expand from here
-  if (!costing_->Allowed(nodeinfo)) {
-    return;
-  }
-
-  // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-
-  // Expand from end node in reverse direction.
-  GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
-  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile, pred.path_id());
-  const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Skip this edge if permanently labeled (best path already found to this
-    // directed edge), if no access for this mode, or if edge is a shortcut
-    if (!(directededge->reverseaccess() & access_mode_) || directededge->is_shortcut() ||
-        es->set() == EdgeSet::kPermanent) {
-      continue;
-    }
-
-    // Get end node tile, opposing edge Id, and opposing directed edge.
-    graph_tile_ptr t2 = tile;
-    auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, t2);
-    if (t2 == nullptr) {
-      continue;
-    }
-    const DirectedEdge* opp_edge = t2->directededge(opp_edge_id);
-
-    // Check if the edge is allowed or if a restriction occurs
-    EdgeStatus* todo = nullptr;
-    uint8_t restriction_idx = -1;
-    if (offset_time.valid) {
-      // With date time we check time dependent restrictions and access
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, todo,
-                               offset_time.local_time, nodeinfo->timezone())) {
-        continue;
-      }
-    } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, 0, 0,
-                                    restriction_idx) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
-        continue;
-      }
-    }
-
-    // Compute the cost to the end of this edge with separate transition cost
-    Cost transition_cost =
-        costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_measured_speed(),
-                                        pred.internal_turn());
-    uint8_t flow_sources;
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources);
-    newcost.cost += transition_cost.cost;
-    uint32_t path_dist = pred.path_distance() + directededge->length();
-
-    // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      BDEdgeLabel& lab = bdedgelabels_[es->index()];
-      if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, path_dist, restriction_idx);
-      }
-      continue;
-    }
-
-    // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = bdedgelabels_.size();
-    *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
-                               transition_cost, path_dist, false,
-                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge),
-                               restriction_idx, pred.path_id());
-    adjacencylist_.add(idx);
-  }
-
-  // Handle transitions - expand from the end node of each transition
-  if (!from_transition && nodeinfo->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, offset_time);
-    }
-  }
-}
-
-// Compute the reverse graph traversal
-void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                               GraphReader& graphreader,
-                               const sif::mode_costing_t& mode_costing,
-                               const TravelMode mode) {
-  // Set the mode and costing
-  mode_ = mode;
-  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-  access_mode_ = costing_->access_mode();
-
-  // Prepare for graph traversal
-  Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
-  SetDestinationLocations(graphreader, dest_locations, costing_);
-
-  // Get the time information for all the destination locations
-  auto time_infos = SetTime(dest_locations, graphreader);
-
-  // Compute the isotile
-  auto cb_decision = ExpansionRecommendation::continue_expansion;
-  while (cb_decision != ExpansionRecommendation::stop_expansion) {
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_.pop();
-    if (predindex == kInvalidLabel) {
-      break;
-    }
-
-    // Copy the EdgeLabel for use in costing and settle the edge.
-    BDEdgeLabel pred = bdedgelabels_[predindex];
+    sif::BDEdgeLabel pred = bdedgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent, pred.path_id());
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
-    const DirectedEdge* opp_pred_edge =
-        graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
+
+    const baldr::DirectedEdge* opp_pred_edge = nullptr;
+    if (expansion_direction == ExpansionType::reverse) {
+      opp_pred_edge = graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
+    }
 
     // Check if we should stop
-    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::reverse);
+    cb_decision = ShouldExpand(graphreader, pred, expansion_direction);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in forward direction.
-      ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
-                    time_infos.front());
+      ExpandInner<expansion_direction>(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
+                                       false, time_infos.front());
     }
   }
 }
+
+/**
+ * NOTE: there's no implementation of ExpansionType::multimodal yet!
+ */
+template void Dijkstras::Compute<ExpansionType::forward>(
+    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    baldr::GraphReader& graphreader,
+    const sif::mode_costing_t& mode_costing,
+    const sif::TravelMode mode);
+
+template void Dijkstras::Compute<ExpansionType::reverse>(
+    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    baldr::GraphReader& graphreader,
+    const sif::mode_costing_t& mode_costing,
+    const sif::TravelMode mode);
 
 // Expand from a node in forward direction using multimodal.
 void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
