@@ -455,8 +455,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const uint32_t seconds,
                          uint8_t& flow_sources) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true, &flow_sources);
-  auto s = std::min(edge_speed, top_speed_);
-  float sec = edge->length() * speedfactor_[s];
+  auto final_speed = std::min(edge_speed, top_speed_);
+  float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -479,6 +479,11 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= living_street_factor_;
   } else if (edge->use() == Use::kServiceRoad) {
     factor *= service_factor_;
+  }
+
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
   }
 
   return {sec * factor, sec};
@@ -776,6 +781,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 

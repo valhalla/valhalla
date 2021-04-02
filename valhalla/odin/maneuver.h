@@ -280,6 +280,9 @@ public:
   uint32_t roundabout_exit_turn_degree() const;
   void set_roundabout_exit_turn_degree(uint32_t turnDegree);
 
+  uint32_t roundabout_exit_shape_index() const;
+  void set_roundabout_exit_shape_index(uint32_t shapeIndex);
+
   bool has_collapsed_small_end_ramp_fork() const;
   void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
 
@@ -424,6 +427,7 @@ protected:
   Signs roundabout_exit_signs_;
   uint32_t roundabout_exit_begin_heading_;
   uint32_t roundabout_exit_turn_degree_;
+  uint32_t roundabout_exit_shape_index_;
 
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;
