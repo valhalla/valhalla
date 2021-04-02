@@ -150,7 +150,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   if (tile == nullptr) {
     return false;
   }
-  const baldr::NodeInfo* nodeinfo = tile->node(node);
+  const NodeInfo* nodeinfo = tile->node(node);
 
   // Keep track of superseded edges
   uint32_t shortcuts = 0;
@@ -165,8 +165,8 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    const baldr::DirectedEdge* opp_edge = nullptr;
-    const baldr::GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    const DirectedEdge* opp_edge = nullptr;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Mark the predecessor as a deadend to be consistent with how the
     // edgelabels are set when an *actual* deadend (i.e. some dangling OSM geometry)
     // is labelled
@@ -202,7 +202,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   // Handle transitions - expand from the end node of each transition
   if (nodeinfo->transition_count() > 0) {
-    const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     auto& hierarchy_limits = FORWARD ? hierarchy_limits_forward_ : hierarchy_limits_reverse_;
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
@@ -367,8 +367,8 @@ bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // less cost the predecessor is updated and the sort cost is decremented
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
-    sif::BDEdgeLabel& lab = FORWARD ? edgelabels_forward_[meta.edge_status->index()]
-                                    : edgelabels_reverse_[meta.edge_status->index()];
+    BDEdgeLabel& lab = FORWARD ? edgelabels_forward_[meta.edge_status->index()]
+                               : edgelabels_reverse_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       if (FORWARD) {
@@ -488,8 +488,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
-  // When a timedependent route is too long in distance it gets sent to this algorithm. It used to
-  // be the case that this algorithm called EdgeCost without a time component. This would result in
+  // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
+  // the case that this algorithm called EdgeCost without a time component. This would result in
   // timedependent routes falling back to time independent routing. Now that this algorithm is time
   // aware we will be tracking time in one direction of the search. To revert to previous behavior
   // you can uncomment the code below and get a time independent route in the fallback scenario.
@@ -561,13 +561,13 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // Search might've exhausted if it hit a closure or not_thru edge leading upto the
         // destination. Instead of tracking if any of the other edges is within a not_thru/closure
         // region (indicated by the pruning state of the edge label), we simply check if we started
-        // from the other end on a closed or not_thru edge. If either is true, we extend the search
-        // in the other direction (if allowed by the config option "thor.extended_search")
+        // from the other end on a closed or not_thru edge. If either is true, we extend the search in
+        // the other direction (if allowed by the config option "thor.extended_search")
         //
-        // Caveat: This assumption is not true if for eg the search from other end has pruning
-        // turned on later, causing us to needlessly expand when we could have aborted sooner.
-        // However, it ensures that most impossible route will fail fast provided one of the
-        // locations didn't start from a not_thru/closed edge
+        // Caveat: This assumption is not true if for eg the search from other end has pruning turned
+        // on later, causing us to needlessly expand when we could have aborted sooner. However, it
+        // ensures that most impossible route will fail fast provided one of the locations didn't
+        // start from a not_thru/closed edge
         if (!extended_search_ || !pruning_disabled_at_destination_) {
           return {};
         }
@@ -605,14 +605,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                   "," + std::to_string(edgelabels_forward_.size()));
         // Search might've exhausted if it hit a closure or not_thru edge leading upto the origin.
         // Instead of tracking if any of the other edges is within a not_thru/closure region
-        // (indicated by the pruning state of the edge label), we simply check if we started from
-        // the other end on a closed or not_thru edge. If either is true, we extend the search in
-        // the other direction (if allowed by the config option "thor.extended_search")
+        // (indicated by the pruning state of the edge label), we simply check if we started from the
+        // other end on a closed or not_thru edge. If either is true, we extend the search in the
+        // other direction (if allowed by the config option "thor.extended_search")
         //
-        // Caveat: This assumption is not true if for eg the search from other end has pruning
-        // turned on later, causing us to needlessly expand when we could have aborted sooner.
-        // However, it ensures that most impossible route will fail fast provided one of the
-        // locations didn't end on a not_thru/closed edge
+        // Caveat: This assumption is not true if for eg the search from other end has pruning turned
+        // on later, causing us to needlessly expand when we could have aborted sooner. However, it
+        // ensures that most impossible route will fail fast provided one of the locations didn't
+        // end on a not_thru/closed edge
         if (!extended_search_ || !pruning_disabled_at_origin_) {
           return {};
         }
