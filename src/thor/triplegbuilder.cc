@@ -862,6 +862,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_sac_scale(GetTripLegSacScale(directededge->sac_scale()));
   }
 
+  if (controller.attributes.at(kEdgeShoulder)) {
+    trip_edge->set_shoulder(directededge->shoulder());
+  }
+
   if (controller.attributes.at(kEdgeSidewalk)) {
     if (directededge->sidewalk_left() && directededge->sidewalk_right()) {
       trip_edge->set_sidewalk(TripLeg_Sidewalk::TripLeg_Sidewalk_kBothSides);

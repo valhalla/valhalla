@@ -108,6 +108,7 @@ edge.lane_count
 edge.cycle_lane
 edge.bicycle_network
 edge.sac_scale
+edge.shoulder
 edge.sidewalk
 edge.density
 edge.speed_limit
@@ -204,6 +205,7 @@ Each `edge` may include:
 | `cycle_lane` | The type (if any) of bicycle lane along this edge. |
 | `bicycle_network` | The bike network for this edge. |
 | `sac_scale` | Classification of hiking trails based on difficulty. Values:<ul><li>`0 - No Sac Scale`</li><li>`1 - Hiking`</li><li>`2 - Mountain hiking`<li>`3 - Demanding mountain hiking`<li>`4 - Alpine hiking`<li>`5 - Demanding alpine hiking`<li>`6 - Difficult alpine hiking`</li></ul> |
+| `shoulder` | True if the edge has a shoulder. |
 | `sidewalk` | Sidewalk values:<ul><li>`left`</li><li>`right`</li><li>`both`</li></ul> |
 | `density` | The relative density along the edge. |
 | `speed_limit` | Edge speed limit in the units specified. The default is kilometers per hour. |
