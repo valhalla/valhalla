@@ -517,6 +517,20 @@ void PopulateStartManeuverList_13_unnamed_walkway(std::list<Maneuver>& maneuvers
   maneuver.set_include_verbal_pre_transition_length(true);
 }
 
+void PopulateStartManeuverList_13_pedestrian_crossing(std::list<Maneuver>& maneuvers,
+                                                      const std::string& country_code,
+                                                      const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kStart, {}, {}, {},
+                   "", 0.050737, 35, 0, Maneuver::RelativeDirection::kNone,
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 213, 209, 0, 3, 0, 4, 0, 0, 0,
+                   0, 0, 0, 1, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 1, 0, 0, 36, 0);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
+  maneuver.set_pedestrian_crossing(true);
+  maneuver.set_include_verbal_pre_transition_length(true);
+}
+
 void PopulateStartManeuverList_14(std::list<Maneuver>& maneuvers,
                                   const std::string& country_code,
                                   const std::string& state_code) {
@@ -3542,6 +3556,29 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_13_unnamed_walkway_miles_en_US
   PopulateStartManeuverList_13_unnamed_walkway(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the walkway.", "",
                                   "Walk southwest on the walkway for 200 feet.",
+                                  "Continue for 200 feet.");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+TEST(NarrativeBuilder, TestBuildStartInstructions_13_pedestrian_crossing_miles_en_US) {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_13_pedestrian_crossing(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_13_pedestrian_crossing(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the crosswalk.", "",
+                                  "Walk southwest on the crosswalk for 200 feet.",
                                   "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);

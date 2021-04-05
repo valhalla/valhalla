@@ -213,6 +213,8 @@ public:
   bool unnamed_cycleway() const;
   bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
+  bool pedestrian_crossing() const;
+  void set_pedestrian_crossing(bool pedestrian_crossing);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
@@ -410,6 +412,7 @@ protected:
   bool imminent_verbal_multi_cue_;
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;
+  bool pedestrian_crossing_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;
