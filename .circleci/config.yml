@@ -95,6 +95,7 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: scripts/clang-tidy-only-diff.sh 4
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -109,10 +110,10 @@ jobs:
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: python3 ./scripts/valhalla_build_config
-      - run: make -C build -j3
+      - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j4 tests
+      - run: make -C build -j4 benchmarks
       - run: make -C build run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
@@ -120,12 +121,11 @@ jobs:
           key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-      - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
-          make -C build -j2 coverage
+          make -C build -j4 coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:
