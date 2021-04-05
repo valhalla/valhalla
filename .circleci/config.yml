@@ -95,7 +95,6 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: scripts/clang-tidy-only-diff.sh 4
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -121,6 +120,7 @@ jobs:
           key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
+      - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
       - run: |
