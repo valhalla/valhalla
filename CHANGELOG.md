@@ -32,6 +32,8 @@
    * FIXED: Restore compatibility with gcc 6.3.0, libprotobuf 3.0.0, boost v1.62.0 [#2953](https://github.com/valhalla/valhalla/pull/2953)
    * FIXED: Dont abort bidirectional a-star search if only one direction is exhausted [#2936](https://github.com/valhalla/valhalla/pull/2936)
    * FIXED: Fixed missing comma in the scripts/valhalla_build_config [#2963](https://github.com/valhalla/valhalla/pull/2963)
+   * FIXED: Reverse and Multimodal Isochrones were returning forward results [#2967](https://github.com/valhalla/valhalla/pull/2967)
+   * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
@@ -65,6 +67,10 @@
    * CHANGED: Allow disabling Werror
    * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
    * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
+   * CHANGED: Refactor isochrone/reachability forward/reverse search to reduce code repetition [#2969](https://github.com/valhalla/valhalla/pull/2969)
+   * ADDED: Set the roundabout exit shape index when we are collapsing the roundabout maneuvers. [#2975](https://github.com/valhalla/valhalla/pull/2975)
+   * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
+   * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

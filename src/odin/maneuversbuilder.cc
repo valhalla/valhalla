@@ -2788,10 +2788,11 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
           // suppressed
           curr_man->set_roundabout_exit_begin_heading(next_man->begin_heading());
 
-          // Store the next maneuver's turn degree. This is where
+          // Store the next maneuver's turn degree and exit shape index. This is where
           // we store the turn angles when exit roundabout maneuver is
           // suppressed
           curr_man->set_roundabout_exit_turn_degree(next_man->turn_degree());
+          curr_man->set_roundabout_exit_shape_index(curr_man->end_shape_index());
 
           // Set the traversable_outbound_intersecting_edge booleans
           curr_man->set_has_left_traversable_outbound_intersecting_edge(
