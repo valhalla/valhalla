@@ -296,6 +296,7 @@ enum class Use : uint8_t {
   kPath = 27,
   kPedestrian = 28,
   kBridleway = 29,
+  kPedestrianCrossing = 32, // cross walks
 
   // Rest/Service Areas
   kRestArea = 30,

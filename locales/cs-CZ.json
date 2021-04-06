@@ -4,30 +4,6 @@
     "cs"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Za <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometrů",
-        "1 kilometr",
-        "<METERS> metrů",
-        "méně než 10 metrů"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mil",
-        "1 míli",
-        "půl míle",
-        "čtvrt míle",
-        "<FEET> stop",
-        "méně než 10 stop"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Přijeďte: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "chodník",
         "tcyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "ferry_label": "Trajekt",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "ferry_label": "Trajekt",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Pokračujte na <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Vjeďte do <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -465,6 +443,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklostezka",
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Vjeďte na <STREET_NAMES> a sjeďte na výjezdu na <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Vjeďtena <STREET_NAMES> a sjeďte na výjezdu směrem na <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -561,6 +540,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklostezka",
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -1077,14 +1068,15 @@
         "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
         "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
-      ],
       "relative_directions": [
         "vlevo",
         "vpravo"
+      ],
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklostezka",
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
         "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "chodník",
-        "cyklostezka",
-        "stezka pro horská kola"
-      ],
       "relative_directions": [
         "vlevo",
         "vpravo"
+      ],
+      "empty_street_name_labels": [
+        "chodník",
+        "cyklostezka",
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
-        "stezka pro horská kola"
+        "stezka pro horská kola",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vlevo",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Za <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrů",
+        "1 kilometr",
+        "<METERS> metrů",
+        "méně než 10 metrů"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 míli",
+        "půl míle",
+        "čtvrt míle",
+        "<FEET> stop",
+        "méně než 10 stop"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

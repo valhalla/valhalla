@@ -102,6 +102,7 @@ constexpr auto kPluralCategoryOtherKey = "other";
 constexpr auto kWalkwayIndex = 0;
 constexpr auto kCyclewayIndex = 1;
 constexpr auto kMountainBikeTrailIndex = 2;
+constexpr auto kPedestrianCrossingIndex = 3;
 
 // Metric length indexes
 constexpr auto kKilometersIndex = 0;

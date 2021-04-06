@@ -1360,6 +1360,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
+  if (curr_edge->IsPedestrianCrossingUse() && prev_edge && prev_edge->IsFootwayUse()) {
+    maneuver.set_pedestrian_crossing(true);
+  }
+
   // Set the maneuver type
   SetManeuverType(maneuver);
 }
@@ -2256,6 +2260,14 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
         node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
                                                                   prev_edge->travel_mode(),
                                                                   &xedge_use);
+
+    // This is needed to ensure we don't consider footways and crosswalks as
+    // different uses for determining pedestrian forks
+    bool is_current_and_intersecting_edge_of_similar_use =
+        (curr_edge->use() == xedge_use ||
+         (curr_edge->IsFootwayUse() &&
+          (xedge_use == TripLeg_Use_kPedestrianCrossingUse || xedge_use == TripLeg_Use_kFootwayUse)));
+
     // if there is a similar traversable intersecting edge
     //    or there is a relative straight traversable intersecting edge
     //    and the current edge use has to be the same as the intersecting edge use
@@ -2264,7 +2276,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     if (((((xedge_counts.left_similar_traversable_outbound > 0) ||
            (xedge_counts.right_similar_traversable_outbound > 0)) ||
           is_relative_straight(straightest_traversable_xedge_turn_degree)) &&
-         (curr_edge->use() == xedge_use)) ||
+         is_current_and_intersecting_edge_of_similar_use) ||
         (prev_edge->roundabout() && !curr_edge->roundabout())) {
       return true;
     }
