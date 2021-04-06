@@ -86,8 +86,8 @@ void BidirectionalAStar::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
-  // Set the allow restricted thru to false
-  allow_restricted_thru_ = false;
+  // Set not thru pruning to true
+  not_thru_pruning_ = true;
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
@@ -328,14 +328,10 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   // There is an edge case where we may encounter only_restrictions with edges being
   // marked as not_thru.  Basically the only way to get in this area is via this edge
-  // based on the restriction, but it is also marked as not_thru. We set the not_thru
-  // to false here only if allow_restricted_thru is true and we are not restricted.
-  // This bool is only set to true on the 2nd pass in route_action. See the gurka
-  // test allow_restricted_thru
-  bool thru = (pred.not_thru_pruning() || !meta.edge->not_thru());
-  if (allow_restricted_thru() && pred.restrictions() && meta.edge->not_thru()) {
-    thru = false;
-  }
+  // based on the restriction, but it is also marked as not_thru. We set the thru
+  // to false here only if not_thru_pruning_ is false.  not_thru_pruning_ is only
+  // set to false on the 2nd pass in route_action. See the gurka test not_thru_pruning_
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
@@ -563,10 +559,10 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // There is an edge case where we may encounter only_restrictions with edges being
   // marked as not_thru.  Basically the only way to get in this area is via this edge
-  // based on the restriction, but it is also marked as not_thru. We set the not_thru
-  // to false here only if allow_restricted_thru is true.  This bool is only set to true
-  // on the 2nd pass in route_action.  See the gurka test allow_restricted_thru
-  bool thru = (allow_restricted_thru() ? false : (pred.not_thru_pruning() || !meta.edge->not_thru()));
+  // based on the restriction, but it is also marked as not_thru. We set the thru
+  // to false here only if not_thru_pruning_ is false.  not_thru_pruning_ is only
+  // set to false on the 2nd pass in route_action. See the gurka test not_thru_pruning_
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
