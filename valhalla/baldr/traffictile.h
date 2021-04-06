@@ -43,7 +43,7 @@ const uint8_t TRAFFIC_TILE_VERSION = VALHALLA_VERSION_MAJOR;
 // number)
 constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
 // Traffic speeds are encoded as 7 bits in `TrafficSpeed` below with a 2kph multiplier
-constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
+constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 2) << 1;
 // This is the value in kph that signifies a traffic speed is unknown
 constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
 
