@@ -281,6 +281,9 @@ public:
         case Use::kBridleway:
           way_.set_use(Use::kBridleway);
           break;
+        case Use::kPedestrianCrossing:
+          way_.set_use(Use::kPedestrianCrossing);
+          break;
         case Use::kLivingStreet:
           way_.set_use(Use::kLivingStreet);
           break;

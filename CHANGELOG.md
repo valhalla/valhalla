@@ -37,6 +37,7 @@
    * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
 
 * **Enhancement**
+   * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
@@ -70,6 +71,7 @@
    * CHANGED: Refactor isochrone/reachability forward/reverse search to reduce code repetition [#2969](https://github.com/valhalla/valhalla/pull/2969)
    * ADDED: Set the roundabout exit shape index when we are collapsing the roundabout maneuvers. [#2975](https://github.com/valhalla/valhalla/pull/2975)
    * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
+   * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

@@ -57,6 +57,7 @@ message TripLeg {
     kPathUse = 27;
     kPedestrianUse = 28;
     kBridlewayUse = 29;
+    kPedestrianCrossingUse = 32;
 
     //Rest/Service Areas
     kRestAreaUse = 30;
@@ -252,6 +253,7 @@ message TripLeg {
     optional float target_along_edge = 50;
 
     optional SacScale sac_scale = 51;
+    optional bool shoulder = 52;
   }
 
   message IntersectingEdge {
