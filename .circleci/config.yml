@@ -143,12 +143,12 @@ jobs:
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
                 -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
-      - run: make -C build -j2
+      - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
+      - run: make -C build -j4 tests
       # leaks in glibc we cant control for
-      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j4 check
+      - run: make -C build -j4 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -174,9 +174,9 @@ jobs:
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j4 tests
+      - run: make -C build -j4 check
+      - run: make -C build -j4 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
