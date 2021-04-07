@@ -91,6 +91,15 @@ public:
   }
 
   /**
+   *
+   * There is a rare case where we may encounter only_restrictions with edges being
+   * marked as not_thru.  Basically the only way to get in this area is via one edge
+   * and all other edges are restricted, but this one edge is also marked as not_thru.
+   * Therefore, on the first pass the expansion stops as we cannot take the restricted
+   * turns and we cannot go into the not_thru region. On the 2nd pass, we now ignore
+   * not_thru flags and allow entry into the not_thru region due to the fact that
+   * not_thru_pruning_ is false.  See the gurka test not_thru_pruning_.
+   *
    * Set the not_thru_pruning_
    * @param pruning  set the not_thru_pruning_ to pruning value.
    *                 only set on the second pass
@@ -124,7 +133,7 @@ protected:
 
   bool has_ferry_; // Indicates whether the path has a ferry
 
-  bool not_thru_pruning_; // Indicates whether to allow access into a restricted no thru region.
+  bool not_thru_pruning_; // Indicates whether to allow access into a not-thru region.
 
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;

@@ -326,11 +326,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
-  // There is an edge case where we may encounter only_restrictions with edges being
-  // marked as not_thru.  Basically the only way to get in this area is via this edge
-  // based on the restriction, but it is also marked as not_thru. We set the thru
-  // to false here only if not_thru_pruning_ is false.  not_thru_pruning_ is only
-  // set to false on the 2nd pass in route_action. See the gurka test not_thru_pruning_
+  // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
@@ -557,11 +553,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
-  // There is an edge case where we may encounter only_restrictions with edges being
-  // marked as not_thru.  Basically the only way to get in this area is via this edge
-  // based on the restriction, but it is also marked as not_thru. We set the thru
-  // to false here only if not_thru_pruning_ is false.  not_thru_pruning_ is only
-  // set to false on the 2nd pass in route_action. See the gurka test not_thru_pruning_
+  // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
