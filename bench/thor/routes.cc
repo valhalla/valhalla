@@ -172,8 +172,8 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   std::size_t route_size = 0;
 
+  thor::BidirectionalAStar astar;
   for (auto _ : state) {
-    thor::BidirectionalAStar astar;
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
@@ -185,8 +185,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   if (route_size == 0) {
     throw std::runtime_error("Failed all routes");
   }
-  state.counters["Routes"] =
-      benchmark::Counter(route_size, benchmark::Counter::kIsIterationInvariantRate);
+  state.counters["Routes"] = route_size;
 }
 
 void customize_traffic(const boost::property_tree::ptree& config,
