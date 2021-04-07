@@ -40,8 +40,8 @@ TEST(StandAlone, exhaust_reverse_search) {
     }
   });
 
-  // Without extending search, the route should not fail due to settting allow_restricted_thru
-  // to true on the second pass
+  // Without extending search, the route should not fail due to settting not_thru_pruning_
+  // to false on the second pass
   map.config.put("thor.extended_search", false);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
@@ -84,22 +84,14 @@ TEST(StandAlone, exhaust_forward_search) {
     }
   });
 
-  // Without extending search, the route should fail
+  // Without extending search, the route should not fail due to settting not_thru_pruning_
+  // to false on the second pass
   map.config.put("thor.extended_search", false);
-  EXPECT_THROW(
-      {
-        try {
-          auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
-        } catch (const std::exception& e) {
-          EXPECT_STREQ("No path could be found for input", e.what());
-          throw;
-        }
-      },
-      std::exception);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
 
   // Allowing search to extend, finds route
   map.config.put("thor.extended_search", true);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
 }
 
@@ -135,14 +127,5 @@ TEST(StandAlone, failed_search) {
     }
   });
 
-  EXPECT_THROW(
-      {
-        try {
-          auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
-        } catch (const std::exception& e) {
-          EXPECT_STREQ("No path could be found for input", e.what());
-          throw;
-        }
-      },
-      std::exception);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
 }
