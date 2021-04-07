@@ -4,30 +4,6 @@
     "tr"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "<LENGTH> sonunda, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS>kilometre",
-        "1 kilometre",
-        "<METERS> metre",
-        "10 kilometreden az"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mil",
-        "1 mil",
-        "yarım mil",
-        "çeyrek mil",
-        "<FEET>fit",
-        "10 fitten daha az"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Varış: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometre",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "ferry_label": "Feribot",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "ferry_label": "Feribot",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> caddesine doğru çıkın.<ROUNDABOUT_EXIT_STREET_NAMES> caddesine devam edin.",
         "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
-      "empty_street_name_labels": [
-        "yaya geçidi",
-        "bisiklet yolu",
-        "dağ bisikleti yolu"
-      ],
       "ordinal_values": [
         "Birinci",
         "İkinci",
@@ -465,6 +443,12 @@
         "Sekizinci",
         "Dokuzuncu",
         "Onuncu"
+      ],
+      "empty_street_name_labels": [
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "<STREET_NAMES> caddesine girin ve <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>caddesine doğru çıkın.",
         "15": "<STREET_NAMES> caddesine girin ve <TOWARD_SIGN> işaretine doğru çıkın."
       },
-      "empty_street_name_labels": [
-        "yaya geçidi",
-        "bisiklet yolu",
-        "dağ bisikleti yolu"
-      ],
       "ordinal_values": [
         "Birinci",
         "İkinci",
@@ -561,6 +540,12 @@
         "Sekizinci",
         "Dokuzuncu",
         "Onuncu"
+      ],
+      "empty_street_name_labels": [
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -1077,14 +1068,15 @@
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
         "5": "<RELATIVE_DIRECTION>dan yola katılın toward <TOWARD_SIGN> işaretine doğru."
       },
-      "empty_street_name_labels": [
-        "yaya geçidi",
-        "bisiklet yolu",
-        "dağ bisikleti yolu"
-      ],
       "relative_directions": [
         "sol",
         "sağ"
+      ],
+      "empty_street_name_labels": [
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
         "5": "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
       },
-      "empty_street_name_labels": [
-        "yaya geçidi",
-        "bisiklet yolu",
-        "dağ bisikleti yolu"
-      ],
       "relative_directions": [
         "sol",
         "sağ"
+      ],
+      "empty_street_name_labels": [
+        "yaya geçidi",
+        "bisiklet yolu",
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS>kilometre",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
-        "dağ bisikleti yolu"
+        "dağ bisikleti yolu",
+        "the crosswalk"
       ],
       "relative_directions": [
         "sol",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> sonunda, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS>kilometre",
+        "1 kilometre",
+        "<METERS> metre",
+        "10 kilometreden az"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "yarım mil",
+        "çeyrek mil",
+        "<FEET>fit",
+        "10 fitten daha az"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
