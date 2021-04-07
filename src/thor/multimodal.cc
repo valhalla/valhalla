@@ -92,8 +92,6 @@ void MultiModalPathAlgorithm::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
-  // Set not thru pruning to true
-  not_thru_pruning_ = true;
 }
 
 // Calculate best path using multiple modes (e.g. transit).

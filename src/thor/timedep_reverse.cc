@@ -40,8 +40,6 @@ void TimeDepReverse::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
-  // Set not thru pruning to true
-  not_thru_pruning_ = true;
 }
 
 // Initialize prior to finding best path
