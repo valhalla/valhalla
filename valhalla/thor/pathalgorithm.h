@@ -94,7 +94,6 @@ public:
    * Set the not_thru_pruning_
    * @param pruning  set the not_thru_pruning_ to pruning value.
    *                 only set on the second pass
-   *
    */
   void set_not_thru_pruning(const bool pruning) {
     not_thru_pruning_ = pruning;
