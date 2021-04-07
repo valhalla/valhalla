@@ -35,6 +35,7 @@
    * FIXED: Reverse and Multimodal Isochrones were returning forward results [#2967](https://github.com/valhalla/valhalla/pull/2967)
    * FIXED: Map-match fix for first gps-point being exactly equal to street shape-point [#2977](https://github.com/valhalla/valhalla/pull/2977)
    * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
+   * FIXED: Allow expansion into a region when not_thru_pruning_ is false on 2nd pass [#2978](https://github.com/valhalla/valhalla/pull/2978)
    * FIXED: Fix polygon area calculation: use Shoelace formula [#2927](https://github.com/valhalla/valhalla/pull/2927)
    * FIXED: Isochrone: orient segments/rings acoording to the right-hand rule [#2932](https://github.com/valhalla/valhalla/pull/2932)
    * FIXED: Parsenodes fix: check if index is out-of-bound first [#2984](https://github.com/valhalla/valhalla/pull/2984)

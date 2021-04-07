@@ -37,6 +37,9 @@ void TimeDepReverse::Clear() {
   }
   edgelabels_rev_.clear();
   adjacencylist_rev_.clear();
+
+  // Set the ferry flag to false
+  has_ferry_ = false;
 }
 
 // Initialize prior to finding best path

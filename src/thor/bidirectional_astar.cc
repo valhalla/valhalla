@@ -86,6 +86,8 @@ void BidirectionalAStar::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
+  // Set not thru pruning to true
+  not_thru_pruning_ = true;
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
@@ -324,11 +326,13 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
+  // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost,
-                                   (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   dist, mode_, transition_cost, thru,
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
                                    costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -549,11 +553,13 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   float sortcost =
       newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
 
+  // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost,
-                                   (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                                   dist, mode_, transition_cost, thru,
                                    (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                    static_cast<bool>(flow_sources & kDefaultFlowMask),
                                    costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
