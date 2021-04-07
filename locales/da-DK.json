@@ -4,30 +4,6 @@
     "da"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometer",
-        "1 kilometer",
-        "<METERS> meter",
-        "mindre end 10 meter"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mil",
-        "1 mil",
-        "en halv mil",
-        "en kvart mil",
-        "<FEET> fod",
-        "mindre end 10 fod"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Ankomst: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "ferry_label": "Færge",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "ferry_label": "Færge",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "fortovet",
-        "cykelstien",
-        "mountainbike-sporet"
-      ],
       "ordinal_values": [
         "første",
         "anden",
@@ -465,6 +443,12 @@
         "ottende",
         "niende",
         "tiende"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "fortovet",
-        "cykelstien",
-        "mountainbike-sporet"
-      ],
       "ordinal_values": [
         "første",
         "anden",
@@ -561,6 +540,12 @@
         "ottende",
         "niende",
         "tiende"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -1077,14 +1068,15 @@
         "4": "Flet mod <TOWARD_SIGN>.",
         "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "fortovet",
-        "cykelstien",
-        "mountainbike-sporet"
-      ],
       "relative_directions": [
         "venstre",
         "højre"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Flet mod <TOWARD_SIGN>.",
         "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "fortovet",
-        "cykelstien",
-        "mountainbike-sporet"
-      ],
       "relative_directions": [
         "venstre",
         "højre"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "fortovet",
         "cykelstien",
-        "mountainbike-sporet"
+        "mountainbike-sporet",
+        "the crosswalk"
       ],
       "relative_directions": [
         "venstre",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
