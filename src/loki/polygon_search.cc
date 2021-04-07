@@ -38,8 +38,6 @@ ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
-  // corrects geometry and handedness as expected by bg for rings
-  bg::correct(new_ring);
   return new_ring;
 }
 

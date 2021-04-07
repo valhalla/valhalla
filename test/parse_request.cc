@@ -13,6 +13,9 @@ using namespace valhalla;
 
 namespace {
 
+// Base defaults
+constexpr float kDefaultClosureFactor = 9.0f;
+
 // Auto defaults
 constexpr float kDefaultAuto_ManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAuto_DestinationOnlyPenalty = 600.0f; // Seconds
@@ -749,6 +752,19 @@ void test_default_transit_cost_options(const Costing costing, const Options::Act
            request.options().costing_options(static_cast<int>(costing)).transfer_cost());
   validate("transfer_penalty", kDefaultTransit_TransferPenalty,
            request.options().costing_options(static_cast<int>(costing)).transfer_penalty());
+}
+
+void test_default_base_cost_options(const Costing costing, const Options::Action action) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string key = "costing";
+
+  // Get cost request with no cost options
+  Api request = get_request(get_request_str(key, costing_str), action);
+
+  validate(costing_str + " closure_factor", kDefaultClosureFactor,
+           request.options().costing_options(static_cast<float>(costing)).closure_factor());
+  // TODO: Validate more common cost attributes
 }
 
 void test_transport_type_parsing(const Costing costing,
@@ -1649,6 +1665,22 @@ void test_service_factor_parsing(const Costing costing,
            request.options().costing_options(static_cast<int>(costing)).service_factor());
 }
 
+void test_closure_factor_parsing(const Costing costing,
+                                 const float specified_value,
+                                 const float expected_value,
+                                 const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "closure_factor";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options().costing_options(static_cast<int>(costing)).closure_factor());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 TEST(ParseRequest, test_polygons) {
@@ -1709,6 +1741,12 @@ TEST(ParseRequest, test_filter_attributes) {
   test_filter_attributes_parsing({"edge.names", "edge.id", "edge.weighted_grade", "edge.speed"});
 }
 
+std::vector<Costing> get_all_motor_costings() {
+  return {Costing::auto_,      Costing::bicycle, Costing::bus,
+          Costing::hov,        Costing::taxi,    Costing::motor_scooter,
+          Costing::pedestrian, Costing::truck,   Costing::motorcycle};
+}
+
 std::vector<Costing> get_base_auto_costing_list() {
   return {Costing::auto_, Costing::bus, Costing::hov, Costing::taxi};
 }
@@ -1740,6 +1778,12 @@ TEST(ParseRequest, test_default_truck_cost_options) {
 
 TEST(ParseRequest, test_default_transit_cost_options) {
   test_default_transit_cost_options(transit, Options::route);
+}
+
+TEST(ParseRequest, test_default_base_cost_options) {
+  for (auto costing : get_all_motor_costings()) {
+    test_default_base_cost_options(costing, Options::route);
+  }
 }
 
 TEST(ParseRequest, test_transport_type) {
@@ -2280,6 +2324,17 @@ TEST(ParseRequest, test_service_factor) {
     test_service_factor_parsing(costing, 10.f, 10.f);
     test_service_factor_parsing(costing, -2.f, default_value);
     test_service_factor_parsing(costing, 200000.f, default_value);
+  }
+}
+
+TEST(ParseRequest, test_closure_factor) {
+  for (const auto& costing : get_all_motor_costings()) {
+    test_closure_factor_parsing(costing, 0.f, kDefaultClosureFactor);
+    test_closure_factor_parsing(costing, 1.0f, 1.0f);
+    test_closure_factor_parsing(costing, 5.0f, 5.0f);
+    test_closure_factor_parsing(costing, 9.0f, 9.0f);
+    test_closure_factor_parsing(costing, 10.f, 10.f);
+    test_closure_factor_parsing(costing, 100.f, kDefaultClosureFactor);
   }
 }
 

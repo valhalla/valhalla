@@ -44,7 +44,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -83,7 +84,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -140,7 +142,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -171,7 +174,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -224,7 +228,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -360,7 +365,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "ferry_label": "trajekt",
       "example_phrases": {
@@ -388,7 +394,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "ferry_label": "trajekt",
       "example_phrases": {
@@ -440,7 +447,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -536,7 +544,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -715,7 +724,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -742,7 +752,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -890,7 +901,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -936,7 +948,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -970,7 +983,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1008,7 +1022,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1060,7 +1075,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1099,7 +1115,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1146,7 +1163,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1381,7 +1399,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1420,7 +1439,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1475,7 +1495,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1562,7 +1583,8 @@
       "empty_street_name_labels": [
         "chodníku",
         "cykloceste",
-        "ceste pre horské bicykle"
+        "ceste pre horské bicykle",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1939,7 +1961,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -1978,7 +2001,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -2019,7 +2043,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",
@@ -2066,7 +2091,8 @@
       "empty_street_name_labels": [
         "chodník",
         "cyklocestu",
-        "cestu pre horské bicykle"
+        "cestu pre horské bicykle",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vľavo",

@@ -183,14 +183,14 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   // expand in the forward direction
   if (direction | kOutbound) {
     Clear();
-    Compute(locations_, reader, costings, costing->travel_mode());
+    Compute<thor::ExpansionType::forward>(locations_, reader, costings, costing->travel_mode());
     reach.outbound = std::min(static_cast<uint32_t>(done_.size() - transitions_), max_reach);
   }
 
   // expand in the reverse direction
   if (direction | kInbound) {
     Clear();
-    ComputeReverse(locations_, reader, costings, costing->travel_mode());
+    Compute<thor::ExpansionType::reverse>(locations_, reader, costings, costing->travel_mode());
     reach.inbound = std::min(static_cast<uint32_t>(done_.size() - transitions_), max_reach);
   }
 

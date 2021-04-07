@@ -119,7 +119,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
       // Skip uses other than road / other (service?)
       const OSMWay w = *ways[edge.wayindex_];
-      if (w.use() != baldr::Use::kOther &&
+      if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
         continue;
       }

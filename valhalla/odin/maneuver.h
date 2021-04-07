@@ -114,9 +114,6 @@ public:
   uint32_t end_heading() const;
   void set_end_heading(uint32_t endHeading);
 
-  uint32_t roundabout_exit_begin_heading() const;
-  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
-
   uint32_t begin_node_index() const;
   void set_begin_node_index(uint32_t beginNodeIndex);
 
@@ -180,9 +177,6 @@ public:
   uint32_t internal_left_turn_count() const;
   void set_internal_left_turn_count(uint32_t internal_left_turn_count);
 
-  uint32_t roundabout_exit_count() const;
-  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
-
   bool fork() const;
   void set_fork(bool fork);
 
@@ -219,6 +213,8 @@ public:
   bool unnamed_cycleway() const;
   bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
+  bool pedestrian_crossing() const;
+  void set_pedestrian_crossing(bool pedestrian_crossing);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
@@ -228,22 +224,6 @@ public:
 
   bool to_stay_on() const;
   void set_to_stay_on(bool to_stay_on);
-
-  const StreetNames& roundabout_exit_street_names() const;
-  void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
-  bool HasRoundaboutExitStreetNames() const;
-  void ClearRoundaboutExitStreetNames();
-
-  const StreetNames& roundabout_exit_begin_street_names() const;
-  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_roundabout_exit_begin_street_names(
-      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
-  bool HasRoundaboutExitBeginStreetNames() const;
-  void ClearRoundaboutExitBeginStreetNames();
-
-  const Signs& roundabout_exit_signs() const;
-  Signs* mutable_roundabout_exit_signs();
 
   RelativeDirection merge_to_relative_direction() const;
   void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
@@ -268,6 +248,9 @@ public:
   bool contains_obvious_maneuver() const;
   void set_contains_obvious_maneuver(bool contains_obvious_maneuver);
 
+  uint32_t roundabout_exit_count() const;
+  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
+
   bool has_combined_enter_exit_roundabout() const;
   void set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout);
 
@@ -276,6 +259,31 @@ public:
 
   float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
   void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
+
+  const StreetNames& roundabout_exit_street_names() const;
+  void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
+  bool HasRoundaboutExitStreetNames() const;
+  void ClearRoundaboutExitStreetNames();
+
+  const StreetNames& roundabout_exit_begin_street_names() const;
+  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_begin_street_names(
+      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
+  bool HasRoundaboutExitBeginStreetNames() const;
+  void ClearRoundaboutExitBeginStreetNames();
+
+  const Signs& roundabout_exit_signs() const;
+  Signs* mutable_roundabout_exit_signs();
+
+  uint32_t roundabout_exit_begin_heading() const;
+  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
+
+  uint32_t roundabout_exit_turn_degree() const;
+  void set_roundabout_exit_turn_degree(uint32_t turnDegree);
+
+  uint32_t roundabout_exit_shape_index() const;
+  void set_roundabout_exit_shape_index(uint32_t shapeIndex);
 
   bool has_collapsed_small_end_ramp_fork() const;
   void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
@@ -377,7 +385,6 @@ protected:
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
-  uint32_t roundabout_exit_begin_heading_;
   uint32_t begin_node_index_;
   uint32_t end_node_index_;
   uint32_t begin_shape_index_;
@@ -394,7 +401,6 @@ protected:
   Signs signs_;
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
-  uint32_t roundabout_exit_count_;
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
   bool intersecting_forward_edge_;
@@ -406,9 +412,7 @@ protected:
   bool imminent_verbal_multi_cue_;
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;
-  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
-  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
-  Signs roundabout_exit_signs_;
+  bool pedestrian_crossing_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;
@@ -416,9 +420,18 @@ protected:
   bool has_left_traversable_outbound_intersecting_edge_;
   bool include_verbal_pre_transition_length_;
   bool contains_obvious_maneuver_;
+
+  uint32_t roundabout_exit_count_;
   bool has_combined_enter_exit_roundabout_;
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
+  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
+  Signs roundabout_exit_signs_;
+  uint32_t roundabout_exit_begin_heading_;
+  uint32_t roundabout_exit_turn_degree_;
+  uint32_t roundabout_exit_shape_index_;
+
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;
 

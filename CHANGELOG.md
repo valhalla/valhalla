@@ -1,5 +1,6 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.1
 * **Removed**
+   * REMOVED: The tossing of private roads in [#1960](https://github.com/valhalla/valhalla/pull/1960) was too aggressive and resulted in a lot of no routes.  Reverted this logic.  [#2934](https://github.com/valhalla/valhalla/pull/2934)
 
 * **Bug Fix**
    * FIXED: Fix compression_utils.cc::inflate(...) throw - make it catchable [#2839](https://github.com/valhalla/valhalla/pull/2839)
@@ -20,12 +21,26 @@
    * FIXED: Ensure route summaries are unique among all returned route/legs [#2874](https://github.com/valhalla/valhalla/pull/2874)
    * FIXED: Fix compilation errors when boost < 1.68 and libprotobuf < 3.6  [#2878](https://github.com/valhalla/valhalla/pull/2878)
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
+   * FIXED: Fixed "No route found" error in case of multipoint request with locations near low reachability edges [#2914](https://github.com/valhalla/valhalla/pull/2914)
    * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
    * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2893)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
+   * FIXED: Use CMakes built-in Python variables to configure installation [#2931](https://github.com/valhalla/valhalla/pull/2931)
+   * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
+   * FIXED: Fix map-match segfault when gps-points project very near a node [#2946](https://github.com/valhalla/valhalla/pull/2946)
+   * FIXED: Use kServiceRoad edges while searching for ferry connection [#2933](https://github.com/valhalla/valhalla/pull/2933)
+   * FIXED: Enhanced logic for IsTurnChannelManeuverCombinable [#2952](https://github.com/valhalla/valhalla/pull/2952)
+   * FIXED: Restore compatibility with gcc 6.3.0, libprotobuf 3.0.0, boost v1.62.0 [#2953](https://github.com/valhalla/valhalla/pull/2953)
+   * FIXED: Dont abort bidirectional a-star search if only one direction is exhausted [#2936](https://github.com/valhalla/valhalla/pull/2936)
+   * FIXED: Fixed missing comma in the scripts/valhalla_build_config [#2963](https://github.com/valhalla/valhalla/pull/2963)
+   * FIXED: Reverse and Multimodal Isochrones were returning forward results [#2967](https://github.com/valhalla/valhalla/pull/2967)
+   * FIXED: Map-match fix for first gps-point being exactly equal to street shape-point [#2977](https://github.com/valhalla/valhalla/pull/2977)
+   * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
    * FIXED: Fix polygon area calculation: use Shoelace formula [#2927](https://github.com/valhalla/valhalla/pull/2927)
    * FIXED: Isochrone: orient segments/rings acoording to the right-hand rule [#2932](https://github.com/valhalla/valhalla/pull/2932)
 
 * **Enhancement**
+   * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
    * CHANGED: Azure uses ninja as generator [#2779](https://github.com/valhalla/valhalla/pull/2779)
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
@@ -40,6 +55,7 @@
    * CHANGED: Use relative cost threshold to extend search in bidirectional astar in order to find more alternates [#2868](https://github.com/valhalla/valhalla/pull/2868)
    * CHANGED: Throw an exception if directory does not exist when building traffic extract [#2871](https://github.com/valhalla/valhalla/pull/2871)
    * CHANGED: Support for ignoring multiple consecutive closures at start/end locations [#2846](https://github.com/valhalla/valhalla/pull/2846)
+   * ADDED: Added sac_scale to trace_attributes output and locate edge output [#2818](https://github.com/valhalla/valhalla/pull/2818)
    * ADDED: Ukrainian language translations [#2882](https://github.com/valhalla/valhalla/pull/2882)
    * ADDED: Add support for closure annotations [#2816](https://github.com/valhalla/valhalla/pull/2816)
    * ADDED: Add costing option `service_factor`. Implement possibility to avoid or favor generic service roads in route for all costing options. [#2870](https://github.com/valhalla/valhalla/pull/2870)
@@ -49,6 +65,16 @@
    * ADDED: Add complex mandatory restrictions support [#2766](https://github.com/valhalla/valhalla/pull/2766)
    * ADDED: Status endpoint for future status info and health checking of running service [#2907](https://github.com/valhalla/valhalla/pull/2907)
    * ADDED: Add min_level argument to valhalla_ways_to_edges [#2918](https://github.com/valhalla/valhalla/pull/2918)
+   * ADDED: Adding ability to store the roundabout_exit_turn_degree to the maneuver [#2941](https://github.com/valhalla/valhalla/pull/2941)
+   * ADDED: Penalize pencil point uturns and uturns at short internal edges. Note: `motorcycle` and `motor_scooter` models do not penalize on short internal edges. No new uturn penalty logic has been added to the pedestrian and bicycle costing models. [#2944](https://github.com/valhalla/valhalla/pull/2944)
+   * CHANGED: Allow config object to be passed-in to path algorithms [#2949](https://github.com/valhalla/valhalla/pull/2949)
+   * CHANGED: Allow disabling Werror
+   * ADDED: Add ability to build Valhalla modules as STATIC libraries. [#2957](https://github.com/valhalla/valhalla/pull/2957)
+   * NIT: Enables compiler warnings in part of mjolnir module [#2922](https://github.com/valhalla/valhalla/pull/2922)
+   * CHANGED: Refactor isochrone/reachability forward/reverse search to reduce code repetition [#2969](https://github.com/valhalla/valhalla/pull/2969)
+   * ADDED: Set the roundabout exit shape index when we are collapsing the roundabout maneuvers. [#2975](https://github.com/valhalla/valhalla/pull/2975)
+   * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
+   * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

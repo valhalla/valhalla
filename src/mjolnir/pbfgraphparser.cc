@@ -281,6 +281,9 @@ public:
         case Use::kBridleway:
           way_.set_use(Use::kBridleway);
           break;
+        case Use::kPedestrianCrossing:
+          way_.set_use(Use::kPedestrianCrossing);
+          break;
         case Use::kLivingStreet:
           way_.set_use(Use::kLivingStreet);
           break;
@@ -1479,8 +1482,7 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() &&
-        (way_.use() == Use::kRoad || way_.use() == Use::kServiceRoad) &&
+    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
       way_.set_use(Use::kCuldesac);
     }

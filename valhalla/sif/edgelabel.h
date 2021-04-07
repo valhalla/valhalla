@@ -31,8 +31,8 @@ public:
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
-        has_measured_speed_(0), path_id_(0), restriction_idx_(0), cost_(0, 0), sortcost_(0),
-        distance_(0), transition_cost_(0, 0) {
+        has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), cost_(0, 0),
+        sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -52,6 +52,7 @@ public:
    * found
    * @param closure_pruning     Should closure pruning be enabled on this path?
    * @param has_measured_speed  Do we have any of the measured speed types set?
+   * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    */
@@ -67,6 +68,7 @@ public:
             const uint8_t restriction_idx,
             const bool closure_pruning,
             const bool has_measured_speed,
+            const InternalTurn internal_turn,
             const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
@@ -78,8 +80,8 @@ public:
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
-        restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost), distance_(dist),
-        transition_cost_(transition_cost) {
+        restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
+        cost_(cost), sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -272,6 +274,14 @@ public:
     return restriction_idx_;
   }
   /**
+   * Get the internal_turn.
+   * @return  Returns value from InternalTurn that indicates if we made a turn on a short internal
+   * edge.
+   */
+  InternalTurn internal_turn() const {
+    return static_cast<InternalTurn>(internal_turn_);
+  }
+  /**
    * Does this edge have a toll?
    * @return  Returns true if this edge has a toll.
    */
@@ -410,9 +420,9 @@ protected:
    * toll_:               Edge is toll.
    * not_thru_:           Flag indicating edge is not_thru.
    * deadend_:            Flag indicating edge is a dead-end.
-   * on_complex_rest:     Part of a complex restriction.
+   * on_complex_rest_:    Part of a complex restriction.
    * closure_pruning_:    Was closure pruning active on prior edge?
-   * has_measured_speed:  Do we have any of the measured speed types set?
+   * has_measured_speed_: Do we have any of the measured speed types set?
    */
   uint64_t endnode_ : 46;
   uint64_t use_ : 6;
@@ -431,7 +441,9 @@ protected:
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
   uint32_t path_id_ : 7;
   uint32_t restriction_idx_ : 8;
-  uint32_t spare_1 : 17;
+  // internal_turn_ Did we make an turn on a short internal edge.
+  uint32_t internal_turn_ : 2;
+  uint32_t spare : 15;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -468,6 +480,7 @@ public:
    * @param not_thru_pruning    Is not thru pruning enabled.
    * @param closure_pruning     Is closure pruning active.
    * @param has_measured_speed  Do we have any of the measured speed types set?
+   * @param internal_turn       Did we make an turn on a short internal edge.
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
@@ -485,6 +498,7 @@ public:
               const bool not_thru_pruning,
               const bool closure_pruning,
               const bool has_measured_speed,
+              const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -499,6 +513,7 @@ public:
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
+                  internal_turn,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -518,6 +533,7 @@ public:
    * @param not_thru_pruning    Is not thru pruning enabled.
    * @param closure_pruning     Is closure pruning active.
    * @param has_measured_speed  Do we have any of the measured speed types set?
+   * @param internal_turn       Did we make an turn on a short internal edge.
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
@@ -534,6 +550,7 @@ public:
               const bool not_thru_pruning,
               const bool closure_pruning,
               const bool has_measured_speed,
+              const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
@@ -548,6 +565,7 @@ public:
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
+                  internal_turn,
                   path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
@@ -566,6 +584,7 @@ public:
    * found
    * @param closure_pruning     Is closure pruning active.
    * @param has_measured_speed  Do we have any of the measured speed types set?
+   * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    */
@@ -579,6 +598,7 @@ public:
               const uint8_t restriction_idx,
               const bool closure_pruning,
               const bool has_measured_speed,
+              const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -592,6 +612,7 @@ public:
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
+                  internal_turn,
                   path_id),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
@@ -725,6 +746,7 @@ public:
                   restriction_idx,
                   true,
                   false,
+                  InternalTurn::kNoTurn,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
