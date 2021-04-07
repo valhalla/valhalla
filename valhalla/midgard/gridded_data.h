@@ -141,7 +141,7 @@ public:
         {{true, true, false}, {false, false, false}, {false, false, false}},
     };
     std::array<std::function<void()>, 10> cases{
-        [&]() { from_pt = to_pt = {}; },
+        [&]() {},
         // Line between vertices 1 and 2
         [&]() {
           from_pt = tile_corners[m1];
