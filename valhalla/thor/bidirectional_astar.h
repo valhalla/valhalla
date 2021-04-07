@@ -174,15 +174,15 @@ protected:
   // edge is a not-thru edge that will be pruned.
   //
   template <const ExpansionType expansion_direction>
-  bool ExpandInner(baldr::GraphReader& graphreader,
-                   const sif::BDEdgeLabel& pred,
-                   const baldr::DirectedEdge* opp_pred_edge,
-                   const baldr::NodeInfo* nodeinfo,
-                   const uint32_t pred_idx,
-                   const EdgeMetadata& meta,
-                   uint32_t& shortcuts,
-                   const graph_tile_ptr& tile,
-                   const baldr::TimeInfo& time_info);
+  inline bool ExpandInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          uint32_t& shortcuts,
+                          const graph_tile_ptr& tile,
+                          const baldr::TimeInfo& time_info);
 
   /**
    * Add edges at the origin to the forward adjacency list.
