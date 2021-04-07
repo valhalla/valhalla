@@ -183,7 +183,6 @@ protected:
                           uint32_t& shortcuts,
                           const graph_tile_ptr& tile,
                           const baldr::TimeInfo& time_info);
-
   /**
    * Add edges at the origin to the forward adjacency list.
    * @param graphreader  Graph tile reader.

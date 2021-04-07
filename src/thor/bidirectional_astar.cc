@@ -303,34 +303,10 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                         false);
   }
 
-  // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge
-  // that will be pruned. In that case we want to allow uturns.
+  // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
+  // will be pruned. In that case we want to allow uturns.
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
-
-/*
-template inline bool BidirectionalAStar::ExpandInner<BidirectionalAStar::ExpansionType::forward>(
-    baldr::GraphReader& graphreader,
-    const sif::BDEdgeLabel& pred,
-    const baldr::DirectedEdge* opp_pred_edge,
-    const baldr::NodeInfo* nodeinfo,
-    const uint32_t pred_idx,
-    const EdgeMetadata& meta,
-    uint32_t& shortcuts,
-    const graph_tile_ptr& tile,
-    const baldr::TimeInfo& time_info);
-
-template inline bool BidirectionalAStar::ExpandInner<BidirectionalAStar::ExpansionType::reverse>(
-    baldr::GraphReader& graphreader,
-    const sif::BDEdgeLabel& pred,
-    const baldr::DirectedEdge* opp_pred_edge,
-    const baldr::NodeInfo* nodeinfo,
-    const uint32_t pred_idx,
-    const EdgeMetadata& meta,
-    uint32_t& shortcuts,
-    const graph_tile_ptr& tile,
-    const baldr::TimeInfo& time_info);
-    */
 
 template <const BidirectionalAStar::ExpansionType expansion_direction>
 bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
@@ -380,7 +356,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus);
   EdgeMetadata uturn_meta{};
 
-  // Expand from end node in forward direction.
+  // Expand from end node in <expansion_direction> direction.
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
 
     // Begin by checking if this is the opposing edge to pred.
@@ -410,8 +386,8 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
         continue;
       }
 
-      hierarchy_limits[node.level()].up_transition_count += trans->up();
       // setup for expansion at this level
+      hierarchy_limits[node.level()].up_transition_count += trans->up();
       const auto* trans_node = trans_tile->node(trans->endnode());
       EdgeMetadata trans_meta =
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus);
@@ -445,24 +421,6 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   return disable_uturn;
 }
-
-template bool BidirectionalAStar::Expand<BidirectionalAStar::ExpansionType::forward>(
-    baldr::GraphReader& graphreader,
-    const baldr::GraphId& node,
-    sif::BDEdgeLabel& pred,
-    const uint32_t pred_idx,
-    const baldr::DirectedEdge* opp_pred_edge,
-    const baldr::TimeInfo& time_info,
-    const bool invariant);
-
-template bool BidirectionalAStar::Expand<BidirectionalAStar::ExpansionType::reverse>(
-    baldr::GraphReader& graphreader,
-    const baldr::GraphId& node,
-    sif::BDEdgeLabel& pred,
-    const uint32_t pred_idx,
-    const baldr::DirectedEdge* opp_pred_edge,
-    const baldr::TimeInfo& time_info,
-    const bool invariant);
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
@@ -616,8 +574,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         //
         // Caveat: This assumption is not true if for eg the search from other end has pruning turned
         // on later, causing us to needlessly expand when we could have aborted sooner. However, it
-        // ensures that most impossible route will fail fast provided one of the locations didn't
-        // end on a not_thru/closed edge
+        // ensures that most impossible route will fail fast provided one of the locations didn't end
+        // on a not_thru/closed edge
         if (!extended_search_ || !pruning_disabled_at_origin_) {
           return {};
         }
