@@ -716,6 +716,22 @@ TEST(UtilMidgard, SequenceSort) {
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));
 }
 
+TEST(UtilMidgard, PolygonArea) {
+  std::vector<PointLL> a{{1, 1}, {2, 2}, {3, 1}};
+  {
+    // area is negative in case of clockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, -1, 1e-7);
+  }
+
+  std::reverse(a.begin(), a.end());
+  {
+    // area is positive in case of counterclockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, 1, 1e-7);
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

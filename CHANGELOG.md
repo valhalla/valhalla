@@ -23,7 +23,7 @@
    * FIXED: Allow u-turns at no-access barriers when forced by heading [#2875](https://github.com/valhalla/valhalla/pull/2875)
    * FIXED: Fixed "No route found" error in case of multipoint request with locations near low reachability edges [#2914](https://github.com/valhalla/valhalla/pull/2914)
    * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
-   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2878)
+   * FIXED: Skip bindings if there's no Python development version [#2893](https://github.com/valhalla/valhalla/pull/2893)
    * FIXED: Use CMakes built-in Python variables to configure installation [#2931](https://github.com/valhalla/valhalla/pull/2931)
    * FIXED: Sometimes emitting zero-length route geometry when traffic splits edge twice [#2943](https://github.com/valhalla/valhalla/pull/2943)
    * FIXED: Fix map-match segfault when gps-points project very near a node [#2946](https://github.com/valhalla/valhalla/pull/2946)
@@ -35,6 +35,8 @@
    * FIXED: Reverse and Multimodal Isochrones were returning forward results [#2967](https://github.com/valhalla/valhalla/pull/2967)
    * FIXED: Map-match fix for first gps-point being exactly equal to street shape-point [#2977](https://github.com/valhalla/valhalla/pull/2977)
    * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
+   * FIXED: Fix polygon area calculation: use Shoelace formula [#2927](https://github.com/valhalla/valhalla/pull/2927)
+   * FIXED: Isochrone: orient segments/rings acoording to the right-hand rule [#2932](https://github.com/valhalla/valhalla/pull/2932)
    * FIXED: Parsenodes fix: check if index is out-of-bound first [#2984](https://github.com/valhalla/valhalla/pull/2984)
 
 * **Enhancement**
