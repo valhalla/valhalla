@@ -741,7 +741,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // on later, causing us to needlessly expand when we could have aborted sooner. However, it
         // ensures that most impossible route will fail fast provided one of the locations didn't end
         // on a not_thru/closed edge
-
         if (!extended_search_ || !pruning_disabled_at_origin_) {
           return {};
         }
