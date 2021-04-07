@@ -855,8 +855,8 @@ public:
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
     // skip because it means there were no ways that we kept that referenced it. also we could run out
     // of waynodes to look for and in that case we are done as well
-    if (osmid < (*(*way_nodes_)[current_way_node_index_]).node.osmid_ ||
-        current_way_node_index_ >= way_nodes_->size()) {
+    if (current_way_node_index_ >= way_nodes_->size() ||
+        osmid < (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
       return;
     }
 
