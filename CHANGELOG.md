@@ -33,6 +33,7 @@
    * FIXED: Dont abort bidirectional a-star search if only one direction is exhausted [#2936](https://github.com/valhalla/valhalla/pull/2936)
    * FIXED: Fixed missing comma in the scripts/valhalla_build_config [#2963](https://github.com/valhalla/valhalla/pull/2963)
    * FIXED: Reverse and Multimodal Isochrones were returning forward results [#2967](https://github.com/valhalla/valhalla/pull/2967)
+   * FIXED: Map-match fix for first gps-point being exactly equal to street shape-point [#2977](https://github.com/valhalla/valhalla/pull/2977)
    * FIXED: Add missing GEOS:GEOS dep to mjolnir target [#2901](https://github.com/valhalla/valhalla/pull/2901)
 
 * **Enhancement**
