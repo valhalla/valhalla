@@ -427,37 +427,37 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'auto_shorter': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'bus': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'hov': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'taxi': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'pedestrian': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix',
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix',
       'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
@@ -465,37 +465,37 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'motorcycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'truck': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'skadi': {
       'max_shape': 'Maximum number of input shapes',
@@ -520,7 +520,7 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'centroid': {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',
