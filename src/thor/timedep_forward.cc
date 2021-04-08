@@ -612,15 +612,17 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
 
-    uint32_t path_distance = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+    uint32_t path_distance =
+        static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
                            Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           sif::InternalTurn::kNoTurn, 
-                           /* TODO(danpat) why does reverse use -1 here, and this uses baldr::kInvalidRestriction ? */
+                           sif::InternalTurn::kNoTurn,
+                           /* TODO(danpat) why does reverse use -1 here, and this uses
+                              baldr::kInvalidRestriction ? */
                            baldr::kInvalidRestriction);
-    /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the same
-     * time - so we need to update immediately after to set path_distance */
+    /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the
+     * same time - so we need to update immediately after to set path_distance */
     edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
 
     // Set the origin flag
