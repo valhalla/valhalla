@@ -1,6 +1,7 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+#include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
@@ -53,12 +54,12 @@ TEST(GraphBuilder, TestConstructEdges) {
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
   EXPECT_EQ(tiles.size(), 4);
   EXPECT_EQ(tiles[GraphId{5993698}], 0);
-  EXPECT_EQ(tiles[GraphId{5993706}], 3084);
-  EXPECT_EQ(tiles[GraphId{6005218}], 3113);
-  EXPECT_EQ(tiles[GraphId{6005226}], 8953);
+  EXPECT_EQ(tiles[GraphId{5993706}], 3125);
+  EXPECT_EQ(tiles[GraphId{6005218}], 3154);
+  EXPECT_EQ(tiles[GraphId{6005226}], 8997);
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
@@ -66,18 +67,19 @@ TEST(GraphBuilder, TestConstructEdges) {
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
-  EXPECT_TRUE(filesystem::remove_all(tile_dir));
+  filesystem::remove_all(tile_dir);
+  EXPECT_TRUE(!filesystem::exists(tile_dir));
 }
 
 // Test that only a subset of tiles are built when explicitly asked for.
-TEST(graphbuilder, TestConstructEdgesSubset) {
+TEST(Graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
   // Redefine tiles to that we only build a single tile.
   tiles = {{GraphId{5993698}, 0}};
   // This directory should be empty
@@ -87,6 +89,26 @@ TEST(graphbuilder, TestConstructEdgesSubset) {
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
+}
+
+TEST(Graphbuilder, TestDEBuilderLength) {
+
+  std::vector<PointLL> shape1{{-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531},
+                              {-160.096619f, 21.997619f}};
+  ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                   valhalla::midgard::length(shape1), 1, 1,
+                                                   Use::kRoad, baldr::RoadClass::kMotorway, 0, false,
+                                                   0, 0, false));
+
+  std::vector<PointLL> shape2{{-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531},
+                              {-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531}};
+  ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                valhalla::midgard::length(shape2), 1, 1, Use::kRoad,
+                                                baldr::RoadClass::kMotorway, 0, false, 0, 0, false),
+               std::runtime_error);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
@@ -101,8 +123,7 @@ public:
                                                 way_nodes_file, access_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
-    PBFGraphParser::ParseNodes(mjolnir_config, input_files, ways_file, way_nodes_file, bss_file,
-                               osmdata);
+    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

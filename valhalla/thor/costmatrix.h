@@ -145,14 +145,14 @@ protected:
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // source location (forward traversal)
   std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
-  std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> source_adjacency_;
+  std::vector<std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>> source_adjacency_;
   std::vector<std::vector<sif::BDEdgeLabel>> source_edgelabel_;
   std::vector<EdgeStatus> source_edgestatus_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // target location (reverse traversal)
   std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
-  std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> target_adjacency_;
+  std::vector<std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>> target_adjacency_;
   std::vector<std::vector<sif::BDEdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
 

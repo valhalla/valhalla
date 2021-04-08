@@ -30,16 +30,16 @@ public:
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
     PathEdge(const GraphId& id,
-             const float percent_along,
+             const double percent_along,
              const midgard::PointLL& projected,
-             const float score,
+             const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
-    float percent_along;
+    double percent_along;
     // the projected point along the edge where the original location correlates
     midgard::PointLL projected;
     // what side of the edge is it on
@@ -51,7 +51,7 @@ public:
 
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
-    float distance;
+    double distance;
     // minimum number of nodes reachable from this edge
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge
@@ -138,6 +138,7 @@ public:
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
     l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
+    l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
@@ -249,6 +250,7 @@ public:
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+      l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};

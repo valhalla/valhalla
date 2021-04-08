@@ -6,6 +6,7 @@ import public "tripcommon.proto";
 message Contour {
   optional float time = 1;     // minutes
   optional string color = 2;   // hex color with out # - for example: "ff0000" for red
+  optional float distance = 3; // kilometers
 }
 
 enum ShapeMatch {
@@ -33,7 +34,7 @@ enum ShapeFormat {
 
 enum Costing {
   auto_ = 0;
-  auto_shorter = 1;
+  // deprecated auto_shorter = 1;
   bicycle = 2;
   bus = 3;
   hov = 4;
@@ -43,7 +44,7 @@ enum Costing {
   transit = 8;
   truck = 9;
   motorcycle = 10;
-  auto_data_fix = 11;
+  // deprecated auto_data_fix = 11;
   taxi = 12;
   none_ = 13;
   bikeshare = 14;
@@ -118,11 +119,19 @@ message CostingOptions {
   optional bool ignore_oneways = 61;
   optional bool ignore_access = 62;
   optional bool ignore_closures = 63;
+  optional bool shortest = 64;
+  optional float service_penalty = 65;
+  optional float use_tracks = 66;
+  optional float use_distance = 67;
+  optional float use_living_streets = 68;
+  optional float service_factor = 69;
+  optional float closure_factor = 70;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
   optional string name = 91;
   repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from avoid_locations
+  optional bool filter_closures = 93 [default = true];
 }
 
 message Options {
@@ -149,12 +158,19 @@ message Options {
     height = 8;
     transit_available = 9;
     expansion = 10;
+    centroid = 11;
+    status = 12;
   }
 
   enum DateTimeType {
     current = 0;
     depart_at = 1;
     arrive_by = 2;
+    invariant = 3;
+  }
+
+  message Ring {
+    repeated LatLng coords = 1;
   }
 
   optional Units units = 1;                                               // kilometers or miles
@@ -203,4 +219,5 @@ message Options {
   optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
+  repeated Ring avoid_polygons = 47;                                      // Rings/polygons to exclude entire areas during path finding
 }

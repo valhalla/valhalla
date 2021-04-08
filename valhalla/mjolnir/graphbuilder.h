@@ -47,7 +47,6 @@ public:
                     const std::map<baldr::GraphId, size_t>& tiles);
 
   static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
-                                                     const OSMData& osmdata,
                                                      const std::string& ways_file,
                                                      const std::string& way_nodes_file,
                                                      const std::string& nodes_file,

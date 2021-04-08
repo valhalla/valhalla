@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
@@ -27,21 +27,13 @@ TEST(recosting, same_historical) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // add historical traffic so that we can get different costs at different times
-  // TODO: move this into test utils with a callback per edge to get speed from the test
-  for (const auto& tile_id : reader->GetTileSet()) {
-    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
-    std::vector<valhalla::baldr::DirectedEdge> edges;
-    edges.reserve(tile.header()->directededgecount());
-    for (const auto& edge : tile.GetDirectedEdges()) {
-      edges.push_back(edge);
-      edges.back().set_free_flow_speed(80);
-      edges.back().set_speed(55);
-      edges.back().set_constrained_flow_speed(10);
-      // TODO: add historical 5 minutely buckets
-      // tile.AddPredictedSpeed();
-    }
-    tile.UpdatePredictedSpeeds(edges);
-  }
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    e.set_free_flow_speed(80);
+    e.set_speed(55);
+    e.set_constrained_flow_speed(10);
+    // TODO: add historical 5 minutely buckets
+    return boost::none;
+  });
 
   // run a route and check that the costs are the same for the same options
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -60,7 +52,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -102,7 +94,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -226,7 +218,8 @@ TEST(recosting, all_algorithms) {
         // get the api response out using the normal means
         auto start = named_locations.substr(i, 1);
         auto end = named_locations.substr(j, 1);
-        auto api = gurka::route(map, start, end, "auto", option, reader);
+        auto api =
+            gurka::do_action(valhalla::Options::route, map, {start, end}, "auto", option, reader);
         auto leg = api.trip().routes(0).legs(0);
 
         // setup a callback for the recosting to get each edge
@@ -248,7 +241,7 @@ TEST(recosting, all_algorithms) {
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
                                        reverse](const sif::EdgeLabel& label) -> void {
-          length += elapsed_itr->edge().length() * 1000.0;
+          length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
           EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),
@@ -290,8 +283,12 @@ TEST(recosting, all_algorithms) {
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
+        const GraphId start_edge_id(leg.node().begin()->edge().id());
+        const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
+        const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
+
         // recost the path
-        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
+        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, time_info);
       }
     }
   }
@@ -319,7 +316,7 @@ TEST(recosting, throwing) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // cross the graph as a pedestrian
-  auto api = gurka::route(map, "A", "F", "pedestrian", {}, reader);
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "pedestrian", {}, reader);
 
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
@@ -355,7 +352,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // go in the reverse direction
-  api = gurka::route(map, "F", "A", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"F", "A"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // this path isnt possible with a car because the first node is a gate
@@ -364,7 +361,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // travel only on pedestrian edges
-  api = gurka::route(map, "B", "D", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // it wont be able to evaluate any edges because they are all pedestrian only
@@ -374,7 +371,7 @@ TEST(recosting, throwing) {
 }
 
 TEST(recosting, error_request) {
-  auto config = gurka::detail::build_config("foo_bar", {});
+  auto config = test::make_config("foo_bar", {});
   auto reader = std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(config, *reader, true);
 
@@ -433,7 +430,10 @@ TEST(recosting, api) {
                           bool transition = true) {
     if (cost)
       EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
-    EXPECT_GE(greater.elapsed_cost().seconds(), lesser.elapsed_cost().seconds());
+    bool const is_greater = greater.elapsed_cost().seconds() > lesser.elapsed_cost().seconds();
+    bool const is_equal =
+        std::abs(greater.elapsed_cost().seconds() - lesser.elapsed_cost().seconds()) < 0.0001;
+    EXPECT_TRUE(is_greater || is_equal);
     if (transition) {
       if (cost)
         EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());

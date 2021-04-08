@@ -171,8 +171,10 @@ public:
   /**
    * Sets the length of the edge in meters.
    * @param  length  Length of the edge in meters.
+   * @param  should_error  Bool indicating whether or not to error or warn on length > kMaxEdgeLength
+   *
    */
-  void set_length(const uint32_t length);
+  void set_length(const uint32_t length, bool should_error = true);
 
   /**
    * Get the weighted grade factor
@@ -500,6 +502,14 @@ public:
    * @param  use  Use of this edge.
    */
   void set_use(const Use use);
+
+  /**
+   * Is the edge a road (includes generic service roads)
+   * @return Returns true if the edge is a road use or service road.
+   */
+  bool is_road() const {
+    return use() == Use::kRoad || use() == Use::kServiceRoad;
+  }
 
   /**
    * Is this edge a transit line (bus or rail)?

@@ -20,6 +20,7 @@ message TripLeg {
     repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
     repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
     repeated SignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
+    repeated SignElement guidance_view_signboards = 9; // The list of guidance view signboards, examples: SI_721701166;1 or SI_721701166;2
   }
 
   enum Traversability {
@@ -42,6 +43,7 @@ message TripLeg {
     kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
                                // connected at one node to another edge.
     kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
+    kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
 
     // Bicycle specific uses
     kCyclewayUse = 20;          // Dedicated bicycle path
@@ -55,6 +57,7 @@ message TripLeg {
     kPathUse = 27;
     kPedestrianUse = 28;
     kBridlewayUse = 29;
+    kPedestrianCrossingUse = 32;
 
     //Rest/Service Areas
     kRestAreaUse = 30;
@@ -159,6 +162,16 @@ message TripLeg {
     kSeparated = 3; // A separate cycle lane (physical separation from the main carriageway
   }
 
+  enum SacScale {
+    kNoSacScale = 0;
+    kHiking = 1;
+    kMountainHiking = 2;
+    kDemandingMountainHiking = 3;
+    kAlpineHiking = 4;
+    kDemandingAlpineHiking = 5;
+    kDifficultAlpineHiking = 6;
+  }
+
   enum Sidewalk {
     kNoSidewalk = 0;
     kLeft = 1;
@@ -186,7 +199,7 @@ message TripLeg {
 
   message Edge {
     repeated StreetName name = 1;           // street names
-    optional float length = 2;              // km
+    optional float length_km = 2;           // km
     optional float speed = 3;               // km/h
     optional RoadClass road_class = 4;
     optional uint32 begin_heading = 5;      // 0-359
@@ -238,6 +251,9 @@ message TripLeg {
     // it starts and ends along the length of the edge as a percentage
     optional float source_along_edge = 49;
     optional float target_along_edge = 50;
+
+    optional SacScale sac_scale = 51;
+    optional bool shoulder = 52;
   }
 
   message IntersectingEdge {
@@ -276,6 +292,7 @@ message TripLeg {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
+      kSumpBuster = 12;             // Sump Buster
     }
 
     optional Edge edge = 1;
@@ -303,6 +320,8 @@ message TripLeg {
     repeated uint32 time = 1 [packed=true]; // milliseconds
     repeated uint32 length = 2 [packed=true]; // decimeters
     repeated uint32 speed = 3 [packed=true]; // decimeters per sec
+    // 4 is reserved
+    repeated uint32 speed_limit = 5 [packed=true]; // speed limit in kph
   }
 
   // we encapsulate the real incident object here so we can add information
@@ -312,6 +331,11 @@ message TripLeg {
     // Valhalla additions to incident metadata goes here
     optional uint32 begin_shape_index = 3;
     optional uint32 end_shape_index = 4;
+  };
+
+  message Closure {
+    optional uint32 begin_shape_index = 1;
+    optional uint32 end_shape_index = 2;
   };
 
   optional uint64 osm_changeset = 1;
@@ -325,6 +349,8 @@ message TripLeg {
   optional BoundingBox bbox = 9;
   optional ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
+  repeated string algorithms = 12;
+  repeated Closure closures = 13;
 }
 
 message TripRoute {

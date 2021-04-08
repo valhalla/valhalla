@@ -74,7 +74,11 @@ function(valhalla_module)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(library valhalla-${MODULE_NAME})
-  add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
+  if (ENABLE_STATIC_LIBRARY_MODULES)
+    add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
+  else()
+    add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
+  endif()
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
   set_target_properties(${library} PROPERTIES FOLDER "Modules")
 
@@ -136,8 +140,12 @@ function(valhalla_module)
   set(libvalhalla_compile_definitions "${libvalhalla_compile_definitions};$<TARGET_PROPERTY:${library},COMPILE_DEFINITIONS>" CACHE INTERNAL "")
   set(libvalhalla_compile_options "${libvalhalla_compile_options};$<TARGET_PROPERTY:${library},COMPILE_OPTIONS>" CACHE INTERNAL "")
   set(libvalhalla_include_directories "${libvalhalla_include_directories};$<TARGET_PROPERTY:${library},INCLUDE_DIRECTORIES>" CACHE INTERNAL "")
-  set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
-  set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
+  if (ENABLE_STATIC_LIBRARY_MODULES)
+    set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends};${library}" CACHE INTERNAL "")
+  else()
+    set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
+    set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
+  endif()
 endfunction()
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
@@ -175,11 +183,11 @@ set(valhalla_src
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif()
 
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)

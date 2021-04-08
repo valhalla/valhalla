@@ -388,7 +388,7 @@ public:
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
   using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile,
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
                                                               tweeners_t& tweeners);
 
   /**
@@ -399,7 +399,7 @@ public:
    * @param more_bins  the extra bin data to append to the tile
    */
   static void AddBins(const std::string& tile_dir,
-                      const GraphTile* tile,
+                      const graph_tile_ptr& tile,
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
@@ -436,7 +436,7 @@ public:
    * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
   void AddPredictedSpeed(const uint32_t idx,
-                         const std::vector<int16_t>& profile,
+                         const std::array<int16_t, kCoefficientCount>& coefficients,
                          const size_t predicted_count_hint = 256);
 
   /**

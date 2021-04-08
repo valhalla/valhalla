@@ -62,7 +62,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const Transit& transit,
                  std::unordered_map<GraphId, uint16_t>& stop_access,
                  const std::string& file,
-                 const GraphId& tile_id,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -490,7 +489,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_map<uint32_t, Shape>& shape_data,
                 const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
-                std::vector<OneStopTest>& onestoptests,
                 bool tile_within_one_tz,
                 const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys,
                 uint32_t& no_dir_edge_count) {
@@ -562,8 +560,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Set the station lat,lon using the tile base LL
       PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-      NodeInfo station_node(base_ll, station_ll, RoadClass::kServiceOther, n_access,
-                            NodeType::kTransitStation, false);
+      NodeInfo station_node(base_ll, station_ll, n_access, NodeType::kTransitStation, false);
       station_node.set_stop_index(station_pbf_id.id());
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
@@ -629,8 +626,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Set the egress lat,lon using the tile base LL
         PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-        NodeInfo egress_node(base_ll, egress_ll, RoadClass::kServiceOther, n_access,
-                             NodeType::kTransitEgress, false);
+        NodeInfo egress_node(base_ll, egress_ll, n_access, NodeType::kTransitEgress, false);
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
@@ -638,7 +634,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, egress_ll.Distance(station_ll));
+        double length = std::max(1.0, egress_ll.Distance(station_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -687,7 +683,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the platform connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(egress_ll));
+        double length = std::max(1.0, station_ll.Distance(egress_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -743,7 +739,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(platform_ll));
+        double length = std::max(1.0, station_ll.Distance(platform_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kPlatformConnection);
         directededge.set_speed(5);
@@ -809,8 +805,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // Set the platform lat,lon using the tile base LL
     PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-    NodeInfo platform_node(base_ll, platform_ll, RoadClass::kServiceOther, n_access,
-                           NodeType::kMultiUseTransitPlatform, false);
+    NodeInfo platform_node(base_ll, platform_ll, n_access, NodeType::kMultiUseTransitPlatform, false);
     platform_node.set_mode_change(true);
     platform_node.set_stop_index(platform_index);
     platform_node.set_timezone(timezone);
@@ -822,7 +817,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // add the platform connection
     // Make sure length is non-zero
-    float length = std::max(1.0f, platform_ll.Distance(station_ll));
+    double length = std::max(1.0, platform_ll.Distance(station_ll));
     directededge.set_length(length);
     directededge.set_use(Use::kPlatformConnection);
     directededge.set_speed(5);
@@ -967,7 +962,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
                  const std::unordered_set<GraphId>& all_tiles,
                  std::unordered_set<GraphId>::const_iterator tile_start,
                  std::unordered_set<GraphId>::const_iterator tile_end,
-                 std::vector<OneStopTest>& onestoptests,
                  std::promise<builder_stats>& results) {
 
   builder_stats stats;
@@ -983,7 +977,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
 
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
@@ -1011,7 +1005,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.lock();
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
+    graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
@@ -1078,8 +1072,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Process schedule stop pairs (departures)
     std::unordered_multimap<GraphId, Departure> departures =
-        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, tile_id,
-                         lock, stats);
+        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, lock,
+                         stats);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.nodes_size(); i++) {
@@ -1158,8 +1152,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, all_tiles, stop_edge_map,
-               stop_access, shapes, distances, route_types, onestoptests, tile_within_one_tz,
-               tz_polys, stats.no_dir_edge_count);
+               stop_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
+               stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.nodes_size()) + " stops, " +
@@ -1183,7 +1177,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
 void build(const ptree& pt,
            const std::unordered_set<GraphId>& all_tiles,
-           std::vector<OneStopTest>& onestoptests,
            unsigned int thread_count = std::max(static_cast<unsigned int>(1),
                                                 std::thread::hardware_concurrency())) {
 
@@ -1228,7 +1221,7 @@ void build(const ptree& pt,
     results.emplace_back();
     threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
                                      std::cref(all_tiles), tile_start, tile_end,
-                                     std::ref(onestoptests), std::ref(results.back())));
+                                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
@@ -1302,7 +1295,7 @@ int main(int argc, char** argv) {
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().rbegin()->first));
+      std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -1321,7 +1314,7 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Building transit network.");
-  build(pt, all_tiles, onestoptests);
+  build(pt, all_tiles);
   ValidateTransit::Validate(pt, all_tiles, onestoptests);
   return 0;
 }

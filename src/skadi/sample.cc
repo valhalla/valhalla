@@ -49,32 +49,6 @@ std::list<std::string> get_files(const std::string& root_dir) {
   return files;
 }
 
-std::string name_hgt(int16_t index) {
-  auto x = (index % 360) - 180;
-  auto y = (index / 360) - 90;
-
-  std::string name(y < 0 ? "/S" : "/N");
-  y = std::abs(y);
-  if (y < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(y));
-  name.append(name);
-
-  name.append(x < 0 ? "W" : "E");
-  x = std::abs(x);
-  if (x < 100) {
-    name.push_back('0');
-  }
-  if (x < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(x));
-  name.append(".hgt");
-
-  return name;
-}
-
 template <typename fmt_t> uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
   std::smatch m;
   std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
@@ -107,12 +81,19 @@ namespace valhalla {
 namespace skadi {
 
 ::valhalla::skadi::sample::sample(const std::string& data_source)
-    : mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>()), data_source(data_source) {
+    : unzipped_cache(-1, std::vector<int16_t>()), data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
          this->data_source.back() == filesystem::path::preferred_separator) {
     this->data_source.pop_back();
   }
+
+  // If data_source is empty, do not allocate/resize mapped cache.
+  if (data_source.empty()) {
+    LOG_DEBUG("No elevation data_source was provided");
+    return;
+  }
+  mapped_cache.resize(TILE_COUNT);
 
   // check the directory for files that look like what we need
   auto files = get_files(data_source);
@@ -141,7 +122,7 @@ const int16_t* sample::source(uint16_t index) const {
   // if we dont have anything maybe its lazy loaded
   auto& mapped = mapped_cache[index];
   if (mapped.second.get() == nullptr) {
-    auto f = data_source + name_hgt(index);
+    auto f = data_source + get_hgt_file_name(index);
     auto size = file_size(f);
     if (size != HGT_BYTES) {
       return nullptr;
@@ -273,6 +254,38 @@ double sample::get_no_data_value() {
   return NO_DATA_VALUE;
 }
 
+template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
+  auto lon = std::floor(coord.first);
+  auto lat = std::floor(coord.second);
+  return static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
+}
+
+std::string sample::get_hgt_file_name(uint16_t index) {
+  auto x = (index % 360) - 180;
+  auto y = (index / 360) - 90;
+
+  std::string name(y < 0 ? "/S" : "/N");
+  y = std::abs(y);
+  if (y < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(y));
+  name.append(name);
+
+  name.append(x < 0 ? "W" : "E");
+  x = std::abs(x);
+  if (x < 100) {
+    name.push_back('0');
+  }
+  if (x < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(x));
+  name.append(".hgt");
+
+  return name;
+}
+
 // explicit instantiations for templated get
 template double sample::get<std::pair<double, double>>(const std::pair<double, double>&) const;
 template double sample::get<std::pair<float, float>>(const std::pair<float, float>&) const;
@@ -294,6 +307,12 @@ template std::vector<double>
 sample::get_all<std::list<midgard::Point2>>(const std::list<midgard::Point2>&) const;
 template std::vector<double>
 sample::get_all<std::vector<midgard::Point2>>(const std::vector<midgard::Point2>&) const;
+template uint16_t
+sample::get_tile_index<std::pair<double, double>>(const std::pair<double, double>& coord);
+template uint16_t
+sample::get_tile_index<std::pair<float, float>>(const std::pair<float, float>& coord);
+template uint16_t sample::get_tile_index<midgard::PointLL>(const midgard::PointLL& coord);
+template uint16_t sample::get_tile_index<midgard::Point2>(const midgard::Point2& coord);
 
 } // namespace skadi
 } // namespace valhalla

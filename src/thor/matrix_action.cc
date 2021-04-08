@@ -2,6 +2,7 @@
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
+#include "thor/timedistancebssmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -24,14 +25,12 @@ namespace thor {
 constexpr uint32_t kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::matrix");
+
   parse_locations(request);
   auto costing = parse_costing(request);
   const auto& options = request.options();
-
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::" + Options_Action_Enum_Name(options.action()),
-                                    " [ANALYTICS] ");
-  }
 
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;
@@ -52,6 +51,13 @@ std::string thor_worker_t::matrix(Api& request) {
     return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
                                  max_matrix_distance.find(costing)->second);
   };
+  if (costing == "bikeshare") {
+    thor::TimeDistanceBSSMatrix matrix;
+    time_distances =
+        matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+                              max_matrix_distance.find(costing)->second);
+    return tyr::serializeMatrix(request, time_distances, distance_scale);
+  }
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job

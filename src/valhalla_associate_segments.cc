@@ -109,7 +109,7 @@ uint16_t bearing(const std::vector<vm::PointLL>& shape) {
 
 uint16_t bearing(const vb::GraphTile* tile, vb::GraphId edge_id, float dist) {
   const auto* edge = tile->directededge(edge_id);
-  std::vector<vm::PointLL> shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+  std::vector<vm::PointLL> shape = tile->edgeinfo(edge).shape();
   if (!edge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
@@ -716,7 +716,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     // Add edges to the matched path.
     // TODO - remove duplicate instances of the edge ID in the path info.
     for (const auto& info : path) {
-      const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
+      graph_tile_ptr tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
       edges.emplace_back(EdgeMatch{info.edgeid, edge->length(), 0.0f,
                                    1.0f}); // TODO - set first and last edge full_edge flag

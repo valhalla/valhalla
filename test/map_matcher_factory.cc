@@ -10,7 +10,6 @@
 #include "meili/map_matcher_factory.h"
 
 #include "test.h"
-#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -29,8 +28,7 @@ void create_costing_options(Costing costing, Options& options) {
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
-  ptree root;
-  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  const auto root = test::make_config("/data/valhala");
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
@@ -159,8 +157,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 }
 
 TEST(MapMatcherFactory, TestMapMatcher) {
-  ptree root;
-  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  const auto root = test::make_config("/data/valhalla");
 
   // Nothing special to test for the moment
 

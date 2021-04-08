@@ -14,7 +14,7 @@ using namespace valhalla::meili;
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    std::vector<EdgeSegment>::const_iterator segment_begin,
                    std::vector<EdgeSegment>::const_iterator segment_end,
-                   const baldr::GraphTile*& tile) {
+                   graph_tile_ptr& tile) {
   if (segment_begin == segment_end) {
     return true;
   }
@@ -52,8 +52,8 @@ namespace valhalla {
 namespace meili {
 
 EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
-                         float the_source,
-                         float the_target,
+                         double the_source,
+                         double the_target,
                          int the_first_match_idx,
                          int the_last_match_idx,
                          bool disconnect,
@@ -65,8 +65,8 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
     throw std::invalid_argument("Invalid edgeid");
   }
 
-  if (!(0.f <= source && source <= target && target <= 1.f)) {
-    throw std::invalid_argument("Expect 0.f <= source <= target <= 1.f, but you got source = " +
+  if (!(0 <= source && source <= target && target <= 1)) {
+    throw std::invalid_argument("Expect 0 <= source <= target <= 1, but you got source = " +
                                 std::to_string(source) + " and target = " + std::to_string(target));
   }
 }
@@ -141,15 +141,22 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       continue;
     }
+
+    // Allow for some fp-fuzz in this gt comparison
+    bool prev_gt_curr = prev_match.distance_along > curr_match.distance_along + 1e-3;
+
     // we want to handle to loop by locating the correct target edge by comparing the distance alone
-    bool loop = prev_match.edgeid == curr_match.edgeid &&
-                prev_match.distance_along > curr_match.distance_along;
+    bool loop = (prev_match.edgeid == curr_match.edgeid) && prev_gt_curr;
+
     // if it is a loop, we start the search after the first edge
     auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
                                      [&curr_match](const EdgeSegment& segment) {
                                        return (segment.edgeid == curr_match.edgeid);
                                      });
-    assert(last_segment != segments.cend());
+
+    if (last_segment == segments.cend()) {
+      throw std::logic_error("In meili::cutsegments(), unexpectedly unable to locate target edge.");
+    }
 
     // we need to close the previous edge
     size_t old_size = new_segments.size();
@@ -183,7 +190,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   }
 
   std::vector<EdgeSegment> route;
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
 
   // Merge segments into route
   // std::deque<int> match_indices;

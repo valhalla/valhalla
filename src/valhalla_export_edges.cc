@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iostream>
 #include <unordered_map>
+#include <utility>
 
 #include "config.h"
 
@@ -69,25 +70,16 @@ struct edge_t {
 // Get the opposing edge - if the opposing index is invalid return a nullptr
 // for the directed edge. This should not occur but this can happen in
 // GraphValidator if it fails to find an opposing edge.
-edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* edge) {
-  const GraphTile* t = edge->leaves_tile() ? reader.GetGraphTile(edge->endnode()) : tile;
-  auto id = edge->endnode();
-  id.set_id(t->node(id)->edge_index() + edge->opp_index());
-
-  // Check for invalid opposing index
-  if (edge->opp_index() == kMaxEdgesPerNode) {
-    PointLL ll = t->get_node_ll(edge->endnode());
-    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
-              " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-    return {id, nullptr};
-  }
-  return {id, t->directededge(id)};
+edge_t opposing(GraphReader& reader, graph_tile_ptr tile, const GraphId& edge_id) {
+  const DirectedEdge* opp_edge = nullptr;
+  auto opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, tile);
+  return {opp_id, opp_edge};
 }
 
 edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
             const bitset_t& edge_set,
             GraphReader& reader,
-            const GraphTile*& tile,
+            graph_tile_ptr& tile,
             const edge_t& edge,
             const std::vector<std::string>& names) {
   // get the right tile
@@ -118,7 +110,7 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
       continue;
     }
     // names have to match
-    auto candidate_names = tile->edgeinfo(candidate.e->edgeinfo_offset()).GetNames();
+    auto candidate_names = tile->edgeinfo(candidate.e).GetNames();
     if (names.size() == candidate_names.size() &&
         std::equal(names.cbegin(), names.cend(), candidate_names.cbegin())) {
       return candidate;
@@ -129,7 +121,7 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
 }
 
 void extend(GraphReader& reader,
-            const GraphTile*& tile,
+            graph_tile_ptr& tile,
             const edge_t& edge,
             std::list<PointLL>& shape) {
   // get the shape
@@ -137,7 +129,7 @@ void extend(GraphReader& reader,
     tile = reader.GetGraphTile(edge.i);
   }
   // get the shape
-  auto info = tile->edgeinfo(edge.e->edgeinfo_offset());
+  auto info = tile->edgeinfo(edge.e);
   auto more = valhalla::midgard::decode7<std::list<PointLL>>(info.encoded_shape());
   // this shape runs the other way
   if (!edge.e->forward()) {
@@ -216,12 +208,13 @@ int main(int argc, char* argv[]) {
   std::unordered_map<GraphId, uint64_t> tile_set(kMaxGraphTileId * TileHierarchy::levels().size());
   uint64_t edge_count = 0;
   for (const auto& level : TileHierarchy::levels()) {
-    for (uint32_t i = 0; i < level.second.tiles.TileCount(); ++i) {
-      GraphId tile_id{i, level.first, 0};
+    for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
+      GraphId tile_id{i, level.level, 0};
       if (reader.DoesTileExist(tile_id)) {
         // TODO: just read the header, parsing the whole thing isnt worth it at this point
         tile_set.emplace(tile_id, edge_count);
-        const auto* tile = reader.GetGraphTile(tile_id);
+        auto tile = reader.GetGraphTile(tile_id);
+        assert(tile);
         edge_count += tile->header()->directededgecount();
         reader.Clear();
       }
@@ -243,7 +236,8 @@ int main(int argc, char* argv[]) {
   for (const auto& tile_count_pair : tile_set) {
     // for each edge in the tile
     reader.Clear();
-    const auto* tile = reader.GetGraphTile(tile_count_pair.first);
+    auto tile = reader.GetGraphTile(tile_count_pair.first);
+    assert(tile);
     for (uint32_t i = 0; i < tile->header()->directededgecount(); ++i) {
       // we've seen this one already
       if (edge_set.get(tile_count_pair.second + i)) {
@@ -280,7 +274,7 @@ int main(int argc, char* argv[]) {
       }
 
       // no name no thanks
-      auto edge_info = tile->edgeinfo(edge.e->edgeinfo_offset());
+      auto edge_info = tile->edgeinfo(edge.e);
       auto names = edge_info.GetNames();
       if (names.size() == 0 && !unnamed) {
         continue;
@@ -300,7 +294,7 @@ int main(int argc, char* argv[]) {
       std::list<edge_t> edges{edge};
 
       // go forward
-      const auto* t = tile;
+      auto t = tile;
       while ((edge = next(tile_set, edge_set, reader, t, edge, names))) {
         // mark them to never be used again
         edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());

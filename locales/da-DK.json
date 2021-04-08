@@ -1,0 +1,2177 @@
+{
+  "posix_locale": "da_DK.UTF-8",
+  "aliases": [
+    "da"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Ankomst: <TIME>.",
+        "1": "Ankomst: <TIME> ved <TRANSIT_STOP>.<TRANSIT_STOP>"
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Ankomst kl <TIME>.",
+        "1": "Ankomst kl <TIME> ved <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Styr mod <RELATIVE_DIRECTION>.",
+        "1": "Styr mod <RELATIVE_DIRECTION> på <STREET_NAMES>.",
+        "2": "Styr mod <RELATIVE_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt ind på <STREET_NAMES>.",
+        "3": "Styr mod <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Styr mod <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Styr mod <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Styr mod <RELATIVE_DIRECTION>.",
+        "1": "Styr mod <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Styr mod <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Styr mod <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Styr mod <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Styr mod <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> bliver til <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> bliver til <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Fortsæt.",
+        "1": "Fortsæt på <STREET_NAMES>.",
+        "2": "Fortsæt ved <JUNCTION_NAME>.",
+        "3": "Fortsæt mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Fortsæt.",
+        "1": "Fortsæt i <LENGTH>.",
+        "2": "Fortsæt på <STREET_NAMES>.",
+        "3": "Fortsæt på <STREET_NAMES> i <LENGTH>.",
+        "4": "Fortsæt ved <JUNCTION_NAME>.",
+        "5": "Fortsæt ved <JUNCTION_NAME> i <LENGTH>.",
+        "6": "Fortsæt mod <TOWARD_SIGN>.",
+        "7": "Fortsæt mod <TOWARD_SIGN> i <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Fortsæt.",
+        "1": "Fortsæt på <STREET_NAMES>.",
+        "2": "Fortsæt ved <JUNCTION_NAME>.",
+        "3": "Fortsæt mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Afgang: <TIME>.",
+        "1": "Afgang: <TIME> fra <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Afgang kl <TIME>.",
+        "1": "Afgang kl <TIME> fra <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Du er ankommet til din destination.",
+        "1": "Du er ankommet til <DESTINATION>.",
+        "2": "Din destination er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Du er ankommet til din destination.",
+        "1": "Du er ankommet til <DESTINATION>.",
+        "2": "Din destination er til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> er til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Du ankommer til din destination",
+        "1": "Du ankommer til <DESTINATION>.",
+        "2": "Din destination vil være til <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> vil være til <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Tag færgen.",
+        "1": "Tag <STREET_NAMES>.",
+        "2": "Tag <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tag færgen mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "ferry_label": "Færge",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Tag færgen.",
+        "1": "Tag <STREET_NAMES>.",
+        "2": "Tag <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tag færgen mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "ferry_label": "Færge",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Kør ind i rundkørslen.",
+        "1": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel.",
+        "2": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "5": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Kør ind i rundkørslen og tag frakørslen mod <TOWARD_SIGN>.",
+        "8": "Kør ind på <STREET_NAMES>",
+        "9": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel.",
+        "10": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "13": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsæt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "første",
+        "anden",
+        "tredje",
+        "fjerde",
+        "femte",
+        "sjette",
+        "syvende",
+        "ottende",
+        "niende",
+        "tiende"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Kør ind i rundkørslen.",
+        "1": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel.",
+        "2": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Kør ind i rundkørslen og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "5": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kør ind i rundkørslen og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Kør ind i rundkørslen og tag frakørslen mod <TOWARD_SIGN>.",
+        "8": "Kør ind på <STREET_NAMES>",
+        "9": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel.",
+        "10": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Kør ind på <STREET_NAMES> og tag <ORDINAL_VALUE> frakørsel mod <TOWARD_SIGN>.",
+        "13": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kør ind på <STREET_NAMES> og tag frakørslen ind på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Kør ind på <STREET_NAMES> og tag frakørslen mod <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "første",
+        "anden",
+        "tredje",
+        "fjerde",
+        "femte",
+        "sjette",
+        "syvende",
+        "ottende",
+        "niende",
+        "tiende"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Tag frakørslen til <RELATIVE_DIRECTION>.",
+        "1": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "3": "Tage frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "4": "Tag frakørslen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "6": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "7": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "8": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "10": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "12": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "15": "Tag frakørslen.",
+        "16": "Tag frakørsel <NUMBER_SIGN>.",
+        "17": "Tag <BRANCH_SIGN> frakørsel.",
+        "18": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN>.",
+        "19": "Tag frakørslen mod <TOWARD_SIGN>.",
+        "20": "Tag frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "21": "Tag <BRANCH_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "22": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "23": "Tag <NAME_SIGN> frakørsel.",
+        "25": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN>.",
+        "27": "Tag <NAME_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "29": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN> mod <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Kør ud ad rundkørslen.",
+        "1": "Kør ud ad rundkørslen ind på <STREET_NAMES>.",
+        "2": "Kør ud ad rundkørslen ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Kør ud ad rundkørslen mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Kør ud ad rundkørslen.",
+        "1": "Kør ud ad rundkørslen ind på <STREET_NAMES>.",
+        "2": "Kør ud ad rundkørslen ind på <BEGIN_STREET_NAMES>.",
+        "3": "Kør ud ad rundkørslen mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Tag frakørslen til <RELATIVE_DIRECTION>.",
+        "1": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION>.",
+        "2": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "3": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "4": "Tag frakørslen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "6": "Tag <BRANCH_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "7": "Tag frakørsel <NUMBER_SIGN> til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "8": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION>.",
+        "10": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN>.",
+        "12": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> frakørsel til <RELATIVE_DIRECTION> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "15": "Tag frakørslen.",
+        "16": "Tag frakørsel <NUMBER_SIGN>.",
+        "17": "Tag <BRANCH_SIGN> frakørsel.",
+        "18": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN>.",
+        "19": "Tag frakørslen mod <TOWARD_SIGN>.",
+        "20": "Tag frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "21": "Tag <BRANCH_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "22": "Tag frakørsel <NUMBER_SIGN> ind på <BRANCH_SIGN> mod <TOWARD_SIGN>.",
+        "23": "Tag <NAME_SIGN> frakørsel.",
+        "25": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN>.",
+        "27": "Tag <NAME_SIGN> frakørsel mod <TOWARD_SIGN>.",
+        "29": "Tag <NAME_SIGN> frakørsel ind på <BRANCH_SIGN> mod <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Kør ud ad <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> ved vejgaflen.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "lige ud",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "lige ud",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> for at blive på <STREET_NAMES> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "lige ud",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Hold til <RELATIVE_DIRECTION> ved vejgaflen.",
+        "1": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN>.",
+        "2": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES>.",
+        "3": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES>.",
+        "4": "Hold til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "5": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> mod <TOWARD_SIGN>.",
+        "6": "Hold til <RELATIVE_DIRECTION> for at tage <STREET_NAMES> mod <TOWARD_SIGN>.",
+        "7": "Hold til <RELATIVE_DIRECTION> for at tage frakørsel <NUMBER_SIGN> ind på <STREET_NAMES> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "lige ud",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Flet.",
+        "1": "Flet <RELATIVE_DIRECTION>.",
+        "2": "Flet ind på <STREET_NAMES>.",
+        "3": "Flet <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "4": "Flet mod <TOWARD_SIGN>.",
+        "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Flet.",
+        "1": "Flet <RELATIVE_DIRECTION>.",
+        "2": "Flet ind på <STREET_NAMES>.",
+        "3": "Flet <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "4": "Flet mod <TOWARD_SIGN>.",
+        "5": "Flet <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Rejs <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "stop"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Fortsæt i <LENGTH>.",
+        "1": "Fortsæt på <STREET_NAMES> i <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Tag rampen til <RELATIVE_DIRECTION>.",
+        "1": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "2": "Tag rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "3": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "4": "Tag <NAME_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "5": "Drej til <RELATIVE_DIRECTION> for at tage rampen.",
+        "6": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen.",
+        "7": "Drej til <RELATIVE_DIRECTION> for at tage rampen mod <TOWARD_SIGN>.",
+        "8": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "9": "Drej til <RELATIVE_DIRECTION> for at tage <NAME_SIGN> rampen.",
+        "10": "Tag rampen.",
+        "11": "Tag <BRANCH_SIGN> rampen.",
+        "12": "Tag rampen mod <TOWARD_SIGN>.",
+        "13": "Tag <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> rampen."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Bliv i banen for at tage rampen.",
+        "1": "Bliv i banen for at tage <BRANCH_SIGN> rampe.",
+        "2": "Bliv i banen for at tage rampen mod <TOWARD_SIGN>.",
+        "3": "Bliv i banen for at tage <BRANCH_SIGN> rampe mod <TOWARD_SIGN>.",
+        "4": "Bliv i banen for at tage <NAME_SIGN> rampe."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Bliv i banen for at tage rampen.",
+        "1": "Bliv i banen for at tage <BRANCH_SIGN> rampe.",
+        "2": "Bliv i banen for at tage rampen mod <TOWARD_SIGN>.",
+        "3": "Bliv i banen for at tage <BRANCH_SIGN> rampe mod <TOWARD_SIGN>.",
+        "4": "Bliv i banen for at tage <NAME_SIGN> rampe."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Tag rampen til <RELATIVE_DIRECTION>.",
+        "1": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "2": "Tag rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "3": "Tag <BRANCH_SIGN> rampen til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>.",
+        "4": "Tag <NAME_SIGN> rampen til <RELATIVE_DIRECTION>.",
+        "5": "Drej til <RELATIVE_DIRECTION> for at tage rampen.",
+        "6": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen.",
+        "7": "Drej til <RELATIVE_DIRECTION> for at tage rampen mod <TOWARD_SIGN>.",
+        "8": "Drej til <RELATIVE_DIRECTION> for at tage <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "9": "Drej til <RELATIVE_DIRECTION> for at tage <NAME_SIGN> rampen.",
+        "10": "Tag rampen.",
+        "11": "Tag <BRANCH_SIGN> rampen.",
+        "12": "Tag rampen mod <TOWARD_SIGN>.",
+        "13": "Tag <BRANCH_SIGN> rampen mod <TOWARD_SIGN>.",
+        "14": "Tag <NAME_SIGN> rampen."
+      },
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Drej skarpt til <RELATIVE_DIRECTION>.",
+        "1": "Drej skarpt til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej skarpt til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Drej skarpt til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej skarpt til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej skarpt til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Drej skarpt til <RELATIVE_DIRECTION>.",
+        "1": "Drej skarpt til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej skarpt til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Drej skarpt til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej skarpt til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej skarpt til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Tag mod <CARDINAL_DIRECTION>.",
+        "1": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "2": "Tag mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "4": "Kør mod <CARDINAL_DIRECTION>.",
+        "5": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "6": "Kør mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "8": "Gå mod <CARDINAL_DIRECTION>.",
+        "9": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "10": "Gå mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "16": "Cykl mod <CARDINAL_DIRECTION>.",
+        "17": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykl mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "nord",
+        "nordøst",
+        "øst",
+        "sydøst",
+        "syd",
+        "sydvest",
+        "vest",
+        "nordvest"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Tag mod <CARDINAL_DIRECTION>.",
+        "1": "Tag mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "2": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "3": "Tag mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "4": "Tag mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "5": "Kør mod <CARDINAL_DIRECTION>.",
+        "6": "Kør mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "7": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "8": "Kør mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "9": "Kør mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "10": "Gå mod <CARDINAL_DIRECTION>.",
+        "11": "Gå mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "12": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "13": "Gå mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "14": "Gå mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "15": "Cykl mod <CARDINAL_DIRECTION>.",
+        "16": "Cykl mod <CARDINAL_DIRECTION> i <LENGTH>.",
+        "17": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykl mod <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "19": "Cykl mod <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "nord",
+        "nordøst",
+        "øst",
+        "sydøst",
+        "syd",
+        "sydvest",
+        "vest",
+        "nordvest"
+      ],
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Tag <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Tag <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "stop"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Gå ud fra stationen.",
+        "1": "Gå ud fra <TRANSIT_STOP>.",
+        "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Gå ud fra stationen.",
+        "1": "Gå ud fra <TRANSIT_STOP>.",
+        "2": "Gå ud fra <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Gå ind på stationen.",
+        "1": "Gå ind på <TRANSIT_STOP>.",
+        "2": "Gå ind på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Gå ind på stationen.",
+        "1": "Gå ind på <TRANSIT_STOP>.",
+        "2": "Gå ind på <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Transfer ved stationen.",
+        "1": "Transfer ved <TRANSIT_STOP>.",
+        "2": "Transfer ved <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Transfer ved stationen.",
+        "1": "Transfer ved <TRANSIT_STOP>.",
+        "2": "Transfer ved <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Bliv på <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Bliv på <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "stop"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Bliv på <TRANSIT_NAME>.",
+        "1": "Bliv på <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Transfer for at tage <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transfer for at tage <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "stop"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Transfer for at tage <TRANSIT_NAME>.",
+        "1": "Transfer for at tage <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Tag <TRANSIT_NAME>.",
+        "1": "Tag <TRANSIT_NAME> mod <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "sporvogn",
+        "metro",
+        "tog",
+        "bus",
+        "færge",
+        "kabelvogn",
+        "gondol",
+        "tovbane"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Drej til <RELATIVE_DIRECTION>.",
+        "1": "Drej til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>. Fortsæt på <STREET_NAMES>.",
+        "3": "Drej til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Drej til <RELATIVE_DIRECTION>.",
+        "1": "Drej til <RELATIVE_DIRECTION> ind på <STREET_NAMES>.",
+        "2": "Drej til <RELATIVE_DIRECTION> ind på <BEGIN_STREET_NAMES>.",
+        "3": "Drej til <RELATIVE_DIRECTION> for at blive på <STREET_NAMES>.",
+        "4": "Drej til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
+        "5": "Drej til <RELATIVE_DIRECTION> mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Foretag en <RELATIVE_DIRECTION> u-vending.",
+        "1": "Foretag en <RELATIVE_DIRECTION> u-vending ind på <STREET_NAMES>.",
+        "2": "Foretag en <RELATIVE_DIRECTION> u-vending for at blive på <STREET_NAMES>.",
+        "3": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES>.",
+        "4": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> ind på <STREET_NAMES>.",
+        "5": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> for at blive på <STREET_NAMES>.",
+        "6": "Foretag en <RELATIVE_DIRECTION> u-vending ved <JUNCTION_NAME>.",
+        "7": "Foretag en <RELATIVE_DIRECTION> u-vending mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Foretag en <RELATIVE_DIRECTION> u-vending.",
+        "1": "Foretag en <RELATIVE_DIRECTION> u-vending ind på <STREET_NAMES>.",
+        "2": "Foretag en <RELATIVE_DIRECTION> u-vending for at blive på <STREET_NAMES>.",
+        "3": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES>.",
+        "4": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> ind på <STREET_NAMES>.",
+        "5": "Foretag en <RELATIVE_DIRECTION> u-vending ved <CROSS_STREET_NAMES> for at blive på <STREET_NAMES>.",
+        "6": "Foretag en <RELATIVE_DIRECTION> u-vending ved <JUNCTION_NAME>.",
+        "7": "Foretag en <RELATIVE_DIRECTION> u-vending mod <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "fortovet",
+        "cykelstien",
+        "mountainbike-sporet",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "venstre",
+        "højre"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Derefter <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Derefter, om <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre end 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 mil",
+        "en halv mil",
+        "en kvart mil",
+        "<FEET> fod",
+        "mindre end 10 fod"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}

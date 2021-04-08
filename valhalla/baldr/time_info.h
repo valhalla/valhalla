@@ -42,6 +42,14 @@ struct TimeInfo {
   baldr::DateTime::tz_sys_info_cache_t* tz_cache;
 
   /**
+   * Create TimeInfo object with default parameters.
+   * @return    TimeInfo structure
+   */
+  static inline TimeInfo invalid() {
+    return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
+  }
+
+  /**
    * Helper function to initialize the object from a location. Uses the graph to
    * find timezone information about the edge candidates at the location. If the
    * graph has no timezone information or the location has no edge candidates the
@@ -61,14 +69,13 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (!location.has_date_time()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
-    }
+    if (!location.has_date_time())
+      return TimeInfo::invalid();
 
     // Find the first edge whose end node has a valid timezone index and keep it
     int timezone_index = 0;
     for (const auto& pe : location.path_edges()) {
-      const baldr::GraphTile* tile = nullptr;
+      graph_tile_ptr tile;
       const auto* edge = reader.directededge(baldr::GraphId(pe.graph_id()), tile);
       timezone_index = reader.GetTimezone(edge->endnode(), tile);
       if (timezone_index != 0)
@@ -100,9 +107,8 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (date_time.empty()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
-    }
+    if (date_time.empty())
+      return TimeInfo::invalid();
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
     if (timezone_index == 0) {
@@ -134,7 +140,7 @@ struct TimeInfo {
       LOG_ERROR("Could not parse provided date_time: " + date_time);
       return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
     }
-    const auto then_date = date::make_zoned(tz, parsed_date);
+    const auto then_date = date::make_zoned(tz, parsed_date, date::choose::latest);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
 
     // What second of the week is this (for historical traffic lookup)
@@ -245,6 +251,11 @@ struct TimeInfo {
             static_cast<uint64_t>(std::abs(sfn)),
             sfn < 0,
             tz_cache};
+  }
+
+  // returns localtime as a string
+  std::string date_time() const {
+    return DateTime::seconds_to_date(local_time, dt::get_tz_db().from_index(timezone_index), false);
   }
 
   // for unit tests

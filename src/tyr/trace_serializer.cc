@@ -81,6 +81,12 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_density()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
       }
+      if (edge.has_sac_scale()) {
+        edge_map->emplace("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
+      }
+      if (edge.has_shoulder()) {
+        edge_map->emplace("shoulder", static_cast<bool>(edge.shoulder()));
+      }
       if (edge.has_sidewalk()) {
         edge_map->emplace("sidewalk", to_string(edge.sidewalk()));
       }
@@ -187,8 +193,8 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_speed()) {
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
-      if (edge.has_length()) {
-        edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
+      if (edge.has_length_km()) {
+        edge_map->emplace("length", json::fp_t{edge.length_km() * scale, 3});
       }
       // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {

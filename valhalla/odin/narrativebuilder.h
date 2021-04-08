@@ -232,7 +232,6 @@ protected:
 
   std::string
   FormVerbalAlertKeepToStayOnInstruction(Maneuver& maneuver,
-                                         bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                          uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
@@ -246,7 +245,7 @@ protected:
                                                 const std::string& relative_dir,
                                                 const std::string& street_name,
                                                 const std::string& exit_number_sign = "",
-                                                const std::string& exit_toward_sign = "");
+                                                const std::string& toward_sign = "");
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormMergeInstruction(Maneuver& maneuver,

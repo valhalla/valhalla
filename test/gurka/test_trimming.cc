@@ -42,31 +42,34 @@ TEST(Trimming, routes) {
       gurka::findEdge(reader, map.nodes, "BC", "C");
 
   // we start by getting the shape for the two edges we want a route on
-  const auto* tile = reader.GetGraphTile(start_id);
-  auto start_shape = tile->edgeinfo(start_edge->edgeinfo_offset()).shape();
+  auto tile = reader.GetGraphTile(start_id);
+  auto start_shape = tile->edgeinfo(start_edge).shape();
   if (!start_edge->forward())
     std::reverse(start_shape.begin(), start_shape.end());
-  auto end_shape = tile->edgeinfo(end_edge->edgeinfo_offset()).shape();
+  auto end_shape = tile->edgeinfo(end_edge).shape();
   if (!end_edge->forward())
     std::reverse(end_shape.begin(), end_shape.end());
   auto start_length = midgard::length<decltype(start_shape)>(start_shape);
   auto end_length = midgard::length<decltype(end_shape)>(end_shape);
 
-  // we expect that the actual length is shorter than the rounded off length
-  EXPECT_LT(start_length, start_edge->length());
+  // we expect that the actual length is shorter than the rounded off length;
+  // but, due to the possible precision loss while encoding-decoding edge shape we can't
+  // completely rely on this fact. So, we just check that actual length is close to the edge length
+  EXPECT_NEAR(start_length, start_edge->length(), 1.);
   // we expect that the distance to the starting point of our route is within the
   // margin of length rounding error to the end of the edge
   auto start = start_shape.back();
   auto end = end_shape.back();
-  start.first -= .000005f;
-  EXPECT_LT(start.Distance(start_shape.back()), 0.5f);
+  start.first -= .0000005;
+  EXPECT_LT(start.Distance(start_shape.back()), 0.5);
   // we expect that the percentage along the edge with respect to the actual length is less than 1
   // meaning its not all the way at the end of the edge
   auto offset = start_shape.front().Distance(start) / start_length;
-  EXPECT_LT(offset, 1.f);
+  EXPECT_LT(offset, 1.);
   // we expect that multiplying the percent along by the rounded length will result in a number that
   // is larger than the actual length
-  EXPECT_GT(offset * start_edge->length(), start_length);
+  // TODO: with the fixes in precision to PointLL this test no longer exposes the issue, needs new
+  // test EXPECT_GT(offset * start_edge->length(), start_length);
 
   // fake a costing
   const rapidjson::Document doc;
@@ -79,8 +82,9 @@ TEST(Trimming, routes) {
   auto costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route
-  std::vector<thor::PathInfo> path{{costing->travel_mode(), {.001, .001}, start_id, 0, -1},
-                                   {costing->travel_mode(), {45, 45}, end_id, 0, -1}};
+  std::vector<thor::PathInfo>
+      path{{costing->travel_mode(), {.001, .001}, start_id, 0, baldr::kInvalidRestriction},
+           {costing->travel_mode(), {45, 45}, end_id, 0, baldr::kInvalidRestriction}};
   valhalla::Location origin = fake_location(start_id, start, offset);
   valhalla::Location dest = fake_location(end_id, end, 1);
 
@@ -92,11 +96,11 @@ TEST(Trimming, routes) {
   thor::AttributesController c;
   valhalla::TripLeg leg;
   thor::TripLegBuilder::Build({}, c, reader, mode_costings, path.cbegin(), path.cend(), origin, dest,
-                              {}, leg);
+                              {}, leg, {});
   auto leg_shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
   auto leg_length = midgard::length(leg_shape);
 
   // since the start point is at the very end of the start edge, the shape should pretty much be just
   // the second edge
-  EXPECT_NEAR(end_length, leg_length, 1.f);
+  EXPECT_NEAR(end_length, leg_length, 1.);
 }

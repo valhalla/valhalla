@@ -52,7 +52,8 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
+  boost::algorithm::split(tokens, tag_value,
+                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_off);
   return tokens;
 }
@@ -163,7 +164,7 @@ bool load_spatialite(sqlite3* db_handle) {
   return false;
 }
 
-bool build_tile_set(const boost::property_tree::ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage,
@@ -174,10 +175,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     }
   };
 
-  // cannot allow this when building tiles
-  if (config.get_child("mjolnir").get_optional<std::string>("tile_extract")) {
-    throw std::runtime_error("Tiles cannot be directly built into a tar extract");
-  }
+  // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
+  auto config = original_config;
+  config.get_child("mjolnir").erase("tile_extract");
+  config.get_child("mjolnir").erase("tile_url");
+  config.get_child("mjolnir").erase("traffic_extract");
 
   // Get the tile directory (make sure it ends with the preferred separator
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
@@ -190,7 +192,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage == BuildStage::kInitialize) {
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-      auto level_dir = tile_dir + std::to_string(level.first);
+      auto level_dir = tile_dir + std::to_string(level.level);
       if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
         filesystem::remove_all(level_dir);
@@ -199,8 +201,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 
     // check for transit level.
     auto level_dir =
-        tile_dir +
-        std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
+        tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
     if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       filesystem::remove_all(level_dir);
@@ -266,8 +267,8 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
-    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               bss_nodes_bin, osm_data);
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
+                               osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {
@@ -288,7 +289,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     if (start_stage == BuildStage::kConstructEdges)
       osm_data.read_from_temp_files(tile_dir);
 
-    tiles = GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+    tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
@@ -305,8 +306,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
         // TODO: Remove this backfill in the future, and make calling constructedges stage
         // explicitly required in the future.
         LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
-        tiles =
-            GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+        tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
       }
     }
 

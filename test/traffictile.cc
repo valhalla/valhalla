@@ -2,6 +2,16 @@
 
 #include "baldr/traffictile.h"
 
+namespace {
+class UnmanagedGraphMemory : public valhalla::baldr::GraphMemory {
+public:
+  UnmanagedGraphMemory(char* const buf, const size_t len) {
+    data = buf;
+    size = len;
+  }
+};
+} // namespace
+
 TEST(Traffic, TileConstruction) {
   using namespace valhalla::baldr;
 
@@ -15,8 +25,7 @@ TEST(Traffic, TileConstruction) {
   };
 #pragma pack(pop)
 
-  TestTile testdata = {};
-
+  TestTile testdata{};
   testdata.header.directed_edge_count = 3;
   testdata.header.traffic_tile_version = TRAFFIC_TILE_VERSION;
   testdata.speed3.overall_speed = 98 >> 1;
@@ -25,10 +34,12 @@ TEST(Traffic, TileConstruction) {
   testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
-  TrafficTile tile(reinterpret_cast<char*>(&testdata));
+  auto memory =
+      std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
+  TrafficTile tile(std::move(memory));
 
   auto const volatile& speed = tile.trafficspeed(2);
-  EXPECT_TRUE(speed.valid());
+  EXPECT_TRUE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
   EXPECT_EQ(speed.get_overall_speed(), 98);
   EXPECT_EQ(speed.get_speed(0), 98);
@@ -39,7 +50,7 @@ TEST(Traffic, TileConstruction) {
   // Test with an invalid version
   testdata.header.traffic_tile_version = 78;
   auto const volatile& invalid_speed = tile.trafficspeed(2);
-  EXPECT_FALSE(invalid_speed.valid());
+  EXPECT_FALSE(invalid_speed.speed_valid());
 }
 
 TEST(Traffic, NullTileConstruction) {
@@ -47,32 +58,57 @@ TEST(Traffic, NullTileConstruction) {
   TrafficTile tile(nullptr); // Should not segfault
 
   auto volatile& speed = tile.trafficspeed(99);
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
+}
+
+TEST(Traffic, Closed) {
+  using namespace valhalla::baldr;
+  TrafficSpeed speed = {};
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed1 = 0;
+  EXPECT_FALSE(speed.closed());
+  EXPECT_FALSE(speed.closed(0));
+
+  speed.breakpoint1 = 255;
+  EXPECT_TRUE(speed.closed());
+  EXPECT_TRUE(speed.closed(0));
+
+  speed.overall_speed = 0;
+  EXPECT_TRUE(speed.closed());
+  EXPECT_TRUE(speed.closed(0));
 }
 
 TEST(Traffic, SpeedValid) {
   using namespace valhalla::baldr;
   TrafficSpeed speed = {};
-  EXPECT_FALSE(speed.valid());
+  speed.overall_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
+  EXPECT_FALSE(speed.speed_valid());
 
   speed.speed1 = 1;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.congestion1 = 1;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.congestion1 = 4;
-  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed1 = 0;
   speed.breakpoint1 = 255;
-  EXPECT_TRUE(speed.valid());
+  EXPECT_FALSE(speed.speed_valid());
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed1 = 0;
+  speed.breakpoint1 = 255;
+  speed.overall_speed = 0;
+  EXPECT_TRUE(speed.speed_valid());
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound

@@ -1,5 +1,7 @@
 #include "sif/dynamiccost.h"
+
 #include "baldr/graphconstants.h"
+#include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -10,6 +12,7 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
+#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -48,11 +51,36 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
+// default options/parameters
+namespace {
+
+// max penalty to apply when use tracks
+constexpr float kMaxTrackPenalty = 300.f; // 5 min
+
+// min and max factors to apply when use tracks
+constexpr float kMinTrackFactor = 0.8f;
+constexpr float kMaxTrackFactor = 4.f;
+
+// max penalty to apply when use living streets
+constexpr float kMaxLivingStreetPenalty = 500.f;
+
+// min and max factors to apply when use living streets
+constexpr float kMinLivingStreetFactor = 0.8f;
+constexpr float kMaxLivingStreetFactor = 3.f;
+
+} // namespace
+
+DynamicCost::DynamicCost(const CostingOptions& options,
+                         const TravelMode mode,
+                         uint32_t access_mask,
+                         bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      access_mask_(access_mask), flow_mask_(kDefaultFlowMask),
-      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
-      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()) {
+      access_mask_(access_mask), closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
+      shortest_(options.shortest()), ignore_restrictions_(options.ignore_restrictions()),
+      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()),
+      ignore_closures_(options.ignore_closures()), top_speed_(options.top_speed()),
+      filter_closures_(ignore_closures_ ? false : options.filter_closures()),
+      penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -80,16 +108,15 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
-  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+  uint8_t flow_sources;
+  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
-                                 const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
   return {0.0f, 0.0f};
 }
 
@@ -97,10 +124,12 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
-                                        const baldr::NodeInfo* node,
-                                        const baldr::DirectedEdge* opp_edge,
-                                        const baldr::DirectedEdge* opp_pred_edge) const {
+Cost DynamicCost::TransitionCostReverse(const uint32_t,
+                                        const baldr::NodeInfo*,
+                                        const baldr::DirectedEdge*,
+                                        const baldr::DirectedEdge*,
+                                        const bool,
+                                        const InternalTurn) const {
   return {0.0f, 0.0f};
 }
 
@@ -189,16 +218,16 @@ bool DynamicCost::bicycle() const {
 }
 
 // Add to the exclude list.
-void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+void DynamicCost::AddToExcludeList(const graph_tile_ptr&) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::DirectedEdge*) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
   return false;
 }
 
@@ -211,7 +240,38 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
 
 Cost DynamicCost::BSSCost() const {
   return kNoCost;
-};
+}
+
+void DynamicCost::set_use_tracks(float use_tracks) {
+  // Calculate penalty value based on use preference. Return value
+  // in range [kMaxTrackPenalty; 0], if use < 0.5; or
+  // 0, if use > 0.5.
+  track_penalty_ = use_tracks < 0.5f ? (kMaxTrackPenalty * (1.f - 2.f * use_tracks)) : 0.f;
+  // Calculate factor value based on use preference. Return value
+  // in range [kMaxTrackFactor; 1], if use < 0.5; or
+  // in range [1; kMinTrackFactor], if use > 0.5
+  track_factor_ = use_tracks < 0.5f
+                      ? (kMaxTrackFactor - 2.f * use_tracks * (kMaxTrackFactor - 1.f))
+                      : (kMinTrackFactor + 2.f * (1.f - use_tracks) * (1.f - kMinTrackFactor));
+}
+
+void DynamicCost::set_use_living_streets(float use_living_streets) {
+  // Calculate penalty value based on use preference. Return value
+  // in range [kMaxLivingStreetPenalty; 0], if use < 0.5; or
+  // 0, if use > 0.5.
+  living_street_penalty_ =
+      use_living_streets < 0.5f ? (kMaxLivingStreetPenalty * (1.f - 2.f * use_living_streets)) : 0;
+
+  // Calculate factor value based on use preference. Return value
+  // in range [kMaxLivingStreetFactor; 1], if use < 0.5; or
+  // in range [1; kMinLivingStreetFactor], if use > 0.5.
+  // Thus living_street_factor_ is inversely proportional to use_living_streets.
+  living_street_factor_ =
+      use_living_streets < 0.5f
+          ? (kMaxLivingStreetFactor - 2.f * use_living_streets * (kMaxLivingStreetFactor - 1.f))
+          : (kMinLivingStreetFactor +
+             2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
+}
 
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
@@ -225,6 +285,11 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   if (name) {
     pbf_costing_options->set_name(*name);
   }
+  pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
+  pbf_costing_options->set_top_speed(
+      kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
+  pbf_costing_options->set_closure_factor(
+      kClosureFactorRange(rapidjson::get<float>(value, "/closure_factor", kDefaultClosureFactor)));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -235,6 +300,11 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     Costing costing = static_cast<Costing>(i);
     // Create the costing string
     const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Deprecated costings still need their place in the array
+    if (costing_str.empty()) {
+      options.add_costing_options();
+      continue;
+    }
     // Create the costing options key
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
@@ -269,10 +339,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParseAutoCostOptions(doc, key, costing_options);
       break;
     }
-    case auto_shorter: {
-      sif::ParseAutoShorterCostOptions(doc, key, costing_options);
-      break;
-    }
     case bicycle: {
       sif::ParseBicycleCostOptions(doc, key, costing_options);
       break;
@@ -301,6 +367,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParsePedestrianCostOptions(doc, key, costing_options);
       break;
     }
+    case bikeshare: {
+      costing_options->set_costing(Costing::bikeshare); // Nothing to parse for this one
+      break;
+    }
     case transit: {
       sif::ParseTransitCostOptions(doc, key, costing_options);
       break;
@@ -311,10 +381,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case motorcycle: {
       sif::ParseMotorcycleCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_data_fix: {
-      sif::ParseAutoDataFixCostOptions(doc, key, costing_options);
       break;
     }
     case none_: {

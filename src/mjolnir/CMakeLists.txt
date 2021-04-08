@@ -21,11 +21,24 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+    graphenhancer.cc
+    hierarchybuilder.cc
+    luatagtransform.cc
+    osmdata.cc
+    osmrestriction.cc
+    PROPERTIES COMPILE_FLAGS "-Werror -Wall")
+endif (UNIX)
+
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
 
   admin.cc
+  adminbuilder.cc
   bssbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc

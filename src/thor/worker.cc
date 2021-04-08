@@ -6,14 +6,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/ptree.hpp>
-
+#include "midgard/util.h"
 #include "thor/isochrone.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -47,7 +47,18 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
-constexpr double kMilePerMeter = 0.000621371;
+
+#ifdef HAVE_HTTP
+std::string serialize_to_pbf(Api& request) {
+  std::string buf;
+  if (!request.SerializeToString(&buf)) {
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker");
+    throw valhalla_exception_t{401, boost::optional<std::string>(
+                                        "Failed serializing to pbf in Thor::Worker")};
+  }
+  return buf;
+};
+#endif
 
 } // namespace
 
@@ -56,9 +67,11 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{},
-      long_request(config.get<float>("thor.logging.long_request")) {
+    : mode(valhalla::sif::TravelMode::kPedestrian), bidir_astar(config.get_child("thor")),
+      bss_astar(config.get_child("thor")), multi_modal_astar(config.get_child("thor")),
+      timedep_forward(config.get_child("thor")), timedep_reverse(config.get_child("thor")),
+      isochrone_gen(config.get_child("thor")), matcher_factory(config, graph_reader),
+      reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -69,13 +82,14 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
+        kv.first == "centroid") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
-                                                              ".max_matrix_distance"));
-    }
+
+    max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
+                                                            ".max_matrix_distance"));
   }
 
   if (conf_algorithm == "timedistancematrix") {
@@ -93,23 +107,13 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 thor_worker_t::~thor_worker_t() {
 }
 
-std::string serialize_to_pbf(Api& request) {
-  std::string buf;
-  if (!request.SerializeToString(&buf)) {
-    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
-    throw valhalla_exception_t{401, boost::optional<std::string>(
-                                        "Failed serializing to pbf in Thor::Worker")};
-  }
-  return buf;
-};
-
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t
 thor_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
-  // get time for start of request
-  auto s = std::chrono::system_clock::now();
+
+  // get request info
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Thor Request " + std::to_string(info.id));
   Api request;
@@ -126,76 +130,65 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
-    double denominator = 0;
+    prime_server::worker_t::result_t result{true, {}, {}};
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:
         result = to_response(matrix(request), info, request);
-        denominator = options.sources_size() + options.targets_size();
         break;
       case Options::optimized_route: {
         optimized_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
       case Options::isochrone:
         result = to_response(isochrones(request), info, request);
-        denominator = options.sources_size() * options.targets_size();
         break;
       case Options::route: {
         route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = options.locations_size();
         break;
       }
       case Options::trace_route: {
         trace_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = trace.size() / 1100;
         break;
       }
       case Options::trace_attributes:
         result = to_response(trace_attributes(request), info, request);
-        denominator = trace.size() / 1100;
         break;
       case Options::expansion: {
         result = to_response(expansion(request), info, request);
-        denominator = options.locations_size();
+        break;
+      }
+      case Options::centroid: {
+        centroid(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
+        break;
+      }
+      case Options::status: {
+        status(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
         break;
       }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }
-
-    double elapsed_time =
-        std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
-    if (!options.do_not_track() && elapsed_time / denominator > long_request) {
-      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
-               " request elapsed time (ms)::" + std::to_string(elapsed_time));
-      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
-               " request exceeded threshold::" + std::to_string(info.id));
-      midgard::logging::Log("valhalla_thor_long_request_" +
-                                Options_Action_Enum_Name(options.action()),
-                            " [ANALYTICS] ");
-    }
-
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
-                                        " request_id=" + std::to_string(info.id),
-                                    " [ANALYTICS] ");
+    LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
-                                        " request_id=" + std::to_string(info.id),
-                                    " [ANALYTICS] ");
+    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error({499, std::string(e.what())}, info, request);
   }
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from thor proxy
   auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
   // sends them on to odin
@@ -225,8 +218,6 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   auto costing = options.costing();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
-  valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)),
-                                  " [ANALYTICS] ");
   return costing_str;
 }
 
@@ -293,7 +284,6 @@ void thor_worker_t::parse_measurements(const Api& request) {
 void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> state_iso;
   std::unordered_set<std::string> country_iso;
-  std::stringstream s_ss, c_ss;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
       if (admin.has_state_code()) {
@@ -302,18 +292,6 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
       if (admin.has_country_code()) {
         country_iso.insert(admin.country_code());
       }
-    }
-    for (const std::string& x : state_iso) {
-      s_ss << " " << x;
-    }
-    for (const std::string& x : country_iso) {
-      c_ss << " " << x;
-    }
-    if (!s_ss.eof()) {
-      valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-    }
-    if (!c_ss.eof()) {
-      valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
     }
   }
 }
@@ -353,7 +331,6 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
 }
 
 void thor_worker_t::cleanup() {
-  astar.Clear();
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();
@@ -361,6 +338,7 @@ void thor_worker_t::cleanup() {
   bss_astar.Clear();
   trace.clear();
   isochrone_gen.Clear();
+  centroid_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
     reader->Trim();

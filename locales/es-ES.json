@@ -7,44 +7,45 @@
     "arrive": {
       "phrases": {
         "0": "Llegada: <TIME>.",
-        "1": "Llegada: <TIME> en <TRANSIT_STOP>."
+        "1": "Llegada: <TIME> a <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Llegada: 8:02 AM."
+          "Arrive: 8:02 AM."
         ],
         "1": [
-          "Llegada: 8:02 AM en 8 St - NYU."
+          "Arrive: 8:02 AM at 8 St - NYU."
         ]
       }
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Llegada a las <TIME>.",
-        "1": "Llegada a las <TIME> en <TRANSIT_STOP>."
+        "0": "Llegará a las <TIME>.",
+        "1": "Llegará a las <TIME> a <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Llegada a las 8:02 AM."
+          "Arrive at 8:02 AM."
         ],
         "1": [
-          "Llegada a las 8:02 AM en 8 St - NYU."
+          "Arrive at 8:02 AM at 8 St - NYU."
         ]
       }
     },
     "bear": {
       "phrases": {
-        "0": "Girar levemente a la <RELATIVE_DIRECTION>.",
-        "1": "Girar levemente a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Girar levemente a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "3": "Girar levemente a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Siga por la <RELATIVE_DIRECTION>.",
+        "1": "Siga por la <RELATIVE_DIRECTION> en dirección a <STREET_NAMES>.",
+        "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -52,16 +53,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Girar levemente a la derecha."
+          "Bear right."
         ],
         "1": [
-          "Girar levemente a la izquierda sobre Arlen Road."
+          "Bear left onto Arlen Road."
         ],
         "2": [
-          "Girar levemente a la derecha sobre Belair Road/US 1 Business. Continuar en US 1 Business."
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
         ],
         "3": [
-          "Girar levemente a la izquierda para quedar en US 15 sur."
+          "Bear left to stay on US 15 South."
         ],
         "4": [
           "Bear right at Mannenbashi East."
@@ -73,17 +74,18 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Girar levemente a la <RELATIVE_DIRECTION>.",
-        "1": "Girar levemente a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Girar levemente a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "3": "Girar levemente a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Siga por la <RELATIVE_DIRECTION>.",
+        "1": "Siga por la <RELATIVE_DIRECTION> en dirección a <STREET_NAMES>.",
+        "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -91,16 +93,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Girar levemente a la derecha."
+          "Bear right."
         ],
         "1": [
-          "Girar levemente a la izquierda en Arlen Road."
+          "Bear left onto Arlen Road."
         ],
         "2": [
-          "Girar levemente a la derecha en Belair Road, U.S. 1 Business."
+          "Bear right onto Belair Road, U.S. 1 Business."
         ],
         "3": [
-          "Girar levemente a la izquierda para quedar en U.S. 15 sur."
+          "Bear left to stay on U.S. 15 South."
         ],
         "4": [
           "Bear right at Mannenbashi East."
@@ -112,42 +114,43 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> cambia de nombre a <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> se convierte en <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
-          "Vine Street cambia de nombre a Middletown Road."
+          "Vine Street becomes Middletown Road."
         ]
       }
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> cambia de nombre a <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> se convierte en <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
-          "Vine Street cambia de nombre a Middletown Road."
+          "Vine Street becomes Middletown Road."
         ]
       }
     },
     "continue": {
       "phrases": {
-        "0": "Continuar.",
-        "1": "Continuar en <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "0": "Continúe.",
+        "1": "Continúe en <STREET_NAMES>.",
+        "2": "Continúe en <JUNCTION_NAME>.",
+        "3": "Continúe en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Continuar."
+          "Continue."
         ],
         "1": [
-          "Continuar en 10th Avenue."
+          "Continue on 10th Avenue."
         ],
         "2": [
           "Continue at Mannenbashi East."
@@ -159,19 +162,20 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continuar.",
-        "1": "Continuar por <LENGTH>.",
-        "2": "Continuar en <STREET_NAMES>.",
-        "3": "Continuar en <STREET_NAMES> por <LENGTH>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "0": "Continúe.",
+        "1": "Continúe durante <LENGTH>.",
+        "2": "Continúe en <STREET_NAMES>.",
+        "3": "Continúe en <STREET_NAMES> durante <LENGTH>.",
+        "4": "Continúe en <JUNCTION_NAME>.",
+        "5": "Continúe en <JUNCTION_NAME> durante <LENGTH>.",
+        "6": "Continúe en dirección a <TOWARD_SIGN>.",
+        "7": "Continúe dirección a <TOWARD_SIGN> durante <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -183,8 +187,8 @@
         "<MILES> millas",
         "1 milla",
         "media milla",
-        "a quarter mile",
-        "<FEET> pie",
+        "un cuarto de milla",
+        "<FEET> pies",
         "menos de 10 pies"
       ],
       "example_phrases": {
@@ -216,22 +220,23 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Continuar.",
-        "1": "Continuar en <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "0": "Continúe.",
+        "1": "Continúe en <STREET_NAMES>.",
+        "2": "Continúe en <JUNCTION_NAME>.",
+        "3": "Continúe en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Continuar."
+          "Continue."
         ],
         "1": [
-          "Continuar en 10th Avenue."
+          "Continue on 10th Avenue."
         ],
         "2": [
           "Continue at Mannenbashi East."
@@ -243,64 +248,37 @@
     },
     "depart": {
       "phrases": {
-        "0": "Horario de partida: <TIME>.",
-        "1": "Horario de partida: <TIME> desde <TRANSIT_STOP>."
+        "0": "Salida: <TIME>.",
+        "1": "Salida: <TIME> desde <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Partida: 8:02 AM."
+          "Depart: 8:02 AM."
         ],
         "1": [
-          "Partida: 8:02 AM desde 8 St - NYU."
+          "Depart: 8:02 AM from 8 St - NYU."
         ]
       }
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Partida a las <TIME>.",
-        "1": "Partida a las <TIME> desde <TRANSIT_STOP>."
+        "0": "Salida a las <TIME>.",
+        "1": "Salida a las <TIME> desde <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Partida a las 8:02 AM."
+          "Depart at 8:02 AM."
         ],
         "1": [
-          "Partida a las 8:02 AM desde 8 St - NYU."
+          "Depart at 8:02 AM from 8 St - NYU."
         ]
       }
     },
     "destination": {
       "phrases": {
-        "0": "Has llegado a tu destino.",
-        "1": "Has llegado a <DESTINATION>.",
-        "2": "Tu destino está hacia la <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> está hacia la <RELATIVE_DIRECTION>."
-      },
-      "relative_directions": [
-        "izquierda",
-        "derecha"
-      ],
-      "example_phrases": {
-        "0": [
-          "Has llegado a destino."
-        ],
-        "1": [
-          "Has llegado a 3206 Powelton Avenue."
-        ],
-        "2": [
-          "Tu destino está hacia la izquierda.",
-          "Tu destino está hacia la derecha."
-        ],
-        "3": [
-          "Lancaster Brewing Company está a tu izquierda."
-        ]
-      }
-    },
-    "destination_verbal": {
-      "phrases": {
-        "0": "Has llegado a tu destino.",
-        "1": "Has llegado a <DESTINATION>.",
-        "2": "Tu destino está a la <RELATIVE_DIRECTION>.",
+        "0": "Ha llegado a su destino.",
+        "1": "Ha llegado a <DESTINATION>.",
+        "2": "Su destino está a la <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> está a la <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
@@ -309,25 +287,52 @@
       ],
       "example_phrases": {
         "0": [
-          "Has llegado a tu destino."
+          "You have arrived at your destination."
         ],
         "1": [
-          "Has llegado a 32 o6 Powelton Avenue."
+          "You have arrived at 3206 Powelton Avenue."
         ],
         "2": [
-          "Tu destino está a la izquierda.",
-          "Tu destino está a la derecha."
+          "Your destination is on the left.",
+          "Your destination is on the right."
         ],
         "3": [
-          "Lancaster Brewing Company está a la izquierda."
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Ha llegado a su destino.",
+        "1": "Ha llegado a <DESTINATION>.",
+        "2": "Su destino está a la <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> está a la <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "izquierda",
+        "derecha"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
         ]
       }
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Llegarás a tu destino.",
-        "1": "Llegarás a <DESTINATION>.",
-        "2": "Tu destino estará hacia la <RELATIVE_DIRECTION>.",
+        "0": "Llegará a su destino.",
+        "1": "Llegará a <DESTINATION>.",
+        "2": "Su destino estará a la <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> estará a la <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
@@ -336,42 +341,43 @@
       ],
       "example_phrases": {
         "0": [
-          "Llegarás a tu destino."
+          "You will arrive at your destination."
         ],
         "1": [
-          "Llegarás a 32 o6 Powelton Avenue."
+          "You will arrive at 32 o6 Powelton Avenue."
         ],
         "2": [
-          "Tu destino estará a la izquierda.",
-          "Tu destino estará a la derecha."
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
         ],
         "3": [
-          "Lancaster Brewing Company estará a la izquierda."
+          "Lancaster Brewing Company will be on the left."
         ]
       }
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Tomar el Ferry.",
-        "1": "Tomar la <STREET_NAMES>.",
-        "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "0": "Tome el ferri.",
+        "1": "Tome la <STREET_NAMES>.",
+        "2": "Tome la <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tome el ferri en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
-      "ferry_label": "Ferry",
+      "ferry_label": "Ferri",
       "example_phrases": {
         "0": [
-          "Tomar el Ferry."
+          "Take the Ferry."
         ],
         "1": [
-          "Tomar el Ferry Millersburg."
+          "Take the Millersburg Ferry."
         ],
         "2": [
-          "Tomar el Ferry Bridgeport - Port Jefferson."
+          "Take the Bridgeport - Port Jefferson Ferry."
         ],
         "3": [
           "Take the ferry toward Cape May."
@@ -380,26 +386,27 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Tomar el Ferry.",
-        "1": "Tomar la <STREET_NAMES>.",
-        "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "0": "Tome el ferri.",
+        "1": "Tome la <STREET_NAMES>.",
+        "2": "Tome la <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Tome el ferri en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
-      "ferry_label": "Ferry",
+      "ferry_label": "Ferri",
       "example_phrases": {
         "0": [
-          "Tomar el Ferry."
+          "Take the Ferry."
         ],
         "1": [
-          "Tomar el Ferry Millersburg."
+          "Take the Millersburg Ferry."
         ],
         "2": [
-          "Tomar el Ferry Bridgeport - Port Jefferson."
+          "Take the Bridgeport - Port Jefferson Ferry."
         ],
         "3": [
           "Take the ferry toward Cape May."
@@ -408,55 +415,56 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Entre en la rotonda.",
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "0": "Haga la rotonda.",
+        "1": "Haga la rotonda y tome la salida <ORDINAL_VALUE>.",
+        "2": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Haga la rotonda y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "5": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Haga la rotonda y tome la salida en dirección a <TOWARD_SIGN>.",
+        "8": "Incorpórese a <STREET_NAMES>",
+        "9": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE>.",
+        "10": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "13": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continúe en <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Incorpórese a <STREET_NAMES> y tome la salida en dirección a <TOWARD_SIGN>."
       },
       "ordinal_values": [
-        "1er",
-        "2da",
-        "3er",
-        "4ta",
-        "5ta",
-        "6ta",
-        "7º",
-        "8º",
-        "9º",
-        "10º"
+        "1.º",
+        "2.º",
+        "3.º",
+        "4.º",
+        "5.º",
+        "6.º",
+        "7.º",
+        "8.º",
+        "9.º",
+        "10.º"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Entre en la rotonda."
+          "Enter the roundabout."
         ],
         "1": [
-          "Entre en la rotonda y tome la 1er salida.",
-          "Entre en la rotonda y tome la 2da salida.",
-          "Entre en la rotonda y tome la 3er salida.",
-          "Entre en la rotonda y tome la 4ta salida.",
-          "Entre en la rotonda y tome la 5ta salida.",
-          "Entre en la rotonda y tome la 6ta salida.",
-          "Entre en la rotonda y tome la 7º salida.",
-          "Entre en la rotonda y tome la 8º salida.",
-          "Entre en la rotonda y tome la 9º salida.",
-          "Entre en la rotonda y tome la 10º salida."
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -504,55 +512,56 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Entre en la rotonda.",
-        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "0": "Haga la rotonda.",
+        "1": "Haga la rotonda y tome la salida <ORDINAL_VALUE>.",
+        "2": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Haga la rotonda y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Haga la rotonda y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "5": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Haga la rotonda y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Haga la rotonda y tome la salida en dirección a <TOWARD_SIGN>.",
+        "8": "Incorpórese a <STREET_NAMES>",
+        "9": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE>.",
+        "10": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Incorpórese a <STREET_NAMES> y tome la salida <ORDINAL_VALUE> en dirección a <TOWARD_SIGN>.",
+        "13": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Incorpórese a <STREET_NAMES> y tome la salida hacia <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Incorpórese a <STREET_NAMES> y tome la salida en dirección a <TOWARD_SIGN>."
       },
       "ordinal_values": [
-        "1ª",
-        "2ª",
-        "3ª",
-        "4ª",
-        "5ª",
-        "6ª",
-        "7ª",
-        "8ª",
-        "9ª",
-        "10ª"
+        "1.º",
+        "2.º",
+        "3.º",
+        "4.º",
+        "5.º",
+        "6.º",
+        "7.º",
+        "8.º",
+        "9.º",
+        "10.º"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Entre en la rotonda."
+          "Enter the roundabout."
         ],
         "1": [
-          "Entre en la rotonda y tome la 1er salida.",
-          "Entre en la rotonda y tome la 2da salida.",
-          "Entre en la rotonda y toma la 3er salida.",
-          "Entre en la rotonda y tome la 4ta salida.",
-          "Entre en la rotonda y tome la 5ta salida.",
-          "Entre en la rotonda y tome la 6ta salida.",
-          "Entre en la rotonda y tome la 7º salida.",
-          "Entre en la rotonda y tome la 8º salida.",
-          "Entre en la rotonda y tome la 9º salida.",
-          "Entre en la rotonda y tome la 10º salida."
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -600,30 +609,30 @@
     },
     "exit": {
       "phrases": {
-        "0": "Tomar la salida sobre la <RELATIVE_DIRECTION>.",
-        "1": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
-        "2": "Tomar la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
-        "3": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.",
-        "4": "Tomar la salida a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "5": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "6": "Tomar la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "7": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "8": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
-        "10": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.",
-        "12": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "15": "Tomar la salida.",
-        "16": "Tomar la salida <NUMBER_SIGN>.",
-        "17": "Tomar la salida <BRANCH_SIGN>.",
-        "18": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN>.",
-        "19": "Tomar la salida hacia <TOWARD_SIGN>.",
-        "20": "Tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
-        "21": "Tomar la salida <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "22": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "23": "Tomar la salida <NAME_SIGN>.",
-        "25": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN>.",
-        "27": "Tomar la salida <NAME_SIGN> hacia <TOWARD_SIGN>.",
-        "29": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
+        "0": "Tome la salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "3": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "4": "Tome la salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "7": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "8": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "10": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "12": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "15": "Tome la salida.",
+        "16": "Tome la salida <NUMBER_SIGN>.",
+        "17": "Tome la salida <BRANCH_SIGN>.",
+        "18": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN>.",
+        "19": "Tome la salida en dirección a <TOWARD_SIGN>.",
+        "20": "Tome la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "21": "Tome la salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "22": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "23": "Tome la salida <NAME_SIGN>.",
+        "25": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN>.",
+        "27": "Tome la salida <NAME_SIGN> en dirección a <TOWARD_SIGN>.",
+        "29": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -631,101 +640,102 @@
       ],
       "example_phrases": {
         "0": [
-          "Tomar la salida sobre la izquierda.",
-          "Tomar la salida sobre la derecha."
+          "Take the exit on the left.",
+          "Take the exit on the right."
         ],
         "1": [
-          "Tomar la salida 67 B-A sobre la derecha."
+          "Take exit 67 B-A on the right."
         ],
         "2": [
-          "Tomar la salida de US 322 oeste sobre la derecha."
+          "Take the US 322 West exit on the right."
         ],
         "3": [
-          "Tomar la salida 67 B-A  sobre la derecha hacia US 322 oeste."
+          "Take exit 67 B-A on the right onto US 322 West."
         ],
         "4": [
-          "Tomar la salida sobre la derecha hacia Lewistown."
+          "Take the exit on the right toward Lewistown."
         ],
         "5": [
-          "Tomar la salida 67 B-A sobre la derecha hacia Lewistown."
+          "Take exit 67 B-A on the right toward Lewistown."
         ],
         "6": [
-          "Tomar la salida de US 322 oeste sobre la derecha hacia Lewistown."
+          "Take the US 322 West exit on the right toward Lewistown."
         ],
         "7": [
-          "Tomar la salida 67 B-A sobre la derecha sobre US 322 oeste hacia Lewistown/State College."
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
         ],
         "8": [
-          "Tomar la salida White Marsh Boulevard sobre la izquierda."
+          "Take the White Marsh Boulevard exit on the left."
         ],
         "10": [
-          "Tomar la salida White Marsh Boulevard sobre la izquierda hacia MD 43 East."
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
         ],
         "12": [
-          "Tomar la salida White Marsh Boulevard sobre la izquierda hacia White Marsh."
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
         ],
         "14": [
-          "Tomar la salida White Marsh Boulevard sobre la izquierda en MD 43 East hacia White Marsh."
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
         ],
         "15": [
-          "Tomar la salida."
+          "Take the exit."
         ],
         "16": [
-          "Tomar la salida 67 B-A."
+          "Take exit 67 B-A."
         ],
         "17": [
-          "Tomar la salida US 322 West."
+          "Take the US 322 West exit."
         ],
         "18": [
-          "Tomar la salida 67 B-A en US 322 West."
+          "Take exit 67 B-A onto US 322 West."
         ],
         "19": [
-          "Tomar la salida hacia Lewistown."
+          "Take the exit toward Lewistown."
         ],
         "20": [
-          "Tomar la salida 67 B-A hacia Lewistown."
+          "Take exit 67 B-A toward Lewistown."
         ],
         "21": [
-          "Tomar la salida US 322 West hacia Lewistown."
+          "Take the US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Tomar la salida 67 B-A en US 322 West hacia Lewistown/State College."
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
-          "Tomar la salida White Marsh Boulevard."
+          "Take the White Marsh Boulevard exit."
         ],
         "25": [
-          "Tomar la salida White Marsh Boulevard en MD 43 East."
+          "Take the White Marsh Boulevard exit onto MD 43 East."
         ],
         "27": [
-          "Tomar la salida White Marsh Boulevard hacia White Marsh."
+          "Take the White Marsh Boulevard exit toward White Marsh."
         ],
         "29": [
-          "Tomar la salida White Marsh Boulevard en MD 43 East hacia White Marsh."
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Entre en la rotonda.",
-        "1": "Entre en la rotonda en <STREET_NAMES>.",
-        "2": "Entre en la rotonda en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "0": "Salga de la rotonda.",
+        "1": "Salga de la rotonda hacia <STREET_NAMES>.",
+        "2": "Salga de la rotonda hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Salga de la rotonda en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la cilovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Entre en la rotonda."
+          "Exit the roundabout."
         ],
         "1": [
-          "Entre en la rotonda en Philadelphia Road/MD 7."
+          "Exit the roundabout onto Philadelphia Road/MD 7."
         ],
         "2": [
-          "Entre en la rotonda en Catoctin Mountain Highway/US 15. Continuar en US 15."
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
         ],
         "3": [
           "Exit the roundabout toward Baltimore."
@@ -734,25 +744,26 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Entre en la rotonda.",
-        "1": "Entre en la rotonda en <STREET_NAMES>.",
-        "2": "Entre en la rotonda en <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "0": "Salga de la rotonda.",
+        "1": "Salga de la rotonda hacia <STREET_NAMES>.",
+        "2": "Salga de la rotonda hacia <BEGIN_STREET_NAMES>.",
+        "3": "Salga de la rotonda en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Entre en la rotonda."
+          "Exit the roundabout."
         ],
         "1": [
-          "Entre en la rotonda en Philadelphia Road, Maryland 7."
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
         ],
         "2": [
-          "Entre en la rotonda en Catoctin Mountain Highway, U.S. 15."
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
         ],
         "3": [
           "Exit the roundabout toward Baltimore."
@@ -761,30 +772,30 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Tomar la salida sobre la <RELATIVE_DIRECTION>.",
-        "1": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
-        "2": "Tomar la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
-        "3": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
-        "4": "Tomar la salida a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "5": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "6": "Tomar la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "7": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "8": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
-        "10": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.",
-        "12": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "15": "Tomar la salida.",
-        "16": "Tomar la salida <NUMBER_SIGN>.",
-        "17": "Tomar la salida <BRANCH_SIGN>.",
-        "18": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN>.",
-        "19": "Tomar la salida hacia <TOWARD_SIGN>.",
-        "20": "Tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
-        "21": "Tomar la salida <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "22": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "23": "Tomar la salida <NAME_SIGN>.",
-        "25": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN>.",
-        "27": "Tomar la salida <NAME_SIGN> hacia <TOWARD_SIGN>.",
-        "29": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
+        "0": "Tome la salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "3": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "4": "Tome la salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Tome la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Tome la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "7": "Toma la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "8": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "10": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN>.",
+        "12": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "15": "Tome la salida.",
+        "16": "Tome la salida <NUMBER_SIGN>.",
+        "17": "Tome la salida <BRANCH_SIGN>.",
+        "18": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN>.",
+        "19": "Tome la salida en dirección a <TOWARD_SIGN>.",
+        "20": "Tome la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "21": "Tome la salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "22": "Tome la salida <NUMBER_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "23": "Tome la salida <NAME_SIGN>.",
+        "25": "Toma la salida <NAME_SIGN> hacia <BRANCH_SIGN>.",
+        "27": "Tome la salida <NAME_SIGN> en dirección a <TOWARD_SIGN>.",
+        "29": "Tome la salida <NAME_SIGN> hacia <BRANCH_SIGN> en dirección a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -792,77 +803,77 @@
       ],
       "example_phrases": {
         "0": [
-          "Tomar la salia a la izquierda.",
-          "Tomar la salida hacia la derecha."
+          "Take the exit on the left.",
+          "Take the exit on the right."
         ],
         "1": [
-          "Tomar la salida 67 B-A a la derecha."
+          "Take exit 67 B-A on the right."
         ],
         "2": [
-          "Tomar la salida U.S. 3 22 oeste a la derecha."
+          "Take the U.S. 3 22 West exit on the right."
         ],
         "3": [
-          "Tomar la salida 67 B-A a la derecha en U.S. 3 22 oeste."
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
         ],
         "4": [
-          "Tomar la salida a la derecha hacia Lewistown."
+          "Take the exit on the right toward Lewistown."
         ],
         "5": [
-          "Tomar la salida 67 B-A a la derecha hacia Lewistown."
+          "Take exit 67 B-A on the right toward Lewistown."
         ],
         "6": [
-          "Tomar la salida U.S. 3 22 oeste sobre la derecha hacia Lewistown."
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
         ],
         "7": [
-          "Tomar la salida 67 B-A a la derecha sobre U.S. 3 22 oeste hacia Lewistown, State College."
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
         ],
         "8": [
-          "Tomar la salida White Marsh Boulevard a la izquierda."
+          "Take the White Marsh Boulevard exit on the left."
         ],
         "10": [
-          "Tomar la salida White Marsh Boulevard a la izquierda en Maryland 43 East."
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
         ],
         "12": [
-          "Tomar la salida White Marsh Boulevard a la izquierda hacia White Marsh."
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
         ],
         "14": [
-          "Tomar la salida White Marsh Boulevard a la izquierda sobre Maryland 43 East hacia White Marsh."
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
         ],
         "15": [
-          "Tomar la salida."
+          "Take the exit."
         ],
         "16": [
-          "Tomar la salida 67 B-A."
+          "Take exit 67 B-A."
         ],
         "17": [
-          "Tomar la salida US 322 West."
+          "Take the US 322 West exit."
         ],
         "18": [
-          "Tomar la salida 67 B-A en US 322 West."
+          "Take exit 67 B-A onto US 322 West."
         ],
         "19": [
-          "Tomar la salida hacia Lewistown."
+          "Take the exit toward Lewistown."
         ],
         "20": [
-          "Tomar la salida 67 B-A hacia Lewistown."
+          "Take exit 67 B-A toward Lewistown."
         ],
         "21": [
-          "Tomar la salida US 322 West hacia Lewistown."
+          "Take the US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Tomar la salida 67 B-A en US 322 West hacia Lewistown/State College."
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
-          "Tomar la salida White Marsh Boulevard."
+          "Take the White Marsh Boulevard exit."
         ],
         "25": [
-          "Tomar la salida White Marsh Boulevard en MD 43 East."
+          "Take the White Marsh Boulevard exit onto MD 43 East."
         ],
         "27": [
-          "Tomar la salida White Marsh Boulevard hacia White Marsh."
+          "Take the White Marsh Boulevard exit toward White Marsh."
         ],
         "29": [
-          "Tomar la salida White Marsh Boulevard en MD 43 East hacia White Marsh."
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -872,208 +883,213 @@
       },
       "example_phrases": {
         "0": [
-          "Salida 1A"
+          "Exit 1A"
         ]
       }
     },
     "keep": {
       "phrases": {
-        "0": "En la bifurcación manténgase a la <RELATIVE_DIRECTION>.",
-        "1": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.",
-        "2": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.",
-        "3": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.",
-        "4": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "5": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
-        "6": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.",
-        "7": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "Manténgase a la <RELATIVE_DIRECTION> en la bifurcación.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES>.",
+        "4": "Manténgase a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar la <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
-        "derecho",
+        "recto",
         "derecha"
       ],
       "example_phrases": {
         "0": [
-          "En la bifurcación manténgase a la izquierda.",
-          "Siga derecho en la bifurcación.",
-          "En la bifurcación manténgase a la derecha."
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
         ],
         "1": [
-          "Manténgase a la derecha para tomar la salida 62."
+          "Keep right to take exit 62."
         ],
         "2": [
-          "Manténgase a la derecha para tomar I 895 sur."
+          "Keep right to take I 895 South."
         ],
         "3": [
-          "Manténgase a la derecha para tomar la salida 62 en I 895 sur."
+          "Keep right to take exit 62 onto I 895 South."
         ],
         "4": [
-          "Manténgase a la derecha hacia Annapolis."
+          "Keep right toward Annapolis."
         ],
         "5": [
-          "Manténgase a la derecha para tomar la salida 62 hacia Annapolis."
+          "Keep right to take exit 62 toward Annapolis."
         ],
         "6": [
-          "Manténgase a la derecha para tomar I 895 sur hacia Annapolis."
+          "Keep right to take I 895 South toward Annapolis."
         ],
         "7": [
-          "Manténgase a la derecha para tomar la salida 62 en I 895 sur hacia Annapolis."
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
         ]
       }
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.",
-        "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.",
-        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
-        "derecho",
+        "recto",
         "derecha"
       ],
       "example_phrases": {
         "0": [
-          "Manténgase a la izquierda para quedar en I 95 sur.",
-          "Siga derecho para quedar en I 95 sur.",
-          "Manténgase a la derecha para quedar en I 95 sur."
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
         ],
         "1": [
-          "Manténgase a la izquierda para tomar la salida 62 para quedar en I 95 sur."
+          "Keep left to take exit 62 to stay on I 95 South."
         ],
         "2": [
-          "Manténgase a la izquierda para quedar en I 95 sur hacia Baltimore."
+          "Keep left to stay on I 95 South toward Baltimore."
         ],
         "3": [
-          "Manténgase a la izquierda para tomar la salida 62 para quedar en I 95 sur hacia Baltimore."
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
         ]
       }
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.",
-        "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.",
-        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES>.",
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> y permanecer en <STREET_NAMES> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
-        "derecho",
+        "recto",
         "derecha"
       ],
       "example_phrases": {
         "0": [
-          "Manténgase a la izquierda para quedar en Interstate 95 sur.",
-          "Siga derecho para quedar en Interstate 95 sur.",
-          "Manténgase a la derecha para quedar en Interstate 95 sur."
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
         ],
         "1": [
-          "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur."
+          "Keep left to take exit 62 to stay on Interstate 95 South."
         ],
         "2": [
-          "Manténgase a la izquierda para quedar en I 95 sur hacia Baltimore."
+          "Keep left to stay on I 95 South toward Baltimore."
         ],
         "3": [
-          "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur hacia Baltimore."
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
         ]
       }
     },
     "keep_verbal": {
       "phrases": {
-        "0": "En la bifurcación manténgase a la <RELATIVE_DIRECTION>.",
+        "0": "Manténgase a la <RELATIVE_DIRECTION> en la bifurcación.",
         "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.",
         "2": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.",
-        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.",
-        "4": "Manténgase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
-        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.",
-        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> salida <TOWARD_SIGN>."
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES>.",
+        "4": "Manténgase a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en dirección a <TOWARD_SIGN>.",
+        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> en dirección a <TOWARD_SIGN>.",
+        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <STREET_NAMES> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
-        "derecho",
+        "recto",
         "derecha"
       ],
       "example_phrases": {
         "0": [
-          "En la bifurcación manténgase a la izquierda.",
-          "En la bifurcación siga derecho.",
-          "En la bifurcación manténgase a la derecha."
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
         ],
         "1": [
-          "Manténgase a la derecha para tomar la salida 62."
+          "Keep right to take exit 62."
         ],
         "2": [
-          "Manténgase a la derecha para tomar Interstate 8 95 sur."
+          "Keep right to take Interstate 8 95 South."
         ],
         "3": [
-          "Manténgase a la derecha para tomar la salida 62 en Interstate 8 95 sur."
+          "Keep right to take exit 62 onto Interstate 8 95 South."
         ],
         "4": [
-          "Manténgase a la derecha hacia Annapolis."
+          "Keep right toward Annapolis."
         ],
         "5": [
-          "Manténgase a la derecha para tomar la salida 62 hacia Annapolis."
+          "Keep right to take exit 62 toward Annapolis."
         ],
         "6": [
-          "Manténgase a la derecha para tomar Interstate 8 95 sur hacia Annapolis."
+          "Keep right to take Interstate 8 95 South toward Annapolis."
         ],
         "7": [
-          "Manténgase a la derecha para tomar la salida 62 en Interstate 8 95 sur hacia Annapolis."
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
         ]
       }
     },
     "merge": {
       "phrases": {
-        "0": "Empalme.",
-        "1": "Empalme a la <RELATIVE_DIRECTION>.",
-        "2": "Empalme en <STREET_NAMES>.",
-        "3": "Empalme a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Incorpórese.",
+        "1": "Incorpórese a la <RELATIVE_DIRECTION>.",
+        "2": "Incorpórese a <STREET_NAMES>.",
+        "3": "Incorpórese a la <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
+        "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
         "derecha"
       ],
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Empalme."
+          "Merge."
         ],
         "1": [
-          "Empalme a la izquierda."
+          "Merge left."
         ],
         "2": [
-          "Empalme en I 76 oeste/Pennsylvania Turnpike."
+          "Merge onto I 76 West/Pennsylvania Turnpike."
         ],
         "3": [
-          "Empalme a la derecha en I 83 South."
+          "Merge right onto I 83 South."
         ],
         "4": [
           "Merge toward Baltimore."
@@ -1085,34 +1101,35 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Empalme.",
-        "1": "Empalme a la <RELATIVE_DIRECTION>.",
-        "2": "Empalme en <STREET_NAMES>.",
-        "3": "Empalme a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Incorpórese.",
+        "1": "Incorpórese a la <RELATIVE_DIRECTION>.",
+        "2": "Incorpórese a <STREET_NAMES>.",
+        "3": "Incorpórese a la <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
+        "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
         "derecha"
       ],
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Empalme."
+          "Merge."
         ],
         "1": [
-          "Empalme a la izquierda."
+          "Merge left."
         ],
         "2": [
-          "Empalme en I 76 oeste/Pennsylvania Turnpike."
+          "Merge onto I 76 West/Pennsylvania Turnpike."
         ],
         "3": [
-          "Empalme a la derecha en I 83 South."
+          "Merge right onto I 83 South."
         ],
         "4": [
           "Merge toward Baltimore."
@@ -1124,7 +1141,7 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Viajar <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Viaje <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
         "one": "parada",
@@ -1132,20 +1149,21 @@
       },
       "example_phrases": {
         "0": [
-          "Viajar 1 parada.",
-          "Viajar 3 paradas."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continuar por <LENGTH>.",
-        "1": "Continuar en <STREET_NAMES> por <LENGTH>."
+        "0": "Continúe durante <LENGTH>.",
+        "1": "Continúe en <STREET_NAMES> durante <LENGTH>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -1157,38 +1175,38 @@
         "<MILES> millas",
         "1 milla",
         "media milla",
-        "a quarter mile",
-        "<FEET> pie",
+        "un cuarto de milla",
+        "<FEET> pies",
         "menos de 10 pies"
       ],
       "example_phrases": {
         "0": [
-          "Continuar por 300 pies.",
-          "Continuar por 9 millas."
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
         ],
         "1": [
-          "Continuar en Pennsylvania 7 43 for 6.2 miles.",
-          "Continuar en Main Street, Vermont 30 por 1 décima de milla."
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
         ]
       }
     },
     "ramp": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.",
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.",
-        "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.",
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia la <TOWARD_SIGN>.",
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN>.",
-        "10": "Tomar el repecho.",
-        "11": "Tomar el repecho <BRANCH_SIGN>.",
-        "12": "Tomar el repecho hacia <TOWARD_SIGN>.",
-        "13": "Tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "14": "Tomar el repecho <NAME_SIGN>."
+        "0": "Tome la vía de salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la vía de salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "3": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "4": "Tome la vía de salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida.",
+        "6": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN>.",
+        "7": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "8": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "9": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <NAME_SIGN>.",
+        "10": "Tome la vía de salida.",
+        "11": "Tome la vía de salida <BRANCH_SIGN>.",
+        "12": "Tome la vía de salida en dirección a <TOWARD_SIGN>.",
+        "13": "Tome la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la vía de salida <NAME_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -1196,123 +1214,123 @@
       ],
       "example_phrases": {
         "0": [
-          "Tomar el repecho a la izquierda.",
-          "Tomar el repecho a la derecha."
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
         ],
         "1": [
-          "Tomar el repecho a la derecha en la I 95ramp."
+          "Take the I 95 ramp on the right."
         ],
         "2": [
-          "Tomar el repecho a la izquierda hacia JFK."
+          "Take the ramp on the left toward JFK."
         ],
         "3": [
-          "Tomar el repecho a la izquierda de sur Conduit Avenue hacia JFK."
+          "Take the South Conduit Avenue ramp on the left toward JFK."
         ],
         "4": [
-          "Tomar el repecho a la derecha de Gettysburg Pike."
+          "Take the Gettysburg Pike ramp on the right."
         ],
         "5": [
-          "Girar a la izquierda para tomar el repecho.",
-          "Gire a la derecha para tomar el repecho."
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
         ],
         "6": [
-          "Girar a la izquierda para tomar el repecho de PA 283 oeste."
+          "Turn left to take the PA 283 West ramp."
         ],
         "7": [
-          "Girar a la izquierda para tomar el repecho hacia Harrisburg/Harrisburg International Airport."
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "8": [
-          "Girar a la izquierda para tomar el repecho de PA 283 oeste hacia Harrisburg/Harrisburg International Airport."
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "9": [
-          "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+          "Turn right to take the Gettysburg Pike ramp."
         ],
         "10": [
-          "Tomar el repecho."
+          "Take the ramp."
         ],
         "11": [
-          "Tomar el repecho I 95."
+          "Take the I 95 ramp."
         ],
         "12": [
-          "Tomar el repecho hacia JFK."
+          "Take the ramp toward JFK."
         ],
         "13": [
-          "Tomar el repecho Soutch Conduit Avenue hacia JFK."
+          "Take the Soutch Conduit Avenue ramp toward JFK."
         ],
         "14": [
-          "Tomar el repecho Gettysburg."
+          "Take the Gettysburg ramp."
         ]
       }
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Siga derecho para tomar el repecho.",
-        "1": "Siga derecho para tomar la <BRANCH_SIGN> del repecho.",
-        "2": "Siga derecho para tomar el repecho hacia <TOWARD_SIGN>.",
-        "3": "Siga derecho para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "4": "Siga derecho para tomar el repecho <NAME_SIGN>."
+        "0": "Siga recto para tomar la vía de salida.",
+        "1": "Siga recto para tomar la vía de salida <BRANCH_SIGN>.",
+        "2": "Siga recto para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "3": "Siga recto para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "4": "Siga recto para tomar la vía de salida <NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
-          "Siga derecho para tomar el repecho."
+          "Stay straight to take the ramp."
         ],
         "1": [
-          "Siga derecho para tomar el repecho de US 322 East."
+          "Stay straight to take the US 322 East ramp."
         ],
         "2": [
-          "Siga derecho para tomar el repecho hacia Hershey."
+          "Stay straight to take the ramp toward Hershey."
         ],
         "3": [
-          "Siga derecho para tomar el repecho de US 322 East/US 422 East/US 522 East/US 622 East hacia Hershey/Palmdale/Palmyra/Campbelltown."
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
         ],
         "4": [
-          "Siga derecho para tomar el repecho de Gettysburg Pike."
+          "Stay straight to take the Gettysburg Pike ramp."
         ]
       }
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Siga derecho para tomar el repecho.",
-        "1": "Siga derecho para tomar el repecho <BRANCH_SIGN>.",
-        "2": "Siga derecho para tomar el repecho hacia <TOWARD_SIGN>.",
-        "3": "Siga derecho para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "4": "Siga derecho para tomar el repecho <NAME_SIGN>."
+        "0": "Siga recto para tomar la vía de salida.",
+        "1": "Siga recto para tomar la vía de salida <BRANCH_SIGN>.",
+        "2": "Siga recto para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "3": "Siga recto para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "4": "Siga recto para tomar la vía de salida <NAME_SIGN>."
       },
       "example_phrases": {
         "0": [
-          "Siga derecho para tomar el repecho."
+          "Stay straight to take the ramp."
         ],
         "1": [
-          "Siga derecho para tomar el repecho de U.S. 3 22 East."
+          "Stay straight to take the U.S. 3 22 East ramp."
         ],
         "2": [
-          "Siga derecho para tomar el repecho hacia Hershey."
+          "Stay straight to take the ramp toward Hershey."
         ],
         "3": [
-          "Siga derecho para tomar el repecho de U.S. 3 22 East, U.S. 4 22 East ramp hacia Hershey, Palmdale."
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
         ],
         "4": [
-          "Siga derecho para tomar el repecho de Gettysburg Pike."
+          "Stay straight to take the Gettysburg Pike ramp."
         ]
       }
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.",
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.",
-        "6": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN>.",
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia <TOWARD_SIGN>.",
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia la <TOWARD_SIGN>.",
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN> ramp.",
-        "10": "Tomar el repecho.",
-        "11": "Tomar el repecho <BRANCH_SIGN>.",
-        "12": "Tomar el repecho hacia <TOWARD_SIGN>.",
-        "13": "Tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "14": "Tomar el repecho <NAME_SIGN>."
+        "0": "Tome la vía de salida a la <RELATIVE_DIRECTION>.",
+        "1": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.",
+        "2": "Tome la vía de salida a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "3": "Tome la vía de salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "4": "Tome la vía de salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida.",
+        "6": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN>.",
+        "7": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida en dirección a <TOWARD_SIGN>.",
+        "8": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "9": "Gire a la <RELATIVE_DIRECTION> para tomar la vía de salida <NAME_SIGN>.",
+        "10": "Tome la vía de salida.",
+        "11": "Tome la vía de salida <BRANCH_SIGN>.",
+        "12": "Tome la vía de salida en dirección a <TOWARD_SIGN>.",
+        "13": "Tome la vía de salida <BRANCH_SIGN> en dirección a <TOWARD_SIGN>.",
+        "14": "Tome la vía de salida <NAME_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -1320,67 +1338,68 @@
       ],
       "example_phrases": {
         "0": [
-          "Tomar el repecho a la izquierda.",
-          "Tomar el repecho a la derecha."
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
         ],
         "1": [
-          "Tomar el repecho de la Interstate 95 sobre la derecha."
+          "Take the Interstate 95 ramp on the right."
         ],
         "2": [
-          "Tomar el repecho sobre la izquierda hacia JFK."
+          "Take the ramp on the left toward JFK."
         ],
         "3": [
-          "Tomar el repecho a la izquierda de sur Conduit Avenue hacia JFK."
+          "Take the South Conduit Avenue ramp on the left toward JFK."
         ],
         "4": [
-          "Tomar el repecho de la Gettysburg Pike ramp a la derecha."
+          "Take the Gettysburg Pike ramp on the right."
         ],
         "5": [
-          "Girar a la izquierda para tomar el repecho.",
-          "Girar a la derecha para tomar el repecho."
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
         ],
         "6": [
-          "Girar a la izquierda para tomar el repecho de la Pennsylvania 2 83 oeste."
+          "Turn left to take the Pennsylvania 2 83 West ramp."
         ],
         "7": [
-          "Girar a la izquierda para tomar el repecho hacia Harrisburg/Harrisburg International Airport."
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "8": [
-          "Girar a la izquierda para tomar el repecho de Pennsylvania 2 83 oeste hacia Harrisburg, Harrisburg International Airport."
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
         ],
         "9": [
-          "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+          "Turn right to take the Gettysburg Pike ramp."
         ],
         "10": [
-          "Tomar el repecho."
+          "Take the ramp."
         ],
         "11": [
-          "Tomar el repecho Interstate 95."
+          "Take the Interstate 95 ramp."
         ],
         "12": [
-          "Tomar el repecho hacia JFK."
+          "Take the ramp toward JFK."
         ],
         "13": [
-          "Tomar el repecho South Conduit Avenue hacia JFK."
+          "Take the South Conduit Avenue ramp toward JFK."
         ],
         "14": [
-          "Tomar el repecho Gettysburg Pike."
+          "Take the Gettysburg Pike ramp."
         ]
       }
     },
     "sharp": {
       "phrases": {
-        "0": "Giro pronunciado a la <RELATIVE_DIRECTION>.",
-        "1": "Giro pronunciado a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Giro pronunciado a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "3": "Giro pronunciado a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gire completamente a la <RELATIVE_DIRECTION>.",
+        "1": "Gire completamente a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -1388,16 +1407,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Giro pronunciado a la izquierda."
+          "Make a sharp left."
         ],
         "1": [
-          "Giro pronunciado a la derecha en Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Giro pronunciado a la izquierda en North Bond Street/US 1 Business/MD 924. Continuar en MD 924."
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Giro pronunciado a la derecha para quedar en Sunstone Conducir."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1409,17 +1428,18 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Giro pronunciado a la <RELATIVE_DIRECTION>.",
-        "1": "Giro pronunciado a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Giro pronunciado a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "3": "Giro pronunciado a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gire completamente a la <RELATIVE_DIRECTION>.",
+        "1": "Gire completamente a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -1427,16 +1447,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Giro pronunciado a la izquierda."
+          "Make a sharp left."
         ],
         "1": [
-          "Giro pronunciado a la derecha en Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Giro pronunciado a la izquierda en North Bond Street, U.S. 1 Business."
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Giro pronunciado a la derecha para quedar en Sunstone Conducir."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1448,18 +1468,18 @@
     },
     "start": {
       "phrases": {
-        "0": "Ir hacia el <CARDINAL_DIRECTION>.",
-        "1": "Ir hacia el <CARDINAL_DIRECTION> y tomar <STREET_NAMES>.",
-        "2": "Ir hacia el <CARDINAL_DIRECTION> y tomar <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> y tomar <STREET_NAMES>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> y tomar <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> y tomar <STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION> y tomar <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "16": "Ir en bicicleta hacia el <CARDINAL_DIRECTION>.",
-        "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> y tomar <STREET_NAMES>.",
-        "18": "Ir en bici hacia el <CARDINAL_DIRECTION> y tomar <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
+        "0": "Diríjase al <CARDINAL_DIRECTION>.",
+        "1": "Diríjase al <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "2": "Diríjase al <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "4": "Conduzca hacia el <CARDINAL_DIRECTION>.",
+        "5": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "6": "Conduzca hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "8": "Camine hacia el <CARDINAL_DIRECTION>.",
+        "9": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "10": "Camine hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "16": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION>.",
+        "17": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "18": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>."
       },
       "cardinal_directions": [
         "norte",
@@ -1472,81 +1492,82 @@
         "noroeste"
       ],
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero para bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Ir hacia el este.",
-          "Ir hacia el norte."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Ir hacia el suroeste sobre la 5º Avenue.",
-          "Ir hacia el oeste por el pasaje",
-          "Ir hacia el este sobre la ciclovía",
-          "Ir hacia el norte sobre el sendero de bici de montaña"
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
         ],
         "2": [
-          "Ir hacia el sur sobre North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "4": [
-          "Conducir hacia el este.",
-          "Conducir hacia el norte."
+          "Drive east.",
+          "Drive north."
         ],
         "5": [
-          "Conducir hacia el suroeste sobre la 5º Avenue."
+          "Drive southwest on 5th Avenue."
         ],
         "6": [
-          "Conducir hacia el sur sobre North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "8": [
-          "Caminarnar hacia el este.",
-          "Caminar hacia el norte."
+          "Walk east.",
+          "Walk north."
         ],
         "9": [
-          "Caminar hacia el suroeste sobre la 5º Avenue.",
-          "Caminar hacia el oeste por el pasaje"
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
         ],
         "10": [
-          "Caminar hacia el sur sobre la North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "16": [
-          "En bici hacia el este.",
-          "En bici hacia el norte."
+          "Bike east.",
+          "Bike north."
         ],
         "17": [
-          "En bici hacia el suroeste sobre 5º Avenue.",
-          "En bici hacia el este sobre la ciclovía",
-          "En bici hacia el norte por el sendero de bicicleta de montaña"
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
         ],
         "18": [
-          "En bici hacia el sur por North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ]
       }
     },
     "start_verbal": {
       "phrases": {
-        "0": "Ir hacia el <CARDINAL_DIRECTION>.",
-        "1": "Ir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "2": "Ir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "3": "Ir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "4": "Ir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "7": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "8": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "9": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "11": "Caminar hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "12": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "13": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "14": "Caminar hacia el el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "15": "Ir en bici hacia el <CARDINAL_DIRECTION>.",
-        "16": "Ir en bici hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "17": "Ir en bici hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "18": "Ir en bici hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "19": "Ir en bici hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
+        "0": "Diríjase hacia el <CARDINAL_DIRECTION>.",
+        "1": "Diríjase hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "2": "Diríjase hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "3": "Diríjase hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "4": "Diríjase hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "5": "Conduzca hacia el <CARDINAL_DIRECTION>.",
+        "6": "Conduzca hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "7": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "8": "Conduzca hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "9": "Conduzca hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "10": "Camine hacia el <CARDINAL_DIRECTION>.",
+        "11": "Camine hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "12": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "13": "Camine hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "14": "Camine hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>.",
+        "15": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION>.",
+        "16": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> durante <LENGTH>.",
+        "17": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES>.",
+        "18": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <STREET_NAMES> durante <LENGTH>.",
+        "19": "Vaya en bicicleta hacia el <CARDINAL_DIRECTION> por <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "norte",
@@ -1559,9 +1580,10 @@
         "noroeste"
       ],
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -1573,8 +1595,8 @@
         "<MILES> millas",
         "1 milla",
         "media milla",
-        "a quarter mile",
-        "<FEET> pie",
+        "un cuarto de milla",
+        "<FEET> pies",
         "menos de 10 pies"
       ],
       "example_phrases": {
@@ -1650,15 +1672,15 @@
     },
     "transit": {
       "phrases": {
-        "0": "Tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Tome el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Tome el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
@@ -1669,141 +1691,141 @@
       },
       "example_phrases": {
         "0": [
-          "Tomar la the New Haven. (1 parada)",
-          "Tomar el metro. (2 paradas)",
-          "Tomar el ómnibus. (12 paradas)"
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
         ],
         "1": [
-          "Tomar la F hacia JAMAICA - 179 ST. (10 paradas)",
-          "Tomar el ferry hacia Staten Island. (1 parada)"
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
         ]
       }
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Salir de la Estación.",
-        "1": "Salir de <TRANSIT_STOP>.",
-        "2": "Salir de <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Salga de la estación.",
+        "1": "Baje en la <TRANSIT_STOP>.",
+        "2": "Baje en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Salir de la Estación."
+          "Exit the station."
         ],
         "1": [
-          "Salir de la Estación Embarcadero."
+          "Exit the Embarcadero Station."
         ],
         "2": [
-          "Salir de 8 St - Estación NYU."
+          "Exit the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Salir de la Estación.",
-        "1": "Salir de <TRANSIT_STOP>.",
-        "2": "Salir de la <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Salga de la estación.",
+        "1": "Baje en la <TRANSIT_STOP>.",
+        "2": "Baje en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Salir de la Estación."
+          "Exit the station."
         ],
         "1": [
-          "Salir de la Estación Embarcadero."
+          "Exit the Embarcadero Station."
         ],
         "2": [
-          "Exit the 8 St - Estación NYU."
+          "Exit the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Entrar a la estación.",
-        "1": "Entrar en <TRANSIT_STOP>.",
-        "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entre en la estación.",
+        "1": "Entre en la <TRANSIT_STOP>.",
+        "2": "Entre en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Entrar en la estación."
+          "Enter the station."
         ],
         "1": [
-          "Entrar en la estación de Embarcadero."
+          "Enter the Embarcadero Station."
         ],
         "2": [
-          "Entrar en la 8 St - NYU Estación."
+          "Enter the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Entrar en la estación.",
-        "1": "Entrar en <TRANSIT_STOP>.",
-        "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entre en la estación.",
+        "1": "Entre en la <TRANSIT_STOP>.",
+        "2": "Entre en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Entrar en la estación."
+          "Enter the station."
         ],
         "1": [
-          "Entrar en la estación Embarcadero."
+          "Enter the Embarcadero Station."
         ],
         "2": [
-          "Entrar en la 8 St - NYU Estación."
+          "Enter the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Trasladarse a la Estación.",
-        "1": "Trasladarse a la <TRANSIT_STOP>.",
-        "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Haga transbordo en la estación.",
+        "1": "Haga transbordo en la <TRANSIT_STOP>.",
+        "2": "Haga transbordo en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Trasladarse a la Estación."
+          "Transfer at the station."
         ],
         "1": [
-          "Trasladarse a la Embarcadero Estación."
+          "Transfer at the Embarcadero Station."
         ],
         "2": [
-          "Trasladarse a la 8 St - Estación NYU."
+          "Transfer at the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Trasladarse a la Estación.",
-        "1": "Trasladarse a la <TRANSIT_STOP>.",
-        "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
+        "0": "Haga transbordo en la estación.",
+        "1": "Haga transbordo en la <TRANSIT_STOP>.",
+        "2": "Haga transbordo en la <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
         "0": [
-          "Trasladarse a la Estación."
+          "Transfer at the station."
         ],
         "1": [
-          "Trasladarse a la Estación Embarcadero."
+          "Transfer at the Embarcadero Station."
         ],
         "2": [
-          "Trasladarse a la 8 St - NYU Estación."
+          "Transfer at the 8 St - NYU Station."
         ]
       }
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Permanecer en la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Permanezca en el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Permanezca en el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
@@ -1814,49 +1836,49 @@
       },
       "example_phrases": {
         "0": [
-          "Permanecer la New Haven. (1 parada)",
-          "Permanecer en el tren. (3 paradas)"
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
         ],
         "1": [
-          "Permanecer en F hacia JAMAICA - 179 ST. (10 paradas)"
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
         ]
       }
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Permanecer en la <TRANSIT_NAME>.",
-        "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
+        "0": "Permanezca en el <TRANSIT_NAME>.",
+        "1": "Permanezca en el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
       ],
       "example_phrases": {
         "0": [
-          "Permanecer en la New Haven."
+          "Remain on the New Haven."
         ],
         "1": [
-          "Permanecer en F hacia JAMAICA - 179 ST."
+          "Remain on the F toward JAMAICA - 179 ST."
         ]
       }
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Trasladarse para tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Haga transbordo para tomar el <TRANSIT_NAME>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )",
+        "1": "Haga transbordo para tomar el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>. ( <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> )"
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
@@ -1867,75 +1889,76 @@
       },
       "example_phrases": {
         "0": [
-          "Trasladarse para tomar la New Haven. (1 parada)",
-          "Trasladarse para tomar el tranvía. (4 paradas)"
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
         ],
         "1": [
-          "Trasladarse para tomar F hacia JAMAICA - 179 ST. (10 paradas)"
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
         ]
       }
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Trasladarse para tomar la <TRANSIT_NAME>.",
-        "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
+        "0": "Haga transbordo para tomar el <TRANSIT_NAME>.",
+        "1": "Haga transbordo para tomar el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
       ],
       "example_phrases": {
         "0": [
-          "Trasladarse para tomar la New Haven."
+          "Transfer to take the New Haven."
         ],
         "1": [
-          "Trasladarse para tomar la F hacia JAMAICA - 179 ST."
+          "Transfer to take the F toward JAMAICA - 179 ST."
         ]
       }
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Tomar la <TRANSIT_NAME>.",
-        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
+        "0": "Tome el <TRANSIT_NAME>.",
+        "1": "Tome el <TRANSIT_NAME> en dirección a <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tranvía",
         "metro",
         "tren",
-        "ómnibus",
-        "ferry",
+        "autobús",
+        "ferri",
         "teleférico",
         "góndola",
         "funicular"
       ],
       "example_phrases": {
         "0": [
-          "Tomar la New Haven."
+          "Take the New Haven."
         ],
         "1": [
-          "Tomar la F hacia JAMAICA - 179 ST."
+          "Take the F toward JAMAICA - 179 ST."
         ]
       }
     },
     "turn": {
       "phrases": {
-        "0": "Girar a la <RELATIVE_DIRECTION>.",
-        "1": "Girar a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Girar a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "3": "Girar a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gire a la <RELATIVE_DIRECTION>.",
+        "1": "Gire a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
+        "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -1943,16 +1966,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Girar a la izquierda."
+          "Turn left."
         ],
         "1": [
-          "Girar a la derecha en Flatbush Avenue."
+          "Turn right onto Flatbush Avenue."
         ],
         "2": [
-          "Girar a la izquierda en North Bond Street/US 1 Business/MD 924. Continuar en MD 924."
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Girar a la derecha para quedar en Sunstone Conducir."
+          "Turn right to stay on Sunstone Drive."
         ],
         "4": [
           "Turn right at Mannenbashi East."
@@ -1964,17 +1987,18 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "Girar a la <RELATIVE_DIRECTION>.",
-        "1": "Girar a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Girar a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "3": "Girar a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gire a la <RELATIVE_DIRECTION>.",
+        "1": "Gire a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
+        "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -1982,16 +2006,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Girar a la izquierda."
+          "Turn left."
         ],
         "1": [
-          "Girar a la derecha en Flatbush Avenue."
+          "Turn right onto Flatbush Avenue."
         ],
         "2": [
-          "Girar a la izquierda en North Bond Street, U.S. 1 Business."
+          "Turn left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Girar a la derecha para quedar en Sunstone Conducir."
+          "Turn right to stay on Sunstone Drive."
         ],
         "4": [
           "Turn right at Mannenbashi East."
@@ -2003,19 +2027,20 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Hacer una vuelta en U a la <RELATIVE_DIRECTION>",
-        "1": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en <STREET_NAMES>.",
-        "2": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "3": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en el cruce de la calle <CROSS_STREET_NAMES>.",
-        "4": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en el cruce de la calle <CROSS_STREET_NAMES> en <STREET_NAMES>.",
-        "5": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en el cruce de la calle <CROSS_STREET_NAMES> para quedar en <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "Haga un cambio de sentido a la <RELATIVE_DIRECTION>.",
+        "1": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "3": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES>.",
+        "4": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> hacia <STREET_NAMES>.",
+        "5": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> para permanecer en <STREET_NAMES>.",
+        "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -2023,22 +2048,22 @@
       ],
       "example_phrases": {
         "0": [
-          "Hacer un giro en U a la izquierda."
+          "Make a left U-turn."
         ],
         "1": [
-          "Hacer un giro en U a la derecha en Bunker Hill Road."
+          "Make a right U-turn onto Bunker Hill Road."
         ],
         "2": [
-          "Hacer un giro en U a la izquierda para quedar en Bunker Hill Road."
+          "Make a left U-turn to stay on Bunker Hill Road."
         ],
         "3": [
-          "Hacer un giro en U a la izquierda en Devonshire Road."
+          "Make a left U-turn at Devonshire Road."
         ],
         "4": [
-          "Hacer un giro en U a la izquierda en Devonshire Road hacia Jonestown Road/US 22."
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
         ],
         "5": [
-          "Hacer un giro en U a la izquierda en Devonshire Road para quedar en Jonestown Road/US 22."
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
         ],
         "6": [
           "Make a right U-turn at Mannenbashi East."
@@ -2050,19 +2075,20 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Hacer un giro en U a la <RELATIVE_DIRECTION>.",
-        "1": "Hacer un giro en U a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
-        "2": "Hacer un giro en U a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.",
-        "3": "Hacer un giro en U a la <RELATIVE_DIRECTION> en el cruce de calle <CROSS_STREET_NAMES>.",
-        "4": "Hacer un giro en U a la <RELATIVE_DIRECTION> en el cruce de calle <CROSS_STREET_NAMES> en <STREET_NAMES>.",
-        "5": "Hacer un giro en U a la <RELATIVE_DIRECTION> en el cruce de calle <CROSS_STREET_NAMES> para quedar en <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "Haga un cambio de sentido a la <RELATIVE_DIRECTION>.",
+        "1": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> hacia <STREET_NAMES>.",
+        "2": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
+        "3": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES>.",
+        "4": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> hacia <STREET_NAMES>.",
+        "5": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <CROSS_STREET_NAMES> para permanecer en <STREET_NAMES>.",
+        "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
+        "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
+        "the crosswalk"
       ],
       "relative_directions": [
         "izquierda",
@@ -2070,22 +2096,22 @@
       ],
       "example_phrases": {
         "0": [
-          "Hacer un giro en U a la izquierda."
+          "Make a left U-turn."
         ],
         "1": [
-          "Hacer un giro en U a la derecha hacia Bunker Hill Road."
+          "Make a right U-turn onto Bunker Hill Road."
         ],
         "2": [
-          "Hacer un giro en U a la izquierda para quedar en Bunker Hill Road."
+          "Make a left U-turn to stay on Bunker Hill Road."
         ],
         "3": [
-          "Hacer un giro en U a la izquierda en Devonshire Road."
+          "Make a left U-turn at Devonshire Road."
         ],
         "4": [
-          "Hacer un giro en U a la izquierda en Devonshire Road hacia Jonestown Road, U.S. 22."
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
         ],
         "5": [
-          "Hacer un giro en U a la izquierda en Devonshire Road para quedar en Jonestown Road, U.S. 22."
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
         ],
         "6": [
           "Make a right U-turn at Mannenbashi East."
@@ -2097,8 +2123,8 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> después <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Después <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Después, en <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -2110,13 +2136,13 @@
         "<MILES> millas",
         "1 milla",
         "media milla",
-        "a quarter mile",
-        "<FEET> pie",
+        "un cuarto de milla",
+        "<FEET> pies",
         "menos de 10 pies"
       ],
       "example_phrases": {
         "0": [
-          "Girar levemente a la derecha en East Fayette Street. Después doble a la derecha en North Gay Street."
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
@@ -2125,7 +2151,7 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "En <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -2137,8 +2163,8 @@
         "<MILES> millas",
         "1 milla",
         "media milla",
-        "a quarter mile",
-        "<FEET> pie",
+        "un cuarto de milla",
+        "<FEET> pies",
         "menos de 10 pies"
       ],
       "example_phrases": {

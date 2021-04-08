@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include <iostream>
 #include <string>
@@ -8,7 +7,6 @@
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
-#include "thor/astar.h"
 #include "thor/worker.h"
 
 using namespace valhalla;
@@ -69,33 +67,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto config = test::json_to_pt(R"({
-    "meili": {"default": {"breakage_distance": 2000}},
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-    "loki":{
-      "actions":["sources_to_targets"],
-      "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-    },
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })");
-
-} // namespace
+const auto config = test::make_config("test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,
@@ -112,12 +84,14 @@ void try_path(GraphReader& reader,
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 
-  AStarPathAlgorithm astar;
+  TimeDepForward astar;
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
   auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
   EXPECT_EQ(pathedges.size(), expected_edgecount);
 }
+
+} // namespace
 
 TEST(TrivialPaths, test_trivial_paths) {
   // Test setup

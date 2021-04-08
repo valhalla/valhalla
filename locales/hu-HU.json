@@ -1,0 +1,2177 @@
+{
+  "posix_locale": "hu_HU.UTF-8",
+  "aliases": [
+    "hu"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Érkezés: <TIME>.",
+        "1": "Érkezés: <TIME> ide: <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Érkezés ekkor: <TIME>.",
+        "1": "Érkezés ekkor: <TIME> ide: <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon balra <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jelzés felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpár út",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES>.",
+        "3": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jel felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> átvált <STREET_NAMES> utcára."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> átvált <STREET_NAMES> utcára."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Folytatás.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "3": "Haladjon tovább a(z) <TOWARD_SIGN> jel felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Folytatás.",
+        "1": "Haladjon tovább <LENGTH> távot.",
+        "2": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Haladjon tovább a(z) <STREET_NAMES> utcán <LENGTH> távot.",
+        "4": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Haladjon tovább a(z) <JUNCTION_NAME> útketeszteződésnél <LENGTH> távot.",
+        "6": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felé.",
+        "7": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felé <LENGTH> távot."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "lkevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "egy fél mérföld",
+        "egy negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Folytatás.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon tovább a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "3": "Haladjon tovább a(z) <TOWARD_SIGN> jelzés felés."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Indulás: <TIME>.",
+        "1": "Indulás: <TIME> innen <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Indulás ekkor <TIME>.",
+        "1": "Indulás ekkor <TIME> innen <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Megérkezett az úti céljához.",
+        "1": "Megérkezett ide: <DESTINATION>.",
+        "2": "Az úti célja erre van: <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> erre van: <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Megérkezett az úti céljához.",
+        "1": "Megérkezett ide: <DESTINATION>.",
+        "2": "Az Ön úti célja <RELATIVE_DIRECTION> van.",
+        "3": "A(z) <DESTINATION> <RELATIVE_DIRECTION> lesz."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Ön meg fog érkezni az úti céljához.",
+        "1": "Ön meg fog érkezni ide: <DESTINATION>.",
+        "2": "Az Ön úti célja <RELATIVE_DIRECTION> lesz.",
+        "3": "A(z)<DESTINATION> <RELATIVE_DIRECTION> lesz."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Utazás komppal.",
+        "1": "Utazás ezen az utcán: <STREET_NAMES>.",
+        "2": "Utazás a(z) <STREET_NAMES> utcán a(z) <FERRY_LABEL> komppal.",
+        "3": "Utazás komppal a(z) <TOWARD_SIGN> jelzés felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "ferry_label": "Komp",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Utazás komppal.",
+        "1": "Utazás a(z) <STREET_NAMES> utcán.",
+        "2": "Utazás a(z) <STREET_NAMES> utcán a(z) <FERRY_LABEL> komppal.",
+        "3": "Utazás komppal a(z) <TOWARD_SIGN> jelzés felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "ferry_label": "Komp",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Menjen be a körforgalomba.",
+        "1": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "2": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utca felé.",
+        "3": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot (z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utca felé. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "4": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "6": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> felé vezető kijáratot. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "7": "Menjen be a körforgalomba és válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "8": "Térjen be a(z) <STREET_NAMES> utcára",
+        "9": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "10": "Térjen be a(z) <STREET_NAMES> utcáraés válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utca felé.",
+        "11": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utca felé. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "12": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "13": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot. Haladjon tovább a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcán.",
+        "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
+      },
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Menjen be a körforgalomba.",
+        "1": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "2": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára.",
+        "3": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára.",
+        "4": "Menjen be a körforgalomba és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "6": "Menjen be a körforgalomba és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot.",
+        "7": "Menjen be a körforgalomba és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot.",
+        "8": "Térjen be a(z) <STREET_NAMES> utcára",
+        "9": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot.",
+        "10": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára.",
+        "11": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára.",
+        "12": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ORDINAL_VALUE> kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "13": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_STREET_NAMES> utcára vezető kijáratot.",
+        "14": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> utcára vezető kijáratot.",
+        "15": "Térjen be a(z) <STREET_NAMES> utcára és válassza a(z) <TOWARD_SIGN> jelzés felé vezető kijáratot."
+      },
+      "ordinal_values": [
+        "1.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9.",
+        "10."
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Válassza a(z) <RELATIVE_DIRECTION> irányba lévő kijáratot.",
+        "1": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "3": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "4": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot a(z) <TOWARD_SIGN> jelzés felé.",
+        "5": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> jelzés felé.",
+        "6": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "7": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <BRANCH_SIGN> felé, a(z) <TOWARD_SIGN> jelzés irányába.",
+        "8": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "10": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "12": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "14": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "15": "Használja a kijáratot.",
+        "16": "Válassza a(z) <NUMBER_SIGN> kijáratot.",
+        "17": "Válassza a(z) <BRANCH_SIGN> kijáratot.",
+        "18": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "19": "Válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "20": "Válassza a(z) <NUMBER_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "21": "Válassza a(z) <BRANCH_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "22": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé <TOWARD_SIGN> irányába.",
+        "23": "Válassza a(z) <NAME_SIGN> kijáratot.",
+        "25": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé.",
+        "27": "Válassza a(z) <NAME_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "29": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Hagyja el a körforgalmat.",
+        "1": "Hagyja el a körforgalmat a(z) <STREET_NAMES> utcára fordulva.",
+        "2": "Hagyja el a körforgalmat a(z) <BEGIN_STREET_NAMES> utcára fordulva. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Hagyja el a körforgalmat a(z) <TOWARD_SIGN> irányába."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Hagyja el a körforgalmat.",
+        "1": "Hagyja el a körforgalmat a(z) <STREET_NAMES> felé.",
+        "2": "Hagyja el a körforgalmat a(z) <BEGIN_STREET_NAMES> felé.",
+        "3": "Hagyja el a körforgalmat a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerkpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot.",
+        "1": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "3": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "4": "Válassza a(z) <RELATIVE_DIRECTION> lévő kijáratot <TOWARD_SIGN> felé.",
+        "5": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "6": "Válassza a(z) <BRANCH_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "7": "Válassza a(z) <NUMBER_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "8": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>.",
+        "10": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé.",
+        "12": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <TOWARD_SIGN> felé.",
+        "14": "Válassza a(z) <NAME_SIGN> kijáratot <RELATIVE_DIRECTION>, a(z) <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába.",
+        "15": "Használja a kijáratot.",
+        "16": "Válassza a(z) <NUMBER_SIGN> kijáratot.",
+        "17": "Válassza a(z) <BRANCH_SIGN> kijáratot.",
+        "18": "Válassza a(z) <NUMBER_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "19": "Válassza a(z) <TOWARD_SIGN> felé vezető kijáratot.",
+        "20": "Válassza a(z) <NUMBER_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "21": "Válassza a(z) <BRANCH_SIGN> kijáratot <TOWARD_SIGN> felé.",
+        "22": "Válassza a(z) <NUMBER_SIGN> kijáratot <BRANCH_SIGN> felé a(z)<TOWARD_SIGN> irányába.",
+        "23": "Válassza a(z) <NAME_SIGN> kijáratot.",
+        "25": "Válassza a(z) <NAME_SIGN> kijáratot a(z) <BRANCH_SIGN> felé.",
+        "27": "Válassza a(z) <NAME_SIGN> kijáratot a(z) <TOWARD_SIGN> felé.",
+        "29": "Válassza a(z) <NAME_SIGN> kijáratot <BRANCH_SIGN> felé a(z) <TOWARD_SIGN> irányába."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Kijárat <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Az útelágazásnál tartson <RELATIVE_DIRECTION>.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcára térhessen.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> felé.",
+        "4": "Tartson <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "5": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <TOWARD_SIGN> felé.",
+        "6": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcába a(z) <TOWARD_SIGN> felé.",
+        "7": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> utca felé a(z) <TOWARD_SIGN> irányába."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "egyenesen előre",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "1": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <NUMBER_SIGN> kijáratot használva a(z) <STREET_NAMES> utcán maradjon.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon, a(z) <TOWARD_SIGN> felé.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon, <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "egyenesen előre",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon, <TOWARD_SIGN> felé.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához, hogy a(z) <STREET_NAMES> utcán maradjon <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "egyenesen előre",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Tartson <RELATIVE_DIRECTION> az útelágazásnál.",
+        "1": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához.",
+        "2": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcára.",
+        "3": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához a(z) <STREET_NAMES> felé.",
+        "4": "Tartson <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "5": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat használatához <TOWARD_SIGN> felé.",
+        "6": "Tartson <RELATIVE_DIRECTION>, hogy betérjen a(z) <STREET_NAMES> utcára <TOWARD_SIGN> felé.",
+        "7": "Tartson <RELATIVE_DIRECTION> a(z) <NUMBER_SIGN> kijárat haszálatához <STREET_NAMES> felé, <TOWARD_SIGN> irányába."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "egyenesen előre",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Úttorkolat.",
+        "1": "Úttorkolat <RELATIVE_DIRECTION>.",
+        "2": "Úttorkolat a(z) <STREET_NAMES> utcába.",
+        "3": "Úttorkolat <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcába.",
+        "4": "Úttorkolat <TOWARD_SIGN> felé.",
+        "5": "Úttorkolat <RELATIVE_DIRECTION> felé <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Úttorkolat.",
+        "1": "Úttorkolat <RELATIVE_DIRECTION>.",
+        "2": "Úttorkolat a(z) <STREET_NAMES> utcába.",
+        "3": "Úttorkolat <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcába.",
+        "4": "Úttorkolat a(z) <TOWARD_SIGN> felé.",
+        "5": "Úttorkolat <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Utazás <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "megálló",
+        "other": "megállók"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Haladjon tovább <LENGTH> távot.",
+        "1": "Haladjon tovább a(z) <STREET_NAMES> utcán <LENGTH> távot."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföld",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Válassza a rámpát <RELATIVE_DIRECTION>.",
+        "1": "Válassza a(z) <BRANCH_SIGN> rámpát <RELATIVE_DIRECTION>.",
+        "2": "Válassza a(z) <RELATIVE_DIRECTION> lévő rámpát <TOWARD_SIGN> felé.",
+        "3": "Válassza a(z) <BRANCH_SIGN> rámpát <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "4": "Válassza a(z) <NAME_SIGN> rámpát <RELATIVE_DIRECTION>.",
+        "5": "Forduljon <RELATIVE_DIRECTION>, hogy a rámpára hajtson.",
+        "6": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <BRANCH_SIGN> rámpára hajtson.",
+        "7": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <TOWARD_SIGN> felé vezető rámpára hajtson.",
+        "8": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <BRANCH_SIGN> rámpára hajtson a(z) <TOWARD_SIGN> felé.",
+        "9": "Forduljon <RELATIVE_DIRECTION> hogy a(z) <NAME_SIGN> rámpára hajtson.",
+        "10": "Hajtson a rámpára.",
+        "11": "Hajtson rá a(z) <BRANCH_SIGN> rámpára.",
+        "12": "Hajtson rá a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "13": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "14": "Hajtson rá a(z) <NAME_SIGN> rámpára."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Tartson egyenesen előre, hogy ráhajtson a rámpára.",
+        "1": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "2": "Tartson egyenesen előre, hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "3": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "4": "Tartson egyenesen előre, hogy ráhajtson a(z) <NAME_SIGN> rámpára."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Tartson egyenesen előre, hogy ráhajtson a rámpára",
+        "1": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "2": "Tartson egyenesen előre, hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "3": "Tartson egyenesen előre, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "4": "Tartson egyenesen előre, hogy ráhajtson a(z) <NAME_SIGN> rámpára."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Hajtson rá a <RELATIVE_DIRECTION> lévő rámpára.",
+        "1": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <RELATIVE_DIRECTION>.",
+        "2": "Hajtson rá a(z) <RELATIVE_DIRECTION> lévő rámpára <TOWARD_SIGN> felé.",
+        "3": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé.",
+        "4": "Hajtson rá a(z) <NAME_SIGN> rámpára <RELATIVE_DIRECTION>.",
+        "5": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a rámpára.",
+        "6": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára.",
+        "7": "Forduljon <RELATIVE_DIRECTION> hogy ráhajtson a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "8": "Forduljon <RELATIVE_DIRECTION>, hogy ráhajtson a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "9": "Forduljon <RELATIVE_DIRECTION> hogy ráhajtson a(z) <NAME_SIGN> rámpára.",
+        "10": "Hajtson a rámpára.",
+        "11": "Hajtson a(z) <BRANCH_SIGN> rámpára.",
+        "12": "Hajtson rá a(z) <TOWARD_SIGN> felé vezető rámpára.",
+        "13": "Hajtson rá a(z) <BRANCH_SIGN> rámpára <TOWARD_SIGN> felé.",
+        "14": "Hajtson rá a(z) <NAME_SIGN> rámpára."
+      },
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Forduljon élesen <RELATIVE_DIRECTION>.",
+        "1": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon élesen <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Forduljon élesen <RELATIVE_DIRECTION>.",
+        "1": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára.",
+        "3": "Forduljon élesen <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon élesen <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Haladjon <CARDINAL_DIRECTION>.",
+        "1": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "2": "Haladjon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "4": "Hajtson <CARDINAL_DIRECTION>.",
+        "5": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "6": "Hajtson <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "8": "Sétáljon <CARDINAL_DIRECTION>.",
+        "9": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "10": "Sétáljon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "16": "Kerékpározzon <CARDINAL_DIRECTION>.",
+        "17": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "18": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán. Haladjon tovább a(z) <STREET_NAMES> utcán."
+      },
+      "cardinal_directions": [
+        "északra",
+        "északkeletre",
+        "keletre",
+        "délkeletre",
+        "délre",
+        "délnyugatra",
+        "nyugatra",
+        "északnyugatra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Haladjon <CARDINAL_DIRECTION>.",
+        "1": "Haladjon <CARDINAL_DIRECTION> <LENGTH> távolságot.",
+        "2": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "3": "Haladjon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> <LENGTH> távolságot.",
+        "4": "Haladjon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "5": "Hajtson <CARDINAL_DIRECTION>.",
+        "6": "Hajtson <CARDINAL_DIRECTION> <LENGTH> távolságot.",
+        "7": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "8": "Hajtson <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán <LENGTH> távolságot.",
+        "9": "Hajtson <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "10": "Sétáljon <CARDINAL_DIRECTION>.",
+        "11": "Sétáljon <CARDINAL_DIRECTION> <LENGTH> távot.",
+        "12": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES>utcán.",
+        "13": "Sétáljon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> <LENGTH> távot.",
+        "14": "Sétáljon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán.",
+        "15": "Kerékpározzon <CARDINAL_DIRECTION>.",
+        "16": "Kerékpározzon <CARDINAL_DIRECTION> <LENGTH> távot.",
+        "17": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán.",
+        "18": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <STREET_NAMES> utcán <LENGTH> távot.",
+        "19": "Kerékpározzon <CARDINAL_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcán."
+      },
+      "cardinal_directions": [
+        "északra",
+        "északkeletre",
+        "keletre",
+        "délkeletre",
+        "délre",
+        "délnyugatra",
+        "nyugatra",
+        "északnyugatra"
+      ],
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Válassza a következő közlekedési eszközt: <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Válassz a következő közlekedési eszközt: <TRANSIT_NAME> a(z) <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "Felvonó",
+        "gondola",
+        "sikló"
+      ],
+      "transit_stop_count_labels": {
+        "one": "megálló",
+        "other": "megállók"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Hagyja el az állomást.",
+        "1": "Hagyja el a(z) <TRANSIT_STOP> megállót.",
+        "2": "Hagyja el a következőt: <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Hagyja el az állomást.",
+        "1": "Hagyja el a(z) <TRANSIT_STOP> megállót.",
+        "2": "Hagyja el a következőt <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Menjen az állomásra.",
+        "1": "Menjen a(z) <TRANSIT_STOP> megálló területére.",
+        "2": "Menjen a(z) <TRANSIT_STOP> megálló területére a(z) <STATION_LABEL> állomáson."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Menjen az állomásra.",
+        "1": "Menjen ide: <TRANSIT_STOP>.",
+        "2": "Menjen a(z) <TRANSIT_STOP> megállóba a(z) <STATION_LABEL> állomáson."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Váltson közlekedési eszközt az állomáson.",
+        "1": "Váltson közlekedési eszközt itt: <TRANSIT_STOP>.",
+        "2": "Váltson közlekedési eszközt a <TRANSIT_STOP> megállóban a(z) <STATION_LABEL> állomáson."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Váltson közlekedési eszközt az állomáson.",
+        "1": "Váltson közlekedési eszközt a(z) <TRANSIT_STOP> megállóban.",
+        "2": "Váltson közlekedési eszközt a(z) <TRANSIT_STOP> megállóban a(z) <STATION_LABEL> állomáson."
+      },
+      "station_label": "Állomás",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "falvonó",
+        "gondola",
+        "sikló"
+      ],
+      "transit_stop_count_labels": {
+        "one": "megálló",
+        "other": "megállók"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön.",
+        "1": "Maradjon a(z) <TRANSIT_NAME> közlekedési eszközön <TRANSIT_HEADSIGN> felé."
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
+        "gondola",
+        "sikló"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Váltson közlekedési eszközt, és válassza a következőt: <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Váltson közlekedési eszközt és válassza a következőt: <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
+        "gondola",
+        "sikló"
+      ],
+      "transit_stop_count_labels": {
+        "one": "megálló",
+        "other": "megállók"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Váltson közlekedési eszközt, és válassza a következőt: <TRANSIT_NAME>.",
+        "1": "Váltson közlekedési eszközt és válassza a következőt <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé."
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
+        "gondola",
+        "sikló"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Válassza a következő közlekedési eszközt: <TRANSIT_NAME>.",
+        "1": "Válassza akövetkező közlekedési eszközt <TRANSIT_NAME> <TRANSIT_HEADSIGN> felé."
+      },
+      "empty_transit_name_labels": [
+        "villamos",
+        "metró",
+        "vonat",
+        "busz",
+        "komp",
+        "felvonó",
+        "gondola",
+        "sikló"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára. Haladjon tovább a(z) <STREET_NAMES> utcán.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkeresztaződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Forduljon <RELATIVE_DIRECTION>.",
+        "1": "Forduljon <RELATIVE_DIRECTION> a(z) <STREET_NAMES> utcára.",
+        "2": "Forduljon <RELATIVE_DIRECTION> a(z) <BEGIN_STREET_NAMES> utcára.",
+        "3": "Forduljon <RELATIVE_DIRECTION>, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "4": "Forduljon <RELATIVE_DIRECTION> a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "5": "Forduljon <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Végezzen egy <RELATIVE_DIRECTION> megfordulást.",
+        "1": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <STREET_NAMES> utcára.",
+        "2": "Végezzen egy <RELATIVE_DIRECTION> megfordulást, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "3": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél.",
+        "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
+        "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "7": "Végezzen egy <RELATIVE_DIRECTION> Umegfordulást a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Végezzen egy <RELATIVE_DIRECTION> megfordulást.",
+        "1": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <STREET_NAMES> utcára.",
+        "2": "Végezzen egy <RELATIVE_DIRECTION> megfordulást, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "3": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél.",
+        "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
+        "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
+        "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
+        "7": "VÉgezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <TOWARD_SIGN> felé."
+      },
+      "empty_street_name_labels": [
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpárút",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "balra",
+        "jobbra"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> aztán <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Aztán, <LENGTH> hosszban, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH> távon belül, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilométerek",
+        "1 kilométer",
+        "<METERS> méterek",
+        "kevesebb, mint 10 méter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mérföldek",
+        "1 mérföld",
+        "fél mérföld",
+        "negyed mérföld",
+        "<FEET> láb",
+        "kevesebb, mint 10 láb"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}

@@ -86,7 +86,7 @@ public:
    * @param   e  An epsilon which determines how close they must be to be considered equal
    * @return  Returns true if two points are approximately equal, false otherwise.
    */
-  bool ApproximatelyEqual(const PointXY<PrecisionT>& p, float e = LL_EPSILON) const {
+  bool ApproximatelyEqual(const PointXY<PrecisionT>& p, PrecisionT e = LL_EPSILON) const {
     return equal<value_type>(first, p.first, e) && equal<second_type>(second, p.second, e);
   }
 
@@ -171,7 +171,7 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual float IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
+  virtual PrecisionT IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
     return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 
@@ -198,18 +198,13 @@ protected:
 };
 
 using Point2 = PointXY<float>;
+using Point2d = PointXY<double>;
 
 } // namespace midgard
 } // namespace valhalla
 
 namespace std {
-template <> struct hash<valhalla::midgard::Point2> {
-  size_t operator()(const valhalla::midgard::Point2& p) const {
-    uint64_t h;
-    char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, 4);
-    std::memcpy(b + 4, &p.second, 4);
-    return std::hash<uint64_t>()(h);
-  }
+template <typename PrecisionT> struct hash<valhalla::midgard::PointXY<PrecisionT>> {
+  size_t operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const;
 };
 } // namespace std

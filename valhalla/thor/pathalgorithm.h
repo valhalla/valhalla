@@ -30,8 +30,12 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
+  PathAlgorithm()
+      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_() {
   }
+
+  PathAlgorithm(const PathAlgorithm&) = delete;
+  PathAlgorithm& operator=(const PathAlgorithm&) = delete;
 
   /**
    * Destructor
@@ -59,6 +63,12 @@ public:
               const Options& options = Options::default_instance()) = 0;
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const = 0;
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   virtual void Clear() = 0;
@@ -81,6 +91,32 @@ public:
   }
 
   /**
+   *
+   * There is a rare case where we may encounter only_restrictions with edges being
+   * marked as not_thru.  Basically the only way to get in this area is via one edge
+   * and all other edges are restricted, but this one edge is also marked as not_thru.
+   * Therefore, on the first pass the expansion stops as we cannot take the restricted
+   * turns and we cannot go into the not_thru region. On the 2nd pass, we now ignore
+   * not_thru flags and allow entry into the not_thru region due to the fact that
+   * not_thru_pruning_ is false.  See the gurka test not_thru_pruning_.
+   *
+   * Set the not_thru_pruning_
+   * @param pruning  set the not_thru_pruning_ to pruning value.
+   *                 only set on the second pass
+   */
+  void set_not_thru_pruning(const bool pruning) {
+    not_thru_pruning_ = pruning;
+  }
+
+  /**
+   * Get the not thru pruning
+   * @return  Returns not_thru_pruning_
+   */
+  bool not_thru_pruning() {
+    return not_thru_pruning_;
+  }
+
+  /**
    * Sets the functor which will track the algorithms expansion.
    *
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
@@ -96,6 +132,8 @@ protected:
   const std::function<void()>* interrupt;
 
   bool has_ferry_; // Indicates whether the path has a ferry
+
+  bool not_thru_pruning_; // Indicates whether to allow access into a not-thru region.
 
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
@@ -137,7 +175,7 @@ struct EdgeMetadata {
 
   inline static EdgeMetadata make(const baldr::GraphId& node,
                                   const baldr::NodeInfo* nodeinfo,
-                                  const baldr::GraphTile* tile,
+                                  const graph_tile_ptr& tile,
                                   EdgeStatus& edge_status_) {
     baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
@@ -145,10 +183,19 @@ struct EdgeMetadata {
     return {directededge, edge_id, edge_status};
   }
 
-  inline void increment_pointers() {
+  inline EdgeMetadata& operator++() {
     ++edge;
     ++edge_id;
     ++edge_status;
+    return *this;
+  }
+
+  inline operator bool() const {
+    return edge;
+  }
+
+  inline bool operator!() const {
+    return !edge;
   }
 };
 

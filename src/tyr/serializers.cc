@@ -31,12 +31,64 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-midgard::PointLL to_ll(const LatLng& ll) {
-  return midgard::PointLL{ll.lng(), ll.lat()};
+using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
+
+FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
+  if (edge.roundabout()) {
+    return FormOfWay::ROUNDABOUT;
+  } else if (edge.use() == valhalla::TripLeg::kRampUse ||
+             edge.use() == valhalla::TripLeg::kTurnChannelUse) {
+    return FormOfWay::SLIPROAD;
+  } else if (edge.road_class() == valhalla::RoadClass::kMotorway) {
+    return FormOfWay::MOTORWAY;
+  } else if (edge.traversability() == valhalla::TripLeg::kBoth) {
+    return FormOfWay::MULTIPLE_CARRIAGEWAY;
+  } else if (edge.traversability() != valhalla::TripLeg::kNone) {
+    return FormOfWay::SINGLE_CARRIAGEWAY;
+  } else {
+    return FormOfWay::OTHER;
+  }
+}
+
+std::vector<std::string> openlr_edges(const TripLeg& leg) {
+  // TODO: can we get the uncompressed shape when we have it in other serialization steps
+  const std::vector<midgard::PointLL>& shape =
+      midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+  std::vector<std::string> openlrs;
+  openlrs.reserve(leg.node_size());
+  for (const TripLeg::Node& node : leg.node()) {
+    // the last trip node is the end, we shouldnt have an openlr there
+    if (!node.has_edge())
+      break;
+
+    const auto& edge = node.edge();
+
+    const FormOfWay fow = road_class_to_fow(edge);
+    const auto frc = static_cast<uint8_t>(edge.road_class());
+
+    const auto& start = shape[edge.begin_shape_index()];
+    float forward_heading =
+        midgard::tangent_angle(edge.begin_shape_index(), start, shape, 20.f, true);
+    const auto& end = shape[edge.end_shape_index()];
+    float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
+
+    std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
+    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
+                      edge.length_km() * valhalla::midgard::kMetersPerKm, frc);
+    lrps.emplace_back(end.lng(), end.lat(), reverse_heading, frc, fow, &lrps.back());
+    openlrs.emplace_back(baldr::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
+  }
+  return openlrs;
 }
 } // namespace
 namespace valhalla {
 namespace tyr {
+std::string serializeStatus(const Api&) {
+  // TODO: once we decide on what's in the status message we'll fill out the proto message in
+  // loki/thor/odin and we'll serialize it here
+  return "{}";
+}
+
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
@@ -46,11 +98,28 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
-    for (const std::string& openlr : midgard::openlr_edges(leg)) {
+    auto edge_references = openlr_edges(leg);
+    references->reserve(references->size() + edge_references.size());
+    for (const std::string& openlr : edge_references) {
       references->emplace_back(openlr);
     }
   }
   route_json->emplace("linear_references", references);
+}
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  // you have to have requested it and you have to be some kind of route response
+  if (!api.options().linear_references() ||
+      (api.options().action() != Options::trace_route && api.options().action() != Options::route))
+    return;
+
+  writer.start_array("linear_references");
+  for (const TripLeg& leg : api.trip().routes(route_index).legs()) {
+    for (const std::string& openlr : openlr_edges(leg)) {
+      writer(openlr);
+    }
+  }
+  writer.end_array();
 }
 } // namespace tyr
 } // namespace valhalla

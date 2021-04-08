@@ -1,3 +1,4 @@
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <list>
@@ -5,6 +6,7 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <streambuf>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -60,39 +62,57 @@ int main(int argc, char** argv) {
       return 1;
     }
 
+    // if argv[3] is a file, then use its content as request, otherwise use it directly
+    std::string request_str;
+    try {
+      std::ifstream request_file(argv[3]);
+      if (request_file) {
+        request_str = std::string((std::istreambuf_iterator<char>(request_file)),
+                                  std::istreambuf_iterator<char>());
+      } else {
+        request_str = argv[3];
+      }
+    } catch (const std::exception& e) {
+      LOG_ERROR(e.what());
+      return 1;
+    } catch (...) {
+      LOG_ERROR("Unknown exception thrown while reading request string or file");
+      return 1;
+    }
+
     // do the right action
     valhalla::Api request;
     try {
       switch (action) {
         case valhalla::Options::route:
-          std::cout << actor.route(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.route(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::locate:
-          std::cout << actor.locate(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.locate(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::sources_to_targets:
-          std::cout << actor.matrix(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.matrix(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::optimized_route:
-          std::cout << actor.optimized_route(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.optimized_route(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::isochrone:
-          std::cout << actor.isochrone(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.isochrone(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::trace_route:
-          std::cout << actor.trace_route(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.trace_route(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::trace_attributes:
-          std::cout << actor.trace_attributes(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.trace_attributes(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::height:
-          std::cout << actor.height(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.height(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::transit_available:
-          std::cout << actor.transit_available(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.transit_available(request_str, nullptr, &request) << std::endl;
           break;
         case valhalla::Options::expansion:
-          std::cout << actor.expansion(argv[3], nullptr, &request) << std::endl;
+          std::cout << actor.expansion(request_str, nullptr, &request) << std::endl;
           break;
         default:
           std::cerr << "Unknown action" << std::endl;
@@ -118,6 +138,10 @@ int main(int argc, char** argv) {
   }
 
 #ifdef HAVE_HTTP
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");

@@ -61,6 +61,10 @@ Vector2 operator*(float s, const Vector2& v) {
   return Vector2(v.x() * s, v.y() * s);
 }
 
+Vector2d operator*(double s, const Vector2d& v) {
+  return Vector2d(v.x() * s, v.y() * s);
+}
+
 // Trim the front of a polyline (represented as a list or vector of Point2).
 // Returns the trimmed portion of the polyline. The supplied polyline is
 // altered (the trimmed part is removed).
@@ -251,7 +255,7 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
   container_t resampled = {polyline.front()};
   resolution *= RAD_PER_METER;
   double remaining = resolution;
-  PointLL last = resampled.back();
+  auto last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // radians
     auto lon2 = p->first * -RAD_PER_DEG;
@@ -537,14 +541,16 @@ x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
                               const GeoPoint<double>&,
                               const GeoPoint<double>::first_type);
 
-template <class container_t> float polygon_area(const container_t& polygon) {
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
+  // Shoelace formula
   typename container_t::value_type::first_type area =
-      polygon.back() == polygon.front() ? 0.f
-                                        : (polygon.back().first + polygon.front().first) *
-                                              (polygon.back().second + polygon.front().second);
+      polygon.back() == polygon.front() ? 0.
+                                        : (polygon.back().first * polygon.front().second -
+                                           polygon.back().second * polygon.front().first);
   for (auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend();
        ++p1, ++p2) {
-    area += (p1->first + p2->first) * (p1->second + p2->second);
+    area += p1->first * p2->second - p1->second * p2->first;
   }
   return area * .5;
 }

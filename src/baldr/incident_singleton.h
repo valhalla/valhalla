@@ -26,48 +26,15 @@ namespace {
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
 
-/**
- * Read the contents of a file into an incident tile
- * @param filename   name of the file on the file system to read into memory
- * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
- */
-std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
-  // crack the file open
-  std::ifstream file(filename, std::ios::in | std::ios::binary);
-  if (!file.is_open()) {
-    LOG_WARN("Incident Watcher failed to open " + filename);
-    return {};
-  }
-
-  // prepare a stream for parsing
-  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
-  google::protobuf::io::CodedInputStream cs(
-      static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
-
-  // try to parse the stream
-  std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
-  if (!tile->ParseFromCodedStream(&cs)) {
-    LOG_WARN("Incident Watcher failed to parse " + filename);
-    return {};
-  }
-
-  // dont store empty tiles no point
-  if (tile->locations_size() == 0) {
-    return {};
-  }
-
-  // hand back something that isnt modifyable
-  return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
-}
-
 struct incident_singleton_t {
 protected:
   // parameter pack to share state between daemon thread and singleton instance
   struct state_t {
-    std::atomic<bool> lock_free;
-    std::condition_variable signal;
-    std::mutex mutex;
+    std::atomic<bool> initialized;  // whether or not the watcher thread has done 1 load of incidents
+    std::atomic<bool> lock_free;    // whether or not we can skip locking around cache operations
+    std::condition_variable signal; // how the watcher tells the main thread its done its first load
+    std::mutex mutex;               // for locking on cache operations
+    // the actual cache where tiles are stored
     std::unordered_map<uint64_t, std::shared_ptr<const valhalla::IncidentsTile>> cache;
   };
   // we use a shared_ptr to wrap the state between the watcher thread and the main threads singleton
@@ -81,24 +48,78 @@ protected:
   // daemon thread to watch for new incident data
   std::thread watcher;
 
+  // prototype for the watch function. we need this so unit tests can safely test all functionality
+  using watch_function_t = std::function<void(boost::property_tree::ptree,
+                                              std::unordered_set<valhalla::baldr::GraphId>,
+                                              std::shared_ptr<state_t>,
+                                              std::function<bool(size_t)>)>;
+
   /**
    * Singleton private constructor that static function uses to instantiate the singleton
-   * @param config   lets the daemon thread know where/how to look for incidents
-   * @param tileset  an mmapped graph tileset (ie static) allows incident loading to be lock-free
+   * @param config      lets the daemon thread know where/how to look for incidents
+   * @param tileset     an mmapped graph tileset (ie static) allows incident loading to be lock-free
+   * @param watch_func  the function the background thread will run to keep incident caches up to date
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
-                       const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t{}}, watcher(watch, config, std::cref(tileset), state) {
+                       const std::unordered_set<valhalla::baldr::GraphId>& tileset,
+                       const watch_function_t& watch_func = incident_singleton_t::watch)
+      : state{new state_t{}}, watcher(watch_func, config, tileset, state, interrupt()) {
+    // let the thread control its own lifetime
+    watcher.detach();
+    // check how long we should wait to find out if its initialized
     auto max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
+
     // see if the thread can start up and do a pass to load all the incidents
     std::unique_lock<std::mutex> lock(state->mutex);
     auto when = std::chrono::system_clock::now() + std::chrono::seconds(max_loading_latency);
-    if (state->signal.wait_until(lock, when) == std::cv_status::timeout) {
+    if (!state->signal.wait_until(lock, when, [&]() -> bool { return state->initialized.load(); })) {
       throw std::runtime_error("Unable to initialize incident watcher in the configured time period");
     }
-    // let this run forever
-    watcher.detach();
+  }
+
+  /**
+   * The default interrupt for the watcher threads main loop. Since its not set, the watcher loop
+   * will run forever. This method is provided so the unit tests can exercise the constructor
+   * @return
+   */
+  virtual std::function<bool(size_t)> interrupt() {
+    return {};
+  }
+
+  /**
+   * Read the contents of a file into an incident tile
+   * @param filename   name of the file on the file system to read into memory
+   * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
+   */
+  static std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
+    // open the file for reading. its normal for this to fail when the file has been removed
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+      return {};
+    }
+
+    // prepare a stream for parsing
+    std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()),
+                                              buffer.size());
+    google::protobuf::io::CodedInputStream cs(
+        static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+
+    // try to parse the stream
+    std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
+    if (!tile->ParseFromCodedStream(&cs)) {
+      LOG_WARN("Incident Watcher failed to parse " + filename);
+      return {};
+    }
+
+    // dont store empty tiles no point
+    if (tile->locations_size() == 0) {
+      return {};
+    }
+
+    // hand back something that isnt modifyable
+    return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
   }
 
   /**
@@ -106,15 +127,15 @@ protected:
    * @param state     the state to update
    * @param tile_id   the tile id we are loading
    * @param path      the path to the tile file
+   * @param hint      a pointer to an existing iterator into the cache
    * @return the shared_ptr that owns the tile memory
    */
   static bool update_tile(const std::shared_ptr<state_t>& state,
                           const valhalla::baldr::GraphId& tile_id,
-                          const std::string& path) {
-    // load the tile
-    auto tile = read_tile(path);
+                          std::shared_ptr<const valhalla::IncidentsTile>&& tile,
+                          decltype(state_t::cache)::iterator* hint = nullptr) {
     // see if we have a slot
-    auto found = state->cache.find(tile_id);
+    auto found = hint ? *hint : state->cache.find(tile_id);
     // if we dont have a slot make one, this must be synchronized
     if (found == state->cache.cend()) {
       // this shouldnt happen in lock free mode but can if you put unexpected tiles in the log/dir
@@ -140,29 +161,49 @@ protected:
   }
 
   /**
-   * Thread work function that continually checks for updates to incident tiles. The updates come in
-   * the form of timestamps in a memory mapped file of 64bit integers (one per tile). The first 25
-   * bits are the tile id and level (as a normal graphid) the remaining 39 bits are the timestamp.
-   * When the timestamp for the last check is older than a timestamp for a given file that file is
-   * replaced with whatever its contents are on disk.
+   * Thread work function that continually checks for updates to incident tiles. The thread begins by
+   * deciding whether its just scanning the directory (works for a small number of incidents) or using
+   * a memory mapped changelog to communicate about which incidents changed when.
    *
-   * The thread begins by deciding whether its just scaning the directory (works for a small number of
-   * incidents) or using a memory mapped changelog to communicate about which incidents chnaged last.
-   * If the latter is used we preallocate
-   * @param config
-   * @param tileset
-   * @param state
+   * Directory Scanning Mode:
+   *
+   * In this mode the thread will continually loop over the entire contents of the directory provided.
+   * Any file in the directory which has a timestamp later or equal to the timestamp of the last scan
+   * that was performed will be read into the incident cache. Tiles which are in the cache but were
+   * not found on the disk in the last scan will be purged as they have been removed from the disk. If
+   * a static tileset was provided any tiles which are found in the directory but are not part of the
+   * tileset will be ignored.
+   *
+   * Memory Mapped Log Mode:
+   *
+   * In this mode the thread will continually loop over uint64_t entries of a single binary log file.
+   * The file is used to communicate which incidents changed when. Each entry is a bitfield comprised
+   * of two parts. The first 25 bits are the tile id and level (the same format as a normal graphid)
+   * the remaining 39 bits are the timestamp. Any tile entry in the log which has a timestamp later or
+   * equal to the timestamp of the last scan that was performed will be read into the incident cache.
+   * Tiles which are in the cache but were not found on the disk in the last scan will b epurged as
+   * they have been removed from the log. If a static tileset was provided any tiles which are found
+   * in the log but are nto part of the tileset will be ignored. When the timestamp for the last check
+   * is older than a timestamp for a given file that file is replaced with whatever its contents are
+   * on disk.
+   *
+   * @param config     lets the function know where to look for incidents and desired update frequency
+   * @param tileset    if not empty, the static list of tiles to track (other tiles will be ignored).
+                       if the tileset is static (mem map tar file) we can use lockfree mode
+   * @param state      inter thread communication object (mainly tile cache)
+   * @param interrupt  functor that, if set and returns true, stops the main loop of this function
    */
-  [[noreturn]] static void watch(boost::property_tree::ptree config,
-                                 std::unordered_set<valhalla::baldr::GraphId> tileset,
-                                 std::shared_ptr<state_t> state) {
+  static void watch(boost::property_tree::ptree config,
+                    std::unordered_set<valhalla::baldr::GraphId> tileset,
+                    std::shared_ptr<state_t> state,
+                    std::function<bool(size_t)> interrupt) {
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
     filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
     filesystem::path inc_dir;
     try {
-      changelog.reset(new decltype(changelog)::element_type(inc_log_path.string()));
+      changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
@@ -177,6 +218,7 @@ protected:
     // bail if there is nothing to do
     if (!changelog && inc_dir.string().empty()) {
       LOG_INFO("Incident watcher disabled");
+      state->initialized.store(true);
       state->signal.notify_one();
       return;
     }
@@ -190,11 +232,12 @@ protected:
     }
 
     // some setup for continuous operation
-    bool first_run = true;
+    size_t run_count = 0;
     time_t last_scan = 0;
-    size_t latent_count = 0;
     time_t max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
+    std::unordered_set<uint64_t> seen;
+    seen.reserve(tileset.size());
 
     // wait for someone to tell us to stop
     do {
@@ -203,26 +246,34 @@ protected:
       // the current iteration will load the tile and that it will again be loaded in the next
       auto current_scan = time(nullptr);
       size_t update_count = 0;
+      seen.clear();
 
       // we are in memory map mode
       if (changelog) {
         // reload the log if the tileset isnt static
-        if (!state->lock_free.load())
-          changelog.reset(new decltype(changelog)::element_type(inc_log_path.string()));
+        try {
+          if (!state->lock_free.load())
+            changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
+        } catch (...) {
+          LOG_ERROR("Incident watcher could not map incident_log: " + inc_log_path.string());
+          break;
+        }
+
         // check all of the timestamps/tile_ids
         for (auto entry : *changelog) {
-          // check the timestamp part of the tile id to see if its newer
+          // first 25 bits are the tile id
+          valhalla::baldr::GraphId tile_id(((uint64_t(1) << 25) - 1) & entry);
+          seen.insert(tile_id);
           // spare last 39 bits are the timestamp, leaves us with something like 17k years
-          uint64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
+          int64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
+          // check the timestamp part of the tile id to see if its newer
           if (last_scan <= timestamp) {
-            // first 25 bits are the tile id
-            valhalla::baldr::GraphId tile_id(((uint64_t(1) << 46) - 1) & entry);
             // concoct a file name from the tile_id
             auto file_location = inc_log_path;
             file_location.replace_filename(
                 valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf", true));
             // update the tile
-            update_count += update_tile(state, tile_id, file_location.string());
+            update_count += update_tile(state, tile_id, read_tile(file_location.string()));
           }
         }
       } // we are in directory scan mode
@@ -230,16 +281,29 @@ protected:
         // check all of the files
         for (filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
           try {
-            // if the tile was updated since the last time we scanned we load it
-            struct stat s;
+            // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
             if (i->is_regular_file() &&
-                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid() &&
-                stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
-              // update the tile
-              update_count += update_tile(state, tile_id, i->path().string());
+                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
+              // and if the tile was updated since the last time we scanned we load it
+              seen.insert(tile_id);
+              struct stat s;
+              if (stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
+                // update the tile
+                update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+              }
             }
-          } catch (...) { LOG_WARN("Incident watcher ignoring " + i->path().string()); }
+          } // happens when there is a file in the directory that doesnt have a tile-looking name
+          catch (...) {}
+        }
+      }
+
+      // for all the ones we didnt see, they have been removed from the filesystem or changelog
+      // no locking is needed because we don't realloc here we just null out some values
+      for (auto entry = state->cache.begin(); entry != state->cache.end(); ++entry) {
+        auto found = seen.find(entry->first);
+        if (found == seen.cend() && entry->second) {
+          update_count += update_tile(state, valhalla::baldr::GraphId(entry->first), nullptr, &entry);
         }
       }
 
@@ -249,25 +313,25 @@ protected:
       auto wait = 0;
       if (latency > max_loading_latency) {
         LOG_WARN("Incident watcher is not meeting max loading latency requirement");
-      } // this round finished fast enough, changelog mode is cheap so wait only a second
+      } // this round finished fast enough wait the remainder of the time specified
       else {
-        wait = changelog ? 1 : max_loading_latency - latency;
+        wait = max_loading_latency - latency;
       }
-      LOG_INFO("Incident watcher loaded " + std::to_string(update_count) + " tiles in " +
+      LOG_INFO("Incident watcher updated " + std::to_string(update_count) + " tiles in " +
                std::to_string(latency) + " seconds");
 
       // signal to the constructor that we completed our first batch
-      if (first_run) {
+      if (run_count++ == 0) {
         LOG_INFO("Incident watcher initialized");
-        first_run = false;
+        state->initialized.store(true);
         state->signal.notify_one();
       }
 
       // wait just a little before we check again
       std::this_thread::sleep_for(std::chrono::seconds(wait));
-    } while (true);
+    } while (!interrupt || !interrupt(run_count));
 
-    LOG_INFO("Incident watcher died from latency breaches");
+    LOG_INFO("Incident watcher has stopped");
   }
 
 public:

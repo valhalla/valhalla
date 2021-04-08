@@ -17,6 +17,7 @@
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
+#include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 
@@ -71,10 +72,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   const auto& costing_str = Costing_Enum_Name(options.costing());
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
-  }
-
   try {
     // For the begin and end of multimodal we expect you to be walking
     if (options.costing() == Costing::multimodal) {
@@ -87,18 +84,29 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
-  // See if we have avoids and take care of them
-  if (options.avoid_locations_size() > max_avoid_locations) {
-    throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+  if (options.avoid_polygons_size()) {
+    const auto edges =
+        edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
+    auto* co = options.mutable_costing_options(options.costing());
+    for (const auto& edge_id : edges) {
+      auto* avoid = co->add_avoid_edges();
+      avoid->set_id(edge_id);
+      // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
+      avoid->set_percent_along(0);
+    }
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (options.avoid_locations_size()) {
+    // See if we have avoids and take care of them
+    if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
+      throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    }
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
-      auto* co = options.mutable_costing_options(static_cast<uint8_t>(costing->travel_mode()));
+      auto* co = options.mutable_costing_options(options.costing());
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
@@ -120,9 +128,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid = co->add_avoid_edges();
-                avoid->set_id(shortcut);
-                avoid->set_percent_along(0);
+                auto* avoid_shortcut = co->add_avoid_edges();
+                avoid_shortcut->set_id(shortcut);
+                avoid_shortcut->set_percent_along(0);
               }
             }
           }
@@ -145,9 +153,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"))
                            : nullptr),
-      long_request(config.get<float>("loki.logging.long_request")),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
-      max_time(config.get<size_t>("service_limits.isochrone.max_time")),
+      max_contour_min(config.get<size_t>("service_limits.isochrone.max_time_contour")),
+      max_contour_km(config.get<size_t>("service_limits.isochrone.max_distance_contour")),
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
@@ -175,18 +183,18 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace") {
+    if (kv.first != "trace") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+      if (kv.first == "centroid" && max_locations["centroid"] > 127)
+        throw std::runtime_error("Max locations for centroid action must be < 128");
     }
-    if (kv.first != "skadi") {
-      max_distance.emplace(kv.first,
-                           config.get<float>("service_limits." + kv.first + ".max_distance"));
-    }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+    max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
+    if (kv.first != "centroid" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                               ".max_matrix_distance"));
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
@@ -216,6 +224,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+  max_avoid_polygons_length = config.get<float>("service_limits.max_avoid_polygons_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");
@@ -251,8 +260,8 @@ prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
-  // get time for start of request
-  auto s = std::chrono::system_clock::now();
+
+  // grab the request info
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Loki Request " + std::to_string(info.id));
   Api request;
@@ -272,11 +281,16 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{
+        true,
+        {},
+        "",
+    };
     // do request specific processing
     switch (options.action()) {
       case Options::route:
       case Options::expansion:
+      case Options::centroid:
         route(request);
         result.messages.emplace_back(request.SerializeAsString());
         break;
@@ -303,35 +317,29 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::transit_available:
         result = to_response(transit_available(request), info, request);
         break;
+      case Options::status:
+        status(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
         return jsonify_error({107}, info, request);
     }
-    // get processing time for loki
-    auto e = std::chrono::system_clock::now();
-    std::chrono::duration<float, std::milli> elapsed_time = e - s;
-    // log request if greater than X (ms)
-    auto work_units = options.locations_size()
-                          ? options.locations_size()
-                          : (options.sources_size() ? options.sources_size() + options.targets_size()
-                                                    : options.shape_size() * 20);
-    if (!options.do_not_track() && elapsed_time.count() / work_units > long_request) {
-      LOG_WARN("loki::request elapsed time (ms)::" + std::to_string(elapsed_time.count()));
-      LOG_WARN("loki::request exceeded threshold::" + std::to_string(info.id));
-      midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
-    }
-
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error({199, std::string(e.what())}, info, request);
   }
 }
 
 void run_service(const boost::property_tree::ptree& config) {
+  // gracefully shutdown when asked via SIGTERM
+  prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
+                        config.get<unsigned int>("httpd.service.shutting_seconds", 1));
+
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
   // sends them on to thor

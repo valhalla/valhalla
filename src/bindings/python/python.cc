@@ -1,6 +1,4 @@
-// Note: keep include boost/python.hpp first - fixes https://bugs.python.org/issue10910 on
-// FreeBSD/macOS
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
@@ -11,6 +9,7 @@
 #include <sstream>
 #include <string>
 
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
@@ -52,39 +51,77 @@ configure(const boost::optional<std::string>& config = boost::none) {
 void py_configure(const std::string& config_file) {
   configure(config_file);
 }
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(route_overloads, route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(locate_overloads, locate, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(optimized_route_overloads, optimized_route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(matrix_overloads, matrix, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(isochrone_overloads, isochrone, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_route_overloads, trace_route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_attributes_overloads, trace_attributes, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(height_overloads, height, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(transit_available_overloads, transit_available, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(expansion_overloads, expansion, 1, 1);
 } // namespace
 
-BOOST_PYTHON_MODULE(valhalla) {
+namespace py = pybind11;
 
-  // python interface for configuring the system, always call this first in your python program
-  boost::python::def("Configure", py_configure);
+struct simplified_actor_t : public valhalla::tyr::actor_t {
+  simplified_actor_t(const boost::property_tree::ptree& config)
+      : valhalla::tyr::actor_t::actor_t(config, true) {
+  }
 
-  boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
-                        boost::shared_ptr<valhalla::tyr::actor_t>>("Actor", boost::python::no_init)
-      .def("__init__", boost::python::make_constructor(+[]() {
-             return boost::make_shared<valhalla::tyr::actor_t>(configure(), true);
-           }))
-      .def("Route", &valhalla::tyr::actor_t::route, route_overloads())
-      .def("Locate", &valhalla::tyr::actor_t::route, locate_overloads())
-      .def("OptimizedRoute", &valhalla::tyr::actor_t::route, optimized_route_overloads())
-      .def("Matrix", &valhalla::tyr::actor_t::route, matrix_overloads())
-      .def("Isochrone", &valhalla::tyr::actor_t::route, isochrone_overloads())
-      .def("TraceRoute", &valhalla::tyr::actor_t::route, trace_route_overloads())
-      .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
-      .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
-      .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
-      .def("Expansion", &valhalla::tyr::actor_t::route, expansion_overloads())
+  std::string route(const std::string& request_str) {
+    return valhalla::tyr::actor_t::route(request_str, nullptr, nullptr);
+  };
+  std::string locate(const std::string& request_str) {
+    return valhalla::tyr::actor_t::locate(request_str, nullptr, nullptr);
+  };
+  std::string optimized_route(const std::string& request_str) {
+    return valhalla::tyr::actor_t::optimized_route(request_str, nullptr, nullptr);
+  };
+  std::string matrix(const std::string& request_str) {
+    return valhalla::tyr::actor_t::matrix(request_str, nullptr, nullptr);
+  };
+  std::string isochrone(const std::string& request_str) {
+    return valhalla::tyr::actor_t::isochrone(request_str, nullptr, nullptr);
+  };
+  std::string trace_route(const std::string& request_str) {
+    return valhalla::tyr::actor_t::trace_route(request_str, nullptr, nullptr);
+  };
+  std::string trace_attributes(const std::string& request_str) {
+    return valhalla::tyr::actor_t::trace_attributes(request_str, nullptr, nullptr);
+  };
+  std::string height(const std::string& request_str) {
+    return valhalla::tyr::actor_t::height(request_str, nullptr, nullptr);
+  };
+  std::string transit_available(const std::string& request_str) {
+    return valhalla::tyr::actor_t::transit_available(request_str, nullptr, nullptr);
+  };
+  std::string expansion(const std::string& request_str) {
+    return valhalla::tyr::actor_t::expansion(request_str, nullptr, nullptr);
+  };
+  std::string centroid(const std::string& request_str) {
+    return valhalla::tyr::actor_t::centroid(request_str, nullptr, nullptr);
+  };
+};
 
-      ;
+PYBIND11_MODULE(python_valhalla, m) {
+  m.def("Configure", py_configure);
+
+  py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")
+      .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure()); }))
+      .def("Route", &simplified_actor_t::route, "Calculates a route.")
+      .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
+      .def("OptimizedRoute", &simplified_actor_t::optimized_route,
+           "Optimizes the order of a set of waypoints by time.")
+      .def(
+          "Matrix", &simplified_actor_t::matrix,
+          "Computes the time and distance between a set of locations and returns them as a matrix table.")
+      .def("Isochrone", &simplified_actor_t::isochrone, "Calculates isochrones and isodistances.")
+      .def("TraceRoute", &simplified_actor_t::trace_route,
+           "Map-matching for a set of input locations, e.g. from a GPS.")
+      .def(
+          "TraceAttributes", &simplified_actor_t::trace_attributes,
+          "Returns detailed attribution along each portion of a route calculated from a set of input locations, e.g. from a GPS trace.")
+      .def("Height", &simplified_actor_t::height,
+           "Provides elevation data for a set of input geometries.")
+      .def(
+          "TransitAvailable", &simplified_actor_t::transit_available,
+          "Lookup if transit stops are available in a defined radius around a set of input locations.")
+      .def(
+          "Expansion", &simplified_actor_t::expansion,
+          "Returns all road segments which were touched by the routing algorithm during the graph traversal.")
+      .def(
+          "Centroid", &simplified_actor_t::centroid,
+          "Returns routes from all the input locations to the minimum cost meeting point of those paths.");
 }

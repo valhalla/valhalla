@@ -6,45 +6,46 @@
   "instructions": {
     "arrive": {
       "phrases": {
-        "0": "Ankomst: <TIME>.",
-        "1": "Ankomst: <TIME> till <TRANSIT_STOP>."
+        "0": "Anländer: <TIME>.",
+        "1": "Anländer: <TIME> till <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Ankomst: 8:02 AM."
+          "Arrive: 8:02 AM."
         ],
         "1": [
-          "Ankomst: 8:02 AM till 8 St - NYU."
+          "Arrive: 8:02 AM at 8 St - NYU."
         ]
       }
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Ankomst vid <TIME>.",
-        "1": "Ankomst vid <TIME> till <TRANSIT_STOP>."
+        "0": "Anländer <TIME>.",
+        "1": "Anländer <TIME> till <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Ankomst vid 8:02 AM."
+          "Arrive at 8:02 AM."
         ],
         "1": [
-          "Ankomst vid 8:02 AM till 8 St - NYU."
+          "Arrive at 8:02 AM at 8 St - NYU."
         ]
       }
     },
     "bear": {
       "phrases": {
-        "0": "Håll <RELATIVE_DIRECTION>.",
-        "1": "Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Sväng <RELATIVE_DIRECTION>.",
+        "1": "Sväng <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Sväng <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Sväng <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
+        "5": "Sväng <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -52,16 +53,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Håll höger."
+          "Bear right."
         ],
         "1": [
-          "Håll vänster till Arlen Road."
+          "Bear left onto Arlen Road."
         ],
         "2": [
-          "Håll höger till Belair Road/US 1 Business. Fortsätt på US 1 Business."
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
         ],
         "3": [
-          "Håll vänster för att stanna kvar på US 15 South."
+          "Bear left to stay on US 15 South."
         ],
         "4": [
           "Bear right at Mannenbashi East."
@@ -73,17 +74,18 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Håll <RELATIVE_DIRECTION>.",
-        "1": "Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Sväng <RELATIVE_DIRECTION>.",
+        "1": "Sväng <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Sväng <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>.",
+        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Sväng <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
+        "5": "Sväng <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -91,16 +93,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Håll höger."
+          "Bear right."
         ],
         "1": [
-          "Håll vänster till Arlen Road."
+          "Bear left onto Arlen Road."
         ],
         "2": [
-          "Håll höger till Belair Road, U.S. 1 Business."
+          "Bear right onto Belair Road, U.S. 1 Business."
         ],
         "3": [
-          "Håll vänster för att stanna kvar på U.S. 15 South."
+          "Bear left to stay on U.S. 15 South."
         ],
         "4": [
           "Bear right at Mannenbashi East."
@@ -112,21 +114,21 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> övergår i <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> blir <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
-          "Vine Street övergår i Middletown Road."
+          "Vine Street becomes Middletown Road."
         ]
       }
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> övergår i <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> blir <STREET_NAMES>."
       },
       "example_phrases": {
         "0": [
-          "Vine Street övergår i Middletown Road."
+          "Vine Street becomes Middletown Road."
         ]
       }
     },
@@ -134,20 +136,21 @@
       "phrases": {
         "0": "Fortsätt.",
         "1": "Fortsätt på <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Fortsätt i <JUNCTION_NAME>.",
+        "3": "Fortsätt mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Fortsätt."
+          "Continue."
         ],
         "1": [
-          "Fortsätt på 10th Avenue."
+          "Continue on 10th Avenue."
         ],
         "2": [
           "Continue at Mannenbashi East."
@@ -160,18 +163,19 @@
     "continue_verbal": {
       "phrases": {
         "0": "Fortsätt.",
-        "1": "Fortsätt <LENGTH>.",
+        "1": "Fortsätt i <LENGTH>.",
         "2": "Fortsätt på <STREET_NAMES>.",
-        "3": "Fortsätt <LENGTH> på <STREET_NAMES>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "3": "Fortsätt på <STREET_NAMES> i <LENGTH>.",
+        "4": "Fortsätt på <JUNCTION_NAME>.",
+        "5": "Fortsätt på <JUNCTION_NAME> i <LENGTH>.",
+        "6": "Fortsätt mot<TOWARD_SIGN>.",
+        "7": "Fortsätt mot <TOWARD_SIGN> i <LENGTH>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -180,10 +184,10 @@
         "mindre än 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "en halv mile",
-        "a quarter mile",
+        "<MILES> engelska mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvarts engelsk mil ",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
@@ -218,20 +222,21 @@
       "phrases": {
         "0": "Fortsätt.",
         "1": "Fortsätt på <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Fortsätt i <JUNCTION_NAME>.",
+        "3": "Fortsätt mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Fortsätt."
+          "Continue."
         ],
         "1": [
-          "Fortsätt på 10th Avenue."
+          "Continue on 10th Avenue."
         ],
         "2": [
           "Continue at Mannenbashi East."
@@ -243,38 +248,38 @@
     },
     "depart": {
       "phrases": {
-        "0": "Avresa: <TIME>.",
-        "1": "Avresa: <TIME> från <TRANSIT_STOP>."
+        "0": "Avres: <TIME>.",
+        "1": "Avres: <TIME> från <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Avresa: 8:02 AM."
+          "Depart: 8:02 AM."
         ],
         "1": [
-          "Avresa: 8:02 AM från 8 St - NYU."
+          "Depart: 8:02 AM from 8 St - NYU."
         ]
       }
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Avresa vid <TIME>.",
-        "1": "Avresa vid <TIME> från <TRANSIT_STOP>."
+        "0": "Avres <TIME>.",
+        "1": "Avres <TIME> från <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
-          "Avresa vid 8:02 AM."
+          "Depart at 8:02 AM."
         ],
         "1": [
-          "Avresa vid 8:02 AM från 8 St - NYU."
+          "Depart at 8:02 AM from 8 St - NYU."
         ]
       }
     },
     "destination": {
       "phrases": {
-        "0": "Du är framme vid målet.",
-        "1": "Du är framme vid <DESTINATION>.",
-        "2": "Din destination ligger på <RELATIVE_DIRECTION> sida.",
-        "3": "<DESTINATION> ligger på <RELATIVE_DIRECTION> sida."
+        "0": "Du har anlänt till din destination.",
+        "1": "Du har anlänt till <DESTINATION>.",
+        "2": "Din destination är till <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> är till <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "vänster",
@@ -282,26 +287,26 @@
       ],
       "example_phrases": {
         "0": [
-          "Du är framme vid målet."
+          "You have arrived at your destination."
         ],
         "1": [
-          "Du är framme vid 3206 Powelton Avenue."
+          "You have arrived at 3206 Powelton Avenue."
         ],
         "2": [
-          "Din destination ligger på vänster sida.",
-          "Din destination ligger på höger sida."
+          "Your destination is on the left.",
+          "Your destination is on the right."
         ],
         "3": [
-          "Lancaster Brewing Company ligger på vänster sida."
+          "Lancaster Brewing Company is on the left."
         ]
       }
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Du är framme vid målet.",
-        "1": "Du är framme vid <DESTINATION>.",
-        "2": "Din destination ligger på <RELATIVE_DIRECTION> sida.",
-        "3": "<DESTINATION> ligger på <RELATIVE_DIRECTION> sida."
+        "0": "Du har anlänt till din destination.",
+        "1": "Du har anlänt till <DESTINATION>.",
+        "2": "Din destination är till <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> är till <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "vänster",
@@ -309,26 +314,26 @@
       ],
       "example_phrases": {
         "0": [
-          "Du är framme vid målet."
+          "You have arrived at your destination."
         ],
         "1": [
-          "Du är framme vid 32 o6 Powelton Avenue."
+          "You have arrived at 32 o6 Powelton Avenue."
         ],
         "2": [
-          "Din destination är på vänster sida.",
-          "Din destination är på höger sida."
+          "Your destination is on the left.",
+          "Your destination is on the right."
         ],
         "3": [
-          "Lancaster Brewing Company ligger på vänster sida."
+          "Lancaster Brewing Company is on the left."
         ]
       }
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Du anländer till din destination.",
-        "1": "Du anländer till <DESTINATION>.",
-        "2": "Din destination ligger på <RELATIVE_DIRECTION> sida.",
-        "3": "<DESTINATION> ligger på <RELATIVE_DIRECTION> sida."
+        "0": "Du kommer att anlända till din destination.",
+        "1": "Du kommer att anlända till <DESTINATION>.",
+        "2": "Din destination kommer att vara till <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> kommer att vara till <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "vänster",
@@ -336,17 +341,17 @@
       ],
       "example_phrases": {
         "0": [
-          "Du anländer till din destination."
+          "You will arrive at your destination."
         ],
         "1": [
-          "Du anländer till 32 o6 Powelton Avenue."
+          "You will arrive at 32 o6 Powelton Avenue."
         ],
         "2": [
-          "Din destination ligger på vänster sida.",
-          "Din destination ligger på höger sida."
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
         ],
         "3": [
-          "Lancaster Brewing Company ligger på vänster sida."
+          "Lancaster Brewing Company will be on the left."
         ]
       }
     },
@@ -355,23 +360,24 @@
         "0": "Ta färjan.",
         "1": "Ta <STREET_NAMES>.",
         "2": "Ta <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Ta färjan mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "ferry_label": "Färja",
       "example_phrases": {
         "0": [
-          "Ta färjan."
+          "Take the Ferry."
         ],
         "1": [
-          "Ta Millersburg-färjan."
+          "Take the Millersburg Ferry."
         ],
         "2": [
-          "Ta Bridgeport - Port Jefferson-färjan."
+          "Take the Bridgeport - Port Jefferson Ferry."
         ],
         "3": [
           "Take the ferry toward Cape May."
@@ -383,23 +389,24 @@
         "0": "Ta färjan.",
         "1": "Ta <STREET_NAMES>.",
         "2": "Ta <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Ta färjan mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "ferry_label": "Färja",
       "example_phrases": {
         "0": [
-          "Ta färjan."
+          "Take the Ferry."
         ],
         "1": [
-          "Ta Millersburg-färjan."
+          "Take the Millersburg Ferry."
         ],
         "2": [
-          "Ta Bridgeport - Port Jefferson-färjan."
+          "Take the Bridgeport - Port Jefferson Ferry."
         ],
         "3": [
           "Take the ferry toward Cape May."
@@ -409,21 +416,21 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Kör in i rondellen.",
-        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> avfarten.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "1": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten.",
+        "2": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsätt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten mot <TOWARD_SIGN>.",
+        "5": "Kör in i rondellen och ta avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kör in i rondellen och ta avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsätt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Kör in i rondellen och ta avfarten mot <TOWARD_SIGN>.",
+        "8": "Kör in på <STREET_NAMES>",
+        "9": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten.",
+        "10": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsätt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten mot <TOWARD_SIGN>.",
+        "13": "Kör in på <STREET_NAMES> och ta avfarten mot <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kör in på <STREET_NAMES> och ta avfarten mot <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Fortsätt på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Kör in på <STREET_NAMES> och ta avfarten mot <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1:a",
@@ -438,25 +445,26 @@
         "10:e"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "gångvägen",
+        "cykelbanan",
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Kör in i rondellen."
+          "Enter the roundabout."
         ],
         "1": [
-          "Kör in i rondellen och ta 1:a avfarten.",
-          "Kör in i rondellen och ta 2:a avfarten.",
-          "Kör in i rondellen och ta 3:e avfarten.",
-          "Kör in i rondellen och ta 4:e avfarten.",
-          "Kör in i rondellen och ta 5:e avfarten.",
-          "Kör in i rondellen och ta 6:e avfarten.",
-          "Kör in i rondellen och ta 7:e avfarten.",
-          "Kör in i rondellen och ta 8:e avfarten.",
-          "Kör in i rondellen och ta 9:e avfarten.",
-          "Kör in i rondellen och ta 10:e avfarten."
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -505,21 +513,21 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Kör in i rondellen.",
-        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> exit.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "1": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten.",
+        "2": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Kör in i rondellen och ta den <ORDINAL_VALUE> avfarten mot <TOWARD_SIGN>.",
+        "5": "Kör in i rondellen och ta avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Kör in i rondellen och ta avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Kör in i rondellen och ta avfarten mot <TOWARD_SIGN>.",
+        "8": "Kör in på <STREET_NAMES>",
+        "9": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten.",
+        "10": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Kör in på <STREET_NAMES> och ta den <ORDINAL_VALUE> avfarten mot <TOWARD_SIGN>.",
+        "13": "Kör in på <STREET_NAMES> och ta avfarten mot <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Kör in på <STREET_NAMES> och ta avfarten in på <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Kör in på <STREET_NAMES> och ta avfarten mot <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1:a",
@@ -534,25 +542,26 @@
         "10:e"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "gångvägen",
+        "cykelbanan",
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Kör in i rondellen."
+          "Enter the roundabout."
         ],
         "1": [
-          "Kör in i rondellen och ta 1:a avfarten.",
-          "Kör in i rondellen och ta 2:a avfarten.",
-          "Kör in i rondellen och ta 3:e avfarten.",
-          "Kör in i rondellen och ta 4:e avfarten.",
-          "Kör in i rondellen och ta 5:e avfarten.",
-          "Kör in i rondellen och ta 6:e avfarten.",
-          "Kör in i rondellen och ta 7:e avfarten.",
-          "Kör in i rondellen och ta 8:e avfarten.",
-          "Kör in i rondellen och ta 9:e avfarten.",
-          "Kör in i rondellen och ta 10:e avfarten."
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -600,30 +609,30 @@
     },
     "exit": {
       "phrases": {
-        "0": "Ta avfarten på <RELATIVE_DIRECTION> sida.",
-        "1": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida.",
-        "2": "Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.",
-        "3": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.",
-        "4": "Ta avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "5": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "6": "Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "7": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
-        "8": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.",
-        "10": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.",
-        "12": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "14": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "0": "Ta avfarten till <RELATIVE_DIRECTION>.",
+        "1": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION>.",
+        "2": "Ta <BRANCH_SIGN> avfarten till <RELATIVE_DIRECTION>.",
+        "3": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN>.",
+        "4": "Ta avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Ta <BRANCH_SIGN> avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "7": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN> mot<TOWARD_SIGN>.",
+        "8": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION>.",
+        "10": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION> in på <BRANCH_SIGN>.",
+        "12": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "14": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION> in på <BRANCH_SIGN> mot<TOWARD_SIGN>.",
         "15": "Ta avfarten.",
         "16": "Ta avfart <NUMBER_SIGN>.",
-        "17": "Ta <BRANCH_SIGN>-avfarten.",
-        "18": "Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN>.",
+        "17": "Ta <BRANCH_SIGN> avfarten.",
+        "18": "Ta avfart <NUMBER_SIGN> in på <BRANCH_SIGN>.",
         "19": "Ta avfarten mot <TOWARD_SIGN>.",
         "20": "Ta avfart <NUMBER_SIGN> mot <TOWARD_SIGN>.",
-        "21": "Ta <BRANCH_SIGN>-avfarten mot <TOWARD_SIGN>.",
-        "22": "Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
-        "23": "Ta <NAME_SIGN>-avfarten.",
-        "25": "Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN>.",
-        "27": "Ta <NAME_SIGN>-avfarten mot <TOWARD_SIGN>.",
-        "29": "Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN> mot <TOWARD_SIGN>."
+        "21": "Ta <BRANCH_SIGN> avfarten mot <TOWARD_SIGN>.",
+        "22": "Ta avfart <NUMBER_SIGN> in på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "23": "Ta <NAME_SIGN>avfarten.",
+        "25": "Ta <NAME_SIGN>avfarten in på  <BRANCH_SIGN>.",
+        "27": "Ta <NAME_SIGN>avfarten mot <TOWARD_SIGN>.",
+        "29": "Ta <NAME_SIGN>avfarten in på <BRANCH_SIGN> mot <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vänster",
@@ -631,41 +640,41 @@
       ],
       "example_phrases": {
         "0": [
-          "Ta avfarten på vänster sida.",
-          "Ta avfarten på höger sida."
+          "Take the exit on the left.",
+          "Take the exit on the right."
         ],
         "1": [
-          "Ta avfart 67 B-A på höger sida."
+          "Take exit 67 B-A on the right."
         ],
         "2": [
-          "Ta US 322 West-avfarten på höger sida."
+          "Take the US 322 West exit on the right."
         ],
         "3": [
-          "Ta avfart 67 B-A på höger sida till US 322 West."
+          "Take exit 67 B-A on the right onto US 322 West."
         ],
         "4": [
-          "Ta avfarten på höger sida mot Lewistown."
+          "Take the exit on the right toward Lewistown."
         ],
         "5": [
-          "Ta avfart 67 B-A på höger mot Lewistown."
+          "Take exit 67 B-A on the right toward Lewistown."
         ],
         "6": [
-          "Ta US 322 West-avfarten på höger sida mot Lewistown."
+          "Take the US 322 West exit on the right toward Lewistown."
         ],
         "7": [
-          "Ta avfart 67 B-A på höger sida till US 322 West mot Lewistown/State College."
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
         ],
         "8": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida."
+          "Take the White Marsh Boulevard exit on the left."
         ],
         "10": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida till MD 43 East."
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
         ],
         "12": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida mot White Marsh."
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
         ],
         "14": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida till MD 43 East mot White Marsh."
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
         ],
         "15": [
           "Take the exit."
@@ -708,24 +717,25 @@
     "exit_roundabout": {
       "phrases": {
         "0": "Kör ut ur rondellen.",
-        "1": "Kör ut ur rondellen till <STREET_NAMES>.",
-        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "1": "Kör ut ur rondellen in på <STREET_NAMES>.",
+        "2": "Kör ut ur rondellen in på <BEGIN_STREET_NAMES>. Fortsätt på  <STREET_NAMES>.",
+        "3": "Kör ut ur rondellen mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Kör ut ur rondellen."
+          "Exit the roundabout."
         ],
         "1": [
-          "Kör ut ur rondellen till Philadelphia Road/MD 7."
+          "Exit the roundabout onto Philadelphia Road/MD 7."
         ],
         "2": [
-          "Kör ut ur rondellen till Catoctin Mountain Highway/US 15. Fortsätt på US 15."
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
         ],
         "3": [
           "Exit the roundabout toward Baltimore."
@@ -735,24 +745,25 @@
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Kör ut ur rondellen.",
-        "1": "Kör ut ur rondellen till <STREET_NAMES>.",
-        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "1": "Kör ut ur rondellen in på <STREET_NAMES>.",
+        "2": "Kör ut ur rondellen in på <BEGIN_STREET_NAMES>.",
+        "3": "Kör ut ur rondellen mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Kör ut ur rondellen."
+          "Exit the roundabout."
         ],
         "1": [
-          "Kör ut ur rondellen till Philadelphia Road, Maryland 7."
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
         ],
         "2": [
-          "Kör ut ur rondellen till Catoctin Mountain Highway, U.S. 15."
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
         ],
         "3": [
           "Exit the roundabout toward Baltimore."
@@ -761,72 +772,72 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "Ta avfarten på <RELATIVE_DIRECTION> sida.",
-        "1": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida.",
-        "2": "Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.",
-        "3": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.",
-        "4": "Ta avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "5": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "6": "Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida, mot <TOWARD_SIGN>.",
-        "7": "Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
-        "8": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.",
-        "10": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.",
-        "12": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "14": "Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "0": "Ta avfarten till <RELATIVE_DIRECTION>.",
+        "1": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION>.",
+        "2": "Ta <BRANCH_SIGN>avfarten till <RELATIVE_DIRECTION>.",
+        "3": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN>.",
+        "4": "Ta avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "5": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Ta <BRANCH_SIGN>avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "7": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "8": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION>.",
+        "10": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION> in på <BRANCH_SIGN>.",
+        "12": "Ta <NAME_SIGN> avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "14": "Ta <NAME_SIGN>avfarten till <RELATIVE_DIRECTION> in på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
         "15": "Ta avfarten.",
         "16": "Ta avfart <NUMBER_SIGN>.",
-        "17": "Ta <BRANCH_SIGN>-avfarten.",
-        "18": "Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN>.",
+        "17": "Ta <BRANCH_SIGN>avfarten.",
+        "18": "Ta avfart <NUMBER_SIGN> in på <BRANCH_SIGN>.",
         "19": "Ta avfarten mot <TOWARD_SIGN>.",
         "20": "Ta avfart <NUMBER_SIGN> mot <TOWARD_SIGN>.",
-        "21": "Ta <BRANCH_SIGN>-avfarten mot <TOWARD_SIGN>.",
-        "22": "Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN> mot <TOWARD_SIGN>.",
-        "23": "Ta <NAME_SIGN>-avfarten.",
-        "25": "Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN>.",
-        "27": "Ta <NAME_SIGN>-avfarten mot <TOWARD_SIGN>.",
-        "29": "Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN> mot <TOWARD_SIGN>."
+        "21": "Ta <BRANCH_SIGN>avfarten mot <TOWARD_SIGN>.",
+        "22": "Ta avfart <NUMBER_SIGN> in på <BRANCH_SIGN> mot <TOWARD_SIGN>.",
+        "23": "Ta <NAME_SIGN>avfarten.",
+        "25": "Ta <NAME_SIGN>avfarten in på <BRANCH_SIGN>.",
+        "27": "Ta <NAME_SIGN>avfarten mot <TOWARD_SIGN>.",
+        "29": "Ta <NAME_SIGN>avfarten in på <BRANCH_SIGN> mot <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vänster",
+        "vänster ",
         "höger"
       ],
       "example_phrases": {
         "0": [
-          "Ta avfarten på vänster sida.",
-          "Ta avfarten på höger sida."
+          "Take the exit on the left.",
+          "Take the exit on the right."
         ],
         "1": [
-          "Ta avfart 67 B-A på höger sida."
+          "Take exit 67 B-A on the right."
         ],
         "2": [
-          "Ta U.S. 3 22 West-avfarten på höger sida."
+          "Take the U.S. 3 22 West exit on the right."
         ],
         "3": [
-          "Ta avfart 67 B-A på höger sida till U.S. 3 22 West."
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
         ],
         "4": [
-          "Ta avfarten på höger sida mot Lewistown."
+          "Take the exit on the right toward Lewistown."
         ],
         "5": [
-          "Ta avfart 67 B-A på höger sida mot Lewistown."
+          "Take exit 67 B-A on the right toward Lewistown."
         ],
         "6": [
-          "Ta U.S. 3 22 West-avfarten på höger sida mot Lewistown."
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
         ],
         "7": [
-          "Ta avfart 67 B-A på höger sida till U.S. 3 22 West mot Lewistown, State College."
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
         ],
         "8": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida."
+          "Take the White Marsh Boulevard exit on the left."
         ],
         "10": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida till Maryland 43 East."
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
         ],
         "12": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida mot White Marsh."
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
         ],
         "14": [
-          "Ta White Marsh Boulevard-avfarten på vänster sida till Maryland 43 East mot White Marsh."
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
         ],
         "15": [
           "Take the exit."
@@ -868,7 +879,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Exit <EXIT_NUMBERS>"
+        "0": "Avfart <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -878,202 +889,207 @@
     },
     "keep": {
       "phrases": {
-        "0": "Håll <RELATIVE_DIRECTION> i vägskälet.",
+        "0": "Håll <RELATIVE_DIRECTION> i korsningen.",
         "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>.",
         "2": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till <STREET_NAMES>.",
+        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> in på <STREET_NAMES>.",
         "4": "Håll <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
         "5": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> mot <TOWARD_SIGN>.",
-        "6": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES> mot <TOWARD_SIGN>.",
-        "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till <STREET_NAMES> mot <TOWARD_SIGN>."
+        "6": "Håll <RELATIVE_DIRECTION>för att ta <STREET_NAMES> mot <TOWARD_SIGN>.",
+        "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> in på <STREET_NAMES> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
-        "rakt",
+        "rakt fram",
         "höger"
       ],
       "example_phrases": {
         "0": [
-          "Håll vänster i vägskälet.",
-          "Håll rakt i vägskälet.",
-          "Håll höger i vägskälet."
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
         ],
         "1": [
-          "Håll höger för att ta avfart 62."
+          "Keep right to take exit 62."
         ],
         "2": [
-          "Håll höger för att ta I 895 South."
+          "Keep right to take I 895 South."
         ],
         "3": [
-          "Håll höger för att ta avfart 62 till I 895 South."
+          "Keep right to take exit 62 onto I 895 South."
         ],
         "4": [
-          "Håll höger mot Annapolis."
+          "Keep right toward Annapolis."
         ],
         "5": [
-          "Håll höger för att ta avfart 62 mot Annapolis."
+          "Keep right to take exit 62 toward Annapolis."
         ],
         "6": [
-          "Håll höger för att ta I 895 South mot Annapolis."
+          "Keep right to take I 895 South toward Annapolis."
         ],
         "7": [
-          "Håll höger för att ta avfart 62 till I 895 South mot Annapolis."
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
         ]
       }
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES>.",
+        "0": "Håll <RELATIVE_DIRECTION> för att stanna kvar på  <STREET_NAMES>.",
+        "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> för att stanna kvar på <STREET_NAMES>.",
         "2": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
+        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
-        "rakt",
+        "rakt fram",
         "höger"
       ],
       "example_phrases": {
         "0": [
-          "Håll vänster för att stanna kvar på I 95 South.",
-          "Håll rakt för att stanna kvar på I 95 South.",
-          "Håll höger för att stanna kvar på I 95 South."
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
         ],
         "1": [
-          "Håll vänster för att ta avfart 62, för att stanna kvar på I 95 South."
+          "Keep left to take exit 62 to stay on I 95 South."
         ],
         "2": [
-          "Håll vänster för att stanna kvar på I 95 South mot Baltimore."
+          "Keep left to stay on I 95 South toward Baltimore."
         ],
         "3": [
-          "Håll vänster för att ta avfart 62, för att stanna kvar på I 95 South mot Baltimore."
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
         ]
       }
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
         "0": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES>.",
+        "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> för att stanna kvar på <STREET_NAMES>.",
         "2": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
+        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
-        "rakt",
+        "rakt fram",
         "höger"
       ],
       "example_phrases": {
         "0": [
-          "Håll vänster för att stanna kvar på Interstate 95 South.",
-          "Håll rakt för att stanna kvar på Interstate 95 South.",
-          "Håll höger för att stanna kvar på Interstate 95 South."
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
         ],
         "1": [
-          "Håll vänster för att ta avfart 62, för att stanna kvar på Interstate 95 South."
+          "Keep left to take exit 62 to stay on Interstate 95 South."
         ],
         "2": [
-          "Håll vänster för att stanna kvar på I 95 South mot Baltimore."
+          "Keep left to stay on I 95 South toward Baltimore."
         ],
         "3": [
-          "Håll vänster för att ta avfart 62, för att stanna kvar på Interstate 95 South mot Baltimore."
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
         ]
       }
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Håll <RELATIVE_DIRECTION> i vägskälet.",
+        "0": "Håll <RELATIVE_DIRECTION> i korsningen.",
         "1": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>.",
         "2": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> mot <STREET_NAMES>.",
+        "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> in på  <STREET_NAMES>.",
         "4": "Håll <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
         "5": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> mot <TOWARD_SIGN>.",
         "6": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES> mot <TOWARD_SIGN>.",
-        "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till <STREET_NAMES> mot <TOWARD_SIGN>."
+        "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> in på <STREET_NAMES> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
-        "rakt",
+        "rakt fram",
         "höger"
       ],
       "example_phrases": {
         "0": [
-          "Håll vänster i vägskälet.",
-          "Håll rakt i vägskälet.",
-          "Håll höger i vägskälet."
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
         ],
         "1": [
-          "Håll höger för att ta avfart 62."
+          "Keep right to take exit 62."
         ],
         "2": [
-          "Håll höger för att ta Interstate 8 95 South."
+          "Keep right to take Interstate 8 95 South."
         ],
         "3": [
-          "Håll höger för att ta avfart 62 mot Interstate 8 95 South."
+          "Keep right to take exit 62 onto Interstate 8 95 South."
         ],
         "4": [
-          "Håll höger mot Annapolis."
+          "Keep right toward Annapolis."
         ],
         "5": [
-          "Håll höger för att ta avfart 62 mot Annapolis."
+          "Keep right to take exit 62 toward Annapolis."
         ],
         "6": [
-          "Håll höger för att ta Interstate 8 95 South mot Annapolis."
+          "Keep right to take Interstate 8 95 South toward Annapolis."
         ],
         "7": [
-          "Håll höger för att ta avfart 62 mot Interstate 8 95 South mot Annapolis."
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
         ]
       }
     },
     "merge": {
       "phrases": {
-        "0": "Anslut.",
-        "1": "Anslut <RELATIVE_DIRECTION>.",
-        "2": "Anslut till <STREET_NAMES>.",
-        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Köra in.",
+        "1": "Kör in till <RELATIVE_DIRECTION>.",
+        "2": "Kör in på <STREET_NAMES>.",
+        "3": "Kör in till <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "4": "Kör in mot <TOWARD_SIGN>.",
+        "5": "Kör till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vänster",
         "höger"
       ],
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Anslut."
+          "Merge."
         ],
         "1": [
-          "Anslut vänster."
+          "Merge left."
         ],
         "2": [
-          "Anslut till I 76 West/Pennsylvania Turnpike."
+          "Merge onto I 76 West/Pennsylvania Turnpike."
         ],
         "3": [
-          "Anslut höger till I 83 South."
+          "Merge right onto I 83 South."
         ],
         "4": [
           "Merge toward Baltimore."
@@ -1085,34 +1101,35 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Anslut.",
-        "1": "Anslut <RELATIVE_DIRECTION>.",
-        "2": "Anslut till <STREET_NAMES>.",
-        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Kör in.",
+        "1": "Kör in till <RELATIVE_DIRECTION>.",
+        "2": "Kör in på <STREET_NAMES>.",
+        "3": "Kör in till <RELATIVE_DIRECTION> Kör in på <STREET_NAMES>.",
+        "4": "Kör in mot <TOWARD_SIGN>.",
+        "5": "Kör in till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vänster",
         "höger"
       ],
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Anslut."
+          "Merge."
         ],
         "1": [
-          "Anslut vänster."
+          "Merge left."
         ],
         "2": [
-          "Anslut till I 76 West/Pennsylvania Turnpike."
+          "Merge onto I 76 West/Pennsylvania Turnpike."
         ],
         "3": [
-          "Anslut höger till I 83 South."
+          "Merge right onto I 83 South."
         ],
         "4": [
           "Merge toward Baltimore."
@@ -1124,28 +1141,29 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Res <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Resa<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
       "transit_stop_count_labels": {
-        "one": "hållplats",
-        "other": "hållplatser"
+        "one": "stopp",
+        "other": "stopp"
       },
       "example_phrases": {
         "0": [
-          "Res 1 hållplats.",
-          "Res 3 hållplatser."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Fortsätt <LENGTH>.",
-        "1": "Fortsätt på <STREET_NAMES> <LENGTH>."
+        "0": "Fortsätt i <LENGTH>.",
+        "1": "Fortsätt på <STREET_NAMES> i <LENGTH>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1154,41 +1172,41 @@
         "mindre än 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "en halv mile",
-        "a quarter mile",
+        "<MILES> engelska mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvarts engelsk mit",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
-          "Fortsätt 300 fot.",
-          "Fortsätt 9 miles."
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
         ],
         "1": [
-          "Fortsätt 6.2 miles på Pennsylvania 7 43.",
-          "Fortsätt 1 tiondels mile på Main Street, Vermont 30"
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
         ]
       }
     },
     "ramp": {
       "phrases": {
-        "0": "Ta rampen på <RELATIVE_DIRECTION> sida.",
-        "1": "Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida.",
-        "2": "Ta rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "3": "Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "4": "Ta <NAME_SIGN>-rampen på <RELATIVE_DIRECTION> sida.",
-        "5": "Sväng <RELATIVE_DIRECTION> för att komma till rampen.",
-        "6": "Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen.",
-        "7": "Sväng <RELATIVE_DIRECTION> för att komma till rampen mot <TOWARD_SIGN>.",
-        "8": "Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen, mot <TOWARD_SIGN>.",
-        "9": "Sväng <RELATIVE_DIRECTION> för att komma till <NAME_SIGN>-rampen.",
-        "10": "Ta rampen.",
-        "11": "Ta <BRANCH_SIGN>-rampen.",
-        "12": "Ta rampen mot <TOWARD_SIGN>.",
-        "13": "Ta <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.",
-        "14": "Ta <NAME_SIGN>-rampen."
+        "0": "Ta påfarten till <RELATIVE_DIRECTION>.",
+        "1": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION>.",
+        "2": "Ta påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "3": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "4": "Ta <NAME_SIGN>påfarten till <RELATIVE_DIRECTION>.",
+        "5": "Sväng <RELATIVE_DIRECTION> för att ta påfarten.",
+        "6": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten.",
+        "7": "Sväng <RELATIVE_DIRECTION> för att ta påfarten mot <TOWARD_SIGN>.",
+        "8": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "9": "Sväng <RELATIVE_DIRECTION> för att ta <NAME_SIGN>påfarten.",
+        "10": "Ta påfarten.",
+        "11": "Ta <BRANCH_SIGN>påfarten.",
+        "12": "Ta påfarten mot <TOWARD_SIGN>.",
+        "13": "Ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "14": "Ta <NAME_SIGN>påfarten."
       },
       "relative_directions": [
         "vänster",
@@ -1196,36 +1214,36 @@
       ],
       "example_phrases": {
         "0": [
-          "Ta rampen på vänster sida.",
-          "Ta rampen på höger sida."
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
         ],
         "1": [
-          "Ta I 95-rampen på höger sida."
+          "Take the I 95 ramp on the right."
         ],
         "2": [
-          "Ta rampen på vänster sida, mot JFK."
+          "Take the ramp on the left toward JFK."
         ],
         "3": [
-          "Ta South Conduit Avenue-rampen på vänster sida, mot JFK."
+          "Take the South Conduit Avenue ramp on the left toward JFK."
         ],
         "4": [
-          "Ta Gettysburg Pike-rampen på höger sida."
+          "Take the Gettysburg Pike ramp on the right."
         ],
         "5": [
-          "Sväng vänster för att komma till rampen.",
-          "Sväng höger för att komma till rampen."
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
         ],
         "6": [
-          "Sväng vänster för att komma till PA 283 West-rampen."
+          "Turn left to take the PA 283 West ramp."
         ],
         "7": [
-          "Sväng vänster för att komma till rampen mot Harrisburg/Harrisburg International Airport."
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "8": [
-          "Sväng vänster för att komma till PA 283 West-rampen, mot Harrisburg/Harrisburg International Airport."
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "9": [
-          "Sväng höger för att komma till Gettysburg Pike-rampen."
+          "Turn right to take the Gettysburg Pike ramp."
         ],
         "10": [
           "Take the ramp."
@@ -1246,73 +1264,73 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Håll rakt för att komma till rampen.",
-        "1": "Håll rakt för att komma till <BRANCH_SIGN>-rampen.",
-        "2": "Håll rakt för att komma till rampen mot <TOWARD_SIGN>.",
-        "3": "Håll rakt för att komma till <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.",
-        "4": "Håll rakt för att komma till <NAME_SIGN>-rampen."
+        "0": "Håll rakt fram för att ta påfarten.",
+        "1": "Håll rakt fram för att ta <BRANCH_SIGN>påfarten.",
+        "2": "Håll rakt fram för att ta påfarten mot <TOWARD_SIGN>.",
+        "3": "Håll rakt fram för att ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "4": "Håll rakt fram för att ta <NAME_SIGN>påfarten."
       },
       "example_phrases": {
         "0": [
-          "Håll rakt för att komma till rampen."
+          "Stay straight to take the ramp."
         ],
         "1": [
-          "Håll rakt för att komma till US 322 East-rampen."
+          "Stay straight to take the US 322 East ramp."
         ],
         "2": [
-          "Håll rakt för att komma till rampen mot Hershey."
+          "Stay straight to take the ramp toward Hershey."
         ],
         "3": [
-          "Håll rakt för att komma till US 322 East/US 422 East/US 522 East/US 622 East-rampen mot Hershey/Palmdale/Palmyra/Campbelltown."
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
         ],
         "4": [
-          "Håll rakt för att komma till Gettysburg Pike-rampen."
+          "Stay straight to take the Gettysburg Pike ramp."
         ]
       }
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Håll rakt för att komma till rampen.",
-        "1": "Håll rakt för att komma till <BRANCH_SIGN>-rampen.",
-        "2": "Håll rakt för att komma till rampen mot <TOWARD_SIGN>.",
-        "3": "Håll rakt för att komma till <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.",
-        "4": "Håll rakt för att komma till <NAME_SIGN>-rampen."
+        "0": "Håll rakt fram för att ta påfarten.",
+        "1": "Håll rakt fram för att ta<BRANCH_SIGN> påfarten.",
+        "2": "Håll rakt fram för att ta påfarten mot <TOWARD_SIGN>.",
+        "3": "Håll rakt fram för att ta<BRANCH_SIGN> påfarten mot <TOWARD_SIGN>.",
+        "4": "Håll rakt fram för att ta <NAME_SIGN>påfarten."
       },
       "example_phrases": {
         "0": [
-          "Håll rakt för att komma till rampen."
+          "Stay straight to take the ramp."
         ],
         "1": [
-          "Håll rakt för att komma till U.S. 3 22 East-rampen."
+          "Stay straight to take the U.S. 3 22 East ramp."
         ],
         "2": [
-          "Håll rakt för att komma till rampen mot Hershey."
+          "Stay straight to take the ramp toward Hershey."
         ],
         "3": [
-          "Håll rakt för att komma till U.S. 3 22 East, U.S. 4 22 East-rampen mot Hershey, Palmdale."
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
         ],
         "4": [
-          "Håll rakt för att komma till Gettysburg Pike-rampen."
+          "Stay straight to take the Gettysburg Pike ramp."
         ]
       }
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Ta rampen på <RELATIVE_DIRECTION> sida.",
-        "1": "Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida.",
-        "2": "Ta rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "3": "Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.",
-        "4": "Ta <NAME_SIGN>-rampen på <RELATIVE_DIRECTION> sida.",
-        "5": "Sväng <RELATIVE_DIRECTION> för att komma till ramp.",
-        "6": "Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen.",
-        "7": "Sväng <RELATIVE_DIRECTION> för att komma till rampen, mot <TOWARD_SIGN>.",
-        "8": "Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen, mot <TOWARD_SIGN>.",
-        "9": "Sväng <RELATIVE_DIRECTION> för att komma till <NAME_SIGN>-rampen.",
-        "10": "Ta rampen.",
-        "11": "Ta <BRANCH_SIGN>-rampen.",
-        "12": "Ta rampen mot <TOWARD_SIGN>.",
-        "13": "Ta <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.",
-        "14": "Ta <NAME_SIGN>-rampen."
+        "0": "Ta påfarten till <RELATIVE_DIRECTION>.",
+        "1": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION>.",
+        "2": "Ta påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "3": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "4": "Ta <NAME_SIGN>påfarten till <RELATIVE_DIRECTION>.",
+        "5": "Sväng <RELATIVE_DIRECTION> för att ta påfarten.",
+        "6": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten.",
+        "7": "Sväng <RELATIVE_DIRECTION> för att ta påfarten mot <TOWARD_SIGN>.",
+        "8": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "9": "Sväng <RELATIVE_DIRECTION> för att ta <NAME_SIGN>påfarten.",
+        "10": "Ta påfarten.",
+        "11": "Ta <BRANCH_SIGN>påfarten.",
+        "12": "Ta påfarten mot <TOWARD_SIGN>.",
+        "13": "Ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "14": "Ta <NAME_SIGN>påfarten."
       },
       "relative_directions": [
         "vänster",
@@ -1320,36 +1338,36 @@
       ],
       "example_phrases": {
         "0": [
-          "Ta rampen på vänster sida.",
-          "Ta rampen på höger sida."
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
         ],
         "1": [
-          "Ta Interstate 95-rampen på höger sida."
+          "Take the Interstate 95 ramp on the right."
         ],
         "2": [
-          "Ta rampen på vänster sida, mot JFK."
+          "Take the ramp on the left toward JFK."
         ],
         "3": [
-          "Ta South Conduit Avenue-rampen på vänster sida, mot JFK."
+          "Take the South Conduit Avenue ramp on the left toward JFK."
         ],
         "4": [
-          "Ta Gettysburg Pike-rampen på höger sida."
+          "Take the Gettysburg Pike ramp on the right."
         ],
         "5": [
-          "Sväng vänster för att komma till rampen.",
-          "Sväng höger för att komma till rampen."
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
         ],
         "6": [
-          "Sväng vänster för att komma till Pennsylvania 2 83 West-rampen."
+          "Turn left to take the Pennsylvania 2 83 West ramp."
         ],
         "7": [
-          "Sväng vänster för att komma till rampen mot Harrisburg/Harrisburg International Airport."
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
         ],
         "8": [
-          "Sväng vänster för att komma till Pennsylvania 2 83 West-rampen, mot Harrisburg, Harrisburg International Airport."
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
         ],
         "9": [
-          "Sväng höger för att komma till Gettysburg Pike-rampen."
+          "Turn right to take the Gettysburg Pike ramp."
         ],
         "10": [
           "Take the ramp."
@@ -1370,17 +1388,18 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Sväng skarp <RELATIVE_DIRECTION>.",
-        "1": "Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gör en skarp sväng till <RELATIVE_DIRECTION>.",
+        "1": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "3": "Gör en skarp sväng till <RELATIVE_DIRECTION> för att stanna kvar på  <STREET_NAMES>.",
+        "4": "Gör en skarp sväng till <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
+        "5": "Gör en skarp sväng till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -1388,16 +1407,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Sväng skarp vänster."
+          "Make a sharp left."
         ],
         "1": [
-          "Sväng skarp höger till Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Sväng skarp vänster till North Bond Street/US 1 Business/MD 924. Fortsätt på MD 924."
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Sväng skarp höger för att stanna kvar på Sunstone Drive."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1409,17 +1428,18 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Sväng skarp <RELATIVE_DIRECTION>.",
-        "1": "Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
-        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Gör en skarp sväng till <RELATIVE_DIRECTION>.",
+        "1": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>.",
+        "3": "Gör en skarp sväng till <RELATIVE_DIRECTION> för att stanna kvar på  <STREET_NAMES>.",
+        "4": "Gör en skarp sväng till <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
+        "5": "Gör en skarp sväng till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -1427,16 +1447,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Sväng skarp vänster."
+          "Make a sharp left."
         ],
         "1": [
-          "Sväng skarp höger till Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Sväng skarp vänster till North Bond Street, U.S. 1 Business."
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Sväng skarp höger för att stanna kvar på Sunstone Drive."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1448,120 +1468,122 @@
     },
     "start": {
       "phrases": {
-        "0": "<CARDINAL_DIRECTION>.",
-        "1": "<CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "2": "<CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "0": "Kör <CARDINAL_DIRECTION>.",
+        "1": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "2": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
         "4": "Kör <CARDINAL_DIRECTION>.",
         "5": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "6": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "6": "Kör <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
         "8": "Gå <CARDINAL_DIRECTION>.",
         "9": "Gå <CARDINAL_DIRECTION> på <STREET_NAMES>.",
         "10": "Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "16": "Cykla <CARDINAL_DIRECTION>.",
-        "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>."
+        "16": "Cycla <CARDINAL_DIRECTION>.",
+        "17": "Cycla <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cycla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt <STREET_NAMES>."
       },
       "cardinal_directions": [
         "norrut",
-        "mot nordost",
+        "mot nordöst",
         "österut",
-        "mot sydost",
+        "mot sydöst",
         "söderut",
         "mot sydväst",
         "västerut",
         "mot nordväst"
       ],
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
-          "Österut.",
-          "Norrut."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Mot sydväst på 5th Avenue.",
-          "Västerut på gångbanan",
-          "Österut på cykelbanan",
-          "Norrut i mountain bike-spåret"
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
         ],
         "2": [
-          "Söderut på North Prince Street/US 222/PA 272. Fortsätt på US 222/PA 272."
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "4": [
-          "Kör österut.",
-          "Kör norrut."
+          "Drive east.",
+          "Drive north."
         ],
         "5": [
-          "Kör mot sydväst på 5th Avenue."
+          "Drive southwest on 5th Avenue."
         ],
         "6": [
-          "Kör söderut på North Prince Street/US 222/PA 272. Fortsätt på US 222/PA 272."
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "8": [
-          "Gå österut.",
-          "Gå norrut."
+          "Walk east.",
+          "Walk north."
         ],
         "9": [
-          "Gå mot sydväst på 5th Avenue.",
-          "Gå västerut på gångbanan"
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
         ],
         "10": [
-          "Gå söderut på North Prince Street/US 222/PA 272. Fortsätt på US 222/PA 272."
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "16": [
-          "Cykla österut.",
-          "Cykla norrut."
+          "Bike east.",
+          "Bike north."
         ],
         "17": [
-          "Cykla mot sydväst på 5th Avenue.",
-          "Cykla österut på cykelbanan",
-          "Cykla norrut i mountain bike-spåret"
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
         ],
         "18": [
-          "Cykla söderut på North Prince Street/US 222/PA 272. Fortsätt på US 222/PA 272."
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ]
       }
     },
     "start_verbal": {
       "phrases": {
-        "0": "<CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "<CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "3": "<LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "4": "<CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "0": "Kör <CARDINAL_DIRECTION>.",
+        "1": "Kör <CARDINAL_DIRECTION> i <LENGTH>.",
+        "2": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "3": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "4": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
         "5": "Kör <CARDINAL_DIRECTION>.",
-        "6": "Kör <LENGTH> <CARDINAL_DIRECTION>.",
-        "7": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "8": "Kör <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "6": "Kör <CARDINAL_DIRECTION> i <LENGTH>.",
+        "7": "Kör <CARDINAL_DIRECTION>  <STREET_NAMES>.",
+        "8": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
         "9": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
         "10": "Gå <CARDINAL_DIRECTION>.",
-        "11": "Gå <LENGTH> <CARDINAL_DIRECTION>.",
+        "11": "Gå <CARDINAL_DIRECTION> i <LENGTH>.",
         "12": "Gå <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "13": "Gå <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "14": "Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "13": "Gå <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
+        "14": "Gå<CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
         "15": "Cykla <CARDINAL_DIRECTION>.",
-        "16": "Cykla <LENGTH> <CARDINAL_DIRECTION>.",
+        "16": "Cykla <CARDINAL_DIRECTION> i <LENGTH>.",
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "18": "Cykla <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
         "19": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "norrut",
-        "mot nordost",
+        "mot nordöst",
         "österut",
-        "mot sydost",
+        "mot sydöst",
         "söderut",
         "mot sydväst",
         "västerut",
-        "mot nordäst"
+        "mot nordväst"
       ],
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -1570,10 +1592,10 @@
         "mindre än 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "en halv mile",
-        "a quarter mile",
+        "<MILES> engelska mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvarts engelsk mil",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
@@ -1659,23 +1681,23 @@
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "transit_stop_count_labels": {
-        "one": "hållplats",
-        "other": "hållplatser"
+        "one": "stopp",
+        "other": "stopp"
       },
       "example_phrases": {
         "0": [
-          "Ta New Haven. (1 hållplats)",
-          "Ta tunnelbanan. (2 hållplatser)",
-          "Ta bussen. (12 hållplatser)"
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
         ],
         "1": [
-          "Ta F mot JAMAICA - 179 ST. (10 hållplatser)",
-          "Ta färjan mot Staten Island. (1 hållplats)"
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
         ]
       }
     },
@@ -1688,13 +1710,13 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Lämna stationen."
+          "Exit the station."
         ],
         "1": [
-          "Lämna Embarcadero Station."
+          "Exit the Embarcadero Station."
         ],
         "2": [
-          "Lämna 8 St - NYU Station."
+          "Exit the 8 St - NYU Station."
         ]
       }
     },
@@ -1707,13 +1729,13 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Lämna stationen."
+          "Exit the station."
         ],
         "1": [
-          "Lämna Embarcadero Station."
+          "Exit the Embarcadero Station."
         ],
         "2": [
-          "Lämna 8 St - NYU Station."
+          "Exit the 8 St - NYU Station."
         ]
       }
     },
@@ -1726,13 +1748,13 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Gå in på stationen."
+          "Enter the station."
         ],
         "1": [
-          "Gå in på Embarcadero Station."
+          "Enter the Embarcadero Station."
         ],
         "2": [
-          "Gå in på 8 St - NYU Station."
+          "Enter the 8 St - NYU Station."
         ]
       }
     },
@@ -1745,80 +1767,80 @@
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Gå in på stationen."
+          "Enter the station."
         ],
         "1": [
-          "Gå in på Embarcadero Station."
+          "Enter the Embarcadero Station."
         ],
         "2": [
-          "Gå in på 8 St - NYU Station."
+          "Enter the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Byt vid stationen.",
-        "1": "Byt vid <TRANSIT_STOP>.",
-        "2": "Byt vid <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Byt på stationen.",
+        "1": "Byt på <TRANSIT_STOP>.",
+        "2": "Byt på  <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Byt vid stationen."
+          "Transfer at the station."
         ],
         "1": [
-          "Byt vid Embarcadero Station."
+          "Transfer at the Embarcadero Station."
         ],
         "2": [
-          "Byt vid 8 St - NYU Station."
+          "Transfer at the 8 St - NYU Station."
         ]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Byt vid stationen.",
-        "1": "Byt vid <TRANSIT_STOP>.",
-        "2": "Byt vid <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Byt på stationen.",
+        "1": "Byt på <TRANSIT_STOP>.",
+        "2": "Byt på <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
         "0": [
-          "Byt vid stationen."
+          "Transfer at the station."
         ],
         "1": [
-          "Byt vid Embarcadero Station."
+          "Transfer at the Embarcadero Station."
         ],
         "2": [
-          "Byt vid 8 St - NYU Station."
+          "Transfer at the 8 St - NYU Station."
         ]
       }
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Stanna kvar på <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "0": "Stanna kvar på  <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Stanna kvar på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "spårvagnen",
+        "spårvagnen ",
         "tunnelbanan",
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "transit_stop_count_labels": {
-        "one": "hållplats",
-        "other": "hållplatser"
+        "one": "stopp",
+        "other": "stopp"
       },
       "example_phrases": {
         "0": [
-          "Stanna kvar på New Haven. (1 hållplats)",
-          "Stanna kvar på tåget. (3 hållplatser)"
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
         ],
         "1": [
-          "Stanna kvar på F mot JAMAICA - 179 ST. (10 hållplatser)"
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
         ]
       }
     },
@@ -1833,16 +1855,16 @@
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "example_phrases": {
         "0": [
-          "Stanna kvar på New Haven."
+          "Remain on the New Haven."
         ],
         "1": [
-          "Stanna kvar på F mot JAMAICA - 179 ST."
+          "Remain on the F toward JAMAICA - 179 ST."
         ]
       }
     },
@@ -1857,21 +1879,21 @@
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "transit_stop_count_labels": {
-        "one": "hållplats",
-        "other": "hållplatser"
+        "one": "stopp",
+        "other": "stopp"
       },
       "example_phrases": {
         "0": [
-          "Byt för att ta New Haven. (1 hållplats)",
-          "Byt för att ta spårvagnen. (4 hållplatser)"
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
         ],
         "1": [
-          "Byt för att ta F mot JAMAICA - 179 ST. (10 hållplatser)"
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
         ]
       }
     },
@@ -1886,16 +1908,16 @@
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "example_phrases": {
         "0": [
-          "Byt för att ta New Haven."
+          "Transfer to take the New Haven."
         ],
         "1": [
-          "Byt för att ta F mot JAMAICA - 179 ST."
+          "Transfer to take the F toward JAMAICA - 179 ST."
         ]
       }
     },
@@ -1910,32 +1932,33 @@
         "tåget",
         "bussen",
         "färjan",
-        "kabelvagnen",
+        "linbanan",
         "gondolen",
-        "linbanan"
+        "bergbanan"
       ],
       "example_phrases": {
         "0": [
-          "Ta New Haven."
+          "Take the New Haven."
         ],
         "1": [
-          "Ta F mot JAMAICA - 179 ST."
+          "Take the F toward JAMAICA - 179 ST."
         ]
       }
     },
     "turn": {
       "phrases": {
         "0": "Sväng <RELATIVE_DIRECTION>.",
-        "1": "Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "1": "Sväng <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Sväng <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
         "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Sväng <RELATIVE_DIRECTION> vid <JUNCTION_NAME>.",
+        "5": "Sväng <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -1943,16 +1966,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Sväng vänster."
+          "Turn left."
         ],
         "1": [
-          "Sväng höger till Flatbush Avenue."
+          "Turn right onto Flatbush Avenue."
         ],
         "2": [
-          "Sväng vänster till North Bond Street/US 1 Business/MD 924. Fortsätt på MD 924."
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Sväng höger för att stanna kvar på Sunstone Drive."
+          "Turn right to stay on Sunstone Drive."
         ],
         "4": [
           "Turn right at Mannenbashi East."
@@ -1965,16 +1988,17 @@
     "turn_verbal": {
       "phrases": {
         "0": "Sväng <RELATIVE_DIRECTION>.",
-        "1": "Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
+        "1": "Sväng <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
+        "2": "Sväng <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>.",
         "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Sväng <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
+        "5": "Sväng <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -1982,16 +2006,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Sväng vänster."
+          "Turn left."
         ],
         "1": [
-          "Sväng höger till Flatbush Avenue."
+          "Turn right onto Flatbush Avenue."
         ],
         "2": [
-          "Sväng vänster till North Bond Street, U.S. 1 Business."
+          "Turn left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Sväng höger för att stanna kvar på Sunstone Drive."
+          "Turn right to stay on Sunstone Drive."
         ],
         "4": [
           "Turn right at Mannenbashi East."
@@ -2003,19 +2027,20 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Gör en U-sväng åt <RELATIVE_DIRECTION>.",
-        "1": "Gör en U-sväng åt <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Gör en U-sväng åt <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "3": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>.",
-        "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.",
-        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "Gör en <RELATIVE_DIRECTION> U-sväng.",
+        "1": "Gör en <RELATIVE_DIRECTION> U-sväng in på <STREET_NAMES>.",
+        "2": "Gör en <RELATIVE_DIRECTION> U-sväng för att stanna kvar på <STREET_NAMES>.",
+        "3": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES>.",
+        "4": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> in på <STREET_NAMES>.",
+        "5": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
+        "6": "Gör en <RELATIVE_DIRECTION> U-sväng vid <JUNCTION_NAME>.",
+        "7": "Gör en <RELATIVE_DIRECTION> U-sväng mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -2023,22 +2048,22 @@
       ],
       "example_phrases": {
         "0": [
-          "Gör en U-sväng åt vänster."
+          "Make a left U-turn."
         ],
         "1": [
-          "Gör en U-sväng åt höger till Bunker Hill Road."
+          "Make a right U-turn onto Bunker Hill Road."
         ],
         "2": [
-          "Gör en U-sväng åt vänster för att stanna kvar på Bunker Hill Road."
+          "Make a left U-turn to stay on Bunker Hill Road."
         ],
         "3": [
-          "Gör en U-sväng åt vänster på Devonshire Road."
+          "Make a left U-turn at Devonshire Road."
         ],
         "4": [
-          "Gör en U-sväng åt vänster på Devonshire Road till Jonestown Road/US 22."
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
         ],
         "5": [
-          "Gör en U-sväng åt vänster på Devonshire Road för att stanna kvar på Jonestown Road/US 22."
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
         ],
         "6": [
           "Make a right U-turn at Mannenbashi East."
@@ -2050,19 +2075,20 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Gör en U-sväng åt <RELATIVE_DIRECTION>.",
-        "1": "Gör en U-sväng åt <RELATIVE_DIRECTION> till <STREET_NAMES>.",
-        "2": "Gör en U-sväng åt <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
-        "3": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>.",
-        "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.",
-        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "0": "Gör en <RELATIVE_DIRECTION> U-sväng.",
+        "1": "Gör en <RELATIVE_DIRECTION> U-sväng in på <STREET_NAMES>.",
+        "2": "Gör en <RELATIVE_DIRECTION> U-sväng för att stanna kvar på <STREET_NAMES>.",
+        "3": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES>.",
+        "4": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> in på <STREET_NAMES>.",
+        "5": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
+        "6": "Gör en <RELATIVE_DIRECTION> U-sväng vid <JUNCTION_NAME>.",
+        "7": "Gör en <RELATIVE_DIRECTION> U-sväng mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "gångbanan",
+        "gångvägen",
         "cykelbanan",
-        "mountain bike-spåret"
+        "terrängcykelbanan",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vänster",
@@ -2070,22 +2096,22 @@
       ],
       "example_phrases": {
         "0": [
-          "Gör en U-sväng åt vänster."
+          "Make a left U-turn."
         ],
         "1": [
-          "Gör en U-sväng åt höger till Bunker Hill Road."
+          "Make a right U-turn onto Bunker Hill Road."
         ],
         "2": [
-          "Gör en U-sväng åt vänster för att stanna kvar på Bunker Hill Road."
+          "Make a left U-turn to stay on Bunker Hill Road."
         ],
         "3": [
-          "Gör en U-sväng åt vänster på Devonshire Road."
+          "Make a left U-turn at Devonshire Road."
         ],
         "4": [
-          "Gör en U-sväng åt vänster på Devonshire Road till Jonestown Road, U.S. 22."
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
         ],
         "5": [
-          "Gör en U-sväng åt vänster på Devonshire Road för att stanna kvar på Jonestown Road, U.S. 22."
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
         ],
         "6": [
           "Make a right U-turn at Mannenbashi East."
@@ -2097,8 +2123,8 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> sedan <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Därefter <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Därefter, i <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -2107,16 +2133,16 @@
         "mindre än 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "en halv mile",
-        "a quarter mile",
+        "<MILES> engelska mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvarts engelsk mil",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
-          "Håll höger mot East Fayette Street. Sväng sedan höger mot North Gay Street."
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
@@ -2125,7 +2151,7 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "Om <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilometer",
@@ -2134,12 +2160,12 @@
         "mindre än 10 meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "en halv mile",
-        "a quarter mile",
+        "<MILES> engelska mil",
+        "1 engelsk mil",
+        "en halv engelsk mil",
+        "en kvarts engelsk mil",
         "<FEET> fot",
-        "mindre än 10 fot"
+        "mindre än 10 meter"
       ],
       "example_phrases": {
         "0": [

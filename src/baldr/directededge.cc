@@ -114,8 +114,13 @@ void DirectedEdge::set_sign(const bool exit) {
 // ------------------------- Geographic attributes ------------------------- //
 
 // Sets the length of the edge in meters.
-void DirectedEdge::set_length(const uint32_t length) {
+void DirectedEdge::set_length(const uint32_t length, bool should_error) {
   if (length > kMaxEdgeLength) {
+    if (should_error) {
+      // Consider this a catastrophic error.
+      LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+      throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
+    }
     LOG_WARN("Exceeding max. edge length: " + std::to_string(length));
     length_ = kMaxEdgeLength;
   } else {
@@ -580,6 +585,7 @@ json::MapPtr DirectedEdge::json() const {
       {"country_crossing", static_cast<bool>(ctry_crossing_)},
       {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
       {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
+      {"sac_scale", to_string(static_cast<SacScale>(sac_scale_))},
       {"geo_attributes",
        json::map({
            {"length", static_cast<uint64_t>(length_)},

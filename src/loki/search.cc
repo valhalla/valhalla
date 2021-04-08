@@ -24,6 +24,8 @@ template <typename T> inline T square(T v) {
 }
 
 bool is_search_filter_triggered(const DirectedEdge* edge,
+                                const DynamicCost& costing,
+                                const graph_tile_ptr& tile,
                                 const Location::SearchFilter& search_filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
@@ -33,14 +35,12 @@ bool is_search_filter_triggered(const DirectedEdge* edge,
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
-  if ((road_class > min_road_class || road_class < max_road_class) ||
-      (search_filter.exclude_tunnel_ && edge->tunnel()) ||
-      (search_filter.exclude_bridge_ && edge->bridge()) ||
-      (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp))) {
-    return true;
-  }
-
-  return false;
+  return (road_class > min_road_class || road_class < max_road_class) ||
+         (search_filter.exclude_tunnel_ && edge->tunnel()) ||
+         (search_filter.exclude_bridge_ && edge->bridge()) ||
+         (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
+         (search_filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
+          tile->IsClosed(edge));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
@@ -50,7 +50,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
     return false;
 
   // need the driving side for this edge
-  const GraphTile* tile;
+  graph_tile_ptr tile;
   auto* opp = reader.GetOpposingEdge(edge.id, tile);
   if (!opp)
     return false;
@@ -89,24 +89,23 @@ PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   return side;
 }
 
-std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const PointLL& p,
-                                                                        const GraphReader& reader) {
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+std::function<std::tuple<int32_t, unsigned short, double>()> make_binner(const PointLL& p) {
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   return tiles.ClosestFirst(p);
 }
 
 // Model a segment (2 consecutive points in an edge in a bin).
 struct candidate_t {
-  double sq_distance;
+  double sq_distance{};
   PointLL point;
-  size_t index;
-  bool prefiltered;
+  size_t index{};
+  bool prefiltered{};
 
   GraphId edge_id;
-  const DirectedEdge* edge;
+  const DirectedEdge* edge{};
   std::shared_ptr<const EdgeInfo> edge_info;
 
-  const GraphTile* tile;
+  graph_tile_ptr tile;
 
   bool operator<(const candidate_t& c) const {
     return sq_distance < c.sq_distance;
@@ -135,17 +134,17 @@ struct candidate_t {
     // 10 degrees on either side is considered to be straight ahead
     constexpr float angle_tolerance = 10.f;
 
-    // check which side the point falls in:
-    // If angle_diff is between 10 and 170 it's on the right side,
-    // if angle_diff is between 190 and 350 it's on the left side,
-    // otherwise it's practically straight ahead or behind.
-    //
-    //       \    L    /
-    //        \       /
-    //  - - - - - x - - - - -
-    //        /       \
-    //       /    R    \
-    //
+    /* check which side the point falls in:
+       If angle_diff is between 10 and 170 it's on the right side,
+       if angle_diff is between 190 and 350 it's on the left side,
+       otherwise it's practically straight ahead or behind.
+
+             \    L    /
+              \       /
+        - - - - - x - - - - -
+              /       \
+             /    R    \
+    */
     if (angle_diff > angle_tolerance && angle_diff < (180.f - angle_tolerance)) {
       return PathLocation::SideOfStreet::RIGHT;
     } else if (angle_diff > (180.f + angle_tolerance) && angle_diff < (360.f - angle_tolerance)) {
@@ -164,7 +163,7 @@ struct candidate_t {
 // is found.
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
-      : binner(make_binner(location.latlng_, reader)), location(location),
+      : binner(make_binner(location.latlng_)), location(location),
         sq_radius(square(double(location.radius_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -185,7 +184,7 @@ struct projector_wrapper {
   bool operator<(const projector_wrapper& other) const {
     // the
     if (cur_tile != other.cur_tile) {
-      return cur_tile > other.cur_tile;
+      return cur_tile.get() > other.cur_tile.get();
     }
     return bin_index < other.bin_index;
   }
@@ -205,7 +204,7 @@ struct projector_wrapper {
       // we have something AND cant find more in the search radius AND
       // cant find anything better in general than what we have
       int32_t tile_index;
-      float distance;
+      double distance;
       std::tie(tile_index, bin_index, distance) = binner();
       if (distance > location.search_cutoff_ ||
           (reachable.size() && distance > location.radius_ &&
@@ -215,13 +214,13 @@ struct projector_wrapper {
       }
 
       // grab the tile the lat, lon is in
-      auto tile_id = GraphId(tile_index, TileHierarchy::levels().rbegin()->first, 0);
+      auto tile_id = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
       reader.GetGraphTile(tile_id, cur_tile);
     } while (!cur_tile);
   }
 
-  std::function<std::tuple<int32_t, unsigned short, float>()> binner;
-  const GraphTile* cur_tile = nullptr;
+  std::function<std::tuple<int32_t, unsigned short, double>()> binner;
+  graph_tile_ptr cur_tile;
   Location location;
   unsigned short bin_index = 0;
   double sq_radius;
@@ -276,11 +275,11 @@ struct bin_handler_t {
     if (candidate.point.Distance(location.latlng_) > location.search_cutoff_)
       return;
     // we need this because we might need to go to different levels
-    float distance = std::numeric_limits<float>::lowest();
+    double distance = std::numeric_limits<double>::lowest();
     std::function<void(const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
-      const auto* tile = reader.GetGraphTile(node_id);
+      auto tile = reader.GetGraphTile(node_id);
       if (!tile) {
         return;
       }
@@ -289,29 +288,24 @@ struct bin_handler_t {
       const auto* end_edge = start_edge + node->edge_count();
       PointLL node_ll = node->latlng(tile->header()->base_ll());
       // cache the distance
-      if (distance == std::numeric_limits<float>::lowest())
+      if (distance == std::numeric_limits<double>::lowest())
         distance = node_ll.Distance(location.latlng_);
       // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
-        auto info = tile->edgeinfo(edge->edgeinfo_offset());
+        auto info = tile->edgeinfo(edge);
         // calculate the heading of the snapped point to the shape for use in heading filter
         size_t index = edge->forward() ? 0 : info.shape().size() - 2;
         float angle =
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         // do we want this edge
-        if (costing->Filter(edge, tile) != 0.0f) {
+        if (costing->Allowed(edge, tile)) {
           auto reach = get_reach(id, edge);
-          PathLocation::PathEdge path_edge{id,
-                                           0.f,
-                                           node_ll,
-                                           distance,
-                                           PathLocation::NONE,
-                                           reach.outbound,
-                                           reach.inbound};
+          PathLocation::PathEdge
+              path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
           if (heading_filter(location, angle)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
@@ -321,15 +315,15 @@ struct bin_handler_t {
 
         // do we want the evil twin
         const DirectedEdge* other_edge = nullptr;
-        const GraphTile* other_tile;
+        graph_tile_ptr other_tile;
         const auto other_id = reader.GetOpposingEdgeId(id, other_edge, other_tile);
         if (!other_edge)
           continue;
 
-        if (costing->Filter(other_edge, other_tile) != 0.0f) {
+        if (costing->Allowed(other_edge, other_tile)) {
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
-                                           1.f,
+                                           1,
                                            node_ll,
                                            distance,
                                            PathLocation::NONE,
@@ -375,9 +369,10 @@ struct bin_handler_t {
             candidate.edge_info->shape()[i].Distance(candidate.edge_info->shape()[i + 1]);
       }
       partial_length += candidate.edge_info->shape()[candidate.index].Distance(candidate.point);
+      // TODO: length of the edge only has meters resolution, either store more precision or
+      // measure the rest of the shapes length
       partial_length = std::min(partial_length, static_cast<double>(candidate.edge->length()));
-      float length_ratio =
-          static_cast<float>(partial_length / static_cast<double>(candidate.edge->length()));
+      double length_ratio = partial_length / candidate.edge->length();
       if (!candidate.edge->forward()) {
         length_ratio = 1.f - length_ratio;
       }
@@ -408,11 +403,11 @@ struct bin_handler_t {
       }
       // correlate its evil twin
       const DirectedEdge* other_edge = nullptr;
-      const GraphTile* other_tile;
+      graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Filter(other_edge, other_tile) != 0.0f) {
-        auto reach = get_reach(opposing_edge_id, other_edge);
+      if (other_edge && costing->Allowed(other_edge, other_tile)) {
+        reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
@@ -442,7 +437,7 @@ struct bin_handler_t {
   // do a mini network expansion or maybe not
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
-                                    const GraphTile* tile,
+                                    graph_tile_ptr tile,
                                     const DirectedEdge* edge,
                                     const GraphId edge_id) {
     // no need when set to 0
@@ -476,7 +471,7 @@ struct bin_handler_t {
 
     const DirectedEdge* opp_edge = nullptr;
     if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
-        costing->Filter(opp_edge, tile) > 0.f) {
+        costing->Allowed(opp_edge, tile)) {
       directed_reaches[opp_edge] = reach;
     }
     return reach;
@@ -496,11 +491,11 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (costing->Filter(edge, tile) == 0.0f) {
+      if (!costing->Allowed(edge, tile)) {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id.Is_Valid() || costing->Filter(edge, tile) == 0.0f)
+        if (!edge_id.Is_Valid() || !costing->Allowed(edge, tile))
           continue;
       }
 
@@ -511,8 +506,9 @@ struct bin_handler_t {
       decltype(begin) p_itr;
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-        c_itr->sq_distance = std::numeric_limits<float>::max();
-        c_itr->prefiltered = is_search_filter_triggered(edge, p_itr->location.search_filter_);
+        c_itr->sq_distance = std::numeric_limits<double>::max();
+        c_itr->prefiltered =
+            is_search_filter_triggered(edge, *costing, tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -531,7 +527,7 @@ struct bin_handler_t {
       // a trivial half plane test as maybe a single dot product and comparison?
 
       // get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()));
+      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
       auto shape = edge_info->lazy_shape();
       PointLL v;
       if (!shape.empty()) {
@@ -575,16 +571,17 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         const DirectedEdge* opp_edge = nullptr;
-        const GraphTile* opp_tile = tile;
+        graph_tile_ptr opp_tile = tile;
         GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Filter(opp_edge, opp_tile) > 0.f) {
+            costing->Allowed(opp_edge, opp_tile)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
             tile = opp_tile;
             edge = opp_edge;
+            edge_id = opp_edgeid;
             reach = opp_reach;
             reachable = true;
           }
@@ -710,7 +707,7 @@ struct bin_handler_t {
                         pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
-          const GraphTile* other_tile;
+          graph_tile_ptr other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction
@@ -746,7 +743,7 @@ struct bin_handler_t {
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {
-        for (auto& path_edge : filtered) {
+        for (auto&& path_edge : filtered) {
           if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
           }

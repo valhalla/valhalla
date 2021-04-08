@@ -4,6 +4,23 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+# common things that the tests need
+add_library(valhalla_test
+  test.h test.cc gurka/gurka.h gurka/gurka.cc
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+target_include_directories(valhalla_test PUBLIC
+  ${VALHALLA_SOURCE_DIR}/test
+  ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+
+if(ENABLE_DATA_TOOLS)
+  target_link_libraries(valhalla_test GEOS::GEOS)
+endif()
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
@@ -13,18 +30,21 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
-  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
+  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
+  incident_loading)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable mapmatch matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
+  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+    thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
 endif()
 
 if(ENABLE_SERVICES)
-  list(APPEND tests loki_service skadi_service thor_service)
+  list(APPEND tests loki_service skadi_service)
 endif()
 
 ## TODO: fix apple tests!
@@ -32,32 +52,30 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
     openlr.cc
     incidents.cc
+    incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif()
 
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+  set_target_properties(${test} PROPERTIES FOLDER "Tests")
+  target_compile_definitions(${test} PRIVATE
+      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE)
     # Using LuaJIT on macOS requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
-  target_include_directories(${test} SYSTEM PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-      ${VALHALLA_SOURCE_DIR}/test)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
@@ -67,7 +85,7 @@ foreach(test ${cost_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
 endforeach()
 
 set(tyr_tests route_serializer_osrm)
@@ -77,7 +95,7 @@ foreach(test ${tyr_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
 endforeach()
 
 ## Test-specific data, properties and dependencies
@@ -271,6 +289,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
+  add_dependencies(run-matrix_bss paris_bss_tiles)
   add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)

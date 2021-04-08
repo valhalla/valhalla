@@ -116,7 +116,7 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   // See what kind of tiles we are dealing with here by getting a graphreader
   GraphReader reader(pt);
   auto tiles = reader.GetTileSet();
-  transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
+  transit_level = TileHierarchy::GetTransitLevel().level;
 
   // Quick hack to remove connectivity between known unconnected regions
   // The only land connection from north to south america is through
@@ -142,12 +142,12 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   // (build the ColorMap). Transit level uses local hierarchy tiles
   for (auto& color : colors) {
     if (color.first == transit_level) {
-      TileHierarchy::levels().rbegin()->second.tiles.ColorMap(color.second, not_neighbors);
+      TileHierarchy::GetTransitLevel().tiles.ColorMap(color.second, not_neighbors);
     } else {
-      TileHierarchy::levels()
-          .find(color.first)
-          ->second.tiles.ColorMap(color.second,
-                                  color.first == 2 ? not_neighbors : decltype(not_neighbors){});
+      TileHierarchy::levels()[color.first].tiles.ColorMap(color.second,
+                                                          color.first == 2
+                                                              ? not_neighbors
+                                                              : decltype(not_neighbors){});
     }
   }
 }
@@ -173,7 +173,7 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
   if (level == colors.cend()) {
     return result;
   }
-  const auto& tiles = TileHierarchy::levels().find(hierarchy_level)->second.tiles;
+  const auto& tiles = TileHierarchy::levels()[hierarchy_level].tiles;
   std::vector<const decltype(location.edges)*> edge_sets{&location.edges, &location.filtered_edges};
   for (const auto* edges : edge_sets) {
     for (const auto& edge : *edges) {
@@ -199,10 +199,10 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
 std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
   // bail if we dont have the level
   uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
-  auto bbox = TileHierarchy::levels().find(tile_level);
-  if (bbox == TileHierarchy::levels().cend()) {
+  if (tile_level >= TileHierarchy::levels().size()) {
     throw std::runtime_error("hierarchy level not found");
   }
+  const auto& tiles = TileHierarchy::levels()[tile_level].tiles;
 
   // make a region map (inverse mapping of color to lists of tiles)
   // could cache this but shouldnt need to call it much
@@ -230,7 +230,7 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
   std::unordered_map<size_t, polygon_t> boundaries;
   for (const auto& arity : arities) {
     auto& region = *regions.find(arity.second);
-    boundaries.emplace(arity.second, to_boundary(region.second, bbox->second.tiles));
+    boundaries.emplace(arity.second, to_boundary(region.second, tiles));
   }
 
   // turn it into geojson
@@ -239,12 +239,12 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
 
 std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
   uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
-  auto bbox = TileHierarchy::levels().find(tile_level);
-  if (bbox == TileHierarchy::levels().cend()) {
+  if (tile_level >= TileHierarchy::levels().size()) {
     throw std::runtime_error("hierarchy level not found");
   }
+  const auto& level_tiles = TileHierarchy::levels()[tile_level];
 
-  std::vector<size_t> tiles(bbox->second.tiles.nrows() * bbox->second.tiles.ncolumns(),
+  std::vector<size_t> tiles(level_tiles.tiles.nrows() * level_tiles.tiles.ncolumns(),
                             static_cast<uint32_t>(0));
   auto level = colors.find(hierarchy_level);
   if (level != colors.cend()) {

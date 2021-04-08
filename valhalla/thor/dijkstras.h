@@ -22,10 +22,10 @@
 namespace valhalla {
 namespace thor {
 
-enum class InfoRoutingType {
-  forward,
-  bidirectional,
-  multi_modal,
+enum class ExpansionType {
+  forward = 0,
+  reverse = 1,
+  multimodal = 2,
 };
 
 enum class ExpansionRecommendation {
@@ -39,7 +39,15 @@ enum class ExpansionRecommendation {
  */
 class Dijkstras {
 public:
-  Dijkstras();
+  /**
+   * Constructor.
+   * @param config A config object of key, value pairs
+   */
+  explicit Dijkstras(const boost::property_tree::ptree& config = {});
+
+  Dijkstras(const Dijkstras&) = delete;
+  Dijkstras& operator=(const Dijkstras&) = delete;
+
   virtual ~Dijkstras() {
   }
 
@@ -49,28 +57,33 @@ public:
   virtual void Clear();
 
   /**
+   * Compute the best first graph traversal from a list locations
+   * @param expansion_type  What type of expansion should be run
+   * @param  locations      List of locations from which to expand.
+   * @param  reader         provides access to underlying graph primitives
+   * @param  costings       List of costing objects
+   * @param  mode           Travel mode
+   */
+  void Expand(ExpansionType expansion_type,
+              valhalla::Api& api,
+              baldr::GraphReader& reader,
+              const sif::mode_costing_t& costings,
+              const sif::TravelMode mode);
+
+protected:
+  /**
    * Compute the best first graph traversal from a list of origin locations
    * @param  origin_locs  List of origin locations.
    * @param  graphreader  Graphreader
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  virtual void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
-                       baldr::GraphReader& graphreader,
-                       const sif::mode_costing_t& mode_costing,
-                       const sif::TravelMode mode);
-
-  /**
-   * Compute the best first graph traversal to a list of destination locations
-   * @param  origin_locs  List of origin locations.
-   * @param  graphreader  Graphreader
-   * @param  mode_costing List of costing objects
-   * @param  mode         Travel mode
-   */
-  virtual void ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                              baldr::GraphReader& graphreader,
-                              const sif::mode_costing_t& mode_costing,
-                              const sif::TravelMode mode);
+  // Note: ExpansionType::multimodal not yet implemented
+  template <const ExpansionType expansion_direction>
+  void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               baldr::GraphReader& graphreader,
+               const sif::mode_costing_t& mode_costing,
+               const sif::TravelMode mode);
 
   /**
    * Compute the best first graph traversal from a list of origin locations using multimodal
@@ -85,10 +98,9 @@ public:
                     const sif::mode_costing_t& mode_costing,
                     const sif::TravelMode mode);
 
-protected:
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader&,
-                             const baldr::GraphTile*,
+                             graph_tile_ptr,
                              const baldr::NodeInfo*,
                              const sif::EdgeLabel&,
                              const sif::EdgeLabel*) = 0;
@@ -96,7 +108,7 @@ protected:
   // A child-class must implement this to decide when to stop the expansion
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                const sif::EdgeLabel& pred,
-                                               const InfoRoutingType route_type) = 0;
+                                               const ExpansionType route_type) = 0;
 
   // A child-class must implement this to tell the algorithm how much expansion to expect to do
   virtual void GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const = 0;
@@ -122,15 +134,23 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> mmadjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  // when expanding should we treat each location as its own individual path to track concurrently but
+  // separately from the other paths
+  bool multipath_;
+
+  // TODO: add an interrupt here so that the caller can abort the main loop externally
 
   /**
    * Initialization prior to computing the graph expansion
@@ -139,7 +159,9 @@ protected:
    * @param bucketsize  Adjacency list bucket size.
    */
   template <typename label_container_t>
-  void Initialize(label_container_t& labels, const uint32_t bucketsize);
+  void Initialize(label_container_t& labels,
+                  baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
+                  const uint32_t bucketsize);
 
   /**
    * Sets the start time for forward expansion or end time for reverse expansion based on the
@@ -154,7 +176,8 @@ protected:
           baldr::GraphReader& reader);
 
   /**
-   * Expand from the node along the forward search path.
+   * Expand from the node along the search path for non-multimodal expansion
+   * Handles both forward and reverse traversals
    * @param graphreader  Graph reader.
    * @param node Graph Id of the node to expand.
    * @param pred Edge label of the predecessor edge leading to the node.
@@ -162,29 +185,14 @@ protected:
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
    * @param time_info Tracks time offset as the expansion progresses
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition,
-                     const baldr::TimeInfo& time_info);
-
-  /**
-   * Expand from the node along the reverse search path.
-   * @param graphreader  Graph reader.
-   * @param node Graph Id of the node to expand.
-   * @param pred Edge label of the predecessor edge leading to the node.
-   * @param pred_idx Index in the edge label list of the predecessor edge.
-   * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param time_info Tracks time offset as the expansion progresses
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition,
-                     const baldr::TimeInfo& time_info);
+  template <const ExpansionType expansion_direction>
+  void ExpandInner(baldr::GraphReader& graphreader,
+                   const baldr::GraphId& node,
+                   const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+                   const uint32_t pred_idx,
+                   const baldr::DirectedEdge* opp_pred_edge,
+                   const bool from_transition,
+                   const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node using multimodal algorithm.
@@ -246,7 +254,7 @@ protected:
    * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
    */
   int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
+    graph_tile_ptr tile = graphreader.GetGraphTile(node);
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };

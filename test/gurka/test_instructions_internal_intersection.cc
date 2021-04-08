@@ -66,7 +66,7 @@ gurka::map InstructionsInternalIntersection::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Drive north and turn left
 TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_TurnLeft_PatuxentWoodsDrive) {
-  auto result = gurka::route(map, "A", "L", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Broken Land Parkway",
@@ -102,14 +102,14 @@ TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_TurnLeft_P
   auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
   ASSERT_TRUE(prev_edge);
   EXPECT_EQ(prev_edge->turn_lanes_size(), 3);
-  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left ACTIVE | through | through ]");
+  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ *left* ACTIVE | through | through ]");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start on internal edge - Drive north and turn left
 TEST_F(InstructionsInternalIntersection,
        StartInternal_DriveNorth_BrokenLandParkway_TurnLeft_PatuxentWoodsDrive) {
-  auto result = gurka::route(map, "B", "L", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "L"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Snowden River Parkway",
@@ -143,7 +143,7 @@ TEST_F(InstructionsInternalIntersection,
 // Drive north and turn left - end on internal
 TEST_F(InstructionsInternalIntersection,
        DriveNorth_BrokenLandParkway_TurnLeft_SnowdenRiverParkway_EndInternal) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Broken Land Parkway",
@@ -177,7 +177,7 @@ TEST_F(InstructionsInternalIntersection,
 // Drive north and turn left - Start and end on internal
 TEST_F(InstructionsInternalIntersection,
        StartInternal_DriveNorth_BrokenLandParkway_TurnLeft_SnowdenRiverParkway_EndInternal) {
-  auto result = gurka::route(map, "B", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "F"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Snowden River Parkway"});
@@ -209,7 +209,7 @@ TEST_F(InstructionsInternalIntersection,
 ///////////////////////////////////////////////////////////////////////////////
 // Drive south and turn left
 TEST_F(InstructionsInternalIntersection, DriveSouth_BrokenLandParkway_TurnLeft_SnowdenRiverParkway) {
-  auto result = gurka::route(map, "E", "J", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Broken Land Parkway",
@@ -242,7 +242,7 @@ TEST_F(InstructionsInternalIntersection, DriveSouth_BrokenLandParkway_TurnLeft_S
 ///////////////////////////////////////////////////////////////////////////////
 // Drive east and turn left
 TEST_F(InstructionsInternalIntersection, DriveEast_PatuxentWoodsDrive_TurnLeft_BrokenLandParkway) {
-  auto result = gurka::route(map, "I", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"I", "D"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Patuxent Woods Drive", "Snowden River Parkway",
@@ -275,7 +275,7 @@ TEST_F(InstructionsInternalIntersection, DriveEast_PatuxentWoodsDrive_TurnLeft_B
 ///////////////////////////////////////////////////////////////////////////////
 // Drive west and turn left
 TEST_F(InstructionsInternalIntersection, DriveWest_SnowdenRiverParkway_TurnLeft_BrokenLandParkway) {
-  auto result = gurka::route(map, "K", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"K", "H"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Snowden River Parkway", "Snowden River Parkway",
@@ -308,7 +308,7 @@ TEST_F(InstructionsInternalIntersection, DriveWest_SnowdenRiverParkway_TurnLeft_
 ///////////////////////////////////////////////////////////////////////////////
 // Drive north and make a left u-turn
 TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_UturnLeft_BrokenLandParkway) {
-  auto result = gurka::route(map, "A", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Broken Land Parkway",

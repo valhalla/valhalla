@@ -16,7 +16,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
@@ -217,7 +216,7 @@ public:
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                               ways_file, way_nodes_file, bss_file, osmdata);
+                               way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

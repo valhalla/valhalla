@@ -1,5 +1,6 @@
 #pragma once
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/incidents.pb.h>
 #include <valhalla/sif/costconstants.h>
@@ -118,6 +119,8 @@ inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
       return TripLeg_Node_Type_kBorderControl;
     case baldr::NodeType::kTollGantry:
       return TripLeg_Node_Type_kTollGantry;
+    case baldr::NodeType::kSumpBuster:
+      return TripLeg_Node_Type_kSumpBuster;
   }
   auto num = static_cast<uint8_t>(node_type);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -131,6 +134,18 @@ constexpr TripLeg_CycleLane kTripLegCycleLane[] = {TripLeg_CycleLane_kNoCycleLan
                                                    TripLeg_CycleLane_kSeparated};
 inline TripLeg_CycleLane GetTripLegCycleLane(const baldr::CycleLane cyclelane) {
   return kTripLegCycleLane[static_cast<uint32_t>(cyclelane)];
+}
+
+// Associate Sac scale values to TripLeg proto
+constexpr TripLeg_SacScale kTripLegSacScale[] = {TripLeg_SacScale_kNoSacScale,
+                                                 TripLeg_SacScale_kHiking,
+                                                 TripLeg_SacScale_kMountainHiking,
+                                                 TripLeg_SacScale_kDemandingMountainHiking,
+                                                 TripLeg_SacScale_kAlpineHiking,
+                                                 TripLeg_SacScale_kDemandingAlpineHiking,
+                                                 TripLeg_SacScale_kDifficultAlpineHiking};
+inline TripLeg_SacScale GetTripLegSacScale(const baldr::SacScale sac) {
+  return kTripLegSacScale[static_cast<uint32_t>(sac)];
 }
 
 // Associate Use to TripLeg proto
@@ -175,6 +190,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kPedestrianUse;
     case baldr::Use::kBridleway:
       return TripLeg_Use_kBridlewayUse;
+    case baldr::Use::kPedestrianCrossing:
+      return TripLeg_Use_kPedestrianCrossingUse;
     case baldr::Use::kRestArea:
       return TripLeg_Use_kRestAreaUse;
     case baldr::Use::kServiceArea:
@@ -206,6 +223,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact
 const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
+// Get the string representing the guidance view type
+const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type);
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here. newer versions of protobuf provide these even
@@ -225,5 +244,20 @@ const std::string& FilterAction_Enum_Name(const FilterAction action);
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
 bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
+bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t);
+const std::string& Location_Type_Enum_Name(const Location::Type t);
+const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet s);
+
+std::pair<std::string, std::string>
+travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
+
+inline midgard::PointLL to_ll(const LatLng& ll) {
+  return midgard::PointLL{ll.lng(), ll.lat()};
+}
+
+inline void from_ll(valhalla::Location* l, const midgard::PointLL& p) {
+  l->mutable_ll()->set_lat(p.lat());
+  l->mutable_ll()->set_lng(p.lng());
+}
 
 } // namespace valhalla

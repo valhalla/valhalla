@@ -193,7 +193,7 @@ TEST(TimeTracking, routes) {
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   auto opp_start_edge = gurka::findEdge(reader, map.nodes, "AB", "B");
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   const auto* node = reader.nodeinfo(std::get<3>(opp_start_edge)->endnode(), tile);
   auto start = node->latlng(tile->header()->base_ll());
   auto end_edge = gurka::findEdge(reader, map.nodes, "GH", "H");
@@ -218,7 +218,8 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
+                                  193.9319, 245.4273, 269.4273, 293.4273};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
@@ -239,7 +240,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  expected = {0, 17.1429, 34.2857, 51.4286, 193.9319, 245.4273, 269.4273, 293.4273};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
@@ -260,9 +261,18 @@ TEST(TimeTracking, routes) {
       }
     }
   }
+
   // TODO: why does arrive by have an extra node in here...
-  expected = {0, 0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  expected = {0, 0, 44.6402, 61.7830, 78.9259, 221.4292, 272.9246, 296.9246, 320.9246};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
+}
+
+TEST(TimeTracking, dst) {
+  // BST and GMT ambiguity where we gain an hour due to DST
+  std::string date_time = "2020-10-25T01:57";
+  int tz_idx = dt::get_tz_db().to_index("Europe/London");
+  EXPECT_NO_THROW(baldr::TimeInfo::make(date_time, tz_idx))
+      << " could not apply timezone to local time";
 }

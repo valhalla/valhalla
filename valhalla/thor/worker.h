@@ -18,10 +18,10 @@
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astar.h>
 #include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/centroid.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedep.h>
@@ -62,6 +62,8 @@ public:
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
+  void centroid(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -74,7 +76,8 @@ protected:
   void log_admin(const TripLeg&);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
-                                          const Location& destination);
+                                          const Location& destination,
+                                          const Options& options);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized
@@ -111,23 +114,23 @@ protected:
   std::vector<meili::Measurement> trace;
   sif::CostFactory factory;
   sif::mode_costing_t mode_costing;
+
   // Path algorithms (TODO - perhaps use a map?))
-  AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
   AStarBSSAlgorithm bss_astar;
-
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
+
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
-  float long_request;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
+  Centroid centroid_gen;
 };
 
 } // namespace thor

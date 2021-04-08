@@ -47,15 +47,13 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsLoopTerminal(const GraphTile& tile,
+bool IsLoopTerminal(const graph_tile_ptr& tile,
                     GraphReader& reader,
-                    const GraphId& startnode,
-                    const NodeInfo& startnodeinfo,
                     const DirectedEdge& directededge,
                     statistics::RouletteData& rd) {
   // Get correct tile to work with
-  auto end_tile = (tile.id() == directededge.endnode().tileid())
-                      ? &tile
+  auto end_tile = (tile->id() == directededge.endnode().tileid())
+                      ? tile
                       : reader.GetGraphTile(directededge.endnode());
   auto endnodeinfo = end_tile->node(directededge.endnode());
   // If there aren't 3 edges we don't want it
@@ -133,13 +131,12 @@ bool IsLoopTerminal(const GraphTile& tile,
       if (loop_node_info->edge_count() == 2 ||
           (loop_node_info->edge_count() == 3 && !outboundIsRestrictive())) {
         // Victory
-        auto shape = tile.edgeinfo(first_edge->edgeinfo_offset()).shape();
-        auto second_shape = tile.edgeinfo(last_edge->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(first_edge).shape();
+        auto second_shape = tile->edgeinfo(last_edge).shape();
         for (auto& point : second_shape) {
           shape.push_back(point);
         }
-        rd.AddTask(AABB2<PointLL>(shape), tile.edgeinfo(first_edge->edgeinfo_offset()).wayid(),
-                   shape);
+        rd.AddTask(AABB2<PointLL>(shape), tile->edgeinfo(first_edge).wayid(), shape);
         return true;
       }
     }
@@ -162,13 +159,13 @@ bool IsLoop(GraphReader& reader,
   };
 
   const auto* current_edge = &directededge;
-  const auto* starttile = reader.GetGraphTile(startnode);
+  auto starttile = reader.GetGraphTile(startnode);
   const auto* opp_edge = starttile->directededge(startnode);
   // keep looking while we are stuck on a oneway and we don't look too far
   for (size_t i = 0; i < 3; ++i) {
     // where can we go from here
     const DirectedEdge* next = nullptr;
-    const auto* tile = reader.GetGraphTile(current_edge->endnode());
+    auto tile = reader.GetGraphTile(current_edge->endnode());
     const auto* end_node = tile->node(current_edge->endnode());
     const auto* edge = tile->directededge(end_node->edge_index());
     for (size_t j = 0; j < end_node->edge_count(); ++j, ++edge) {
@@ -188,9 +185,8 @@ bool IsLoop(GraphReader& reader,
     }
     // continue the loop if you haven't finished it
     if (next == &directededge) {
-      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next->edgeinfo_offset()).shape()),
-                 tile->edgeinfo(next->edgeinfo_offset()).wayid(),
-                 tile->edgeinfo(next->edgeinfo_offset()).shape());
+      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next).shape()), tile->edgeinfo(next).wayid(),
+                 tile->edgeinfo(next).shape());
       return true;
     }
     if (next) {
@@ -202,10 +198,7 @@ bool IsLoop(GraphReader& reader,
 }
 
 bool IsUnroutableNode(const GraphTile& tile,
-                      GraphReader& reader,
-                      const GraphId& startnode,
                       const NodeInfo& startnodeinfo,
-                      const DirectedEdge& directededge,
                       statistics::RouletteData& rd) {
 
   const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
@@ -235,8 +228,7 @@ bool IsUnroutableNode(const GraphTile& tile,
   return false;
 }
 
-void checkExitInfo(const GraphTile& tile,
-                   GraphReader& reader,
+void checkExitInfo(GraphReader& reader,
                    const GraphId& startnode,
                    const NodeInfo& startnodeinfo,
                    const DirectedEdge& directededge,
@@ -246,7 +238,7 @@ void checkExitInfo(const GraphTile& tile,
   if (startnodeinfo.type() == NodeType::kMotorWayJunction) {
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all forward edges are links, it is a fork
-    const GraphTile* tile = reader.GetGraphTile(startnode);
+    graph_tile_ptr tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
@@ -292,8 +284,7 @@ void AddStatistics(statistics& stats,
                    const GraphTile& tile,
                    GraphReader& graph_reader,
                    GraphId& node,
-                   const NodeInfo& nodeinfo,
-                   uint32_t idx) {
+                   const NodeInfo& nodeinfo) {
 
   auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ? directededge.length() * 0.5f
@@ -331,15 +322,14 @@ void AddStatistics(statistics& stats,
 
   // Check for exit signage if it is a highway link
   if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
-    checkExitInfo(tile, graph_reader, node, nodeinfo, directededge, stats);
+    checkExitInfo(graph_reader, node, nodeinfo, directededge, stats);
   }
 
   // Add all other statistics
   // Only consider edge if edge is good and it's not a link
   if (!directededge.link()) {
     edge_length *= 0.5f;
-    bool found =
-        IsUnroutableNode(tile, graph_reader, node, nodeinfo, directededge, stats.roulette_data);
+    bool found = IsUnroutableNode(tile, nodeinfo, stats.roulette_data);
     if (!found) {
       // IsLoop(graph_reader,directededge,node,stats.roulette_data);
     }
@@ -357,7 +347,7 @@ void AddStatistics(statistics& stats,
       stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
     }
     // Check if edge has any names
-    if (tile.edgeinfo(directededge.edgeinfo_offset()).name_count() > 0) {
+    if (tile.edgeinfo(&directededge).name_count() > 0) {
       stats.add_tile_named(tileid, rclass, edge_length);
       stats.add_country_named(begin_node_iso, rclass, edge_length);
     }
@@ -391,11 +381,11 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
-      level = TileHierarchy::levels().rbegin()->second.level;
+    if (TileHierarchy::levels().back().level + 1 == level) {
+      level = TileHierarchy::levels().back().level;
     }
 
-    const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
+    const auto& tiles = TileHierarchy::levels()[level].tiles;
     level = tile_id.level();
     auto tileid = tile_id.tileid();
 
@@ -403,7 +393,7 @@ void build(const boost::property_tree::ptree& pt,
     std::vector<DirectedEdge> directededges;
 
     // Get this tile
-    const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = graph_reader.GetGraphTile(tile_id);
 
     // Iterate through the nodes and the directed edges
     float roadlength = 0.0f;
@@ -478,7 +468,7 @@ void build(const boost::property_tree::ptree& pt,
         // Statistics
         if (valid_length) {
           AddStatistics(stats, *directededge, tileid, begin_node_iso, hgv, *tile, graph_reader, node,
-                        *nodeinfo, j);
+                        *nodeinfo);
         }
       }
     }
@@ -514,8 +504,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
   for (const auto& tier : TileHierarchy::levels()) {
-    auto level = tier.second.level;
-    auto tiles = tier.second.tiles;
+    auto level = tier.level;
+    const auto& tiles = tier.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
@@ -525,7 +515,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     }
 
     // transit level
-    if (level == TileHierarchy::levels().rbegin()->second.level) {
+    if (level == TileHierarchy::levels().back().level) {
       level += 1;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
@@ -536,7 +526,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       }
     }
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  std::random_device rd;
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
 
   // A mutex we can use to do the synchronization
   std::mutex lock;
@@ -571,7 +562,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished");
 
-  stats.build_db(pt);
+  stats.build_db();
   stats.roulette_data.GenerateTasks(pt);
 }
 

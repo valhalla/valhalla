@@ -21,48 +21,12 @@ using namespace valhalla::tyr;
 
 namespace {
 
-boost::property_tree::ptree get_conf() {
-  std::stringstream ss;
-  ss << R"({
-      "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-      "loki":{
-        "actions":["route"],
-        "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-      },
-      "thor":{"logging":{"long_request": 100}},
-      "odin":{"logging":{"long_request": 100}},
-      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-      "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
-              "mode":"auto","grid":{"cache_size":100240,"size":500},
-              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
-      "service_limits": {
-        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-      }
-    })";
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(ss, conf);
-  return conf;
-}
+const auto conf = test::make_config("test/data/utrecht_tiles");
 
 struct route_tester {
   route_tester()
-      : conf(get_conf()), reader(new GraphReader(conf.get_child("mjolnir"))),
-        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
+      : reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
+        thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -75,7 +39,6 @@ struct route_tester {
     odin_worker.cleanup();
     return request;
   }
-  boost::property_tree::ptree conf;
   std::shared_ptr<GraphReader> reader;
   loki_worker_t loki_worker;
   thor_worker_t thor_worker;
@@ -91,7 +54,7 @@ TEST(Summary, test_time_summary) {
   const auto& leg = response.trip().routes(0).legs(0);
   EXPECT_EQ(
       leg.shape(),
-      "kbykbB{afxHWee@kAuh@{@qZmP{[_IsMaHoMgDcSu@mFM{@wDoIcAx@iR`LqHlE}IhFaShF{P{@eJAqL{MoNkLcRgSsUc^_IcPwIcUmOkf@qRss@sKig@{Po~@iM}|@wHe{@yCa_@s@{_@z@i^dEo_@nI}^lJcX~NoWhM{Npa@gYbk@yUro@_WnvAmn@~l@wVnc@kRhGcDnNaHxa@mShg@aUlqBq{@hdB_x@prDuyAt`Cy|@dZsKhWuLb|B_`Ajf@wOfgAy`@nr@q^bj@cY`q@qa@h]_UzZcTz`@i[tmAmbAfXwNp\\aPdPoAtTpAzUrJnNlKvMbQhM~WzKtZx\\p_BxQfbA~NjcAdJdj@|~@poEzn@fmC~DdPjKiJ~N_MfNuJdOkIfNkFv^kDjP`@fO`AdOtD~CnApCdApGhC~NxJpQhPbLdLfYjZlgAjnAh|@r{@zZnSje@x\\|aBfdAld@xZ~uBjtArKhHfkAhw@bWzNzJpF~IfGxLpIrLpInShQbPbR`NlTjP|ZzPhc@dKbZ`g@d{AbQnh@fXxv@vM`^j[~s@zQx]nMnTpRz[nh@pu@bVzZ|TtZt^rc@ra@vf@dYrZz`@h^l_@~W~]xSxyAxl@~|@j]b~Axm@xjAdd@zy@hZfgAra@nStJdJfIfElGtDpHfI|TvHfXrB`Mz@~ZGxb@{@hXcQ~qBm_@`vDcp@`aFoHxm@uE|SsFzX}Jjd@gIj\\oHlXqH|Z}DtQoDvS{ApLaCr\\UdE]vDGtCd@jEz@xCxBvDxHhBjo@nOr[jEdT~AbLYbGYdJeB`CY~R_FpWoKxHwDfeB_u@jViFrKm@xMvAvSdHxVdS`Xjd@bKhSlJfWvIna@`\\`zBxCjQhGhVpH`UpLpV|@lBvCpG~HnUjGfZzEld@zAna@dAva@Df_@aBpc@kB~^aCx^cAdKiBzKqBbMyClQwH`]aHxWqHbUy[rz@mE`L}O~`@zF|GtDdFxl@~{@zn@``Ani@`w@jUr_@hg@l~@`{@faBh\\hp@fYhg@`Wbd@xGnL}OvnAoCtd@yBbOaRzuAm@nDqCfM_C~MeAlFsAlKs@pHaCtUWpJwChXqBdH}@jFUjFOzHt@nHvCpK~DtGlDlC`XdO~CzBG~T}Jh}@yVaLqBbAsFhh@G`FOt`@e@xC");
+      "ibykbB}afxHWge@oAqh@y@sZoPy[{HuMeHmMgDgSq@iFS{@sDsIgAz@iR`LoHlEyIjFcSfF{P}@gJAmL{MqNkLaReSuUc^cIcPsIeUoOkf@sRqs@mKgg@_Qs~@kMy|@wHi{@sC__@y@{_@|@g^fEs_@lI}^lJaX|NqWjMyNpa@gYbk@yUto@_WnvAmn@~l@uVnc@mRdGcDnNaHza@kSfg@cUjqBs{@pdB}w@jrDsyAv`C}|@dZqKlWuL~{B}_Ajf@yOhgAy`@lr@q^fj@cYzp@qa@j]aU|ZaTv`@g[vmAobAjXyNp\\_PbPmAtTnA|UrJjNjKzMbQfM`XzKtZz\\p_BtQfbA~NhcAdJfj@~~@roEvn@dmC~DdPpKiJ~N_MdNsJdOkIbNmFx^iDlP\\hOdAdOpDzCnApChAnGhCbOvJlQjPdL`LfYnZpgAhnAd|@t{@xZlSne@x\\xaBfdAnd@xZ|uBjtAvKjHdkAfw@fWzNvJrF~IdGxLrIpLlIrSjQ`PdRbNlTlPzZvPjc@fK`Zbg@d{A~Pph@hXvv@tMb^j[zs@~Qz]jMnTtRx[nh@pu@~UzZ`UtZr^tc@na@tf@fYrZx`@j^n_@`X~]tSzyAzl@~|@l]~}Avm@zjAdd@|y@hZbgApa@rStJbJjIjElGpDnHhIzTxHjXrB`Mv@zZIzb@u@hXeQ~qBm_@`vDap@baFsHvm@sE|SsFzX_Kjd@eIj\\mHnXwHzZ{DrQqDzS{ApLyBp\\]dEYtDGtCb@jE|@zCxBxDtHfBno@pOr[hEbT|A`LWbGWhJeB`C]`S{EpWqKtHyDjeB}t@hViFpKk@|MtAnSdH~VdS~Wld@dKfSnJfWtIpa@b\\~yBrChQhGlVrH`UpLpV~@jBrCnGdInUdGjZ|Ejd@|Ala@dAxa@@d_@{Apc@kB`_@aCx^iAfKiBzKqB~LwCnQwHb]cHvWiHdU}[nz@kEbLaP`a@|F|GxDdFrl@~{@|n@``Ahi@~v@pUt_@dg@h~@b{@jaBj\\dp@bYjg@fWdd@vGnL}OtnAqCtd@uB`OaR~uAq@lDoCfMaC`NaAjFsAjKu@pHcCxUSlJ{ClXmB`H}@nF[fFIzHp@nH|CtKxDrGpDlC~WdO|CxBE~TaKh}@sVaLyBbAsFlh@A`FMt`@c@xC");
 
   // loop over all routes all legs
   auto trip_route = response.trip().routes().begin();

@@ -50,13 +50,13 @@ rapidjson::Document d;
 /*************************************************************/
 
 TEST_F(NodeType, Toll) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(1).type(), TripLeg::Node::Type::TripLeg_Node_Type_kTollBooth); // AE
 
-  result = gurka::route(map, "A", "F", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(3).type(), TripLeg::Node::Type::TripLeg_Node_Type_kTollGantry); // AF
 }

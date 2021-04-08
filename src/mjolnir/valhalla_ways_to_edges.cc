@@ -44,8 +44,7 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n"
       " Usage: ways_to_edges [options]\n"
       "\n"
-      "ways_to_edges is a program that creates a list of edges for each OSM way "
-      "on the local level tiles."
+      "ways_to_edges is a program that creates a list of edges for each auto-driveable OSM way."
       "\n"
       "\n");
 
@@ -105,28 +104,23 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
 
-  // Get something we can use to fetch tiles
-  auto tile_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
-
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
-  // Iterate through tiles at the local level
   GraphReader reader(pt.get_child("mjolnir"));
-  for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+  // Iterate through all tiles
+  for (auto edge_id : reader.GetTileSet()) {
     // If tile exists add it to the queue
-    GraphId edge_id(id, local_level, 0);
     if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
 
-    const GraphTile* tile = reader.GetGraphTile(edge_id);
+    graph_tile_ptr tile = reader.GetGraphTile(edge_id);
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
+          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
+          edge->is_shortcut()) {
         continue;
       }
 
@@ -136,13 +130,14 @@ int main(int argc, char** argv) {
       }
 
       // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge->edgeinfo_offset()).wayid();
+      uint64_t wayid = tile->edgeinfo(edge).wayid();
       ways_edges[wayid].push_back({edge->forward(), edge_id});
     }
   }
 
   std::ofstream ways_file;
-  std::string fname = pt.get<std::string>("mjolnir.tile_dir") + "/way_edges.txt";
+  std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
+                      filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
     ways_file << way.first;

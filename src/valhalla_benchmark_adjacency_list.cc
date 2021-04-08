@@ -65,9 +65,8 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
   // such that EmptyOverflow is called once
   std::vector<EdgeLabel> edgelabels;
   // Set up lambda to get sort costs
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
   start = std::clock();
-  DoubleBucketQueue adjlist(0, maxcost / 2, bucketsize, edgecost);
+  DoubleBucketQueue<EdgeLabel> adjlist(0, maxcost / 2, bucketsize, &edgelabels);
 
   // Construct EdgeLabels and add to adjacency list
 

@@ -1,7 +1,5 @@
-#include <gtest/gtest.h>
-
 #include "gurka.h"
-#include "test/util/traffic_utils.h"
+#include "test.h"
 
 using namespace valhalla;
 
@@ -31,10 +29,10 @@ protected:
 
     // connect the ways via the nodes
     const gurka::ways ways = {
-        {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "tertiary"}}},
+        {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "service"}}},
         {"DEF", {{"highway", "primary"}}},  {"GHI", {{"highway", "primary"}}},
         {"ADG", {{"highway", "motorway"}}}, {"BE", {{"highway", "secondary"}}},
-        {"EH", {{"highway", "service"}}},
+        {"EH", {{"highway", "tertiary"}}},
     };
 
     // generate the lls for the nodes in the map
@@ -48,7 +46,7 @@ protected:
                             });
 
     // stage up some live traffic data
-    valhalla_tests::utils::build_live_traffic_data(map.config);
+    test::build_live_traffic_data(map.config);
   }
 };
 
@@ -231,7 +229,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
       if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
         current->has_incidents = true;
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);
+    test::customize_live_traffic_data(map.config, has_incident_cb);
     edge_ids.push_back(edge_id);
   }
 
@@ -251,9 +249,10 @@ TEST_F(IncidentsTest, simple_cut) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -271,9 +270,10 @@ TEST_F(IncidentsTest, whole_edge) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., 1.), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -291,9 +291,10 @@ TEST_F(IncidentsTest, left) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., .5), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -311,9 +312,10 @@ TEST_F(IncidentsTest, right) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -334,9 +336,10 @@ TEST_F(IncidentsTest, multiedge) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -361,9 +364,10 @@ TEST_F(IncidentsTest, multiincident) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -388,9 +392,10 @@ TEST_F(IncidentsTest, interleaved) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -415,9 +420,10 @@ TEST_F(IncidentsTest, collisions) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -439,9 +445,10 @@ TEST_F(IncidentsTest, full_overlap) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -468,9 +475,10 @@ TEST_F(IncidentsTest, multileg) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B", "E", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B", "E", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -495,9 +503,10 @@ TEST_F(IncidentsTest, clipped) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -518,9 +527,10 @@ TEST_F(IncidentsTest, missed) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {});
@@ -537,9 +547,10 @@ TEST_F(IncidentsTest, simple_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -558,9 +569,10 @@ TEST_F(IncidentsTest, left_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -579,9 +591,10 @@ TEST_F(IncidentsTest, right_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -602,9 +615,10 @@ TEST_F(IncidentsTest, multipoint) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -630,9 +644,10 @@ TEST_F(IncidentsTest, point_collisions) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -659,9 +674,10 @@ TEST_F(IncidentsTest, point_shared) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -707,9 +723,10 @@ TEST_F(IncidentsTest, armageddon) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "B", "E", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "B", "E", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {

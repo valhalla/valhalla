@@ -68,8 +68,19 @@ message DirectionsLeg {
   }
 
   message GuidanceView {
+    enum Type{
+      kJunction = 0;
+      kSapa = 1;
+      kTollbranch = 2;
+      kAftertoll = 3;
+      kEnt = 4;
+      kExit = 5;
+      kCityreal = 6;
+      kDirectionboard = 7;
+      kSignboard = 8;
+    }
     optional string data_id = 1;        // TODO future enum as data id?
-    optional string type = 2;           // The type of guidance view TODO future enum
+    optional Type type = 2;             // The type of guidance view
     optional string base_id = 3;        // Image base id
     repeated string overlay_ids = 4;    // List of overlay ids
   }
@@ -146,7 +157,7 @@ message DirectionsLeg {
     }
 
     enum BssManeuverType{
-      kNoneAction = 1;	
+      kNoneAction = 1;
       kRentBikeAtBikeShare = 2;
       kReturnBikeAtBikeShare = 3;
     }
@@ -186,7 +197,7 @@ message DirectionsLeg {
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;               // List of guidance views
-    optional BssManeuverType bss_maneuver_type = 36;  
+    optional BssManeuverType bss_maneuver_type = 36;
   }
 
   optional uint64 trip_id = 1;

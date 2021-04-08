@@ -41,7 +41,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
                    std::deque<GraphId>& tilequeue,
                    std::mutex& lock,
                    const std::unique_ptr<const valhalla::skadi::sample>& sample,
-                   std::promise<uint32_t>& result) {
+                   std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -88,7 +88,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
       auto found = geo_attribute_cache.find(edge_info_offset);
       if (found == geo_attribute_cache.cend()) {
         // Get the shape and length
-        auto shape = tilebuilder.edgeinfo(edge_info_offset).shape();
+        auto shape = tilebuilder.edgeinfo(&directededge).shape();
         auto length = directededge.length();
 
         // Grade estimation and max slopes
@@ -189,7 +189,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  std::random_device rd;
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
 
   // An mutex we can use to do the synchronization
   std::mutex lock;

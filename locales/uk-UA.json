@@ -1,0 +1,2177 @@
+{
+  "posix_locale": "uk_UA.UTF-8",
+  "aliases": [
+    "uk"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Прибуття: <TIME>.",
+        "1": "Прибуття: <TIME> до <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Прибуття о <TIME>.",
+        "1": "Прибуття о <TIME> до <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Рухайтесь <RELATIVE_DIRECTION>.",
+        "1": "Рухайтесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Рухайтесь <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Далі по <STREET_NAMES>.",
+        "3": "Рухайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Рухайтесь <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Рухайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Рухайтесь <RELATIVE_DIRECTION>.",
+        "1": "Рухайтесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Рухайтесь <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Рухайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Рухайтесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Рухайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходить у <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходить у <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Продовжуйте рух.",
+        "1": "Продовжуйте рух по <STREET_NAMES>.",
+        "2": "Продовжуйте рух через <JUNCTION_NAME>.",
+        "3": "Продовжуйте рух в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Продовжуйте рух.",
+        "1": "Продовжуйте рух ще <LENGTH>.",
+        "2": "Продовжуйте рух по <STREET_NAMES>.",
+        "3": "Продовжуйте рух <STREET_NAMES> ще <LENGTH>.",
+        "4": "Продовжуйте рух через <JUNCTION_NAME>.",
+        "5": "Продовжуйте рух через <JUNCTION_NAME> ще <LENGTH>.",
+        "6": "Продовжуйте рух в напрямку <TOWARD_SIGN>.",
+        "7": "Продовжуйте рух <TOWARD_SIGN> ще <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> кілометрів",
+        "1 кілометр",
+        "<METERS> метрів",
+        "менше ніж 10 метрів"
+      ],
+      "us_customary_lengths": [
+        "<MILES> милі",
+        "1 милю",
+        "півмилі",
+        "чверть милі",
+        "<FEET> футів",
+        "менше ніж 10 футів"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Продовжуйте рух.",
+        "1": "Продовжуйте рух по <STREET_NAMES>.",
+        "2": "Продовжуйте рух через <JUNCTION_NAME>.",
+        "3": "Продовжуйте рух в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Відправлення: <TIME>.",
+        "1": "Відправлення: <TIME> з <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Відправлення о <TIME>.",
+        "1": "Відправлення о <TIME> з <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Ви прибули до місця призначення.",
+        "1": "Ви прибули до <DESTINATION>.",
+        "2": "Ваше місце призначення <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> знаходиться <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Ви прибули до місця призначення.",
+        "1": "Ви прибули до <DESTINATION>.",
+        "2": "Ваше місце призначення <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> знаходиться <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Ви наближаєтесь до місця призначення.",
+        "1": "Ви наближаєтесь до <DESTINATION>.",
+        "2": "Ваше місце призначення буде <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> буде <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Скористайтеся поромом.",
+        "1": "Скористайтеся поромом <STREET_NAMES>.",
+        "2": "Скористайтеся поромом <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Скористайтеся поромом в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "на пішохідній доріжці",
+        "на велодоріжці",
+        "на шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "ferry_label": "Пором",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Скористайтеся поромом.",
+        "1": "Скористайтеся поромом <STREET_NAMES>.",
+        "2": "Скористайтеся поромом <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Скористайтеся поромом в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "на пішохідній доріжці",
+        "на велодоріжці",
+        "на шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "ferry_label": "Пором",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Рухайтесь по кільцю.",
+        "1": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд.",
+        "2": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продовжуйте рух по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд в напрямку <TOWARD_SIGN>.",
+        "5": "Рухайтесь по кільцю та поверніть на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Рухайтесь по кільцю та поверніть на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продовжуйте рух по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Рухайтесь по кільцю та поверніть в бік <TOWARD_SIGN>.",
+        "8": "Рухайтесь по <STREET_NAMES>",
+        "9": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд.",
+        "10": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продовжуйте рух по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд в напрямку <TOWARD_SIGN>.",
+        "13": "Рухайтесь по <STREET_NAMES> та поверніть на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Рухайтесь по <STREET_NAMES> та поверніть на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продовжуйте рух по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Рухайтесь по <STREET_NAMES> та поверніть в напрямку <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "1-й",
+        "2-й",
+        "3-й",
+        "4-й",
+        "5-й",
+        "6-й",
+        "7-й",
+        "8-й",
+        "9-й",
+        "10-й"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Рухайтесь по кільцю.",
+        "1": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд.",
+        "2": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Рухайтесь по кільцю та поверніть у <ORDINAL_VALUE> з'їзд в напрямку <TOWARD_SIGN>.",
+        "5": "Рухайтесь по кільцю та поверніть на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Рухайтесь по кільцю та поверніть на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Рухайтесь по кільцю та поверніть в бік <TOWARD_SIGN>.",
+        "8": "Рухайтесь по <STREET_NAMES>",
+        "9": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд.",
+        "10": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Рухайтесь по <STREET_NAMES> та поверніть у <ORDINAL_VALUE> з'їзд в напрямку <TOWARD_SIGN>.",
+        "13": "Рухайтесь по <STREET_NAMES> та поверніть на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Рухайтесь по <STREET_NAMES> та поверніть на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Рухайтесь по <STREET_NAMES> та поверніть в напрямку <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "1-й",
+        "2-й",
+        "3-й",
+        "4-й",
+        "5-й",
+        "6-й",
+        "7-й",
+        "8-й",
+        "9-й",
+        "10-й"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Рухайтесь на з'їзд <RELATIVE_DIRECTION>.",
+        "1": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Рухайтесь на з'їзд <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "4": "Рухайтесь на з'їзд <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "5": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "6": "Рухайтесь на з'їзд <BRANCH_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "7": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "8": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "12": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "14": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "15": "Рухайтесь на з'їзд.",
+        "16": "Рухайтесь на з'їзд <NUMBER_SIGN>.",
+        "17": "Рухайтесь на з'їзд <BRANCH_SIGN>.",
+        "18": "Рухайтесь на з'їзд <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Рухайтесь на з'їзд в напрямку <TOWARD_SIGN>.",
+        "20": "Рухайтесь на з'їзд <NUMBER_SIGN> в напрямку <TOWARD_SIGN>.",
+        "21": "Рухайтесь на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "22": "Рухайтесь на з'їзд <NUMBER_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "23": "Рухайтесь на з'їзд <NAME_SIGN>.",
+        "25": "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Рухайтесь на з'їзд <NAME_SIGN> в напрямку <TOWARD_SIGN>.",
+        "29": "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Залишить кільце.",
+        "1": "Залишить кільце на <STREET_NAMES>.",
+        "2": "Залишить кільце на <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "3": "Залишить кільце і рухайтесь в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Залишить кільце.",
+        "1": "Залишить кільце на <STREET_NAMES>.",
+        "2": "Залишить кільце на <BEGIN_STREET_NAMES>.",
+        "3": "Залишить кільце і рухайтесь в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Рухайтесь на з'їзд <RELATIVE_DIRECTION>.",
+        "1": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Рухайтесь на з'їзд <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "4": "Рухайтесь на з'їзд <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "5": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "6": "Рухайтесь на з'їзд <BRANCH_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "7": "Рухайтесь на з'їзд <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "8": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
+        "12": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "14": "Рухайтесь на з'їзд <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "15": "Рухайтесь на з'їзд.",
+        "16": "Рухайтесь на з'їзд <NUMBER_SIGN>.",
+        "17": "Рухайтесь на з'їзд <BRANCH_SIGN>.",
+        "18": "Рухайтесь на з'їзд <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Рухайтесь на з'їзд в напрямку <TOWARD_SIGN>.",
+        "20": "Рухайтесь на з'їзд <NUMBER_SIGN> в напрямку <TOWARD_SIGN>.",
+        "21": "Рухайтесь на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "22": "Рухайтесь на з'їзд <NUMBER_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "23": "Рухайтесь на з'їзд <NAME_SIGN>.",
+        "25": "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Рухайтесь на з'їзд <NAME_SIGN> в напрямку <TOWARD_SIGN>.",
+        "29": "Рухайтесь на з'їзд <NAME_SIGN> на <BRANCH_SIGN> в напрямку <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "З'їзд <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Тримайтесь <RELATIVE_DIRECTION> на роздоріжжі.",
+        "1": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN>.",
+        "2": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на <STREET_NAMES>.",
+        "3": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Тримайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "5": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> в напрямку <TOWARD_SIGN>.",
+        "6": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на <STREET_NAMES> в напрямку <TOWARD_SIGN>.",
+        "7": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідну доріжку",
+        "велодоріжку",
+        "шлях для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "прямо",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Тримайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "1": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES>.",
+        "2": "Тримайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>.",
+        "3": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "прямо",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Тримайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "1": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES>.",
+        "2": "Тримайтесь <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>.",
+        "3": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> щоб залишатись на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "прямо",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Тримайтесь <RELATIVE_DIRECTION> на роздоріжжі.",
+        "1": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN>.",
+        "2": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на <STREET_NAMES>.",
+        "3": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Тримайтесь <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "5": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> в напрямку <TOWARD_SIGN>.",
+        "6": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на <STREET_NAMES> в напрямку <TOWARD_SIGN>.",
+        "7": "Тримайтесь <RELATIVE_DIRECTION> для виїзду на з'їзд <NUMBER_SIGN> на <STREET_NAMES> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідну доріжку",
+        "велодоріжку",
+        "шлях для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "прямо",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Приєднайтеся до потоку.",
+        "1": "Приєднайтеся до потоку <RELATIVE_DIRECTION>.",
+        "2": "Приєднайтеся до потоку на <STREET_NAMES>.",
+        "3": "Приєднайтеся до потоку <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Приєднайтеся до потоку в напрямку <TOWARD_SIGN>.",
+        "5": "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Приєднайтеся до потоку.",
+        "1": "Приєднайтеся до потоку <RELATIVE_DIRECTION>.",
+        "2": "Приєднайтеся до потоку на <STREET_NAMES>.",
+        "3": "Приєднайтеся до потоку <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Приєднайтеся до потоку в напрямку <TOWARD_SIGN>.",
+        "5": "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Проїдьте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "зупинку",
+        "other": "зупинки"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Продовжуйте рух ще <LENGTH>.",
+        "1": "Продовжуйте рух по <STREET_NAMES> ще <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> кілометрів",
+        "1 кілометр",
+        "<METERS> метрів",
+        "менше ніж 10 метрів"
+      ],
+      "us_customary_lengths": [
+        "<MILES> милі",
+        "1 милю",
+        "півмилі",
+        "чверть милі",
+        "<FEET> футів",
+        "менше ніж 10 футів"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Скористайтесь з'їздом <RELATIVE_DIRECTION>.",
+        "1": "Скористайтесь з'їздом <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Скористайтесь з'їздом <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "3": "Скористайтесь з'їздом <BRANCH_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "4": "Скористайтесь з'їздом <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Поверніть <RELATIVE_DIRECTION> на з'їзд.",
+        "6": "Поверніть <RELATIVE_DIRECTION> на з'їзд <BRANCH_SIGN>.",
+        "7": "Поверніть <RELATIVE_DIRECTION> на з'їзд в напрямку <TOWARD_SIGN>.",
+        "8": "Поверніть <RELATIVE_DIRECTION> на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "9": "Поверніть <RELATIVE_DIRECTION> на з'їзд <NAME_SIGN>.",
+        "10": "Скористайтесь з'їздом.",
+        "11": "Скористайтесь з'їздом <BRANCH_SIGN>.",
+        "12": "Скористайтесь з'їздом в напрямку <TOWARD_SIGN>.",
+        "13": "Скористайтесь з'їздом <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "14": "Скористайтесь з'їздом <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Рухайтесь прямо на з'їзд.",
+        "1": "Рухайтесь прямо на з'їзд <BRANCH_SIGN>.",
+        "2": "Рухайтесь прямо на з'їзд в напрямку <TOWARD_SIGN>.",
+        "3": "Рухайтесь прямо на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "4": "Рухайтесь прямо на з'їзд <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Рухайтесь прямо на з'їзд.",
+        "1": "Рухайтесь прямо на з'їзд <BRANCH_SIGN>.",
+        "2": "Рухайтесь прямо на з'їзд в напрямку <TOWARD_SIGN>.",
+        "3": "Рухайтесь прямо на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "4": "Рухайтесь прямо на з'їзд <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Скористайтесь з'їздом <RELATIVE_DIRECTION>.",
+        "1": "Скористайтесь з'їздом <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Скористайтесь з'їздом <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "3": "Скористайтесь з'їздом <BRANCH_SIGN> <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "4": "Скористайтесь з'їздом <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Поверніть <RELATIVE_DIRECTION> на з'їзд.",
+        "6": "Поверніть <RELATIVE_DIRECTION> на з'їзд <BRANCH_SIGN>.",
+        "7": "Поверніть <RELATIVE_DIRECTION> на з'їзд в напрямку <TOWARD_SIGN>.",
+        "8": "Поверніть <RELATIVE_DIRECTION> на з'їзд <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "9": "Поверніть <RELATIVE_DIRECTION> на з'їзд <NAME_SIGN>.",
+        "10": "Скористайтесь з'їздом.",
+        "11": "Скористайтесь з'їздом <BRANCH_SIGN>.",
+        "12": "Скористайтесь з'їздом в напрямку <TOWARD_SIGN>.",
+        "13": "Скористайтесь з'їздом <BRANCH_SIGN> в напрямку <TOWARD_SIGN>.",
+        "14": "Скористайтесь з'їздом <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Різко поверніть <RELATIVE_DIRECTION>.",
+        "1": "Різко поверніть <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Різко поверніть <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "3": "Різко поверніть <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Різко поверніть <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Різко поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Різко поверніть <RELATIVE_DIRECTION>.",
+        "1": "Різко поверніть <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Різко поверніть <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Різко поверніть <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Різко поверніть <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Різко поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Прямуйте на <CARDINAL_DIRECTION>.",
+        "1": "Прямуйте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "2": "Прямуйте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "4": "Їдьте на <CARDINAL_DIRECTION>.",
+        "5": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "6": "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "8": "Йдіть на <CARDINAL_DIRECTION>.",
+        "9": "Йдіть на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "10": "Йдіть на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "16": "Їдьте на <CARDINAL_DIRECTION>.",
+        "17": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "північ",
+        "північний схід",
+        "схід",
+        "південний схід",
+        "південь",
+        "південний захід",
+        "захід",
+        "північний захід"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Прямуйте на <CARDINAL_DIRECTION>.",
+        "1": "Прямуйте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Прямуйте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "3": "Прямуйте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "4": "Прямуйте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "5": "Їдьте на <CARDINAL_DIRECTION>.",
+        "6": "Їдьте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "8": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "9": "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "10": "Йдіть на <CARDINAL_DIRECTION>.",
+        "11": "Йдіть на <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Йдіть на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "13": "Йдіть на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "14": "Йдіть на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "15": "Їдьте на <CARDINAL_DIRECTION>.",
+        "16": "Їдьте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Їдьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "19": "Їдьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "північ",
+        "північний схід",
+        "схід",
+        "південний схід",
+        "південь",
+        "південний захід",
+        "захід",
+        "північний захід"
+      ],
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> кілометрів",
+        "1 кілометр",
+        "<METERS> метрів",
+        "менше ніж 10 метрів"
+      ],
+      "us_customary_lengths": [
+        "<MILES> милі",
+        "1 милю",
+        "півмилі",
+        "чверть милі",
+        "<FEET> футів",
+        "менше ніж 10 футів"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Сідайте на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Сідайте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поїзд",
+        "автобус",
+        "пором",
+        "канатну дорогу",
+        "гондолу",
+        "фунікулер"
+      ],
+      "transit_stop_count_labels": {
+        "one": "зупинка",
+        "other": "зупинки"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Вийдіть на зупинці.",
+        "1": "Вийдіть на <TRANSIT_STOP>.",
+        "2": "Вийдіть на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Вийдіть на зупинці.",
+        "1": "Вийдіть на <TRANSIT_STOP>.",
+        "2": "Вийдіть на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Сідайте на зупинці.",
+        "1": "Сідайте на <TRANSIT_STOP>.",
+        "2": "Сідайте на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Сідайте на зупинці.",
+        "1": "Сідайте на <TRANSIT_STOP>.",
+        "2": "Сідайте на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Зробіть пересадку на зупинці.",
+        "1": "Зробіть пересадку на <TRANSIT_STOP>.",
+        "2": "Зробіть пересадку на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Зробіть пересадку на зупинці.",
+        "1": "Зробіть пересадку на <TRANSIT_STOP>.",
+        "2": "Зробіть пересадку на <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "зупинці",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Рухайтесь <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Рухайтесь <TRANSIT_NAME> до зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамваєм",
+        "метро",
+        "поїздом",
+        "автобусом",
+        "поромом",
+        "канатною дорогою",
+        "гондолою",
+        "фунікулером"
+      ],
+      "transit_stop_count_labels": {
+        "one": "зупинку",
+        "other": "зупинки"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Рухайтесь <TRANSIT_NAME>.",
+        "1": "Рухайтесь <TRANSIT_NAME> до зупинки <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамваєм",
+        "метро",
+        "поїздом",
+        "автобусом",
+        "поромом",
+        "канатною дорогою",
+        "гондолою",
+        "фунікулером"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Пересядьте на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Пересядьте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поїзд",
+        "автобус",
+        "пором",
+        "канатну дорогу",
+        "гондолу",
+        "фунікулер"
+      ],
+      "transit_stop_count_labels": {
+        "one": "зупинка",
+        "other": "зупинки"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Пересядьте на <TRANSIT_NAME>.",
+        "1": "Пересядьте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поїзд",
+        "автобус",
+        "пором",
+        "канатну дорогу",
+        "гондолу",
+        "фунікулер"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Сідайте на <TRANSIT_NAME>.",
+        "1": "Сідайте <TRANSIT_NAME> в напрямку зупинки <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "поїзд",
+        "автобус",
+        "пором",
+        "канатну дорогу",
+        "гондолу",
+        "фунікулер"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Поверніть <RELATIVE_DIRECTION>.",
+        "1": "Поверніть <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверніть <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продовжуйте рух по <STREET_NAMES>.",
+        "3": "Поверніть <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Поверніть <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Поверніть <RELATIVE_DIRECTION>.",
+        "1": "Поверніть <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверніть <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Поверніть <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "4": "Поверніть <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "5": "Поверніть <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Розверніться <RELATIVE_DIRECTION>.",
+        "1": "Розверніться <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Розверніться <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "3": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
+        "5": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> щоб залишатись на <STREET_NAMES>.",
+        "6": "Розверніться <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Розверніться <RELATIVE_DIRECTION>.",
+        "1": "Розверніться <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Розверніться <RELATIVE_DIRECTION> щоб залишатись на <STREET_NAMES>.",
+        "3": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
+        "5": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> щоб залишатись на <STREET_NAMES>.",
+        "6": "Розверніться <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
+        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "пішохідній доріжці",
+        "велодоріжці",
+        "шляху для гірських велосипедів",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "ліворуч",
+        "праворуч"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Потім <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Потім, через <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> кілометрів",
+        "1 кілометр",
+        "<METERS> метрів",
+        "менше ніж 10 метрів"
+      ],
+      "us_customary_lengths": [
+        "<MILES> милі",
+        "1 милю",
+        "півмилі",
+        "чверть милі",
+        "<FEET> футів",
+        "менше ніж 10 футів"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> кілометрів",
+        "1 кілометр",
+        "<METERS> метрів",
+        "менше ніж 10 метрів"
+      ],
+      "us_customary_lengths": [
+        "<MILES> милі",
+        "1 милю",
+        "півмилі",
+        "чверть милі",
+        "<FEET> футів",
+        "менше ніж 10 футів"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}

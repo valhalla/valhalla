@@ -49,9 +49,8 @@ rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(TaggedNamesTunnel, Tunnel) {
-  auto result = gurka::route(map, "A", "F", "auto");
-
+TEST_F(TaggedNames, Tunnel) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
@@ -73,9 +72,8 @@ TEST_F(TaggedNamesTunnel, Tunnel) {
   EXPECT_EQ(leg.node(5).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNamesTunnel, NoTunnel) {
-  auto result = gurka::route(map, "A", "H", "auto");
-
+TEST_F(TaggedNames, NoTunnel) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
@@ -83,8 +81,8 @@ TEST_F(TaggedNamesTunnel, NoTunnel) {
   EXPECT_EQ(leg.node(2).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNamesTunnel, test_taking_tunnel) {
-  auto result = gurka::route(map, "A", "F", "auto");
+TEST_F(TaggedNames, test_taking_tunnel) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   auto steps = d["routes"][0]["legs"][0]["steps"].GetArray();
@@ -138,8 +136,8 @@ TEST_F(TaggedNamesTunnel, test_taking_tunnel) {
   }
 }
 
-TEST_F(TaggedNamesTunnel, test_bypass_tunnel) {
-  auto result = gurka::route(map, "A", "H", "auto");
+TEST_F(TaggedNames, test_bypass_tunnel) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   for (const auto& route : d["routes"].GetArray()) {

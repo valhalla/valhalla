@@ -8,6 +8,7 @@
 #include "midgard/pointll.h"
 #include "proto/trip.pb.h"
 #include "proto/tripcommon.pb.h"
+#include "tyr/serializers.h"
 
 #include "test.h"
 
@@ -15,7 +16,8 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::midgard;
-using namespace valhalla::midgard::OpenLR;
+using namespace valhalla::baldr;
+using namespace valhalla::baldr::OpenLR;
 
 using FormOfWay = OpenLR::LocationReferencePoint::FormOfWay;
 
@@ -231,17 +233,6 @@ TEST(OpenLR, CreateLinearReference) {
   EXPECT_EQ(short_location.noff, 0);
 }
 
-TEST(OpenLR, road_class_to_fow) {
-  // Check basic undefined behavior
-  TripLeg::Node node;
-  EXPECT_EQ(road_class_to_fow(node), FormOfWay::OTHER);
-  // Basic road class behavior check
-  node.mutable_edge()->set_roundabout(true);
-  node.mutable_edge()->set_use(TripLeg::kRoadUse);
-  node.mutable_edge()->set_road_class(RoadClass::kPrimary);
-  EXPECT_EQ(road_class_to_fow(node), FormOfWay::ROUNDABOUT);
-}
-
 TripLeg CreateLeg(const std::vector<PointLL>& points) {
   TripLeg path;
   TripLeg::Node* node;
@@ -252,8 +243,42 @@ TripLeg CreateLeg(const std::vector<PointLL>& points) {
   edge->set_begin_shape_index(0);
   edge->set_end_shape_index(1);
   edge->set_use(TripLeg::kRoadUse);
-  edge->set_road_class(RoadClass::kPrimary);
+  edge->set_road_class(valhalla::RoadClass::kPrimary);
   return path;
+}
+
+std::vector<OpenLR::OpenLr> LegToOpenLrs(TripLeg&& leg) {
+  // gin up a route/request for it
+  valhalla::Options options;
+  options.set_action(Options::route);
+  options.set_linear_references(true);
+  valhalla::TripRoute route;
+  route.mutable_legs()->Add()->Swap(&leg);
+  baldr::json::MapPtr container = baldr::json::map({});
+
+  // serialize some b64 encoded openlrs and get them back out as openlr objects
+  tyr::route_references(container, route, options);
+  auto references = boost::get<baldr::json::ArrayPtr>(container->find("linear_references")->second);
+  std::vector<OpenLR::OpenLr> openlrs;
+  for (const auto& reference : *references) {
+    auto b64 = boost::get<std::string>(reference);
+    openlrs.emplace_back(b64, true);
+  }
+
+  return openlrs;
+}
+
+TEST(OpenLR, road_class_to_fow) {
+  // make a leg to test basic behavior
+  auto leg = CreateLeg({{0, 0}, {1, 1}});
+  auto* edge = leg.mutable_node(0)->mutable_edge();
+  edge->set_roundabout(true);
+  edge->set_use(TripLeg::kRoadUse);
+  edge->set_road_class(valhalla::RoadClass::kPrimary);
+  auto openlrs = LegToOpenLrs(std::move(leg));
+
+  // parse them out and check whats in them
+  EXPECT_EQ(openlrs.front().lrps[0].fow, FormOfWay::ROUNDABOUT);
 }
 
 // TripPath to OpenLR tests: Spot check that some two point line segments (on a primary road
@@ -265,11 +290,9 @@ TEST(OpenLR, openlr_edges) {
       PointLL(5.08531221, 52.0938563),
       PointLL(5.0865867, 52.0930211),
   };
-  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  auto openlrs = LegToOpenLrs(CreateLeg(points));
   EXPECT_EQ(openlrs.size(), 1);
-  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtsAgCA/60bHA==");
-  // Check decoding
-  OpenLr decoded(openlrs.at(0), true);
+  const auto& decoded = openlrs[0];
   EXPECT_EQ(decoded.lrps.size(), 2);
   PointLL first = decoded.getFirstCoordinate();
   EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
@@ -286,11 +309,9 @@ TEST(OpenLR, openlr_edges_duplicate) {
       PointLL(5.08531221, 52.0938563),
 
   };
-  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  auto openlrs = LegToOpenLrs(CreateLeg(points));
   EXPECT_EQ(openlrs.size(), 1);
-  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtgAAAAAAAbEA==");
-  // Check decoding
-  OpenLr decoded(openlrs.at(0), true);
+  const auto& decoded = openlrs[0];
   EXPECT_EQ(decoded.lrps.size(), 2);
   PointLL first = decoded.getFirstCoordinate();
   EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);

@@ -10,9 +10,13 @@
 #include <date/date.h>
 #include <date/tz.h>
 
+#include "baldr/turnlanes.h"
 #include "locales.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
+#include "tyr/serializer_constants.h"
+
+using namespace valhalla::tyr;
 
 namespace {
 
@@ -67,7 +71,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t intersecting_turn_degree,
                          bool is_right,
                          uint32_t turn_degree_threshold) {
-  int32_t turn_degree_delta = 0;
+  uint32_t turn_degree_delta = 0;
   if (is_right) {
     turn_degree_delta = (((intersecting_turn_degree - path_turn_degree) + 360) % 360);
   } else {
@@ -132,6 +136,30 @@ const locales_singleton_t& get_locales() {
 
 const std::unordered_map<std::string, std::string>& get_locales_json() {
   return locales_json;
+}
+
+std::string turn_lane_direction(uint16_t turn_lane) {
+  switch (turn_lane) {
+    case baldr::kTurnLaneReverse:
+      return osrmconstants::kModifierUturn;
+    case baldr::kTurnLaneSharpLeft:
+      return osrmconstants::kModifierSharpLeft;
+    case baldr::kTurnLaneLeft:
+      return osrmconstants::kModifierLeft;
+    case baldr::kTurnLaneSlightLeft:
+      return osrmconstants::kModifierSlightLeft;
+    case baldr::kTurnLaneThrough:
+      return osrmconstants::kModifierStraight;
+    case baldr::kTurnLaneSlightRight:
+      return osrmconstants::kModifierSlightRight;
+    case baldr::kTurnLaneRight:
+      return osrmconstants::kModifierRight;
+    case baldr::kTurnLaneSharpRight:
+      return osrmconstants::kModifierSharpRight;
+    default:
+      return "";
+  }
+  return "";
 }
 
 } // namespace odin

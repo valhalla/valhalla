@@ -9,7 +9,7 @@
 #include "midgard/pointll.h"
 #include "sif/autocost.h"
 #include "sif/costfactory.h"
-#include "test/util/traffic_utils.h"
+#include "test.h"
 #include "thor/bidirectional_astar.h"
 #include <valhalla/proto/options.pb.h>
 
@@ -67,8 +67,8 @@ boost::property_tree::ptree build_config(const char* live_traffic_tar) {
       "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
+      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
+      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,"max_avoid_polygons_length":10000,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
       "skadi": {"max_shape": 750000,"min_resample": 10.0},
@@ -83,7 +83,7 @@ constexpr float kMaxRange = 256;
 
 static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   const auto config = build_config("generated-live-data.tar");
-  valhalla_tests::utils::build_live_traffic_data(config);
+  test::build_live_traffic_data(config);
 
   std::mt19937 gen(0); // Seed with the same value for consistent benchmarking
   {
@@ -105,10 +105,10 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       } else {
       }
     };
-    valhalla_tests::utils::customize_live_traffic_data(config, generate_traffic);
+    test::customize_live_traffic_data(config, generate_traffic);
   }
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   // Generate N random route queries within the Utrect bounding box;
   const int N = 2;
@@ -172,26 +172,26 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   std::size_t route_size = 0;
 
+  thor::BidirectionalAStar astar;
   for (auto _ : state) {
-    thor::BidirectionalAStar astar;
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
+      astar.Clear();
       route_size += 1;
     }
   }
   if (route_size == 0) {
     throw std::runtime_error("Failed all routes");
   }
-  state.counters["Routes"] =
-      benchmark::Counter(route_size, benchmark::Counter::kIsIterationInvariantRate);
+  state.counters["Routes"] = route_size;
 }
 
 void customize_traffic(const boost::property_tree::ptree& config,
                        baldr::GraphId& target_edge_id,
                        const int target_speed) {
-  valhalla_tests::utils::build_live_traffic_data(config);
+  test::build_live_traffic_data(config);
   // Make some updates to the traffic .tar file.
   // Generate traffic data
   std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
@@ -206,7 +206,7 @@ void customize_traffic(const boost::property_tree::ptree& config,
       current->speed1 = target_speed >> 1;
     }
   };
-  valhalla_tests::utils::customize_live_traffic_data(config, generate_traffic);
+  test::customize_live_traffic_data(config, generate_traffic);
 }
 
 BENCHMARK(BM_UtrechtBidirectionalAstar)->Unit(benchmark::kMillisecond);
@@ -219,7 +219,7 @@ static void BM_GetSpeed(benchmark::State& state) {
   const auto tgt_speed = 50;
   customize_traffic(config, tgt_edge_id, tgt_speed);
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   auto tile = clean_reader->GetGraphTile(baldr::GraphId(tgt_edge_id));
   if (tile == nullptr) {
@@ -251,7 +251,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   auto tgt_speed = 100;
   customize_traffic(config, tgt_edge_id, tgt_speed);
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   Options options;
   create_costing_options(options);
@@ -276,7 +276,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   // auto pred = sif::EdgeLabel(0, tgt_edge_id, edge, costs, 1.0, 1.0,
   // sif::TravelMode::kDrive,10,sif::Cost());
   auto pred = sif::EdgeLabel();
-  int restriction_idx;
+  uint8_t restriction_idx;
 
   for (auto _ : state) {
     cost->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);

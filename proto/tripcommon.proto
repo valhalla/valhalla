@@ -3,8 +3,8 @@ option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message LatLng {
-  optional float lat = 1;
-  optional float lng = 2;
+  optional double lat = 1;
+  optional double lng = 2;
 }
 
 message BoundingBox {
@@ -34,10 +34,10 @@ message Location {
 
   message PathEdge {
     optional uint64 graph_id = 1;
-    optional float percent_along = 2;
+    optional double percent_along = 2;
     optional LatLng ll = 3;
     optional SideOfStreet side_of_street = 4;
-    optional float distance = 5;
+    optional double distance = 5;
     optional int32 minimum_reachability = 6; //deprecated
     optional bool begin_node = 7;
     optional bool end_node = 8;
@@ -54,6 +54,7 @@ message Location {
     optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
     optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
     optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results (default false)
+    optional bool exclude_closures  = 6 [default = true]; // whether to exclude roads marked as closed due to traffic
   }
 
   //inputs
@@ -131,8 +132,14 @@ message StreetName {
 }
 
 message TurnLane {
+  enum State {
+    kInvalid = 0;
+    kValid = 1;
+    kActive = 2;
+  }
   optional uint32 directions_mask = 1;
-  optional bool is_active = 2;
+  optional State state = 2 [default = kInvalid];
+  optional uint32 active_direction = 3;
 }
 
 enum RoadClass {

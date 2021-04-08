@@ -16,7 +16,6 @@
 #include "worker.h"
 
 #include "test.h"
-#include "utils.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -66,37 +65,12 @@ std::string to_locations(const std::vector<PointLL>& shape,
 }
 
 // fake config
-const auto conf = test::json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-    "loki":{
-      "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
-      "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-    },
-    "thor":{"logging":{"long_request": 110}},
-    "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-    "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius","interpolation_distance"],
-             "mode":"auto","grid":{"cache_size":100240,"size":500},
-             "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-             "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-             "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200, "match_on_restrictions":false}},
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })");
+const auto conf = test::make_config("test/data/utrecht_tiles",
+                                    {
+                                        {"meili.default.max_search_radius", "200"},
+                                        {"meili.default.search_radius", "15.0"},
+                                        {"meili.default.turn_penalty_factor", "200"},
+                                    });
 
 struct api_tester {
   api_tester()
@@ -1131,8 +1105,8 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<int> test_ans_num_routes{2, 2, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
-                                                        {48.6, 0.64, 0.961},
-                                                        {220.778, 2.431, 1.899}};
+                                                        {48.159, 0.64, 0.961},
+                                                        {93.388, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1231,7 +1205,7 @@ TEST(Mapmatch, test_loop_matching) {
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
-          {"lat": 52.098126, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.098127, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
           {"lat": 52.098128, "lon": 5.129725, "type": "break", "node_snap_tolerance": 0}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
@@ -1242,7 +1216,7 @@ TEST(Mapmatch, test_intersection_matching) {
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
           {"lat": 52.095164, "lon": 5.128560, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.095294, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.095295, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
           {"lat": 52.094478, "lon": 5.130406, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})"};
 
@@ -1426,16 +1400,17 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   const auto& matches = response.get_child("matchings");
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
-      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
-      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+      "CwOduyULYiKJAAAV//0iGw==",
+      "CwOdxCULYCKJAAAN//8iGw==",
+      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOd1yULWCKLAQBV/84iGw==",
   };
   for (const auto& match : matches) {
-    const auto& references = match.second.get_child("linear_references");
-    EXPECT_EQ(references.size(), 5);
-    for (const auto& reference : references) {
-      const std::string& actual = reference.second.get_value<std::string>();
-      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
-    }
+    std::vector<std::string> references;
+    for (const auto& reference : match.second.get_child("linear_references"))
+      references.push_back(reference.second.get_value<std::string>());
+    EXPECT_EQ(references.size(), 4);
+    EXPECT_EQ(expected, references);
   }
 }
 
@@ -1447,15 +1422,16 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   tyr::actor_t actor(conf, true);
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
-      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
-      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+      "CwOduyULYiKJAAAV//0iGw==",
+      "CwOdxCULYCKJAAAN//8iGw==",
+      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOd1yULWCKLAQBV/84iGw==",
   };
-  const auto& references = response.get_child("trip.linear_references");
-  EXPECT_EQ(references.size(), 5);
-  for (const auto& reference : references) {
-    const std::string& actual = reference.second.get_value<std::string>();
-    EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
-  }
+  std::vector<std::string> references;
+  for (const auto& reference : response.get_child("trip.linear_references"))
+    references.push_back(reference.second.get_value<std::string>());
+  EXPECT_EQ(references.size(), 4);
+  EXPECT_EQ(expected, references);
 }
 
 // Verify that OpenLR references are not present in API response when not asked for

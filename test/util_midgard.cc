@@ -2,8 +2,10 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/polyline2.h"
+#include "midgard/sequence.h"
 #include "midgard/util.h"
 #include <cmath>
+#include <cstdlib>
 #include <random>
 
 #include <list>
@@ -173,7 +175,7 @@ TEST(UtilMidgard, TestResample) {
     for (const auto& p : resampled) {
       auto cp = p.ClosestPoint(input_shape);
       auto dist = std::get<1>(cp);
-      if (!equal(dist, 0.f, 1.2f)) {
+      if (!equal(dist, 0., 1.2)) {
         throw std::runtime_error("Sampled point was not found on original line");
       }
     }
@@ -223,7 +225,7 @@ TEST(UtilMidgard, TestResampleDuplicate) {
   for (const auto& p : resampled) {
     auto cp = p.ClosestPoint(polyline);
     auto dist = std::get<1>(cp);
-    if (!equal(dist, 0.f, 1.2f)) {
+    if (!equal(dist, 0., 1.2)) {
       throw std::runtime_error("Sampled point was not found on original line");
     }
   }
@@ -691,6 +693,42 @@ TEST(UtilMidgard, Base64) {
     EXPECT_EQ(encode64(decoded), encoded);
     EXPECT_EQ(decode64(encoded), decoded);
     EXPECT_EQ(decode64(encode64(decoded)), decoded);
+  }
+}
+
+TEST(UtilMidgard, SequenceSort) {
+  std::vector<uint8_t> in_mem;
+  valhalla::midgard::sequence<uint8_t> merge("char_sequence_test_merge.bin", true, 1327);
+  valhalla::midgard::sequence<uint8_t> standard("char_sequence_test_standard.bin", true, 1327 * 5);
+
+  for (int i = 0; i < int(1327 * 4.5); ++i) {
+    auto n = static_cast<uint8_t>(rand() % std::numeric_limits<uint8_t>::max());
+    in_mem.push_back(n);
+    merge.push_back(n);
+    standard.push_back(n);
+  }
+
+  std::sort(in_mem.begin(), in_mem.end());
+  merge.sort(std::less<uint8_t>(), 1327);
+  standard.sort(std::less<uint8_t>(), 1327 * 5);
+
+  EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), merge.begin()));
+  EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));
+}
+
+TEST(UtilMidgard, PolygonArea) {
+  std::vector<PointLL> a{{1, 1}, {2, 2}, {3, 1}};
+  {
+    // area is negative in case of clockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, -1, 1e-7);
+  }
+
+  std::reverse(a.begin(), a.end());
+  {
+    // area is positive in case of counterclockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, 1, 1e-7);
   }
 }
 

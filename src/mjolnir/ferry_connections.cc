@@ -49,7 +49,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -119,7 +119,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
       // Skip uses other than road / other (service?)
       const OSMWay w = *ways[edge.wayindex_];
-      if (w.use() != baldr::Use::kOther &&
+      if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
         continue;
       }
@@ -218,7 +218,7 @@ bool ShortFerry(const uint32_t node_index,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -256,8 +256,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file,
-                                const uint32_t rc,
-                                DataQuality& stats) {
+                                const uint32_t rc) {
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);

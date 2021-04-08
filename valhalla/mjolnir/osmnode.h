@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -45,9 +46,9 @@ struct OSMNode {
   uint32_t urban_ : 1;
   uint32_t spare1_ : 5;
 
-  // Lat,lng of the node
-  float lng_;
-  float lat_;
+  // Lat,lng of the node at fixed 7digit precision
+  uint32_t lng7_;
+  uint32_t lat7_;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));
@@ -57,8 +58,8 @@ struct OSMNode {
    * Constructor with OSM node Id
    */
   OSMNode(const uint64_t id,
-          const float lat = baldr::kInvalidLongitude,
-          const float lng = baldr::kInvalidLatitude) {
+          const double lat = std::numeric_limits<double>::max(),
+          const double lng = std::numeric_limits<double>::max()) {
     memset(this, 0, sizeof(OSMNode));
     set_id(id);
     set_latlng(lat, lng);
@@ -79,17 +80,24 @@ struct OSMNode {
    * @param  lat  Latitude of the node.
    *
    */
-  void set_latlng(const float lng, const float lat) {
-    lng_ = lng;
-    lat_ = lat;
+  void set_latlng(const double lng, double lat) {
+    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
+    if (lng >= -180 && lng <= 180)
+      lng7_ = std::round((lng + 180) * 1e7);
+    if (lat >= -90 && lat <= 90)
+      lat7_ = std::round((lat + 90) * 1e7);
   }
 
   /**
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  std::pair<float, float> latlng() const {
-    return std::make_pair(lng_, lat_);
+  midgard::PointLL latlng() const {
+    // if either coord is borked we return invalid pointll
+    if (lng7_ == std::numeric_limits<uint32_t>::max() ||
+        lat7_ == std::numeric_limits<uint32_t>::max())
+      return {};
+    return {lng7_ * 1e-7 - 180, lat7_ * 1e-7 - 90};
   }
 
   /**

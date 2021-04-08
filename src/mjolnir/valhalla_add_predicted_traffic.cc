@@ -13,6 +13,7 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
@@ -57,13 +58,8 @@ struct stats {
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
-  std::vector<int16_t> coefficients;
+  boost::optional<std::array<int16_t, kCoefficientCount>> coefficients;
 };
-
-// Convert big endian bytes to little endian
-int16_t to_little_endian(const uint16_t val) {
-  return (val << 8) | ((val >> 8) & 0x00ff);
-}
 
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
@@ -133,25 +129,11 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
               if (t.size()) {
                 try {
                   // Decode the base64 predicted speeds
-                  // Decode the base64 string and cast the data to a raw string of signed bytes
-                  const std::string& decoded_str = decode64(t);
-                  if (decoded_str.size() != kDecodedSpeedSize) {
-                    throw std::runtime_error(
-                        "Decoded speed string size expected= " + std::to_string(kDecodedSpeedSize) +
-                        " actual=" + std::to_string(decoded_str.size()));
-                  }
-                  const int8_t* raw = reinterpret_cast<const int8_t*>(decoded_str.data());
-                  // Create the coefficients. Each group of 2 bytes represents a signed, int16 number
-                  // (big endian). Convert to little endian.
-                  traffic->second.coefficients.reserve(kCoefficientCount);
-                  for (uint32_t i = 0, idx = 0; i < kCoefficientCount; ++i, idx += 2) {
-                    traffic->second.coefficients.push_back(
-                        to_little_endian(*(reinterpret_cast<const uint16_t*>(&raw[idx]))));
-                  }
+                  traffic->second.coefficients = decode_compressed_speeds(t);
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
-                           std::to_string(line_num));
+                           std::to_string(line_num) + "; error='" + e.what() + "'");
                   has_error = true;
                 }
               }
@@ -191,7 +173,7 @@ void update_tile(const std::string& tile_dir,
   size_t pred_count = 0;
   for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
     auto found = speeds.find(j);
-    pred_count += found != speeds.cend() && found->second.coefficients.size() == kCoefficientCount;
+    pred_count += found != speeds.cend() && static_cast<bool>(found->second.coefficients);
   }
 
   // Update directed edges as needed
@@ -209,8 +191,8 @@ void update_tile(const std::string& tile_dir,
       if (speed.free_flow_speed) {
         directededge.set_free_flow_speed(speed.free_flow_speed);
       }
-      if (speed.coefficients.size() == kCoefficientCount) {
-        tile_builder.AddPredictedSpeed(j, speed.coefficients, pred_count);
+      if (speed.coefficients) {
+        tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
         directededge.set_has_predicted_speed(true);
       }
       ++stat.updated_count;
@@ -329,7 +311,8 @@ int main(int argc, char** argv) {
   }
   std::vector<std::pair<GraphId, std::vector<std::string>>> traffic_tiles(files_per_tile.begin(),
                                                                           files_per_tile.end());
-  std::random_shuffle(traffic_tiles.begin(), traffic_tiles.end());
+  std::random_device rd;
+  std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
   // Read the config file
   boost::property_tree::ptree pt;
@@ -422,7 +405,7 @@ int main(int argc, char** argv) {
         reader.Trim();
       }
 
-      const GraphTile* tile = reader.GetGraphTile(tile_id);
+      graph_tile_ptr tile = reader.GetGraphTile(tile_id);
       uint32_t n = tile->header()->directededgecount();
       if (n == 0)
         continue;

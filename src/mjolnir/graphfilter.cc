@@ -60,7 +60,7 @@ void FilterTiles(GraphReader& reader,
   };
 
   // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().rbegin()->second.level);
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
@@ -68,7 +68,8 @@ void FilterTiles(GraphReader& reader,
     n_original_edges += tilebuilder.header()->directededgecount();
 
     // Get the graph tile. Read from this tile to create the new tile.
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    assert(tile);
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
@@ -142,7 +143,7 @@ void FilterTiles(GraphReader& reader,
         // encoded shape plus way Id.
         bool added;
         uint32_t idx = directededge->edgeinfo_offset();
-        auto edgeinfo = tile->edgeinfo(idx);
+        auto edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
@@ -156,7 +157,7 @@ void FilterTiles(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
-        edge_count++;
+        ++edge_count;
       }
 
       // Add the node to the tilebuilder unless no edges remain
@@ -228,14 +229,11 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   int not_found = 0;
 
   // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().rbegin()->second.level);
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
-    // Get the graph tile. Skip if no tile exists or no nodes exist in the tile
-    // (should not happen!?)
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
-      continue;
-    }
+    // Get the graph tile. Skip if no tile exists (should not happen!?)
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    assert(tile);
 
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);

@@ -1,7 +1,7 @@
-#ifndef VALHALLA_MIDGARD_UTIL_H_
-#define VALHALLA_MIDGARD_UTIL_H_
+#pragma once
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <ostream>
@@ -133,9 +133,9 @@ inline float normalize(const float num, const float den) {
 template <class container_t>
 typename container_t::value_type::first_type length(const container_t& pts) {
   if (pts.size() < 2) {
-    return 0.0f;
+    return 0.0;
   }
-  typename container_t::value_type::first_type length = 0.0f;
+  typename container_t::value_type::first_type length = 0.0;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
   }
@@ -154,7 +154,7 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
     return 0.0;
   }
 
-  typename iterator_t::value_type::first_type length = 0.0f;
+  typename iterator_t::value_type::first_type length = 0.0;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     length += std::prev(vertex)->Distance(*vertex);
   }
@@ -474,7 +474,7 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
- * this will return a positive value for clockwise wound polygons and negative otherwise.
+ * this will return a positive value for counterclockwise wound polygons and negative otherwise.
  * Works with rings where the polygons first and last points are the same or not
  *
  * NOTE: this is good for relative area but the units for spherical coordinates
@@ -483,7 +483,8 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
  * @param polygon   the list of points comprising the polygon
  * @return the area of the polygon
  */
-template <class container_t> float polygon_area(const container_t& polygon);
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon);
 
 template <typename T> struct ring_queue_t {
   ring_queue_t(size_t limit) : limit(limit), i(0) {
@@ -597,8 +598,8 @@ struct projector_t {
 
     // project a onto b where b is the origin vector representing this segment
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = double(v.first) - u.first;
-    auto by = double(v.second) - u.second;
+    auto bx = v.first - u.first;
+    auto by = v.second - u.second;
 
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
@@ -647,7 +648,36 @@ std::string encode64(const std::string& val);
  */
 std::string decode64(const std::string& val);
 
+// Convert big endian bytes to little endian
+inline int16_t to_little_endian(uint16_t val) {
+  return (val << 8) | ((val >> 8) & 0x00ff);
+}
+
+// Convert little endian bytes to big endian
+inline uint16_t to_big_endian(uint16_t val) {
+  return (val << 8) | (val >> 8);
+}
+
+template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+template <typename clock_t = std::chrono::steady_clock> struct scoped_timer {
+  using duration_t = typename clock_t::duration;
+  const std::function<void(const duration_t&)> callback;
+  const std::chrono::time_point<clock_t> start;
+
+  scoped_timer(const std::function<void(const duration_t&)>& finished_callback)
+      : callback(finished_callback), start(clock_t::now()) {
+  }
+  scoped_timer(std::function<void(const duration_t&)>&& finished_callback)
+      : callback(finished_callback), start(clock_t::now()) {
+  }
+  ~scoped_timer() {
+    callback(clock_t::now() - start);
+  }
+};
+
 } // namespace midgard
 } // namespace valhalla
-  //
-#endif // VALHALLA_MIDGARD_UTIL_H_
