@@ -77,6 +77,7 @@
    * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
    * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
    * CHANGED: Refactor bidirectional astar forward/reverse search to reduce code repetition [#2970](https://github.com/valhalla/valhalla/pull/2970)
+   * ADDED: Adds support for name:pronunciation tag [#2639](https://github.com/valhalla/valhalla/pull/2639)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
