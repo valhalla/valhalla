@@ -82,6 +82,7 @@ public:
   }
 
 protected:
+  enum ExpansionType { forward, reverse };
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
@@ -103,24 +104,28 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  bool ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::TimeInfo& time_info,
-                     const valhalla::Location& dest,
-                     std::pair<int32_t, float>& best_path);
+  template <ExpansionType expansion_direction, typename EdgeLabelT>
+  bool Expand(baldr::GraphReader& graphreader,
+              const baldr::GraphId& node,
+              EdgeLabelT& pred,
+              const uint32_t pred_idx,
+              const baldr::DirectedEdge* opp_pred_edge,
+              const baldr::TimeInfo& time_info,
+              const valhalla::Location& dest,
+              std::pair<int32_t, float>& best_path);
 
   // Private helper function for `ExpandReverse`
-  inline bool ExpandForwardInner(baldr::GraphReader& graphreader,
-                                 const sif::EdgeLabel& pred,
-                                 const baldr::NodeInfo* nodeinfo,
-                                 const uint32_t pred_idx,
-                                 const EdgeMetadata& meta,
-                                 const graph_tile_ptr& tile,
-                                 const baldr::TimeInfo& time_info,
-                                 const valhalla::Location& destination,
-                                 std::pair<int32_t, float>& best_path);
+  template <ExpansionType expansion_direction, typename EdgeLabelT>
+  inline bool ExpandInner(baldr::GraphReader& graphreader,
+                          const EdgeLabelT& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          const graph_tile_ptr& tile,
+                          const baldr::TimeInfo& time_info,
+                          const valhalla::Location& destination,
+                          std::pair<int32_t, float>& best_path);
 
   /**
    * Modify hierarchy limits based on distance between origin and destination
@@ -176,7 +181,7 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::BDEdgeLabel> edgelabels_;
   uint32_t max_reserved_labels_count_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
@@ -185,9 +190,11 @@ protected:
   // Destinations, id and percent used along the edge
   std::unordered_map<uint64_t, float> destinations_percent_along_;
 
-private:
+  // Access mode used by the costing method
+  uint32_t access_mode_;
+
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
 };
 
 /**
@@ -203,11 +210,6 @@ public:
    * @param config A config object of key, value pairs
    */
   explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
-
-  /**
-   * Destructor
-   */
-  virtual ~TimeDepReverse();
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -236,64 +238,13 @@ public:
     return "time_dependent_reverse_a*";
   }
 
-  /**
-   * Clear the temporary information generated during path construction.
-   */
-  virtual void Clear() override;
-
 protected:
-  // Access mode used by the costing method
-  uint32_t access_mode_;
-
-  // Vector of edge labels that support reverse search (so use the
-  // bidirectional edge label structure.
-  std::vector<sif::BDEdgeLabel> edgelabels_rev_;
-
-  // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_rev_;
-
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
   void Init(const midgard::PointLL& origll, const midgard::PointLL& destll) override;
-
-  /**
-   * Expand from the node along the reverse search path. Immediately expands
-   * from the end node of any transition edge (so no transition edges are added
-   * to the adjacency list or EdgeLabel list). Does not expand transition
-   * edges if from_transition is false.
-   * @param  graphreader  Graph tile reader.
-   * @param  node         Graph Id of the node being expanded.
-   * @param  pred         Predecessor edge label (for costing).
-   * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  opp_pred_edge Opposing predecessor directed edge.
-   * @param  time_info    Tracks time offset as the route progresses
-   * @param  dest         Location information of the destination.
-   * @param  best_path    Best path found so far. Includes the index into
-   *                      EdgeLabels and the cost.
-   */
-  bool ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     const baldr::TimeInfo& time_info,
-                     const valhalla::Location& dest,
-                     std::pair<int32_t, float>& best_path);
-
-  // Private helper function for `ExpandReverse`
-  bool ExpandReverseInner(baldr::GraphReader& graphreader,
-                          const sif::BDEdgeLabel& pred,
-                          const baldr::DirectedEdge* opp_pred_edge,
-                          const baldr::NodeInfo* nodeinfo,
-                          const uint32_t pred_idx,
-                          const EdgeMetadata& meta,
-                          const graph_tile_ptr& tile,
-                          const baldr::TimeInfo& time_info,
-                          const valhalla::Location& destination,
-                          std::pair<int32_t, float>& best_path);
 
   /**
    * The origin of the reverse path is the destination location. Add edges at the

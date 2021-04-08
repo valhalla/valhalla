@@ -21,7 +21,8 @@ TimeDepForward::TimeDepForward(const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kDrive), travel_type_(0),
       max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
+      access_mode_{kAutoAccess} {
 }
 
 // Destructor
@@ -49,13 +50,16 @@ void TimeDepForward::Clear() {
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-bool TimeDepForward::ExpandForward(GraphReader& graphreader,
-                                   const GraphId& node,
-                                   EdgeLabel& pred,
-                                   const uint32_t pred_idx,
-                                   const TimeInfo& time_info,
-                                   const valhalla::Location& destination,
-                                   std::pair<int32_t, float>& best_path) {
+template <TimeDepForward::ExpansionType expansion_direction, typename EdgeLabelT>
+bool TimeDepForward::Expand(GraphReader& graphreader,
+                            const GraphId& node,
+                            EdgeLabelT& pred,
+                            const uint32_t pred_idx,
+                            const DirectedEdge* opp_pred_edge,
+                            const TimeInfo& time_info,
+                            const valhalla::Location& destination,
+                            std::pair<int32_t, float>& best_path) {
+  constexpr bool FORWARD = expansion_direction == TimeDepForward::ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -65,7 +69,9 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
 
   // Update the time information
-  auto offset_time = time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  auto offset_time =
+      FORWARD ? time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()))
+              : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge;
@@ -73,12 +79,13 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     // Check if edge is null before using it (can happen with regional data sets)
     pred.set_deadend(true);
     return opp_edge &&
-           ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
-                              {opp_edge, opp_edge_id, edgestatus_.GetPtr(opp_edge_id, tile)}, tile,
-                              offset_time, destination, best_path);
+           ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                            {opp_edge, opp_edge_id,
+                                             edgestatus_.GetPtr(opp_edge_id, tile)},
+                                            tile, offset_time, destination, best_path);
   }
 
-  // Expand from start node.
+  // Expand from <expansion_direction> node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
 
   bool disable_uturn = false;
@@ -93,10 +100,11 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
-    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
-                     ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
-                                        offset_time, destination, best_path)) ||
-                    disable_uturn;
+    disable_uturn =
+        (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+         ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                          tile, offset_time, destination, best_path)) ||
+        disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -118,8 +126,9 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
       // expand the edges from this node at this level
       for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
-        disable_uturn = ExpandForwardInner(graphreader, pred, trans_node, pred_idx, trans_meta,
-                                           trans_tile, offset_time, destination, best_path) ||
+        disable_uturn = ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, trans_node,
+                                                         pred_idx, trans_meta, trans_tile,
+                                                         offset_time, destination, best_path) ||
                         disable_uturn;
       }
     }
@@ -136,57 +145,114 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
     // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-    disable_uturn = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
-                                       offset_time, destination, best_path) ||
-                    disable_uturn;
+    disable_uturn =
+        ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                         uturn_meta, tile, offset_time, destination, best_path) ||
+        disable_uturn;
   }
 
   return disable_uturn;
 }
+
+template bool TimeDepForward::Expand<TimeDepForward::ExpansionType::reverse, BDEdgeLabel>(
+    GraphReader& graphreader,
+    const GraphId& node,
+    BDEdgeLabel& pred,
+    const uint32_t pred_idx,
+    const DirectedEdge* opp_pred_edge,
+    const TimeInfo& time_info,
+    const valhalla::Location& destination,
+    std::pair<int32_t, float>& best_path);
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if
 // the edge described in `meta` should be placed on the stack
 // as well as doing just that.
 //
 // Returns true if any edge _could_ have been expanded after restrictions etc.
-inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
-                                               const EdgeLabel& pred,
-                                               const NodeInfo* nodeinfo,
-                                               const uint32_t pred_idx,
-                                               const EdgeMetadata& meta,
-                                               const graph_tile_ptr& tile,
-                                               const TimeInfo& time_info,
-                                               const valhalla::Location& destination,
-                                               std::pair<int32_t, float>& best_path) {
+template <TimeDepForward::ExpansionType expansion_direction, typename EdgeLabelT>
+inline bool TimeDepForward::ExpandInner(GraphReader& graphreader,
+                                        const EdgeLabelT& pred,
+                                        const baldr::DirectedEdge* opp_pred_edge,
+                                        const NodeInfo* nodeinfo,
+                                        const uint32_t pred_idx,
+                                        const EdgeMetadata& meta,
+                                        const graph_tile_ptr& tile,
+                                        const TimeInfo& time_info,
+                                        const valhalla::Location& destination,
+                                        std::pair<int32_t, float>& best_path) {
+  constexpr bool FORWARD = expansion_direction == TimeDepForward::ExpansionType::forward;
+
+  if (!FORWARD) {
+    // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
+    // path already found to this directed edge) or if no access for this mode.
+    if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
+      return false;
+    }
+  }
 
   // Skip this edge if permanently labeled (best path already found to this
   // directed edge)
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
+
+  graph_tile_ptr t2 = nullptr;
+  GraphId opp_edge_id;
+  const DirectedEdge* opp_edge = nullptr;
+  if (!FORWARD) {
+    // Get end node tile, opposing edge Id, and opposing directed edge.
+    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+    if (t2 == nullptr) {
+      return false;
+    }
+    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
+    opp_edge = t2->directededge(opp_edge_id);
+  }
+
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   uint8_t restriction_idx = -1;
-  if (meta.edge->is_shortcut() ||
-      !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
-                         nodeinfo->timezone(), restriction_idx) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                           time_info.local_time, nodeinfo->timezone())) {
-    return false;
+  if (FORWARD) {
+    if (meta.edge->is_shortcut() ||
+        !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+                           nodeinfo->timezone(), restriction_idx) ||
+        costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
+                             time_info.local_time, nodeinfo->timezone())) {
+      return false;
+    }
+  } else {
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
+                                  nodeinfo->timezone(), restriction_idx) ||
+        costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
+                             time_info.local_time, nodeinfo->timezone())) {
+      return false;
+    }
   }
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources);
-  auto transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  Cost newcost = pred.cost() + edge_cost + transition_cost;
+  auto edge_cost = FORWARD
+                       ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
+                       : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
+
+  auto transition_cost =
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge, pred.has_measured_speed(),
+                                                pred.internal_turn());
+  Cost newcost = pred.cost() + edge_cost;
+  if (FORWARD) {
+    newcost += transition_cost;
+  } else {
+    newcost.cost += transition_cost.cost;
+  }
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
   auto dest_edge = destinations_percent_along_.find(meta.edge_id);
   if (dest_edge != destinations_percent_along_.end()) {
     // Adapt cost to potentially not using the entire destination edge
-    newcost -= edge_cost * (1.0f - dest_edge->second);
+    newcost -= edge_cost * (FORWARD ? (1.0f - dest_edge->second) : dest_edge->second);
 
     // Find the destination edge and update cost to include the edge score.
     // Note - with high edge scores the convergence test fails some routes
@@ -202,8 +268,9 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     // a path to be formed even if the convergence test fails (can
     // happen with large edge scores)
     if (best_path.first == -1 || newcost.cost < best_path.second) {
-      best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index()
-                                                                         : edgelabels_.size();
+      best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary)
+                            ? meta.edge_status->index()
+                            : (FORWARD ? edgelabels_.size() : edgelabels_.size());
       best_path.second = newcost.cost;
     }
   }
@@ -212,10 +279,16 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // less cost the predecessor is updated and the sort cost is decremented
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
-    EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
+    // TODO(danpat): can we slices down to EdgeLabel here safely?
+    EdgeLabel& lab =
+        FORWARD ? edgelabels_[meta.edge_status->index()] : edgelabels_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
+      if (FORWARD) {
+        adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
+      } else {
+        adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
+      }
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -235,15 +308,33 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
   }
 
-  // Add to the adjacency list and edge labels.
-  uint32_t idx = edgelabels_.size();
-  edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, restriction_idx,
-                           (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                           static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge));
-  *meta.edge_status = {EdgeSet::kTemporary, idx};
-  adjacencylist_.add(idx);
+  if (FORWARD) {
+    // Add to the adjacency list and edge labels.
+    uint32_t idx = edgelabels_.size();
+    edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost, dist,
+                             mode_, transition_cost,
+                             (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                             (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, meta.edge),
+                             restriction_idx);
+    *meta.edge_status = {EdgeSet::kTemporary, idx};
+    adjacencylist_.add(idx);
+  } else {
+    // Add edge label, add to the adjacency list and set edge status
+    uint32_t idx = edgelabels_.size();
+    edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost, dist,
+                             mode_, transition_cost,
+                             (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                             (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge),
+                             restriction_idx);
+    *meta.edge_status = {EdgeSet::kTemporary, idx};
+    adjacencylist_.add(idx);
+  }
+
   return true;
 }
 
@@ -260,6 +351,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
+  access_mode_ = costing_->access_mode();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation
@@ -313,7 +405,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
-    EdgeLabel pred = edgelabels_[predindex];
+    BDEdgeLabel pred = edgelabels_[predindex];
     if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
@@ -356,8 +448,8 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, forward_time_info, destination,
-                  best_path);
+    Expand<ExpansionType::forward>(graphreader, pred.endnode(), pred, predindex, nullptr,
+                                   forward_time_info, destination, best_path);
   }
   return {}; // Should never get here
 }
@@ -377,12 +469,14 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
   edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
+  // edgelabels_rev_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
+  // adjacencylist_rev_.reuse(mincost, range, bucketsize, &edgelabels_rev_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -517,11 +611,18 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
-    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{},
-                         baldr::kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
-                         static_cast<bool>(flow_sources & kDefaultFlowMask),
-                         sif::InternalTurn::kNoTurn);
+
+    uint32_t path_distance = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+    BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
+                           Cost{}, false, !(costing_->IsClosed(directededge, tile)),
+                           static_cast<bool>(flow_sources & kDefaultFlowMask),
+                           sif::InternalTurn::kNoTurn, 
+                           /* TODO(danpat) why does reverse use -1 here, and this uses baldr::kInvalidRestriction ? */
+                           baldr::kInvalidRestriction);
+    /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the same
+     * time - so we need to update immediately after to set path_distance */
+    edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
+
     // Set the origin flag
     edge_label.set_origin();
 
