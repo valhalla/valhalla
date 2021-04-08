@@ -17,7 +17,7 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
-TimeDepForward::TimeDepForward(const boost::property_tree::ptree& config)
+TimeDep::TimeDep(const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kDrive), travel_type_(0),
       max_reserved_labels_count_(
@@ -26,11 +26,11 @@ TimeDepForward::TimeDepForward(const boost::property_tree::ptree& config)
 }
 
 // Destructor
-TimeDepForward::~TimeDepForward() {
+TimeDep::~TimeDep() {
 }
 
 // Clear the temporary information generated during path construction.
-void TimeDepForward::Clear() {
+void TimeDep::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   if (edgelabels_.size() > max_reserved_labels_count_) {
@@ -50,16 +50,16 @@ void TimeDepForward::Clear() {
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-template <TimeDepForward::ExpansionType expansion_direction, typename EdgeLabelT>
-bool TimeDepForward::Expand(GraphReader& graphreader,
-                            const GraphId& node,
-                            EdgeLabelT& pred,
-                            const uint32_t pred_idx,
-                            const DirectedEdge* opp_pred_edge,
-                            const TimeInfo& time_info,
-                            const valhalla::Location& destination,
-                            std::pair<int32_t, float>& best_path) {
-  constexpr bool FORWARD = expansion_direction == TimeDepForward::ExpansionType::forward;
+template <TimeDep::ExpansionType expansion_direction, typename EdgeLabelT>
+bool TimeDep::Expand(GraphReader& graphreader,
+                     const GraphId& node,
+                     EdgeLabelT& pred,
+                     const uint32_t pred_idx,
+                     const DirectedEdge* opp_pred_edge,
+                     const TimeInfo& time_info,
+                     const valhalla::Location& destination,
+                     std::pair<int32_t, float>& best_path) {
+  constexpr bool FORWARD = expansion_direction == TimeDep::ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -154,33 +154,33 @@ bool TimeDepForward::Expand(GraphReader& graphreader,
   return disable_uturn;
 }
 
-template bool TimeDepForward::Expand<TimeDepForward::ExpansionType::reverse, BDEdgeLabel>(
-    GraphReader& graphreader,
-    const GraphId& node,
-    BDEdgeLabel& pred,
-    const uint32_t pred_idx,
-    const DirectedEdge* opp_pred_edge,
-    const TimeInfo& time_info,
-    const valhalla::Location& destination,
-    std::pair<int32_t, float>& best_path);
+template bool
+TimeDep::Expand<TimeDep::ExpansionType::reverse, BDEdgeLabel>(GraphReader& graphreader,
+                                                              const GraphId& node,
+                                                              BDEdgeLabel& pred,
+                                                              const uint32_t pred_idx,
+                                                              const DirectedEdge* opp_pred_edge,
+                                                              const TimeInfo& time_info,
+                                                              const valhalla::Location& destination,
+                                                              std::pair<int32_t, float>& best_path);
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if
 // the edge described in `meta` should be placed on the stack
 // as well as doing just that.
 //
 // Returns true if any edge _could_ have been expanded after restrictions etc.
-template <TimeDepForward::ExpansionType expansion_direction, typename EdgeLabelT>
-inline bool TimeDepForward::ExpandInner(GraphReader& graphreader,
-                                        const EdgeLabelT& pred,
-                                        const baldr::DirectedEdge* opp_pred_edge,
-                                        const NodeInfo* nodeinfo,
-                                        const uint32_t pred_idx,
-                                        const EdgeMetadata& meta,
-                                        const graph_tile_ptr& tile,
-                                        const TimeInfo& time_info,
-                                        const valhalla::Location& destination,
-                                        std::pair<int32_t, float>& best_path) {
-  constexpr bool FORWARD = expansion_direction == TimeDepForward::ExpansionType::forward;
+template <TimeDep::ExpansionType expansion_direction, typename EdgeLabelT>
+inline bool TimeDep::ExpandInner(GraphReader& graphreader,
+                                 const EdgeLabelT& pred,
+                                 const baldr::DirectedEdge* opp_pred_edge,
+                                 const NodeInfo* nodeinfo,
+                                 const uint32_t pred_idx,
+                                 const EdgeMetadata& meta,
+                                 const graph_tile_ptr& tile,
+                                 const TimeInfo& time_info,
+                                 const valhalla::Location& destination,
+                                 std::pair<int32_t, float>& best_path) {
+  constexpr bool FORWARD = expansion_direction == TimeDep::ExpansionType::forward;
 
   if (!FORWARD) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
@@ -340,13 +340,12 @@ inline bool TimeDepForward::ExpandInner(GraphReader& graphreader,
 
 // Calculate time-dependent best path using a forward search. Supports
 // "depart-at" routes.
-std::vector<std::vector<PathInfo>>
-TimeDepForward::GetBestPath(valhalla::Location& origin,
-                            valhalla::Location& destination,
-                            GraphReader& graphreader,
-                            const sif::mode_costing_t& mode_costing,
-                            const TravelMode mode,
-                            const Options& /*options*/) {
+std::vector<std::vector<PathInfo>> TimeDep::GetBestPath(valhalla::Location& origin,
+                                                        valhalla::Location& destination,
+                                                        GraphReader& graphreader,
+                                                        const sif::mode_costing_t& mode_costing,
+                                                        const TravelMode mode,
+                                                        const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -360,7 +359,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
                                    destination.path_edges(0).ll().lat());
-  Init(origin_new, destination_new);
+  Init<TimeDep::ExpansionType::forward>(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Get time information for forward
@@ -455,21 +454,19 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 }
 
 // Initialize prior to finding best path
-void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
-  LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
-  LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
+template <TimeDep::ExpansionType expansion_direction>
+void TimeDep::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
+  constexpr bool FORWARD = expansion_direction == TimeDep::ExpansionType::forward;
 
-  // Set the destination and cost factor in the A* heuristic
-  astarheuristic_.Init(destll, costing_->AStarCostFactor());
-
-  // Get the initial cost based on A* heuristic from origin
-  float mincost = astarheuristic_.Get(origll);
-
-  // Reserve size for edge labels - do this here rather than in constructor so
-  // to limit how much extra memory is used for persistent objects.
-  // TODO - reserve based on estimate based on distance and route type.
+  float mincost = 0;
+  if (FORWARD) {
+    astarheuristic_.Init(destll, costing_->AStarCostFactor());
+    mincost = astarheuristic_.Get(origll);
+  } else {
+    astarheuristic_.Init(origll, costing_->AStarCostFactor());
+    mincost = astarheuristic_.Get(destll);
+  }
   edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
-  // edgelabels_rev_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
@@ -484,11 +481,14 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   hierarchy_limits_ = costing_->GetHierarchyLimits();
 }
 
+template void TimeDep::Init<TimeDep::ExpansionType::reverse>(const midgard::PointLL& origll,
+                                                             const midgard::PointLL& destll);
+
 // Modulate the hierarchy expansion within distance based on density at
 // the destination (increase distance for lower densities and decrease
 // for higher densities) and the distance between origin and destination
 // (increase for shorter distances).
-void TimeDepForward::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/) {
+void TimeDep::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/) {
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
   // routes - hopefully we will mark the data somehow to indicate how to
@@ -513,10 +513,10 @@ void TimeDepForward::ModifyHierarchyLimits(const float dist, const uint32_t /*de
 }
 
 // Add an edge at the origin to the adjacency list
-void TimeDepForward::SetOrigin(GraphReader& graphreader,
-                               const valhalla::Location& origin,
-                               const valhalla::Location& destination,
-                               const uint32_t seconds_of_week) {
+void TimeDep::SetOrigin(GraphReader& graphreader,
+                        const valhalla::Location& origin,
+                        const valhalla::Location& destination,
+                        const uint32_t seconds_of_week) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -638,7 +638,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+uint32_t TimeDep::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -674,7 +674,7 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> TimeDepForward::FormPath(const uint32_t dest) {
+std::vector<PathInfo> TimeDep::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));

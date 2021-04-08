@@ -18,33 +18,7 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse(const boost::property_tree::ptree& config) : TimeDepForward(config) {
-}
-
-// Initialize prior to finding best path
-void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
-  // Set the origin lat,lon (since this is reverse path) and cost factor
-  // in the A* heuristic
-  astarheuristic_.Init(origll, costing_->AStarCostFactor());
-
-  // Get the initial cost based on A* heuristic from destination
-  float mincost = astarheuristic_.Get(destll);
-
-  // Reserve size for edge labels - do this here rather than in constructor so
-  // to limit how much extra memory is used for persistent objects.
-  // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Construct adjacency list, clear edge status.
-  // Set bucket size and cost range based on DynamicCost.
-  uint32_t bucketsize = costing_->UnitSize();
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
-  edgestatus_.clear();
-
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing_->GetHierarchyLimits();
+TimeDepReverse::TimeDepReverse(const boost::property_tree::ptree& config) : TimeDep(config) {
 }
 
 // Calculate time-dependent best path using a reverse search. Supports
@@ -75,7 +49,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
                                    destination.path_edges(0).ll().lat());
-  Init(origin_new, destination_new);
+  Init<TimeDep::ExpansionType::reverse>(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Get time information for backward search

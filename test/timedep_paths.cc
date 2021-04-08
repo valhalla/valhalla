@@ -89,7 +89,7 @@ void try_path(GraphReader& reader,
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
   if (depart_at) {
-    TimeDepForward alg;
+    TimeDep alg;
     auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode).front();
     EXPECT_EQ(pathedges.size(), expected_edgecount) << "Depart at path failed";
   } else {

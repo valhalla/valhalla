@@ -84,7 +84,7 @@ void try_path(GraphReader& reader,
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 
-  TimeDepForward astar;
+  TimeDep astar;
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
   auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();

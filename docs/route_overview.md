@@ -12,8 +12,7 @@ This document provides a brief overview of Valhalla route computation.
   Valhalla uses a couple different algorithms to generate the route path.  Code for these algorithms is held within the *thor* directory. They are all flavors of Dijkstra’s algorithm. The following classes are derived from *PathAlgorithm* (base class defining the route path interface):
   
   - *AStar* - This is a forward direction A\* algorithm which is currently used only for “trivial paths” where the origin and destination are on the same edge or adjacent, connected edges.
-  - *TimeDepForward* - This is a forward direction A\* algorithm meant to be used for time dependent routes where a departure time from the origin is specified. 
-  - *TimeDepReverse* - This is a reverse direction A\* algorithm meant to be used for time dependent routes where an arrival time at the destination is specified.
+  - *TimeDep* - This is a forward or reverse A\* algorithm meant to be used for time dependent routes where a departure time from the origin or arrival time at the destination is specified. 
   - *BidirectionalAStar* - This is a bidirectional A\* algorithm used for routes that are not time-dependent and are not trivial.
   - *MultiModal* - This is a forward direction A\* algorithm with transit schedule lookup included as well as logic to switch modes between pedestrian and transit. This algorithm is time-dependent due to the nature of transit schedules.
 

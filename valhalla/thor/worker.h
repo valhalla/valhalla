@@ -119,7 +119,7 @@ protected:
   BidirectionalAStar bidir_astar;
   AStarBSSAlgorithm bss_astar;
   MultiModalPathAlgorithm multi_modal_astar;
-  TimeDepForward timedep_forward;
+  TimeDep timedep_forward;
   TimeDepReverse timedep_reverse;
 
   Isochrone isochrone_gen;

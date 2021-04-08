@@ -27,18 +27,18 @@ namespace thor {
  * For driving routes it uses a highway hierarchy with shortcut edges to
  * improve performance.
  */
-class TimeDepForward : public PathAlgorithm {
+class TimeDep : public PathAlgorithm {
 public:
   /**
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit TimeDepForward(const boost::property_tree::ptree& config = {});
+  explicit TimeDep(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
    */
-  virtual ~TimeDepForward();
+  virtual ~TimeDep();
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -88,7 +88,8 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  virtual void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
+  template <ExpansionType expansion_direction>
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -203,7 +204,7 @@ protected:
  * routes it uses a highway hierarchy with shortcut edges to improve
  * performance.
  */
-class TimeDepReverse : public TimeDepForward {
+class TimeDepReverse : public TimeDep {
 public:
   /**
    * Constructor.
@@ -240,13 +241,6 @@ public:
 
 protected:
   /**
-   * Initializes the hierarchy limits, A* heuristic, and adjacency list.
-   * @param  origll  Lat,lng of the origin.
-   * @param  destll  Lat,lng of the destination.
-   */
-  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll) override;
-
-  /**
    * The origin of the reverse path is the destination location. Add edges at the
    * destination to the adjacency list to start the reverse path search.
    * @param  graphreader  Graph tile reader.
@@ -278,7 +272,7 @@ protected:
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  using TimeDepForward::FormPath;
+  using TimeDep::FormPath;
   std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
 };
 

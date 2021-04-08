@@ -332,7 +332,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  vt::TimeDepForward astar;
+  vt::TimeDep astar;
   TestTrivialPath(astar);
 }
 
@@ -371,7 +371,7 @@ TEST(Astar, TestTrivialPathTriangle) {
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
-  vt::TimeDepForward astar;
+  vt::TimeDep astar;
   // this should go along the path from E to F
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);
@@ -413,7 +413,7 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestPartialDurationForward) {
-  vt::TimeDepForward astar;
+  vt::TimeDep astar;
   TestPartialDuration(astar);
 }
 
@@ -1050,7 +1050,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
 
   {
-    vt::TimeDepForward astar;
+    vt::TimeDep astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)

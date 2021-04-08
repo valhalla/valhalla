@@ -662,10 +662,10 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  TimeDepForward astar;
+  TimeDep astar;
   BidirectionalAStar bd;
   MultiModalPathAlgorithm mm;
-  TimeDepForward timedep_forward;
+  TimeDep timedep_forward;
   TimeDepReverse timedep_reverse;
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
