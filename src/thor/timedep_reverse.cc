@@ -58,7 +58,8 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   // Initialize the locations. For a reverse path search the destination location
   // is used as the "origin" and the origin location is used as the "destination".
   uint32_t density = SetDestination(graphreader, origin);
-  SetOrigin(graphreader, destination, origin, reverse_time_info.second_of_week);
+  SetOrigin<TimeDep::ExpansionType::reverse>(graphreader, destination, origin,
+                                             reverse_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -145,124 +146,6 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
                                    reverse_time_info, destination, best_path);
   }
   return {}; // Should never get here
-}
-
-// The origin of the reverse path is the destination location.
-// TODO - how do we set the
-void TimeDepReverse::SetOrigin(GraphReader& graphreader,
-                               const valhalla::Location& origin,
-                               const valhalla::Location& destination,
-                               const uint32_t seconds_of_week) {
-  // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
-                });
-
-  // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
-    auto p = destinations_percent_along_.find(edge.graph_id());
-    if (p != destinations_percent_along_.end()) {
-      for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edge.graph_id()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  // Iterate through edges and add to adjacency list
-  Cost c;
-  const NodeInfo* nodeinfo = nullptr;
-  const NodeInfo* closest_ni = nullptr;
-  for (const auto& edge : origin.path_edges()) {
-    // If the origin (real destination) is at a node, skip any outbound
-    // edges (so any opposing inbound edges are not considered) unless the
-    // destination is also at the same end node (trivial path).
-    if (has_other_edges && edge.begin_node() && !trivial_at_node(edge)) {
-      continue;
-    }
-
-    // Get the directed edge
-    GraphId edgeid(edge.graph_id());
-    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
-    const DirectedEdge* directededge = tile->directededge(edgeid);
-
-    // Get the opposing directed edge, continue if we cannot get it
-    GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-    if (!opp_edge_id.Is_Valid()) {
-      continue;
-    }
-    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-
-    // Get cost
-    uint8_t flow_sources;
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) * edge.percent_along();
-    float dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
-
-    // We need to penalize this location based on its score (distance in meters from input)
-    // We assume the slowest speed you could travel to cover that distance to start/end the route
-    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    // Perhaps need to adjust score?
-    cost.cost += edge.distance();
-
-    // If this edge is a destination, subtract the partial/remainder cost
-    // (cost from the dest. location to the end of the edge) if the
-    // destination is in a forward direction along the edge.
-    auto settled_dest_edge = destinations_percent_along_.find(opp_edge_id);
-    if (settled_dest_edge != destinations_percent_along_.end()) {
-      // Reverse the origin and destination in the IsTrivial call.
-      if (IsTrivial(edgeid, destination, origin)) {
-        // Find the destination edge and update cost.
-        for (const auto& dest_path_edge : destination.path_edges()) {
-          if (dest_path_edge.graph_id() == edgeid) {
-            // a trivial route passes along a single edge, meaning that the
-            // destination point must be on this edge, and so the distance
-            // remaining must be zero.
-            GraphId id(dest_path_edge.graph_id());
-            const DirectedEdge* dest_edge = tile->directededge(id);
-            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                                  (dest_path_edge.percent_along());
-            // Remove the cost of the final "unused" part of the destination edge
-            cost -= remainder_cost;
-            // Add back in the edge score/penalty to account for destination edges
-            // farther from the input location lat,lon.
-            cost.cost += dest_path_edge.distance();
-            cost.cost = std::max(0.0f, cost.cost);
-            dist = 0.0;
-          }
-        }
-      }
-    }
-    // Store the closest node info
-    if (closest_ni == nullptr) {
-      closest_ni = nodeinfo;
-    }
-
-    // Compute sortcost
-    float sortcost = cost.cost + astarheuristic_.Get(dist);
-
-    // Add BDEdgeLabel to the adjacency list. Set the predecessor edge index
-    // to invalid to indicate the origin of the path. Make sure the opposing
-    // edge (edgeid) is set.
-    // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
-    uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
-                             mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             sif::InternalTurn::kNoTurn, -1);
-    adjacencylist_.add(idx);
-
-    // Set the initial not_thru flag to false. There is an issue with not_thru
-    // flags on small loops. Set this to false here to override this for now.
-    edgelabels_.back().set_not_thru(false);
-
-    // Set the origin flag
-    edgelabels_.back().set_origin();
-  }
 }
 
 // Add destination edges at the origin location. If the location is at a node

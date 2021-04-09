@@ -145,7 +145,9 @@ protected:
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  virtual void SetOrigin(baldr::GraphReader& graphreader,
+
+  template <TimeDep::ExpansionType expansion_direction>
+  void SetOrigin(baldr::GraphReader& graphreader,
                          const valhalla::Location& origin,
                          const valhalla::Location& destination,
                          const uint32_t seconds_of_week);
@@ -240,18 +242,6 @@ public:
   }
 
 protected:
-  /**
-   * The origin of the reverse path is the destination location. Add edges at the
-   * destination to the adjacency list to start the reverse path search.
-   * @param  graphreader  Graph tile reader.
-   * @param  origin       Location information of the origin.
-   * @param  dest         Location information of the destination.
-   */
-  void SetOrigin(baldr::GraphReader& graphreader,
-                 const valhalla::Location& origin,
-                 const valhalla::Location& destination,
-                 const uint32_t seconds_of_week) override;
-
   /**
    * The destination of the reverse path is the origin location. Set the
    * destination edge(s) so we know when to terminate the search.

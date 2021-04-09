@@ -370,7 +370,8 @@ std::vector<std::vector<PathInfo>> TimeDep::GetBestPath(valhalla::Location& orig
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
+  SetOrigin<TimeDep::ExpansionType::forward>(graphreader, origin, destination,
+                                             forward_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -513,15 +514,17 @@ void TimeDep::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/
 }
 
 // Add an edge at the origin to the adjacency list
+template <TimeDep::ExpansionType expansion_direction>
 void TimeDep::SetOrigin(GraphReader& graphreader,
                         const valhalla::Location& origin,
                         const valhalla::Location& destination,
                         const uint32_t seconds_of_week) {
+  constexpr bool FORWARD = expansion_direction == TimeDep::ExpansionType::forward;
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
                 [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.end_node();
+                  has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
   // Check if the origin edge matches a destination edge at the node.
@@ -541,14 +544,18 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
   for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1) unless the
     // destination is also at the same end node (trivial path).
-    if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
+    if (has_other_edges && (FORWARD ? edge.end_node() : edge.begin_node()) &&
+        !trivial_at_node(edge)) {
       continue;
     }
 
-    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
-      continue;
+
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+    if (FORWARD) {
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
     }
 
     // Get the directed edge
@@ -557,16 +564,30 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const auto endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr) {
-      continue;
-    }
-
-    // Get cost
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
-                (1.0f - edge.percent_along());
-    float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
+    Cost cost;
+    float dist;
+    GraphId opp_edge_id;
+    const DirectedEdge* opp_dir_edge;
+    if (FORWARD) {
+      const auto endtile = graphreader.GetGraphTile(directededge->endnode());
+      if (endtile == nullptr) {
+        continue;
+      }
+      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+             (1.0f - edge.percent_along());
+      dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
+    } else {
+      // Get the opposing directed edge, continue if we cannot get it
+      opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+      if (!opp_edge_id.Is_Valid()) {
+        continue;
+      }
+      opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+             edge.percent_along();
+      dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    }
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -579,9 +600,12 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
     // destination is in a forward direction along the edge. Add back in
     // the edge score/penalty to account for destination edges farther from
     // the input location lat,lon.
-    auto settled_dest_edge = destinations_percent_along_.find(edgeid);
+    auto settled_dest_edge = FORWARD ? destinations_percent_along_.find(edgeid)
+                                     : destinations_percent_along_.find(opp_edge_id);
     if (settled_dest_edge != destinations_percent_along_.end()) {
-      if (IsTrivial(edgeid, origin, destination)) {
+      bool trivial =
+          FORWARD ? IsTrivial(edgeid, origin, destination) : IsTrivial(edgeid, destination, origin);
+      if (trivial) {
         // Find the destination edge and update cost.
         for (const auto& dest_path_edge : destination.path_edges()) {
           if (dest_path_edge.graph_id() == edgeid) {
@@ -590,8 +614,11 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             GraphId id(dest_path_edge.graph_id());
             const DirectedEdge* dest_edge = tile->directededge(id);
-            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                                  (1.0f - dest_path_edge.percent_along());
+            Cost remainder_cost =
+                FORWARD ? costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
+                              (1.0f - dest_path_edge.percent_along())
+                        : costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
+                              (dest_path_edge.percent_along());
             // Remove the cost of the final "unused" part of the destination edge
             cost -= remainder_cost;
             // Add back in the edge score/penalty to account for destination edges
@@ -599,7 +626,9 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
             cost.cost += dest_path_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
-            break;
+            // Search complete if this is the forward search
+            if (FORWARD)
+              break;
           }
         }
       }
@@ -612,30 +641,48 @@ void TimeDep::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
 
-    uint32_t path_distance =
-        static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
-                           Cost{}, false, !(costing_->IsClosed(directededge, tile)),
-                           static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           sif::InternalTurn::kNoTurn,
-                           /* TODO(danpat) why does reverse use -1 here, and this uses
-                              baldr::kInvalidRestriction ? */
-                           baldr::kInvalidRestriction);
-    /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the
-     * same time - so we need to update immediately after to set path_distance */
-    edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
-
-    // Set the origin flag
-    edge_label.set_origin();
-
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
-    edgelabels_.push_back(edge_label);
+    if (FORWARD) {
+      uint32_t path_distance =
+          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
+                             Cost{}, false, !(costing_->IsClosed(directededge, tile)),
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             sif::InternalTurn::kNoTurn,
+                             /* TODO(danpat) why does reverse use -1 here, and this uses
+                                baldr::kInvalidRestriction ? */
+                             baldr::kInvalidRestriction);
+      /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the
+       * same time - so we need to update immediately after to set path_distance */
+      edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
+
+      // Set the origin flag
+      edge_label.set_origin();
+      edgelabels_.push_back(edge_label);
+    } else {
+      Cost c; // TODO(danpat): temp code - default zero initialization
+      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
+                               mode_, c, false, !(costing_->IsClosed(directededge, tile)),
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               sif::InternalTurn::kNoTurn, -1);
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      edgelabels_.back().set_not_thru(false);
+      // Set the origin flag
+      edgelabels_.back().set_origin();
+    }
     adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
 }
+
+template void
+TimeDep::SetOrigin<TimeDep::ExpansionType::reverse>(GraphReader& graphreader,
+                                                    const valhalla::Location& origin,
+                                                    const valhalla::Location& destination,
+                                                    const uint32_t seconds_of_week);
 
 // Add a destination edge
 uint32_t TimeDep::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
