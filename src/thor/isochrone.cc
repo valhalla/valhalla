@@ -326,10 +326,13 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // Continue if the time and distance intervals have been met. This bus or rail line goes beyond the
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
-  if ((pred.cost().secs > max_seconds_ || pred.cost().cost > max_seconds_ * 4) &&
-      pred.path_distance() > max_meters_) {
-    return ExpansionRecommendation::stop_expansion;
-  }
+  float time =
+      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
+  float distance =
+      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].path_distance();
+  // prune the edge if its start is above max contour
+  if (time > max_seconds_ && distance > max_meters_)
+    return ExpansionRecommendation::prune_expansion;
   return ExpansionRecommendation::continue_expansion;
 };
 
