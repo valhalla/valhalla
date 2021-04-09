@@ -272,7 +272,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // interpolation is over short distances so accuracy should be fine.
   auto edge_info = tile->edgeinfo(edge);
   const auto& shape = edge_info.shape();
-  auto resampled = resample_polyline(shape, len, shape_interval_);
+  auto resampled = resample_polyline(shape, edge->length(), shape_interval_);
   if (!edge->forward()) {
     std::reverse(resampled.begin(), resampled.end());
   }
