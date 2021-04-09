@@ -35,6 +35,24 @@ uint32_t GetOperatorId(const graph_tile_ptr& tile,
   return 0;
 }
 
+template <typename PrecisionT>
+std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<PrecisionT>>& pts,
+                                                  double distance_along) {
+  double suffix_len = 0;
+  for (auto from = std::next(pts.rbegin()), to = pts.rbegin(); from != pts.rend(); ++from, ++to) {
+    PrecisionT len = from->Distance(*to);
+    suffix_len += len;
+    if (suffix_len >= distance_along) {
+      auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
+      std::vector<GeoPoint<PrecisionT>> res(pts.rbegin(), from);
+      res.push_back(interpolated);
+      std::reverse(res.begin(), res.end());
+      return res;
+    }
+  }
+  return pts;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -175,6 +193,32 @@ std::shared_ptr<const GriddedData<2>> Isochrone::Expand(const ExpansionType& exp
   return isotile_;
 }
 
+void Isochrone::UpdateIsoTileAlongSegment(const midgard::PointLL& from,
+                                          const midgard::PointLL& to,
+                                          float seconds,
+                                          float meters) {
+  float minutes = seconds * kMinPerSec;
+  float km = meters * kKmPerMeter;
+  // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
+  // method unless more than 2 tiles are crossed by the segment.
+  auto tile1 = isotile_->TileId(from);
+  auto tile2 = isotile_->TileId(to);
+  if (tile1 == tile2) {
+    isotile_->SetIfLessThan(tile1, {minutes, km});
+  } else if (isotile_->AreNeighbors(tile1, tile2)) {
+    // If tile 2 is directly east, west, north, or south of tile 1 then the
+    // segment will not intersect any other tiles other than tile1 and tile2.
+    isotile_->SetIfLessThan(tile1, {minutes, km});
+    isotile_->SetIfLessThan(tile2, {minutes, km});
+  } else {
+    // Find intersecting tiles (using a Bresenham method)
+    auto tiles = isotile_->Intersect(std::list<PointLL>{from, to});
+    for (const auto& t : tiles) {
+      isotile_->SetIfLessThan(t.first, {minutes, km});
+    }
+  }
+}
+
 // Update the isotile
 void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
                               GraphReader& graphreader,
@@ -185,7 +229,8 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   graph_tile_ptr t2;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
   EdgeStatusInfo es = edgestatus_.Get(opp);
-  if (es.set() == EdgeSet::kPermanent) {
+  // process origin edge even if its opposite edge is permanent
+  if (es.set() == EdgeSet::kPermanent && !pred.origin()) {
     return;
   }
 
@@ -200,32 +245,24 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   }
 
   // Get the time and distance at the end node of the predecessor
-  // TODO - do we need partial shape from origin location to end of edge?
   float secs1 = pred.cost().secs;
   float dist1 = static_cast<float>(pred.path_distance());
 
   // For short edges just mark the segment between the 2 nodes of the edge. This
   // avoid getting the shape for short edges.
-  if (edge->length() < shape_interval_ * 1.5f) {
-    // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
-    // method unless more than 2 tiles are crossed by the segment.
+  auto len = pred.origin() ? pred.path_distance() : edge->length();
+  if (len < shape_interval_ * 1.5f) {
     PointLL ll0 = tile->get_node_ll(t2->directededge(opp)->endnode());
-    auto tile1 = isotile_->TileId(ll0);
-    auto tile2 = isotile_->TileId(ll);
-    if (tile1 == tile2) {
-      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
-    } else if (isotile_->AreNeighbors(tile1, tile2)) {
-      // If tile 2 is directly east, west, north, or south of tile 1 then the
-      // segment will not intersect any other tiles other than tile1 and tile2.
-      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
-      isotile_->SetIfLessThan(tile2, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
-    } else {
-      // Find intersecting tiles (using a Bresenham method)
-      auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
-      for (const auto& t : tiles) {
-        isotile_->SetIfLessThan(t.first, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
-      }
+    if (pred.origin()) {
+      // interpolate ll0 for origin edge using edge_label.path_distance()
+      auto edge_info = tile->edgeinfo(edge);
+      const auto& shape = edge_info.shape();
+      const auto& ordered_shape =
+          edge->forward() ? shape : std::vector<midgard::PointLL>(shape.rbegin(), shape.rend());
+      auto origin_edge_shape = OriginEdgeShape(ordered_shape, pred.path_distance());
+      ll0 = origin_edge_shape.front();
     }
+    UpdateIsoTileAlongSegment(ll0, ll, secs1, dist1);
     return;
   }
 
@@ -233,43 +270,34 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // the shape interval to get regular spacing. Use the faster resample method.
   // This does not use spherical interpolation - so it is not as accurate but
   // interpolation is over short distances so accuracy should be fine.
-  auto shape = tile->edgeinfo(edge).shape();
-  auto resampled = resample_polyline(shape, edge->length(), shape_interval_);
-  if (!edge->forward()) {
-    std::reverse(resampled.begin(), resampled.end());
+  std::vector<PointLL> resampled;
+  auto edge_info = tile->edgeinfo(edge);
+  const auto& shape = edge_info.shape();
+  if (pred.origin()) {
+    const auto& ordered_shape =
+        edge->forward() ? shape : std::vector<midgard::PointLL>(shape.rbegin(), shape.rend());
+    const auto origin_edge_shape = OriginEdgeShape(ordered_shape, pred.path_distance());
+    resampled = resample_polyline(origin_edge_shape, len, shape_interval_);
+  } else {
+    resampled = resample_polyline(shape, len, shape_interval_);
+    if (!edge->forward()) {
+      std::reverse(resampled.begin(), resampled.end());
+    }
   }
 
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
   // (just use a bounding box around the segment) so this doesn't miss
   // shape that crosses tile corners
-  float minutes = secs0 * kMinPerSec;
-  float km = dist0 * kKmPerMeter;
-  float delta_min = ((secs1 - secs0) / (resampled.size() - 1)) * kMinPerSec;
-  float delta_km = ((dist1 - dist0) / (resampled.size() - 1)) * kKmPerMeter;
+  float seconds = secs0;
+  float meters = dist0;
+  float delta_seconds = ((secs1 - secs0) / (resampled.size() - 1));
+  float delta_meters = ((dist1 - dist0) / (resampled.size() - 1));
   auto itr1 = resampled.begin();
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
-    minutes += delta_min;
-    km += delta_km;
-
-    // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
-    // method unless more than 2 tiles are crossed by the segment.
-    auto tile1 = isotile_->TileId(*itr1);
-    auto tile2 = isotile_->TileId(*itr2);
-    if (tile1 == tile2) {
-      isotile_->SetIfLessThan(tile1, {minutes, km});
-    } else if (isotile_->AreNeighbors(tile1, tile2)) {
-      // If tile 2 is directly east, west, north, or south of tile 1 then the
-      // segment will not intersect any other tiles other than tile1 and tile2.
-      isotile_->SetIfLessThan(tile1, {minutes, km});
-      isotile_->SetIfLessThan(tile2, {minutes, km});
-    } else {
-      // Find intersecting tiles (using a Bresenham method)
-      auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
-      for (const auto& t : tiles) {
-        isotile_->SetIfLessThan(t.first, {minutes, km});
-      }
-    }
+    seconds += delta_seconds;
+    meters += delta_meters;
+    UpdateIsoTileAlongSegment(*itr1, *itr2, seconds, meters);
   }
 }
 
