@@ -367,7 +367,7 @@ std::vector<std::vector<PathInfo>> TimeDep::GetBestPath(valhalla::Location& orig
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
-  uint32_t density = SetDestination(graphreader, destination);
+  uint32_t density = SetDestination<TimeDep::ExpansionType::forward>(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
   SetOrigin<TimeDep::ExpansionType::forward>(graphreader, origin, destination,
@@ -411,10 +411,10 @@ std::vector<std::vector<PathInfo>> TimeDep::GetBestPath(valhalla::Location& orig
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(pred.edgeid(), origin, destination)) {
-          return {FormPath(predindex)};
+          return {FormPathFromForwardSearch(predindex)};
         }
       } else {
-        return {FormPath(predindex)};
+        return {FormPathFromForwardSearch(predindex)};
       }
     }
 
@@ -434,7 +434,7 @@ std::vector<std::vector<PathInfo>> TimeDep::GetBestPath(valhalla::Location& orig
       nc = 0;
     } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
-        return {FormPath(best_path.first)};
+        return {FormPathFromForwardSearch(best_path.first)};
       } else {
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};
@@ -685,7 +685,9 @@ TimeDep::SetOrigin<TimeDep::ExpansionType::reverse>(GraphReader& graphreader,
                                                     const uint32_t seconds_of_week);
 
 // Add a destination edge
+template <TimeDep::ExpansionType expansion_direction>
 uint32_t TimeDep::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+  constexpr bool FORWARD = expansion_direction == TimeDep::ExpansionType::forward;
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -701,27 +703,51 @@ uint32_t TimeDep::SetDestination(GraphReader& graphreader, const valhalla::Locat
       continue;
     }
 
-    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
-      continue;
-    }
+    graph_tile_ptr tile;
+    if (FORWARD) {
+      // Disallow any user avoided edges if the avoid location is behind the destination along the
+      // edge
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
 
-    // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
-    // is subtracted from the total cost up to the end of the destination edge.
-    destinations_percent_along_[edge.graph_id()] = edge.percent_along();
+      // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
+      // is subtracted from the total cost up to the end of the destination edge.
+      destinations_percent_along_[edge.graph_id()] = edge.percent_along();
+      tile = graphreader.GetGraphTile(edgeid);
+    } else {
+      // Keep the id and the cost to traverse the partial distance for the
+      // remainder of the edge. This cost is subtracted from the total cost
+      // up to the end of the destination edge.
+      auto tile = graphreader.GetGraphTile(edgeid);
+      const DirectedEdge* directededge = tile->directededge(edgeid);
+
+      // The opposing edge Id is added as a destination since the search
+      // is done in reverse direction.
+      auto t2 =
+          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (!t2) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+      destinations_percent_along_[oppedge] = edge.percent_along();
+    }
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
-    auto tile = graphreader.GetGraphTile(edgeid);
     density = tile->header()->density();
   }
   return density;
 }
 
+template uint32_t
+TimeDep::SetDestination<TimeDep::ExpansionType::reverse>(GraphReader& graphreader,
+                                                         const valhalla::Location& dest);
+
 // Form the path from the adjacency list.
-std::vector<PathInfo> TimeDep::FormPath(const uint32_t dest) {
+std::vector<PathInfo> TimeDep::FormPathFromForwardSearch(const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
@@ -742,6 +768,46 @@ std::vector<PathInfo> TimeDep::FormPath(const uint32_t dest) {
 
   // Reverse the list and return
   std::reverse(path.begin(), path.end());
+  return path;
+}
+
+// Form the path from the adjacency list.
+std::vector<PathInfo> TimeDep::FormPathFromReverseSearch(const uint32_t dest) {
+  // Metrics to track
+  LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
+  LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
+
+  // Form the reverse path from the destination (true origin) using opposing edges.
+  std::vector<PathInfo> path;
+  Cost cost, previous_transition_cost;
+  uint32_t edgelabel_index = dest;
+  while (edgelabel_index != kInvalidLabel) {
+    const BDEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+
+    // Get elapsed time on the edge, then add the transition cost at prior edge.
+    uint32_t predidx = edgelabel.predecessor();
+    if (predidx == kInvalidLabel) {
+      cost += edgelabel.cost();
+    } else {
+      cost += edgelabel.cost() - edgelabels_[predidx].cost();
+    }
+    cost += previous_transition_cost;
+    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
+                      previous_transition_cost);
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
+
+    // Update edgelabel_index and transition cost to apply at next iteration
+    edgelabel_index = predidx;
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+    previous_transition_cost = edgelabel.transition_cost();
+  }
+
   return path;
 }
 

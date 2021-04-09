@@ -146,11 +146,11 @@ protected:
    * @param  dest         Location information of the destination.
    */
 
-  template <TimeDep::ExpansionType expansion_direction>
+  template <ExpansionType expansion_direction>
   void SetOrigin(baldr::GraphReader& graphreader,
-                         const valhalla::Location& origin,
-                         const valhalla::Location& destination,
-                         const uint32_t seconds_of_week);
+                 const valhalla::Location& origin,
+                 const valhalla::Location& destination,
+                 const uint32_t seconds_of_week);
 
   /**
    * Set the destination edge(s).
@@ -158,7 +158,8 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  template <ExpansionType expansion_direction>
+  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the
@@ -168,37 +169,38 @@ protected:
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  virtual std::vector<PathInfo> FormPath(const uint32_t dest);
+  std::vector<PathInfo> FormPathFromForwardSearch(const uint32_t dest);
+  std::vector<PathInfo> FormPathFromReverseSearch(const uint32_t dest);
 
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+    uint32_t max_label_count_; // Max label count to allow
+    sif::TravelMode mode_;     // Current travel mode
+    uint8_t travel_type_;      // Current travel type
 
-  // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+    // Hierarchy limits.
+    std::vector<sif::HierarchyLimits> hierarchy_limits_;
 
-  // A* heuristic
-  AStarHeuristic astarheuristic_;
+    // A* heuristic
+    AStarHeuristic astarheuristic_;
 
-  // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+    // Current costing mode
+    std::shared_ptr<sif::DynamicCost> costing_;
 
-  // Vector of edge labels (requires access by index).
-  std::vector<sif::BDEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
+    // Vector of edge labels (requires access by index).
+    std::vector<sif::BDEdgeLabel> edgelabels_;
+    uint32_t max_reserved_labels_count_;
 
-  // Edge status. Mark edges that are in adjacency list or settled.
-  EdgeStatus edgestatus_;
+    // Edge status. Mark edges that are in adjacency list or settled.
+    EdgeStatus edgestatus_;
 
-  // Destinations, id and percent used along the edge
-  std::unordered_map<uint64_t, float> destinations_percent_along_;
+    // Destinations, id and percent used along the edge
+    std::unordered_map<uint64_t, float> destinations_percent_along_;
 
-  // Access mode used by the costing method
-  uint32_t access_mode_;
+    // Access mode used by the costing method
+    uint32_t access_mode_;
 
-  // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
-};
+    // Adjacency list - approximate double bucket sort
+    baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+  };
 
 /**
  * Reverse direction A* algorithm to create the shortest / least cost path.
@@ -240,30 +242,6 @@ public:
   virtual const char* name() const override {
     return "time_dependent_reverse_a*";
   }
-
-protected:
-  /**
-   * The destination of the reverse path is the origin location. Set the
-   * destination edge(s) so we know when to terminate the search.
-   * @param   graphreader  Graph tile reader.
-   * @param   dest         Location information of the destination.
-   * @return  Returns the relative density near the destination (0-15)
-   */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
-                                  const valhalla::Location& dest) override;
-
-  /**
-   * Form the path from the adjacency list. Recovers the path from the
-   * destination (true origin) backwards towards the origin (true destination)
-   * (using predecessor information). This path is then reversed.
-   * @param   graphreader  Graph reader.
-   * @param   dest  Index in the edge labels of the destination edge.
-   * @return  Returns the path info, a list of GraphIds representing the
-   *          directed edges along the path - ordered from origin to
-   *          destination - along with travel modes and elapsed time.
-   */
-  using TimeDep::FormPath;
-  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
 };
 
 } // namespace thor
