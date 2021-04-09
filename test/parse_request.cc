@@ -33,7 +33,7 @@ constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 
 constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseLivingStreets = 0.1f;         // Factor between 0 and 1
 constexpr float kDefaultAuto_ServicePenalty = 15.0f;          // Seconds
-constexpr float kDefaultAuto_ServiceFactor = 1.2f;            // Positive factor
+constexpr float kDefaultAuto_ServiceFactor = 1.f;             // Positive factor
 
 // Motor Scooter defaults
 constexpr float kDefaultMotorScooter_ManeuverPenalty = 5.0f;          // Seconds
