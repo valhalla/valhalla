@@ -270,19 +270,14 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // the shape interval to get regular spacing. Use the faster resample method.
   // This does not use spherical interpolation - so it is not as accurate but
   // interpolation is over short distances so accuracy should be fine.
-  std::vector<PointLL> resampled;
   auto edge_info = tile->edgeinfo(edge);
   const auto& shape = edge_info.shape();
+  auto resampled = resample_polyline(shape, len, shape_interval_);
+  if (!edge->forward()) {
+    std::reverse(resampled.begin(), resampled.end());
+  }
   if (pred.origin()) {
-    const auto& ordered_shape =
-        edge->forward() ? shape : std::vector<midgard::PointLL>(shape.rbegin(), shape.rend());
-    const auto origin_edge_shape = OriginEdgeShape(ordered_shape, pred.path_distance());
-    resampled = resample_polyline(origin_edge_shape, len, shape_interval_);
-  } else {
-    resampled = resample_polyline(shape, len, shape_interval_);
-    if (!edge->forward()) {
-      std::reverse(resampled.begin(), resampled.end());
-    }
+    resampled = OriginEdgeShape(resampled, pred.path_distance());
   }
 
   // Mark grid cells along the shape if time is less than what is
