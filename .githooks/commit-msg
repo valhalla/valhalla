@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 CI_IGNORE_FILE='.circleci/ciignore'
-CI_IGNORE_TAG='[skip ci]'
+CI_IGNORE_TAG='[ci skip]'
 GIT_CMD=['git', 'diff', '--cached', '--name-only']
 COMMIT_MSG_FILE=sys.argv[1]
 
