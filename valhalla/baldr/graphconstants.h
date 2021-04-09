@@ -111,6 +111,9 @@ inline bool valid_speed(float speed) {
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
 
+// Delete after testing
+constexpr bool unused = true;
+
 // Special speeds for use with parking aisles, driveways, and drive thrus
 constexpr uint32_t kParkingAisleSpeed = 15; // 15 KPH (10MPH)
 constexpr uint32_t kDriveThruSpeed = 10;    // 10 KPH
