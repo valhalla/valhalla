@@ -80,7 +80,6 @@
    * CHANGED: Factor for service roads is 1.0 by default. [#2988](https://github.com/valhalla/valhalla/pull/2988)
    * ADDED: Support for conditionally skipping CI runs [#2986](https://github.com/valhalla/valhalla/pull/2986)
 
-
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
