@@ -109,11 +109,6 @@ Now, clone the Valhalla repository
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
 ```
 
-Configure custom git hooks
-```bash
-git config --local core.hooksPath .githooks
-```
-
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
 After getting the dependencies install it with:
