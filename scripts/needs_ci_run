@@ -5,12 +5,11 @@ import sys
 import subprocess
 
 CI_IGNORE_FILE='.circleci/ciignore'
-CI_IGNORE_TAG='[ci skip]'
-GIT_CMD=['git', 'diff', '--cached', '--name-only']
-COMMIT_MSG_FILE=sys.argv[1]
+# Looks for files changed in last commit only
+GIT_CMD=['git', 'diff', 'HEAD..HEAD~1', '--name-only']
 
 if not os.path.isfile(CI_IGNORE_FILE):
-  # no CI ignore rules configured, nothing to do
+  # no CI ignore rules configured, run CI
   sys.exit(0)
 
 # Get list of changed files staged for commit
@@ -27,10 +26,9 @@ for changed_file in changed_files:
     if fnmatch.fnmatch(changed_file, ignore_rule):
       ignored_files.append(changed_file)
 
-if sorted(ignored_files) != sorted(changed_files):
-  # not everything was ignored, nothing to do
-  sys.exit(0)
+if sorted(ignored_files) == sorted(changed_files):
+  # everything was ignored, skip CI
+  sys.exit(1)
 
-# all files are to be ignored for CI. modify commit msg to add skip tag
-with open(COMMIT_MSG_FILE, 'r') as original: orig_commit_msg = original.read()
-with open(COMMIT_MSG_FILE, 'w') as modified: modified.write(CI_IGNORE_TAG + " " + orig_commit_msg)
+# Not everything was ignored, run CI
+sys.exit(0)
