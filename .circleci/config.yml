@@ -95,7 +95,7 @@ jobs:
     steps:
       - checkout
       - run: |
-            if [ ./scripts/needs_ci_run -ne 0 ]; then
+            if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
@@ -139,7 +139,7 @@ jobs:
     steps:
       - checkout
       - run: |
-            if [ ./scripts/needs_ci_run -ne 0 ]; then
+            if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
@@ -173,7 +173,7 @@ jobs:
       - install_macos_dependencies
       - checkout
       - run: |
-            if [ ./scripts/needs_ci_run -ne 0 ]; then
+            if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
