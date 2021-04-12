@@ -78,6 +78,7 @@
    * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
    * CHANGED: Refactor bidirectional astar forward/reverse search to reduce code repetition [#2970](https://github.com/valhalla/valhalla/pull/2970)
    * CHANGED: Factor for service roads is 1.0 by default. [#2988](https://github.com/valhalla/valhalla/pull/2988)
+   * NIT: Enables compiler warnings in part of mjolnir module [#2995](https://github.com/valhalla/valhalla/pull/2995)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
