@@ -30,7 +30,7 @@
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
-#include "thor/timedep.h"
+#include "thor/unidirectional_astar.h"
 #include "thor/triplegbuilder.h"
 #include "worker.h"
 

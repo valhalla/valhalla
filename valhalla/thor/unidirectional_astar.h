@@ -21,24 +21,22 @@
 namespace valhalla {
 namespace thor {
 
+enum class AStarExpansionType { forward, reverse };
 /**
  * Forward direction A* algorithm to create the shortest / least cost path.
  * This algorithm is used for "depart-at", time-dependent routes.
  * For driving routes it uses a highway hierarchy with shortcut edges to
  * improve performance.
  */
-class TimeDep : public PathAlgorithm {
+template <const AStarExpansionType expansion_direction,
+          const bool FORWARD = expansion_direction == AStarExpansionType::forward>
+class UnidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit TimeDep(const boost::property_tree::ptree& config = {});
-
-  /**
-   * Destructor
-   */
-  virtual ~TimeDep();
+  explicit UnidirectionalAStar(const boost::property_tree::ptree& config = {});
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -62,14 +60,18 @@ public:
   /**
    * Clear the temporary information generated during path construction.
    */
-  virtual void Clear() override;
+  void Clear() override;
 
   /**
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
   virtual const char* name() const override {
-    return "time_dependent_forward_a*";
+    if (FORWARD) {
+      return "time_dependent_forward_a*";
+    } else {
+        return "time_dependent_reverse_a*";
+    }
   }
 
   /**
@@ -82,13 +84,11 @@ public:
   }
 
 protected:
-  enum ExpansionType { forward, reverse };
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  template <ExpansionType expansion_direction>
   void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
@@ -105,10 +105,9 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  template <ExpansionType expansion_direction, typename EdgeLabelT>
   bool Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
-              EdgeLabelT& pred,
+              sif::BDEdgeLabel& pred,
               const uint32_t pred_idx,
               const baldr::DirectedEdge* opp_pred_edge,
               const baldr::TimeInfo& time_info,
@@ -116,9 +115,8 @@ protected:
               std::pair<int32_t, float>& best_path);
 
   // Private helper function for `ExpandReverse`
-  template <ExpansionType expansion_direction, typename EdgeLabelT>
   inline bool ExpandInner(baldr::GraphReader& graphreader,
-                          const EdgeLabelT& pred,
+                          const sif::BDEdgeLabel& pred,
                           const baldr::DirectedEdge* opp_pred_edge,
                           const baldr::NodeInfo* nodeinfo,
                           const uint32_t pred_idx,
@@ -146,7 +144,6 @@ protected:
    * @param  dest         Location information of the destination.
    */
 
-  template <ExpansionType expansion_direction>
   void SetOrigin(baldr::GraphReader& graphreader,
                  const valhalla::Location& origin,
                  const valhalla::Location& destination,
@@ -158,7 +155,6 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  template <ExpansionType expansion_direction>
   uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
@@ -169,38 +165,37 @@ protected:
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  std::vector<PathInfo> FormPathFromForwardSearch(const uint32_t dest);
-  std::vector<PathInfo> FormPathFromReverseSearch(const uint32_t dest);
+  std::vector<PathInfo> FormPath(const uint32_t dest);
 
-    uint32_t max_label_count_; // Max label count to allow
-    sif::TravelMode mode_;     // Current travel mode
-    uint8_t travel_type_;      // Current travel type
+  uint32_t max_label_count_; // Max label count to allow
+  sif::TravelMode mode_;     // Current travel mode
+  uint8_t travel_type_;      // Current travel type
 
-    // Hierarchy limits.
-    std::vector<sif::HierarchyLimits> hierarchy_limits_;
+  // Hierarchy limits.
+  std::vector<sif::HierarchyLimits> hierarchy_limits_;
 
-    // A* heuristic
-    AStarHeuristic astarheuristic_;
+  // A* heuristic
+  AStarHeuristic astarheuristic_;
 
-    // Current costing mode
-    std::shared_ptr<sif::DynamicCost> costing_;
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
 
-    // Vector of edge labels (requires access by index).
-    std::vector<sif::BDEdgeLabel> edgelabels_;
-    uint32_t max_reserved_labels_count_;
+  // Vector of edge labels (requires access by index).
+  std::vector<sif::BDEdgeLabel> edgelabels_;
+  uint32_t max_reserved_labels_count_;
 
-    // Edge status. Mark edges that are in adjacency list or settled.
-    EdgeStatus edgestatus_;
+  // Edge status. Mark edges that are in adjacency list or settled.
+  EdgeStatus edgestatus_;
 
-    // Destinations, id and percent used along the edge
-    std::unordered_map<uint64_t, float> destinations_percent_along_;
+  // Destinations, id and percent used along the edge
+  std::unordered_map<uint64_t, float> destinations_percent_along_;
 
-    // Access mode used by the costing method
-    uint32_t access_mode_;
+  // Access mode used by the costing method
+  uint32_t access_mode_;
 
-    // Adjacency list - approximate double bucket sort
-    baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
-  };
+  // Adjacency list - approximate double bucket sort
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+};
 
 /**
  * Reverse direction A* algorithm to create the shortest / least cost path.
@@ -208,25 +203,14 @@ protected:
  * routes it uses a highway hierarchy with shortcut edges to improve
  * performance.
  */
-class TimeDepReverse : public TimeDep {
+
+/*
+template <const AStarExpansionType expansion_direction,
+          const bool FORWARD = expansion_direction == AStarExpansionType::forward>
+class TimeDepReverse : public UnidirectionalAStar<expansion_direction> {
 public:
-  /**
-   * Constructor.
-   * @param config A config object of key, value pairs
-   */
   explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
 
-  /**
-   * Form path between and origin and destination location using the supplied
-   * costing method. Forms the path by seaching in reverse order.
-   * @param  origin       Origin location
-   * @param  dest         Destination location
-   * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  mode_costing Costing methods for each mode.
-   * @param  mode         Travel mode to use.
-   * @return Returns the path edges (and elapsed time/modes at end of
-   *          each edge).
-   */
   virtual std::vector<std::vector<PathInfo>>
   GetBestPath(valhalla::Location& origin,
               valhalla::Location& dest,
@@ -235,14 +219,11 @@ public:
               const sif::TravelMode mode,
               const Options& options = Options::default_instance()) override;
 
-  /**
-   * Returns the name of the algorithm
-   * @return the name of the algorithm
-   */
-  virtual const char* name() const override {
-    return "time_dependent_reverse_a*";
-  }
 };
+*/
+
+using TimeDepForward = UnidirectionalAStar<AStarExpansionType::forward>;
+using TimeDepReverse = UnidirectionalAStar<AStarExpansionType::reverse>;
 
 } // namespace thor
 } // namespace valhalla
