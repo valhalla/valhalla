@@ -1,5 +1,9 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
 
+set_source_files_properties(
+        polyline2.cc
+        PROPERTIES COMPILE_FLAGS "-Werror -Wuninitialized")
+
 set(sources
   linesegment2.cc
   tiles.cc

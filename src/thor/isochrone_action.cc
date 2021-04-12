@@ -9,6 +9,8 @@ namespace valhalla {
 namespace thor {
 
 std::string thor_worker_t::isochrones(Api& request) {
+  auto start_time = std::chrono::high_resolution_clock::now();
+
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
 
@@ -44,8 +46,16 @@ std::string thor_worker_t::isochrones(Api& request) {
       grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
 
   // make the final json
-  return tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
+  std::string ret = tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
                                   options.show_locations());
+
+  auto end_time = std::chrono::high_resolution_clock::now();
+  uint32_t total_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+  printf( "Total time: %d ms\n", total_time);
+
+  return ret;
+
 }
 
 } // namespace thor

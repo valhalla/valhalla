@@ -116,7 +116,7 @@ public:
    * @param  indices    list of indices of points not to generalize
    */
   template <class container_t>
-  static void Generalize(container_t& polyline,
+  static std::tuple<long, long>  Generalize(container_t& polyline,
                          typename coord_t::value_type epsilon,
                          const std::unordered_set<size_t>& indices = {});
 

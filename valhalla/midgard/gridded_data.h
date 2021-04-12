@@ -389,10 +389,15 @@ public:
         });
       }
       // clean up the lines
+      long orig_normalize_time = 0;
+      long new_normalize_time = 0;
       for (auto& line : contour) {
         // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          Polyline2<PointLL>::Generalize(line, gen_factor, {});
+          long told, tnew;
+          std::tie(told, tnew) = Polyline2<PointLL>::Generalize(line, gen_factor, {});
+          orig_normalize_time += told;
+          new_normalize_time += tnew;
         }
         // if this ends up as an inner we'll undo this later
         if (cache[&line] > 0) {
@@ -404,6 +409,10 @@ public:
           coord.second += h;
         }
       }
+
+      printf("Orig normalize time: %ld ms\n", orig_normalize_time);
+      printf(" New normalize time: %ld ms\n", new_normalize_time);
+
       // if they just wanted linestrings we need only one per feature
       if (!rings_only) {
         for (auto& linestring : contour) {

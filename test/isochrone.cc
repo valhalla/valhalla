@@ -124,6 +124,141 @@ TEST(Isochrones, Basic) {
   }
 }
 
+bool intersects(const midgard::GeoPoint<double>& a,
+                const midgard::GeoPoint<double>& b,
+                const midgard::GeoPoint<double>& c,
+                const midgard::GeoPoint<double>& d) {
+  double xa = a.lng(), xb = b.lng(), xc = c.lng(), xd = d.lng();
+  double ya = a.lat(), yb = b.lat(), yc = c.lat(), yd = d.lat();
+
+  double denom = (xd-xc)*(yb-ya) - (yd-yc)*(xb-xa);
+
+  constexpr double tol = 1e-9;
+
+  // parallel check
+  if (fabs(denom) < tol)
+    return false;
+
+  double t0 = (yd-yc)*(xa-xc) - (xd-xc)*(ya-yc);
+  t0 = t0 / denom;
+
+  if ((t0 < 1e-9) || (t0 > (1-tol)))
+    return false;
+
+  double t1 = (xb-xa)*(yc-ya) - (yb-ya)*(xc-xa);
+  t1 = t1 / denom;
+
+  if ((t1 < 1e-9) || (t1 > (1-tol)))
+    return false;
+
+  return true;
+}
+
+double dist(const midgard::PointLL & a, const midgard::PointLL & b) {
+  double alat_rad = a.lat() * M_PI / 180.0;
+  double alon_rad = a.lng() * M_PI / 180.0;
+  double blat_rad = b.lat() * M_PI / 180.0;
+  double blon_rad = b.lng() * M_PI / 180.0;
+
+  double dlat = (blat_rad - alat_rad);
+  double dlon = (blon_rad - alon_rad);
+
+  double w = sin(dlat/2)*sin(dlat/2) + sin(dlon/2)*sin(dlon/2) * cos(alat_rad) * cos(blat_rad);
+  double earth_radius = 6378160.187;
+  double c = 2 * asin(sqrt(w));
+  return earth_radius * c;
+}
+
+std::tuple<int, int> self_intersects(const std::vector<midgard::GeoPoint<double>>& points) {
+  int intersections_checked = 0;
+  int intersections = 0;
+  for (size_t i = 1; i < points.size(); i++) {
+    const midgard::GeoPoint<double>& ia(points[i-1]);
+    const midgard::GeoPoint<double>& ib(points[i]);
+    for (size_t j = i + 1; j < points.size(); j++) {
+      const midgard::GeoPoint<double>& ja(points[j-1]);
+      const midgard::GeoPoint<double>& jb(points[j]);
+      intersections_checked++;
+      if (intersects(ia, ib, ja, jb)) {
+        intersections++;
+        printf("Intersection:\n");
+        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
+        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
+      }
+    }
+  }
+
+  return std::make_tuple(intersections_checked, intersections);
+}
+
+TEST(Isochrones, PeuckerSelfIntersection) {
+
+  // these are real-world coordinates pulled off an isochrone polygon with generalize=0.
+  // when we generalize this shape a self-intersection occurs.
+  std::vector<midgard::PointLL> points =
+  { { -117.20467966, 33.77518033 },
+    { -117.20394301, 33.77518757 },
+    { -117.20303785, 33.77482215 },
+    { -117.20251280, 33.77391699 },
+    { -117.20232287, 33.77353715 },
+    { -117.20194304, 33.77334723 },
+    { -117.20100573, 33.77297971 },
+    { -117.20086145, 33.77299859 },
+    { -117.20082284, 33.77279683 },
+    { -117.20026941, 33.77191702 },
+    { -117.20016060, 33.77169937 },
+    { -117.19994294, 33.77159056 }, //*
+    { -117.19962097, 33.77159503 }, //* 4493
+    { -117.19822555, 33.77163442 }, //*
+    { -117.19794297, 33.77163847 },
+    { -117.19749885, 33.77147289 },
+    { -117.19604794, 33.77181206 },
+    { -117.19596388, 33.76993787 },
+    { -117.19595160, 33.76991698 }, //s
+    { -117.19594873, 33.76991125 }, //s 0.992
+    { -117.19594299, 33.76990838 }, //s
+    { -117.19593012, 33.76990411 },
+    { -117.19587159, 33.76991698 },
+    { -117.19593906, 33.76992091 },
+    { -117.19592176, 33.77189578 },
+    { -117.19593198, 33.77191702 },
+    { -117.19592806, 33.77193195 },
+    { -117.19594299, 33.77196341 },
+    { -117.19599274, 33.77196676 },
+    { -117.19768004, 33.77217994 },
+    { -117.19794297, 33.77219556 },
+    { -117.19859647, 33.77257053 },
+    { -117.19924840, 33.77261156 },
+    { -117.19916533, 33.77313940 },
+    { -117.19948144, 33.77391699 },
+    { -117.19963527, 33.77422466 },
+    { -117.19994294, 33.77437851 },
+    { -117.20090806, 33.77495196 },
+    { -117.20132555, 33.77591702 },
+    { -117.20153140, 33.77632866 },
+    { -117.20194304, 33.77653447 },
+    { -117.20258894, 33.77656294 } };
+
+  constexpr double gen_factor = 5.0;
+
+  midgard::Polyline2<midgard::PointLL> polyline(points);
+
+  // 1.0 & 2.0: fine
+  // >3.0: self-intersects
+  polyline.Generalize(gen_factor);
+
+  std::vector<midgard::PointLL>& pts = polyline.pts();
+
+  int intersections_checked, num_intersections;
+  std::tie(intersections_checked, num_intersections) = self_intersects(pts);
+
+  ASSERT_EQ(num_intersections, 0);
+
+  int a = 4;
+}
+
+
+
 } // namespace
 
 int main(int argc, char* argv[]) {
