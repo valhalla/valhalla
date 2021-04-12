@@ -52,7 +52,7 @@ if (UNIX)
     transitbuilder.cc
     util.cc
     validatetransit.cc
-    PROPERTIES COMPILE_FLAGS "-Werror -Wall")
+    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Werror=sign-compare")
 endif (UNIX)
 
 set(sources
