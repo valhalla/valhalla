@@ -25,11 +25,33 @@ if (UNIX)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
+    bssbuilder.cc
+    complexrestrictionbuilder.cc
+    countryaccess.cc
+    dataquality.cc
+    directededgebuilder.cc
+    graphtilebuilder.cc
+    edgeinfobuilder.cc
+    elevationbuilder.cc
     graphenhancer.cc
+    graphvalidator.cc
     hierarchybuilder.cc
+    linkclassification.cc
     luatagtransform.cc
+    node_expander.cc
     osmdata.cc
+    osmpbfparser.cc
+    osmaccessrestriction.cc
     osmrestriction.cc
+    osmway.cc
+    pbfadminparser.cc
+    restrictionbuilder.cc
+    servicedays.cc
+    shortcutbuilder.cc
+    timeparsing.cc
+    transitbuilder.cc
+    util.cc
+    validatetransit.cc
     PROPERTIES COMPILE_FLAGS "-Werror -Wall")
 endif (UNIX)
 

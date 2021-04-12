@@ -368,7 +368,6 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
 
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder_local.nodes()));
-  uint32_t nodecount = currentnodes.size();
 
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
@@ -580,7 +579,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   auto local_level = TileHierarchy::levels().back().level;
 
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
-  for (const auto& node : osm_nodes) {
+  for (auto node : osm_nodes) {
     auto latlng = node.latlng();
     auto tile_id = TileHierarchy::GetGraphId({latlng.first, latlng.second}, local_level);
     graph_tile_ptr local_tile = reader.GetGraphTile(tile_id);

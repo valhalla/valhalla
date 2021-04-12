@@ -23,11 +23,6 @@ namespace {
 // reality to maintain performance
 constexpr uint64_t kMaxOSMNodesHint = 1300000000;
 
-// Node equality
-const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid_ == b.node.osmid_;
-};
-
 struct admin_callback : public OSMPBF::Callback {
 public:
   admin_callback() = delete;
@@ -36,9 +31,9 @@ public:
   }
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMAdminData& osmdata)
-      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
-        members_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osm_admin_data_(osmdata),
-        lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
+      : lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)),
+        shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
+        members_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osm_admin_data_(osmdata) {
   }
 
   virtual void

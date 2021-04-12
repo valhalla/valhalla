@@ -149,7 +149,6 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
 
   // Work up from each leaf until the root is found or a branch occurs.
   // Add branches to expand to a list;
-  uint32_t rc = 0;
   std::vector<uint32_t> link_edge_indexes;
   while (!leaves.empty()) {
     // Clear the list of link edge indices from the prior leaf
