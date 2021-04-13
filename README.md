@@ -92,7 +92,32 @@ if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get
 sudo apt-get install -y python-all-dev
 ```
 
-To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+### Building from Source - MacOS
+
+#### Configuring Rosetta for ARM64 MacBook
+
+Check your architecture typing `arch` in the terminal. In case the result is `arm64` set up Rosetta terminal to emulate x86_64 behavior. Otherwise, skip this step.
+
+1. Go to `Finder > Application > Utilities`.
+2. Select `Terminal` and right-click on it, then choose `Duplicate`.
+3. Rename the duplicated app `Rosetta Terminal`.
+4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
+5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
+6. Make shure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
+7. Now it fully supports Homebrew and other x86_64 command line applications.
+
+Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.
+
+```
+echo "alias ibrew='arch -x86_64 /usr/local/bin/brew'" >> ~/.zshrc
+echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
+```
+
+You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
+
+#### Installing dependencies
+
+To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
@@ -119,6 +144,12 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
 sudo make install
+```
+
+In `Rosetta Terminal` use these flags for cmake:
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
 ```
 
 Important build options include:
