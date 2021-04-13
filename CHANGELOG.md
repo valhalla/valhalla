@@ -39,6 +39,7 @@
    * FIXED: Fix polygon area calculation: use Shoelace formula [#2927](https://github.com/valhalla/valhalla/pull/2927)
    * FIXED: Isochrone: orient segments/rings acoording to the right-hand rule [#2932](https://github.com/valhalla/valhalla/pull/2932)
    * FIXED: Parsenodes fix: check if index is out-of-bound first [#2984](https://github.com/valhalla/valhalla/pull/2984)
+   * FIXED: Isochrone: handle origin edges properly [#2990](https://github.com/valhalla/valhalla/pull/2990)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
@@ -77,6 +78,7 @@
    * CHANGED: Penalized closed edges if using them at start/end locations [#2964](https://github.com/valhalla/valhalla/pull/2964)
    * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
    * CHANGED: Refactor bidirectional astar forward/reverse search to reduce code repetition [#2970](https://github.com/valhalla/valhalla/pull/2970)
+   * CHANGED: Factor for service roads is 1.0 by default. [#2988](https://github.com/valhalla/valhalla/pull/2988)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
