@@ -31,7 +31,7 @@ TEST(Traffic, TileConstruction) {
   testdata.speed3.overall_encoded_speed = 98 >> 1;
   testdata.speed3.encoded_speed1 = 98 >> 1;
   testdata.speed3.encoded_speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
-  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.encoded_speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
   auto memory =
