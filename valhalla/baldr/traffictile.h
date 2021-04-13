@@ -140,7 +140,7 @@ struct TrafficSpeed {
   json::MapPtr json() const volatile {
     auto live_speed = json::map({});
     if (speed_valid()) {
-      live_speed->emplace("overall_encoded_speed", static_cast<uint64_t>(get_overall_speed()));
+      live_speed->emplace("overall_speed", static_cast<uint64_t>(get_overall_speed()));
       auto speed = static_cast<uint64_t>(get_speed(0));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
         live_speed->emplace("speed_0", nullptr);
