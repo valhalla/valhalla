@@ -79,6 +79,8 @@
    * ADDED: Add shoulder to trace_attributes output. [#2980](https://github.com/valhalla/valhalla/pull/2980)
    * CHANGED: Refactor bidirectional astar forward/reverse search to reduce code repetition [#2970](https://github.com/valhalla/valhalla/pull/2970)
    * CHANGED: Factor for service roads is 1.0 by default. [#2988](https://github.com/valhalla/valhalla/pull/2988)
+   * ADDED: Support for conditionally skipping CI runs [#2986](https://github.com/valhalla/valhalla/pull/2986)
+
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**

@@ -94,6 +94,11 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -133,6 +138,11 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -160,10 +170,15 @@ jobs:
   build-osx:
     executor: macos
     steps:
-      - install_macos_dependencies
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - install_macos_dependencies
       - restore_cache:
           keys:
             - ccache-release-macos-{{ .Branch }}
