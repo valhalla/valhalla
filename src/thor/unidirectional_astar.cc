@@ -1,8 +1,8 @@
+#include "thor/unidirectional_astar.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "thor/unidirectional_astar.h"
 #include <algorithm>
 
 using namespace valhalla::baldr;
@@ -17,7 +17,7 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
 // Default constructor
-template<>
+template <>
 UnidirectionalAStar<AStarExpansionType::forward>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
@@ -57,7 +57,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
 }
 
 template <> void UnidirectionalAStar<AStarExpansionType::forward, true>::Clear() {
-   // Clear the edge labels and destination list. Reset the adjacency list
+  // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   if (edgelabels_.size() > max_reserved_labels_count_) {
     edgelabels_.resize(max_reserved_labels_count_);
@@ -72,7 +72,7 @@ template <> void UnidirectionalAStar<AStarExpansionType::forward, true>::Clear()
   has_ferry_ = false;
 }
 template <> void UnidirectionalAStar<AStarExpansionType::reverse, false>::Clear() {
-   // Clear the edge labels and destination list. Reset the adjacency list
+  // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   if (edgelabels_.size() > max_reserved_labels_count_) {
     edgelabels_.resize(max_reserved_labels_count_);
@@ -92,14 +92,14 @@ template <> void UnidirectionalAStar<AStarExpansionType::reverse, false>::Clear(
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graphreader,
-                                                                                 const GraphId& node,
-                                                                                 BDEdgeLabel& pred,
-                                                                                 const uint32_t pred_idx,
-                                                                                 const DirectedEdge* opp_pred_edge,
-                                                                                 const TimeInfo& time_info,
-                                                                                 const valhalla::Location& destination,
-                                                                                 std::pair<int32_t, float>& best_path) {
+bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& graphreader,
+                                                               const GraphId& node,
+                                                               BDEdgeLabel& pred,
+                                                               const uint32_t pred_idx,
+                                                               const DirectedEdge* opp_pred_edge,
+                                                               const TimeInfo& time_info,
+                                                               const valhalla::Location& destination,
+                                                               std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -118,11 +118,9 @@ bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graph
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     pred.set_deadend(true);
-    return opp_edge &&
-           ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                            {opp_edge, opp_edge_id,
-                                             edgestatus_.GetPtr(opp_edge_id, tile)},
-                                            tile, offset_time, destination, best_path);
+    return opp_edge && ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                   {opp_edge, opp_edge_id, edgestatus_.GetPtr(opp_edge_id, tile)},
+                                   tile, offset_time, destination, best_path);
   }
 
   // Expand from <expansion_direction> node.
@@ -140,11 +138,10 @@ bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graph
     uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
-    disable_uturn =
-        (pred.opp_local_idx() != meta.edge->localedgeidx() &&
-         ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          tile, offset_time, destination, best_path)) ||
-        disable_uturn;
+    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+                     ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta, tile,
+                                 offset_time, destination, best_path)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -166,9 +163,8 @@ bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graph
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
       // expand the edges from this node at this level
       for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
-        disable_uturn = ExpandInner(graphreader, pred, opp_pred_edge, trans_node,
-                                                         pred_idx, trans_meta, trans_tile,
-                                                         offset_time, destination, best_path) ||
+        disable_uturn = ExpandInner(graphreader, pred, opp_pred_edge, trans_node, pred_idx,
+                                    trans_meta, trans_tile, offset_time, destination, best_path) ||
                         disable_uturn;
       }
     }
@@ -185,10 +181,9 @@ bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graph
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
     // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-    disable_uturn =
-        ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                         uturn_meta, tile, offset_time, destination, best_path) ||
-        disable_uturn;
+    disable_uturn = ExpandInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta,
+                                tile, offset_time, destination, best_path) ||
+                    disable_uturn;
   }
 
   return disable_uturn;
@@ -196,13 +191,13 @@ bool UnidirectionalAStar<expansion_direction,FORWARD>::Expand(GraphReader& graph
 
 template bool
 UnidirectionalAStar<AStarExpansionType::forward>::Expand(GraphReader& graphreader,
-                                                              const GraphId& node,
-                                                              BDEdgeLabel& pred,
-                                                              const uint32_t pred_idx,
-                                                              const DirectedEdge* opp_pred_edge,
-                                                              const TimeInfo& time_info,
-                                                              const valhalla::Location& destination,
-                                                              std::pair<int32_t, float>& best_path);
+                                                         const GraphId& node,
+                                                         BDEdgeLabel& pred,
+                                                         const uint32_t pred_idx,
+                                                         const DirectedEdge* opp_pred_edge,
+                                                         const TimeInfo& time_info,
+                                                         const valhalla::Location& destination,
+                                                         std::pair<int32_t, float>& best_path);
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if
 // the edge described in `meta` should be placed on the stack
@@ -210,16 +205,17 @@ UnidirectionalAStar<AStarExpansionType::forward>::Expand(GraphReader& graphreade
 //
 // Returns true if any edge _could_ have been expanded after restrictions etc.
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-inline bool UnidirectionalAStar<expansion_direction,FORWARD>::ExpandInner(GraphReader& graphreader,
-                                 const BDEdgeLabel& pred,
-                                 const baldr::DirectedEdge* opp_pred_edge,
-                                 const NodeInfo* nodeinfo,
-                                 const uint32_t pred_idx,
-                                 const EdgeMetadata& meta,
-                                 const graph_tile_ptr& tile,
-                                 const TimeInfo& time_info,
-                                 const valhalla::Location& destination,
-                                 std::pair<int32_t, float>& best_path) {
+inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
+    GraphReader& graphreader,
+    const BDEdgeLabel& pred,
+    const baldr::DirectedEdge* opp_pred_edge,
+    const NodeInfo* nodeinfo,
+    const uint32_t pred_idx,
+    const EdgeMetadata& meta,
+    const graph_tile_ptr& tile,
+    const TimeInfo& time_info,
+    const valhalla::Location& destination,
+    std::pair<int32_t, float>& best_path) {
 
   if (!FORWARD) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
@@ -406,7 +402,8 @@ UnidirectionalAStar<AStarExpansionType::forward>::FormPath(const uint32_t dest) 
 
 // Form the path from the adjacency list.
 template <>
-std::vector<PathInfo> UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) {
+std::vector<PathInfo>
+UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
@@ -448,12 +445,13 @@ std::vector<PathInfo> UnidirectionalAStar<AStarExpansionType::reverse>::FormPath
 // Calculate time-dependent best path using a forward search. Supports
 // "depart-at" routes.
 template <>
-std::vector<std::vector<PathInfo>> UnidirectionalAStar<AStarExpansionType::forward>::GetBestPath(valhalla::Location& origin,
-                                                        valhalla::Location& destination,
-                                                        GraphReader& graphreader,
-                                                        const sif::mode_costing_t& mode_costing,
-                                                        const TravelMode mode,
-                                                        const Options& /*options*/) {
+std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<AStarExpansionType::forward>::GetBestPath(valhalla::Location& origin,
+                                                              valhalla::Location& destination,
+                                                              GraphReader& graphreader,
+                                                              const sif::mode_costing_t& mode_costing,
+                                                              const TravelMode mode,
+                                                              const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -478,8 +476,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<AStarExpansionType::forwa
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination,
-                                             forward_time_info.second_of_week);
+  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -556,8 +553,8 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<AStarExpansionType::forwa
     }
 
     // Expand forward from the end node of the predecessor edge.
-    Expand(graphreader, pred.endnode(), pred, predindex, nullptr,
-                                   forward_time_info, destination, best_path);
+    Expand(graphreader, pred.endnode(), pred, predindex, nullptr, forward_time_info, destination,
+           best_path);
   }
   return {}; // Should never get here
 }
@@ -567,11 +564,11 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<AStarExpansionType::forwa
 template <>
 std::vector<std::vector<PathInfo>>
 UnidirectionalAStar<AStarExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
-                            valhalla::Location& destination,
-                            GraphReader& graphreader,
-                            const sif::mode_costing_t& mode_costing,
-                            const TravelMode mode,
-                            const Options& /*options*/) {
+                                                              valhalla::Location& destination,
+                                                              GraphReader& graphreader,
+                                                              const sif::mode_costing_t& mode_costing,
+                                                              const TravelMode mode,
+                                                              const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -600,8 +597,7 @@ UnidirectionalAStar<AStarExpansionType::reverse>::GetBestPath(valhalla::Location
   // Initialize the locations. For a reverse path search the destination location
   // is used as the "origin" and the origin location is used as the "destination".
   uint32_t density = SetDestination(graphreader, origin);
-  SetOrigin(graphreader, destination, origin,
-                                             reverse_time_info.second_of_week);
+  SetOrigin(graphreader, destination, origin, reverse_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -684,15 +680,16 @@ UnidirectionalAStar<AStarExpansionType::reverse>::GetBestPath(valhalla::Location
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    Expand(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
-                                   reverse_time_info, destination, best_path);
+    Expand(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, reverse_time_info,
+           destination, best_path);
   }
   return {}; // Should never get here
 }
 
 // Initialize prior to finding best path
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-void UnidirectionalAStar<expansion_direction,FORWARD>::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
+void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::PointLL& origll,
+                                                             const midgard::PointLL& destll) {
 
   float mincost = 0;
   if (FORWARD) {
@@ -722,7 +719,9 @@ void UnidirectionalAStar<expansion_direction,FORWARD>::Init(const midgard::Point
 // for higher densities) and the distance between origin and destination
 // (increase for shorter distances).
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-void UnidirectionalAStar<expansion_direction,FORWARD>::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/) {
+void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
+    const float dist,
+    const uint32_t /*density*/) {
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
   // routes - hopefully we will mark the data somehow to indicate how to
@@ -748,10 +747,11 @@ void UnidirectionalAStar<expansion_direction,FORWARD>::ModifyHierarchyLimits(con
 
 // Add an edge at the origin to the adjacency list
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-void UnidirectionalAStar<expansion_direction,FORWARD>::SetOrigin(GraphReader& graphreader,
-                        const valhalla::Location& origin,
-                        const valhalla::Location& destination,
-                        const uint32_t seconds_of_week) {
+void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
+    GraphReader& graphreader,
+    const valhalla::Location& origin,
+    const valhalla::Location& destination,
+    const uint32_t seconds_of_week) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -920,7 +920,9 @@ UnidirectionalAStar<AStarExpansionType::reverse>::SetOrigin(GraphReader& graphre
 
 // Add a destination edge
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-uint32_t UnidirectionalAStar<expansion_direction,FORWARD>::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+uint32_t
+UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& graphreader,
+                                                                  const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -974,8 +976,6 @@ uint32_t UnidirectionalAStar<expansion_direction,FORWARD>::SetDestination(GraphR
   }
   return density;
 }
-
-
 
 } // namespace thor
 } // namespace valhalla
