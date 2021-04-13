@@ -28,9 +28,9 @@ TEST(Traffic, TileConstruction) {
   TestTile testdata{};
   testdata.header.directed_edge_count = 3;
   testdata.header.traffic_tile_version = TRAFFIC_TILE_VERSION;
-  testdata.speed3.overall_speed = 98 >> 1;
-  testdata.speed3.speed1 = 98 >> 1;
-  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.overall_encoded_speed = 98 >> 1;
+  testdata.speed3.encoded_speed1 = 98 >> 1;
+  testdata.speed3.encoded_speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
@@ -67,7 +67,7 @@ TEST(Traffic, Closed) {
   TrafficSpeed speed = {};
   EXPECT_FALSE(speed.closed());
 
-  speed.speed1 = 0;
+  speed.encoded_speed1 = 0;
   EXPECT_FALSE(speed.closed());
   EXPECT_FALSE(speed.closed(0));
 
@@ -75,7 +75,7 @@ TEST(Traffic, Closed) {
   EXPECT_TRUE(speed.closed());
   EXPECT_TRUE(speed.closed(0));
 
-  speed.overall_speed = 0;
+  speed.overall_encoded_speed = 0;
   EXPECT_TRUE(speed.closed());
   EXPECT_TRUE(speed.closed(0));
 }
@@ -83,37 +83,37 @@ TEST(Traffic, Closed) {
 TEST(Traffic, SpeedValid) {
   using namespace valhalla::baldr;
   TrafficSpeed speed = {};
-  speed.overall_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
+  speed.overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
   EXPECT_FALSE(speed.speed_valid());
 
-  speed.speed1 = 1;
+  speed.encoded_speed1 = 1;
   EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed1 = 0;
+  speed.encoded_speed1 = 0;
   speed.congestion1 = 1;
   EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed1 = 0;
+  speed.encoded_speed1 = 0;
   speed.congestion1 = 4;
   EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed1 = 0;
+  speed.encoded_speed1 = 0;
   speed.breakpoint1 = 255;
   EXPECT_FALSE(speed.speed_valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed1 = 0;
+  speed.encoded_speed1 = 0;
   speed.breakpoint1 = 255;
-  speed.overall_speed = 0;
+  speed.overall_encoded_speed = 0;
   EXPECT_TRUE(speed.speed_valid());
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound
-  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
-  EXPECT_EQ(speed.speed1, 0);
+  speed.encoded_speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
+  EXPECT_EQ(speed.encoded_speed1, 0);
 }
 
 int main(int argc, char* argv[]) {

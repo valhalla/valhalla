@@ -203,7 +203,7 @@ void customize_traffic(const boost::property_tree::ptree& config,
     if (edge_id == target_edge_id) {
       current->breakpoint1 = 255;
       current->overall_speed = target_speed >> 1;
-      current->speed1 = target_speed >> 1;
+      current->encoded_speed1 = target_speed >> 1;
     }
   };
   test::customize_live_traffic_data(config, generate_traffic);
