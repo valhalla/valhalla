@@ -953,7 +953,7 @@ uint32_t UnidirectionalAStar<expansion_direction,FORWARD>::SetDestination(GraphR
       // Keep the id and the cost to traverse the partial distance for the
       // remainder of the edge. This cost is subtracted from the total cost
       // up to the end of the destination edge.
-      auto tile = graphreader.GetGraphTile(edgeid);
+      tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // The opposing edge Id is added as a destination since the search
