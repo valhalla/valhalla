@@ -16,6 +16,8 @@
 namespace valhalla {
 namespace midgard {
 
+extern long generalize_time;
+
 // A special generalization value indicating that the application should
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
@@ -389,15 +391,12 @@ public:
         });
       }
       // clean up the lines
-      long orig_normalize_time = 0;
-      long new_normalize_time = 0;
+      long total_generalize_time = 0;
       for (auto& line : contour) {
         // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          long told, tnew;
-          std::tie(told, tnew) = Polyline2<PointLL>::Generalize(line, gen_factor, {});
-          orig_normalize_time += told;
-          new_normalize_time += tnew;
+          Polyline2<PointLL>::Generalize(line, gen_factor, {});
+          total_generalize_time += generalize_time;
         }
         // if this ends up as an inner we'll undo this later
         if (cache[&line] > 0) {
@@ -410,8 +409,7 @@ public:
         }
       }
 
-      printf("Orig normalize time: %ld ms\n", orig_normalize_time);
-      printf(" New normalize time: %ld ms\n", new_normalize_time);
+      printf("Generalize time: %ld ms\n", total_generalize_time);
 
       // if they just wanted linestrings we need only one per feature
       if (!rings_only) {

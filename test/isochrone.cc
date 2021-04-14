@@ -124,63 +124,19 @@ TEST(Isochrones, Basic) {
   }
 }
 
-bool intersects(const midgard::GeoPoint<double>& a,
-                const midgard::GeoPoint<double>& b,
-                const midgard::GeoPoint<double>& c,
-                const midgard::GeoPoint<double>& d) {
-  double xa = a.lng(), xb = b.lng(), xc = c.lng(), xd = d.lng();
-  double ya = a.lat(), yb = b.lat(), yc = c.lat(), yd = d.lat();
-
-  double denom = (xd-xc)*(yb-ya) - (yd-yc)*(xb-xa);
-
-  constexpr double tol = 1e-9;
-
-  // parallel check
-  if (fabs(denom) < tol)
-    return false;
-
-  double t0 = (yd-yc)*(xa-xc) - (xd-xc)*(ya-yc);
-  t0 = t0 / denom;
-
-  if ((t0 < 1e-9) || (t0 > (1-tol)))
-    return false;
-
-  double t1 = (xb-xa)*(yc-ya) - (yb-ya)*(xc-xa);
-  t1 = t1 / denom;
-
-  if ((t1 < 1e-9) || (t1 > (1-tol)))
-    return false;
-
-  return true;
-}
-
-double dist(const midgard::PointLL & a, const midgard::PointLL & b) {
-  double alat_rad = a.lat() * M_PI / 180.0;
-  double alon_rad = a.lng() * M_PI / 180.0;
-  double blat_rad = b.lat() * M_PI / 180.0;
-  double blon_rad = b.lng() * M_PI / 180.0;
-
-  double dlat = (blat_rad - alat_rad);
-  double dlon = (blon_rad - alon_rad);
-
-  double w = sin(dlat/2)*sin(dlat/2) + sin(dlon/2)*sin(dlon/2) * cos(alat_rad) * cos(blat_rad);
-  double earth_radius = 6378160.187;
-  double c = 2 * asin(sqrt(w));
-  return earth_radius * c;
-}
-
-std::tuple<int, int> self_intersects(const std::vector<midgard::GeoPoint<double>>& points) {
-  int intersections_checked = 0;
-  int intersections = 0;
-  for (size_t i = 1; i < points.size(); i++) {
-    const midgard::GeoPoint<double>& ia(points[i-1]);
-    const midgard::GeoPoint<double>& ib(points[i]);
-    for (size_t j = i + 1; j < points.size(); j++) {
-      const midgard::GeoPoint<double>& ja(points[j-1]);
-      const midgard::GeoPoint<double>& jb(points[j]);
-      intersections_checked++;
-      if (intersects(ia, ib, ja, jb)) {
-        intersections++;
+template <typename coord_t> bool self_intersects(const std::vector<coord_t>& points) {
+  int num_self_intersections = 0;
+  for (size_t i = 1; i < points.size() - 2; i++) {
+    const coord_t& ia(points[i - 1]);
+    const coord_t& ib(points[i]);
+    for (size_t j = i + 2; j < points.size() - 1; j++) {
+      const coord_t& ja(points[j - 1]);
+      const coord_t& jb(points[j]);
+      LineSegment2<coord_t> segmenti(ia, ib);
+      LineSegment2<coord_t> segmentj(ja, jb);
+      coord_t intersection_point;
+      if (segmenti.Intersect(segmentj, intersection_point)) {
+        num_self_intersections++;
         printf("Intersection:\n");
         printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
         printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
@@ -188,77 +144,71 @@ std::tuple<int, int> self_intersects(const std::vector<midgard::GeoPoint<double>
     }
   }
 
-  return std::make_tuple(intersections_checked, intersections);
+  return num_self_intersections > 0;
 }
 
-TEST(Isochrones, PeuckerSelfIntersection) {
-
-  // these are real-world coordinates pulled off an isochrone polygon with generalize=0.
-  // when we generalize this shape a self-intersection occurs.
+TEST(Isochrones, PeuckerSelfIntersectionTest) {
+  // These are real-world coordinates pulled off an isochrone polygon with gen_factor=0.
+  // Using the raw Douglas-Peucker algorithm results in a self-intersection (using a
+  // gen_factor=5). The modified Douglas-Peucker algorithm avoids the self-intersection.
   std::vector<midgard::PointLL> points =
-  { { -117.20467966, 33.77518033 },
-    { -117.20394301, 33.77518757 },
-    { -117.20303785, 33.77482215 },
-    { -117.20251280, 33.77391699 },
-    { -117.20232287, 33.77353715 },
-    { -117.20194304, 33.77334723 },
-    { -117.20100573, 33.77297971 },
-    { -117.20086145, 33.77299859 },
-    { -117.20082284, 33.77279683 },
-    { -117.20026941, 33.77191702 },
-    { -117.20016060, 33.77169937 },
-    { -117.19994294, 33.77159056 }, //*
-    { -117.19962097, 33.77159503 }, //* 4493
-    { -117.19822555, 33.77163442 }, //*
-    { -117.19794297, 33.77163847 },
-    { -117.19749885, 33.77147289 },
-    { -117.19604794, 33.77181206 },
-    { -117.19596388, 33.76993787 },
-    { -117.19595160, 33.76991698 }, //s
-    { -117.19594873, 33.76991125 }, //s 0.992
-    { -117.19594299, 33.76990838 }, //s
-    { -117.19593012, 33.76990411 },
-    { -117.19587159, 33.76991698 },
-    { -117.19593906, 33.76992091 },
-    { -117.19592176, 33.77189578 },
-    { -117.19593198, 33.77191702 },
-    { -117.19592806, 33.77193195 },
-    { -117.19594299, 33.77196341 },
-    { -117.19599274, 33.77196676 },
-    { -117.19768004, 33.77217994 },
-    { -117.19794297, 33.77219556 },
-    { -117.19859647, 33.77257053 },
-    { -117.19924840, 33.77261156 },
-    { -117.19916533, 33.77313940 },
-    { -117.19948144, 33.77391699 },
-    { -117.19963527, 33.77422466 },
-    { -117.19994294, 33.77437851 },
-    { -117.20090806, 33.77495196 },
-    { -117.20132555, 33.77591702 },
-    { -117.20153140, 33.77632866 },
-    { -117.20194304, 33.77653447 },
-    { -117.20258894, 33.77656294 } };
-
-  constexpr double gen_factor = 5.0;
+      {{-117.20467966, 33.77518033}, {-117.20394301, 33.77518757}, {-117.20303785, 33.77482215},
+       {-117.20251280, 33.77391699}, {-117.20232287, 33.77353715}, {-117.20194304, 33.77334723},
+       {-117.20100573, 33.77297971}, {-117.20086145, 33.77299859}, {-117.20082284, 33.77279683},
+       {-117.20026941, 33.77191702}, {-117.20016060, 33.77169937}, {-117.19994294, 33.77159056},
+       {-117.19962097, 33.77159503}, {-117.19822555, 33.77163442}, {-117.19794297, 33.77163847},
+       {-117.19749885, 33.77147289}, {-117.19604794, 33.77181206}, {-117.19596388, 33.76993787},
+       {-117.19595160, 33.76991698}, {-117.19594873, 33.76991125}, {-117.19594299, 33.76990838},
+       {-117.19593012, 33.76990411}, {-117.19587159, 33.76991698}, {-117.19593906, 33.76992091},
+       {-117.19592176, 33.77189578}, {-117.19593198, 33.77191702}, {-117.19592806, 33.77193195},
+       {-117.19594299, 33.77196341}, {-117.19599274, 33.77196676}, {-117.19768004, 33.77217994},
+       {-117.19794297, 33.77219556}, {-117.19859647, 33.77257053}, {-117.19924840, 33.77261156},
+       {-117.19916533, 33.77313940}, {-117.19948144, 33.77391699}, {-117.19963527, 33.77422466},
+       {-117.19994294, 33.77437851}, {-117.20090806, 33.77495196}, {-117.20132555, 33.77591702},
+       {-117.20153140, 33.77632866}, {-117.20194304, 33.77653447}, {-117.20258894, 33.77656294}};
 
   midgard::Polyline2<midgard::PointLL> polyline(points);
 
-  // 1.0 & 2.0: fine
-  // >3.0: self-intersects
+  constexpr double gen_factor = 5.0;
   polyline.Generalize(gen_factor);
 
   std::vector<midgard::PointLL>& pts = polyline.pts();
 
-  int intersections_checked, num_intersections;
-  std::tie(intersections_checked, num_intersections) = self_intersects(pts);
+  int num_intersections = self_intersects(pts);
 
   ASSERT_EQ(num_intersections, 0);
-
-  int a = 4;
 }
 
+TEST(Isochrones, PeuckerSelfIntersectionTest2) {
 
+  // These are real-world coordinates pulled off an isochrone polygon with gen_factor=0.
+  // Using the raw Douglas-Peucker algorithm results in a self-intersection (using a
+  // gen_factor=50). The modified Douglas-Peucker algorithm avoids the self-intersection.
+  std::vector<midgard::PointLL> points =
+      {{-118.17329133, 33.78885961}, {-118.17410177, 33.78965699}, {-118.17407460, 33.79007635},
+       {-118.17379829, 33.79096132}, {-118.17377209, 33.79165699}, {-118.17404231, 33.79210863},
+       {-118.17449396, 33.79235270}, {-118.17518239, 33.79234540}, {-118.17601166, 33.79213932},
+       {-118.17649399, 33.79213106}, {-118.17725704, 33.79242005}, {-118.17841540, 33.79173556},
+       {-118.17774024, 33.79290326}, {-118.17803809, 33.79365699}, {-118.17807143, 33.79407953},
+       {-118.17849397, 33.79548576}, {-118.17936408, 33.79452708}, {-118.18010898, 33.79365699},
+       {-118.17945666, 33.79269433}, {-118.17891198, 33.79207499}, {-118.17855126, 33.79165699},
+       {-118.17852006, 33.79163090}, {-118.17849397, 33.79161013}, {-118.17825732, 33.79142034},
+       {-118.17741529, 33.79073567}, {-118.17649399, 33.79007552}, {-118.17627859, 33.78987239},
+       {-118.17597193, 33.78965699}, {-118.17626466, 33.78942765}, {-118.17649399, 33.78910775},
+       {-118.17736539, 33.78852840}, {-118.17778081, 33.78837014}, {-118.17849397, 33.78803414},
+       {-118.17871682, 33.78787982}, {-118.17900272, 33.78765698}, {-118.17996996, 33.78713294},
+       {-118.18049400, 33.78653054}, {-118.18094331, 33.78720766}, {-118.18082302, 33.78765698},
+       {-118.18159441, 33.78855655}, {-118.18249397, 33.78881215}, {-118.18324743, 33.78841046}};
 
+  midgard::Polyline2<midgard::PointLL> polyline(points);
+
+  constexpr double gen_factor = 50.0;
+  polyline.Generalize(gen_factor);
+
+  std::list<midgard::PointLL> intersections = polyline.GetSelfIntersections();
+
+  ASSERT_EQ(intersections.size(), 0);
+}
 } // namespace
 
 int main(int argc, char* argv[]) {

@@ -47,15 +47,15 @@ std::string thor_worker_t::isochrones(Api& request) {
 
   // make the final json
   std::string ret = tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
-                                  options.show_locations());
+                                             options.show_locations());
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  uint32_t total_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+  uint32_t total_time =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-  printf( "Total time: %d ms\n", total_time);
+  printf("Total time: %d ms\n", total_time);
 
   return ret;
-
 }
 
 } // namespace thor

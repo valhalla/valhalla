@@ -18,67 +18,19 @@ using rgba_t = std::tuple<float, float, float>;
 namespace valhalla {
 namespace tyr {
 
-
-bool intersects(const midgard::GeoPoint<double>& a,
-                const midgard::GeoPoint<double>& b,
-                const midgard::GeoPoint<double>& c,
-                const midgard::GeoPoint<double>& d) {
-  double xa = a.lng(), xb = b.lng(), xc = c.lng(), xd = d.lng();
-  double ya = a.lat(), yb = b.lat(), yc = c.lat(), yd = d.lat();
-
-  double denom = (xd-xc)*(yb-ya) - (yd-yc)*(xb-xa);
-
-  constexpr double tol = 1e-20;
-
-  // parallel check
-  if (fabs(denom) < tol)
-    return false;
-
-  double t0 = (yd-yc)*(xa-xc) - (xd-xc)*(ya-yc);
-  t0 = t0 / denom;
-
-  if ((t0 < tol) || (t0 > (1-tol)))
-    return false;
-
-  double t1 = (xb-xa)*(yc-ya) - (yb-ya)*(xc-xa);
-  t1 = t1 / denom;
-
-  if ((t1 < tol) || (t1 > (1-tol)))
-    return false;
-
-  return true;
-}
-
-double dist(const midgard::PointLL & a, const midgard::PointLL & b) {
-  double alat_rad = a.lat() * M_PI / 180.0;
-  double alon_rad = a.lng() * M_PI / 180.0;
-  double blat_rad = b.lat() * M_PI / 180.0;
-  double blon_rad = b.lng() * M_PI / 180.0;
-
-  double dlat = (blat_rad - alat_rad);
-  double dlon = (blon_rad - alon_rad);
-
-  double w = sin(dlat/2)*sin(dlat/2) + sin(dlon/2)*sin(dlon/2) * cos(alat_rad) * cos(blat_rad);
-  double earth_radius = 6378160.187;
-  double c = 2 * asin(sqrt(w));
-  return earth_radius * c;
-}
-
-std::tuple<int, int> self_intersects(const std::vector<midgard::GeoPoint<double>>& points) {
-  int intersections_checked = 0;
-  int intersections = 0;
-  for (size_t i = 1; i < points.size(); i++) {
-    const midgard::GeoPoint<double>& ia(points[i-1]);
-    const midgard::GeoPoint<double>& ib(points[i]);
-//    if (dist(midgard::PointLL(-117.1959639, 33.7699379), ia) < 1000) {
-//      printf("{ %.8f, %.8f },\n", ia.lng(), ia.lat());
-//    }
-    for (size_t j = i + 1; j < points.size(); j++) {
-      const midgard::GeoPoint<double>& ja(points[j-1]);
-      const midgard::GeoPoint<double>& jb(points[j]);
-      intersections_checked++;
-      if (intersects(ia, ib, ja, jb)) {
-        intersections++;
+template <typename coord_t> int self_intersects(const std::vector<coord_t>& points) {
+  int num_self_intersections = 0;
+  for (size_t i = 1; i < points.size() - 2; i++) {
+    const coord_t& ia(points[i - 1]);
+    const coord_t& ib(points[i]);
+    for (size_t j = i + 2; j < points.size() - 1; j++) {
+      const coord_t& ja(points[j - 1]);
+      const coord_t& jb(points[j]);
+      LineSegment2<coord_t> segmenti(ia, ib);
+      LineSegment2<coord_t> segmentj(ja, jb);
+      coord_t intersection_point;
+      if (segmenti.Intersect(segmentj, intersection_point)) {
+        num_self_intersections++;
         printf("Intersection:\n");
         printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
         printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
@@ -86,7 +38,7 @@ std::tuple<int, int> self_intersects(const std::vector<midgard::GeoPoint<double>
     }
   }
 
-  return std::make_tuple(intersections_checked, intersections);
+  return num_self_intersections;
 }
 
 bool check_for_intersections(std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
@@ -94,10 +46,7 @@ bool check_for_intersections(std::vector<midgard::GriddedData<2>::contour_interv
 
   clock_t start_time = clock();
 
-  int polygons_checked = 0;
-  int self_intersecting_polygons = 0;
-  int total_intersections_checked = 0;
-  int total_intersections = 0;
+  int total_self_intersections = 0;
 
   for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
     const auto& interval = intervals[contour_index];
@@ -108,22 +57,15 @@ bool check_for_intersections(std::vector<midgard::GriddedData<2>::contour_interv
         for (const auto& coord : contour) {
           points.emplace_back(coord);
         }
-        polygons_checked++;
-        int intersections_checked = 0;
-        int intersections = 0;
-        std::tie(intersections_checked, intersections) = self_intersects(points);
-        total_intersections_checked += intersections_checked;
-        total_intersections += intersections;
-        if (intersections)
-          self_intersecting_polygons++;
+        int num_self_intersections = self_intersects(points);
+        total_self_intersections += num_self_intersections;
       }
     }
   }
 
-  printf("Total intersections checked: %d, total intersections: %d\n", total_intersections_checked, total_intersections);
-  printf("Polygons checked: %d, num self-intersecting: %d\n", polygons_checked, self_intersecting_polygons);
+  printf("Number self-intersections: %d\n", total_self_intersections);
 
-  return self_intersecting_polygons > 0;
+  return total_self_intersections > 0;
 }
 
 std::string serializeIsochrones(const Api& request,

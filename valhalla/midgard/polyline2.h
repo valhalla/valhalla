@@ -6,6 +6,7 @@
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
 
+#include <list>
 #include <tuple>
 #include <unordered_set>
 #include <vector>
@@ -64,6 +65,15 @@ public:
   template <class container_t> static typename coord_t::value_type Length(const container_t& pts);
 
   /**
+   * In an O(n^2) manner (only useful for debugging/testing), checks if there are any
+   * segments in the polyline that are intersecting. If so, returns those intersection
+   * points.
+   * @param   pts  Polyline vertices.
+   * @return  List of intersections found, if any.
+   */
+  std::list<coord_t> GetSelfIntersections();
+
+  /**
    * Finds the closest point to the supplied point as well as the distance
    * to that point and the index of the segment where the closest
    * point lies.
@@ -116,7 +126,7 @@ public:
    * @param  indices    list of indices of points not to generalize
    */
   template <class container_t>
-  static std::tuple<long, long>  Generalize(container_t& polyline,
+  static void Generalize(container_t& polyline,
                          typename coord_t::value_type epsilon,
                          const std::unordered_set<size_t>& indices = {});
 
