@@ -175,10 +175,16 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     const valhalla::Location& destination,
     std::pair<int32_t, float>& best_path) {
 
+  // Skip shortcut edges for time dependent routes
+  // TODO(danpat): why?
+  if (meta.edge->is_shortcut()) {
+    return false;
+  }
+
   if (!FORWARD) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
     // path already found to this directed edge) or if no access for this mode.
-    if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
+    if (!(meta.edge->reverseaccess() & access_mode_)) {
       return false;
     }
   }
@@ -204,10 +210,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
-  uint8_t restriction_idx = -1;
+  uint8_t restriction_idx = kInvalidRestriction;
   if (FORWARD) {
-    if (meta.edge->is_shortcut() ||
-        !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                            nodeinfo->timezone(), restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                              time_info.local_time, nodeinfo->timezone())) {
@@ -237,6 +242,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   if (FORWARD) {
     newcost += transition_cost;
   } else {
+    // TODO(danpat): why is reverse like this, instead of the same as forward?  Is it a bug?
     newcost.cost += transition_cost.cost;
   }
 
@@ -741,17 +747,17 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
                              Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction);
+                             sif::InternalTurn::kNoTurn, kInvalidRestriction);
       /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the
        * same time - so we need to update immediately after to set path_distance */
-      edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
+      edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, kInvalidRestriction);
       // Set the origin flag
       edgelabels_.push_back(edge_label);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
                                mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               sif::InternalTurn::kNoTurn, -1);
+                               sif::InternalTurn::kNoTurn, kInvalidRestriction);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       edgelabels_.back().set_not_thru(false);
