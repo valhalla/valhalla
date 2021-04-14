@@ -16,9 +16,8 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
-// Default constructor
-template <>
-UnidirectionalAStar<AStarExpansionType::forward>::UnidirectionalAStar(
+template <const AStarExpansionType expansion_direction, const bool FORWARD>
+UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kDrive), travel_type_(0),
@@ -28,15 +27,12 @@ UnidirectionalAStar<AStarExpansionType::forward>::UnidirectionalAStar(
 }
 
 // Default constructor
-template <>
-UnidirectionalAStar<AStarExpansionType::reverse>::UnidirectionalAStar(
-    const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      access_mode_{kAutoAccess} {
-}
+template UnidirectionalAStar<AStarExpansionType::forward>::UnidirectionalAStar(
+    const boost::property_tree::ptree& config);
+
+// Default constructor
+template UnidirectionalAStar<AStarExpansionType::reverse>::UnidirectionalAStar(
+    const boost::property_tree::ptree& config);
 
 // Clear the temporary information generated during path construction.
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
@@ -56,36 +52,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   has_ferry_ = false;
 }
 
-template <> void UnidirectionalAStar<AStarExpansionType::forward, true>::Clear() {
-  // Clear the edge labels and destination list. Reset the adjacency list
-  // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
-    edgelabels_.shrink_to_fit();
-  }
-  edgelabels_.clear();
-  destinations_percent_along_.clear();
-  adjacencylist_.clear();
-  edgestatus_.clear();
-
-  // Set the ferry flag to false
-  has_ferry_ = false;
-}
-template <> void UnidirectionalAStar<AStarExpansionType::reverse, false>::Clear() {
-  // Clear the edge labels and destination list. Reset the adjacency list
-  // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
-    edgelabels_.shrink_to_fit();
-  }
-  edgelabels_.clear();
-  destinations_percent_along_.clear();
-  adjacencylist_.clear();
-  edgestatus_.clear();
-
-  // Set the ferry flag to false
-  has_ferry_ = false;
-}
+template void UnidirectionalAStar<AStarExpansionType::forward>::Clear();
+template void UnidirectionalAStar<AStarExpansionType::reverse>::Clear();
 
 // Expand from the node along the forward search path. Immediately expands
 // from the end node of any transition edge (so no transition edges are added
@@ -363,7 +331,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   return true;
 }
 
-// Form the path from the adjacency list.
+// Form the path from the adjacency list in the _forward_ direction
 template <>
 std::vector<PathInfo>
 UnidirectionalAStar<AStarExpansionType::forward>::FormPath(const uint32_t dest) {
@@ -390,7 +358,7 @@ UnidirectionalAStar<AStarExpansionType::forward>::FormPath(const uint32_t dest) 
   return path;
 }
 
-// Form the path from the adjacency list.
+// Form the path from the adjacency list in the _reverse_ direction
 template <>
 std::vector<PathInfo>
 UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) {
@@ -563,6 +531,21 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   return {}; // Should never get here
 }
 
+template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<AStarExpansionType::forward>::GetBestPath(valhalla::Location& origin,
+                                                              valhalla::Location& destination,
+                                                              GraphReader& graphreader,
+                                                              const sif::mode_costing_t& mode_costing,
+                                                              const TravelMode mode,
+                                                              const Options& /*options*/);
+template std::vector<std::vector<PathInfo>>
+UnidirectionalAStar<AStarExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
+                                                              valhalla::Location& destination,
+                                                              GraphReader& graphreader,
+                                                              const sif::mode_costing_t& mode_costing,
+                                                              const TravelMode mode,
+                                                              const Options& /*options*/);
+// Set the mode and costing
 // Initialize prior to finding best path
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::PointLL& origll,
@@ -758,42 +741,28 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
                              Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             sif::InternalTurn::kNoTurn,
-                             /* TODO(danpat) why does reverse use -1 here, and this uses
-                                baldr::kInvalidRestriction ? */
-                             baldr::kInvalidRestriction);
+                             sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction);
       /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at the
        * same time - so we need to update immediately after to set path_distance */
       edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, baldr::kInvalidRestriction);
-
       // Set the origin flag
-      edge_label.set_origin();
       edgelabels_.push_back(edge_label);
     } else {
-      Cost c; // TODO(danpat): temp code - default zero initialization
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
-                               mode_, c, false, !(costing_->IsClosed(directededge, tile)),
+                               mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                sif::InternalTurn::kNoTurn, -1);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       edgelabels_.back().set_not_thru(false);
-      // Set the origin flag
-      edgelabels_.back().set_origin();
     }
+    // Set the origin flag
+    edgelabels_.back().set_origin();
     adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
 }
-
-/*
-template void
-UnidirectionalAStar<AStarExpansionType::reverse>::SetOrigin(GraphReader& graphreader,
-                                                    const valhalla::Location& origin,
-                                                    const valhalla::Location& destination,
-                                                    const uint32_t seconds_of_week);
-                                                    */
 
 // Add a destination edge
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
