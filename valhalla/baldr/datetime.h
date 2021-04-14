@@ -19,7 +19,10 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <valhalla/proto/tripcommon.pb.h>
+#pragma GCC diagnostic pop
 
 namespace valhalla {
 namespace baldr {

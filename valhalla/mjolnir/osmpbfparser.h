@@ -34,10 +34,13 @@
 #include <fstream>
 #include <string>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 // this describes the low-level blob storage
 #include <valhalla/proto/fileformat.pb.h>
 // this describes the high-level OSM objects
 #include <valhalla/proto/osmformat.pb.h>
+#pragma GCC diagnostic pop
 
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
