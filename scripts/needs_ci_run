@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import fnmatch
+import os.path
+import sys
+import subprocess
+
+CI_IGNORE_FILE='.circleci/ciignore'
+# Looks for files changed in last commit only. This has the drawback
+# of skipping CI if a push's last commit was ciignore-able, even though
+# other commits might need CI
+#
+# TODO: Get all files changed in the last "push". That ensures CI is skipped
+# if ALL commits in a push don't need CI
+GIT_CMD=['git', 'diff', 'HEAD..HEAD~1', '--name-only']
+
+if not os.path.isfile(CI_IGNORE_FILE):
+  # no CI ignore rules configured, run CI
+  sys.exit(0)
+
+# Get list of changed files staged for commit
+changed_files=subprocess.run(GIT_CMD, capture_output=True, text=True).stdout.splitlines()
+
+# Get CI ignore rules
+with open(CI_IGNORE_FILE, 'r') as f:
+  CI_IGNORE_RULES = f.readlines()
+CI_IGNORE_RULES = [x.strip() for x in CI_IGNORE_RULES]
+
+ignored_files=[]
+for changed_file in changed_files:
+  for ignore_rule in CI_IGNORE_RULES:
+    if fnmatch.fnmatch(changed_file, ignore_rule):
+      ignored_files.append(changed_file)
+
+if sorted(ignored_files) == sorted(changed_files):
+  # everything was ignored, skip CI
+  # TODO: Use circleci API to check if a prior build of this branch is running.
+  # If so, don't skip CI
+  sys.exit(1)
+
+# Not everything was ignored, run CI
+sys.exit(0)
