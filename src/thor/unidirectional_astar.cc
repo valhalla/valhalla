@@ -433,13 +433,13 @@ UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) 
 }
 
 template <const AStarExpansionType expansion_direction, const bool FORWARD>
-std::vector<std::vector<PathInfo>>
-UnidirectionalAStar<expansion_direction, FORWARD>::GetBestPath(valhalla::Location& origin,
-                                                              valhalla::Location& destination,
-                                                              GraphReader& graphreader,
-                                                              const sif::mode_costing_t& mode_costing,
-                                                              const TravelMode mode,
-                                                              const Options& /*options*/) {
+std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORWARD>::GetBestPath(
+    valhalla::Location& origin,
+    valhalla::Location& destination,
+    GraphReader& graphreader,
+    const sif::mode_costing_t& mode_costing,
+    const TravelMode mode,
+    const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
