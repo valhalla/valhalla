@@ -19,9 +19,6 @@ using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
 TEST(TestRouteSummary, GetSummary) {
-
-  std::string workdir = "test/data/gurka_test_route_summary";
-
   const std::string ascii_map = R"(
                                 C--------D
                                 |        |
@@ -46,14 +43,10 @@ TEST(TestRouteSummary, GetSummary) {
       {{"mjolnir.data_processing.use_direction_on_ways", "true"},
        {"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}};
 
+  std::string workdir = "test/data/gurka_test_route_summary";
   valhalla::gurka::map map = gurka::buildtiles(node_layout, ways, {}, {}, workdir, config_map);
 
   map.nodes = node_layout;
-
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
-    EXPECT_TRUE(created);
-  }
 
   // Shortest route chosen: ABIJEF
   valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
@@ -141,7 +134,7 @@ TEST(TestRouteSummary, DupSummaryFix) {
       {"EF", {{"highway", "primary"}, {"name", "RT 2"}}},
       {"FIJ", {{"highway", "motorway"}, {"name", "RT 3"}}},
       {"BCDE", {{"highway", "primary"}, {"name", "RT 2"}}},
-      {"FKJ", {{"highway", "primary"}, {"name", "RT 4"}, {"access", "no"}, {"foot", "yes"}}},
+      {"FKJ", {{"highway", "primary"}, {"name", "RT 4"}}},
   };
 
   const auto node_layout = gurka::detail::map_to_coordinates(ascii_map, 100, PointLL{5.108, 52.01});
@@ -154,11 +147,6 @@ TEST(TestRouteSummary, DupSummaryFix) {
   valhalla::gurka::map map = gurka::buildtiles(node_layout, ways, {}, {}, workdir, config_map);
 
   map.nodes = node_layout;
-
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
-    EXPECT_TRUE(created);
-  }
 
   // auto will take the short route via the motorway
   valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, "auto");
