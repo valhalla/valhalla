@@ -37,7 +37,7 @@ public:
   }
 
   virtual void
-  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& /*tags*/) override {
     // Check if it is in the list of nodes used by ways
     if (!shape_.get(osmid)) {
       return;
@@ -53,7 +53,7 @@ public:
   }
 
   virtual void way_callback(const uint64_t osmid,
-                            const OSMPBF::Tags& tags,
+                            const OSMPBF::Tags& /*tags*/,
                             const std::vector<uint64_t>& nodes) override {
 
     // Check if it is in the list of ways used by relations

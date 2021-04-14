@@ -520,7 +520,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::list<PointLL> shape;
-    for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
+    for (int i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
     shape.push_back(std::get<0>(closest));
