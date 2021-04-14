@@ -39,6 +39,7 @@
    * FIXED: Fix polygon area calculation: use Shoelace formula [#2927](https://github.com/valhalla/valhalla/pull/2927)
    * FIXED: Isochrone: orient segments/rings acoording to the right-hand rule [#2932](https://github.com/valhalla/valhalla/pull/2932)
    * FIXED: Parsenodes fix: check if index is out-of-bound first [#2984](https://github.com/valhalla/valhalla/pull/2984)
+   * FIXED: Fix for unique-summary logic [#2996](https://github.com/valhalla/valhalla/pull/2996)
    * FIXED: Isochrone: handle origin edges properly [#2990](https://github.com/valhalla/valhalla/pull/2990)
    * FIXED: Annotations fail with returning NaN speed when the same point is duplicated in route geometry [#2992](https://github.com/valhalla/valhalla/pull/2992)
 
