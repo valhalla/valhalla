@@ -46,7 +46,6 @@ if (UNIX)
     osmway.cc
     pbfadminparser.cc
     restrictionbuilder.cc
-    servicedays.cc
     shortcutbuilder.cc
     timeparsing.cc
     transitbuilder.cc
