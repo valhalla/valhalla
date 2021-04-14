@@ -278,6 +278,7 @@ void PointTiler::remove_point(const size_t& idx) {
   polyline[idx] = PointTiler::deleted_point;
 }
 
+
 template <class container_t>
 void peucker_avoid_self_intersections(PointTiler& point_tile_index,
                                       const double& epsilon_sq,
@@ -300,7 +301,7 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
   double dmax = std::numeric_limits<double>::lowest();
   LineSegment2<PointLL> line_segment{start, end};
 
-  // hfidx represents the index of the highest freq detail (the dividing point)
+  // hfidx is the index of the highest freq detail (the dividing point)
   size_t hfidx = sidx;
 
   // find the point furthest from the line-segment formed by {start, end}
@@ -324,44 +325,56 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
   }
 
   // if (dmax < epsilon_sq) then we have a relatively straight line between (start,end).
-  // However, it can occur that if we were to blindly simplify this polyline we might create
-  // a self-intersection. To test for that possibility, picture N triangles formed by
-  // start, end and every polyline point between. Then test if any points reside in each
-  // triangle. It is reasonable that some of the points along (start,end) will be inside
-  // the triangle, ignore those. If any points remain, we cannot simplify this line or we'd
-  // otherwise create a self-intersection.
+  //
+  // Using a tiled space to determine the points along the "epsilon buffer zone" of the
+  // line is coarse and will contain points both of interest and not. Remember, we want
+  // to determine if simplifying the line will cause a self-intersection. Consider this
+  // amazing ascii art example:
+  //
+  //              i             k
+  //               \           /
+  //                \         /
+  //                 \       /
+  //                  \     /
+  //   s - - - - - - - - - - - - - - - - - - - - - - - - - - - - e
+  //                    \ /
+  //                     j
+  //                       c
+  //
+  // s=start, e=end. c is a point along the polyline between s & e. It is within
+  // epsilon of (s, e) so we are considering simplifying (s,e) and getting rid of c.
+  // As you can see, however, a completely separate portion of our polygon (i, j, k)
+  // would self-intersect if we simplified. To detect this, we perform a triangle
+  // containment test of point j using the triangle (s, c, e), see that its contained,
+  // and decide not to simplify. We create a triangle using every point c between start
+  // and end - and perform containment tests for "nearby" points for every triangle.
+  // We can stop as soon as we find an unexpected point inside a triangle.
   if (dmax < epsilon_sq) {
-
-    //
-    std::unordered_set<size_t> triangle_points;
-    point_tile_index.get_points_between(start, end, triangle_points);
+    // This returns the points in the "epsilon buffer zone" along the line (start, end).
+    std::unordered_set<size_t> line_buffer_points;
+    point_tile_index.get_points_along(start, end, line_buffer_points);
 
     bool can_simplify = true;
     for (size_t cidx = sidx + 1; (cidx < eidx) && can_simplify; cidx++) {
       const PointLL& c = point_tile_index.polyline[cidx];
 
-      // Use our tiled search space to determine which points are in-and-around the
-      // triangle formed by (start, c, end).
-//      triangle_points.clear();
-//      point_tile_index.get_points_in_and_around_triangle(start, c, end, triangle_points);
-
-      // Using a tiled space to determine the points in-and-around the triangle is
-      // coarse and will contain points both inside and outside the triangle. Now
-      // use an exactly geometry check to determine which points are exactly inside
-      // the triangle (start, c, end).
-      for (size_t point_idx : triangle_points) {
+      for (size_t point_idx : line_buffer_points) {
         if (!triangle_contains(start, c, end, point_tile_index.polyline[point_idx])) {
-          triangle_points.erase(point_idx);
+          line_buffer_points.erase(point_idx);
         }
       }
 
       // Disregard points that are along the polyline [start,end].
       for (size_t i = sidx; i <= eidx; i++) {
-        triangle_points.erase(i);
+        line_buffer_points.erase(i);
       }
 
       // If no points remain within the triangle, we can simplify this line
-      can_simplify = triangle_points.empty();
+      can_simplify = line_buffer_points.empty();
+
+      // the moment we realize we cannot simplify we can stop
+      if (!can_simplify)
+        break;
     }
 
     if (can_simplify) {
@@ -375,8 +388,8 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
     }
   }
 
-  // there are some high frequency details between start and end
-  // so we need to look for flatter sections between them
+  // there are some high frequency details between start and end so we need to
+  // look for flatter sections between them
   if (dmax >= epsilon_sq) {
     // we recurse from right to left for two reasons:
     // 1. we want to preserve iterator validity in the vector version
@@ -390,65 +403,9 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
   }
 }
 
-template <class container_t>
-void Generalize_orig(container_t& polyline,
-                     double epsilon,
-                     const std::unordered_set<size_t>& exclusions) {
-  // any epsilon this low will have no effect on the input nor will any super short input
-  if (epsilon <= 0 || polyline.size() < 3)
-    return;
-
-  // the recursive bit
-  epsilon *= epsilon;
-  std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
-      peucker;
-  peucker = [&peucker, &polyline, epsilon, &exclusions](typename container_t::iterator start,
-                                                        size_t s, typename container_t::iterator end,
-                                                        size_t e) {
-    // find the point furthest from the line
-    double dmax = std::numeric_limits<double>::lowest();
-    typename container_t::iterator itr;
-    LineSegment2<PointLL> l{*start, *end};
-    size_t j = e - 1, k;
-    PointLL tmp;
-    for (auto i = std::prev(end); i != start; --i, --j) {
-      // special points we dont want to generalize no matter what take precidence
-      if (exclusions.find(j) != exclusions.end()) {
-        itr = i;
-        dmax = epsilon;
-        k = j;
-        break;
-      }
-
-      // if this is the highest frequency detail so far
-      auto d = l.DistanceSquared(*i, tmp);
-      if (d > dmax) {
-        itr = i;
-        dmax = d;
-        k = j;
-      }
-    }
-
-    // there are some high frequency details between start and end
-    // so we need to look for flatter sections between them
-    if (dmax >= epsilon) {
-      // we recurse from right to left for two reasons:
-      // 1. we want to preserve iterator validity in the vector version
-      // 2. its the only way to preserve the indices in the keep set
-      if (e - k > 1)
-        peucker(itr, k, end, e);
-      if (k - s > 1)
-        peucker(start, s, itr, k);
-    } // nothing sticks out between start and end so simplify everything between away
-    else
-      polyline.erase(std::next(start), end);
-  };
-
-  // recurse!
-  peucker(polyline.begin(), 0, std::prev(polyline.end()), polyline.size() - 1);
-}
-
 long generalize_time;
+
+
 
 /**
  * Generalize the given list of points
@@ -491,6 +448,7 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   generalize_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 }
+
 
 // Explicit instantiation
 template class Polyline2<PointXY<float>>;
