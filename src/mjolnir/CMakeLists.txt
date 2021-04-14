@@ -52,7 +52,7 @@ if (UNIX)
     transitbuilder.cc
     util.cc
     validatetransit.cc
-    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Werror=sign-compare")
+    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-error=missing-field-initializers")
 endif (UNIX)
 
 set(sources
