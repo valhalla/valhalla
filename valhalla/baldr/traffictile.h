@@ -51,10 +51,11 @@ constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
 constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
-  uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
-  uint64_t speed1 : 7;        // 0-255kph in 2kph resolution (access with `get_speed(0)`)
-  uint64_t speed2 : 7;
-  uint64_t speed3 : 7;
+  uint64_t
+      overall_encoded_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
+  uint64_t encoded_speed1 : 7;   // 0-255kph in 2kph resolution (access with `get_speed(0)`)
+  uint64_t encoded_speed2 : 7;
+  uint64_t encoded_speed3 : 7;
   uint64_t breakpoint1 : 8;   // position = length * (breakpoint1 / 255)
   uint64_t breakpoint2 : 8;   // position = length * (breakpoint2 / 255)
   uint64_t congestion1 : 6;   // Stores 0 (unknown), or 1->63 (no congestion->max congestion)
@@ -65,11 +66,11 @@ struct TrafficSpeed {
 
 #ifndef C_ONLY_INTERFACE
   inline bool speed_valid() const volatile {
-    return breakpoint1 != 0 && overall_speed != UNKNOWN_TRAFFIC_SPEED_RAW;
+    return breakpoint1 != 0 && overall_encoded_speed != UNKNOWN_TRAFFIC_SPEED_RAW;
   }
 
   inline bool closed() const volatile {
-    return breakpoint1 != 0 && overall_speed == 0;
+    return breakpoint1 != 0 && overall_encoded_speed == 0;
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
@@ -77,11 +78,11 @@ struct TrafficSpeed {
       return false;
     switch (subsegment) {
       case 0:
-        return speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
+        return encoded_speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
       case 1:
-        return breakpoint1 < 255 && (speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
+        return breakpoint1 < 255 && (encoded_speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
       case 2:
-        return breakpoint2 < 255 && (speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
+        return breakpoint2 < 255 && (encoded_speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
       default:
         assert(false);
         throw std::logic_error("Bad subsegment");
@@ -90,7 +91,7 @@ struct TrafficSpeed {
 
   /// Returns overall speed in kph across edge
   inline uint8_t get_overall_speed() const volatile {
-    return overall_speed << 1;
+    return overall_encoded_speed << 1;
   }
 
   /**
@@ -104,11 +105,11 @@ struct TrafficSpeed {
       return UNKNOWN_TRAFFIC_SPEED_KPH;
     switch (subsegment) {
       case 0:
-        return speed1 << 1;
+        return encoded_speed1 << 1;
       case 1:
-        return speed2 << 1;
+        return encoded_speed2 << 1;
       case 2:
-        return speed3 << 1;
+        return encoded_speed3 << 1;
       default:
         assert(false);
         throw std::logic_error("Bad subsegment");
@@ -116,11 +117,12 @@ struct TrafficSpeed {
   }
 
   constexpr TrafficSpeed()
-      : overall_speed{0}, speed1{0}, speed2{0}, speed3{0}, breakpoint1{0}, breakpoint2{0},
-        congestion1{0}, congestion2{0}, congestion3{0}, has_incidents{0}, spare{0} {
+      : overall_encoded_speed{0}, encoded_speed1{0}, encoded_speed2{0}, encoded_speed3{0},
+        breakpoint1{0}, breakpoint2{0}, congestion1{0}, congestion2{0}, congestion3{0},
+        has_incidents{0}, spare{0} {
   }
 
-  constexpr TrafficSpeed(const uint32_t overall_speed,
+  constexpr TrafficSpeed(const uint32_t overall_encoded_speed,
                          const uint32_t s1,
                          const uint32_t s2,
                          const uint32_t s3,
@@ -130,9 +132,9 @@ struct TrafficSpeed {
                          const uint32_t c2,
                          const uint32_t c3,
                          const bool incidents)
-      : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
-        breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3},
-        has_incidents{incidents}, spare{0} {
+      : overall_encoded_speed{overall_encoded_speed}, encoded_speed1{s1}, encoded_speed2{s2},
+        encoded_speed3{s3}, breakpoint1{b1}, breakpoint2{b2}, congestion1{c1}, congestion2{c2},
+        congestion3{c3}, has_incidents{incidents}, spare{0} {
   }
 
   json::MapPtr json() const volatile {

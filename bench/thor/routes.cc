@@ -101,7 +101,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       baldr::GraphId tile_id(tile.header->tile_id);
       if (traffic_dist(gen) < has_live_traffic) {
         current->breakpoint1 = 255;
-        current->overall_speed = traffic_dist(gen) * 100;
+        current->overall_encoded_speed = traffic_dist(gen) * 100;
       } else {
       }
     };
@@ -202,8 +202,8 @@ void customize_traffic(const boost::property_tree::ptree& config,
     auto edge_id = baldr::GraphId(tile_id.tileid(), tile_id.level(), index);
     if (edge_id == target_edge_id) {
       current->breakpoint1 = 255;
-      current->overall_speed = target_speed >> 1;
-      current->speed1 = target_speed >> 1;
+      current->overall_encoded_speed = target_speed >> 1;
+      current->encoded_speed1 = target_speed >> 1;
     }
   };
   test::customize_live_traffic_data(config, generate_traffic);
