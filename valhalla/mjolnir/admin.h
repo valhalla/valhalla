@@ -1,11 +1,15 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#pragma GCC diagnostic pop
+
 #include <cstdint>
 #include <sqlite3.h>
 #include <unordered_map>
