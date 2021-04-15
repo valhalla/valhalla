@@ -2403,9 +2403,8 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(int node_index,
     // and forward intersecting edge exists
     // then return true
     if (!curr_edge->IsForward(turn_degree) &&
-        node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
-                                                             prev_edge->travel_mode(),
-                                                             prev_edge->road_class())) {
+        node->HasForwardTraversableExcludeUseXEdge(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                   TripLeg_Use_kTrackUse)) {
       return true;
     }
     // if path edge is forward
