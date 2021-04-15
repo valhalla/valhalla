@@ -166,14 +166,14 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   std::size_t route_size = 0;
 
-  thor::TimeDepForward astar;
+  thor::BidirectionalAStar astar;
   for (auto _ : state) {
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
       astar.Clear();
-      route_size += 1;
+      route_size += result.size();
     }
   }
   if (route_size == 0) {
@@ -286,8 +286,6 @@ template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
     throw std::runtime_error("No origins available for test");
   }
 
-  std::size_t route_count = 0;
-
   Algorithm algorithm;
   {
     // Do it once to warmup
@@ -309,10 +307,6 @@ template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
     auto result = algorithm.GetBestPath(origins.front(), destinations.front(), *clean_reader, costs,
                                         sif::TravelMode::kDrive);
     algorithm.Clear();
-    ++route_count;
-  }
-  if (route_count == 0) {
-    throw std::runtime_error("Failed all routes");
   }
 }
 
