@@ -19,8 +19,6 @@ using namespace valhalla;
 
 namespace {
 
-std::string planet_path = "";
-
 void create_costing_options(Options& options) {
   options.set_costing(Costing::auto_);
   rapidjson::Document doc;
@@ -173,7 +171,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
       astar.Clear();
-      route_size += result.size();
+      route_size += 1;
     }
   }
   if (route_size == 0) {
@@ -230,7 +228,8 @@ std::vector<valhalla::baldr::Location> global_locations =
      midgard::PointLL{1.74563, 53.791374},    midgard::PointLL{2.110271, 53.535301},
      midgard::PointLL{21.016792, 41.08852},   midgard::PointLL{21.020342, 41.080669}};
 
-template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
+template <class Algorithm>
+void BM_GlobalFixedRandom(benchmark::State& state, const std::string& planet_path) {
 
   if (planet_path.empty()) {
     state.SkipWithError(
@@ -309,16 +308,6 @@ template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
     algorithm.Clear();
   }
 }
-
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepForward)
-    ->Unit(benchmark::kMillisecond)
-    ->DenseRange(0, 6);
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepReverse)
-    ->Unit(benchmark::kMillisecond)
-    ->DenseRange(0, 6);
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::BidirectionalAStar)
-    ->Unit(benchmark::kMillisecond)
-    ->DenseRange(0, 6);
 
 /** Benchmarks the GetSpeed function */
 static void BM_GetSpeed(benchmark::State& state) {
@@ -400,10 +389,34 @@ int main(int argc, char** argv) {
 
   logging::Configure({{"type", ""}});
 
+  std::string planet_path = "";
+  int num_routes = 0;
+
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]).find("--planet-path=") != std::string::npos) {
       planet_path = std::string(argv[i]).substr(strlen("--planet-path="));
+    } else if (std::string(argv[i]).find("--num-routes=") != std::string::npos) {
+      num_routes = std::atoi(argv[i] + strlen("--num-routes="));
+      if (num_routes == 0) {
+        std::cerr << "num-routes must be > 0";
+        return 1;
+      }
     }
+  }
+
+  if (planet_path.empty() && num_routes > 0) {
+    ::benchmark::RegisterBenchmark("BM_GlobalFixedRandom", BM_GlobalFixedRandom<thor::TimeDepForward>,
+                                   planet_path)
+        ->Unit(benchmark::kMillisecond)
+        ->DenseRange(0, num_routes);
+    ::benchmark::RegisterBenchmark("BM_GlobalFixedRandom", BM_GlobalFixedRandom<thor::TimeDepReverse>,
+                                   planet_path)
+        ->Unit(benchmark::kMillisecond)
+        ->DenseRange(0, num_routes);
+    ::benchmark::RegisterBenchmark("BM_GlobalFixedRandom",
+                                   BM_GlobalFixedRandom<thor::BidirectionalAStar>, planet_path)
+        ->Unit(benchmark::kMillisecond)
+        ->DenseRange(0, num_routes);
   }
   ::benchmark::Initialize(&argc, argv);
   ::benchmark::RunSpecifiedBenchmarks();
