@@ -685,6 +685,13 @@ public:
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
+  bool HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                     const TripLeg_Use exclude_use);
+
+  bool HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
+                                            const TripLeg_TravelMode travel_mode,
+                                            const TripLeg_Use exclude_use);
+
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
