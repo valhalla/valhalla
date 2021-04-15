@@ -11,7 +11,7 @@ TEST(centroid, minimal) {
       {"CD", {{"highway", "residential"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_flat_loop");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_centroid_minimal");
   auto api = gurka::do_action(Options::centroid, map, {"A", "D"}, "pedestrian");
   ASSERT_EQ(api.trip().routes_size(), 2);
   ASSERT_EQ(api.trip().routes(0).legs_size(), 1);

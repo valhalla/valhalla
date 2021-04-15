@@ -70,7 +70,7 @@ constexpr float kTaxiFactor = 0.85f;
 constexpr float kDefaultAlleyFactor = 1.0f;
 
 // How much to avoid generic service roads.
-constexpr float kDefaultServiceFactor = 1.2f;
+constexpr float kDefaultServiceFactor = 1.0f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -498,6 +498,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
+  }
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
@@ -779,6 +783,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 
@@ -1017,6 +1022,10 @@ public:
     } else if (edge->use() == Use::kServiceRoad) {
       factor *= service_factor_;
     }
+    if (IsClosed(edge, tile)) {
+      // Add a penalty for traversing a closed edge
+      factor *= closure_factor_;
+    }
 
     return Cost(sec * factor, sec);
   }
@@ -1184,6 +1193,10 @@ public:
       factor *= living_street_factor_;
     } else if (edge->use() == Use::kServiceRoad) {
       factor *= service_factor_;
+    }
+    if (IsClosed(edge, tile)) {
+      // Add a penalty for traversing a closed edge
+      factor *= closure_factor_;
     }
 
     return Cost(sec * factor, sec);

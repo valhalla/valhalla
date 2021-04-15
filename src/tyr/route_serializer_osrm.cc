@@ -1616,7 +1616,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 
         // k is the number of named segments in the summary. It keeps going
         // up by 1 until route_i's summary is different than the route_j's.
-        size_t k = 1;
+        size_t k = std::min(num_named_segs_needed, num_comparable);
         for (; (k < num_comparable); k++) {
           const std::string& summary_i = rscache.get_n_segment_summary(route_i, leg_idx, k);
           const std::string& summary_j = rscache.get_n_segment_summary(route_j, leg_idx, k);

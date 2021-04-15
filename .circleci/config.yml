@@ -94,6 +94,11 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -108,6 +113,7 @@ jobs:
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DENABLE_PYTHON_BINDINGS=On
+      - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j3
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
@@ -124,7 +130,7 @@ jobs:
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
-          make -C build -j2 coverage
+          make -C build -j4 coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:
@@ -132,6 +138,11 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -159,10 +170,15 @@ jobs:
   build-osx:
     executor: macos
     steps:
-      - install_macos_dependencies
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - install_macos_dependencies
       - restore_cache:
           keys:
             - ccache-release-macos-{{ .Branch }}

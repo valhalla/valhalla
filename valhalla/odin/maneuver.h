@@ -213,6 +213,8 @@ public:
   bool unnamed_cycleway() const;
   bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
+  bool pedestrian_crossing() const;
+  void set_pedestrian_crossing(bool pedestrian_crossing);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
@@ -279,6 +281,9 @@ public:
 
   uint32_t roundabout_exit_turn_degree() const;
   void set_roundabout_exit_turn_degree(uint32_t turnDegree);
+
+  uint32_t roundabout_exit_shape_index() const;
+  void set_roundabout_exit_shape_index(uint32_t shapeIndex);
 
   bool has_collapsed_small_end_ramp_fork() const;
   void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
@@ -407,6 +412,7 @@ protected:
   bool imminent_verbal_multi_cue_;
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;
+  bool pedestrian_crossing_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;
@@ -424,6 +430,7 @@ protected:
   Signs roundabout_exit_signs_;
   uint32_t roundabout_exit_begin_heading_;
   uint32_t roundabout_exit_turn_degree_;
+  uint32_t roundabout_exit_shape_index_;
 
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;

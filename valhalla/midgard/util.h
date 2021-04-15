@@ -474,7 +474,7 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
- * this will return a positive value for clockwise wound polygons and negative otherwise.
+ * this will return a positive value for counterclockwise wound polygons and negative otherwise.
  * Works with rings where the polygons first and last points are the same or not
  *
  * NOTE: this is good for relative area but the units for spherical coordinates

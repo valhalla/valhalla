@@ -85,6 +85,8 @@ public:
   void Clear() override;
 
 protected:
+  enum class ExpansionType { forward = 0, reverse = 1 };
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -125,6 +127,14 @@ protected:
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
 
+  // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
+  // end started on a not_thru or closed (due to live-traffic) edge
+  bool extended_search_;
+  // Stores the pruning state at origin & destination. Its true if _any_ of the candidate edges at
+  // these locations has pruning turned off (pruning is off if starting from a closed or not_thru
+  // edge)
+  bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
+
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
    * and reverse search.
@@ -144,42 +154,27 @@ protected:
    * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node
    */
-  bool ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::TimeInfo& time_info,
-                     const bool invariant);
-  // Private helper function for `ExpandForward`
-  bool ExpandForwardInner(baldr::GraphReader& graphreader,
-                          const sif::BDEdgeLabel& pred,
-                          const baldr::NodeInfo* nodeinfo,
-                          const uint32_t pred_idx,
-                          const EdgeMetadata& meta,
-                          uint32_t& shortcuts,
-                          const graph_tile_ptr& tile,
-                          const baldr::TimeInfo& time_info);
+  template <const ExpansionType expansion_direction>
+  bool Expand(baldr::GraphReader& graphreader,
+              const baldr::GraphId& node,
+              sif::BDEdgeLabel& pred,
+              const uint32_t pred_idx,
+              const baldr::DirectedEdge* opp_pred_edge,
+              const baldr::TimeInfo& time_info,
+              const bool invariant);
 
-  /**
-   * Expand from the node along the reverse search path
-   *
-   * @param graphreader        to access graph data
-   * @param node               the node from which to expand
-   * @param pred               the previous edge label in the reverse expansion
-   * @param pred_idx           the index of the label in the label set
-   * @param time_info          time tracking information about the end of the route
-   * @param invariant          static date_time, dont offset the time as the path lengthens
-   * @return returns true if the expansion continued from this node in this direction
-   */
-  bool ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     const baldr::TimeInfo& time_info,
-                     const bool invariant);
-  // Private helper function for `ExpandReverse`
-  bool ExpandReverseInner(baldr::GraphReader& graphreader,
+  // Runs in the inner loop of `Expand`, essentially evaluating if
+  // the edge described in `meta` should be placed on the stack
+  // as well as doing just that.
+  //
+  // Returns false if uturns are allowed.
+  // Returns true if we will expand or have expanded from this edge. In that case we disallow uturns.
+  // Some edges we won't expand from, but we will still put them on the adjacency list in order to
+  // connect the forward and reverse paths. In that case we return false to allow uturns only if this
+  // edge is a not-thru edge that will be pruned.
+  //
+  template <const ExpansionType expansion_direction>
+  inline bool ExpandInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
                           const baldr::DirectedEdge* opp_pred_edge,
                           const baldr::NodeInfo* nodeinfo,
