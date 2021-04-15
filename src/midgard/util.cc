@@ -459,6 +459,45 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
   return resampled;
 }
 
+// Use the barycentric technique to test if the point p
+// is inside the triangle formed by (a, b, c).
+template <typename coord_t>
+bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p) {
+  double v0x = c.x() - a.x();
+  double v0y = c.y() - a.y();
+  double v1x = b.x() - a.x();
+  double v1y = b.y() - a.y();
+  double v2x = p.x() - a.x();
+  double v2y = p.y() - a.y();
+
+  double dot00 = v0x * v0x + v0y * v0y;
+  double dot01 = v0x * v1x + v0y * v1y;
+  double dot02 = v0x * v2x + v0y * v2y;
+  double dot11 = v1x * v1x + v1y * v1y;
+  double dot12 = v1x * v2x + v1y * v2y;
+
+  double denom = dot00 * dot11 - dot01 * dot01;
+
+  // Triangle with very small area, e.g., nearly a line.
+  if (std::fabs(denom) < 1e-20)
+    return false;
+
+  double u = (dot11 * dot02 - dot01 * dot12) / denom;
+  double v = (dot00 * dot12 - dot01 * dot02) / denom;
+
+  // Check if point is in triangle
+  return (u >= 0) && (v >= 0) && (u + v < 1);
+}
+
+template bool triangle_contains(const PointXY<float>& a, const PointXY<float>& b,
+                                const PointXY<float>& c, const PointXY<float>& p);
+template bool triangle_contains(const PointXY<double>& a, const PointXY<double>& b,
+                                const PointXY<double>& c, const PointXY<double>& p);
+template bool triangle_contains(const GeoPoint<float>& a, const GeoPoint<float>& b,
+                                const GeoPoint<float>& c, const GeoPoint<float>& p);
+template bool triangle_contains(const GeoPoint<double>& a, const GeoPoint<double>& b,
+                                const GeoPoint<double>& c, const GeoPoint<double>& p);
+
 // Return the intersection of two infinite lines if any
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i) {

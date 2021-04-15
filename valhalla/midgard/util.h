@@ -627,6 +627,13 @@ struct projector_t {
 };
 
 /**
+ * Returns true if the given point p resides in the triangle (a,b,c).
+ * Standard cartesian (flat earth) geometry is utilized.
+ */
+template <typename coord_t>
+bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p);
+
+/**
  * Convert the input units, in either imperial or metric, into meters.
  * @param   units_km_or_mi (kms or miles), to convert to meters
  * @param   true if input units are in metric, false if they're in imperial

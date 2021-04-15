@@ -1,12 +1,10 @@
 #include "midgard/polyline2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/point2.h"
-#include "midgard/pointll.h"
+#include "midgard/point_tile_index.h"
 #include "midgard/util.h"
 
-#include <iostream>
 #include <list>
-#include <unistd.h>
 
 namespace valhalla {
 namespace midgard {
@@ -45,6 +43,12 @@ typename coord_t::value_type Polyline2<coord_t>::Length(const container_t& pts) 
   return length;
 }
 
+/**
+ * Uses a brute-force O(n^2) technique to determine if there are any
+ * self-intersections.
+ * TODO: Use the TilePointIndex to make this faster.
+ * @return  T/F if there are self-intersections.
+ */
 template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfIntersections() {
   std::list<coord_t> intersections;
   std::vector<coord_t>& points = pts_;
@@ -66,221 +70,11 @@ template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfInters
   return intersections;
 }
 
-struct TileId {
-  unsigned int x, y;
-  friend bool operator==(const TileId& L, const TileId& R) {
-    return L.x == R.x && L.y == R.y;
-  }
-};
-
-struct TileId_hash_functor {
-  size_t operator()(const TileId& tid) const {
-#if 0
-    // In my tests this wasn't quite as fast as the simple impl below.
-    size_t seed = 0;
-    valhalla::midgard::hash_combine(seed, tid.x);
-    valhalla::midgard::hash_combine(seed, tid.y);
-    return seed;
-#endif
-    // I'll concede this could be an awful way to hash in mock
-    // scenarios. However, for real world data, its darn simple/fast.
-    return tid.x;
-  }
-};
-
-// Use the barycentric technique to test if the point p
-// is inside the triangle formed by (a, b, c).
-template <typename coord_t>
-bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p) {
-  double v0x = c.x() - a.x();
-  double v0y = c.y() - a.y();
-  double v1x = b.x() - a.x();
-  double v1y = b.y() - a.y();
-  double v2x = p.x() - a.x();
-  double v2y = p.y() - a.y();
-
-  double dot00 = v0x * v0x + v0y * v0y;
-  double dot01 = v0x * v1x + v0y * v1y;
-  double dot02 = v0x * v2x + v0y * v2y;
-  double dot11 = v1x * v1x + v1y * v1y;
-  double dot12 = v1x * v2x + v1y * v2y;
-
-  double denom = dot00 * dot11 - dot01 * dot01;
-
-  // Triangle with very small area, e.g., nearly a line.
-  if (std::fabs(denom) < 1e-20)
-    return false;
-
-  double u = (dot11 * dot02 - dot01 * dot12) / denom;
-  double v = (dot00 * dot12 - dot01 * dot02) / denom;
-
-  // Check if point is in triangle
-  return (u >= 0) && (v >= 0) && (u + v < 1);
-}
-
 /**
- * Indexes a given container_t of PointLL's into a tiled space.
- * (So yea, I'm using the word "tile" which is a heavily overloaded term.
- * Maybe "pixel" is a better term? Or "discretized space"?)
- *
- * Basically, I've taken the lat/lon ranges for the earth and subdivided them
- * into smaller and smaller rectangles until the rectangle is only just big
- * enough to meet the given tile_width_degrees.
- *
- * Then, in a single pass in the ::tile() method (O(n)), we compute each
- * PointLL's TileId - which is just a Cartesian coordinate into the tiled space.
- * We then place each PointLL into its appropriate TileId bin.
- *
- * Once all the points are binned we can quickly solve problems like "what
- * points are near me" - in effectively O(1) time (the speed of a hash
- * lookup).
- *
- * Of important note is the fact that to determine the "points nearest a
- * given point" you have to round up all points in all surrounding tiles.
- * You can subsequently compute the distance bewteen your point and each
- * "nearby" point using a more accurate distance computation.
+ * A Douglas-Peucker line simplification algorithm that will not generate
+ * self-intersections.
  */
-class PointTiler {
-  // key: TileId
-  // value: unordered_set of point indices that live in this tile
-  std::unordered_map<TileId, std::unordered_set<size_t>, TileId_hash_functor> tiled_space;
-
-  // How many sections the world's longitude (x) and latitude (y) are divided
-  // to satisfy the given tile_width_degrees.
-  unsigned int num_x_subdivisions;
-  unsigned int num_y_subdivisions;
-
-  inline TileId get_tile_id(const PointLL& pt) {
-    TileId tid;
-    tid.x = std::lround(num_x_subdivisions * ((pt.lng() + 180.0) / 360.0));
-    tid.y = std::lround(num_y_subdivisions * ((pt.lat() + 90.0) / 180.0));
-    return tid;
-  }
-
-public:
-  // when points are deleted from our polyline they become this "special" value
-  static const PointLL deleted_point;
-
-  // need random access to every point
-  std::vector<PointLL> polyline;
-
-  PointTiler(double tile_width_degrees);
-
-  template <class container_t> void tile(container_t& polyline);
-
-  void get_points_near(const PointLL& pt, std::unordered_set<size_t>& points);
-
-  void get_points_in_and_around_triangle(const PointLL& pta,
-                                         const PointLL& ptb,
-                                         const PointLL& ptc,
-                                         std::unordered_set<size_t>& points);
-
-  void get_points_along(const PointLL& pta,
-                        const PointLL& ptb,
-                        std::unordered_set<size_t>& points);
-
-#if 0
-  void get_points_along_line(const PointLL& pta,
-                             const PointLL& ptb,
-                             std::unordered_set<size_t>& near_pts);
-#endif
-
-  void remove_point(const size_t& idx);
-
-  // Removes points from the tile-index. This includes the points from sidx up to
-  // eidx but not including eidx.
-  void remove_points(const size_t& sidx, const size_t& eidx) {
-    for (size_t i = sidx; i < eidx; i++) {
-      remove_point(i);
-    }
-  }
-};
-
-// A "special" value that means "this point is deleted".
-const PointLL PointTiler::deleted_point = {1000.0, 1000.0};
-
-PointTiler::PointTiler(double tile_width_degrees) {
-  assert(tile_width_degrees <= 180.0);
-  assert(tile_width_degrees > 0.0);
-  int level = 1;
-  num_x_subdivisions = 1;
-  double degrees_at_level = 180.0;
-  constexpr double max_level = 32;
-  while ((degrees_at_level > tile_width_degrees) && (level <= max_level)) {
-    level++;
-    degrees_at_level /= 2.0;
-    num_x_subdivisions = num_x_subdivisions << 1;
-  }
-
-  // y's space is half that of x
-  num_y_subdivisions = num_x_subdivisions >> 1;
-}
-
-template <class container_t> void PointTiler::tile(container_t& polyline) {
-  this->polyline.reserve(polyline.size());
-  tiled_space.reserve(polyline.size());
-  size_t index = 0;
-  for (auto iter = polyline.begin(); iter != polyline.end(); iter++, index++) {
-    this->polyline.emplace_back(*iter);
-    TileId pid = get_tile_id(*iter);
-    auto map_iter = tiled_space.find(pid);
-    if (map_iter == tiled_space.end())
-      tiled_space.insert(std::pair<TileId, std::unordered_set<size_t>>{pid, {index}});
-    else
-      map_iter->second.insert(index);
-  }
-}
-
-void PointTiler::get_points_near(const PointLL& pt, std::unordered_set<size_t>& points) {
-  TileId pid = get_tile_id(pt);
-  // TODO: handle under/overflow
-  for (unsigned int x = pid.x - 1; x < pid.x + 1; x++) {
-    for (unsigned int y = pid.y - 1; y < pid.y + 1; y++) {
-      auto iter = tiled_space.find(TileId{x, y});
-      if (iter != tiled_space.end()) {
-        points.insert(iter->second.begin(), iter->second.end());
-      }
-    }
-  }
-}
-
-void PointTiler::get_points_along(const PointLL& pta,
-                                  const PointLL& ptb,
-                                  std::unordered_set<size_t>& points) {
-  TileId pida = get_tile_id(pta);
-  TileId pidb = get_tile_id(ptb);
-  unsigned int minx = std::min(pida.x, pidb.x);
-  unsigned int maxx = std::max(pida.x, pidb.x);
-  unsigned int miny = std::min(pida.y, pidb.y);
-  unsigned int maxy = std::max(pida.y, pidb.y);
-  // TODO: handle under/overflow
-  // TODO: follow line instead of just using a box
-  for (unsigned int x = minx - 1; x < maxx + 1; x++) {
-    for (unsigned int y = miny - 1; y < maxy + 1; y++) {
-      TileId tid{x, y};
-      auto iter = tiled_space.find(tid);
-      if (iter != tiled_space.end()) {
-        points.insert(iter->second.begin(), iter->second.end());
-      }
-    }
-  }
-}
-
-void PointTiler::remove_point(const size_t& idx) {
-  // delete this entry from its tile
-  auto iter = tiled_space.find(get_tile_id(polyline[idx]));
-  if (iter != tiled_space.end()) {
-    std::unordered_set<size_t>& pixel_points = iter->second;
-    pixel_points.erase(idx);
-  }
-
-  // don't actually delete from the vector, just mark as deleted
-  polyline[idx] = PointTiler::deleted_point;
-}
-
-
-template <class container_t>
-void peucker_avoid_self_intersections(PointTiler& point_tile_index,
+void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
                                       const double& epsilon_sq,
                                       const std::unordered_set<size_t>& exclusions,
                                       size_t sidx,
@@ -295,8 +89,8 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
   if (sidx >= eidx)
     return;
 
-  const PointLL& start = point_tile_index.polyline[sidx];
-  const PointLL& end = point_tile_index.polyline[eidx];
+  const PointLL& start = point_tile_index.points[sidx];
+  const PointLL& end = point_tile_index.points[eidx];
 
   double dmax = std::numeric_limits<double>::lowest();
   LineSegment2<PointLL> line_segment{start, end};
@@ -314,7 +108,7 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
       break;
     }
 
-    const PointLL& c = point_tile_index.polyline[idx];
+    const PointLL& c = point_tile_index.points[idx];
 
     // test if this is the highest frequency detail so far
     auto d = line_segment.DistanceSquared(c, tmp);
@@ -324,42 +118,51 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
     }
   }
 
-  // if (dmax < epsilon_sq) then we have a relatively straight line between (start,end).
+  // If (dmax < epsilon_sq) then we have a relatively straight line between (start,end).
+  // A standard Douglas-Peucker algorithm would immediately decimate all the points
+  // between (start,end). In this modified version, we use our tiled-point-space to
+  // determine if decimating the line would result in a self-intersection.
   //
-  // Using a tiled space to determine the points along the "epsilon buffer zone" of the
-  // line is coarse and will contain points both of interest and not. Remember, we want
-  // to determine if simplifying the line will cause a self-intersection. Consider this
-  // amazing ascii art example:
+  // We use our tiled space to determine the points along the "epsilon buffer zone" of
+  // the line (start,end). Because our tiled-point-space is coarse, our
+  // "get_points_near_segment" query will contain points both of interest and not.
+  // Consider this amazing ascii art example:
   //
-  //              i             k
-  //               \           /
-  //                \         /
-  //                 \       /
-  //                  \     /
+  //                i             k
+  //                 \           /
+  //                  \         /
+  //                   \       /
+  //                    \     /
   //   s - - - - - - - - - - - - - - - - - - - - - - - - - - - - e
-  //                    \ /
-  //                     j
-  //                       c
+  //     `  .             \ /                             `
+  //            `  .       j                 .
+  //                  `  c        `
   //
-  // s=start, e=end. c is a point along the polyline between s & e. It is within
-  // epsilon of (s, e) so we are considering simplifying (s,e) and getting rid of c.
-  // As you can see, however, a completely separate portion of our polygon (i, j, k)
-  // would self-intersect if we simplified. To detect this, we perform a triangle
+  // s=start, e=end. c is a point along the polyline between s & e. We are considering
+  // getting rid of c because it is within epsilon of (a,b).
+  //
+  // All the points shown in this hypothetical example are returned from the call to
+  // "get_points_near_segment".
+  //
+  // As you can see, a completely separate portion of our polygon (i, j, k) would
+  // self-intersect if we simplified. To detect this, we perform a triangle
   // containment test of point j using the triangle (s, c, e), see that its contained,
-  // and decide not to simplify. We create a triangle using every point c between start
-  // and end - and perform containment tests for "nearby" points for every triangle.
-  // We can stop as soon as we find an unexpected point inside a triangle.
+  // and decide not to simplify. While this example only has one point c, between
+  // (a,b), there is typically more than one. The logic below will create a triangle
+  // using every point c between start and end - and perform containment tests for all
+  // "nearby" points for every (start,c,end) triangle. We can stop as soon as we find
+  // an unexpected point inside our triangle.
   if (dmax < epsilon_sq) {
     // This returns the points in the "epsilon buffer zone" along the line (start, end).
     std::unordered_set<size_t> line_buffer_points;
-    point_tile_index.get_points_along(start, end, line_buffer_points);
+    point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end), line_buffer_points);
 
     bool can_simplify = true;
     for (size_t cidx = sidx + 1; (cidx < eidx) && can_simplify; cidx++) {
-      const PointLL& c = point_tile_index.polyline[cidx];
+      const PointLL& c = point_tile_index.points[cidx];
 
       for (size_t point_idx : line_buffer_points) {
-        if (!triangle_contains(start, c, end, point_tile_index.polyline[point_idx])) {
+        if (!triangle_contains(start, c, end, point_tile_index.points[point_idx])) {
           line_buffer_points.erase(point_idx);
         }
       }
@@ -388,24 +191,22 @@ void peucker_avoid_self_intersections(PointTiler& point_tile_index,
     }
   }
 
-  // there are some high frequency details between start and end so we need to
-  // look for flatter sections between them
+  // if (dmax >= epsilon_sq) there are some high frequency details between start
+  // and end so we need to look for flatter sections between them.
   if (dmax >= epsilon_sq) {
     // we recurse from right to left for two reasons:
     // 1. we want to preserve iterator validity in the vector version
     // 2. its the only way to preserve the indices in the keep set
     if (eidx - hfidx > 1)
-      peucker_avoid_self_intersections<container_t>(point_tile_index, epsilon_sq, exclusions, hfidx,
+      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, hfidx,
                                                     eidx);
     if (hfidx - sidx > 1)
-      peucker_avoid_self_intersections<container_t>(point_tile_index, epsilon_sq, exclusions, sidx,
+      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, sidx,
                                                     hfidx);
   }
 }
 
 long generalize_time;
-
-
 
 /**
  * Generalize the given list of points
@@ -425,21 +226,21 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
-  // Create a tiled-space spatial-index which allows us to conduct a peucker style
-  // line simplification that avoids creating self-intersections within the polyline/polygon.
+  // Create a tile-space-index which allows us to conduct a peucker style line
+  // simplification that avoids creating self-intersections within the polyline/polygon.
   const PointLL& first_point = *polyline.begin();
   double meters_per_deg = DistanceApproximator<PointLL>::MetersPerLngDegree(first_point.lat());
   double epsilon_in_deg = epsilon / meters_per_deg;
-  PointTiler point_tile_index(epsilon_in_deg);
+  PointTileIndex point_tile_index(epsilon_in_deg);
   point_tile_index.tile<container_t>(polyline);
 
-  peucker_avoid_self_intersections<container_t>(point_tile_index, epsilon * epsilon, exclusions, 0,
+  peucker_avoid_self_intersections(point_tile_index, epsilon * epsilon, exclusions, 0,
                                                 polyline.size() - 1);
 
   // copy the simplified polyline into 'polyline'
   polyline.clear();
-  for (const auto& pt : point_tile_index.polyline) {
-    if (pt != PointTiler::deleted_point) {
+  for (const auto& pt : point_tile_index.points) {
+    if (pt != PointTileIndex::deleted_point) {
       polyline.push_back(pt);
     }
   }
@@ -448,7 +249,6 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   generalize_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 }
-
 
 // Explicit instantiation
 template class Polyline2<PointXY<float>>;
