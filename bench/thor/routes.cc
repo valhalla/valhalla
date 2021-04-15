@@ -6,12 +6,13 @@
 
 #include "baldr/graphreader.h"
 #include "loki/search.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "sif/autocost.h"
 #include "sif/costfactory.h"
 #include "test.h"
-#include "thor/unidirectional_astar.h"
 #include "thor/bidirectional_astar.h"
+#include "thor/unidirectional_astar.h"
 #include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
@@ -93,30 +94,30 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_dir"}});
   config.put("mjolnir.tile_extract", "/Users/danpat/mapbox/data/planet_2021_03_27-03_00_00.tar");
 
-    /*
-      std::mt19937 gen(0); // Seed with the same value for consistent benchmarking
-      {
-        // Something to generate traffic with
-        std::uniform_real_distribution<> traffic_dist(0., 1.);
-        // This fraction of edges have live traffic
-        float has_live_traffic = 0.2;
+  /*
+    std::mt19937 gen(0); // Seed with the same value for consistent benchmarking
+    {
+      // Something to generate traffic with
+      std::uniform_real_distribution<> traffic_dist(0., 1.);
+      // This fraction of edges have live traffic
+      float has_live_traffic = 0.2;
 
-        // Make some updates to the traffic .tar file.
-        // Generate traffic data
-        std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-            generate_traffic = [&gen, &traffic_dist,
-                                &has_live_traffic](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                                   int index, baldr::TrafficSpeed* current) -> void {
-          baldr::GraphId tile_id(tile.header->tile_id);
-          if (traffic_dist(gen) < has_live_traffic) {
-            current->breakpoint1 = 255;
-            current->overall_speed = traffic_dist(gen) * 100;
-          } else {
-          }
-        };
-        test::customize_live_traffic_data(config, generate_traffic);
-      }
-      */
+      // Make some updates to the traffic .tar file.
+      // Generate traffic data
+      std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
+          generate_traffic = [&gen, &traffic_dist,
+                              &has_live_traffic](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                                 int index, baldr::TrafficSpeed* current) -> void {
+        baldr::GraphId tile_id(tile.header->tile_id);
+        if (traffic_dist(gen) < has_live_traffic) {
+          current->breakpoint1 = 255;
+          current->overall_speed = traffic_dist(gen) * 100;
+        } else {
+        }
+      };
+      test::customize_live_traffic_data(config, generate_traffic);
+    }
+    */
 
   auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
@@ -256,10 +257,33 @@ void customize_traffic(const boost::property_tree::ptree& config,
 
 BENCHMARK(BM_UtrechtBidirectionalAstar)->Unit(benchmark::kMillisecond);
 
+std::vector<valhalla::baldr::Location> global_locations =
+    {midgard::PointLL{-8.336801, 33.286377},  midgard::PointLL{5.872467, 50.575802},
+     midgard::PointLL{11.524066, 3.862927},   midgard::PointLL{30.490564, -22.948921},
+     midgard::PointLL{21.407406, 12.212897},  midgard::PointLL{21.408346, 12.209968},
+     midgard::PointLL{17.784868, 44.147346},  midgard::PointLL{15.582961, 45.906693},
+     midgard::PointLL{8.685453, 39.226093},   midgard::PointLL{2.142843, 52.584072},
+     midgard::PointLL{16.960527, 52.423416},  midgard::PointLL{18.670666, 54.35183},
+     midgard::PointLL{85.840378, 12.75919},   midgard::PointLL{84.008522, 9.926284},
+     midgard::PointLL{20.597891, 41.602592},  midgard::PointLL{20.880438, 41.886894},
+     midgard::PointLL{8.057651, 52.261757},   midgard::PointLL{6.309168, 49.66972},
+     midgard::PointLL{37.617016, 55.746685},  midgard::PointLL{37.623234, 55.746956},
+     midgard::PointLL{66.781364, 10.485166},  midgard::PointLL{68.890945, 10.163307},
+     midgard::PointLL{13.961927, 15.293241},  midgard::PointLL{13.967668, 15.293},
+     midgard::PointLL{4.126567, 51.035511},   midgard::PointLL{5.887219, 49.531387},
+     midgard::PointLL{9.22713, 49.130718},    midgard::PointLL{11.066673, 49.452415},
+     midgard::PointLL{95.504768, 18.474234},  midgard::PointLL{95.494049, 18.483744},
+     midgard::PointLL{135.590393, 34.623756}, midgard::PointLL{135.521576, 34.759117},
+     midgard::PointLL{3.953196, 36.537201},   midgard::PointLL{3.178043, 36.726479},
+     midgard::PointLL{35.160679, 32.520855},  midgard::PointLL{35.766632, 32.706535},
+     midgard::PointLL{1.74563, 53.791374},    midgard::PointLL{2.110271, 53.535301},
+     midgard::PointLL{21.016792, 41.08852},   midgard::PointLL{21.020342, 41.080669}};
+
 template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
 
   if (planet_path.empty()) {
-    state.SkipWithError("No planet file specified, please supply --planet-path=X on the command line");
+    state.SkipWithError(
+        "No planet file specified, please supply --planet-path=X on the command line");
     return;
   }
 
@@ -270,59 +294,14 @@ template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
 
   auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
-  std::vector<valhalla::baldr::Location> locations;
-
   Options options;
   create_costing_options(options);
   sif::TravelMode mode;
   auto costs = sif::CostFactory().CreateModeCosting(options, mode);
   auto cost = costs[static_cast<size_t>(mode)];
 
-  // Some random coordinates taken from the top of test_requests/random_routes.txt
-
-  locations.emplace_back(midgard::PointLL{-8.336801, 33.286377});
-  locations.emplace_back(midgard::PointLL{5.872467, 50.575802});
-  locations.emplace_back(midgard::PointLL{11.524066, 3.862927});
-  locations.emplace_back(midgard::PointLL{30.490564, -22.948921});
-  locations.emplace_back(midgard::PointLL{21.407406, 12.212897});
-  locations.emplace_back(midgard::PointLL{21.408346, 12.209968});
-  locations.emplace_back(midgard::PointLL{17.784868, 44.147346});
-  /*
-    // Uncomment for more random routes...
-  locations.emplace_back(midgard::PointLL{15.582961, 45.906693});
-  locations.emplace_back(midgard::PointLL{8.685453, 39.226093});
-  locations.emplace_back(midgard::PointLL{2.142843, 52.584072});
-  locations.emplace_back(midgard::PointLL{16.960527, 52.423416});
-  locations.emplace_back(midgard::PointLL{18.670666, 54.35183});
-  locations.emplace_back(midgard::PointLL{85.840378, 12.75919});
-  locations.emplace_back(midgard::PointLL{84.008522, 9.926284});
-  locations.emplace_back(midgard::PointLL{20.597891, 41.602592});
-  locations.emplace_back(midgard::PointLL{20.880438, 41.886894});
-  locations.emplace_back(midgard::PointLL{8.057651, 52.261757});
-  locations.emplace_back(midgard::PointLL{6.309168, 49.66972});
-  locations.emplace_back(midgard::PointLL{37.617016, 55.746685});
-  locations.emplace_back(midgard::PointLL{37.623234, 55.746956});
-  locations.emplace_back(midgard::PointLL{66.781364, 10.485166});
-  locations.emplace_back(midgard::PointLL{68.890945, 10.163307});
-  locations.emplace_back(midgard::PointLL{13.961927, 15.293241});
-  locations.emplace_back(midgard::PointLL{13.967668, 15.293});
-  locations.emplace_back(midgard::PointLL{4.126567, 51.035511});
-  locations.emplace_back(midgard::PointLL{5.887219, 49.531387});
-  locations.emplace_back(midgard::PointLL{9.22713, 49.130718});
-  locations.emplace_back(midgard::PointLL{11.066673, 49.452415});
-  locations.emplace_back(midgard::PointLL{95.504768, 18.474234});
-  locations.emplace_back(midgard::PointLL{95.494049, 18.483744});
-  locations.emplace_back(midgard::PointLL{135.590393, 34.623756});
-  locations.emplace_back(midgard::PointLL{135.521576, 34.759117});
-  locations.emplace_back(midgard::PointLL{3.953196, 36.537201});
-  locations.emplace_back(midgard::PointLL{3.178043, 36.726479});
-  locations.emplace_back(midgard::PointLL{35.160679, 32.520855});
-  locations.emplace_back(midgard::PointLL{35.766632, 32.706535});
-  locations.emplace_back(midgard::PointLL{1.74563, 53.791374});
-  locations.emplace_back(midgard::PointLL{2.110271, 53.535301});
-  locations.emplace_back(midgard::PointLL{21.016792, 41.08852});
-  locations.emplace_back(midgard::PointLL{21.020342, 41.080669});
-  */
+  std::vector<valhalla::baldr::Location> locations(global_locations.begin() + state.range(0),
+                                                   global_locations.begin() + state.range(0) + 2);
 
   const auto projections = loki::Search(locations, *clean_reader, cost);
   if (projections.size() == 0) {
@@ -356,27 +335,45 @@ template <class Algorithm> void BM_GlobalFixedRandom(benchmark::State& state) {
     throw std::runtime_error("No origins available for test");
   }
 
-  std::size_t route_size = 0;
+  std::size_t route_count = 0;
 
   Algorithm algorithm;
-  for (auto _ : state) {
-    for (int i = 0; i < origins.size(); ++i) {
-      // LOG_WARN("Running index "+std::to_string(i));
-      auto result = algorithm.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
-                                      sif::TravelMode::kDrive);
-      algorithm.Clear();
-      route_size += 1;
+  {
+    // Do it once to warmup
+    auto result = algorithm.GetBestPath(origins.front(), destinations.front(), *clean_reader, costs,
+                                        sif::TravelMode::kDrive);
+    std::string coords = std::to_string(locations[0].latlng_.lng()) + "," +
+                         std::to_string(locations[0].latlng_.lat()) + " -> " +
+                         std::to_string(locations[1].latlng_.lng()) + "," +
+                         std::to_string(locations[1].latlng_.lat());
+    if (result.empty() || result.front().empty()) {
+      state.SkipWithError(std::string("Route " + coords + " returned no result").c_str());
+      return;
     }
+    algorithm.Clear();
+    // std::cout << coords << " = route eta of "
+    //          << std::to_string(result.back().back().elapsed_cost.secs) << " seconds" << std::endl;
   }
-  if (route_size == 0) {
+  for (auto _ : state) {
+    auto result = algorithm.GetBestPath(origins.front(), destinations.front(), *clean_reader, costs,
+                                        sif::TravelMode::kDrive);
+    algorithm.Clear();
+    ++route_count;
+  }
+  if (route_count == 0) {
     throw std::runtime_error("Failed all routes");
   }
-  state.counters["Routes"] = route_size;
 }
 
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepForward)->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepReverse)->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::BidirectionalAStar)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepForward)
+    ->Unit(benchmark::kMillisecond)
+    ->DenseRange(0, 6);
+BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::TimeDepReverse)
+    ->Unit(benchmark::kMillisecond)
+    ->DenseRange(0, 6);
+BENCHMARK_TEMPLATE(BM_GlobalFixedRandom, thor::BidirectionalAStar)
+    ->Unit(benchmark::kMillisecond)
+    ->DenseRange(0, 6);
 
 /** Benchmarks the GetSpeed function */
 static void BM_GetSpeed(benchmark::State& state) {
@@ -455,6 +452,9 @@ BENCHMARK(BM_Sif_Allowed)->Unit(benchmark::kNanosecond);
 } // namespace
 
 int main(int argc, char** argv) {
+
+  logging::Configure({{"type", ""}});
+
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]).find("--planet-path=") != std::string::npos) {
       planet_path = std::string(argv[i]).substr(strlen("--planet-path="));
