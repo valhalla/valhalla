@@ -42,6 +42,7 @@
    * FIXED: Fix for unique-summary logic [#2996](https://github.com/valhalla/valhalla/pull/2996)
    * FIXED: Isochrone: handle origin edges properly [#2990](https://github.com/valhalla/valhalla/pull/2990)
    * FIXED: Annotations fail with returning NaN speed when the same point is duplicated in route geometry [#2992](https://github.com/valhalla/valhalla/pull/2992)
+   * FIXED: Fix run_with_server.py to work on macOS [#3003](https://github.com/valhalla/valhalla/pull/3003)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
