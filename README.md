@@ -122,7 +122,6 @@ To install valhalla on macOS, you need to install its dependencies with [Homebre
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
 brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -204,7 +203,7 @@ C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 ```
 3. Run the build for all targets.
 ```
-cd C:\path\to\project 
+cd C:\path\to\project
 cmake -B build .
 ```
 
@@ -291,7 +290,7 @@ valhalla_service valhalla.json isochrone '{"locations":[{"lat":42.552448,"lon":1
 valhalla_service valhalla.json isochrone isochrone_request.txt
 ```
 
-It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file. 
+It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file.
 
 
 ### Batch Script Tool
