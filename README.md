@@ -38,6 +38,22 @@ There are several key features that we hope can differentiate the Valhalla proje
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
 
+## Platform Compatibility
+
+Valhalla is fully functional on many Linux and Mac OS distributions.
+
+Support for Windows is not yet fully exploited. Building the Valhalla library works flawlessly, as well as the following application modules:
+
+- `TOOLS`: utilities to query and benchmark various components
+- `DATA_TOOLS`: utilities to build input data and handle transit
+- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
+
+Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
+- no/falsy time-dependent routing
+- no border-crossing penalties
+- driving side will be off in LHT countries
+- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
+
 ## Organization
 
 The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
@@ -178,12 +194,6 @@ ccmake ..
 For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 ### Building from Source - Windows
-
-Support for Windows is not yet fully exploited. Building the Valhalla library works flawlessly, as well as the following application modules:
-
-- `TOOLS`: utilities to query and benchmark various components
-- `DATA_TOOLS`: utilities to build input data and handle transit
-- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full Python distribution in the `PATH`)
 
 It's recommended to work with the following toolset:
 - Visual Studio with C++ support
