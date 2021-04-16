@@ -662,7 +662,6 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  TimeDepForward astar(pt.get_child("thor"));
   BidirectionalAStar bd(pt.get_child("thor"));
   MultiModalPathAlgorithm mm(pt.get_child("thor"));
   TimeDepForward timedep_forward(pt.get_child("thor"));
@@ -697,14 +696,13 @@ int main(int argc, char* argv[]) {
           for (auto& edge2 : dest.path_edges()) {
             if (edge1.graph_id() == edge2.graph_id() ||
                 reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
-              pathalgorithm = &astar;
+              pathalgorithm = &timedep_forward;
             }
           }
         }
       }
     }
-    bool using_astar = (pathalgorithm == &astar || pathalgorithm == &timedep_forward ||
-                        pathalgorithm == &timedep_reverse);
+    bool using_astar = (pathalgorithm == &timedep_forward || pathalgorithm == &timedep_reverse);
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path
