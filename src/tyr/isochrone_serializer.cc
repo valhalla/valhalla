@@ -31,9 +31,9 @@ template <typename coord_t> int self_intersects(const std::vector<coord_t>& poin
       coord_t intersection_point;
       if (segmenti.Intersect(segmentj, intersection_point)) {
         num_self_intersections++;
-        printf("Intersection:\n");
-        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
-        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
+//        printf("Intersection:\n");
+//        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
+//        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
       }
     }
   }
@@ -187,6 +187,7 @@ std::string serializeIsochrones(const Api& request,
 
   std::stringstream ss;
   ss << *feature_collection;
+
   return ss.str();
 }
 } // namespace tyr

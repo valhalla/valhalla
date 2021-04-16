@@ -74,6 +74,7 @@ template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfInters
  * A Douglas-Peucker line simplification algorithm that will not generate
  * self-intersections.
  */
+template <typename coord_t>
 void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
                                       const double& epsilon_sq,
                                       const std::unordered_set<size_t>& exclusions,
@@ -93,13 +94,13 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
   const PointLL& end = point_tile_index.points[eidx];
 
   double dmax = std::numeric_limits<double>::lowest();
-  LineSegment2<PointLL> line_segment{start, end};
+  LineSegment2<coord_t> line_segment{start, end};
 
   // hfidx is the index of the highest freq detail (the dividing point)
   size_t hfidx = sidx;
 
   // find the point furthest from the line-segment formed by {start, end}
-  PointLL tmp;
+  coord_t tmp;
   for (size_t idx = sidx + 1; idx < eidx; idx++) {
     // special points we dont want to generalize no matter what take precedence
     if (exclusions.find(idx) != exclusions.end()) {
@@ -108,7 +109,7 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
       break;
     }
 
-    const PointLL& c = point_tile_index.points[idx];
+    const coord_t& c = point_tile_index.points[idx];
 
     // test if this is the highest frequency detail so far
     auto d = line_segment.DistanceSquared(c, tmp);
@@ -147,9 +148,9 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
   // As you can see, a completely separate portion of our polygon (i, j, k) would
   // self-intersect if we simplified. To detect this, we perform a triangle
   // containment test of point j using the triangle (s, c, e), see that its contained,
-  // and decide not to simplify. While this example only has one point c, between
+  // and decide not to simplify. While this example only has one point c between
   // (a,b), there is typically more than one. The logic below will create a triangle
-  // using every point c between start and end - and perform containment tests for all
+  // using every point c between start and end and perform containment tests for all
   // "nearby" points for every (start,c,end) triangle. We can stop as soon as we find
   // an unexpected point inside our triangle.
   if (dmax < epsilon_sq) {
@@ -157,27 +158,37 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
     std::unordered_set<size_t> line_buffer_points;
     point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end), line_buffer_points);
 
+    // We only care about checking for triangle containment for points that are not
+    // along the polyline [start,end] - so we can remove those straightaway.
+    for (size_t i = sidx; i <= eidx; i++) {
+      line_buffer_points.erase(i);
+    }
+
     bool can_simplify = true;
     for (size_t cidx = sidx + 1; (cidx < eidx) && can_simplify; cidx++) {
       const PointLL& c = point_tile_index.points[cidx];
 
       for (size_t point_idx : line_buffer_points) {
-        if (!triangle_contains(start, c, end, point_tile_index.points[point_idx])) {
-          line_buffer_points.erase(point_idx);
+        const PointLL& p = point_tile_index.points[point_idx];
+        if (triangle_contains(start, c, end, p)) {
+          can_simplify = false;
+#if 0
+          printf("------------------------------\n");
+          printf("Avoiding self-intersection:\n");
+          printf("sidx: %lu, s: %.6f, %.6f\n", sidx, start.lat(), start.lng());
+          printf("eidx: %lu, e: %.6f, %.6f\n", eidx, end.lat(), end.lng());
+          printf("cidx: %lu, c: %.6f, %.6f\n", cidx, c.lat(), c.lng());
+          printf("pidx: %lu, p: %.6f, %.6f\n", point_idx, p.lat(), p.lng());
+          triangle_contains(start, c, end, p);
+#endif
+          break;
         }
       }
 
-      // Disregard points that are along the polyline [start,end].
-      for (size_t i = sidx; i <= eidx; i++) {
-        line_buffer_points.erase(i);
-      }
-
-      // If no points remain within the triangle, we can simplify this line
-      can_simplify = line_buffer_points.empty();
-
       // the moment we realize we cannot simplify we can stop
-      if (!can_simplify)
+      if (!can_simplify) {
         break;
+      }
     }
 
     if (can_simplify) {
@@ -198,52 +209,127 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
     // 1. we want to preserve iterator validity in the vector version
     // 2. its the only way to preserve the indices in the keep set
     if (eidx - hfidx > 1)
-      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, hfidx,
+      peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_sq, exclusions, hfidx,
                                                     eidx);
     if (hfidx - sidx > 1)
-      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, sidx,
+      peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_sq, exclusions, sidx,
                                                     hfidx);
+  }
+  else {
+    point_tile_index.remove_points(sidx + 1, eidx);
   }
 }
 
 long generalize_time;
+long num_polygon_edges;
 
-/**
- * Generalize the given list of points
- *
- * @param polyline    the list of points
- * @param epsilon     the tolerance used in removing points
- * @param exclusions  list of indices of points not to generalize
- */
-template <typename coord_t>
-template <class container_t>
-void Polyline2<coord_t>::Generalize(container_t& polyline,
-                                    typename coord_t::value_type epsilon,
-                                    const std::unordered_set<size_t>& exclusions) {
-  // any epsilon this low will have no effect on the input nor will any super short input
-  if (epsilon <= 0 || polyline.size() < 3)
-    return;
-
-  auto start_time = std::chrono::high_resolution_clock::now();
-
-  // Create a tile-space-index which allows us to conduct a peucker style line
+template <class coord_t, class container_t>
+void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
+                                          typename coord_t::value_type epsilon_m,
+                                          const std::unordered_set<size_t>& exclusions) {
+  // Create a tile-space-index which allows us to perform a Douglas-Peucker style line
   // simplification that avoids creating self-intersections within the polyline/polygon.
   const PointLL& first_point = *polyline.begin();
   double meters_per_deg = DistanceApproximator<PointLL>::MetersPerLngDegree(first_point.lat());
-  double epsilon_in_deg = epsilon / meters_per_deg;
-  PointTileIndex point_tile_index(epsilon_in_deg);
+  double epsilon_deg = epsilon_m / meters_per_deg;
+  PointTileIndex point_tile_index(epsilon_deg);
   point_tile_index.tile<container_t>(polyline);
 
-  peucker_avoid_self_intersections(point_tile_index, epsilon * epsilon, exclusions, 0,
-                                                polyline.size() - 1);
+  peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_m * epsilon_m, exclusions, 0,
+                                            polyline.size() - 1);
 
-  // copy the simplified polyline into 'polyline'
+  // copy the simplified 'points' into 'polyline'
   polyline.clear();
   for (const auto& pt : point_tile_index.points) {
     if (pt != PointTileIndex::deleted_point) {
       polyline.push_back(pt);
     }
   }
+}
+
+template <class coord_t, class container_t>
+void DouglasPeucker(container_t& polyline,
+                    typename coord_t::value_type epsilon,
+                    const std::unordered_set<size_t>& indices) {
+  // any epsilon this low will have no effect on the input nor will any super short input
+  if (epsilon <= 0 || polyline.size() < 3)
+    return;
+
+  // the recursive bit
+  epsilon *= epsilon;
+  std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
+      peucker;
+  peucker = [&peucker, &polyline, epsilon, &indices](typename container_t::iterator start, size_t s,
+                                                     typename container_t::iterator end, size_t e) {
+    // find the point furthest from the line
+    typename coord_t::value_type dmax = std::numeric_limits<typename coord_t::value_type>::lowest();
+    typename container_t::iterator itr;
+    LineSegment2<coord_t> l{*start, *end};
+    size_t j = e - 1, k;
+    coord_t tmp;
+    for (auto i = std::prev(end); i != start; --i, --j) {
+      // special points we dont want to generalize no matter what take precidence
+      if (indices.find(j) != indices.end()) {
+        itr = i;
+        dmax = epsilon;
+        k = j;
+        break;
+      }
+
+      // if this is the highest frequency detail so far
+      auto d = l.DistanceSquared(*i, tmp);
+      if (d > dmax) {
+        itr = i;
+        dmax = d;
+        k = j;
+      }
+    }
+
+    // there are some high frequency details between start and end
+    // so we need to look for flatter sections between them
+    if (dmax >= epsilon) {
+      // we recurse from right to left for two reasons:
+      // 1. we want to preserve iterator validity in the vector version
+      // 2. its the only way to preserve the indices in the keep set
+      if (e - k > 1)
+        peucker(itr, k, end, e);
+      if (k - s > 1)
+        peucker(start, s, itr, k);
+    } // nothing sticks out between start and end so simplify everything between away
+    else
+      polyline.erase(std::next(start), end);
+  };
+
+  // recurse!
+  peucker(polyline.begin(), 0, std::prev(polyline.end()), polyline.size() - 1);
+}
+
+/**
+ * Generalize the given list of points
+ *
+ * @param polyline    the list of points
+ * @param epsilon     the tolerance (in meters) used in removing points
+ * @param exclusions  list of indices of points not to generalize
+ */
+template <typename coord_t>
+template <class container_t>
+void Polyline2<coord_t>::Generalize(container_t& polyline,
+                                    typename coord_t::value_type epsilon_m,
+                                    const std::unordered_set<size_t>& exclusions,
+                                    bool avoid_self_intersection) {
+  // any epsilon this low will have no effect on the input nor will any super short input
+  if (epsilon_m <= 0 || polyline.size() < 3)
+    return;
+
+  num_polygon_edges = polyline.size();
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  //if (false)
+  if (avoid_self_intersection)
+    DouglastPeuckerAvoidSelfIntersection<coord_t>(polyline, epsilon_m, exclusions);
+  else
+    DouglasPeucker<coord_t>(polyline, epsilon_m, exclusions);
 
   auto end_time = std::chrono::high_resolution_clock::now();
   generalize_time =
@@ -267,28 +353,36 @@ template double Polyline2<GeoPoint<double>>::Length(const std::list<GeoPoint<dou
 
 template void Polyline2<PointXY<float>>::Generalize(std::vector<PointXY<float>>&,
                                                     float,
-                                                    const std::unordered_set<size_t>&);
+                                                    const std::unordered_set<size_t>&,
+                                                    bool);
 template void Polyline2<PointXY<double>>::Generalize(std::vector<PointXY<double>>&,
                                                      double,
-                                                     const std::unordered_set<size_t>&);
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
 template void Polyline2<PointXY<float>>::Generalize(std::list<PointXY<float>>&,
                                                     float,
-                                                    const std::unordered_set<size_t>&);
+                                                    const std::unordered_set<size_t>&,
+                                                    bool);
 template void Polyline2<PointXY<double>>::Generalize(std::list<PointXY<double>>&,
                                                      double,
-                                                     const std::unordered_set<size_t>&);
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
 template void Polyline2<GeoPoint<float>>::Generalize(std::vector<GeoPoint<float>>&,
                                                      float,
-                                                     const std::unordered_set<size_t>&);
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
 template void Polyline2<GeoPoint<double>>::Generalize(std::vector<GeoPoint<double>>&,
                                                       double,
-                                                      const std::unordered_set<size_t>&);
+                                                      const std::unordered_set<size_t>&,
+                                                      bool);
 template void Polyline2<GeoPoint<float>>::Generalize(std::list<GeoPoint<float>>&,
                                                      float,
-                                                     const std::unordered_set<size_t>&);
+                                                     const std::unordered_set<size_t>&,
+                                                     bool);
 template void Polyline2<GeoPoint<double>>::Generalize(std::list<GeoPoint<double>>&,
                                                       double,
-                                                      const std::unordered_set<size_t>&);
+                                                      const std::unordered_set<size_t>&,
+                                                      bool);
 
 } // namespace midgard
 } // namespace valhalla

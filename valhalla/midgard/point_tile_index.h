@@ -44,6 +44,21 @@ class PointTileIndex {
     }
   };
 
+  // prev/next "iterators" to ensure we stay on the tiled-space when
+  // we might otherwise underflow/overflow.
+  uint32_t prevx(uint32_t x) {
+    return (x > 0) ? x-1 : num_x_subdivisions-1;
+  }
+  uint32_t nextx(uint32_t x) {
+    return (x < num_x_subdivisions-1) ? x+1 : 0;
+  }
+  uint32_t prevy(uint32_t y) {
+    return (y > 0) ? y-1 : num_y_subdivisions-1;
+  }
+  uint32_t nexty(uint32_t y) {
+    return (y < num_y_subdivisions-1) ? y+1 : 0;
+  }
+
   struct TileId_hash_functor {
     size_t operator()(const TileId& tid) const {
 #if 0
@@ -68,10 +83,13 @@ class PointTileIndex {
   uint32_t num_x_subdivisions;
   uint32_t num_y_subdivisions;
 
+  static constexpr double max_x_range = 360.0;  // -180 to 180
+  static constexpr double max_y_range = 180.0;  // -90 to 90
+
   inline TileId get_tile_id(const PointLL& pt) {
     TileId tid;
-    tid.x = std::lround(num_x_subdivisions * ((pt.lng() + 180.0) / 360.0));
-    tid.y = std::lround(num_y_subdivisions * ((pt.lat() + 90.0) / 180.0));
+    tid.x = std::lround(num_x_subdivisions * ((pt.lng() + max_x_range/2.0) / max_x_range));
+    tid.y = std::lround(num_y_subdivisions * ((pt.lat() + max_y_range/2.0) / max_y_range));
     return tid;
   }
 

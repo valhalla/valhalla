@@ -479,14 +479,23 @@ bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, con
   double denom = dot00 * dot11 - dot01 * dot01;
 
   // Triangle with very small area, e.g., nearly a line.
+  // This seemingly very small tolerance is reasonable if you
+  // consider that these are deltas of squared deltas from lat/lon's
+  // that might be close. Derived empirically during the development
+  // of the non-intersecting douglas-peucker logic in ::Normalize.
   if (std::fabs(denom) < 1e-20)
     return false;
 
   double u = (dot11 * dot02 - dot01 * dot12) / denom;
   double v = (dot00 * dot12 - dot01 * dot02) / denom;
 
+  // if u & v are very close to 0 (or exactly 0), that means the input
+  // point p is (very nearly) the same as one of the triangle's vertices.
+  // For the algorithm I'm using, that's okay - so I'm adding a slight
+  // tolerance check here.
+
   // Check if point is in triangle
-  return (u >= 0) && (v >= 0) && (u + v < 1);
+  return (u >= 1e-16) && (v >= 1e-16) && (u + v < 1);
 }
 
 template bool triangle_contains(const PointXY<float>& a, const PointXY<float>& b,

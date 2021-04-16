@@ -8,8 +8,6 @@ namespace midgard {
 const PointLL PointTileIndex::deleted_point = {1000.0, 1000.0};
 
 PointTileIndex::PointTileIndex(double tile_width_degrees) {
-  assert(tile_width_degrees <= 180.0);
-  assert(tile_width_degrees > 0.0);
   int level = 1;
   num_x_subdivisions = 1;
   double degrees_at_level = 180.0;
@@ -42,9 +40,12 @@ template <class container_t> void PointTileIndex::tile(const container_t& polyli
 
 void PointTileIndex::get_points_near(const PointLL& pt, std::unordered_set<size_t>& points) {
   TileId pid = get_tile_id(pt);
-  // TODO: handle under/overflow
-  for (uint32_t x = pid.x - 1; x < pid.x + 1; x++) {
-    for (uint32_t y = pid.y - 1; y < pid.y + 1; y++) {
+  uint32_t px = prevx(pid.x);
+  uint32_t nx = nextx(pid.x);
+  uint32_t py = prevy(pid.y);
+  uint32_t ny = nexty(pid.y);
+  for (uint32_t x = px; x != nx; x = nextx(x)) {
+    for (uint32_t y = py; y != ny; y = nexty(y)) {
       auto iter = tiled_space.find(TileId{x, y});
       if (iter != tiled_space.end()) {
         points.insert(iter->second.begin(), iter->second.end());
@@ -57,14 +58,18 @@ void PointTileIndex::get_points_near_segment(const LineSegment2<PointLL>& seg,
                                              std::unordered_set<size_t>& points) {
   TileId pida = get_tile_id(seg.a());
   TileId pidb = get_tile_id(seg.b());
-  uint32_t minx = std::min(pida.x, pidb.x);
-  uint32_t maxx = std::max(pida.x, pidb.x);
-  uint32_t miny = std::min(pida.y, pidb.y);
-  uint32_t maxy = std::max(pida.y, pidb.y);
-  // TODO: handle under/overflow
-  // TODO: follow line instead of just using a box
-  for (uint32_t x = minx - 1; x < maxx + 1; x++) {
-    for (uint32_t y = miny - 1; y < maxy + 1; y++) {
+
+  uint32_t px = prevx(std::min(pida.x, pidb.x));
+  uint32_t nx = nextx(nextx(std::max(pida.x, pidb.x)));
+  uint32_t py = prevy(std::min(pida.y, pidb.y));
+  uint32_t ny = nexty(nexty(std::max(pida.y, pidb.y)));
+
+  for (uint32_t x = px; x != nx; x = nextx(x)) {
+    int a = 4;
+  }
+
+    for (uint32_t x = px; x != nx; x = nextx(x)) {
+    for (uint32_t y = py; y != ny; y = nexty(y)) {
       TileId tid{x, y};
       auto iter = tiled_space.find(tid);
       if (iter != tiled_space.end()) {

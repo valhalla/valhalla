@@ -17,6 +17,7 @@ namespace valhalla {
 namespace midgard {
 
 extern long generalize_time;
+extern long num_polygon_edges;
 
 // A special generalization value indicating that the application should
 // compute an optimal generalization factor when creating contours.
@@ -92,6 +93,7 @@ public:
                               const bool rings_only = false,
                               const float denoise = 1.f,
                               const float generalize = 200.f) const {
+    printf("==========================================\n");
     // sort the contours first on the metric index then on the values with the bigger contours first
     std::sort(intervals.begin(), intervals.end(), std::greater<>());
 
@@ -392,11 +394,13 @@ public:
       }
       // clean up the lines
       long total_generalize_time = 0;
+      long total_polygon_edges = 0;
       for (auto& line : contour) {
         // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          Polyline2<PointLL>::Generalize(line, gen_factor, {});
+          Polyline2<PointLL>::Generalize(line, gen_factor, {}, /* avoid_self_intersections */ true);
           total_generalize_time += generalize_time;
+          total_polygon_edges += num_polygon_edges;
         }
         // if this ends up as an inner we'll undo this later
         if (cache[&line] > 0) {
@@ -410,6 +414,7 @@ public:
       }
 
       printf("Generalize time: %ld ms\n", total_generalize_time);
+      printf("Num input polygon edges: %ld\n", total_polygon_edges);
 
       // if they just wanted linestrings we need only one per feature
       if (!rings_only) {

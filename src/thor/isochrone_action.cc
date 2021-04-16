@@ -45,15 +45,15 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto isolines =
       grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
 
-  // make the final json
-  std::string ret = tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
-                                             options.show_locations());
-
   auto end_time = std::chrono::high_resolution_clock::now();
   uint32_t total_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
   printf("Total time: %d ms\n", total_time);
+
+  // make the final json
+  std::string ret = tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
+                                             options.show_locations());
 
   return ret;
 }

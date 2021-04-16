@@ -91,14 +91,16 @@ public:
    * Generalize this polyline.
    * @param   t         Generalization tolerance.
    * @param   indices   List of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    * @return  returns the number of points in the generalized polyline.
    */
   uint32_t Generalize(const typename coord_t::value_type t,
-                      const std::unordered_set<size_t>& indices = {}) {
+                      const std::unordered_set<size_t>& indices = {},
+                      bool avoid_self_intersection = false) {
     // Create a vector for the output shape. Recursively call Douglass-Peucker
     // method to generalize the polyline. Square the error tolerance to avoid
     // sqrts.
-    Generalize(pts_, t, indices);
+    Generalize(pts_, t, indices, avoid_self_intersection);
     return pts_.size();
   }
 
@@ -107,14 +109,16 @@ public:
    * unchanged.
    * @param    t   Generalization tolerance.
    * @param    indices   List of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    * @return   returns the generalized polyline.
    */
   Polyline2 GeneralizedPolyline(const typename coord_t::value_type t,
-                                const std::unordered_set<size_t>& indices = {}) {
+                                const std::unordered_set<size_t>& indices = {},
+                                bool avoid_self_intersection = false) {
     // Recursively call Douglass-Peucker method to generalize the polyline.
     // Square the error tolerance to avoid sqrts.
     Polyline2 generalized(pts_);
-    generalized.Generalize(t, indices);
+    generalized.Generalize(t, indices, avoid_self_intersection);
     return generalized;
   }
 
@@ -124,11 +128,13 @@ public:
    * @param polyline    the list of points
    * @param epsilon     the tolerance used in removing points
    * @param  indices    list of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    */
   template <class container_t>
   static void Generalize(container_t& polyline,
                          typename coord_t::value_type epsilon,
-                         const std::unordered_set<size_t>& indices = {});
+                         const std::unordered_set<size_t>& indices = {},
+                         bool avoid_self_intersection = false);
 
   /**
    * Clip this polyline to the specified bounding box.
