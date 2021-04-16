@@ -662,11 +662,11 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  TimeDepForward astar;
-  BidirectionalAStar bd;
-  MultiModalPathAlgorithm mm;
-  TimeDepForward timedep_forward;
-  TimeDepReverse timedep_reverse;
+  TimeDepForward astar(pt.get_child("thor"));
+  BidirectionalAStar bd(pt.get_child("thor"));
+  MultiModalPathAlgorithm mm(pt.get_child("thor"));
+  TimeDepForward timedep_forward(pt.get_child("thor"));
+  TimeDepReverse timedep_reverse(pt.get_child("thor"));
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);
