@@ -131,7 +131,7 @@ jobs:
       - run: |
           # Note: run (compile) tests and make code coverage report.
           make -C build -j4 coverage
-      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+      - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
     docker:
