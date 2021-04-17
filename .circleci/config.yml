@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake ccache libtool python boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
 
 jobs:
   build-docker-images:
