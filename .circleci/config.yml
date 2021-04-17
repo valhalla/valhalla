@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake ccache libtool python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
 
 jobs:
   build-docker-images:
@@ -186,7 +186,7 @@ jobs:
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: cd build && cmake ..
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
