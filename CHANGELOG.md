@@ -89,7 +89,6 @@
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
    * CHANGED: ci: Skip Win CI runs for irrelevant files [#3014](https://github.com/valhalla/valhalla/pull/3014)
-   
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
