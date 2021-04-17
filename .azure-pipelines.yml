@@ -4,6 +4,21 @@
 #       https://developercommunity.visualstudio.com/content/problem/294872/yaml-build-ignores-fetchdepth.html
 # TODO: Once CMake 3.13 is available replace -H with -S option
 #
+
+# No wildcards allowed for file patterns...
+pr:
+  paths:
+    exclude:
+      - docs/
+      - README.md
+      - CHANGELOG.md
+      - COPYING
+      - .circleci
+      - test/
+      - run_route_scripts/
+      - docker/
+      - .github/
+
 jobs:
   - job: VS2019
     displayName: 'Windows 2019 | VS2019'
