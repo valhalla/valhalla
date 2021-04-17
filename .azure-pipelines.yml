@@ -6,6 +6,7 @@
 #
 
 # No wildcards allowed for file patterns...
+# skip draft PR's
 pr:
   branches:
     include:
@@ -21,6 +22,7 @@ pr:
       - run_route_scripts/
       - docker/
       - .github/
+  drafts: false
 
 jobs:
   - job: VS2019
