@@ -42,7 +42,7 @@ There are several key features that we hope can differentiate the Valhalla proje
 
 Valhalla is fully functional on many Linux and Mac OS distributions.
 
-Support for Windows is not yet fully exploited. Building the Valhalla library works flawlessly, as well as the following application modules:
+In Windows all functionality is not yet fully supported. Building the Valhalla library works flawlessly, as well as the following application modules:
 
 - `TOOLS`: utilities to query and benchmark various components
 - `DATA_TOOLS`: utilities to build input data and handle transit
