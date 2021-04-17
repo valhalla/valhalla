@@ -6,6 +6,19 @@
 #
 
 # No wildcards allowed for file patterns...
+trigger:
+  paths:
+    exclude:
+      - docs/
+      - README.md
+      - CHANGELOG.md
+      - COPYING
+      - .circleci
+      - test/
+      - run_route_scripts/
+      - docker/
+      - .github/
+
 pr:
   paths:
     exclude:
