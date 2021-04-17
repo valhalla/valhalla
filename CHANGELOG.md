@@ -87,7 +87,8 @@
    * ADDED: Add instructions for building valhalla on `arm64` macbook [#2997](https://github.com/valhalla/valhalla/pull/2997)
    * CHANGED: nit(rename): Renames the encoded live speed properties [#2998](https://github.com/valhalla/valhalla/pull/2998)
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
-   * CHANGED: Allow None build type
+   * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
+   * CHANGED: ci: Build Python bindings for Mac OS [#3011](https://github.com/valhalla/valhalla/pull/3011)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
