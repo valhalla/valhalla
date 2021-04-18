@@ -6,7 +6,8 @@
 #
 
 # No wildcards allowed for file patterns...
-# skip draft PR's
+# skip draft PR's, skip all commits except for PRs to master
+trigger: none
 pr:
   branches:
     include:
