@@ -169,7 +169,6 @@ inline midgard::scoped_timer<> measure_scope_time(Api& api, const std::string& s
   });
 }
 
-
 // TODO: this will go away and Options will be the request object
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
