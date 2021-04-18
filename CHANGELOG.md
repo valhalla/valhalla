@@ -88,8 +88,8 @@
    * CHANGED: nit(rename): Renames the encoded live speed properties [#2998](https://github.com/valhalla/valhalla/pull/2998)
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
+   * CHANGED: ci: Build Python bindings for Mac OS [#3013](https://github.com/valhalla/valhalla/pull/3013)
    * CHANGED: ci: Skip Win CI runs for irrelevant files [#3014](https://github.com/valhalla/valhalla/pull/3014)
-   * CHANGED: ci: Build Python bindings for Mac OS [#3011](https://github.com/valhalla/valhalla/pull/3011)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
