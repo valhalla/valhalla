@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.1
 * **Removed**
    * REMOVED: The tossing of private roads in [#1960](https://github.com/valhalla/valhalla/pull/1960) was too aggressive and resulted in a lot of no routes.  Reverted this logic.  [#2934](https://github.com/valhalla/valhalla/pull/2934)
+   * REMOVED: stray references to node bindings [#3012](https://github.com/valhalla/valhalla/pull/3012)
 
 * **Bug Fix**
    * FIXED: Fix compression_utils.cc::inflate(...) throw - make it catchable [#2839](https://github.com/valhalla/valhalla/pull/2839)
