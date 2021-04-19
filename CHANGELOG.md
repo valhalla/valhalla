@@ -44,6 +44,7 @@
    * FIXED: Annotations fail with returning NaN speed when the same point is duplicated in route geometry [#2992](https://github.com/valhalla/valhalla/pull/2992)
    * FIXED: Fix run_with_server.py to work on macOS [#3003](https://github.com/valhalla/valhalla/pull/3003)
    * FIXED: Removed unexpected maneuvers at sharp bends [#2968](https://github.com/valhalla/valhalla/pull/2968)
+   * FIXED: Remove large number formatting for non-US countries [#3015](https://github.com/valhalla/valhalla/pull/3015)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
