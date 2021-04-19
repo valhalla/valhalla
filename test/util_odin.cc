@@ -236,6 +236,14 @@ TEST(UtilOdin, test_streetname_string_check) {
   street_name = "East Van Buren Street";
   try_get_word_count(street_name, 4);
   try_get_strlen_utf8(street_name, 21);
+
+  street_name = "246/玉川通り/一般国道246号/Tamagawa-dori";
+  try_get_word_count(street_name, 5);
+  try_get_strlen_utf8(street_name, 31);
+
+  street_name = "三田3丁目";
+  try_get_word_count(street_name, 1);
+  try_get_strlen_utf8(street_name, 5);
 }
 } // namespace
 
