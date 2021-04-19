@@ -184,5 +184,16 @@ size_t get_word_count(const std::string& street_name) {
   return word_count;
 }
 
+// https://en.wikipedia.org/wiki/UTF-8#Description
+std::size_t strlen_utf8(const std::string& str) {
+  std::size_t length = 0;
+  for (char c : str) {
+    if ((c & 0xC0) != 0x80) {
+      ++length;
+    }
+  }
+  return length;
+}
+
 } // namespace odin
 } // namespace valhalla
