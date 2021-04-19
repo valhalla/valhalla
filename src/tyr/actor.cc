@@ -333,5 +333,31 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   return json;
 }
 
+std::string
+actor_t::chinese_postman(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // parse the request
+  Api request;
+  ParseApi(request_str, Options::centroid, request);
+  // check lokis status
+  pimpl->loki_worker.status(request);
+  // check thors status
+  pimpl->thor_worker.status(request);
+  // check odins status
+  pimpl->odin_worker.status(request);
+  // get the json
+  auto json = tyr::serializeStatus(request);
+  // if they want you do to do the cleanup automatically
+  if (auto_cleanup) {
+    cleanup();
+  }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
+  return json;
+}
+
 } // namespace tyr
 } // namespace valhalla

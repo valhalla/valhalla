@@ -114,6 +114,7 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
       {"expansion", Options::expansion},
       {"centroid", Options::centroid},
       {"status", Options::status},
+      {"chinese_postman", Options::chinese_postman},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
