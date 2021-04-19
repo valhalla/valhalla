@@ -162,7 +162,7 @@ void FormTilesInNewLevel(GraphReader& reader,
   // highway level is done first.
   reader.Clear();
   bool added = false;
-  uint8_t current_level;
+  uint8_t current_level = std::numeric_limits<uint8_t>::max();
   GraphId tile_id;
   std::hash<std::string> hasher;
   PointLL base_ll;
@@ -339,10 +339,11 @@ void FormTilesInNewLevel(GraphReader& reader,
     } else if (current_level == 1) {
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
       AddDownwardTransition(new_nodes.local_node, tilebuilder);
-    }
-    if (current_level == 2) {
+    } else if (current_level == 2) {
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
       AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
+    } else {
+      throw std::logic_error("current_level was never set");
     }
 
     // Set the node transition count and index

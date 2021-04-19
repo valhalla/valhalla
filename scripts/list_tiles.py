@@ -73,10 +73,10 @@ class Tiles(object):
 
   def Digits(self, number):
     digits = 1 if (number < 0) else 0
-    while long(number):
+    while number:
        number /= 10
        digits += 1
-    return long(digits)
+    return digits
 
   # get the File based on tile_id and level
   def GetFile(self, tile_id, level):

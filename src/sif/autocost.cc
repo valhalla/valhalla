@@ -70,7 +70,7 @@ constexpr float kTaxiFactor = 0.85f;
 constexpr float kDefaultAlleyFactor = 1.0f;
 
 // How much to avoid generic service roads.
-constexpr float kDefaultServiceFactor = 1.2f;
+constexpr float kDefaultServiceFactor = 1.0f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -267,13 +267,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_measured_speed) const override;
+                                     const bool has_measured_speed,
+                                     const InternalTurn internal_turn) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -330,7 +332,7 @@ public:
 
 // Constructor
 AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
-    : DynamicCost(costing_options, TravelMode::kDrive, access_mask),
+    : DynamicCost(costing_options, TravelMode::kDrive, access_mask, true),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
@@ -496,6 +498,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
+  }
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
@@ -529,18 +535,24 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost;
-    bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (has_left || has_right || has_reverse) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
     }
+
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, pred.internal_turn(),
+                    seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
@@ -566,7 +578,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool has_measured_speed) const {
+                                     const bool has_measured_speed,
+                                     const InternalTurn internal_turn) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -590,18 +603,23 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
         turn_cost += 0.5f;
     }
 
+    float seconds = turn_cost;
+    bool is_turn = false;
+    bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
+                     edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
+    bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
+                      edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
+    bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost;
-    bool is_turn = false;
-    if (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpLeft ||
-        edge->turntype(idx) == baldr::Turn::Type::kRight ||
-        edge->turntype(idx) == baldr::Turn::Type::kSharpRight) {
+    if (has_left || has_right || has_reverse) {
       seconds *= edge->stopimpact(idx);
       is_turn = true;
     }
+
+    AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, internal_turn, seconds);
 
     // Apply density factor and stop impact penalty if there isn't traffic on this edge or you're not
     // using traffic
@@ -765,6 +783,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 
@@ -1003,6 +1022,10 @@ public:
     } else if (edge->use() == Use::kServiceRoad) {
       factor *= service_factor_;
     }
+    if (IsClosed(edge, tile)) {
+      // Add a penalty for traversing a closed edge
+      factor *= closure_factor_;
+    }
 
     return Cost(sec * factor, sec);
   }
@@ -1170,6 +1193,10 @@ public:
       factor *= living_street_factor_;
     } else if (edge->use() == Use::kServiceRoad) {
       factor *= service_factor_;
+    }
+    if (IsClosed(edge, tile)) {
+      // Add a penalty for traversing a closed edge
+      factor *= closure_factor_;
     }
 
     return Cost(sec * factor, sec);

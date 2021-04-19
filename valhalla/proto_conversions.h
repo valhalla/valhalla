@@ -136,6 +136,18 @@ inline TripLeg_CycleLane GetTripLegCycleLane(const baldr::CycleLane cyclelane) {
   return kTripLegCycleLane[static_cast<uint32_t>(cyclelane)];
 }
 
+// Associate Sac scale values to TripLeg proto
+constexpr TripLeg_SacScale kTripLegSacScale[] = {TripLeg_SacScale_kNoSacScale,
+                                                 TripLeg_SacScale_kHiking,
+                                                 TripLeg_SacScale_kMountainHiking,
+                                                 TripLeg_SacScale_kDemandingMountainHiking,
+                                                 TripLeg_SacScale_kAlpineHiking,
+                                                 TripLeg_SacScale_kDemandingAlpineHiking,
+                                                 TripLeg_SacScale_kDifficultAlpineHiking};
+inline TripLeg_SacScale GetTripLegSacScale(const baldr::SacScale sac) {
+  return kTripLegSacScale[static_cast<uint32_t>(sac)];
+}
+
 // Associate Use to TripLeg proto
 inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
   switch (use) {
@@ -178,6 +190,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kPedestrianUse;
     case baldr::Use::kBridleway:
       return TripLeg_Use_kBridlewayUse;
+    case baldr::Use::kPedestrianCrossing:
+      return TripLeg_Use_kPedestrianCrossingUse;
     case baldr::Use::kRestArea:
       return TripLeg_Use_kRestAreaUse;
     case baldr::Use::kServiceArea:

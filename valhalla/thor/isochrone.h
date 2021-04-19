@@ -31,10 +31,9 @@ class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config A config object of key, value pairs
    */
-  explicit Isochrone(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit Isochrone(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
@@ -107,6 +106,18 @@ protected:
                      const midgard::PointLL& ll,
                      const float secs0,
                      const float dist0);
+
+  /**
+   * Updates the isotile along short segment
+   * @param from Segment begin
+   * @param to Segment end
+   * @param seconds Time contour level in seconds
+   * @param meters Distance contour level in meters
+   */
+  void UpdateIsoTileAlongSegment(const midgard::PointLL& from,
+                                 const midgard::PointLL& to,
+                                 float seconds,
+                                 float meters);
 };
 
 } // namespace thor

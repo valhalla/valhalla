@@ -599,6 +599,14 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
     case valhalla::Options::centroid:
       json_str = actor.centroid(request_json, nullptr, &api);
       break;
+    case valhalla::Options::expansion:
+      json_str = actor.expansion(request_json, nullptr, &api);
+      std::cout << json_str << std::endl;
+      break;
+    case valhalla::Options::isochrone:
+      json_str = actor.isochrone(request_json, nullptr, &api);
+      std::cout << json_str << std::endl;
+      break;
     default:
       throw std::logic_error("Unsupported action");
       break;

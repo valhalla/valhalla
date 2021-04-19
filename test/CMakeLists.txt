@@ -15,7 +15,11 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread GEOS::GEOS)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+
+if(ENABLE_DATA_TOOLS)
+  target_link_libraries(valhalla_test GEOS::GEOS)
+endif()
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
@@ -48,7 +52,7 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
@@ -56,7 +60,7 @@ if (UNIX)
     incidents.cc
     incident_loading.cc
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif()
 
 ## Add executable targets
 foreach(test ${tests})
@@ -310,13 +314,13 @@ if(ENABLE_SERVICES)
 endif()
 
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
-  find_package(PythonInterp)
+  find_package(Python COMPONENTS Interpreter)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
+      /bin/bash -cx "${Python_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py

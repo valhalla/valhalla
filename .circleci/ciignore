@@ -1,0 +1,3 @@
+*.md
+.circleci/ciignore
+run_route_scripts/*

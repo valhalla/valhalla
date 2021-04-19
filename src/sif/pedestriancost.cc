@@ -320,13 +320,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool /*has_measured_speed*/) const override;
+                                     const bool /*has_measured_speed*/,
+                                     const InternalTurn /*internal_turn*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -679,8 +681,11 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
-                                           const bool /*has_measured_speed*/) const {
+                                           const bool /*has_measured_speed*/,
+                                           const InternalTurn /*internal_turn*/) const {
 
+  // Pedestrians should be able to make uturns on short internal edges; therefore, InternalTurn
+  // is ignored for now.
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
   // Special cases: fixed penalty for steps/stairs
@@ -899,6 +904,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 

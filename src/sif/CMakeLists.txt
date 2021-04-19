@@ -13,11 +13,11 @@ set(sources
   dynamiccost.cc
   recost.cc)
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-Werror")
-endif (UNIX)
+endif()
 
 valhalla_module(NAME sif
   SOURCES ${sources}

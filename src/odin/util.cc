@@ -71,7 +71,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t intersecting_turn_degree,
                          bool is_right,
                          uint32_t turn_degree_threshold) {
-  int32_t turn_degree_delta = 0;
+  uint32_t turn_degree_delta = 0;
   if (is_right) {
     turn_degree_delta = (((intersecting_turn_degree - path_turn_degree) + 360) % 360);
   } else {

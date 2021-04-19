@@ -41,10 +41,9 @@ class Dijkstras {
 public:
   /**
    * Constructor.
-   * @param max_reserved_labels_count maximum capacity of edgelabels container
-   *                                  that allowed to keep reserved
+   * @param config A config object of key, value pairs
    */
-  explicit Dijkstras(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+  explicit Dijkstras(const boost::property_tree::ptree& config = {});
 
   Dijkstras(const Dijkstras&) = delete;
   Dijkstras& operator=(const Dijkstras&) = delete;
@@ -79,22 +78,12 @@ protected:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  virtual void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
-                       baldr::GraphReader& graphreader,
-                       const sif::mode_costing_t& mode_costing,
-                       const sif::TravelMode mode);
-
-  /**
-   * Compute the best first graph traversal to a list of destination locations
-   * @param  origin_locs  List of origin locations.
-   * @param  graphreader  Graphreader
-   * @param  mode_costing List of costing objects
-   * @param  mode         Travel mode
-   */
-  virtual void ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                              baldr::GraphReader& graphreader,
-                              const sif::mode_costing_t& mode_costing,
-                              const sif::TravelMode mode);
+  // Note: ExpansionType::multimodal not yet implemented
+  template <const ExpansionType expansion_direction>
+  void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               baldr::GraphReader& graphreader,
+               const sif::mode_costing_t& mode_costing,
+               const sif::TravelMode mode);
 
   /**
    * Compute the best first graph traversal from a list of origin locations using multimodal
@@ -187,7 +176,8 @@ protected:
           baldr::GraphReader& reader);
 
   /**
-   * Expand from the node along the forward search path.
+   * Expand from the node along the search path for non-multimodal expansion
+   * Handles both forward and reverse traversals
    * @param graphreader  Graph reader.
    * @param node Graph Id of the node to expand.
    * @param pred Edge label of the predecessor edge leading to the node.
@@ -195,29 +185,14 @@ protected:
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
    * @param time_info Tracks time offset as the expansion progresses
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition,
-                     const baldr::TimeInfo& time_info);
-
-  /**
-   * Expand from the node along the reverse search path.
-   * @param graphreader  Graph reader.
-   * @param node Graph Id of the node to expand.
-   * @param pred Edge label of the predecessor edge leading to the node.
-   * @param pred_idx Index in the edge label list of the predecessor edge.
-   * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param time_info Tracks time offset as the expansion progresses
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition,
-                     const baldr::TimeInfo& time_info);
+  template <const ExpansionType expansion_direction>
+  void ExpandInner(baldr::GraphReader& graphreader,
+                   const baldr::GraphId& node,
+                   const typename decltype(Dijkstras::bdedgelabels_)::value_type& pred,
+                   const uint32_t pred_idx,
+                   const baldr::DirectedEdge* opp_pred_edge,
+                   const bool from_transition,
+                   const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node using multimodal algorithm.

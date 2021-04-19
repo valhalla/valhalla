@@ -207,7 +207,7 @@ void SetShapeAttributes(const AttributesController& controller,
                                 static_cast<std::uint8_t>(traffic_speed.congestion2),
                                 {},
                                 traffic_speed.closed(1)});
-        if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
+        if (traffic_speed.breakpoint2 < 255) {
           cuts.emplace_back(cut_t{1,
                                   speed,
                                   static_cast<std::uint8_t>(traffic_speed.congestion3),
@@ -328,6 +328,9 @@ void SetShapeAttributes(const AttributesController& controller,
     }
     distance_total_pct = next_total;
     double time = distance / cut_itr->speed; // seconds
+    if (std::isnan(time)) {
+      time = 0.;
+    }
 
     // Set shape attributes time per shape point if requested
     if (controller.attributes.at(kShapeAttributesTime)) {
@@ -344,7 +347,11 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set shape attributes speed per shape point if requested
     if (controller.attributes.at(kShapeAttributesSpeed)) {
       // convert speed to decimeters per sec and then round to an integer
-      leg.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+      double speed = (distance * kDecimeterPerMeter / time) + 0.5;
+      if (std::isnan(speed) || time == 0.) { // avoid NaN
+        speed = 0.;
+      }
+      leg.mutable_shape_attributes()->add_speed(speed);
     }
 
     // Set the maxspeed if requested
@@ -856,6 +863,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (controller.attributes.at(kEdgeBicycleNetwork)) {
     trip_edge->set_bicycle_network(directededge->bike_network());
+  }
+
+  if (controller.attributes.at(kEdgeSacScale)) {
+    trip_edge->set_sac_scale(GetTripLegSacScale(directededge->sac_scale()));
+  }
+
+  if (controller.attributes.at(kEdgeShoulder)) {
+    trip_edge->set_shoulder(directededge->shoulder());
   }
 
   if (controller.attributes.at(kEdgeSidewalk)) {

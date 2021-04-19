@@ -274,6 +274,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
+    InternalTurn turn = nodeinfo ? costing->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+                                 : InternalTurn::kNoTurn;
+
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel,
             edge_id,
@@ -286,7 +289,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             {},
             baldr::kInvalidRestriction,
             true,
-            static_cast<bool>(flow_sources & kDefaultFlowMask)};
+            static_cast<bool>(flow_sources & kDefaultFlowMask),
+            turn};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

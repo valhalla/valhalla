@@ -281,6 +281,9 @@ public:
         case Use::kBridleway:
           way_.set_use(Use::kBridleway);
           break;
+        case Use::kPedestrianCrossing:
+          way_.set_use(Use::kPedestrianCrossing);
+          break;
         case Use::kLivingStreet:
           way_.set_use(Use::kLivingStreet);
           break;
@@ -852,8 +855,8 @@ public:
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
     // skip because it means there were no ways that we kept that referenced it. also we could run out
     // of waynodes to look for and in that case we are done as well
-    if (osmid < (*(*way_nodes_)[current_way_node_index_]).node.osmid_ ||
-        current_way_node_index_ >= way_nodes_->size()) {
+    if (current_way_node_index_ >= way_nodes_->size() ||
+        osmid < (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
       return;
     }
 
@@ -1479,8 +1482,7 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() &&
-        (way_.use() == Use::kRoad || way_.use() == Use::kServiceRoad) &&
+    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
       way_.set_use(Use::kCuldesac);
     }

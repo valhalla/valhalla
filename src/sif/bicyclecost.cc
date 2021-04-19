@@ -336,13 +336,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool /*has_measured_speed*/) const override;
+                                     const bool /*has_measured_speed*/,
+                                     const InternalTurn /*internal_turn*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -766,8 +768,11 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
                                         const baldr::DirectedEdge* edge,
-                                        const bool /*has_measured_speed*/) const {
+                                        const bool /*has_measured_speed*/,
+                                        const InternalTurn /*internal_turn*/) const {
 
+  // Bicycles should be able to make uturns on short internal edges; therefore, InternalTurn
+  // is ignored for now.
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
@@ -989,6 +994,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 

@@ -73,6 +73,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {29, "kBridlewayUse"},
       {30, "kRestAreaUse"},
       {31, "kServiceAreaUse"},
+      {32, "kPedestrianCrossingUse"},
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
@@ -368,7 +369,11 @@ bool EnhancedTripLeg_Edge::IsSidewalkUse() const {
 }
 
 bool EnhancedTripLeg_Edge::IsFootwayUse() const {
-  return (use() == TripLeg_Use_kFootwayUse);
+  return (use() == TripLeg_Use_kFootwayUse || use() == TripLeg_Use_kPedestrianCrossingUse);
+}
+
+bool EnhancedTripLeg_Edge::IsPedestrianCrossingUse() const {
+  return (use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
 bool EnhancedTripLeg_Edge::IsStepsUse() const {
@@ -1649,6 +1654,37 @@ bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                                         const TripLeg_Use exclude_use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // If is traversable based on mode
+    // and the intersecting edge use does not equal the specified exclude use
+    if (xedge->IsTraversableOutbound(travel_mode) && (xedge->use() != exclude_use)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
+                                                                const TripLeg_TravelMode travel_mode,
+                                                                const TripLeg_Use exclude_use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // if the intersecting edge is forward
+    // and the intersecting edge is traversable based on mode
+    // and the intersecting edge use does not equal the specified exclude use
+    if (is_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && (xedge->use() != exclude_use)) {
       return true;
     }
   }

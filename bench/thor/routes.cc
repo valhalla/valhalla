@@ -68,7 +68,7 @@ boost::property_tree::ptree build_config(const char* live_traffic_tar) {
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
+      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,"max_avoid_polygons_length":10000,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
       "skadi": {"max_shape": 750000,"min_resample": 10.0},
@@ -101,7 +101,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       baldr::GraphId tile_id(tile.header->tile_id);
       if (traffic_dist(gen) < has_live_traffic) {
         current->breakpoint1 = 255;
-        current->overall_speed = traffic_dist(gen) * 100;
+        current->overall_encoded_speed = traffic_dist(gen) * 100;
       } else {
       }
     };
@@ -172,8 +172,8 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   std::size_t route_size = 0;
 
+  thor::BidirectionalAStar astar;
   for (auto _ : state) {
-    thor::BidirectionalAStar astar;
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
@@ -185,8 +185,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   if (route_size == 0) {
     throw std::runtime_error("Failed all routes");
   }
-  state.counters["Routes"] =
-      benchmark::Counter(route_size, benchmark::Counter::kIsIterationInvariantRate);
+  state.counters["Routes"] = route_size;
 }
 
 void customize_traffic(const boost::property_tree::ptree& config,
@@ -203,8 +202,8 @@ void customize_traffic(const boost::property_tree::ptree& config,
     auto edge_id = baldr::GraphId(tile_id.tileid(), tile_id.level(), index);
     if (edge_id == target_edge_id) {
       current->breakpoint1 = 255;
-      current->overall_speed = target_speed >> 1;
-      current->speed1 = target_speed >> 1;
+      current->overall_encoded_speed = target_speed >> 1;
+      current->encoded_speed1 = target_speed >> 1;
     }
   };
   test::customize_live_traffic_data(config, generate_traffic);

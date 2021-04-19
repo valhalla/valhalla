@@ -115,7 +115,10 @@ protected:
                         EnhancedTripLeg_Edge* prev_edge,
                         EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
+  bool IsTee(int node_index,
+             EnhancedTripLeg_Edge* prev_edge,
+             EnhancedTripLeg_Edge* curr_edge,
+             bool prev_edge_has_common_base_name) const;
 
   bool IsLeftPencilPointUturn(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,

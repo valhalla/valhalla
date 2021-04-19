@@ -379,6 +379,7 @@ public:
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
+  bool IsPedestrianCrossingUse() const;
   bool IsRestAreaUse() const;
   bool IsServiceAreaUse() const;
   bool IsOtherUse() const;
@@ -683,6 +684,13 @@ public:
   bool HasTraversableIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
+
+  bool HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                     const TripLeg_Use exclude_use);
+
+  bool HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
+                                            const TripLeg_TravelMode travel_mode,
+                                            const TripLeg_Use exclude_use);
 
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
