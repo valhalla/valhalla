@@ -31,6 +31,16 @@ void try_get_formatted_date(const std::string& date_time,
   EXPECT_EQ(localized_date, expected_date_time) << "locale " << locale.name();
 }
 
+void try_get_word_count(const std::string& street_name, const std::size_t expected_word_count) {
+  std::size_t word_count = get_word_count(street_name);
+  EXPECT_EQ(word_count, expected_word_count) << street_name << " :: Word Count :: " << word_count;
+}
+
+void try_get_strlen_utf8(const std::string& street_name, const std::size_t expected_strlen) {
+  std::size_t length = strlen_utf8(street_name);
+  EXPECT_EQ(length, expected_strlen) << street_name << " :: Length :: " << length;
+}
+
 TEST(UtilOdin, test_time) {
 
   try_get_formatted_time("2014-01-02T23:59-05:00", "23:59", std::locale());
@@ -188,6 +198,52 @@ TEST(UtilOdin, test_supported_locales) {
       }
     }
   }
+}
+
+TEST(UtilOdin, test_streetname_string_check) {
+  std::string street_name = "Carretera de Santa Agnès de Malanyanes al Coll";
+  try_get_word_count(street_name, 8);
+  try_get_strlen_utf8(street_name, 46);
+
+  street_name = "Calle de la Virgen de la Cabeza";
+  try_get_word_count(street_name, 7);
+  try_get_strlen_utf8(street_name, 31);
+
+  street_name = "Calle del Arroyo de Pozuelo";
+  try_get_word_count(street_name, 5);
+  try_get_strlen_utf8(street_name, 27);
+
+  street_name = "Avenue du Duc de Dantzig";
+  try_get_word_count(street_name, 5);
+  try_get_strlen_utf8(street_name, 24);
+
+  street_name = "Богданова вулиця";
+  try_get_word_count(street_name, 2);
+  try_get_strlen_utf8(street_name, 16);
+
+  street_name = "Щепкіна вулиця/Schepkina Street";
+  try_get_word_count(street_name, 4);
+  try_get_strlen_utf8(street_name, 31);
+
+  street_name = "Набережна Заводська вулиця";
+  try_get_word_count(street_name, 3);
+  try_get_strlen_utf8(street_name, 26);
+
+  street_name = "BV-5105";
+  try_get_word_count(street_name, 2);
+  try_get_strlen_utf8(street_name, 7);
+
+  street_name = "East Van Buren Street";
+  try_get_word_count(street_name, 4);
+  try_get_strlen_utf8(street_name, 21);
+
+  street_name = "246/玉川通り/一般国道246号/Tamagawa-dori";
+  try_get_word_count(street_name, 5);
+  try_get_strlen_utf8(street_name, 31);
+
+  street_name = "三田3丁目";
+  try_get_word_count(street_name, 1);
+  try_get_strlen_utf8(street_name, 5);
 }
 } // namespace
 
