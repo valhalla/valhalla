@@ -158,7 +158,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctRampStraightTransitionInstruction());
+            FormVerbalRampStraightInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -184,8 +184,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_instruction(FormRampInstruction(maneuver));
 
         // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctRampTransitionInstruction(maneuver));
+        maneuver.set_verbal_succinct_transition_instruction(FormVerbalRampInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertRampInstruction(maneuver));
@@ -345,7 +344,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctExitRoundaboutTransitionInstruction());
+            FormVerbalSuccinctExitRoundaboutTransitionInstruction(maneuver));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalExitRoundaboutInstruction(maneuver));
@@ -361,7 +360,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctEnterFerryTransitionInstruction());
+            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -3961,9 +3960,15 @@ std::string NarrativeBuilder::FormVerbalSuccinctContinueTransitionInstruction(Ma
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuver& maneuver) {
+std::string
+NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuver& maneuver,
+                                                              bool limit_by_consecutive_count,
+                                                              uint32_t element_max_count,
+                                                              const std::string& delim) {
 
   // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>."
+  // "4": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+  // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
@@ -3986,6 +3991,23 @@ std::string NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuv
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 5;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = subset->phrases.at(std::to_string(phrase_id));
@@ -3993,6 +4015,8 @@ std::string NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuv
   // Replace phrase tags with values
   boost::replace_all(instruction, kRelativeDirectionTag,
                      FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4002,13 +4026,35 @@ std::string NarrativeBuilder::FormVerbalSuccinctTurnTransitionInstruction(Maneuv
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver) {
+std::string
+NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver,
+                                                               bool limit_by_consecutive_count,
+                                                               uint32_t element_max_count,
+                                                               const std::string& delim) {
   // "0": "Make a <RELATIVE_DIRECTION> U-turn."
+  // "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."
+  // "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string junction_name;
+  std::string guide_sign;
 
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 7;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 6;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+  }
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.uturn_verbal_subset.phrases.at(std::to_string(phrase_id));
 
@@ -4016,12 +4062,13 @@ std::string NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneu
   boost::replace_all(instruction, kRelativeDirectionTag,
                      FormRelativeTwoDirection(maneuver.type(),
                                               dictionary_.uturn_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
     FormArticulatedPrepositions(instruction);
   }
-
   return instruction;
 }
 
@@ -4121,14 +4168,38 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuv
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
-                                                                          const std::string& delim) {
+std::string
+NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
+                                                              bool limit_by_consecutive_count,
+                                                              uint32_t element_max_count,
+                                                              const std::string& delim) {
   // "0": "Keep <RELATIVE_DIRECTION> at the fork."
   // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+  // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 
   std::string exit_number_sign;
+  std::string toward_sign;
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
+  // If they exist, process guide signs
+  if (maneuver.HasGuideSign()) {
+    if (maneuver.HasGuideTowardSign()) {
+      // Assign guide sign
+      toward_sign =
+          maneuver.signs().GetGuideTowardString(element_max_count, limit_by_consecutive_count, delim,
+                                                maneuver.verbal_formatter());
+    }
+  } else {
+    // If it exists, process exit toward sign
+    if (maneuver.HasExitTowardSign()) {
+      // Assign toward sign
+      toward_sign =
+          maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+    }
+  }
 
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
@@ -4136,6 +4207,9 @@ std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuv
     // Assign number sign
     exit_number_sign =
         maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
+  }
+  if (!toward_sign.empty()) {
+    phrase_id += 4;
   }
 
   // Set instruction to the determined tagged phrase
@@ -4146,38 +4220,7 @@ std::string NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuv
                      FormRelativeThreeDirection(maneuver.type(),
                                                 dictionary_.keep_verbal_subset.relative_directions));
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Merge."
-  // "1": "Merge <RELATIVE_DIRECTION>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Check for merge relative direction
-  std::string relative_direction;
-  if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
-      (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
-    phrase_id += 1;
-    relative_direction =
-        FormRelativeTwoDirection(maneuver.type(),
-                                 dictionary_.merge_verbal_subset.relative_directions);
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
+  boost::replace_all(instruction, kTowardSignTag, toward_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4188,13 +4231,68 @@ std::string NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneu
 }
 
 std::string
-NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver) {
+NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver,
+                                                               bool limit_by_consecutive_count,
+                                                               uint32_t element_max_count,
+                                                               const std::string& delim) {
+  // "0": "Merge."
+  // "1": "Merge <RELATIVE_DIRECTION>."
+  // "4": "Merge toward <TOWARD_SIGN>."
+  // "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Use toward phrase if street names is empty
+    phrase_id = 4;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  }
+
+  // Check for merge relative direction
+  std::string relative_direction;
+  if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+      (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
+    phrase_id += 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+                     FormRelativeTwoDirection(maneuver.type(),
+                                              dictionary_.merge_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(
+    Maneuver& maneuver,
+    bool limit_by_consecutive_count,
+    uint32_t element_max_count,
+    const std::string& delim) {
   // "0": "Enter the roundabout.",
   // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+  // "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string guide_sign;
   std::string ordinal_value;
   if ((maneuver.roundabout_exit_count() >= kRoundaboutExitCountLowerBound) &&
       (maneuver.roundabout_exit_count() <= kRoundaboutExitCountUpperBound)) {
@@ -4204,12 +4302,21 @@ NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuve
     ordinal_value = dictionary_.enter_roundabout_verbal_subset.ordinal_values.at(
         maneuver.roundabout_exit_count() - 1);
   }
+  if (maneuver.roundabout_exit_signs().HasGuide()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id += 3;
+    // Assign guide sign
+    guide_sign =
+        maneuver.roundabout_exit_signs().GetGuideString(element_max_count, limit_by_consecutive_count,
+                                                        delim, maneuver.verbal_formatter());
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4219,16 +4326,32 @@ NarrativeBuilder::FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuve
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction() {
+std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruction(
+    Maneuver& maneuver,
+    bool limit_by_consecutive_count,
+    uint32_t element_max_count,
+    const std::string& delim) {
   // "0": "Exit the roundabout."
+  // "3": "Exit the roundabout toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.exit_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
 
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
+
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
     FormArticulatedPrepositions(instruction);
@@ -4237,15 +4360,31 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruct
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction() {
+std::string
+NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver,
+                                                                    bool limit_by_consecutive_count,
+                                                                    uint32_t element_max_count,
+                                                                    const std::string& delim) {
   // "0": "Take the Ferry."
+  // "3": "Take the ferry toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.enter_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
