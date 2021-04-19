@@ -175,7 +175,6 @@ void ParseApi(const std::string& json_request, Options::Action action, Api& api)
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
-
 std::string jsonify_error(const valhalla_exception_t& exception, const Api& options);
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
