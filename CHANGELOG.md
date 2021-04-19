@@ -90,6 +90,7 @@
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
    * CHANGED: ci: Build Python bindings for Mac OS [#3011](https://github.com/valhalla/valhalla/pull/3011)
+   * ADDED: New word count and utf-8 string length functions to util odin [#3016](https://github.com/valhalla/valhalla/pull/3016)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
