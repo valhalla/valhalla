@@ -61,6 +61,13 @@ public:
                                 uint32_t element_max_count = kVerbalPreElementMaxCount,
                                 const std::string& delim = kVerbalDelim);
 
+  /////////////////////////////////////////////////////////////////////////////
+  std::string FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver);
+
+  const NarrativeDictionary& dictionary() const {
+    return dictionary_;
+  }
+
 protected:
   /////////////////////////////////////////////////////////////////////////////
   std::string FormStartInstruction(Maneuver& maneuver);
@@ -355,15 +362,21 @@ protected:
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormVerbalSuccinctStartTransitionInstruction(Maneuver& maneuver);
-
   std::string FormVerbalSuccinctDestinationTransitionInstruction();
 
   std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalSuccinctTurnTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctTurnTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctUturnTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalSuccinctRampStraightTransitionInstruction();
 
@@ -372,16 +385,35 @@ protected:
   std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver,
                                                           const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
-                                                          const std::string& delim = kVerbalDelim);
+  std::string FormVerbalSuccinctKeepTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctMergeTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctEnterRoundaboutTransitionInstruction(Maneuver& maneuver);
+  std::string FormVerbalSuccinctEnterRoundaboutTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction();
+  std::string FormVerbalSuccinctExitRoundaboutTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalSuccinctEnterFerryTransitionInstruction();
+  std::string FormVerbalSuccinctEnterFerryTransitionInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   /**

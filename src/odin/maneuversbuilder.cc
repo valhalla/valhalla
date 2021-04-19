@@ -925,7 +925,7 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
         break;
       }
       if (get_word_count(street_name->value()) > kMaxWordCount ||
-          street_name->value().length() > kMaxStreetNameLength) {
+          strlen_utf8(street_name->value()) > kMaxStreetNameLength) {
         maneuver.set_long_street_name(true);
         break;
       }
@@ -939,7 +939,7 @@ void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Mane
           break;
         }
         if (get_word_count(roundabout_exit_street_name->value()) > kMaxWordCount ||
-            roundabout_exit_street_name->value().length() > kMaxStreetNameLength) {
+            strlen_utf8(roundabout_exit_street_name->value()) > kMaxStreetNameLength) {
           maneuver.set_long_street_name(true);
           break;
         }
