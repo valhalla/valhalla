@@ -126,6 +126,7 @@ message CostingOptions {
   optional float use_living_streets = 68;
   optional float service_factor = 69;
   optional float closure_factor = 70;
+  optional uint32 probability = 71;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
