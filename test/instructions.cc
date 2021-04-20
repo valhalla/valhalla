@@ -319,7 +319,7 @@ TEST(Instructions, validate_exit_instructions) {
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take exit 8 onto A120(W)|A120(W).", "Take exit 8.", "Take exit 8.",
-                    "Take exit 8 onto A1 20(W)|A1 20(W).", "");
+                    "Take exit 8 onto A120(W)|A120(W).", "");
 
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA

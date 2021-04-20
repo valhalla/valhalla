@@ -141,14 +141,14 @@ TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRam
   // Verify start maneuver prior to the continune maneuver
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Drive east on US 322.", "Drive east.",
-                                                            "", "Drive east on US 3 22.",
+                                                            "", "Drive east on US 322.",
                                                             "Continue for 3 kilometers.");
 
   // Verify continue because of same name intersecting edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "Keep left to take US 422.",
                                                             "Keep left at the fork.",
-                                                            "Keep left to take US 4 22.",
-                                                            "Keep left to take US 4 22.",
+                                                            "Keep left to take US 422.",
+                                                            "Keep left to take US 422.",
                                                             "Continue for 6 kilometers.");
 }
