@@ -46,7 +46,7 @@ typename coord_t::value_type Polyline2<coord_t>::Length(const container_t& pts) 
 /**
  * Uses a brute-force O(n^2) technique to determine if there are any
  * self-intersections.
- * TODO: Use the TilePointIndex to make this faster.
+ * TODO: Make this faster (not O(n^2)).
  * @return  T/F if there are self-intersections.
  */
 template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfIntersections() {
@@ -73,8 +73,12 @@ template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfInters
 /**
  * A Douglas-Peucker line simplification algorithm that will not generate
  * self-intersections.
+ *
+ * Notice this is not generically templated for coord_t. This is because
+ * this routine employs the PointTileIndex, which indexes space using
+ * lats/lons. Hence, this routine only works with PointLL's (aka
+ * GeoPoint<double>'s).
  */
-template <typename coord_t>
 void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
                                       const double& epsilon_sq,
                                       const std::unordered_set<size_t>& exclusions,
@@ -94,13 +98,13 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
   const PointLL& end = point_tile_index.points[eidx];
 
   double dmax = std::numeric_limits<double>::lowest();
-  LineSegment2<coord_t> line_segment{start, end};
+  LineSegment2<PointLL> line_segment{start, end};
 
   // hfidx is the index of the highest freq detail (the dividing point)
   size_t hfidx = sidx;
 
   // find the point furthest from the line-segment formed by {start, end}
-  coord_t tmp;
+  PointLL tmp;
   for (size_t idx = sidx + 1; idx < eidx; idx++) {
     // special points we dont want to generalize no matter what take precedence
     if (exclusions.find(idx) != exclusions.end()) {
@@ -109,7 +113,7 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
       break;
     }
 
-    const coord_t& c = point_tile_index.points[idx];
+    const PointLL& c = point_tile_index.points[idx];
 
     // test if this is the highest frequency detail so far
     auto d = line_segment.DistanceSquared(c, tmp);
@@ -209,19 +213,13 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
     // 1. we want to preserve iterator validity in the vector version
     // 2. its the only way to preserve the indices in the keep set
     if (eidx - hfidx > 1)
-      peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_sq, exclusions, hfidx,
-                                                    eidx);
+      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, hfidx, eidx);
     if (hfidx - sidx > 1)
-      peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_sq, exclusions, sidx,
-                                                    hfidx);
-  }
-  else {
+      peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, sidx, hfidx);
+  } else {
     point_tile_index.remove_points(sidx + 1, eidx);
   }
 }
-
-long generalize_time;
-long num_polygon_edges;
 
 template <class coord_t, class container_t>
 void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
@@ -235,8 +233,8 @@ void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
   PointTileIndex point_tile_index(epsilon_deg);
   point_tile_index.tile<container_t>(polyline);
 
-  peucker_avoid_self_intersections<coord_t>(point_tile_index, epsilon_m * epsilon_m, exclusions, 0,
-                                            polyline.size() - 1);
+  peucker_avoid_self_intersections(point_tile_index, epsilon_m * epsilon_m, exclusions, 0,
+                                   polyline.size() - 1);
 
   // copy the simplified 'points' into 'polyline'
   polyline.clear();
@@ -310,6 +308,7 @@ void DouglasPeucker(container_t& polyline,
  * @param polyline    the list of points
  * @param epsilon     the tolerance (in meters) used in removing points
  * @param exclusions  list of indices of points not to generalize
+ * @param avoid_self_intersection  avoid simplifications that cause self-intersection
  */
 template <typename coord_t>
 template <class container_t>
@@ -321,19 +320,10 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   if (epsilon_m <= 0 || polyline.size() < 3)
     return;
 
-  num_polygon_edges = polyline.size();
-
-  auto start_time = std::chrono::high_resolution_clock::now();
-
-  //if (false)
   if (avoid_self_intersection)
     DouglastPeuckerAvoidSelfIntersection<coord_t>(polyline, epsilon_m, exclusions);
   else
     DouglasPeucker<coord_t>(polyline, epsilon_m, exclusions);
-
-  auto end_time = std::chrono::high_resolution_clock::now();
-  generalize_time =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 }
 
 // Explicit instantiation

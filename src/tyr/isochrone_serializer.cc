@@ -18,64 +18,11 @@ using rgba_t = std::tuple<float, float, float>;
 namespace valhalla {
 namespace tyr {
 
-template <typename coord_t> int self_intersects(const std::vector<coord_t>& points) {
-  int num_self_intersections = 0;
-  for (size_t i = 1; i < points.size() - 2; i++) {
-    const coord_t& ia(points[i - 1]);
-    const coord_t& ib(points[i]);
-    for (size_t j = i + 2; j < points.size() - 1; j++) {
-      const coord_t& ja(points[j - 1]);
-      const coord_t& jb(points[j]);
-      LineSegment2<coord_t> segmenti(ia, ib);
-      LineSegment2<coord_t> segmentj(ja, jb);
-      coord_t intersection_point;
-      if (segmenti.Intersect(segmentj, intersection_point)) {
-        num_self_intersections++;
-//        printf("Intersection:\n");
-//        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ia.lat(), ia.lng(), ib.lat(), ib.lng());
-//        printf("Line: (%.7f, %.7f), (%.7f, %.7f)\n", ja.lat(), ja.lng(), jb.lat(), jb.lng());
-      }
-    }
-  }
-
-  return num_self_intersections;
-}
-
-bool check_for_intersections(std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                             midgard::GriddedData<2>::contours_t& contours) {
-
-  clock_t start_time = clock();
-
-  int total_self_intersections = 0;
-
-  for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
-    const auto& interval = intervals[contour_index];
-    const auto& feature_collection = contours[contour_index];
-    for (const auto& feature : feature_collection) {
-      for (const auto& contour : feature) {
-        std::vector<midgard::GeoPoint<double>> points;
-        for (const auto& coord : contour) {
-          points.emplace_back(coord);
-        }
-        int num_self_intersections = self_intersects(points);
-        total_self_intersections += num_self_intersections;
-      }
-    }
-  }
-
-  printf("Number self-intersections: %d\n", total_self_intersections);
-
-  return total_self_intersections > 0;
-}
-
 std::string serializeIsochrones(const Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                 midgard::GriddedData<2>::contours_t& contours,
                                 bool polygons,
                                 bool show_locations) {
-
-  check_for_intersections(intervals, contours);
-
   // for each contour interval
   int i = 0;
   auto features = array({});

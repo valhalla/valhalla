@@ -4,7 +4,8 @@ namespace valhalla {
 
 namespace midgard {
 
-// A "special" value that means "this point is deleted".
+// A "special" value that means "this point is deleted". An invalid
+// lat/lon.
 const PointLL PointTileIndex::deleted_point = {1000.0, 1000.0};
 
 PointTileIndex::PointTileIndex(double tile_width_degrees) {
@@ -38,42 +39,36 @@ template <class container_t> void PointTileIndex::tile(const container_t& polyli
   }
 }
 
-void PointTileIndex::get_points_near(const PointLL& pt, std::unordered_set<size_t>& points) {
+void PointTileIndex::get_points_near(const PointLL& pt, std::unordered_set<size_t>& near_pts) {
   TileId pid = get_tile_id(pt);
   uint32_t px = prevx(pid.x);
-  uint32_t nx = nextx(pid.x);
+  uint32_t nx = nextx(nextx(pid.x));
   uint32_t py = prevy(pid.y);
-  uint32_t ny = nexty(pid.y);
+  uint32_t ny = nexty(nexty(pid.y));
   for (uint32_t x = px; x != nx; x = nextx(x)) {
     for (uint32_t y = py; y != ny; y = nexty(y)) {
       auto iter = tiled_space.find(TileId{x, y});
       if (iter != tiled_space.end()) {
-        points.insert(iter->second.begin(), iter->second.end());
+        near_pts.insert(iter->second.begin(), iter->second.end());
       }
     }
   }
 }
 
 void PointTileIndex::get_points_near_segment(const LineSegment2<PointLL>& seg,
-                                             std::unordered_set<size_t>& points) {
+                                             std::unordered_set<size_t>& near_pts) {
   TileId pida = get_tile_id(seg.a());
   TileId pidb = get_tile_id(seg.b());
-
   uint32_t px = prevx(std::min(pida.x, pidb.x));
   uint32_t nx = nextx(nextx(std::max(pida.x, pidb.x)));
   uint32_t py = prevy(std::min(pida.y, pidb.y));
   uint32_t ny = nexty(nexty(std::max(pida.y, pidb.y)));
-
   for (uint32_t x = px; x != nx; x = nextx(x)) {
-    int a = 4;
-  }
-
-    for (uint32_t x = px; x != nx; x = nextx(x)) {
     for (uint32_t y = py; y != ny; y = nexty(y)) {
       TileId tid{x, y};
       auto iter = tiled_space.find(tid);
       if (iter != tiled_space.end()) {
-        points.insert(iter->second.begin(), iter->second.end());
+        near_pts.insert(iter->second.begin(), iter->second.end());
       }
     }
   }
@@ -100,7 +95,6 @@ template void PointTileIndex::tile(const std::vector<GeoPoint<float>>&);
 template void PointTileIndex::tile(const std::vector<GeoPoint<double>>&);
 template void PointTileIndex::tile(const std::list<GeoPoint<float>>&);
 template void PointTileIndex::tile(const std::list<GeoPoint<double>>&);
-
 
 } // namespace midgard
 } // namespace valhalla

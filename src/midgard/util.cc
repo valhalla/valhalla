@@ -498,14 +498,22 @@ bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, con
   return (u >= 1e-16) && (v >= 1e-16) && (u + v < 1);
 }
 
-template bool triangle_contains(const PointXY<float>& a, const PointXY<float>& b,
-                                const PointXY<float>& c, const PointXY<float>& p);
-template bool triangle_contains(const PointXY<double>& a, const PointXY<double>& b,
-                                const PointXY<double>& c, const PointXY<double>& p);
-template bool triangle_contains(const GeoPoint<float>& a, const GeoPoint<float>& b,
-                                const GeoPoint<float>& c, const GeoPoint<float>& p);
-template bool triangle_contains(const GeoPoint<double>& a, const GeoPoint<double>& b,
-                                const GeoPoint<double>& c, const GeoPoint<double>& p);
+template bool triangle_contains(const PointXY<float>& a,
+                                const PointXY<float>& b,
+                                const PointXY<float>& c,
+                                const PointXY<float>& p);
+template bool triangle_contains(const PointXY<double>& a,
+                                const PointXY<double>& b,
+                                const PointXY<double>& c,
+                                const PointXY<double>& p);
+template bool triangle_contains(const GeoPoint<float>& a,
+                                const GeoPoint<float>& b,
+                                const GeoPoint<float>& c,
+                                const GeoPoint<float>& p);
+template bool triangle_contains(const GeoPoint<double>& a,
+                                const GeoPoint<double>& b,
+                                const GeoPoint<double>& c,
+                                const GeoPoint<double>& p);
 
 // Return the intersection of two infinite lines if any
 template <class coord_t>
