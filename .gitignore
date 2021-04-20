@@ -68,3 +68,6 @@ lib/binding/node_valhalla.node
 site/
 
 .DS_Store
+
+# test/data
+test/data
