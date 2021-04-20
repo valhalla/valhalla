@@ -88,14 +88,24 @@ protected:
   static gurka::map chinese_postman_map;
 
   static void SetUpTestSuite() {
-    const std::string ascii_map = R"(A------B
-                                     |      |
-                                     |      |
-                                     D------E)";
+    // Example is based on standard example from https://www-m9.ma.tum.de/graph-algorithms/directed-chinese-postman/index_en.html
+    const std::string ascii_map = R"(
+        B------A------C
+        | \    |    / |
+        |  \   |   /  |
+        |   \  |  /   |
+        |     \| /    |
+        D------E------F
+    )";
     const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
-                              {"DE", {{"highway", "residential"}, {"name", "Low"}}},
-                              {"AD", {{"highway", "residential"}, {"name", "1st"}}},
-                              {"BE", {{"highway", "residential"}, {"name", "2nd"}}}};
+                              {"AC", {{"highway", "residential"}, {"name", "Low"}}},
+                              {"AE", {{"highway", "residential"}, {"name", "1st"}}},
+                              {"BD", {{"highway", "residential"}, {"name", "2nd"}}},
+                              {"BE", {{"highway", "residential"}, {"name", "3rd"}}},
+                              {"CE", {{"highway", "residential"}, {"name", "4th"}}},
+                              {"CF", {{"highway", "residential"}, {"name", "5th"}}},
+                              {"DE", {{"highway", "residential"}, {"name", "6th"}}},
+                              {"EF", {{"highway", "residential"}, {"name", "7th"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
