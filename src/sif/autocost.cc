@@ -49,6 +49,8 @@ constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll
 constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
+constexpr uint32_t kDefaultProbability = 0; // Default percentage of allowing probable restrictions
+                                            // 0% means do not include them
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -108,6 +110,7 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
 constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
+constexpr ranged_default_t<float> kProbabilityRange{0, kDefaultProbability, 100};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -757,6 +760,11 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_service_factor(
         kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
                                 .get_value_or(kDefaultServiceFactor)));
+    // probability
+    pbf_costing_options->set_probability(
+        kProbabilityRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/probability")
+                              .get_value_or(kDefaultProbability)));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -784,6 +792,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
+    pbf_costing_options->set_probability(kDefaultProbability);
   }
 }
 
