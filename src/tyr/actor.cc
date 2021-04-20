@@ -335,13 +335,14 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
 
 std::string
 actor_t::chinese_postman(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  std::cout << "Calling CP" << std::endl;
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
   Api request;
   ParseApi(request_str, Options::centroid, request);
   // check lokis status
-  pimpl->loki_worker.status(request);
+  pimpl->loki_worker.chinese_postman(request);
   // check thors status
   pimpl->thor_worker.status(request);
   // check odins status

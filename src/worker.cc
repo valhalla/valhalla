@@ -946,6 +946,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
     } catch (...) { throw valhalla_exception_t{137}; }
   }
 
+  // // get the avoid chinese polygon in there
+  // auto chinese_polygon = rapidjson::get_child_optional(doc, "/chinese_polygon");
+  // if (chinese_polygon) {
+  //   auto* ring_pbf = options.mutable_chinese_polygon();
+  //   options.set_allocated_chinese_polygon(chinese_polygon);
+  //   try {
+  //     parse_ring(ring_pbf, chinese_polygon);
+  //   } catch (...) { throw valhalla_exception_t{137}; }
+  // }
+
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {

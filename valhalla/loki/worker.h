@@ -44,6 +44,7 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
   void status(Api& request) const;
+  void chinese_postman(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -59,6 +60,7 @@ protected:
   void init_route(Api& request);
   void init_matrix(Api& request);
   void init_isochrones(Api& request);
+  void init_chinese_postman(Api& request);
   void init_trace(Api& request);
   std::vector<midgard::PointLL> init_height(Api& request);
   void init_transit_available(Api& request);
