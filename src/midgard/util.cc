@@ -459,8 +459,9 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
   return resampled;
 }
 
-// Use the barycentric technique to test if the point p
-// is inside the triangle formed by (a, b, c).
+// Use the barycentric technique to test if the point p is inside the triangle formed by (a, b, c).
+// If p is along the triangle's nodes/edges, this is not considered contained.
+// Note to user: this is entirely done in 2-D; no effort is made to approximate earth curvature.
 template <typename coord_t>
 bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p) {
   double v0x = c.x() - a.x();

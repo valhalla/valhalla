@@ -627,8 +627,14 @@ struct projector_t {
 };
 
 /**
- * Returns true if the given point p resides in the triangle (a,b,c).
- * Standard cartesian (flat earth) geometry is utilized.
+ * Use the barycentric technique to test if the point p is inside the triangle formed by (a, b, c).
+ * If p is along the triangle's nodes/edges, this is not considered contained.
+ * Note to user: this is entirely done in 2-D; no effort is made to approximate earth curvature.
+ * @param  a  first triangle point
+ * @param  b  second triangle point
+ * @param  c  third triangle point
+ * @param  p  point to test for containment
+ * @return    true/false if contained.
  */
 template <typename coord_t>
 bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p);

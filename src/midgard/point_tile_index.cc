@@ -78,8 +78,8 @@ void PointTileIndex::remove_point(const size_t& idx) {
   // delete this entry from its tile
   auto iter = tiled_space.find(get_tile_id(points[idx]));
   if (iter != tiled_space.end()) {
-    std::unordered_set<size_t>& pixel_points = iter->second;
-    pixel_points.erase(idx);
+    std::unordered_set<size_t>& tile_points = iter->second;
+    tile_points.erase(idx);
   }
 
   // don't actually delete from the vector, just mark as deleted

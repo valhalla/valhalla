@@ -216,8 +216,6 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
       peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, hfidx, eidx);
     if (hfidx - sidx > 1)
       peucker_avoid_self_intersections(point_tile_index, epsilon_sq, exclusions, sidx, hfidx);
-  } else {
-    point_tile_index.remove_points(sidx + 1, eidx);
   }
 }
 
