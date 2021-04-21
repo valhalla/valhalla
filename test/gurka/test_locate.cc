@@ -39,14 +39,14 @@ TEST(locate, basic_properties) {
   // turn on some traffic for fun
   auto traffic_cb = [](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
                        valhalla::baldr::TrafficSpeed* current) -> void {
-    current->overall_speed = 124 >> 1;
-    current->speed1 = 126 >> 1;
+    current->overall_encoded_speed = 124 >> 1;
+    current->encoded_speed1 = 126 >> 1;
     current->congestion1 = 0; // unknown
     current->breakpoint1 = 85;
-    current->speed2 = 124 >> 1;
+    current->encoded_speed2 = 124 >> 1;
     current->congestion2 = 32; // middle
     current->breakpoint2 = 170;
-    current->speed3 = 122 >> 1;
+    current->encoded_speed3 = 122 >> 1;
     current->congestion3 = 63; // high
   };
   test::customize_live_traffic_data(map.config, traffic_cb);

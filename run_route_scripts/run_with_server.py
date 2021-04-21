@@ -20,7 +20,7 @@ def get_post_bodies(filename):
       post_body['id'] = str(line_number)
       yield post_body
 
-def initialize(args_):
+def initialize(args_,response_count_):
   # for persistant connections
   global session
   session = requests.Session()
@@ -29,16 +29,7 @@ def initialize(args_):
   args = args_
   # so each process can signal completing a request
   global response_count
-  response_count = multiprocessing.Value('i', 0)
-
-  # make the output directory
-  if args.output_dir is None:
-    basename = os.path.basename(os.path.splitext(args.test_file)[0])
-    datestr = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    args.output_dir = '_'.join([datestr, basename])
-  if os.path.exists(args.output_dir):
-    shutil.rmtree(args.output_dir)
-  os.mkdir(args.output_dir)
+  response_count = response_count_
 
 # post a request
 def make_request(post_body):
@@ -96,14 +87,25 @@ if __name__ == "__main__":
   parser.add_argument('--format', type=str, help='Supports csv, json, raw and null output formats', default='csv')
   parsed_args = parser.parse_args()
 
+  # make the output directory
+  if parsed_args.output_dir is None:
+    basename = os.path.basename(os.path.splitext(parsed_args.test_file)[0])
+    datestr = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    parsed_args.output_dir = '_'.join([datestr, basename])
+  if os.path.exists(parsed_args.output_dir):
+    shutil.rmtree(parsed_args.output_dir)
+  os.mkdir(parsed_args.output_dir)
+
+  response_count = multiprocessing.Value('i', 0)
   # make a worker pool to work on the requests
   work = [body for body in get_post_bodies(parsed_args.test_file)]
-  with multiprocessing.Pool(initializer=initialize(parsed_args), processes=parsed_args.concurrency) as pool:
+  # Note: workers also call initialize for themselves
+  with multiprocessing.Pool(initializer=initialize, initargs=(parsed_args,response_count), processes=parsed_args.concurrency) as pool:
     result = pool.map_async(make_request, work)
 
     # check progress
-    if args.format != 'null':
-      print('Placing %d results in %s' % (len(work), args.output_dir))
+    if parsed_args.format != 'null':
+      print('Placing %d results in %s' % (len(work), parsed_args.output_dir))
     progress = 0
     increment = 5
     while not result.ready():

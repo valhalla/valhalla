@@ -36,7 +36,7 @@ option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON tiles reference counters are thr
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
- 
+
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -79,8 +79,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
   message(STATUS "Configuring in release mode with debug flags")
 elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
   message(STATUS "Configuring in release mode with minimized size")
+elseif(CMAKE_BUILD_TYPE STREQUAL None)
+  message(STATUS "Configuring without a mode, no optimization flags will be set")
 else()
-  message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize")
+  message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
 endif()
 
 function(create_source_groups prefix)

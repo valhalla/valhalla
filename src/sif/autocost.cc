@@ -70,7 +70,7 @@ constexpr float kTaxiFactor = 0.85f;
 constexpr float kDefaultAlleyFactor = 1.0f;
 
 // How much to avoid generic service roads.
-constexpr float kDefaultServiceFactor = 1.2f;
+constexpr float kDefaultServiceFactor = 1.0f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,

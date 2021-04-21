@@ -748,6 +748,22 @@ TEST(UtilMidgard, TriangleContains) {
   EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(c.x() + b.x()) / 2, (c.y() + b.y()) / 2}));
 }
 
+TEST(UtilMidgard, PolygonArea) {
+  std::vector<PointLL> a{{1, 1}, {2, 2}, {3, 1}};
+  {
+    // area is negative in case of clockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, -1, 1e-7);
+  }
+
+  std::reverse(a.begin(), a.end());
+  {
+    // area is positive in case of counterclockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, 1, 1e-7);
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

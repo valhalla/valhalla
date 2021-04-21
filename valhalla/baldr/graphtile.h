@@ -569,13 +569,13 @@ public:
         partial_live_pct =
             (
                 // First section
-                (live_speed.speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
+                (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
                 // Second section
-                + (live_speed.speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
                        ? (live_speed.breakpoint2 - live_speed.breakpoint1)
                        : 0)
                 // Third section
-                + (live_speed.speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
                        ? (255 - live_speed.breakpoint2)
                        : 0)) /
             255.0;

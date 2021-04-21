@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
 
 jobs:
   build-docker-images:
@@ -94,6 +94,11 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -125,14 +130,19 @@ jobs:
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
-          make -C build -j2 coverage
-      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+          make -C build -j4 coverage
+      - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -160,10 +170,15 @@ jobs:
   build-osx:
     executor: macos
     steps:
-      - install_macos_dependencies
       - checkout
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - install_macos_dependencies
       - restore_cache:
           keys:
             - ccache-release-macos-{{ .Branch }}
@@ -171,7 +186,7 @@ jobs:
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: cd build && cmake ..
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests

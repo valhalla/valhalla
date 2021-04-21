@@ -106,6 +106,18 @@ protected:
                      const midgard::PointLL& ll,
                      const float secs0,
                      const float dist0);
+
+  /**
+   * Updates the isotile along short segment
+   * @param from Segment begin
+   * @param to Segment end
+   * @param seconds Time contour level in seconds
+   * @param meters Distance contour level in meters
+   */
+  void UpdateIsoTileAlongSegment(const midgard::PointLL& from,
+                                 const midgard::PointLL& to,
+                                 float seconds,
+                                 float meters);
 };
 
 } // namespace thor

@@ -18,8 +18,6 @@ VerbalTextFormatter::~VerbalTextFormatter() {
 std::string VerbalTextFormatter::Format(const std::string& text) const {
   std::string verbal_text(text);
 
-  verbal_text = FormNumberSplitTts(verbal_text);
-
   return verbal_text;
 }
 

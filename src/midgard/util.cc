@@ -599,13 +599,14 @@ x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
+  // Shoelace formula
   typename container_t::value_type::first_type area =
       polygon.back() == polygon.front() ? 0.
-                                        : (polygon.back().first + polygon.front().first) *
-                                              (polygon.back().second + polygon.front().second);
+                                        : (polygon.back().first * polygon.front().second -
+                                           polygon.back().second * polygon.front().first);
   for (auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend();
        ++p1, ++p2) {
-    area += (p1->first + p2->first) * (p1->second + p2->second);
+    area += p1->first * p2->second - p1->second * p2->first;
   }
   return area * .5;
 }
