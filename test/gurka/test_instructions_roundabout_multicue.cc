@@ -200,14 +200,14 @@ TEST_F(InstructionsRoundaboutMulticue, ExitThenEnterRoundaboutNoMulticue) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index,
       "Enter the roundabout and take the 2nd exit toward A 95/B 2/München/Kürten.",
-      "Enter the roundabout and take the 2nd exit.",
+      "Enter the roundabout and take the 2nd exit toward A 95, München.",
       "Enter the roundabout and take the 2nd exit toward A 95.",
       "Enter the roundabout and take the 2nd exit toward A 95, München.", "");
 
   // Verify the 2nd exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.",
-      "Exit the roundabout. Then You will arrive at your destination.", "",
+      "Exit the roundabout toward A 95, München. Then You will arrive at your destination.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }

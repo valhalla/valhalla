@@ -270,7 +270,8 @@ TEST(Instructions, validate_ramp_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the PA 283 West ramp toward Harrisburg.", "Take the ramp.",
+                    "Take the PA 283 West ramp toward Harrisburg.",
+                    "Take the Pennsylvania 2 83 West ramp toward Harrisburg.",
                     "Take the Pennsylvania 2 83 West ramp.",
                     "Take the Pennsylvania 2 83 West ramp toward Harrisburg.",
                     "Continue for a quarter mile.");
@@ -279,8 +280,9 @@ TEST(Instructions, validate_ramp_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the M11 ramp toward London.", "Take the ramp.", "Take the M11 ramp.",
-                    "Take the M11 ramp toward London.", "Continue for a half mile.");
+                    "Take the M11 ramp toward London.", "Take the M11 ramp toward London.",
+                    "Take the M11 ramp.", "Take the M11 ramp toward London.",
+                    "Continue for a half mile.");
 }
 
 TEST(Instructions, validate_osrm_ramp_maneuver) {
@@ -311,29 +313,32 @@ TEST(Instructions, validate_exit_instructions) {
                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the I 66 East exit on the left toward Washington.",
-                    "Take the exit on the left.", "Take the Interstate 66 East exit on the left.",
+                    "Take the Interstate 66 East exit on the left toward Washington.",
+                    "Take the Interstate 66 East exit on the left.",
                     "Take the Interstate 66 East exit on the left toward Washington.", "");
 
   // Test exit left on left driving side
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "Take exit 8.", "Take exit 8.",
-                    "Take exit 8 onto A1 20(W)|A1 20(W).", "");
+                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8.",
+					"Take exit 8 onto A120(W)|A120(W).", "");
 
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the PA 934 exit toward I 81/Fort Indiantown Gap/Annville.",
-                    "Take the exit.", "Take the Pennsylvania 9 34 exit.",
+                    "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.",
+                    "Take the Pennsylvania 9 34 exit.",
                     "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.", "");
 
   expected_maneuvers_size = 4;
   // Test exit non-motorway in VA
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the US 15 North exit toward Frederick Maryland.", "Take the exit.",
+                    "Take the US 15 North exit toward Frederick Maryland.",
+                    "Take the U.S. 15 North exit toward Frederick Maryland.",
                     "Take the U.S. 15 North exit.",
                     "Take the U.S. 15 North exit toward Frederick Maryland.", "");
 }
@@ -458,7 +463,7 @@ TEST(Instructions, validate_turn_at_instructions) {
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_right_at.pbf"}, expected_routes_size,
       expected_legs_size, expected_maneuvers_size, maneuver_index, "Turn right at 新橋三丁目交番前.",
-      "Turn right. Then, in 50 meters, You will arrive at your destination.",
+      "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
       "Turn right at 新橋三丁目交番前.",
       "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
       "Continue for 50 meters.");
@@ -468,7 +473,7 @@ TEST(Instructions, validate_turn_at_instructions) {
                      "test/pinpoints/instructions/turn_right_at_using_internal_edge.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Turn right at 万年橋東.",
-                    "Turn right. Then You will arrive at your destination.",
+                    "Turn right at 万年橋東. Then You will arrive at your destination.",
                     "Turn right at 万年橋東.",
                     "Turn right at 万年橋東. Then You will arrive at your destination.",
                     "Continue for 50 meters.");
@@ -477,7 +482,7 @@ TEST(Instructions, validate_turn_at_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/uturn_right_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Make a right U-turn at 銀座五丁目.",
-                    "Make a right U-turn. Then You will arrive at 15.",
+                    "Make a right U-turn at 銀座五丁目. Then You will arrive at 15.",
                     "Make a right U-turn at 銀座五丁目.",
                     "Make a right U-turn at 銀座五丁目. Then You will arrive at 15.",
                     "Continue for 30 meters.");
@@ -485,7 +490,8 @@ TEST(Instructions, validate_turn_at_instructions) {
   // Turn left at
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn left at 銀座七丁目.", "Turn left. Then You will arrive at 花椿通り.",
+                    "Turn left at 銀座七丁目.",
+                    "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
                     "Turn left at 銀座七丁目.",
                     "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
                     "Continue for 20 meters.");
@@ -509,8 +515,9 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_turn_channel.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Bear right toward 8th Street.", "Bear right.", "Bear right toward 8th Street.",
-                    "Bear right toward 8th Street.", "Continue for a quarter mile.");
+                    "Bear right toward 8th Street.", "Bear right toward 8th Street.",
+                    "Bear right toward 8th Street.", "Bear right toward 8th Street.",
+                    "Continue for a quarter mile.");
 
   // Suppress use of the begin street name when the step contains an obvious maneuver
   expected_maneuvers_size = 5;
@@ -528,7 +535,8 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Turn right to take the US 322 East ramp.", "Turn right to take the ramp.",
+                    "Turn right to take the US 322 East ramp.",
+                    "Turn right to take the U.S. 3 22 East ramp.",
                     "Turn right to take the U.S. 3 22 East ramp.",
                     "Turn right to take the U.S. 3 22 East ramp.", "Continue for 1 mile.");
 
@@ -538,7 +546,8 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the PA 39 West/Hersheypark Drive exit toward Attractions.",
-                    "Take the exit.", "Take the Pennsylvania 39 West exit.",
+                    "Take the Pennsylvania 39 West, Hersheypark Drive exit toward Attractions.",
+                    "Take the Pennsylvania 39 West exit.",
                     "Take the Pennsylvania 39 West, Hersheypark Drive exit toward Attractions.",
                     "Continue for a half mile.");
 }

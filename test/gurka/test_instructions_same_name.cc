@@ -226,6 +226,6 @@ TEST_F(InstructionsSameNameTurnLeftToward, SameNameTurnLeftToward) {
   // Verify the same name turn left instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn left toward Serooskerke/Zierikzee/Burgh-Haamstede/Middelburg.",
-      "Turn left.", "Turn left toward Serooskerke.", "Turn left toward Serooskerke, Zierikzee.",
-      "Continue for 5 kilometers.");
+      "Turn left toward Serooskerke, Zierikzee.", "Turn left toward Serooskerke.",
+      "Turn left toward Serooskerke, Zierikzee.", "Continue for 5 kilometers.");
 }

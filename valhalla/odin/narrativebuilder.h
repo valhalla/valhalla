@@ -362,8 +362,6 @@ protected:
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormVerbalSuccinctDestinationTransitionInstruction();
-
   std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
 
   std::string FormVerbalSuccinctTurnTransitionInstruction(
@@ -377,13 +375,6 @@ protected:
       bool limit_by_consecutive_count = kLimitByConseuctiveCount,
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       const std::string& delim = kVerbalDelim);
-
-  std::string FormVerbalSuccinctRampStraightTransitionInstruction();
-
-  std::string FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver);
-
-  std::string FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver,
-                                                          const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalSuccinctKeepTransitionInstruction(
       Maneuver& maneuver,
