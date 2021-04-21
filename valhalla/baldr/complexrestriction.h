@@ -185,6 +185,14 @@ public:
   }
 
   /**
+   * Get the probability for the restriction.
+   * @return  Returns the probability for this restriction.
+   */
+  uint64_t probablity() const {
+    return probability_;
+  }
+
+  /**
    * Get the size of this complex restriction. Includes the fixed size
    * structure plus the via edge Id list that immediately follows.
    * @return  Returns the size in bytes of this object.
@@ -226,13 +234,14 @@ protected:
   uint64_t end_hrs_ : 5;     // end hours
 
   // Restriction data
-  uint64_t type_ : 4;       // Restriction type
-  uint64_t modes_ : 12;     // Mode(s) this access restriction applies to
-  uint64_t via_count_ : 5;  // size of via list.
-  uint64_t dow_ : 7;        // day of week for this restriction
-  uint64_t begin_mins_ : 6; // begin minutes
-  uint64_t end_mins_ : 6;   // end minutes
-  uint64_t spare_ : 24;
+  uint64_t type_ : 4;        // Restriction type
+  uint64_t modes_ : 12;      // Mode(s) this access restriction applies to
+  uint64_t via_count_ : 5;   // size of via list.
+  uint64_t dow_ : 7;         // day of week for this restriction
+  uint64_t begin_mins_ : 6;  // begin minutes
+  uint64_t end_mins_ : 6;    // end minutes
+  uint64_t probability_ : 7; // used for probable restrictions.
+  uint64_t spare_ : 17;
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?
