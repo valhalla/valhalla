@@ -175,6 +175,14 @@ public:
   }
 
   /**
+   * Set the probability for the restriction.
+   * @param  probability  probability for this restriction.
+   */
+  void set_probability(const uint64_t probability) {
+    probability_ = probability;
+  }
+
+  /**
    * overloaded == operator - used to ensure no dups in tiles.
    * @param  other  ComplexRestrictionBuilder to compare to.
    * @return  Returns true or false if equal or not.
