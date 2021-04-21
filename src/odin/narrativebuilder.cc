@@ -79,7 +79,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Set verbal succinct transition instruction
         maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctDestinationTransitionInstruction());
+            FormVerbalDestinationInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -209,8 +209,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_instruction(FormExitInstruction(maneuver));
 
         // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctExitTransitionInstruction(maneuver));
+        maneuver.set_verbal_succinct_transition_instruction(FormVerbalExitInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertExitInstruction(maneuver));
@@ -3909,25 +3908,6 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
   boost::replace_all(instruction, kLengthTag,
                      FormLength(maneuver, dictionary_.start_verbal_subset.metric_lengths,
                                 dictionary_.start_verbal_subset.us_customary_lengths));
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction() {
-  // "0": "You have arrived at your destination."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.destination_verbal_subset.phrases.at(std::to_string(phrase_id));
-
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
     FormArticulatedPrepositions(instruction);
@@ -4069,102 +4049,6 @@ NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuve
   if (articulated_preposition_enabled_) {
     FormArticulatedPrepositions(instruction);
   }
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctRampStraightTransitionInstruction() {
-  // "0": "Stay straight to take the ramp."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.ramp_straight_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctRampTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Take the ramp on the <RELATIVE_DIRECTION>."
-  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
-  // "10": "Take the ramp.",
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Determine if turn, else it's a "Take" instruction
-  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
-      (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
-    phrase_id = 5;
-    // Determine if driving side matches relative direction
-  } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-              maneuver.drive_on_right()) ||
-             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-              !maneuver.drive_on_right())) {
-    phrase_id = 10;
-  }
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.ramp_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-                     FormRelativeTwoDirection(maneuver.type(),
-                                              dictionary_.ramp_verbal_subset.relative_directions));
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctExitTransitionInstruction(Maneuver& maneuver,
-                                                                          const std::string& delim) {
-  // "0": "Take the exit on the <RELATIVE_DIRECTION>."
-  // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
-  // "15": "Take the exit.",
-  // "16": "Take exit <NUMBER_SIGN>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-  std::string exit_number_sign;
-
-  // Determine if driving side matches relative direction
-  if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
-      ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
-    phrase_id = 15;
-  }
-
-  if (maneuver.HasExitNumberSign()) {
-    phrase_id += 1;
-    // Assign number sign
-    exit_number_sign =
-        maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.exit_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-                     FormRelativeTwoDirection(maneuver.type(),
-                                              dictionary_.exit_verbal_subset.relative_directions));
-  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
   return instruction;
 }
 
