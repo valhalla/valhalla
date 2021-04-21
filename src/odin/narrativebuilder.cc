@@ -4144,15 +4144,16 @@ NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuve
   if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
       (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
     phrase_id += 1;
+    relative_direction =
+        FormRelativeTwoDirection(maneuver.type(),
+                                 dictionary_.merge_verbal_subset.relative_directions);
   }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-                     FormRelativeTwoDirection(maneuver.type(),
-                                              dictionary_.merge_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
   boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
