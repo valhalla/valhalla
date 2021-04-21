@@ -155,15 +155,15 @@ workflows:
   build_test_publish:
     jobs:
       - build-docker-images
-      - lint-build-debug
+      - lint-build-debug:
           filters:
             tags:
               ignore: /.*/
-      - build-release
+      - build-release:
           filters:
             tags:
               ignore: /.*/
-      - build-osx
+      - build-osx:
           filters:
             tags:
               ignore: /.*/
