@@ -124,7 +124,6 @@ TEST(Isochrones, Basic) {
   }
 }
 
-
 } // namespace
 
 int main(int argc, char* argv[]) {

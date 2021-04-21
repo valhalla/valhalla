@@ -743,9 +743,9 @@ TEST(UtilMidgard, TriangleContains) {
   EXPECT_FALSE(triangle_contains(a, b, c, c));
 
   // triangle edge is not considered contained
-  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x()+b.x())/2, (a.y()+b.y())/2}));
-  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x()+c.x())/2, (a.y()+c.y())/2}));
-  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(c.x()+b.x())/2, (c.y()+b.y())/2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + b.x()) / 2, (a.y() + b.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + c.x()) / 2, (a.y() + c.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(c.x() + b.x()) / 2, (c.y() + b.y()) / 2}));
 }
 
 } // namespace

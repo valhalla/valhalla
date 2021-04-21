@@ -157,7 +157,6 @@ TEST(Polyline2, TestGeneralizeSimplification) {
   }
 }
 
-
 TEST(Polyline2, PeuckerSelfIntersectionTest1) {
   // These are real-world coordinates pulled off an isochrone polygon with gen_factor=0.
   // Using the raw Douglas-Peucker algorithm results in a self-intersection (using a
