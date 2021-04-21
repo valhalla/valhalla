@@ -147,15 +147,14 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     std::cout << "options.has_chinese_polygon" << std::endl;
     const auto chinese_edges =
         edges_in_ring(options.chinese_polygon(), *reader, costing, max_avoid_polygons_length);
-    // const auto edges =
-    //     edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
-    // auto* co = options.mutable_costing_options(options.costing());
-    // for (const auto& edge_id : edges) {
-    //   auto* avoid = co->add_avoid_edges();
-    //   avoid->set_id(edge_id);
-    //   // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
-    //   avoid->set_percent_along(0);
-    // }
+
+    auto* co = options.mutable_costing_options(options.costing());
+    for (const auto& edge_id : chinese_edges) {
+      auto* chinese_edge = co->add_chinese_edges();
+      chinese_edge->set_id(edge_id);
+      // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
+      chinese_edge->set_percent_along(0);
+    }
   }
 
   // If more alternates are requested than we support we cap it
