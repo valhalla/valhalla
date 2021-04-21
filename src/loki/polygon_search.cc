@@ -139,5 +139,82 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
 
   return avoid_edge_ids;
 }
+
+std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring_pbf,
+                                              baldr::GraphReader& reader,
+                                              const std::shared_ptr<sif::DynamicCost>& costing,
+                                              float max_length) {
+  std::cout << "edges_in_ring" << std::endl;
+  // convert to bg object and check length restriction
+  std::vector<ring_bg_t> rings_bg;
+  const ring_bg_t ring_bg = PBFToRing(ring_pbf);
+  std::cout << "edges_in_ring 1" << std::endl;
+  if (GetRingLength(ring_bg) > max_length) {
+    throw valhalla_exception_t(167, std::to_string(max_length));
+  }
+  std::cout << "edges_in_ring 2" << std::endl;
+  // Get the lowest level and tiles
+  const auto tiles = vb::TileHierarchy::levels().back().tiles;
+  const auto bin_level = vb::TileHierarchy::levels().back().level;
+
+  // keep track which tile's bins intersect which rings
+  bins_collector bins_intersected;
+  std::unordered_set<vb::GraphId> avoid_edge_ids;
+
+  // first pull out all *unique* bins which intersect the ring
+  auto line_intersected = tiles.Intersect(ring_bg);
+  for (const auto& tb : line_intersected) {
+    for (const auto& b : tb.second) {
+      bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(0);
+    }
+  }
+  for (const auto& intersection : bins_intersected) {
+    auto tile = reader.GetGraphTile({intersection.first, bin_level, 0});
+    if (!tile) {
+      continue;
+    }
+    for (const auto& bin : intersection.second) {
+      // tile will be mutated most likely in the loop
+      reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
+      for (const auto& edge_id : tile->GetBin(bin.first)) {
+        if (avoid_edge_ids.count(edge_id) != 0) {
+          continue;
+        }
+        // TODO: optimize the tile switching by enqueuing edges
+        // from other levels & tiles and process them after this big loop
+        if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
+            !reader.GetGraphTile(edge_id, tile)) {
+          continue;
+        }
+        const auto edge = tile->directededge(edge_id);
+        auto opp_tile = tile;
+        const baldr::DirectedEdge* opp_edge = nullptr;
+        baldr::GraphId opp_id;
+
+        // bail if we wouldnt be allowed on this edge anyway (or its opposing)
+        if (!costing->Allowed(edge, tile) &&
+            (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
+             !costing->Allowed(opp_edge, opp_tile))) {
+          continue;
+        }
+        // TODO: some logic to set percent_along for origin/destination edges
+        // careful: polygon can intersect a single edge multiple times
+        auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+        bool intersects = false;
+        intersects = bg::intersects(ring_bg, edge_info.shape());
+        if (intersects) {
+          break;
+        }
+        if (intersects) {
+          avoid_edge_ids.emplace(edge_id);
+          avoid_edge_ids.emplace(
+              opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+        }
+      }
+    }
+  }
+  return avoid_edge_ids;
+}
+
 } // namespace loki
 } // namespace valhalla

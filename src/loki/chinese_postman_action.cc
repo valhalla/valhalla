@@ -7,26 +7,6 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 
-namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
-
-void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    float matrix_max_distance) {
-  // see if any locations pairs are unreachable or too far apart
-  for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
-    for (auto target = source + 1; target != locations.end(); ++target) {
-      // check if distance between latlngs exceed max distance limit
-      auto path_distance = to_ll(*source).Distance(to_ll(*target));
-      if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
-      };
-    }
-  }
-}
-} // namespace
-
 namespace valhalla {
 namespace loki {
 
@@ -53,6 +33,15 @@ void loki_worker_t::chinese_postman(Api& request) {
   init_chinese_postman(request);
   auto& options = *request.mutable_options();
 
+  try {
+    // correlate the various locations to the underlying graph
+    auto locations = PathLocation::fromPBF(options.locations());
+    const auto projections = loki::Search(locations, *reader, costing);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& projection = projections.at(locations[i]);
+      PathLocation::toPBF(projection, options.mutable_locations(i), *reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 
 } // namespace loki

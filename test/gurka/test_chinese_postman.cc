@@ -88,7 +88,8 @@ protected:
   static gurka::map chinese_postman_map;
 
   static void SetUpTestSuite() {
-    // Example is based on standard example from https://www-m9.ma.tum.de/graph-algorithms/directed-chinese-postman/index_en.html
+    // Example is based on standard example from
+    // https://www-m9.ma.tum.de/graph-algorithms/directed-chinese-postman/index_en.html
     const std::string ascii_map = R"(
         B------A------C
         | \    |    / |
@@ -109,7 +110,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
-                                  {{"service_limits.max_avoid_polygons_length", "1000"}});
+                                            {{"service_limits.max_avoid_polygons_length", "1000"}});
   }
 };
 
