@@ -53,10 +53,10 @@ TEST(PointTileIndex, Intermediate) {
   double max_lon = 0.001;
   double min_lat = min_lon;
   double max_lat = max_lon;
-  int grid_dim = 19;  // any odd number will do
+  int grid_dim = 19; // any odd number will do
   double width = (max_lat - min_lat) / (grid_dim - 1);
   PointLL origin_pt{0, 0};
-  size_t origin_idx = (grid_dim*grid_dim)/2;  // idx for origin point
+  size_t origin_idx = (grid_dim * grid_dim) / 2; // idx for origin point
   double lat, lon;
   std::unordered_set<size_t> near_pts;
 
@@ -93,8 +93,8 @@ TEST(PointTileIndex, Intermediate) {
     std::unordered_set<size_t> exact_near_pts;
     for (size_t idx : near_pts) {
       const PointLL& near_pt = index.points[idx];
-      double dx = origin_pt.x()-near_pt.x(), dy = origin_pt.y() - near_pt.y();
-      double pure_pythagorean_dist = std::sqrt(dx*dx + dy*dy);
+      double dx = origin_pt.x() - near_pt.x(), dy = origin_pt.y() - near_pt.y();
+      double pure_pythagorean_dist = std::sqrt(dx * dx + dy * dy);
       if (pure_pythagorean_dist < width + eps) {
         exact_near_pts.insert(idx);
       }
@@ -105,11 +105,11 @@ TEST(PointTileIndex, Intermediate) {
 
     // turns out we can compute the index of each points around the origin
     // based on the grid size
-    size_t tidx = origin_idx + 1;               // idx for point above origin
-    size_t bidx = origin_idx - 1;               // idx for point below origin
-    size_t lidx = origin_idx - grid_dim;        // idx for point left of origin
-    size_t ridx = origin_idx + grid_dim;        // idx for point right of origin
-    std::unordered_set<size_t> exp_pts {lidx, bidx, origin_idx, tidx, ridx};
+    size_t tidx = origin_idx + 1;        // idx for point above origin
+    size_t bidx = origin_idx - 1;        // idx for point below origin
+    size_t lidx = origin_idx - grid_dim; // idx for point left of origin
+    size_t ridx = origin_idx + grid_dim; // idx for point right of origin
+    std::unordered_set<size_t> exp_pts{lidx, bidx, origin_idx, tidx, ridx};
     EXPECT_EQ(exact_near_pts, exp_pts);
   }
 
@@ -126,10 +126,10 @@ TEST(PointTileIndex, Intermediate) {
     // add a bunch of points tightly circled around the origin
     int num_circle_pts = 100;
     for (int i = 0; i < num_circle_pts; i++) {
-      double radians = 2*M_PI * ((double)i / (double)num_circle_pts);
+      double radians = 2 * M_PI * ((double)i / (double)num_circle_pts);
       double x = std::cos(radians), y = std::sin(radians);
       constexpr double len = 1e-7;
-      points_enhanced.emplace_back(PointLL{len*x, len*y});
+      points_enhanced.emplace_back(PointLL{len * x, len * y});
       circle_pt_indicies.insert(circle_pt_idx++);
     }
 
@@ -142,7 +142,7 @@ TEST(PointTileIndex, Intermediate) {
     // we added.
     near_pts.clear();
     index.get_points_near(origin_pt, near_pts);
-    EXPECT_EQ(near_pts.size(), num_circle_pts+1);
+    EXPECT_EQ(near_pts.size(), num_circle_pts + 1);
 
     circle_pt_indicies.insert(origin_idx);
     EXPECT_EQ(near_pts, circle_pt_indicies);
@@ -192,7 +192,7 @@ TEST(PointTileIndex, Intermediate) {
     //------- right ---------------------------------
     std::unordered_set<size_t> exp_right_indices;
     for (int i = 0; i < grid_dim; i++) {
-      size_t idx = grid_dim*(grid_dim-1) + i;
+      size_t idx = grid_dim * (grid_dim - 1) + i;
       exp_right_indices.insert(idx);
     }
 
@@ -206,7 +206,7 @@ TEST(PointTileIndex, Intermediate) {
     //------- top ---------------------------------
     std::unordered_set<size_t> exp_top_indices;
     for (int i = 0; i < grid_dim; i++) {
-      size_t idx = grid_dim * (i+1) - 1;
+      size_t idx = grid_dim * (i + 1) - 1;
       exp_top_indices.insert(idx);
     }
 
