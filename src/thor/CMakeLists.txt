@@ -6,6 +6,7 @@ set(sources
   attributes_controller.cc
   bidirectional_astar.cc
   centroid.cc
+  chinese_postman_action.cc
   costmatrix.cc
   dijkstras.cc
   isochrone_action.cc

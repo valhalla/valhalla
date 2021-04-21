@@ -345,7 +345,7 @@ std::string actor_t::chinese_postman(const std::string& request_str,
   // check lokis status
   pimpl->loki_worker.chinese_postman(request);
   // check thors status
-  pimpl->thor_worker.status(request);
+  pimpl->thor_worker.chinese_postman(request);
   // check odins status
   pimpl->odin_worker.status(request);
   // get the json
