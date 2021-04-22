@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
@@ -700,9 +702,10 @@ public:
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
-  uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripLeg_TravelMode travel_mode,
-                                                               TripLeg_Use* use = nullptr);
+  uint32_t
+  GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode,
+                                                      boost::optional<TripLeg_Use>* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);
