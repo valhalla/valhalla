@@ -55,6 +55,11 @@ message AvoidEdge {
   optional float percent_along = 2;
 }
 
+message ChinesePostmanEdge {
+  optional uint64 id = 1;
+  optional float percent_along = 2;
+}
+
 message CostingOptions {
   optional float maneuver_penalty = 1;
   optional float destination_only_penalty = 2;
@@ -132,7 +137,7 @@ message CostingOptions {
   optional string name = 91;
   repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from avoid_locations
   optional bool filter_closures = 93 [default = true];
-  repeated AvoidEdge chinese_edges = 94;                     // Edges to be visited for chinese postman algorithm
+  repeated ChinesePostmanEdge chinese_edges = 94;           // Edges to be visited for chinese postman algorithm
 }
 
 message Options {
