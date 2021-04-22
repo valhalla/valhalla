@@ -1,16 +1,22 @@
+#include "midgard/util.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
+
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace thor {
-void thor_worker_t::chinese_postman(Api&) const {
-#ifdef HAVE_HTTP
-  // if we are in the process of shutting down we signal that here
-  // should react by draining traffic (though they are likely doing this as they are usually the ones
-  // who sent us the request to shutdown)
-  if (prime_server::draining() || prime_server::shutting_down()) {
-    throw valhalla_exception_t{402};
-  }
-#endif
+
+void thor_worker_t::chinese_postman(Api& request) {
+  std::cout << "thor_worker_t::chinese_postman" << std::endl;
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
+
+  parse_locations(request);
+  auto costing = parse_costing(request);
+  auto& options = *request.mutable_options();
 }
+
 } // namespace thor
 } // namespace valhalla
