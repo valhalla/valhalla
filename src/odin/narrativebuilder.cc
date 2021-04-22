@@ -156,10 +156,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set instruction
         maneuver.set_instruction(FormRampStraightInstruction(maneuver));
 
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalRampStraightInstruction(maneuver));
-
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
             FormVerbalAlertRampStraightInstruction(maneuver));
@@ -183,9 +179,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set instruction
         maneuver.set_instruction(FormRampInstruction(maneuver));
 
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(FormVerbalRampInstruction(maneuver));
-
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertRampInstruction(maneuver));
 
@@ -207,9 +200,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kExitLeft: {
         // Set instruction
         maneuver.set_instruction(FormExitInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(FormVerbalExitInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertExitInstruction(maneuver));
