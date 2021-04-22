@@ -341,7 +341,7 @@ std::string actor_t::chinese_postman(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   Api request;
-  ParseApi(request_str, Options::centroid, request);
+  ParseApi(request_str, Options::chinese_postman, request);
   // check lokis status
   pimpl->loki_worker.chinese_postman(request);
   // check thors status
