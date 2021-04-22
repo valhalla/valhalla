@@ -362,6 +362,8 @@ protected:
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
+  std::string FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver);
+
   std::string FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver);
 
   std::string FormVerbalSuccinctTurnTransitionInstruction(
