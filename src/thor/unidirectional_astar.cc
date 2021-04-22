@@ -239,12 +239,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                                 opp_pred_edge, pred.has_measured_speed(),
                                                 pred.internal_turn());
   Cost newcost = pred.cost() + edge_cost;
-  if (FORWARD) {
-    newcost += transition_cost;
-  } else {
-    // TODO(danpat): why is reverse like this, instead of the same as forward?  Is it a bug?
-    newcost.cost += transition_cost.cost;
-  }
+  newcost += transition_cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
@@ -380,7 +375,15 @@ UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) 
     } else {
       cost += edgelabel.cost() - edgelabels_[predidx].cost();
     }
+    // PathInfo expects, looking forward along the route, the cost to be the transition
+    // at the start of the edge plus the cost of the edge.  In the reverse search,
+    // EdgeLabels contain the cost of the edge plus the transition at the _end_ of the edge,
+    // looking forward.  Here, we subtract the transition at the end, and add the transition
+    // at the start (which is taken from the previous edge, as we're walking from the origin
+    // to the destination here)
+    cost -= edgelabel.transition_cost();
     cost += previous_transition_cost;
+
     path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
                       previous_transition_cost);
 
@@ -773,14 +776,14 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
                 [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
+                  has_other_edges = has_other_edges || !(FORWARD ? e.begin_node() : e.end_node());
                 });
 
   // For each edge
   uint32_t density = 0;
   for (const auto& edge : dest.path_edges()) {
     // If destination is at a node skip any outbound edges
-    if (has_other_edges && edge.begin_node()) {
+    if (has_other_edges && (FORWARD ? edge.begin_node() : edge.end_node())) {
       continue;
     }
 
