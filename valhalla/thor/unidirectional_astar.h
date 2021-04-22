@@ -21,15 +21,14 @@
 namespace valhalla {
 namespace thor {
 
-enum class AStarExpansionType { forward, reverse };
 /**
  * Forward direction A* algorithm to create the shortest / least cost path.
  * This algorithm is used for "depart-at", time-dependent routes.
  * For driving routes it uses a highway hierarchy with shortcut edges to
  * improve performance.
  */
-template <const AStarExpansionType expansion_direction,
-          const bool FORWARD = expansion_direction == AStarExpansionType::forward>
+template <const ExpansionType expansion_direction,
+          const bool FORWARD = expansion_direction == ExpansionType::forward>
 class UnidirectionalAStar : public PathAlgorithm {
 public:
   /**
@@ -205,8 +204,8 @@ protected:
  */
 
 /*
-template <const AStarExpansionType expansion_direction,
-          const bool FORWARD = expansion_direction == AStarExpansionType::forward>
+template <const ExpansionType expansion_direction,
+          const bool FORWARD = expansion_direction == ExpansionType::forward>
 class TimeDepReverse : public UnidirectionalAStar<expansion_direction> {
 public:
   explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
@@ -222,8 +221,8 @@ public:
 };
 */
 
-using TimeDepForward = UnidirectionalAStar<AStarExpansionType::forward>;
-using TimeDepReverse = UnidirectionalAStar<AStarExpansionType::reverse>;
+using TimeDepForward = UnidirectionalAStar<ExpansionType::forward>;
+using TimeDepReverse = UnidirectionalAStar<ExpansionType::reverse>;
 
 } // namespace thor
 } // namespace valhalla

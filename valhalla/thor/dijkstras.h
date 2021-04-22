@@ -22,12 +22,6 @@
 namespace valhalla {
 namespace thor {
 
-enum class ExpansionType {
-  forward = 0,
-  reverse = 1,
-  multimodal = 2,
-};
-
 enum class ExpansionRecommendation {
   continue_expansion,
   stop_expansion,

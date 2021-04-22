@@ -16,7 +16,7 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
@@ -27,15 +27,15 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
 }
 
 // Default constructor
-template UnidirectionalAStar<AStarExpansionType::forward>::UnidirectionalAStar(
+template UnidirectionalAStar<ExpansionType::forward>::UnidirectionalAStar(
     const boost::property_tree::ptree& config);
 
 // Default constructor
-template UnidirectionalAStar<AStarExpansionType::reverse>::UnidirectionalAStar(
+template UnidirectionalAStar<ExpansionType::reverse>::UnidirectionalAStar(
     const boost::property_tree::ptree& config);
 
 // Clear the temporary information generated during path construction.
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
@@ -52,14 +52,14 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   has_ferry_ = false;
 }
 
-template void UnidirectionalAStar<AStarExpansionType::forward>::Clear();
-template void UnidirectionalAStar<AStarExpansionType::reverse>::Clear();
+template void UnidirectionalAStar<ExpansionType::forward>::Clear();
+template void UnidirectionalAStar<ExpansionType::reverse>::Clear();
 
 // Expand from the node along the forward search path. Immediately expands
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& graphreader,
                                                                const GraphId& node,
                                                                BDEdgeLabel& pred,
@@ -162,7 +162,7 @@ bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& grap
 // as well as doing just that.
 //
 // Returns true if any edge _could_ have been expanded after restrictions etc.
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     GraphReader& graphreader,
     const BDEdgeLabel& pred,
@@ -328,8 +328,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
 // Form the path from the adjacency list in the _forward_ direction
 template <>
-std::vector<PathInfo>
-UnidirectionalAStar<AStarExpansionType::forward>::FormPath(const uint32_t dest) {
+std::vector<PathInfo> UnidirectionalAStar<ExpansionType::forward>::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
@@ -355,8 +354,7 @@ UnidirectionalAStar<AStarExpansionType::forward>::FormPath(const uint32_t dest) 
 
 // Form the path from the adjacency list in the _reverse_ direction
 template <>
-std::vector<PathInfo>
-UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) {
+std::vector<PathInfo> UnidirectionalAStar<ExpansionType::reverse>::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
@@ -403,7 +401,7 @@ UnidirectionalAStar<AStarExpansionType::reverse>::FormPath(const uint32_t dest) 
   return path;
 }
 
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORWARD>::GetBestPath(
     valhalla::Location& origin,
     valhalla::Location& destination,
@@ -535,22 +533,22 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 }
 
 template std::vector<std::vector<PathInfo>>
-UnidirectionalAStar<AStarExpansionType::forward>::GetBestPath(valhalla::Location& origin,
-                                                              valhalla::Location& destination,
-                                                              GraphReader& graphreader,
-                                                              const sif::mode_costing_t& mode_costing,
-                                                              const TravelMode mode,
-                                                              const Options& /*options*/);
+UnidirectionalAStar<ExpansionType::forward>::GetBestPath(valhalla::Location& origin,
+                                                         valhalla::Location& destination,
+                                                         GraphReader& graphreader,
+                                                         const sif::mode_costing_t& mode_costing,
+                                                         const TravelMode mode,
+                                                         const Options& /*options*/);
 template std::vector<std::vector<PathInfo>>
-UnidirectionalAStar<AStarExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
-                                                              valhalla::Location& destination,
-                                                              GraphReader& graphreader,
-                                                              const sif::mode_costing_t& mode_costing,
-                                                              const TravelMode mode,
-                                                              const Options& /*options*/);
+UnidirectionalAStar<ExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
+                                                         valhalla::Location& destination,
+                                                         GraphReader& graphreader,
+                                                         const sif::mode_costing_t& mode_costing,
+                                                         const TravelMode mode,
+                                                         const Options& /*options*/);
 // Set the mode and costing
 // Initialize prior to finding best path
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::PointLL& origll,
                                                              const midgard::PointLL& destll) {
 
@@ -581,7 +579,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
 // the destination (increase distance for lower densities and decrease
 // for higher densities) and the distance between origin and destination
 // (increase for shorter distances).
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     const float dist,
     const uint32_t /*density*/) {
@@ -609,7 +607,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
 }
 
 // Add an edge at the origin to the adjacency list
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     GraphReader& graphreader,
     const valhalla::Location& origin,
@@ -768,7 +766,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 }
 
 // Add a destination edge
-template <const AStarExpansionType expansion_direction, const bool FORWARD>
+template <const ExpansionType expansion_direction, const bool FORWARD>
 uint32_t
 UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& graphreader,
                                                                   const valhalla::Location& dest) {
