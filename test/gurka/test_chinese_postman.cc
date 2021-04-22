@@ -33,8 +33,8 @@ rapidjson::Value get_avoid_locs(const std::vector<vm::PointLL>& locs,
   return locs_j;
 }
 
-rapidjson::Value get_avoid_polys(const std::vector<ring_bg_t>& rings,
-                                 rapidjson::MemoryPoolAllocator<>& allocator) {
+rapidjson::Value get_chinese_poly(const std::vector<ring_bg_t>& rings,
+                                  rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value rings_j(rapidjson::kArrayType);
   for (auto& ring : rings) {
     rapidjson::Value ring_j(rapidjson::kArrayType);
@@ -69,10 +69,10 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  if (type == "avoid_polygons") {
-    rapidjson::SetValueByPointer(doc, "/avoid_polygons", geom_obj);
+  if (type == "chinese_polygon") {
+    rapidjson::SetValueByPointer(doc, "/chinese_polygon", geom_obj);
   } else {
-    rapidjson::SetValueByPointer(doc, "/avoid_locations", geom_obj);
+    rapidjson::SetValueByPointer(doc, "/chinese_polygon", geom_obj);
   }
 
   rapidjson::StringBuffer sb;
@@ -88,25 +88,22 @@ protected:
   static gurka::map chinese_postman_map;
 
   static void SetUpTestSuite() {
-    // Example is based on standard example from
-    // https://www-m9.ma.tum.de/graph-algorithms/directed-chinese-postman/index_en.html
     const std::string ascii_map = R"(
         B------A------C
-        | \    |    / |
-        |  \   |   /  |
-        |   \  |  /   |
-        |     \| /    |
+        |      |    / |
+        |      |   /  |
+        |      |  /   |
+        |      | /    |
         D------E------F
     )";
     const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
                               {"AC", {{"highway", "residential"}, {"name", "Low"}}},
                               {"AE", {{"highway", "residential"}, {"name", "1st"}}},
                               {"BD", {{"highway", "residential"}, {"name", "2nd"}}},
-                              {"BE", {{"highway", "residential"}, {"name", "3rd"}}},
-                              {"CE", {{"highway", "residential"}, {"name", "4th"}}},
-                              {"CF", {{"highway", "residential"}, {"name", "5th"}}},
-                              {"DE", {{"highway", "residential"}, {"name", "6th"}}},
-                              {"EF", {{"highway", "residential"}, {"name", "7th"}}}};
+                              {"CE", {{"highway", "residential"}, {"name", "3rd"}}},
+                              {"CF", {{"highway", "residential"}, {"name", "4th"}}},
+                              {"DE", {{"highway", "residential"}, {"name", "5th"}}},
+                              {"EF", {{"highway", "residential"}, {"name", "6th"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
@@ -128,141 +125,58 @@ TEST_F(ChinesePostmanTest, TestConfig) {
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
+  auto value = get_chinese_poly(rings, allocator);
+  auto type = "chinese_polygon";
   auto req = build_local_req(doc, allocator, lls, "auto", value, type);
 
   // make sure the right exception is thrown
   try {
-    gurka::do_action(Options::route, chinese_postman_map, req);
+    gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
 
-TEST_P(ChinesePostmanTest, TestAvoidPolygon) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_d = chinese_postman_map.nodes.at("D");
+  auto node_e = chinese_postman_map.nodes.at("E");
+
   auto dx = node_b.lng() - node_a.lng();
   auto dy = node_a.lat() - node_d.lat();
 
-  // create a small polygon intersecting AD ("1st") just below node A
-  //      A------B
-  //  x---|---x  |
-  //  |   |   |  |
-  //  x---|---x  |
-  //      |      |
-  //      D------E
-  ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
-                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
-                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
-                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
-                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}};
+  // create a polygon covering ABDE
+  //   x-------------x
+  //   |  B------A---|--C
+  //   |  |      |   | /|
+  //   |  |      |   |/ |
+  //   |  |      |  /|  |
+  //   |  |      | / |  |
+  //   |  D------E---|--F
+  //   x-------------x
+  //
+  ring_bg_t ring{{node_b.lng() - 0.1 * dx, node_b.lat() + 0.1 * dy},
+                 {node_a.lng() + 0.1 * dx, node_a.lat() + 0.1 * dy},
+                 {node_e.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
+                 {node_d.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
+                 {node_b.lng() - 0.1 * dx, node_b.lat() + 0.1 * dy}};
   std::vector<ring_bg_t> rings;
   rings.push_back(ring);
 
   // build request manually for now
-  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["D"]};
+  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["A"]};
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
+  auto value = get_chinese_poly(rings, allocator);
+  auto type = "chinese_polygon";
   auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
 
   // will avoid 1st
-  auto route = gurka::do_action(Options::route, chinese_postman_map, req);
+  auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
   gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
 }
 
-TEST_P(ChinesePostmanTest, TestAvoid2Polygons) {
-  auto node_a = chinese_postman_map.nodes.at("A");
-  auto node_b = chinese_postman_map.nodes.at("B");
-  auto node_e = chinese_postman_map.nodes.at("E");
-  auto dx = std::abs(node_b.lng() - node_a.lng());
-  auto dy = std::abs(node_b.lat() - node_e.lat());
-
-  // create 2 small polygons intersecting all connecting roads so it fails to find a path
-  //      A------B
-  //  x---|-x  y-|---y
-  //  |   | |  | |   |
-  //  x---|-x  y-|---y
-  //      |      |
-  //      D------E
-
-  // one clockwise ring
-  std::vector<ring_bg_t> rings;
-  rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
-                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
-                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
-                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
-                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}});
-
-  // one counterclockwise ring
-  rings.push_back({{node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.1 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.1 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy}});
-
-  // build request manually for now
-  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["D"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
-
-  // make sure the right exception is thrown
-  try {
-    gurka::do_action(Options::route, chinese_postman_map, req);
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
-    FAIL() << "Expected valhalla_exception_t.";
-  };
-}
-
-TEST_P(ChinesePostmanTest, TestAvoidLocation) {
-  auto node_a = chinese_postman_map.nodes.at("A");
-  auto node_b = chinese_postman_map.nodes.at("B");
-  auto dx = std::abs(node_b.lng() - node_a.lng());
-
-  auto lon = node_a.lng() + 0.5 * dx;
-
-  // avoid the "High" road ;)
-  //      A---x--B
-  //      |      |
-  //      |      |
-  //      |      |
-  //      D------E
-  std::vector<vm::PointLL> points{{lon, node_a.lat()}};
-
-  // build request manually for now
-  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["B"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto value = get_avoid_locs(points, allocator);
-  auto type = "avoid_locations";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
-
-  // will avoid 1st
-  auto route = gurka::do_action(Options::route, chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"1st", "Low", "2nd"});
-}
-
-INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
-                         ChinesePostmanTest,
-                         ::testing::Values("auto",
-                                           "truck",
-                                           "bicycle",
-                                           "pedestrian",
-                                           "motorcycle",
-                                           "motor_scooter",
-                                           "hov",
-                                           "taxi",
-                                           "bus"));
+INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
