@@ -267,9 +267,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // a path to be formed even if the convergence test fails (can
     // happen with large edge scores)
     if (best_path.first == -1 || newcost.cost < best_path.second) {
-      best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary)
-                            ? meta.edge_status->index()
-                            : (FORWARD ? edgelabels_.size() : edgelabels_.size());
+      best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index()
+                                                                         : edgelabels_.size();
       best_path.second = newcost.cost;
     }
   }
@@ -279,15 +278,10 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     // TODO(danpat): can we slices down to EdgeLabel here safely?
-    EdgeLabel& lab =
-        FORWARD ? edgelabels_[meta.edge_status->index()] : edgelabels_[meta.edge_status->index()];
+    EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      if (FORWARD) {
-        adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
-      } else {
-        adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
-      }
+      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -791,7 +785,7 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
     }
 
     GraphId edgeid(edge.graph_id());
-    graph_tile_ptr tile;
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     if (FORWARD) {
       // Disallow any user avoided edges if the avoid location is behind the destination along the
       // edge
@@ -802,12 +796,10 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
       // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
       // is subtracted from the total cost up to the end of the destination edge.
       destinations_percent_along_[edge.graph_id()] = edge.percent_along();
-      tile = graphreader.GetGraphTile(edgeid);
     } else {
       // Keep the id and the cost to traverse the partial distance for the
       // remainder of the edge. This cost is subtracted from the total cost
       // up to the end of the destination edge.
-      tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // The opposing edge Id is added as a destination since the search
