@@ -216,7 +216,7 @@ TEST(TimeTracking, routes) {
   }
   const std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
                                         193.9319, 245.4273, 269.4273, 293.4273};
-  ASSERT_THAT(expected, testing::Pointwise(testing::DoubleNear(0.0001), times));
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a depart_at
   req =
@@ -234,7 +234,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  ASSERT_THAT(expected, testing::Pointwise(testing::DoubleNear(0.0001), times));
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a arrive_by
   req =
