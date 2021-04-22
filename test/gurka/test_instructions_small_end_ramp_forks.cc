@@ -85,7 +85,7 @@ TEST_F(InstructionsSmallEndRampForks, LeftTurn) {
   // Verify the turn left instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn left onto Hershey Road/PA 743.", "Turn left onto Hershey Road.",
-      "Turn left onto Hershey Road, PA 7 43. Then You will arrive at your destination.",
+      "Turn left onto Hershey Road, PA 743. Then You will arrive at your destination.",
       "Continue for 60 meters.");
 }
 
@@ -123,6 +123,6 @@ TEST_F(InstructionsSmallEndRampForks, RightTurn) {
   //  Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right onto Hershey Road/PA 743.", "Turn right onto Hershey Road.",
-      "Turn right onto Hershey Road, PA 7 43. Then You will arrive at your destination.",
+      "Turn right onto Hershey Road, PA 743. Then You will arrive at your destination.",
       "Continue for 40 meters.");
 }
