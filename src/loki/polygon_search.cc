@@ -140,6 +140,8 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
   return avoid_edge_ids;
 }
 
+// TODO: Probable merged the logic with edges_in_rings above (if possible)
+// TODO: Refactor the variable name (i.e. it's not specific to avoid edge)
 std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring_pbf,
                                               baldr::GraphReader& reader,
                                               const std::shared_ptr<sif::DynamicCost>& costing,
