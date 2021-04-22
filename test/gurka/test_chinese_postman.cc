@@ -20,20 +20,7 @@ namespace {
 // register a few boost.geometry types
 using ring_bg_t = std::vector<vm::PointLL>;
 
-rapidjson::Value get_avoid_locs(const std::vector<vm::PointLL>& locs,
-                                rapidjson::MemoryPoolAllocator<>& allocator) {
-  rapidjson::Value locs_j(rapidjson::kArrayType);
-  for (auto& loc : locs) {
-    rapidjson::Value p(rapidjson::kObjectType);
-    p.AddMember("lon", loc.lng(), allocator);
-    p.AddMember("lat", loc.lat(), allocator);
-    locs_j.PushBack(p, allocator);
-  }
-
-  return locs_j;
-}
-
-rapidjson::Value get_chinese_poly(ring_bg_t ring, rapidjson::MemoryPoolAllocator<>& allocator) {
+rapidjson::Value get_chinese_polygon(ring_bg_t ring, rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value ring_j(rapidjson::kArrayType);
   for (auto& coord : ring) {
     rapidjson::Value coords(rapidjson::kArrayType);
@@ -108,30 +95,6 @@ protected:
 
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 
-// TEST_F(ChinesePostmanTest, TestConfig) {
-//   // Add a polygon with longer perimeter than the limit
-//   std::vector<ring_bg_t> rings{{{13.38625361, 52.4652558},
-//                                 {13.38625361, 52.48000128},
-//                                 {13.4181769, 52.48000128},
-//                                 {13.4181769, 52.4652558}}};
-
-//   auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["D"]};
-
-//   rapidjson::Document doc;
-//   doc.SetObject();
-//   auto& allocator = doc.GetAllocator();
-//   auto value = get_chinese_poly(rings, allocator);
-//   auto type = "chinese_polygon";
-//   auto req = build_local_req(doc, allocator, lls, "auto", value, type);
-
-//   // make sure the right exception is thrown
-//   try {
-//     gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
-//   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
-//     FAIL() << "Expected valhalla_exception_t.";
-//   };
-// }
-
 TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
@@ -163,13 +126,12 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto value = get_chinese_poly(ring, allocator);
+  auto value = get_chinese_polygon(ring, allocator);
   auto type = "chinese_polygon";
   auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
 
-  // will avoid 1st
   auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
+  gurka::assert::raw::expect_path(route, {"High", "Low", "5th", "2nd"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
