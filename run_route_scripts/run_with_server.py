@@ -18,8 +18,6 @@ def get_post_bodies(filename):
       line = line[0:line.rfind('}') + 1]
       post_body = json.loads(line)
       post_body['id'] = str(line_number)
-      # 1 - depart_at
-      post_body['date_time'] = {"type":1,"value":"2021-04-15T08:00"}
       yield post_body
 
 def initialize(args_,response_count_):
