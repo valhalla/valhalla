@@ -1,7 +1,9 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.2
 * **Removed**
 * **Bug Fix**
+   * FIXED: Fix TimeDepReverse termination and path cost calculation (for arrive_by routing) [#2987](https://github.com/valhalla/valhalla/pull/2987)
 * **Enhancement**
+   * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
