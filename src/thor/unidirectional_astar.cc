@@ -182,15 +182,14 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   }
 
   if (!FORWARD) {
-    // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
-    // path already found to this directed edge) or if no access for this mode.
+    // Skip this edge if permanently labeled (best path already found to this directed edge) or if no
+    // access for this mode.
     if (!(meta.edge->reverseaccess() & access_mode_)) {
       return false;
     }
   }
 
-  // Skip this edge if permanently labeled (best path already found to this
-  // directed edge)
+  // Skip this edge if permanently labeled (best path already found to this directed edge)
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
