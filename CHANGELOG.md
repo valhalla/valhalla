@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: Sync translation files with Transifex command line tool [#3030](https://github.com/valhalla/valhalla/pull/3030)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
