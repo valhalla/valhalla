@@ -566,7 +566,6 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
-  // adjacencylist_rev_.reuse(mincost, range, bucketsize, &edgelabels_rev_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
