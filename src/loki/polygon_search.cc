@@ -148,7 +148,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
                                               float max_length) {
   std::cout << "edges_in_ring" << std::endl;
   // convert to bg object and check length restriction
-  std::vector<ring_bg_t> rings_bg;
   const ring_bg_t ring_bg = PBFToRing(ring_pbf);
   if (GetRingLength(ring_bg) > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
