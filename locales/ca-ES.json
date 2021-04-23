@@ -294,7 +294,7 @@
         ],
         "2": [
           "La teva destinació és a l'esquerra.",
-          "La teva destianció és a la dreta."
+          "La teva destinació és a la dreta."
         ],
         "3": [
           "Lancaster Brewing Company és a l'esquerra."
@@ -358,8 +358,8 @@
     "enter_ferry": {
       "phrases": {
         "0": "Agafa el ferri.",
-        "1": "Agafa <STREET_NAMES>.",
-        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>.",
+        "1": "Agafa el <STREET_NAMES>.",
+        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>.",
         "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -445,9 +445,9 @@
         "10ena"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la vorera",
+        "el carril bici",
+        "la pista de bicicleta de muntanya",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -455,16 +455,16 @@
           "Entra a la rotonda."
         ],
         "1": [
-          "Entra a la rotonda i pren la 1a sortida.",
-          "Entra a la rotonda i pren la 2a sortida.",
-          "Entra a la rotonda i pren la 3a sortida.",
-          "Entra a la rotonda i pren la 4a sortida.",
-          "Entra a la rotonda i pren la 5ena sortida.",
-          "Entra a la rotonda i pren la 6ena sortida.",
-          "Entra a la rotonda i pren la 7ena sortida.",
-          "Entra a la rotonda i pren la 8ena sortida.",
-          "Entra a la rotonda i pren la 9ena sortida.",
-          "Entra a la rotonda i pren la 10ena sortida."
+          "Entra a la rotonda i pren la sortida 1a.",
+          "Entra a la rotonda i pren la sortida 2a.",
+          "Entra a la rotonda i pren la sortida 3a.",
+          "Entra a la rotonda i pren la sortida 4a.",
+          "Entra a la rotonda i pren la sortida 5ena.",
+          "Entra a la rotonda i pren la sortida 6ena.",
+          "Entra a la rotonda i pren la sortida 7ena.",
+          "Entra a la rotonda i pren la sortida 8ena.",
+          "Entra a la rotonda i pren la sortida 9ena.",
+          "Entra a la rotonda i pren la sortida 10ena."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -542,9 +542,9 @@
         "10ena"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la vorera",
+        "el carril bici",
+        "la pista de bicicleta de muntanya",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -552,16 +552,16 @@
           "Entra a la rotonda."
         ],
         "1": [
-          "Entra a la rotonda i pren la 1a sortida.",
-          "Entra a la rotonda i pren la 2a sortida.",
-          "Entra a la rotonda i pren la 3a sortida.",
-          "Entra a la rotonda i pren la 4a sortida.",
-          "Entra a la rotonda i pren la 5ena sortida.",
-          "Entra a la rotonda i pren la 6ena sortida.",
-          "Entra a la rotonda i pren la 7ena sortida.",
-          "Entra a la rotonda i pren la 8ena sortida.",
-          "Entra a la rotonda i pren la 9ena sortida.",
-          "Entra a la rotonda i pren la 10ena sortida."
+          "Entra a la rotonda i pren la sortida 1a.",
+          "Entra a la rotonda i pren la sortida 2a.",
+          "Entra a la rotonda i pren la sortida 3a.",
+          "Entra a la rotonda i pren la sortida 4a.",
+          "Entra a la rotonda i pren la sortida 5ena.",
+          "Entra a la rotonda i pren la sortida 6ena.",
+          "Entra a la rotonda i pren la sortida 7ena.",
+          "Entra a la rotonda i pren la sortida 8ena.",
+          "Entra a la rotonda i pren la sortida 9ena.",
+          "Entra a la rotonda i pren la sortida 10ena."
         ],
         "2": [
           "Enter the roundabout and take the 3rd exit onto Main Street."
@@ -624,13 +624,13 @@
         "15": "Pren la sortida.",
         "16": "Pren la sortida <NUMBER_SIGN>.",
         "17": "Pren la sortida <BRANCH_SIGN>.",
-        "18": "Pren la sortida <NUMBER_SIGN> a <BRANCH_SIGN>.",
+        "18": "Pren la sortida <NUMBER_SIGN> cap a <BRANCH_SIGN>.",
         "19": "Pren la sortida cap a <TOWARD_SIGN>.",
         "20": "Pren la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
         "21": "Pren la sortida <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
         "22": "Pren la sortida <NUMBER_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
         "23": "Pren la sortida <NAME_SIGN>.",
-        "25": "Pren la sortida <NAME_SIGN> a <BRANCH_SIGN>.",
+        "25": "Pren la sortida <NAME_SIGN> cap a <BRANCH_SIGN>.",
         "27": "Pren la sortida <NAME_SIGN> cap a <TOWARD_SIGN>.",
         "29": "Pren la sortida <NAME_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>."
       },
@@ -895,7 +895,7 @@
         "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES>.",
         "4": "Queda't a <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
         "5": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
-        "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> cap a <TOWARD_SIGN>.",
+        "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> a <TOWARD_SIGN>.",
         "7": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES> cap a <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -1181,19 +1181,19 @@
       ],
       "example_phrases": {
         "0": [
-          "Continua durant 300 peus.",
-          "Continua durant 9 milles."
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
         ],
         "1": [
-          "Continua per Pennsylvania 7 43 durant 6.2 milles.",
-          "Continua per Main Street, Vermont 30 durant 1 dècima de milla."
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
         ]
       }
     },
     "ramp": {
       "phrases": {
         "0": "Pren l'accés de <RELATIVE_DIRECTION>.",
-        "1": "Pren l'accés <BRANCH_SIGN> de  <RELATIVE_DIRECTION>.",
+        "1": "Pren l'accés <BRANCH_SIGN> de <RELATIVE_DIRECTION>.",
         "2": "Pren l'accés de <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
         "3": "Pren l'accés <BRANCH_SIGN> de <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
         "4": "Pren l'accés <NAME_SIGN> de <RELATIVE_DIRECTION>.",
@@ -1601,11 +1601,11 @@
       ],
       "example_phrases": {
         "0": [
-          "Head east.",
-          "Head north."
+          "Vés cap l'est.",
+          "Vés cap el nord."
         ],
         "1": [
-          "Head east for a half mile.",
+          "Vés cap l'est for a half mile.",
           "Head north for 1 kilometer."
         ],
         "2": [
@@ -1618,11 +1618,11 @@
           "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Drive east.",
-          "Drive north."
+          "Condueix cap l'est.",
+          "Condueix cap el nord."
         ],
         "6": [
-          "Drive east for a half mile.",
+          "Condueix cap l'est durant a half mile.",
           "Drive north for 1 kilometer."
         ],
         "7": [
@@ -1635,8 +1635,8 @@
           "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Walk east.",
-          "Walk north."
+          "Camina cap l'est.",
+          "Camina cap el nord."
         ],
         "11": [
           "Walk east for a half mile.",
@@ -1656,7 +1656,7 @@
           "Bike north."
         ],
         "16": [
-          "Bike east for a half mile.",
+          "Pedala cap l'est durant a half mile.",
           "Bike north for 1 kilometer."
         ],
         "17": [
