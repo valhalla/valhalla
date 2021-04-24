@@ -11,7 +11,7 @@ commands:
   install_macos_dependencies:
     steps:
       - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: pip install requests
+      - run: pip3 install requests
 
 jobs:
   build-docker-images:
