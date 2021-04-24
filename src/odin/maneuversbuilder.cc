@@ -39,7 +39,7 @@ using namespace valhalla::odin;
 namespace {
 
 constexpr uint32_t kRelativeStraightTurnDegreeLowerBound = 330;
-constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
+constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
