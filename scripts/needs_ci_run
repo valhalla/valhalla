@@ -1,21 +1,87 @@
 #!/usr/bin/env python3
 import fnmatch
-import os.path
 import sys
 import subprocess
+import requests
+
+
+from os import path, environ
+
+token = '8193cb473902c29f1a360547e9d4126b4df302ea'
+
+# jobs defined in .circleci/config.yml
+JOBS = ['build-docker-images',
+        'lint-build-debug',
+        'build-release',
+        'build-osx']
+
+CIRCLE_JOB_STATUS_SUCCESS = 'success';
+
+
+# Returns a tuple of status, gitsha of the PR that triggered the build.
+# status is True if all jobs of the last build were in 'success' state
+# otherwise False
+def last_build_successful():
+    branch = environ.get('CIRCLE_BRANCH')
+    if not branch:
+        raise Exception('CIRCLE_BRANCH env not set!')
+
+    cci_api_url = \
+        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)}';
+    print(f'cci url: {cci_api_url}')
+
+    resp = requests.get(cci_api_url)
+    resp.raise_for_status()
+
+    builds = resp.json()
+    # print(builds)
+
+    # if this is the first push of this branch, there will be no prior builds
+    if not builds:
+        print('No previous builds found')
+        return False, None
+
+    # build a dict of {job_name: (job_status, gitsha)}
+    job_status = {}
+    for build in builds:
+        job_status[build['workflows']['job_name']] = (build['status'], build['vcs_revision'])
+
+    if len(job_status) != len(JOBS):
+        print(f'Cannot determine job status! jobs fetched ({len(job_status)}) != jobs expected ({len(jobs)})')
+        return False, None
+    elif sorted(job_status.keys()) != sorted(JOBS):
+        print(f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
+        return False
+
+    # Return False if any of the jobs were not in 'success' state
+    for status, gitsha in job_status.values():
+        if status != 'success':
+            return False, gitsha
+
+    return True, job_status[JOBS[0]][1]
+
 
 CI_IGNORE_FILE='.circleci/ciignore'
+
+if not path.isfile(CI_IGNORE_FILE):
+  # no CI ignore rules configured, run CI
+  sys.exit(0)
+
+# Check if a previous build of this branch was successful or not
+status, last_pr_gitsha = last_build_successful()
+print(f'last build status: {status}, {last_pr_gitsha}')
+
+# if last build was not successfull, dont skip
+if not status:
+    sys.exit(0)
+
 # Looks for files changed in last commit only. This has the drawback
 # of skipping CI if a push's last commit was ciignore-able, even though
 # other commits might need CI
 #
 # TODO: Get all files changed in the last "push". That ensures CI is skipped
 # if ALL commits in a push don't need CI
-GIT_CMD=['git', 'diff', 'HEAD..HEAD~1', '--name-only']
-
-if not os.path.isfile(CI_IGNORE_FILE):
-  # no CI ignore rules configured, run CI
-  sys.exit(0)
+GIT_CMD=['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 
 # Get list of changed files staged for commit
 changed_files=subprocess.run(GIT_CMD, capture_output=True, text=True).stdout.splitlines()
