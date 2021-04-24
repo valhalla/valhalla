@@ -25,10 +25,16 @@ def last_build_successful():
     branch = environ.get('CIRCLE_BRANCH')
     if not branch:
         raise Exception('CIRCLE_BRANCH env not set!')
+    build_num = environ.get('CIRCLE_BUILD_NUM')
+    if not build_num:
+        raise Exception('CIRCLE_BUILD_NUM not found')
 
+    # Get twice the number of jobs configured. There would be len(JOBS) from this
+    # run, while the rest will be from the last run
     cci_api_url = \
-        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)}';
+        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}';
     print(f'cci url: {cci_api_url}')
+    print(f'build num: {build_num}')
 
     resp = requests.get(cci_api_url)
     resp.raise_for_status()
@@ -36,14 +42,18 @@ def last_build_successful():
     builds = resp.json()
     # print(builds)
 
-    # if this is the first push of this branch, there will be no prior builds
+    # this should never happen. since this script is run from within a CI run
+    # there should be at least 1 entry (this run)
     if not builds:
-        print('No previous builds found')
+        print('ERROR! No previous builds found! Not skipping build')
         return False, None
 
     # build a dict of {job_name: (job_status, gitsha)}
     job_status = {}
     for build in builds:
+        # ignore this build's status
+        if build['build_num'] == int(build_num):
+            continue
         job_status[build['workflows']['job_name']] = (build['status'], build['vcs_revision'])
 
     if len(job_status) != len(JOBS):
