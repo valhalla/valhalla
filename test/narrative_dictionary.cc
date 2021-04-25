@@ -36,6 +36,23 @@ const std::vector<std::string> kExpectedEmptyTransitNameLabels = {"tram",    "me
 const std::map<std::string, std::string> kExpectedTransitStopCountLabels = {{"one", "stop"},
                                                                             {"other", "stops"}};
 
+// Expected abbreviations
+const std::map<std::string, std::string> kExpectedCardinalDirectionAbbreviations =
+    {{"North", "N"}, {"Northeast", "NE"}, {"East", "E"}, {"Southeast", "SE"},
+     {"South", "S"}, {"Southwest", "SW"}, {"West", "W"}, {"Northwest", "NW"}};
+
+const std::map<std::string, std::string> kExpectedMiscellaneousAbbreviations =
+    {{"Building", "Bldg"},  {"International", "Int'l"}, {"Junior", "Jr"}, {"Memorial", "Mem"},
+     {"National", "Nat'l"}, {"Route", "Rte"},           {"Senior", "Sr"}};
+
+const std::map<std::string, std::string> kExpectedRoadLabelAbbreviations =
+    {{"Avenue", "Ave"},  {"Boulevard", "Blvd"}, {"Bypass", "Byp"}, {"Circle", "Cir"},
+     {"Court", "Ct"},    {"Crescent", "Cres"},  {"Drive", "Dr"},   {"Expressway", "Expy"},
+     {"Freeway", "Fwy"}, {"Highway", "Hwy"},    {"Lane", "Ln"},    {"Motorway", "Mwy"},
+     {"Parkway", "Pky"}, {"Place", "Pl"},       {"Plaza", "Plz"},  {"Point", "Pt"},
+     {"Road", "Rd"},     {"Square", "Sq"},      {"Street", "St"},  {"Terrace", "Ter"},
+     {"Turnpike", "Tpk"}};
+
 // Expected phrases
 const std::map<std::string, std::string> kExpectedStartPhrases =
     {{"0", "Head <CARDINAL_DIRECTION>."},
@@ -404,6 +421,21 @@ void validate(const std::unordered_map<std::string, std::string>& test_target,
     const auto& test_target_item = test_target.at(expected_phrase.first);
     EXPECT_EQ(test_target_item, expected_phrase.second);
   }
+}
+
+TEST(NarrativeDictionary, test_abbreviations) {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate cardinal direction abbreviations
+  validate(dictionary.cardinal_directions_abbreviation_subset.abbreviations,
+           kExpectedCardinalDirectionAbbreviations);
+
+  // Validate miscellaneous abbreviations
+  validate(dictionary.miscellaneous_abbreviation_subset.abbreviations,
+           kExpectedMiscellaneousAbbreviations);
+
+  // Validate road label abbreviations
+  validate(dictionary.road_labels_abbreviation_subset.abbreviations, kExpectedRoadLabelAbbreviations);
 }
 
 TEST(NarrativeDictionary, test_en_US_start) {

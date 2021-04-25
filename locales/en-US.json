@@ -3,6 +3,50 @@
   "aliases": [
     "en"
   ],
+  "abbreviations": {
+    "cardinal_directions": {
+      "North": "N",
+      "Northeast": "NE",
+      "East": "E",
+      "Southeast": "SE",
+      "South": "S",
+      "Southwest": "SW",
+      "West": "W",
+      "Northwest": "NW"
+    },
+    "miscellaneous": {
+      "Building": "Bldg",
+      "International": "Int'l",
+      "Junior": "Jr",
+      "Memorial": "Mem",
+      "National": "Nat'l",
+      "Route": "Rte",
+      "Senior": "Sr"
+    },
+    "road_labels": {
+      "Avenue": "Ave",
+      "Boulevard": "Blvd",
+      "Bypass": "Byp",
+      "Circle": "Cir",
+      "Court": "Ct",
+      "Crescent": "Cres",
+      "Drive": "Dr",
+      "Expressway": "Expy",
+      "Freeway": "Fwy",
+      "Highway": "Hwy",
+      "Lane": "Ln",
+      "Motorway": "Mwy",
+      "Parkway": "Pky",
+      "Place": "Pl",
+      "Plaza": "Plz",
+      "Point": "Pt",
+      "Road": "Rd",
+      "Square": "Sq",
+      "Street": "St",
+      "Terrace": "Ter",
+      "Turnpike": "Tpk"
+    }
+  },
   "instructions": {
     "arrive": {
       "phrases": {

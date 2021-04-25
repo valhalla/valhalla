@@ -54,6 +54,22 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate cardinal_directions_abbreviation_subset...");
+  // Populate cardinal_directions_abbreviation_subset
+  Load(cardinal_directions_abbreviation_subset, narrative_pt.get_child("abbreviations"),
+       "cardinal_directions");
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate miscellaneous_abbreviation_subset...");
+  // Populate miscellaneous_abbreviation_subset
+  Load(miscellaneous_abbreviation_subset, narrative_pt.get_child("abbreviations"), "miscellaneous");
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate road_labels_abbreviation_subset...");
+  // Populate road_labels_abbreviation_subset
+  Load(road_labels_abbreviation_subset, narrative_pt.get_child("abbreviations"), "road_labels");
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate start_subset...");
   // Populate start_subset
   Load(start_subset, narrative_pt.get_child(kStartKey));
@@ -314,6 +330,14 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate approach_verbal_alert_subset...");
   // Populate approach_verbal_alert_subset
   Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
+}
+
+void NarrativeDictionary::Load(AbbreviationSet& abbreviation_handle,
+                               const boost::property_tree::ptree& abbreviation_pt,
+                               const std::string& pt_key) {
+
+  abbreviation_handle.abbreviations =
+      as_unordered_map<std::string, std::string>(abbreviation_pt, pt_key);
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,

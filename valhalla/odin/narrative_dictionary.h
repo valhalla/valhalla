@@ -157,6 +157,10 @@ constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 namespace valhalla {
 namespace odin {
 
+struct AbbreviationSet {
+  std::unordered_map<std::string, std::string> abbreviations;
+};
+
 struct PhraseSet {
   std::unordered_map<std::string, std::string> phrases;
 };
@@ -246,6 +250,11 @@ class NarrativeDictionary {
 public:
   NarrativeDictionary(const std::string& language_tag,
                       const boost::property_tree::ptree& narrative_pt);
+
+  // Abbreviations
+  AbbreviationSet cardinal_directions_abbreviation_subset;
+  AbbreviationSet miscellaneous_abbreviation_subset;
+  AbbreviationSet road_labels_abbreviation_subset;
 
   // Start
   StartSubset start_subset;
@@ -388,6 +397,17 @@ protected:
    *                       narrative instructions.
    */
   void Load(const boost::property_tree::ptree& narrative_pt);
+
+  /**
+   * Loads the localized abbreviations contained in the specified property tree.
+   *
+   * @param  abbreviation_handle  The 'abbreviations' structure to populate.
+   * @param  abbreviation_pt  The 'abbreviation' property tree.
+   * @param  pt_key Key into the 'abbreviation' property tree.
+   */
+  void Load(AbbreviationSet& abbreviation_handle,
+            const boost::property_tree::ptree& abbreviation_pt,
+            const std::string& pt_key);
 
   /**
    * Loads the phrases with the localized narrative instructions
