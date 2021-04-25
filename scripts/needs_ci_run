@@ -7,7 +7,6 @@ import requests
 
 from os import path, environ
 
-token = '8193cb473902c29f1a360547e9d4126b4df302ea'
 
 # jobs defined in .circleci/config.yml
 JOBS = ['build-docker-images',
@@ -15,7 +14,7 @@ JOBS = ['build-docker-images',
         'build-release',
         'build-osx']
 
-CIRCLE_JOB_STATUS_SUCCESS = 'success';
+CIRCLE_JOB_STATUS_SUCCESS = 'success'
 
 '''
 Returns a tuple of status & gitsha of the PR that triggered the build.
@@ -40,21 +39,24 @@ def last_build_successful():
 
     if not branch:
         print('CIRCLE_BRANCH env not set! Unable to do CI skip check')
+        sys.exit(0)
     if not current_workflow_id:
         print('CIRCLE_WORKFLOW_ID env not set! Unable to do CI skip check')
+        sys.exit(0)
     if not token:
         print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check')
+        sys.exit(0)
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run
     cci_api_url = \
-        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}';
+        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}'
 
     resp = requests.get(cci_api_url)
     resp.raise_for_status()
 
     builds = resp.json()
-    #print(builds)
+    # print(builds)
 
     # this should never happen. since this script is run from within a CI run
     # there should be at least 1 entry (i.e this run)
@@ -83,11 +85,11 @@ def last_build_successful():
     return True, job_status[JOBS[0]][1]
 
 
-CI_IGNORE_FILE='.circleci/ciignore'
+CI_IGNORE_FILE = '.circleci/ciignore'
 
 if not path.isfile(CI_IGNORE_FILE):
-  # no CI ignore rules configured, run CI
-  sys.exit(0)
+    # no CI ignore rules configured, run CI
+    sys.exit(0)
 
 # Check if a previous build of this branch was successful or not
 status, last_pr_gitsha = last_build_successful()
@@ -98,25 +100,27 @@ if not status:
     sys.exit(0)
 
 # Get all changes since the last succesful CI run
-GIT_CMD=['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
+GIT_CMD = ['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 
 # Get list of changed files staged for commit
-changed_files=subprocess.run(GIT_CMD, capture_output=True, text=True).stdout.splitlines()
+changed_files = subprocess.run(GIT_CMD,
+                               capture_output=True,
+                               text=True).stdout.splitlines()
 
 # Get CI ignore rules
 with open(CI_IGNORE_FILE, 'r') as f:
-  CI_IGNORE_RULES = f.readlines()
+    CI_IGNORE_RULES = f.readlines()
 CI_IGNORE_RULES = [x.strip() for x in CI_IGNORE_RULES]
 
-ignored_files=[]
+ignored_files = []
 for changed_file in changed_files:
-  for ignore_rule in CI_IGNORE_RULES:
-    if fnmatch.fnmatch(changed_file, ignore_rule):
-      ignored_files.append(changed_file)
+    for ignore_rule in CI_IGNORE_RULES:
+        if fnmatch.fnmatch(changed_file, ignore_rule):
+            ignored_files.append(changed_file)
 
 if sorted(ignored_files) == sorted(changed_files):
-  # everything was ignored, skip CI
-  sys.exit(1)
+    # everything was ignored, skip CI
+    sys.exit(1)
 
 # Not everything was ignored, run CI
 sys.exit(0)
