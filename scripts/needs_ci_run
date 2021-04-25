@@ -75,7 +75,7 @@ def last_build_successful():
 
     if sorted(job_status.keys()) != sorted(JOBS):
         print(f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
-        return False
+        return False, None
 
     # Return False if any of the jobs were not in 'success' state
     for status, gitsha in job_status.values():
