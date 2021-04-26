@@ -28,6 +28,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   for (auto& edge : co->chinese_edges()) {
     chinese_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
+
+  std::cout << "chinese_edges_ size: " << chinese_edges_.size() << std::endl;
 }
 
 } // namespace thor
