@@ -57,7 +57,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length) {
-
+  std::cout << "edges_in_rings" << std::endl;
   // convert to bg object and check length restriction
   double rings_length = 0;
   std::vector<ring_bg_t> rings_bg;
@@ -137,6 +137,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     }
   }
 
+  std::cout << "edges_in_rings avoid_edge_ids size " << avoid_edge_ids.size() << std::endl;
   return avoid_edge_ids;
 }
 
@@ -215,6 +216,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
       }
     }
   }
+  std::cout << "edges_in_ring avoid_edge_ids size " << avoid_edge_ids.size() << std::endl;
   return avoid_edge_ids;
 }
 

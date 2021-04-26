@@ -20,6 +20,23 @@ namespace {
 // register a few boost.geometry types
 using ring_bg_t = std::vector<vm::PointLL>;
 
+rapidjson::Value get_avoid_polys(const std::vector<ring_bg_t>& rings,
+                                 rapidjson::MemoryPoolAllocator<>& allocator) {
+  rapidjson::Value rings_j(rapidjson::kArrayType);
+  for (auto& ring : rings) {
+    rapidjson::Value ring_j(rapidjson::kArrayType);
+    for (auto& coord : ring) {
+      rapidjson::Value coords(rapidjson::kArrayType);
+      coords.PushBack(coord.lng(), allocator);
+      coords.PushBack(coord.lat(), allocator);
+      ring_j.PushBack(coords, allocator);
+    }
+    rings_j.PushBack(ring_j, allocator);
+  }
+
+  return rings_j;
+}
+
 rapidjson::Value get_chinese_polygon(ring_bg_t ring, rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value ring_j(rapidjson::kArrayType);
   for (auto& coord : ring) {
@@ -37,8 +54,8 @@ std::string build_local_req(rapidjson::Document& doc,
                             rapidjson::MemoryPoolAllocator<>& allocator,
                             const std::vector<midgard::PointLL>& waypoints,
                             const std::string& costing,
-                            const rapidjson::Value& geom_obj,
-                            const std::string& type) {
+                            const rapidjson::Value& chinese_polygon,
+                            const rapidjson::Value& avoid_polygons) {
 
   rapidjson::Value locations(rapidjson::kArrayType);
   for (const auto& waypoint : waypoints) {
@@ -51,11 +68,8 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  if (type == "chinese_polygon") {
-    rapidjson::SetValueByPointer(doc, "/chinese_polygon", geom_obj);
-  } else {
-    rapidjson::SetValueByPointer(doc, "/chinese_polygon", geom_obj);
-  }
+  rapidjson::SetValueByPointer(doc, "/chinese_polygon", chinese_polygon);
+  rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -79,8 +93,8 @@ protected:
         D------E------F
     )";
     const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
-                              {"BC", {{"highway", "residential"}, {"name", "Low"}}},
-                              {"AA", {{"highway", "residential"}, {"name", "1st"}}},
+                              {"AD", {{"highway", "residential"}, {"name", "Low"}}},
+                              {"BC", {{"highway", "residential"}, {"name", "1st"}}},
                               {"BE", {{"highway", "residential"}, {"name", "2nd"}}},
                               {"CE", {{"highway", "residential"}, {"name", "3rd"}}},
                               {"CF", {{"highway", "residential"}, {"name", "4th"}}},
@@ -103,25 +117,39 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_e = chinese_postman_map.nodes.at("E");
   auto node_f = chinese_postman_map.nodes.at("F");
 
-  auto dx = node_c.lng() - node_b.lng();
-  auto dy = node_a.lat() - node_d.lat();
+  auto c_b = node_c.lng() - node_b.lng();
+  auto b_a = node_b.lng() - node_a.lng();
+  auto a_d = node_a.lat() - node_d.lat();
 
-  // create a polygon covering ABDE
-  //   x-------------x
-  //   |  A------B---|--C
-  //   |  |      |   | /|
-  //   |  |      |   |/ |
-  //   |  |      |  /|  |
-  //   |  |      | / |  |
-  //   |  D------E---|--F
-  //   x-------------x
-  //
-  auto ratio = 0.1;
-  ring_bg_t ring{{node_a.lng() - ratio * dx, node_a.lat() + ratio * dy},
-                 {node_b.lng() + ratio * dx, node_b.lat() + ratio * dy},
-                 {node_e.lng() + ratio * dx, node_e.lat() - ratio * dy},
-                 {node_d.lng() - ratio * dx, node_d.lat() - ratio * dy},
-                 {node_a.lng() - ratio * dx, node_a.lat() + ratio * dy}};
+  // create a chinese polygon covering ABDE and avoid polygon covering AD
+  //   c---------------c
+  //   |    A------B---|--C
+  //   | a--|--a   |   | /|
+  //   | |  |  |   |   |/ |
+  //   | a--|--a   |  /|  |
+  //   |    |      | / |  |
+  //   |    D------E---|--F
+  //   c---------------c
+
+  auto ratio = 0.2;
+  ring_bg_t chinese_ring{{node_b.lng() + ratio * c_b, node_b.lat() + ratio * a_d},
+                         {node_e.lng() + ratio * c_b, node_e.lat() - ratio * a_d},
+                         {node_d.lng() - ratio * c_b, node_d.lat() - ratio * a_d},
+                         {node_a.lng() - ratio * c_b, node_a.lat() + ratio * a_d},
+                         {node_b.lng() + ratio * c_b, node_b.lat() + ratio * a_d}};
+
+  auto avoid_ratio = 0.1;
+  auto small_avoid_ratio = 0.01;
+  ring_bg_t avoid_ring{
+      {node_a.lng() + avoid_ratio * b_a, node_a.lat() - small_avoid_ratio * a_d},
+      {node_a.lng() + avoid_ratio * b_a, node_a.lat() - avoid_ratio * a_d},
+      {node_a.lng() - avoid_ratio * b_a, node_a.lat() - avoid_ratio * a_d},
+      {node_a.lng() - avoid_ratio * b_a, node_a.lat() - small_avoid_ratio * a_d},
+      {node_a.lng() + avoid_ratio * b_a, node_a.lat() - small_avoid_ratio * a_d},
+  };
+
+  std::vector<ring_bg_t> avoid_rings;
+  avoid_rings.push_back(avoid_ring);
 
   // build request manually for now
   auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["A"]};
@@ -129,9 +157,9 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto value = get_chinese_polygon(ring, allocator);
-  auto type = "chinese_polygon";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
+  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
 
   auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
   // gurka::assert::raw::expect_path(route, {"High", "Low", "5th", "2nd"});

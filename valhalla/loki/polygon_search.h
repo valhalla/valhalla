@@ -35,6 +35,7 @@ edges_in_ring(const valhalla::Options_Ring& ring_pbf,
               baldr::GraphReader& reader,
               const std::shared_ptr<sif::DynamicCost>& costing,
               float max_length);
+
 } // namespace loki
 } // namespace valhalla
 
