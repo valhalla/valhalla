@@ -1503,7 +1503,10 @@
           "Richtung Norden."
         ],
         "1": [
-          "Auf Hauptstraße Richtung Südwesten."
+          "Auf Hauptstraße Richtung Südwesten.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
         ],
         "2": [
           "Auf A 1 Richtung Süden. Dann weiter auf B 13."
