@@ -55,6 +55,7 @@
    * FIXED: Removed unexpected maneuvers at sharp bends [#2968](https://github.com/valhalla/valhalla/pull/2968)
    * FIXED: Remove large number formatting for non-US countries [#3015](https://github.com/valhalla/valhalla/pull/3015)
    * FIXED: Odin undefined behaviour: handle case when xedgeuse is not initialized [#3020](https://github.com/valhalla/valhalla/pull/3020)
+   * FIXED: Update homebrew and xcode to avoid osx build failures [#3037](https://github.com/valhalla/valhalla/pull/3037)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
