@@ -8,6 +8,9 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
+      - run: |
+             git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+             git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
       - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests
 
