@@ -26,7 +26,6 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
-    std::cout << "a" << std::endl;
     chinese_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }

@@ -57,7 +57,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length) {
-  std::cout << "edges_in_rings" << std::endl;
   // convert to bg object and check length restriction
   double rings_length = 0;
   std::vector<ring_bg_t> rings_bg;
@@ -147,7 +146,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
                                               baldr::GraphReader& reader,
                                               const std::shared_ptr<sif::DynamicCost>& costing,
                                               float max_length) {
-  std::cout << "edges_in_ring" << std::endl;
   // convert to bg object and check length restriction
   const ring_bg_t ring_bg = PBFToRing(ring_pbf);
   if (GetRingLength(ring_bg) > max_length) {
@@ -169,13 +167,11 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
     }
   }
   for (const auto& intersection : bins_intersected) {
-    std::cout << "intersection" << std::endl;
     auto tile = reader.GetGraphTile({intersection.first, bin_level, 0});
     if (!tile) {
       continue;
     }
     for (const auto& bin : intersection.second) {
-      std::cout << "intersection.second" << std::endl;
       // tile will be mutated most likely in the loop
       reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
       for (const auto& edge_id : tile->GetBin(bin.first)) {
@@ -205,9 +201,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
         bool intersects = false;
         intersects = bg::intersects(ring_bg, edge_info.shape());
-        if (intersects) {
-          break;
-        }
         if (intersects) {
           avoid_edge_ids.emplace(edge_id);
           avoid_edge_ids.emplace(

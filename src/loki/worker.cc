@@ -150,7 +150,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : chinese_edges) {
-      std::cout << "a" << std::endl;
       auto* chinese_edge = co->add_chinese_edges();
       chinese_edge->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
