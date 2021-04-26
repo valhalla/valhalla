@@ -11,6 +11,7 @@ commands:
   install_macos_dependencies:
     steps:
       - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: pip3 install requests
 
 jobs:
   build-docker-images:
@@ -123,6 +124,7 @@ jobs:
     executor: macos
     steps:
       - checkout
+      - install_macos_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
@@ -130,7 +132,6 @@ jobs:
             fi
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
-      - install_macos_dependencies
       - restore_cache:
           keys:
             - ccache-release-macos-{{ .Branch }}
