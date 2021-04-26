@@ -105,6 +105,30 @@ protected:
 
 gurka::map AvoidTest::avoid_map = {};
 
+TEST_F(AvoidTest, TestConfig) {
+  // Add a polygon with longer perimeter than the limit
+  std::vector<ring_bg_t> rings{{{13.38625361, 52.4652558},
+                                {13.38625361, 52.48000128},
+                                {13.4181769, 52.48000128},
+                                {13.4181769, 52.4652558}}};
+
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_polys(rings, allocator);
+  auto type = "avoid_polygons";
+  auto req = build_local_req(doc, allocator, lls, "auto", value, type);
+
+  // make sure the right exception is thrown
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
 TEST_P(AvoidTest, TestAvoidPolygon) {
   auto node_a = avoid_map.nodes.at("A");
   auto node_b = avoid_map.nodes.at("B");
@@ -142,4 +166,92 @@ TEST_P(AvoidTest, TestAvoidPolygon) {
   gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
 }
 
-INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest, AvoidTest, ::testing::Values("auto"));
+TEST_P(AvoidTest, TestAvoid2Polygons) {
+  auto node_a = avoid_map.nodes.at("A");
+  auto node_b = avoid_map.nodes.at("B");
+  auto node_e = avoid_map.nodes.at("E");
+  auto dx = std::abs(node_b.lng() - node_a.lng());
+  auto dy = std::abs(node_b.lat() - node_e.lat());
+
+  // create 2 small polygons intersecting all connecting roads so it fails to find a path
+  //      A------B
+  //  x---|-x  y-|---y
+  //  |   | |  | |   |
+  //  x---|-x  y-|---y
+  //      |      |
+  //      D------E
+
+  // one clockwise ring
+  std::vector<ring_bg_t> rings;
+  rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
+                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
+                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
+                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
+                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}});
+
+  // one counterclockwise ring
+  rings.push_back({{node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy},
+                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.1 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.1 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
+                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy}});
+
+  // build request manually for now
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_polys(rings, allocator);
+  auto type = "avoid_polygons";
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+
+  // make sure the right exception is thrown
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_P(AvoidTest, TestAvoidLocation) {
+  auto node_a = avoid_map.nodes.at("A");
+  auto node_b = avoid_map.nodes.at("B");
+  auto dx = std::abs(node_b.lng() - node_a.lng());
+
+  auto lon = node_a.lng() + 0.5 * dx;
+
+  // avoid the "High" road ;)
+  //      A---x--B
+  //      |      |
+  //      |      |
+  //      |      |
+  //      D------E
+  std::vector<vm::PointLL> points{{lon, node_a.lat()}};
+
+  // build request manually for now
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["B"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_locs(points, allocator);
+  auto type = "avoid_locations";
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+
+  // will avoid 1st
+  auto route = gurka::do_action(Options::route, avoid_map, req);
+  gurka::assert::raw::expect_path(route, {"1st", "Low", "2nd"});
+}
+
+INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
+                         AvoidTest,
+                         ::testing::Values("auto",
+                                           "truck",
+                                           "bicycle",
+                                           "pedestrian",
+                                           "motorcycle",
+                                           "motor_scooter",
+                                           "hov",
+                                           "taxi",
+                                           "bus"));
