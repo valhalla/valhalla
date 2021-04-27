@@ -70,6 +70,29 @@ TEST_F(TimeDependentTags, HourRestrictions) {
   }
 }
 
+TEST_F(TimeDependentTags, DayRestrictions) {
+  tags day_hour = {{"type", "restriction"},
+                   {"restriction", "no_left_turn"},
+                   {"day_on", "Monday"},
+                   {"day_off", "Friday"}};
+  const gurka::relations restrictions = {{restriction_members, day_hour}};
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, restrictions,
+                        "test/data/gurka_time_dependent_restrictions_day",
+                        {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+
+  for (int x = 0; x < working_hours.size(); ++x) {
+    auto result =
+        gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
+                         {{"/date_time/type", "1"}, {"/date_time/value", working_hours.at(x)}});
+    if (x == 0 || x == 1 || x == 2) { //  Restriction is on.
+      gurka::assert::raw::expect_path(result, {"AB", "BD", "DE", "EC", "CF"});
+    } else { //  Restriction is off.
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
+    }
+  }
+}
+
 TEST_F(TimeDependentTags, DayAndHourRestrictions) {
   tags day_hour = {{"type", "restriction"}, {"restriction", "no_left_turn"},
                    {"day_on", "Monday"},    {"day_off", "Friday"},
@@ -87,6 +110,28 @@ TEST_F(TimeDependentTags, DayAndHourRestrictions) {
     if (x == 1) { //  Restriction is on.
       gurka::assert::raw::expect_path(result, {"AB", "BD", "DE", "EC", "CF"});
     } else { //  Restriction is off.
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
+    }
+  }
+}
+
+TEST_F(TimeDependentTags, ConditionalEdgeRestriction) {
+  // almost a year.
+  tags day_hour = {{"type", "restriction"},
+                   {"restriction:conditional", "no_left_turn @ (Apr 24-Apr 21 7:00-19:00)"}};
+  const gurka::relations restrictions = {{restriction_members, day_hour}};
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, restrictions,
+                        "test/data/gurka_time_dependent_restrictions_day_and_hour",
+                        {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+
+  for (int x = 0; x < working_hours.size(); ++x) {
+    auto result =
+        gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
+                         {{"/date_time/type", "1"}, {"/date_time/value", working_hours.at(x)}});
+    if (x == 3) { // Restriction is on.
+      gurka::assert::raw::expect_path(result, {"AB", "BD", "DE", "EC", "CF"});
+    } else { // Restriction is off.
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
     }
   }
