@@ -4,7 +4,6 @@
 #include <unordered_map>
 
 #include "baldr/graphconstants.h"
-#include "midgard/encoded.h"
 #include "midgard/util.h"
 
 namespace valhalla {
@@ -55,10 +54,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     return shape;
   };
 
-  //  auto node = (*way_nodes[start_node_idx]).node;
-  //  std::cout << std::setprecision(6) << '[' << node.latlng().first << ',' << node.latlng().second
-  //  << "]," << std::endl;
-
   // Map to store the status and index of nodes that have been encountered.
   // Any unreached nodes are not added to the map.
   std::unordered_map<uint32_t, NodeStatusInfo> node_status;
@@ -81,9 +76,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // is reached
   uint32_t n = 0;
   uint32_t index = 0;
-
-  //  bool isFerry = false;
-
   while (!adjset.empty()) {
     // Get the next node from the adjacency list/priority queue. Gets its
     // current cost and index
@@ -120,8 +112,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     for (const auto& expandededge : expanded.node_edges) {
       // Skip any ferry edge and any edge that includes the start node index
       const auto& edge = expandededge.first;
-      //      const OSMWay w = *ways[edge.wayindex_];
-      //      isFerry = isFerry || w.way_id() == 180387103;
       if (edge.attributes.driveable_ferry || edge.sourcenode_ == start_node_idx ||
           edge.targetnode_ == start_node_idx) {
         continue;
@@ -186,7 +176,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
   // Trace shortest path backwards and upgrade edge classifications
   uint32_t count = 0;
-  std::list<PointLL> final_shape;
   while (true) {
     // Get the edge between this node and the predecessor
     uint32_t idx = node_labels[index].node_index;
@@ -197,25 +186,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       if (edge.first.sourcenode_ == pred_node || edge.first.targetnode_ == pred_node) {
         sequence<Edge>::iterator element = edges[edge.second];
         auto update_edge = *element;
-
-        // TODO: remove
-        //        auto shape = EdgeShape(update_edge.llindex_, update_edge.attributes.llcount);
-        //        if (final_shape.size()) {
-        //          if (final_shape.back() == shape.front()) {
-        //            final_shape.insert(final_shape.end(), shape.begin(), shape.end());
-        //          } else if (final_shape.back() == shape.back()) {
-        //            std::reverse(shape.begin(), shape.end());
-        //            final_shape.insert(final_shape.end(), shape.begin(), shape.end());
-        //          } else if (final_shape.front() == shape.back()) {
-        //            final_shape.insert(final_shape.begin(), shape.begin(), shape.end());
-        //          } else {
-        //            std::reverse(shape.begin(), shape.end());
-        //            final_shape.insert(final_shape.begin(), shape.begin(), shape.end());
-        //          }
-        //        } else {
-        //          final_shape = shape;
-        //        }
-
         if (update_edge.attributes.importance > rc) {
           update_edge.attributes.importance = rc;
           update_edge.attributes.reclass_ferry = true;
@@ -231,8 +201,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     }
     index = node_status[pred_node].index;
   }
-  //    if (isFerry)
-  //  std::cout << midgard::encode(final_shape) << std::endl;
   return count;
 }
 
@@ -325,11 +293,6 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > rc &&
         !ShortFerry(node_itr.position(), bundle, edges, nodes, ways, way_nodes)) {
-
-      //      auto idx = (*node_itr).start_of == -1 ? (*node_itr).end_of : (*node_itr).start_of;
-      //      auto node = (*way_nodes[(*edges[idx]).llindex_]).node;
-      //      printf("[%.6f,%.6f],\n", node.latlng().first, node.latlng().second);
-
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
       bool oneway_reverse = false;
