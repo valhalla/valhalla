@@ -51,6 +51,47 @@ ReclassifyFerryConnectionEdge(std::map<std::string, std::string> const& way_desc
   return {Bb_edge->classification(), Gg_edge->classification()};
 }
 
+TEST(Standalone, ShortFerry) {
+  const std::string ascii_map = R"(
+          A--B--C--F--D--E--G
+                   |
+                   N
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                            {"BC", {{"highway", "service"}}},
+                            {"CF",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
+                            {"FD",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
+                            {"DE", {{"highway", "service"}}},
+                            {"EG", {{"highway", "trunk"}}},
+                            {"FN", {{"highway", "service"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  auto BC_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "C"));
+  auto DE_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "E"));
+
+  EXPECT_EQ(BC_edge->classification(), baldr::RoadClass::kPrimary);
+  EXPECT_EQ(DE_edge->classification(), baldr::RoadClass::kPrimary);
+}
+
 TEST(Standalone, ReclassifyFerryConnection) {
   // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
   // high-class road
