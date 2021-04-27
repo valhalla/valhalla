@@ -36,10 +36,10 @@ PointTileIndex::PointTileIndex(double tile_width_degrees, const container_t& pol
   // every tile around the given tile we are searching and this prevents
   // us from wrapping at the tiled-space boundaries.
   constexpr int tile_buffer = 2;
-  min_lat -= tile_buffer*tile_width_degrees;
-  min_lng -= tile_buffer*tile_width_degrees;
-  max_lat += 2*tile_buffer*tile_width_degrees;
-  max_lng += 2*tile_buffer*tile_width_degrees;
+  min_lat -= tile_buffer * tile_width_degrees;
+  min_lng -= tile_buffer * tile_width_degrees;
+  max_lat += 2 * tile_buffer * tile_width_degrees;
+  max_lng += 2 * tile_buffer * tile_width_degrees;
 
   double deltax = max_lng - min_lng;
   double deltay = max_lat - min_lat;
@@ -51,6 +51,8 @@ PointTileIndex::PointTileIndex(double tile_width_degrees, const container_t& pol
 
   // A square shape
   int32_t num_divs = std::max(num_y_divs, num_x_divs);
+
+  // TODO: catch the fact that there is an upper limit
 
   tiles = std::make_unique<Tiles<PointLL>>(min_pt, tile_width_degrees, num_divs, num_divs);
 

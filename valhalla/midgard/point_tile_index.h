@@ -1,11 +1,10 @@
 #pragma once
 
-#include <list>
 #include <unordered_set>
 
 #include "midgard/linesegment2.h"
-#include "midgard/tiles.h"
 #include "midgard/pointll.h"
+#include "midgard/tiles.h"
 
 namespace valhalla {
 
@@ -20,10 +19,9 @@ namespace midgard {
  * lookup).
  *
  * Of important note is the fact that to determine the "points within an
- * exact distance of a given point" you must round up all points in all
- * surrounding tiles. You can subsequently compute the distance bewteen your
- * point and each "nearby" point using a more accurate distance computation
- * of your choosing.
+ * exact distance of a given point" you must 1) use the get_points_near*()
+ * methods to round-up nearby points, then 2) compute the distance those
+ * nearby points using a more accurate distance computation of your choosing.
  */
 class PointTileIndex {
   // This guy can tell us which tile a points belongs to.
@@ -37,8 +35,7 @@ public:
   // The given tile_width_degrees determines how the PointTileIndex will subdivide
   // space. All "near" queries will be based on this distance. The given polyline
   // points will be binned/indexed into our tiled space.
-  template <class container_t>
-  PointTileIndex(double tile_width_degrees, const container_t& polyline);
+  template <class container_t> PointTileIndex(double tile_width_degrees, const container_t& polyline);
 
   // Get all the points roughly within the "tile_width_degrees" of the given pt.
   // Some of the returned points could be as far as 2*tile_width_degrees from

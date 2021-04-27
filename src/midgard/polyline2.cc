@@ -159,7 +159,8 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
   // an unexpected point inside our triangle.
   if (dmax < epsilon_sq) {
     // This returns the points in the "epsilon buffer zone" along the line (start, end).
-    std::unordered_set<size_t> line_buffer_points = point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end));
+    std::unordered_set<size_t> line_buffer_points =
+        point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end));
 
     // We only care about checking for triangle containment for points that are not
     // along the polyline [start,end] - so we can remove those straightaway.
@@ -243,8 +244,9 @@ void DouglasPeucker(container_t& polyline,
   epsilon *= epsilon;
   std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
       peucker;
-  peucker = [&peucker, &polyline, epsilon, &exclusions](typename container_t::iterator start, size_t s,
-                                                     typename container_t::iterator end, size_t e) {
+  peucker = [&peucker, &polyline, epsilon, &exclusions](typename container_t::iterator start,
+                                                        size_t s, typename container_t::iterator end,
+                                                        size_t e) {
     // find the point furthest from the line
     typename coord_t::value_type dmax = std::numeric_limits<typename coord_t::value_type>::lowest();
     typename container_t::iterator itr;
