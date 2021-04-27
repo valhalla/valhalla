@@ -49,8 +49,9 @@ typename coord_t::value_type Polyline2<coord_t>::Length(const container_t& pts) 
  * TODO: Make this faster (not O(n^2)).
  * @return  T/F if there are self-intersections.
  */
-template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfIntersections() {
-  std::list<coord_t> intersections;
+template <typename coord_t> std::vector<coord_t> Polyline2<coord_t>::GetSelfIntersections() {
+  std::vector<coord_t> intersections;
+  coord_t intersection_point;
   std::vector<coord_t>& points = pts_;
   for (size_t i = 1; i < points.size() - 2; i++) {
     const coord_t& ia(points[i - 1]);
@@ -60,7 +61,6 @@ template <typename coord_t> std::list<coord_t> Polyline2<coord_t>::GetSelfInters
       const coord_t& jb(points[j]);
       LineSegment2<coord_t> segmenti(ia, ib);
       LineSegment2<coord_t> segmentj(ja, jb);
-      coord_t intersection_point;
       if (segmenti.Intersect(segmentj, intersection_point)) {
         intersections.emplace_back(std::move(intersection_point));
       }
@@ -159,8 +159,7 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
   // an unexpected point inside our triangle.
   if (dmax < epsilon_sq) {
     // This returns the points in the "epsilon buffer zone" along the line (start, end).
-    std::unordered_set<size_t> line_buffer_points;
-    point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end), line_buffer_points);
+    std::unordered_set<size_t> line_buffer_points = point_tile_index.get_points_near_segment(LineSegment2<PointLL>(start, end));
 
     // We only care about checking for triangle containment for points that are not
     // along the polyline [start,end] - so we can remove those straightaway.
@@ -171,20 +170,10 @@ void peucker_avoid_self_intersections(PointTileIndex& point_tile_index,
     bool can_simplify = true;
     for (size_t cidx = sidx + 1; (cidx < eidx) && can_simplify; cidx++) {
       const PointLL& c = point_tile_index.points[cidx];
-
       for (size_t point_idx : line_buffer_points) {
         const PointLL& p = point_tile_index.points[point_idx];
         if (triangle_contains(start, c, end, p)) {
           can_simplify = false;
-#if 0
-          printf("------------------------------\n");
-          printf("Avoiding self-intersection:\n");
-          printf("sidx: %lu, s: %.6f, %.6f\n", sidx, start.lat(), start.lng());
-          printf("eidx: %lu, e: %.6f, %.6f\n", eidx, end.lat(), end.lng());
-          printf("cidx: %lu, c: %.6f, %.6f\n", cidx, c.lat(), c.lng());
-          printf("pidx: %lu, p: %.6f, %.6f\n", point_idx, p.lat(), p.lng());
-          triangle_contains(start, c, end, p);
-#endif
           break;
         }
       }
@@ -228,8 +217,7 @@ void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
   const PointLL& first_point = *polyline.begin();
   double meters_per_deg = DistanceApproximator<PointLL>::MetersPerLngDegree(first_point.lat());
   double epsilon_deg = epsilon_m / meters_per_deg;
-  PointTileIndex point_tile_index(epsilon_deg);
-  point_tile_index.tile<container_t>(polyline);
+  PointTileIndex point_tile_index(epsilon_deg, polyline);
 
   peucker_avoid_self_intersections(point_tile_index, epsilon_m * epsilon_m, exclusions, 0,
                                    polyline.size() - 1);
@@ -237,7 +225,7 @@ void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
   // copy the simplified 'points' into 'polyline'
   polyline.clear();
   for (const auto& pt : point_tile_index.points) {
-    if (pt != PointTileIndex::deleted_point) {
+    if (pt != PointTileIndex::kDeletedPoint) {
       polyline.push_back(pt);
     }
   }
@@ -246,7 +234,7 @@ void DouglastPeuckerAvoidSelfIntersection(container_t& polyline,
 template <class coord_t, class container_t>
 void DouglasPeucker(container_t& polyline,
                     typename coord_t::value_type epsilon,
-                    const std::unordered_set<size_t>& indices) {
+                    const std::unordered_set<size_t>& exclusions) {
   // any epsilon this low will have no effect on the input nor will any super short input
   if (epsilon <= 0 || polyline.size() < 3)
     return;
@@ -255,7 +243,7 @@ void DouglasPeucker(container_t& polyline,
   epsilon *= epsilon;
   std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
       peucker;
-  peucker = [&peucker, &polyline, epsilon, &indices](typename container_t::iterator start, size_t s,
+  peucker = [&peucker, &polyline, epsilon, &exclusions](typename container_t::iterator start, size_t s,
                                                      typename container_t::iterator end, size_t e) {
     // find the point furthest from the line
     typename coord_t::value_type dmax = std::numeric_limits<typename coord_t::value_type>::lowest();
@@ -265,7 +253,7 @@ void DouglasPeucker(container_t& polyline,
     coord_t tmp;
     for (auto i = std::prev(end); i != start; --i, --j) {
       // special points we dont want to generalize no matter what take precidence
-      if (indices.find(j) != indices.end()) {
+      if (exclusions.find(j) != exclusions.end()) {
         itr = i;
         dmax = epsilon;
         k = j;

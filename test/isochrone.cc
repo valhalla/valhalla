@@ -150,7 +150,6 @@ TEST(Isochrones, Basic) {
   }
 
   {
-    printf("third case:\n");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","costing_options":{"bicycle":{"service_penalty":0}},"contours":[{"time":15}],"show_locations":true})";
     const auto expected =

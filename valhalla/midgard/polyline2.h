@@ -71,7 +71,7 @@ public:
    * @param   pts  Polyline vertices.
    * @return  List of intersections found, if any.
    */
-  std::list<coord_t> GetSelfIntersections();
+  std::vector<coord_t> GetSelfIntersections();
 
   /**
    * Finds the closest point to the supplied point as well as the distance

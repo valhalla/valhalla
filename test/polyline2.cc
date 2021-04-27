@@ -183,7 +183,7 @@ TEST(Polyline2, PeuckerSelfIntersectionTest1) {
     // Allow self-intersections, see them occur.
     Polyline2<PointLL> polyline(points);
     polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ false);
-    std::list<PointLL> intersections = polyline.GetSelfIntersections();
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
     ASSERT_EQ(intersections.size(), 1);
   }
 
@@ -191,7 +191,7 @@ TEST(Polyline2, PeuckerSelfIntersectionTest1) {
     // Avoid self-intersections, see none.
     Polyline2<PointLL> polyline(points);
     polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ true);
-    std::list<PointLL> intersections = polyline.GetSelfIntersections();
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
     ASSERT_EQ(intersections.size(), 0);
   }
 }
@@ -222,7 +222,7 @@ TEST(Polyline2, PeuckerSelfIntersectionTest2) {
     // Allow self-intersections, see them occur.
     Polyline2<PointLL> polyline(points);
     polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ false);
-    std::list<PointLL> intersections = polyline.GetSelfIntersections();
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
     ASSERT_EQ(intersections.size(), 2);
   }
 
@@ -230,7 +230,7 @@ TEST(Polyline2, PeuckerSelfIntersectionTest2) {
     // Avoid self-intersections, see none.
     Polyline2<PointLL> polyline(points);
     polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ true);
-    std::list<PointLL> intersections = polyline.GetSelfIntersections();
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
     ASSERT_EQ(intersections.size(), 0);
   }
 }
