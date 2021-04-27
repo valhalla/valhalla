@@ -206,8 +206,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = -1;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
-                           restriction_idx) ||
+    if (!costing_->Allowed(meta.edge, false /* is_dest */, pred, tile, meta.edge_id, localtime,
+                           time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {
       return false;

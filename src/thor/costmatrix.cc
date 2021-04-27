@@ -294,7 +294,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       uint8_t restriction_idx = -1;
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
+      if (!costing_->Allowed(directededge, false /* is_dest */, pred, tile, edgeid, 0, 0,
+                             restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
         continue;
       }

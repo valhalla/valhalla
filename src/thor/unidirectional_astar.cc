@@ -210,8 +210,10 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   uint8_t restriction_idx = kInvalidRestriction;
+  bool is_dest =
+      destinations_percent_along_.find(meta.edge_id) != std::cend(destinations_percent_along_);
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+    if (!costing_->Allowed(meta.edge, is_dest, pred, tile, meta.edge_id, time_info.local_time,
                            nodeinfo->timezone(), restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                              time_info.local_time, nodeinfo->timezone())) {
