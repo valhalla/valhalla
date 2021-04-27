@@ -32,13 +32,13 @@ ReclassifyFerryConnectionEdge(std::map<std::string, std::string> const& way_desc
                             {"Gg", way_description},
                             {"gH", way_description},
                             {"HI",
-                                   {{"motor_vehicle", "yes"},
-                                       {"motorcar", "yes"},
-                                       {"bicycle", "yes"},
-                                       {"foot", "no"},
-                                       {"duration", "35"},
-                                       {"route", "shuttle_train"},
-                                       {"name", "Eurotunnel Shuttle"}}},
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
                             {"IJ", {{"highway", "trunk"}, {"name", ""}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
@@ -92,4 +92,3 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
     EXPECT_GT(gclass, baldr::RoadClass::kPrimary);
   }
 }
-
