@@ -38,8 +38,8 @@
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Bear <RELATIVE_DIRECTION> me matey at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> me matey toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -78,7 +78,7 @@
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.",
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "4": "Bear <RELATIVE_DIRECTION> me matey at <JUNCTION_NAME>.",
         "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
