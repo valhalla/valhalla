@@ -46,13 +46,18 @@ PointTileIndex::PointTileIndex(double tile_width_degrees, const container_t& pol
 
   PointLL min_pt = {min_lng, min_lat};
 
-  int32_t num_x_divs = tile_buffer + std::lround(deltax / tile_width_degrees);
-  int32_t num_y_divs = tile_buffer + std::lround(deltay / tile_width_degrees);
+  int32_t num_x_divs = std::ceil(deltax / tile_width_degrees);
+  int32_t num_y_divs = std::ceil(deltay / tile_width_degrees);
 
   // A square shape
-  int32_t num_divs = std::max(num_y_divs, num_x_divs);
+  int32_t num_divs = 2 * tile_buffer + std::max(num_y_divs, num_x_divs);
 
-  // TODO: catch the fact that there is an upper limit
+  // Ok full confession, I know how the TileId's are generated inside the Tile
+  // class and they have an upper limit of int32_t. I'm going to cap how many
+  // divisions can be made to avoid hitting that upper limit. Yes I know the
+  // fix should be made inside the Tile class but that's a separate project.
+  static const int32_t max_divs = std::floor(std::sqrt(std::numeric_limits<int32_t>::max()));
+  num_divs = std::min(max_divs, num_divs);
 
   tiles = std::make_unique<Tiles<PointLL>>(min_pt, tile_width_degrees, num_divs, num_divs);
 

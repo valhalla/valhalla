@@ -5,7 +5,6 @@
 #include "tyr/serializers.h"
 
 #include <cmath>
-#include <iomanip>
 #include <sstream>
 #include <utility>
 
