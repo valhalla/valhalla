@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.2
 * **Removed**
 * **Bug Fix**
+   * FIXED: Fix reclassification for "shorter" ferries and rail ferries (for Chunnel routing issues) [#3038](https://github.com/valhalla/valhalla/pull/3038)
    * FIXED: Fix TimeDepReverse termination and path cost calculation (for arrive_by routing) [#2987](https://github.com/valhalla/valhalla/pull/2987)
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
