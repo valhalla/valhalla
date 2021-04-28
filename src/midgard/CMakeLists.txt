@@ -1,9 +1,11 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
 
-set_source_files_properties(
+if ((UNIX OR APPLE) AND ENABLE_SINGLE_FILES_WERROR)
+ set_source_files_properties(
         polyline2.cc
         point_tile_index.cc
         PROPERTIES COMPILE_FLAGS "-Werror -Wuninitialized")
+endif()
 
 set(sources
   linesegment2.cc
