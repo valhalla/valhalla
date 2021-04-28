@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "midgard/point_tile_index.h"
 
 namespace valhalla {
