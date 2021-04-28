@@ -5,7 +5,6 @@
 #include "tyr/serializers.h"
 
 #include <cmath>
-#include <iomanip>
 #include <sstream>
 #include <utility>
 
@@ -134,6 +133,7 @@ std::string serializeIsochrones(const Api& request,
 
   std::stringstream ss;
   ss << *feature_collection;
+
   return ss.str();
 }
 } // namespace tyr
