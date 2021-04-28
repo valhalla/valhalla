@@ -251,7 +251,7 @@ void DouglasPeucker(container_t& polyline,
     typename coord_t::value_type dmax = std::numeric_limits<typename coord_t::value_type>::lowest();
     typename container_t::iterator itr;
     LineSegment2<coord_t> l{*start, *end};
-    size_t j = e - 1, k;
+    size_t j = e - 1, k = 0;
     coord_t tmp;
     for (auto i = std::prev(end); i != start; --i, --j) {
       // special points we dont want to generalize no matter what take precidence
