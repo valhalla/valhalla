@@ -420,8 +420,8 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,

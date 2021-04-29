@@ -7,6 +7,9 @@
 
 namespace {
 const std::array<std::string, 3> kDateTimeTypes = {"1", "2", "3"};
+const std::array<std::string, 6> kMotorVehicleCostingModels = {"auto",  "bus",
+                                                               "taxi",  "motor_scooter",
+                                                               "truck", "motorcycle"};
 } // namespace
 
 using namespace valhalla;
@@ -182,57 +185,78 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnLastEdgeIsValid) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T20:00"}});
-    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnLastEdgeIsNotValid) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T12:00"}});
-    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"}, "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsValid_OnlyAlternative) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T20:00"}});
-    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
-                                    "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsNotValid_OnlyAlternative) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T12:00"}});
-    gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
-                                    "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsValid_ManyAlternatives) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T20:00"}});
-    gurka::assert::raw::expect_path(result, {"IJ", "JM", "MN", "NK", "KL"},
-                                    "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"IJ", "JM", "MN", "NK", "KL"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }
 
 TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsNotValid_ManyAlternatives) {
   for (auto const& date_time_type : kDateTimeTypes) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, "auto",
-                                   {{"/date_time/type", date_time_type},
-                                    {"/date_time/value", "2020-04-04T12:00"}});
-    gurka::assert::raw::expect_path(result, {"IJ", "JK", "KL"}, "Date time type: " + date_time_type);
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"IJ", "JK", "KL"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
   }
 }

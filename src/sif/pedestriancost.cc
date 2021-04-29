@@ -604,8 +604,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time

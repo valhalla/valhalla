@@ -55,7 +55,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool /* is_dest */,
+                       const bool,
                        const EdgeLabel&,
                        const graph_tile_ptr&,
                        const baldr::GraphId&,

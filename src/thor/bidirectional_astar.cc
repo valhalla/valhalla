@@ -206,7 +206,15 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = -1;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, false /* is_dest */, pred, tile, meta.edge_id, localtime,
+    // Why is is_dest false?
+    // We have to consider next cases:
+    //  1) At least one step of reverse search was done -> forward search will never reach the
+    //  destination edge. 2) There were no steps of the reverse search -> the destination edge is a
+    //  connection edge.
+    // We can set is_dest incorrectly in the second case, but it is the rare case.
+    // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
+    // function in second time.
+    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
                            time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {

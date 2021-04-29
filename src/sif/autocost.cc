@@ -446,8 +446,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 // Get the cost to traverse the edge in seconds
@@ -908,8 +908,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -1084,8 +1084,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseHOVCostOptions(const rapidjson::Document& doc,
@@ -1258,8 +1258,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false /* is_dest */, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,

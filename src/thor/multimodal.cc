@@ -351,7 +351,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
-    bool is_dest = destinations_.find(edgeid) != std::cend(destinations_);
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
       if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
@@ -725,7 +725,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     uint8_t restriction_idx = -1;
-    bool is_dest = destinations_.find(edgeid) != std::cend(destinations_);
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (es->set() == EdgeSet::kPermanent ||
         !costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
       continue;

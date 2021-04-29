@@ -543,7 +543,7 @@ public:
             if (access_type == baldr::AccessType::kTimedAllowed)
               return true;
             else if (access_type == baldr::AccessType::kDestinationAllowed)
-              return allow_conditional_destination_restrictions_ || is_dest;
+              return allow_conditional_destination_ || is_dest;
             else
               return false;
           }
@@ -689,7 +689,7 @@ public:
    * Sets the flag indicating whether edges with valid restriction conditional=destination are
    * allowed.
    */
-  void set_allow_conditional_destination_restrictions(const bool allow);
+  void set_allow_conditional_destination(const bool allow);
 
   /**
    * Set the current travel mode.
@@ -840,7 +840,7 @@ protected:
   // and bicycle generally allow access (with small penalties).
   bool allow_destination_only_;
 
-  bool allow_conditional_destination_restrictions_;
+  bool allow_conditional_destination_;
 
   // Travel mode
   TravelMode travel_mode_;

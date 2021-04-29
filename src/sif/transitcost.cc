@@ -519,7 +519,7 @@ uint32_t TransitCost::access_mode() const {
 
 // Check if access is allowed on the specified edge.
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
-                          const bool /* is_dest */,
+                          const bool,
                           const EdgeLabel&,
                           const graph_tile_ptr& tile,
                           const baldr::GraphId&,
