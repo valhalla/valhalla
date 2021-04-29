@@ -7,7 +7,7 @@
     "arrive": {
       "phrases": {
         "0": "Llegada: <TIME>.",
-        "1": "Llegada: <TIME> a <TRANSIT_STOP>."
+        "1": "Llegada: <TIME> en <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -20,8 +20,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Llegará a las <TIME>.",
-        "1": "Llegará a las <TIME> a <TRANSIT_STOP>."
+        "0": "Llegada a las <TIME>.",
+        "1": "Llegada a las <TIME> en <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [

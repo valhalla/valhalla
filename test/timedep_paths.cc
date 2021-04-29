@@ -8,7 +8,7 @@
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
-#include "thor/timedep.h"
+#include "thor/unidirectional_astar.h"
 #include "thor/worker.h"
 #include "worker.h"
 

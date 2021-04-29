@@ -385,9 +385,8 @@ public:
       }
       // clean up the lines
       for (auto& line : contour) {
-        // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          Polyline2<PointLL>::Generalize(line, gen_factor, {});
+          Polyline2<PointLL>::Generalize(line, gen_factor, {}, /* avoid_self_intersections */ true);
         }
         // sampling the bottom left corner means everything is skewed, so unskew it
         for (auto& coord : line) {
