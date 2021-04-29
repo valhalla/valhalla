@@ -56,6 +56,7 @@
    * FIXED: Remove large number formatting for non-US countries [#3015](https://github.com/valhalla/valhalla/pull/3015)
    * FIXED: Odin undefined behaviour: handle case when xedgeuse is not initialized [#3020](https://github.com/valhalla/valhalla/pull/3020)
    * FIXED: Isochrone (::Generalize()) fix to avoid generating self-intersecting polygons [#3026](https://github.com/valhalla/valhalla/pull/3026)
+   * FIXED: Handle day_on/day_off/hour_on/hour_off restrictions [#3029](https://github.com/valhalla/valhalla/pull/3029)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
