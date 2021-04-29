@@ -282,7 +282,7 @@ bool is_conditional_active(const bool type,
     return false;
 
   bool dow_in_range = true;
-  bool dt_in_range = false;
+  bool dt_in_range = true;
 
   // date::time_of_day()
   std::chrono::minutes b_td = std::chrono::hours(0);
@@ -448,7 +448,7 @@ bool is_conditional_active(const bool type,
         end_date = date::year_month_day(date::year(e_year), date::month(e_month),
                                         date::day(e_day_dow)); // Dec 5 to Mar 3
       }
-    } else { // do we have just time?
+    } else { // just time or dow with or without time
 
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
         b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
