@@ -45,7 +45,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -85,7 +85,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -143,7 +143,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -229,7 +229,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +366,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "ferry_label": "Lautta",
       "example_phrases": {
@@ -395,7 +395,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "ferry_label": "Lautta",
       "example_phrases": {
@@ -448,7 +448,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,7 +545,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +725,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +753,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +902,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -949,7 +949,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -984,7 +984,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -1023,7 +1023,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -1076,7 +1076,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1116,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1163,7 +1163,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -1399,7 +1399,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1439,7 +1439,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1495,7 +1495,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1583,7 +1583,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -1958,7 +1958,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1998,7 +1998,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -2040,7 +2040,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -2088,7 +2088,7 @@
         "kävelyreitti",
         "pyöräilyreitti",
         "maastopyöräreitti",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
