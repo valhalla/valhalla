@@ -45,6 +45,7 @@ jobs:
   lint-build-debug:
     docker:
       - image: valhalla/valhalla:build-latest
+    resource_class: xlarge
     steps:
       - checkout
       - run: |
@@ -67,11 +68,11 @@ jobs:
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: python3 ./scripts/valhalla_build_config
-      - run: make -C build -j3
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -83,12 +84,13 @@ jobs:
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
-          make -C build -j4 coverage
+          make -C build -j8 coverage
       - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
     docker:
       - image: valhalla/valhalla:build-latest
+    resource_class: xlarge
     steps:
       - checkout
       - run: |
@@ -105,14 +107,14 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
-      - run: make -C build -j2
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
+      - run: make -C build -j8 tests
       # leaks in glibc we cant control for
-      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
