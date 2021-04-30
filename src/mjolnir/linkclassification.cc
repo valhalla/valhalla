@@ -308,6 +308,20 @@ bool CanGoThroughNode(const node_bundle& node,
   return false;
 }
 
+/*
+ * This class builds acyclic link graph starting from some exit node. This node is the root node.
+ * Then we start recursively traversing the graph using only driveforward links. When we reach a
+ * node that doesn't contain nonlink edges we add this node to the graph and continue to exapnd
+ * (except when we've already visited the node). In case a node with nonlink edges is reached we
+ * check if the node has some destination road or not and based on this we determine should we stop
+ * or continue to expand. In order to avoid cycles there are two sets are used: 'processed' - contains
+ * nodes where all their children have been processed; 'in_progress' - contains nodes that have been
+ * visited but some of their children haven't been processed yet (in other words 'in progress' set
+ * contains all nodes on the path from the root node to the current node). So, when we reach a node
+ * from the 'processed' set we should and an edge to the graph (that goes from the current node to the
+ * node from 'processed' set); but when we reach a node from the 'in progress' set - it's a cycle
+ * (right now we just skip it).
+ */
 struct LinkGraphBuilder {
   Data& data_;
   // Way tags of the root link
@@ -429,8 +443,14 @@ struct LinkGraphBuilder {
   }
 };
 
-// Reclassify links in the acyclic link graph. Work up from each leaf and potentially
-// reclassify chain of connected links.
+/*
+ * Reclassify links in the acyclic link graph. We maintain a queue of leaf nodes. On each step take
+ * some leaf node from the queue, build a link chain, determine the final road class for the whole
+ * chain (and set the new class), then virtually "remove" reclassified links from the grpaph and
+ * update the queue if a new leaf is detected. The final link class is defined as maximum from the
+ * root node classification and current leaf node classification. After reclassification is done we
+ * update the parent node classification and continue.
+ */
 std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& link_graph,
                                                   uint32_t exit_classification,
                                                   Data& data,
