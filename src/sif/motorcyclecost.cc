@@ -501,11 +501,15 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
 
+    auto stop_impact = edge->stopimpact(idx);
+    if (edge->use() == Use::kParkingAisle && pred.use() == Use::kParkingAisle)
+      stop_impact /= 2;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
+      seconds *= stop_impact;
       is_turn = true;
     }
 
@@ -516,7 +520,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     // using traffic
     if (!pred.has_measured_speed()) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stop_impact;
       seconds *= trans_density_factor_[node->density()];
     }
     c.cost += seconds;
@@ -570,11 +574,15 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
 
+    auto stop_impact = edge->stopimpact(idx);
+    if (edge->use() == Use::kParkingAisle && pred->use() == Use::kParkingAisle)
+      stop_impact /= 2;
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
     if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
+      seconds *= stop_impact;
       is_turn = true;
     }
 
@@ -585,7 +593,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     // using traffic
     if (!has_measured_speed) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stop_impact;
       seconds *= trans_density_factor_[node->density()];
     }
     c.cost += seconds;
