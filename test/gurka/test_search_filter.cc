@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
-using LiveTrafficCustomize = test::LiveTrafficCustomize;
+using LiveTrafficCustomize = gurka::LiveTrafficCustomize;
 
 /*************************************************************/
 class SearchFilter : public ::testing::Test {
@@ -260,13 +260,13 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
+    gurka::build_live_traffic_data(closure_map.config);
 
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_default_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
@@ -318,7 +318,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
       close_bidir_edge(reader, tile, index, current, "AB", closure_map);
       close_bidir_edge(reader, tile, index, current, "BC", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
                                    {{"/date_time/type", date_type},
@@ -369,7 +369,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
       close_bidir_edge(reader, tile, index, current, "CD", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
                                    {{"/date_time/type", date_type},
@@ -421,7 +421,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
       close_bidir_edge(reader, tile, index, current, "CD", closure_map);
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     // The route from 2->3 fails since there's no suitable edge from 2->3
     EXPECT_THROW((gurka::do_action(valhalla::Options::route, closure_map, {"1", "2", "3"}, costing,
@@ -478,7 +478,7 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
       close_bidir_edge(reader, tile, index, current, "CD", closure_map);
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
                                    {{"/date_time/type", date_type},
@@ -531,7 +531,7 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidIntermediateClosures) {
       close_bidir_edge(reader, tile, index, current, "CD", closure_map);
       close_bidir_edge(reader, tile, index, current, "JK", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
                                    {{"/date_time/type", date_type},
@@ -579,7 +579,7 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "LM", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     // No route since the edge is closed
     EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, {"4", "5"}, costing,
@@ -630,7 +630,7 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
       close_bidir_edge(reader, tile, index, current, "LM", closure_map);
       close_bidir_edge(reader, tile, index, current, "MN", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     // Snaps to the nearby edge HIC, since candidate edges are closed
     auto res = gurka::do_action(valhalla::Options::route, closure_map, {"4", "6"}, costing,
@@ -847,14 +847,14 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, relations, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
+    gurka::build_live_traffic_data(closure_map.config);
     closure_map.config.put("thor.extended_search", true);
 
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_default_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
@@ -888,7 +888,7 @@ TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
       close_bidir_edge(reader, tile, index, current, "FG", closure_map);
       close_bidir_edge(reader, tile, index, current, "FH", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     const std::string& req =
         (boost::format(
@@ -909,7 +909,7 @@ TEST_P(ClosuresWithRestrictions, AvoidClosureWithRestriction) {
                                             uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "AB", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge_AB);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge_AB);
 
     const std::string& req_disable_exclude_closures =
         (boost::format(
@@ -958,12 +958,12 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    gurka::build_live_traffic_data(closure_map.config);
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_default_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
@@ -1006,7 +1006,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepForward) {
       close_bidir_edge(reader, tile, index, current, "AB", closure_map);
       close_bidir_edge(reader, tile, index, current, "BC", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     const std::string& req =
         (boost::format(
@@ -1027,7 +1027,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepForward) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     const std::string& req =
         (boost::format(
@@ -1065,7 +1065,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
       close_bidir_edge(reader, tile, index, current, "FG", closure_map);
       close_bidir_edge(reader, tile, index, current, "GH", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     const std::string& req =
         (boost::format(
@@ -1085,7 +1085,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
       close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
-    test::customize_live_traffic_data(closure_map.config, close_edge);
+    gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
     const std::string& req =
         (boost::format(

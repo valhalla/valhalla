@@ -6,12 +6,11 @@ set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 # common things that the tests need
 add_library(valhalla_test
-  test.h test.cc gurka/gurka.h gurka/gurka.cc
+  test.h test.cc
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)

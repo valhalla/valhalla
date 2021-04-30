@@ -10,7 +10,7 @@
 
 using namespace valhalla;
 using namespace valhalla::loki;
-using LiveTrafficCustomize = test::LiveTrafficCustomize;
+using LiveTrafficCustomize = gurka::LiveTrafficCustomize;
 
 namespace {
 inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
@@ -90,13 +90,13 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
+    gurka::build_live_traffic_data(closure_map.config);
 
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_default_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader&, baldr::TrafficTile&, int,
                                          baldr::TrafficSpeed* current) -> void {
                                         SetLiveSpeed(current, default_speed);
@@ -125,7 +125,7 @@ TEST_F(TestReach, ReachWithNoClosures) {
   sif::CostFactory factory;
   CostingOptions co;
   co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
+  co.set_flow_mask(baldr::kDefaultFlowMask);
   co.set_filter_closures(false);
 
   auto costing = factory.Create(co);
@@ -149,7 +149,7 @@ TEST_F(TestReach, ReachWithClosures) {
     close_bidir_edge(reader, tile, index, current, "AD", closure_map);
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
   };
-  test::customize_live_traffic_data(closure_map.config, close_edge);
+  gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
   // Create costing
   // - type: auto
@@ -160,7 +160,7 @@ TEST_F(TestReach, ReachWithClosures) {
 
   CostingOptions co;
   co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
+  co.set_flow_mask(baldr::kDefaultFlowMask);
   co.set_filter_closures(true);
   // Check reach for AB - enclosed by closures, so reach should be 0
   {
@@ -210,7 +210,7 @@ TEST_F(TestReach, DISABLED_ReachWithClosures2) {
     close_bidir_edge(reader, tile, index, current, "LM", closure_map);
     close_bidir_edge(reader, tile, index, current, "MN", closure_map);
   };
-  test::customize_live_traffic_data(closure_map.config, close_edge);
+  gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
   // Create costing
   // - type: auto
@@ -221,7 +221,7 @@ TEST_F(TestReach, DISABLED_ReachWithClosures2) {
 
   CostingOptions co;
   co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
+  co.set_flow_mask(baldr::kDefaultFlowMask);
   co.set_filter_closures(false);
   auto costing = factory.Create(co);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "K", "L");

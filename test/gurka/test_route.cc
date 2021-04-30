@@ -288,20 +288,20 @@ protected:
     map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
 
     // add live traffic
-    test::build_live_traffic_data(map.config);
-    test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+    gurka::build_live_traffic_data(map.config);
+    gurka::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                       valhalla::baldr::TrafficSpeed* traffic_speed) {
       traffic_speed->overall_encoded_speed = 50 >> 1;
       traffic_speed->encoded_speed1 = 50 >> 1;
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    gurka::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
 
       // speeds for every 5 min bucket of the week
-      std::array<float, kBucketsPerWeek> historical;
+      std::array<float, baldr::kBucketsPerWeek> historical;
       historical.fill(7);
       for (size_t i = 0; i < historical.size(); ++i) {
         // TODO: if we are in morning or evening set a different speed and add another test
@@ -312,7 +312,7 @@ protected:
     // tests below use saturday at 9am and thursday 4am (27 if for leap seconds)
     size_t second_of_week_constrained = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
     size_t second_of_week_freeflow = 3 * 24 * 60 * 60 + 4 * 60 * 60 + 27;
-    auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
       auto tile = reader->GetGraphTile(tile_id);
       for (const auto& e : tile->GetDirectedEdges()) {
@@ -568,16 +568,17 @@ TEST(Standalone, AvoidExtraDetours) {
   const auto nodes = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(nodes, ways, {}, {}, "test/data/avoid_extra_detours");
 
-  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "C")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "C", "B")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  gurka::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                         baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())
       edge.set_not_thru(true);
   });

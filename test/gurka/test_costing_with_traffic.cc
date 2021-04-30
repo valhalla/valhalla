@@ -7,7 +7,7 @@
 #endif
 
 using namespace valhalla;
-using LiveTrafficCustomize = test::LiveTrafficCustomize;
+using LiveTrafficCustomize = gurka::LiveTrafficCustomize;
 
 const std::vector<std::string>& costing = {"auto",  "hov",           "taxi",      "bus",
                                            "truck", "motor_scooter", "motorcycle"};
@@ -171,9 +171,9 @@ TEST(Standalone, CostingWithTraffic) {
 
   {
     map.config.put("mjolnir.traffic_extract", "test/data/gurka_costing_with_traffic/traffic.tar");
-    test::build_live_traffic_data(map.config);
+    gurka::build_live_traffic_data(map.config);
     std::shared_ptr<valhalla::baldr::GraphReader> reader =
-        test::make_clean_graphreader(map.config.get_child("mjolnir"));
+        gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
 
     LiveTrafficCustomize edges_with_traffic = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                                  uint32_t index,
@@ -209,7 +209,7 @@ TEST(Standalone, CostingWithTraffic) {
       update_bidir_edges(reader, tile, index, current, "YZ", map, 27);
       update_bidir_edges(reader, tile, index, current, "Zs", map, 27);
     };
-    test::customize_live_traffic_data(map.config, edges_with_traffic);
+    gurka::customize_live_traffic_data(map.config, edges_with_traffic);
 
     for (auto& c : costing) {
       const std::string& req_no_traffic =

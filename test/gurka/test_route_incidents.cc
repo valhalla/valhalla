@@ -46,7 +46,7 @@ protected:
                             });
 
     // stage up some live traffic data
-    test::build_live_traffic_data(map.config);
+    gurka::build_live_traffic_data(map.config);
   }
 };
 
@@ -229,7 +229,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
       if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
         current->has_incidents = true;
     };
-    test::customize_live_traffic_data(map.config, has_incident_cb);
+    gurka::customize_live_traffic_data(map.config, has_incident_cb);
     edge_ids.push_back(edge_id);
   }
 

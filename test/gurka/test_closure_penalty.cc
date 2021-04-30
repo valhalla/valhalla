@@ -5,7 +5,7 @@
 #include "baldr/traffictile.h"
 
 using namespace valhalla;
-using LiveTrafficCustomize = test::LiveTrafficCustomize;
+using LiveTrafficCustomize = gurka::LiveTrafficCustomize;
 
 namespace {
 inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
@@ -112,17 +112,17 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
+    gurka::build_live_traffic_data(closure_map.config);
 
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_unknown_live_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, UNKNOWN_TRAFFIC_SPEED_RAW);
+                                        SetLiveSpeed(current, baldr::UNKNOWN_TRAFFIC_SPEED_RAW);
                                       });
   }
 
@@ -150,7 +150,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
   }
 
   // Close entire stretch of center road
-  test::LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+  gurka::LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                              int index, baldr::TrafficSpeed* current) -> void {
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
     close_bidir_edge(reader, tile, index, current, "EH", closure_map);
@@ -158,7 +158,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
     close_bidir_edge(reader, tile, index, current, "NQ", closure_map);
     close_bidir_edge(reader, tile, index, current, "QT", closure_map);
   };
-  test::customize_live_traffic_data(closure_map.config, close_edge);
+  gurka::customize_live_traffic_data(closure_map.config, close_edge);
 
   // Route from closed edge to an open one
   {

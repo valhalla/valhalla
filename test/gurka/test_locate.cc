@@ -34,7 +34,7 @@ TEST(locate, basic_properties) {
                             {"mjolnir.reclassify_links", "0"},
                             {"mjolnir.traffic_extract", "test/data/gurka_locate_basic/traffic.tar"},
                         });
-  test::build_live_traffic_data(map.config);
+  gurka::build_live_traffic_data(map.config);
 
   // turn on some traffic for fun
   auto traffic_cb = [](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
@@ -49,10 +49,10 @@ TEST(locate, basic_properties) {
     current->encoded_speed3 = 122 >> 1;
     current->congestion3 = 63; // high
   };
-  test::customize_live_traffic_data(map.config, traffic_cb);
+  gurka::customize_live_traffic_data(map.config, traffic_cb);
 
   // call locate to see some info about each edge
-  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   auto result = gurka::do_action(valhalla::Options::locate, map,
                                  {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "a", "b"}, "none",

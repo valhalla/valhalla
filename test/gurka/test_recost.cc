@@ -27,7 +27,7 @@ TEST(recosting, same_historical) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // add historical traffic so that we can get different costs at different times
-  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+  gurka::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
     e.set_free_flow_speed(80);
     e.set_speed(55);
     e.set_constrained_flow_speed(10);

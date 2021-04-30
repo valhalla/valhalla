@@ -41,7 +41,7 @@ protected:
     use_tracks_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_tracks");
 
     // set the same historical speeds for all roads
-    test::customize_historical_traffic(use_tracks_map.config, [](baldr::DirectedEdge& e) {
+    gurka::customize_historical_traffic(use_tracks_map.config, [](baldr::DirectedEdge& e) {
       e.set_free_flow_speed(40);
       e.set_constrained_flow_speed(40);
       return boost::none;

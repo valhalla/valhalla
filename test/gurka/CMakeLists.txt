@@ -1,4 +1,13 @@
 if(ENABLE_DATA_TOOLS)
+  add_library(valhalla_gurka_test
+    gurka.h gurka.cc)
+  target_include_directories(valhalla_gurka_test PUBLIC
+          ${VALHALLA_SOURCE_DIR}/test
+          ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+          ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+          ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  target_link_libraries(valhalla_gurka_test valhalla_test)
+
   file(GLOB_RECURSE TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/test_*.cc")
 
   add_custom_target(gurka)
@@ -26,7 +35,7 @@ if(ENABLE_DATA_TOOLS)
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
     create_source_groups("Source Files" ${FILENAME})
-    target_link_libraries(${TESTNAME} valhalla_test)
+    target_link_libraries(${TESTNAME} valhalla_gurka_test)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)

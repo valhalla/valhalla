@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
-using LiveTrafficCustomize = test::LiveTrafficCustomize;
+using LiveTrafficCustomize = gurka::LiveTrafficCustomize;
 
 namespace {
 
@@ -13,7 +13,7 @@ inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uin
   live_speed->breakpoint1 = breakpoint1;
   live_speed->breakpoint2 = 255;
   live_speed->encoded_speed2 = speed >> 1;
-  live_speed->encoded_speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  live_speed->encoded_speed3 = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
 }
 
 inline void SetLiveSpeedUpto(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
@@ -120,13 +120,13 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    test::build_live_traffic_data(closure_map.config);
+    gurka::build_live_traffic_data(closure_map.config);
 
-    reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    reader = gurka::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 
   void set_default_speed_on_all_edges() {
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader&, baldr::TrafficTile&, uint32_t,
                                          baldr::TrafficSpeed* current) -> void {
                                         SetLiveSpeed(current, default_speed);
@@ -137,7 +137,7 @@ protected:
     set_default_speed_on_all_edges();
 
     // Partially close AB from 50%
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         close_partial_dir_edge_from(reader, tile, index, 0.5, current,
@@ -145,14 +145,14 @@ protected:
                                       });
 
     // Fully close BC
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         close_bidir_edge(reader, tile, index, current, "BC",
                                                          closure_map);
                                       });
     // Partially close DE upto 50%
-    test::customize_live_traffic_data(closure_map.config,
+    gurka::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         close_partial_dir_edge_upto(reader, tile, index, 0.5, current,
