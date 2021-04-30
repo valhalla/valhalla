@@ -112,10 +112,13 @@ std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& b
 
 namespace valhalla {
 namespace baldr {
-connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
+connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt, const std::shared_ptr<GraphReader>& graph_reader) {
   // See what kind of tiles we are dealing with here by getting a graphreader
-  GraphReader reader(pt);
-  auto tiles = reader.GetTileSet();
+  std::shared_ptr<GraphReader> reader = graph_reader;
+  if (!reader) {
+    reader = std::make_shared<GraphReader>(pt);
+  }
+  auto tiles = reader->GetTileSet();
   transit_level = TileHierarchy::GetTransitLevel().level;
 
   // Quick hack to remove connectivity between known unconnected regions
