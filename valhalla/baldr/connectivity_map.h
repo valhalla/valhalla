@@ -17,9 +17,11 @@ public:
   /**
    * Constructs the connectivity map
    * @param pt   the ptree sub child labeled mjolnir in the valhalla json config
-   * @param graphreader optional pointer to the graph reader to use. If null, then the reader will be constructed using pt.
+   * @param graphreader optional pointer to the graph reader to use. If null, then the reader will be
+   * constructed using pt.
    */
-  connectivity_map_t(const boost::property_tree::ptree& pt, const std::shared_ptr<GraphReader>& graph_reader = {});
+  connectivity_map_t(const boost::property_tree::ptree& pt,
+                     const std::shared_ptr<GraphReader>& graph_reader = {});
 
   /**
    * Returns the color for the given graphid
