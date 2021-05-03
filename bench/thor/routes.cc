@@ -5,6 +5,7 @@
 #include <string>
 
 #include "baldr/graphreader.h"
+#include "gurka/gurka.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
