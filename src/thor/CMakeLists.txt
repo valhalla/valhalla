@@ -7,6 +7,7 @@ set(sources
   bidirectional_astar.cc
   centroid.cc
   chinese_postman_action.cc
+  chinese_postman_graph.cc
   costmatrix.cc
   dijkstras.cc
   isochrone_action.cc

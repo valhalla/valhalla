@@ -1,4 +1,8 @@
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/properties.hpp>
+
 #include "midgard/util.h"
+#include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -9,6 +13,9 @@ namespace valhalla {
 namespace thor {
 
 void thor_worker_t::chinese_postman(Api& request) {
+
+  ChinesePostmanGraph G;
+
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
@@ -27,9 +34,17 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
     chinese_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+    GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
+    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
+    CPVertex start_vertex = CPVertex(start_node);
+    G.addVertex(start_vertex);
+    CPVertex end_vertex = CPVertex(end_node);
+    G.addVertex(end_vertex);
   }
 
-  std::cout << "chinese_edges_ size: " << chinese_edges_.size() << std::endl;
+  std::cout << "Num of vertices: " << G.numVertices() << std::endl;
+  // std::cout << "Num of edges: " << boost::num_edges(G) << std::endl;
+  // std::cout << "chinese_edges_ size: " << chinese_edges_.size() << std::endl;
 }
 
 } // namespace thor
