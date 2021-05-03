@@ -2,11 +2,15 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: Fix TimeDepReverse termination and path cost calculation (for arrive_by routing) [#2987](https://github.com/valhalla/valhalla/pull/2987)
+   * FIXED: Isochrone (::Generalize()) fix to avoid generating self-intersecting polygons [#3026](https://github.com/valhalla/valhalla/pull/3026)
+   * FIXED: Handle day_on/day_off/hour_on/hour_off restrictions [#3029](https://github.com/valhalla/valhalla/pull/3029)
+   * FIXED: Apply conditional restrictions with dow only to the edges when routing [#3039](https://github.com/valhalla/valhalla/pull/3039)
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
    * CHANGED: Sync translation files with Transifex command line tool [#3030](https://github.com/valhalla/valhalla/pull/3030)
    * CHANGED: Use osm tags in links reclassification algorithm in order to reduce false positive downgrades [#3042](https://github.com/valhalla/valhalla/pull/3042) 
    * CHANGED: Use CircleCI XL instances for linux based builds [#3043](https://github.com/valhalla/valhalla/pull/3043)
+   * ADDED: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
@@ -57,9 +61,6 @@
    * FIXED: Removed unexpected maneuvers at sharp bends [#2968](https://github.com/valhalla/valhalla/pull/2968)
    * FIXED: Remove large number formatting for non-US countries [#3015](https://github.com/valhalla/valhalla/pull/3015)
    * FIXED: Odin undefined behaviour: handle case when xedgeuse is not initialized [#3020](https://github.com/valhalla/valhalla/pull/3020)
-   * FIXED: Isochrone (::Generalize()) fix to avoid generating self-intersecting polygons [#3026](https://github.com/valhalla/valhalla/pull/3026)
-   * FIXED: Handle day_on/day_off/hour_on/hour_off restrictions [#3029](https://github.com/valhalla/valhalla/pull/3029)
-   * FIXED: Apply conditional restrictions with dow only to the edges when routing [#3039](https://github.com/valhalla/valhalla/pull/3039)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
@@ -105,7 +106,6 @@
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
    * CHANGED: ci: Build Python bindings for Mac OS [#3011](https://github.com/valhalla/valhalla/pull/3011)
-   * Added: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
