@@ -298,7 +298,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // makes the data left side driving.
-  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4",
+  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5",
                           {{"mjolnir.data_processing.use_admin_db", "true"}});
 
   // A -> F - takes leftmost right lane (left side driving)
@@ -696,7 +696,7 @@ TEST(Standalone, TurnLanesSerializedResponse) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_10");
 
   auto verify_lane_schema = [](const rapidjson::Value& lanes) -> void {
     // Verify common lane attributes:
@@ -927,4 +927,78 @@ TEST(Standalone, TurnLanesSerializedResponse) {
       EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("uturn"));
     }
   }
+}
+
+TEST(Standalone, TurnLanesForks) {
+  constexpr double gridsize_metres = 100;
+
+  const std::string ascii_map = R"(
+                        W
+             V----U     |
+      N    Q       >P---O---M
+      |     >F---G<     |
+  A---B---D<       H    X
+      |     K----L
+      C
+  )";
+
+  const gurka::ways ways =
+      {{"AB",
+        {{"highway", "primary"},
+         {"name", "Frankfurter Ring"},
+         {"oneway", "yes"},
+         {"lanes", "3"},
+         {"turn:lanes", "left|through|through;right"}}},
+       {"BC", {{"highway", "tertiary"}, {"name", "Knorrstraße"}}},
+       {"BN", {{"highway", "tertiary"}, {"name", "Knorrstraße"}}},
+       {"BD",
+        {{"highway", "primary"},
+         {"name", "Frankfurter Ring"},
+         {"oneway", "yes"},
+         {"lanes", "2"},
+         {"turn:lanes", "through|slight_right"}}},
+       {"DF",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "1"}}},
+       {"FG", {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"lanes", "2"}}},
+       {"GH",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "1"}}},
+       {"DK",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "2"}}},
+       {"KL",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "2"}}},
+       {"MO",
+        {{"highway", "primary"},
+         {"name", "Frankfurter Ring"},
+         {"oneway", "yes"},
+         {"lanes", "3"},
+         {"turn:lanes", "left|through|through;right"}}},
+       {"OW", {{"highway", "tertiary"}, {"name", "Am Nordring"}}},
+       {"OX", {{"highway", "tertiary"}, {"name", "Am Nordring"}}},
+       {"OP",
+        {{"highway", "primary"},
+         {"name", "Frankfurter Ring"},
+         {"oneway", "yes"},
+         {"lanes", "2"},
+         {"turn:lanes", "through|slight_right"}}},
+       {"PG",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "1"}}},
+       {"FQ",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "1"}}},
+       {"PU",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "2"}}},
+       {"UV",
+        {{"highway", "primary"}, {"name", "Frankfurter Ring"}, {"oneway", "yes"}, {"lanes", "2"}}}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_11");
+
+  // A -> H
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
+  validate_turn_lanes(result, {{3, "[ left | *through* ACTIVE | *through*;right ACTIVE ]"},
+                               {2, "[ *through* ACTIVE | slight_right ]"},
+                               {0, ""},
+                               {0, ""},
+                               {0, ""}});
 }
