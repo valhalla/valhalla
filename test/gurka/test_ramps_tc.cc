@@ -292,6 +292,7 @@ void check_edge_classification(baldr::GraphReader& graph_reader,
 } // namespace
 
 TEST(LinkReclassification, test_use_refs) {
+  // Check that linkreclassification algorithm takes into account 'destination:ref' and 'ref' tags
   constexpr double gridsize_metres = 10;
 
   const std::string ascii_map = R"(
@@ -338,6 +339,7 @@ TEST(LinkReclassification, test_use_refs) {
 }
 
 TEST(LinkReclassification, test_hierarchical_reclass) {
+  // Check that final road classes of links will be higher or equal to the classes of their children
   constexpr double gridsize_metres = 10;
 
   const std::string ascii_map = R"(
@@ -378,6 +380,9 @@ TEST(LinkReclassification, test_hierarchical_reclass) {
 }
 
 TEST(LinkReclassification, test_acyclic_graph) {
+  // Check that all links will be reclassified correctly in case when some nodes have
+  // several inbound links and some nodes have several outbound links (when link graph
+  // is an acyclic graph that is not a tree)
   constexpr double gridsize_metres = 10;
 
   const std::string ascii_map = R"(
