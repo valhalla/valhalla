@@ -267,11 +267,11 @@ protected:
 
   void set_default_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, default_speed);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         (void)reader, (void)tile, (void)index;
+                                         SetLiveSpeed(current, default_speed);
+                                       });
   }
 
   virtual void SetUp() {
@@ -855,11 +855,11 @@ protected:
 
   void set_default_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, default_speed);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         (void)reader, (void)tile, (void)index;
+                                         SetLiveSpeed(current, default_speed);
+                                       });
   }
 
   virtual void SetUp() {
@@ -964,11 +964,11 @@ protected:
 
   void set_default_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, default_speed);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         (void)reader, (void)tile, (void)index;
+                                         SetLiveSpeed(current, default_speed);
+                                       });
   }
 
   virtual void SetUp() {

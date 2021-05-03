@@ -9,8 +9,8 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "mjolnir/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "proto/trip.pb.h"
 #include "tyr/actor.h"
@@ -21,13 +21,13 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <microtar.h>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
-#include <microtar.h>
 
 #include <regex>
 #include <string>
@@ -587,7 +587,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       return MTAR_ESUCCESS;
     };
     tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
-    tar.close = [](mtar_t * /*tar*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t* /*tar*/) -> int { return MTAR_ESUCCESS; };
 
     // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
     // 10km/h)

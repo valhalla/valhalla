@@ -2,8 +2,8 @@ if(ENABLE_DATA_TOOLS)
   add_library(valhalla_gurka_test
     gurka.h gurka.cc)
   target_include_directories(valhalla_gurka_test PUBLIC
-          ${VALHALLA_SOURCE_DIR}/test
-          ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+    ${VALHALLA_SOURCE_DIR}/test
+    ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
           ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
           ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
   target_link_libraries(valhalla_gurka_test valhalla_test)

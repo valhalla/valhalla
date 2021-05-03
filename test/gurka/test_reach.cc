@@ -97,10 +97,10 @@ protected:
 
   void set_default_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader&, baldr::TrafficTile&, int,
-                                         baldr::TrafficSpeed* current) -> void {
-                                        SetLiveSpeed(current, default_speed);
-                                      });
+                                       [](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                          baldr::TrafficSpeed* current) -> void {
+                                         SetLiveSpeed(current, default_speed);
+                                       });
   }
 
   virtual void SetUp() {

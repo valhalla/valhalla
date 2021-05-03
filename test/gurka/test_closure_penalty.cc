@@ -119,11 +119,11 @@ protected:
 
   void set_unknown_live_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, baldr::UNKNOWN_TRAFFIC_SPEED_RAW);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         (void)reader, (void)tile, (void)index;
+                                         SetLiveSpeed(current, baldr::UNKNOWN_TRAFFIC_SPEED_RAW);
+                                       });
   }
 
   virtual void SetUp() {
@@ -151,7 +151,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
 
   // Close entire stretch of center road
   gurka::LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+                                              int index, baldr::TrafficSpeed* current) -> void {
     close_bidir_edge(reader, tile, index, current, "BE", closure_map);
     close_bidir_edge(reader, tile, index, current, "EH", closure_map);
     close_bidir_edge(reader, tile, index, current, "HK", closure_map);

@@ -127,10 +127,10 @@ protected:
 
   void set_default_speed_on_all_edges() {
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader&, baldr::TrafficTile&, uint32_t,
-                                         baldr::TrafficSpeed* current) -> void {
-                                        SetLiveSpeed(current, default_speed);
-                                      });
+                                       [](baldr::GraphReader&, baldr::TrafficTile&, uint32_t,
+                                          baldr::TrafficSpeed* current) -> void {
+                                         SetLiveSpeed(current, default_speed);
+                                       });
   }
 
   virtual void SetUp() {
@@ -138,26 +138,26 @@ protected:
 
     // Partially close AB from 50%
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        close_partial_dir_edge_from(reader, tile, index, 0.5, current,
-                                                                    "AB", "B", closure_map);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         close_partial_dir_edge_from(reader, tile, index, 0.5,
+                                                                     current, "AB", "B", closure_map);
+                                       });
 
     // Fully close BC
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        close_bidir_edge(reader, tile, index, current, "BC",
-                                                         closure_map);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         close_bidir_edge(reader, tile, index, current, "BC",
+                                                          closure_map);
+                                       });
     // Partially close DE upto 50%
     gurka::customize_live_traffic_data(closure_map.config,
-                                      [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        close_partial_dir_edge_upto(reader, tile, index, 0.5, current,
-                                                                    "DE", "E", closure_map);
-                                      });
+                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                         close_partial_dir_edge_upto(reader, tile, index, 0.5,
+                                                                     current, "DE", "E", closure_map);
+                                       });
   }
 
   virtual void TearDown() {
