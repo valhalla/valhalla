@@ -157,6 +157,84 @@ TEST(Polyline2, TestGeneralizeSimplification) {
   }
 }
 
+TEST(Polyline2, PeuckerSelfIntersectionTest1) {
+  // These are real-world coordinates pulled off an isochrone polygon with gen_factor=0.
+  // Using the raw Douglas-Peucker algorithm results in a self-intersection (using a
+  // gen_factor=5). The modified Douglas-Peucker algorithm avoids the self-intersection.
+  std::vector<PointLL> points =
+      {{-117.20467966, 33.77518033}, {-117.20394301, 33.77518757}, {-117.20303785, 33.77482215},
+       {-117.20251280, 33.77391699}, {-117.20232287, 33.77353715}, {-117.20194304, 33.77334723},
+       {-117.20100573, 33.77297971}, {-117.20086145, 33.77299859}, {-117.20082284, 33.77279683},
+       {-117.20026941, 33.77191702}, {-117.20016060, 33.77169937}, {-117.19994294, 33.77159056},
+       {-117.19962097, 33.77159503}, {-117.19822555, 33.77163442}, {-117.19794297, 33.77163847},
+       {-117.19749885, 33.77147289}, {-117.19604794, 33.77181206}, {-117.19596388, 33.76993787},
+       {-117.19595160, 33.76991698}, {-117.19594873, 33.76991125}, {-117.19594299, 33.76990838},
+       {-117.19593012, 33.76990411}, {-117.19587159, 33.76991698}, {-117.19593906, 33.76992091},
+       {-117.19592176, 33.77189578}, {-117.19593198, 33.77191702}, {-117.19592806, 33.77193195},
+       {-117.19594299, 33.77196341}, {-117.19599274, 33.77196676}, {-117.19768004, 33.77217994},
+       {-117.19794297, 33.77219556}, {-117.19859647, 33.77257053}, {-117.19924840, 33.77261156},
+       {-117.19916533, 33.77313940}, {-117.19948144, 33.77391699}, {-117.19963527, 33.77422466},
+       {-117.19994294, 33.77437851}, {-117.20090806, 33.77495196}, {-117.20132555, 33.77591702},
+       {-117.20153140, 33.77632866}, {-117.20194304, 33.77653447}, {-117.20258894, 33.77656294}};
+
+  constexpr double gen_factor = 5.0;
+
+  {
+    // Allow self-intersections, see them occur.
+    Polyline2<PointLL> polyline(points);
+    polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ false);
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
+    ASSERT_EQ(intersections.size(), 1);
+  }
+
+  {
+    // Avoid self-intersections, see none.
+    Polyline2<PointLL> polyline(points);
+    polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ true);
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
+    ASSERT_EQ(intersections.size(), 0);
+  }
+}
+
+TEST(Polyline2, PeuckerSelfIntersectionTest2) {
+  // These are real-world coordinates pulled off an isochrone polygon with gen_factor=0.
+  // Using the raw Douglas-Peucker algorithm results in a self-intersection (using a
+  // gen_factor=50). The modified Douglas-Peucker algorithm avoids the self-intersection.
+  std::vector<PointLL> points =
+      {{-118.17329133, 33.78885961}, {-118.17410177, 33.78965699}, {-118.17407460, 33.79007635},
+       {-118.17379829, 33.79096132}, {-118.17377209, 33.79165699}, {-118.17404231, 33.79210863},
+       {-118.17449396, 33.79235270}, {-118.17518239, 33.79234540}, {-118.17601166, 33.79213932},
+       {-118.17649399, 33.79213106}, {-118.17725704, 33.79242005}, {-118.17841540, 33.79173556},
+       {-118.17774024, 33.79290326}, {-118.17803809, 33.79365699}, {-118.17807143, 33.79407953},
+       {-118.17849397, 33.79548576}, {-118.17936408, 33.79452708}, {-118.18010898, 33.79365699},
+       {-118.17945666, 33.79269433}, {-118.17891198, 33.79207499}, {-118.17855126, 33.79165699},
+       {-118.17852006, 33.79163090}, {-118.17849397, 33.79161013}, {-118.17825732, 33.79142034},
+       {-118.17741529, 33.79073567}, {-118.17649399, 33.79007552}, {-118.17627859, 33.78987239},
+       {-118.17597193, 33.78965699}, {-118.17626466, 33.78942765}, {-118.17649399, 33.78910775},
+       {-118.17736539, 33.78852840}, {-118.17778081, 33.78837014}, {-118.17849397, 33.78803414},
+       {-118.17871682, 33.78787982}, {-118.17900272, 33.78765698}, {-118.17996996, 33.78713294},
+       {-118.18049400, 33.78653054}, {-118.18094331, 33.78720766}, {-118.18082302, 33.78765698},
+       {-118.18159441, 33.78855655}, {-118.18249397, 33.78881215}, {-118.18324743, 33.78841046}};
+
+  constexpr double gen_factor = 50.0;
+
+  {
+    // Allow self-intersections, see them occur.
+    Polyline2<PointLL> polyline(points);
+    polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ false);
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
+    ASSERT_EQ(intersections.size(), 2);
+  }
+
+  {
+    // Avoid self-intersections, see none.
+    Polyline2<PointLL> polyline(points);
+    polyline.Generalize(gen_factor, {}, /* avoid self-intersections? */ true);
+    std::vector<PointLL> intersections = polyline.GetSelfIntersections();
+    ASSERT_EQ(intersections.size(), 0);
+  }
+}
+
 void TryClosestPoint(const Polyline2<Point2>& pl, const Point2& a, const Point2& b) {
   auto result = pl.ClosestPoint(a);
   EXPECT_EQ(std::get<0>(result), b);

@@ -147,7 +147,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 // connect the forward and reverse paths. In that case we return false to allow uturns only if this
 // edge is a not-thru edge that will be pruned.
 //
-template <const BidirectionalAStar::ExpansionType expansion_direction>
+template <const ExpansionType expansion_direction>
 inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             const sif::BDEdgeLabel& pred,
                                             const baldr::DirectedEdge* opp_pred_edge,
@@ -157,7 +157,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             uint32_t& shortcuts,
                                             const graph_tile_ptr& tile,
                                             const baldr::TimeInfo& time_info) {
-  constexpr bool FORWARD = expansion_direction == BidirectionalAStar::ExpansionType::forward;
+  constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   auto& hierarchy_limits = FORWARD ? hierarchy_limits_forward_ : hierarchy_limits_reverse_;
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -308,7 +308,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
-template <const BidirectionalAStar::ExpansionType expansion_direction>
+template <const ExpansionType expansion_direction>
 bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::GraphId& node,
                                 sif::BDEdgeLabel& pred,
@@ -316,7 +316,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::DirectedEdge* opp_pred_edge,
                                 const baldr::TimeInfo& time_info,
                                 const bool invariant) {
-  constexpr bool FORWARD = expansion_direction == BidirectionalAStar::ExpansionType::forward;
+  constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);

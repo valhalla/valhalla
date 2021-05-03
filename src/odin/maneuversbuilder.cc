@@ -2260,7 +2260,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
 
-    TripLeg_Use xedge_use;
+    boost::optional<TripLeg_Use> xedge_use;
     uint32_t straightest_traversable_xedge_turn_degree =
         node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
                                                                   prev_edge->travel_mode(),
@@ -2269,9 +2269,10 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     // This is needed to ensure we don't consider footways and crosswalks as
     // different uses for determining pedestrian forks
     bool is_current_and_intersecting_edge_of_similar_use =
-        (curr_edge->use() == xedge_use ||
-         (curr_edge->IsFootwayUse() &&
-          (xedge_use == TripLeg_Use_kPedestrianCrossingUse || xedge_use == TripLeg_Use_kFootwayUse)));
+        (xedge_use &&
+         (curr_edge->use() == *xedge_use ||
+          (curr_edge->IsFootwayUse() && (*xedge_use == TripLeg_Use_kPedestrianCrossingUse ||
+                                         *xedge_use == TripLeg_Use_kFootwayUse))));
 
     // if there is a similar traversable intersecting edge
     //    or there is a relative straight traversable intersecting edge

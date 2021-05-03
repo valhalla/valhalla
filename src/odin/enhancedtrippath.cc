@@ -1728,7 +1728,7 @@ bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const RoadClass road_class
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
-    TripLeg_Use* use) {
+    boost::optional<TripLeg_Use>* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta

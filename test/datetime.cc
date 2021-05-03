@@ -481,6 +481,75 @@ TEST(DateTime, TestIsRestricted) {
 
   TryIsRestricted(td, "2020-03-02T22:21", true);
   TryIsRestricted(td, "2020-03-02T21:21", false);
+
+  td = TimeDomain(74766824767740); // Jan 04-Jan 01 Mo-Sa
+  // Jan 03
+  TryIsRestricted(td, "2020-01-03T22:21", false);
+  TryIsRestricted(td, "2021-01-03T21:21", false);
+  // sundays
+  TryIsRestricted(td, "2020-01-05T23:00", false);
+  TryIsRestricted(td, "2020-01-05T20:00", false);
+  TryIsRestricted(td, "2020-03-01T23:00", false);
+
+  TryIsRestricted(td, "2020-01-06T21:21", true);
+  TryIsRestricted(td, "2020-01-01T22:21", true);
+  TryIsRestricted(td, "2020-01-04T20:00", true);
+  TryIsRestricted(td, "2020-03-02T16:00", true);
+
+  td = TimeDomain(74766824773120); // Jan 04-Jan 01 22:00-24:00
+  // Jan 03
+  TryIsRestricted(td, "2020-01-03T22:21", false);
+  TryIsRestricted(td, "2021-01-03T21:21", false);
+
+  TryIsRestricted(td, "2020-01-05T22:30", true);
+  TryIsRestricted(td, "2020-01-05T16:00", false);
+
+  TryIsRestricted(td, "2020-01-01T22:21", true);
+  TryIsRestricted(td, "2020-01-01T21:21", false);
+
+  TryIsRestricted(td, "2020-03-01T22:21", true);
+  TryIsRestricted(td, "2020-03-01T21:21", false);
+
+  td = TimeDomain(74766824767488); // Jan 04-Jan 01
+  // Jan 03
+  TryIsRestricted(td, "2020-01-03T22:21", false);
+  TryIsRestricted(td, "2020-01-03T21:21", false);
+
+  TryIsRestricted(td, "2020-01-05T23:59", true);
+  TryIsRestricted(td, "2020-01-05T08:00", true);
+  TryIsRestricted(td, "2021-01-01T00:00", true);
+  TryIsRestricted(td, "2022-01-01T22:00", true);
+  TryIsRestricted(td, "2020-03-10T22:00", true);
+  TryIsRestricted(td, "2020-06-20T16:30", true);
+
+  td = TimeDomain(124); // Mo-Fr
+  TryIsRestricted(td, "2021-04-22T05:00", true);
+  TryIsRestricted(td, "2021-04-22T23:58", true);
+  TryIsRestricted(td, "2021-04-23T10:00", true);
+  TryIsRestricted(td, "2021-04-24T11:00", false);
+  TryIsRestricted(td, "2021-04-26T01:11", true);
+
+  td = TimeDomain(20); // Mo,We
+  TryIsRestricted(td, "2021-04-21T08:00", true);
+  TryIsRestricted(td, "2021-04-20T08:00", false);
+  TryIsRestricted(td, "2021-04-18T16:00", false);
+  TryIsRestricted(td, "2021-04-26T18:00", true);
+
+  td = TimeDomain(21990234128384); // March-May
+  TryIsRestricted(td, "2021-04-03T08:00", true);
+  TryIsRestricted(td, "2020-03-15T23:59", true);
+  TryIsRestricted(td, "2022-05-10T16:00", true);
+  TryIsRestricted(td, "2021-02-18T16:00", false);
+  TryIsRestricted(td, "2021-06-26T19:00", false);
+
+  td = TimeDomain(2128654663942144); // March 18-April 30
+  TryIsRestricted(td, "2021-04-03T08:00", true);
+  TryIsRestricted(td, "2021-03-21T20:00", true);
+  TryIsRestricted(td, "2021-04-30T23:59", true);
+  TryIsRestricted(td, "2020-03-15T16:00", false);
+  TryIsRestricted(td, "2022-05-10T16:00", false);
+  TryIsRestricted(td, "2021-02-18T16:00", false);
+  TryIsRestricted(td, "2021-06-26T16:00", false);
 }
 
 TEST(DateTime, TestTimezoneDiff) {
