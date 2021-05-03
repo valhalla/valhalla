@@ -2269,7 +2269,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     // This is needed to ensure we don't consider footways and crosswalks as
     // different uses for determining pedestrian forks
     bool is_current_and_intersecting_edge_of_similar_use =
-        (xedge_use.has_value() &&
+        (xedge_use &&
          (curr_edge->use() == *xedge_use ||
           (curr_edge->IsFootwayUse() && (*xedge_use == TripLeg_Use_kPedestrianCrossingUse ||
                                          *xedge_use == TripLeg_Use_kFootwayUse))));

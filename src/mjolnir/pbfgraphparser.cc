@@ -1828,13 +1828,15 @@ public:
             // simple restriction, but is a timed restriction
             // change to complex and set date and time info
             if (condition.empty()) {
-              condition = day_start + "-";
-              condition += day_end;
+              if (!day_start.empty() && !day_end.empty()) {
+                condition = day_start + '-' + day_end;
+              }
               // do we have multiple times entered?
               if (!has_multiple_times) {
                 // no we do not...add the hours to the condition
-                condition += " " + hour_start + "-";
-                condition += hour_end;
+                if (!hour_start.empty() && !hour_end.empty()) {
+                  condition += ' ' + hour_start + '-' + hour_end;
+                }
               }
               // yes multiple times
               // 06:00;17:00
