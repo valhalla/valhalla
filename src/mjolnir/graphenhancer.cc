@@ -31,9 +31,11 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
@@ -94,58 +96,221 @@ struct enhancer_stats {
   }
 };
 
+/*
+The json basically looks like this:
+
+[{
+  "iso3166-1": "us",
+  "iso3166-2": "pa",
+  "urban": {
+    "way": [1,2,3,4,5,6,7,8],
+    "link_exiting": [9,10,11,12,13,14],
+    "link_turning": [15,16,17,18,19,20],
+    "roundabout": [21,22,23,24,25,26,27,28],
+    "driveway": 29,
+    "alley": 30,
+    "parking_aisle": 31,
+    "drive-through": 32
+  },
+  "rural": {
+    "way": [33,34,35,36,37,38,39,40],
+    "link_exiting": [41,42,43,44,45,46],
+    "link_turning": [47,48,49,50,51,52],
+    "roundabout": [53,54,55,56,57,58,59,60],
+    "driveway": 61,
+    "alley": 62,
+    "parking_aisle": 63,
+    "drive-through": 64
+  }
+}]
+ */
+
 /**
- * Update directed edge speed based on density and other edge parameters like
- * surface type. TODO - add admin specific logic
- * @param  directededge  Directed edge to update.
- * @param  density       Relative road density.
- * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
- * @param  rc_speed Array of default speeds vs. road class
- * @param  infer_turn_channels flag indicating if we should infer tc.
  *
  */
-void UpdateSpeed(DirectedEdge& directededge,
-                 const uint32_t density,
-                 const uint32_t* urban_rc_speed,
-                 bool infer_turn_channels) {
+struct SpeedAssigner {
+  struct SpeedTable {
+    // no special uses
+    std::array<uint32_t, 8> way;
+    // ramps
+    std::array<uint32_t, 6> link_exiting;
+    // turn channel
+    std::array<uint32_t, 6> link_turning;
+    // roundabout
+    std::array<uint32_t, 8> roundabout;
+    // driveway, alley, parking_aisle, drive-through
+    std::array<uint32_t, 4> service;
 
-  // Update speed on ramps (if not a tagged speed) and turn channels
-  if (directededge.link()) {
-    uint32_t speed = directededge.speed();
-    Use use = directededge.use();
-    if (use == Use::kTurnChannel && infer_turn_channels) {
-      speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
-    } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
-      // If no tagged speed set ramp speed to slightly lower than speed
-      // for roads of this classification
-      RoadClass rc = directededge.classification();
-      if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) || (rc == RoadClass::kPrimary)) {
-        speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
-                              : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
-      } else {
-        speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+    template <typename container_t>
+    void parse(const rapidjson::Value& obj, const std::string& name, container_t& entries) {
+      auto arr = obj[name].GetArray();
+      if (arr.Size() != entries.size())
+        throw std::runtime_error(name + " must have " + std::to_string(entries.size()) + " speeds");
+      size_t i = 0;
+      for (const auto& speed : arr) {
+        entries[i++] = speed.GetUint();
       }
     }
-    directededge.set_speed(speed);
 
-    // Done processing links so return...
-    return;
+    SpeedTable(const rapidjson::Value& obj) {
+      parse(obj, "way", way);
+      parse(obj, "link_exiting", link_exiting);
+      parse(obj, "link_turning", link_turning);
+      parse(obj, "roundabout", roundabout);
+      service[0] = obj["driveway"].GetUint();
+      service[1] = obj["alley"].GetUint();
+      service[2] = obj["parking_aisle"].GetUint();
+      service[3] = obj["drive-through"].GetUint();
+    }
+  };
+
+  // 2 letter country and 2 letter state as key with urban and rural speed tables as value
+  std::unordered_map<std::string, std::array<SpeedTable, 2>> speeds;
+
+  SpeedAssigner(const boost::optional<std::string>& config_file) {
+    if (!config_file)
+      return;
+    try {
+      auto doc = rapidjson::read_json(*config_file);
+      if (doc.HasParseError())
+        throw std::runtime_error("malformed json");
+      if (!doc.IsArray())
+        throw std::runtime_error("must be a json array");
+
+      // loop over each country/state pair
+      for (const auto& cs : doc.GetArray()) {
+        std::string code = cs["iso3166-1"].GetString();
+        code += cs["iso3166-2"].GetString();
+        speeds.emplace(std::move(code), std::array<SpeedTable, 2>{
+                                            SpeedTable(cs["urban"]),
+                                            SpeedTable(cs["rural"]),
+                                        });
+      }
+    } catch (const std::exception& e) {
+      LOG_WARN(std::string("Could not load default speeds: ") + e.what());
+    } catch (...) {}
   }
 
-  // If speed is assigned from an OSM max_speed tag we only update it based
-  // on surface type.
-  if (directededge.speed_type() == SpeedType::kTagged) {
-    // Reduce speed on rough pavements. TODO - do we want to increase
-    // more on worse surface types?
-    if (directededge.surface() >= Surface::kPavedRough) {
-      uint32_t speed = directededge.speed();
-      if (speed >= 50) {
-        directededge.set_speed(speed - 10);
-      } else if (speed > 15) {
-        directededge.set_speed(speed - 5);
-      }
+  bool FromConfig(DirectedEdge& directededge,
+                  const uint32_t density,
+                  const std::string& country_state_code) {
+    // let the other function handle ferry stuff or anything not motor vehicle
+    if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
+        directededge.forwardaccess() & kVehicularAccess)
+      return false;
+
+    // try first the country state combo, then country only, then neither, then bail
+    auto found = speeds.find(country_state_code);
+    if (found == speeds.end())
+      found = speeds.find(country_state_code.substr(0, 2));
+    if (found == speeds.end())
+      found = speeds.find("");
+    if (found == speeds.end())
+      return false;
+
+    // urban or rural
+    const auto& speed_table = found->second[density <= 8];
+    size_t rc = static_cast<size_t>(directededge.classification());
+
+    // some kind of special use
+    switch (directededge.use()) {
+      case Use::kTurnChannel:
+        directededge.set_speed(speed_table.link_turning[rc]);
+        return true;
+      case Use::kDriveway:
+        directededge.set_speed(speed_table.service[0]);
+        return true;
+      case Use::kAlley:
+        directededge.set_speed(speed_table.service[1]);
+        return true;
+      case Use::kParkingAisle:
+        directededge.set_speed(speed_table.service[2]);
+        return true;
+      case Use::kDriveThru:
+        directededge.set_speed(speed_table.service[3]);
+        return true;
+      default:
+        break;
     }
-  } else {
+
+    // exit ramp
+    if (directededge.link()) {
+      directededge.set_speed(speed_table.link_exiting[rc]);
+      return true;
+    }
+
+    // roundabout
+    if (directededge.roundabout()) {
+      directededge.set_speed(speed_table.roundabout[rc]);
+      return true;
+    }
+
+    // non-special use, just use the road class
+    directededge.set_speed(speed_table.way[rc]);
+    return true;
+  }
+
+  /**
+   * Update directed edge speed based on density and other edge parameters like
+   * surface type. TODO - add admin specific logic
+   * @param  directededge  Directed edge to update.
+   * @param  density       Relative road density.
+   * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
+   * @param  rc_speed Array of default speeds vs. road class
+   * @param  infer_turn_channels flag indicating if we should infer tc.
+   * @param country_state_code 2 letter country and 2 letter state codes concatinated
+   *
+   */
+  void UpdateSpeed(DirectedEdge& directededge,
+                   const uint32_t density,
+                   const uint32_t* urban_rc_speed,
+                   bool infer_turn_channels,
+                   const std::string& country_state_code) {
+
+    // If we have config loaded we'll use that
+    if (FromConfig(directededge, density, country_state_code))
+      return;
+
+    // Update speed on ramps (if not a tagged speed) and turn channels
+    if (directededge.link()) {
+      uint32_t speed = directededge.speed();
+      Use use = directededge.use();
+      if (use == Use::kTurnChannel && infer_turn_channels) {
+        speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
+      } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
+        // If no tagged speed set ramp speed to slightly lower than speed
+        // for roads of this classification
+        RoadClass rc = directededge.classification();
+        if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) ||
+            (rc == RoadClass::kPrimary)) {
+          speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
+                                : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+        } else {
+          speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+        }
+      }
+      directededge.set_speed(speed);
+
+      // Done processing links so return...
+      return;
+    }
+
+    // If speed is assigned from an OSM max_speed tag we only update it based
+    // on surface type.
+    if (directededge.speed_type() == SpeedType::kTagged) {
+      // Reduce speed on rough pavements. TODO - do we want to increase
+      // more on worse surface types?
+      if (directededge.surface() >= Surface::kPavedRough) {
+        uint32_t speed = directededge.speed();
+        if (speed >= 50) {
+          directededge.set_speed(speed - 10);
+        } else if (speed > 15) {
+          directededge.set_speed(speed - 5);
+        }
+      }
+      return;
+    }
+
     // Set speed on ferries. Base the speed on the length - assumes
     // that longer lengths generally use a faster ferry boat
     if (directededge.use() == Use::kRailFerry) {
@@ -169,8 +334,8 @@ void UpdateSpeed(DirectedEdge& directededge,
 
     // Modify speed for roads in urban regions - anything above 8 is
     // assumed to be urban
-    // if this density check is changed to be greater than 8, then we need to modify the urban flag in
-    // the osrm response as well.
+    // if this density check is changed to be greater than 8, then we need to modify
+    // the urban flag in the osrm response as well.
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
@@ -197,7 +362,7 @@ void UpdateSpeed(DirectedEdge& directededge,
       directededge.set_speed(speed / 2);
     }
   }
-}
+};
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
@@ -384,14 +549,13 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
     bool bUpdated = false;
     // handle [left, none, none, right] --> [left, straight, straight, right]
-    // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
-    // right]
+    // handle [straight, none, [straight, right], right] --> [straight, straight,
+    // [straight, right], right]
     bUpdated = ProcessLanes(true, true, enhanced_tls);
 
     if (!bUpdated) {
-      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
-      // straight]
-      // handle [left, none, none] --> [left, straight, straight]
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left],
+      // straight, straight] handle [left, none, none] --> [left, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
 
       std::set<Turn::Type> outgoing_turn_type;
@@ -494,7 +658,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
         }
       }
     }
-    // if anything was updated, we have to get the new string from the updated vector.
+    // if anything was updated, we have to get the new string from the updated
+    // vector.
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
 
@@ -1185,8 +1350,8 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact -= 1;
     }
   }
-  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
-  // or ramp penalize lefts when driving on the right.
+  // add to the stop impact when transitioning from higher to lower class road and we
+  // are not on a TC or ramp penalize lefts when driving on the right.
   else if (nodeinfo.drive_on_right() &&
            (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
            from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
@@ -1272,10 +1437,10 @@ void ProcessEdgeTransitions(const uint32_t idx,
 }
 
 /**
- * Get the index of the opposing edge at the end node. This is on the local hierarchy,
- * before adding transition and shortcut edges. Make sure that even if the end nodes
- * and lengths match that the correct edge is selected (match shape) since some loops
- * can have the same length and end node.
+ * Get the index of the opposing edge at the end node. This is on the local
+ * hierarchy, before adding transition and shortcut edges. Make sure that even if the
+ * end nodes and lengths match that the correct edge is selected (match shape) since
+ * some loops can have the same length and end node.
  * @param  endnodetile   Graph tile at the end node.
  * @param  startnode     Start node of the directed edge.
  * @param  tile          Graph tile of the edge
@@ -1288,17 +1453,19 @@ uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
   // Get the nodeinfo at the end of the edge
   const NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
 
-  // Iterate through the directed edges and return when the end node matches the specified
-  // node, the length matches, and the shape matches (or edgeinfo offset matches)
+  // Iterate through the directed edges and return when the end node matches the
+  // specified node, the length matches, and the shape matches (or edgeinfo offset
+  // matches)
   const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
-      // If in the same tile and the edgeinfo offset matches then the shape and names will match
+      // If in the same tile and the edgeinfo offset matches then the shape and names
+      // will match
       if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
         return i;
       } else {
-        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
-        // names in opposing directions)
+        // Need to compare shape if not in the same tile or different EdgeInfo (could
+        // be different names in opposing directions)
         if (shapes_match(tile->edgeinfo(&edge).shape(),
                          endnodetile->edgeinfo(directededge).shape())) {
           return i;
@@ -1360,16 +1527,21 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
+  // Config driven speed assignment
+  auto speeds_config = pt.get_optional<std::string>("default_speeds");
+  SpeedAssigner speed_assigner(speeds_config);
+
   // Default speeds (kph) in urban areas per road class
-  // (TODO - get from property tree)
-  // 55 MPH - motorway
-  // 45 MPH - trunk
-  // 35 MPH - primary
-  // 30 MPH - secondary
-  // 25 MPH - tertiary
-  // 20 MPH - residential and unclassified
-  // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
+  uint32_t urban_rc_speed[] = {
+      89, // 55 MPH - motorway
+      73, // 45 MPH - trunk
+      57, // 35 MPH - primary
+      49, // 30 MPH - secondary
+      40, // 25 MPH - tertiary
+      35, // 22 MPH - unclassified
+      30, // 20 MPH - residential
+      20, // 13 MPH - service/other
+  };
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
@@ -1426,8 +1598,8 @@ void enhance(const boost::property_tree::ptree& pt,
         throw std::runtime_error("edge transitions set is empty");
       }
 
-      // Headings must be done first so that we can check if a next edge is internal or not
-      // while processing turn lanes.
+      // Headings must be done first so that we can check if a next edge is internal
+      // or not while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
@@ -1516,27 +1688,33 @@ void enhance(const boost::property_tree::ptree& pt,
 
         auto e_offset = tilebuilder->edgeinfo(&directededge);
         std::string end_node_code = "";
+        std::string country_state_code = "";
         uint32_t end_admin_index = 0;
+        // TODO: why do we get this information again, we could use the begin node admin above instead
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
+        const Admin* admin = nullptr;
         if (tile->id() == directededge.endnode().Tile_Base()) {
           end_admin_index = tile->node(directededge.endnode().id())->admin_index();
-          end_node_code = tile->admin(end_admin_index)->country_iso();
+          admin = tile->admin(end_admin_index);
         } else {
           lock.lock();
           endnodetile = reader.GetGraphTile(directededge.endnode());
           lock.unlock();
           end_admin_index = endnodetile->node(directededge.endnode().id())->admin_index();
-          end_node_code = endnodetile->admin(end_admin_index)->country_iso();
+          admin = endnodetile->admin(end_admin_index);
         }
+        end_node_code = admin->country_iso();
+        if (!end_node_code.empty())
+          country_state_code += admin->state_iso();
 
         // only process country access logic if the iso country codes match.
         if (apply_country_overrides && country_code == end_node_code) {
           // country access logic.
           // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
           // struct, then this means that it has been set by a user of the
-          // OpenStreetMap community.  Therefore, we will not override this tag with the
-          // country defaults.  Otherwise, country specific access wins.
+          // OpenStreetMap community.  Therefore, we will not override this tag with
+          // the country defaults.  Otherwise, country specific access wins.
           // Currently, overrides only exist for Trunk RC and Uses below.
           OSMAccess target{e_offset.wayid()};
           std::unordered_map<std::string, std::vector<int>>::const_iterator country_iterator =
@@ -1549,8 +1727,8 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
             std::vector<int> access = country_access.at(country_code);
-            // leaves tile flag indicates that we have an access record for this edge.
-            // leaves tile flag is updated later to the real value.
+            // leaves tile flag indicates that we have an access record for this
+            // edge. leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
               sequence<OSMAccess>::iterator access_it = access_tags.find(target, less_than);
               if (access_it != access_tags.end()) {
@@ -1561,10 +1739,10 @@ void enhance(const boost::property_tree::ptree& pt,
             } else {
               SetCountryAccess(directededge, access, target);
             }
-            // motorroad default.  Only applies to RC <= kPrimary and has no country override.
-            // We just use the defaults which is no bicycles, mopeds and no pedestrians.
-            // leaves tile flag indicates that we have an access record for this edge.
-            // leaves tile flag is updated later to the real value.
+            // motorroad default.  Only applies to RC <= kPrimary and has no country
+            // override. We just use the defaults which is no bicycles, mopeds and no
+            // pedestrians. leaves tile flag indicates that we have an access record
+            // for this edge. leaves tile flag is updated later to the real value.
           } else if (country_iterator == country_access.end() &&
                      directededge.classification() <= RoadClass::kPrimary &&
                      directededge.leaves_tile()) {
@@ -1629,8 +1807,9 @@ void enhance(const boost::property_tree::ptree& pt,
           directededge.set_use(Use::kFootway);
         }
 
-        // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
+        // Speed assignment
+        speed_assigner.UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels,
+                                   country_state_code);
 
         // Update the named flag
         auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
