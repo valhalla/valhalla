@@ -1,6 +1,6 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "test.h"
-#include "datatools/test.h"
 
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"

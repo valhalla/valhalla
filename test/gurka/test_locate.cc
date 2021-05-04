@@ -1,8 +1,8 @@
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
+#include "datatools/test.h"
 #include "gurka.h"
 #include "test.h"
-#include "datatools/test.h"
 
 using namespace valhalla;
 

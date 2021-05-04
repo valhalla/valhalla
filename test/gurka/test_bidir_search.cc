@@ -1,6 +1,6 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "test.h"
-#include "datatools/test.h"
 
 #include <gtest/gtest.h>
 
@@ -34,13 +34,13 @@ TEST(StandAlone, exhaust_reverse_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "D")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "C")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
-                                                        baldr::DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
-        not_thru_edgeids.end()) {
-      edge.set_not_thru(true);
-    }
-  });
+  test::customize_edges(map.config,
+                        [&not_thru_edgeids](const baldr::GraphId& edgeid, baldr::DirectedEdge& edge) {
+                          if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+                              not_thru_edgeids.end()) {
+                            edge.set_not_thru(true);
+                          }
+                        });
 
   // Without extending search, the route should not fail due to settting not_thru_pruning_
   // to false on the second pass
@@ -79,13 +79,13 @@ TEST(StandAlone, exhaust_forward_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "F")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "F", "E")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
-                                                        baldr::DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
-        not_thru_edgeids.end()) {
-      edge.set_not_thru(true);
-    }
-  });
+  test::customize_edges(map.config,
+                        [&not_thru_edgeids](const baldr::GraphId& edgeid, baldr::DirectedEdge& edge) {
+                          if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+                              not_thru_edgeids.end()) {
+                            edge.set_not_thru(true);
+                          }
+                        });
 
   // Without extending search, the route should not fail due to settting not_thru_pruning_
   // to false on the second pass
@@ -123,13 +123,13 @@ TEST(StandAlone, failed_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "E")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "D")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
-                                                        baldr::DirectedEdge& edge) {
-    if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
-        not_thru_edgeids.end()) {
-      edge.set_not_thru(true);
-    }
-  });
+  test::customize_edges(map.config,
+                        [&not_thru_edgeids](const baldr::GraphId& edgeid, baldr::DirectedEdge& edge) {
+                          if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
+                              not_thru_edgeids.end()) {
+                            edge.set_not_thru(true);
+                          }
+                        });
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
 }

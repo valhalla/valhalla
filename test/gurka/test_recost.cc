@@ -1,8 +1,8 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
 #include "test.h"
-#include "datatools/test.h"
 
 using namespace valhalla;
 

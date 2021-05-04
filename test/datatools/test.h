@@ -1,7 +1,7 @@
 #pragma once
 
-#include "baldr/traffictile.h"
 #include "baldr/predictedspeeds.h"
+#include "baldr/traffictile.h"
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
@@ -9,8 +9,8 @@ namespace baldr {
 class GraphReader;
 class DirectedEdge;
 struct GraphId;
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
 namespace test {
 
@@ -48,14 +48,13 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb);
 
 using HistoricalTrafficCustomize =
-std::function<
-    boost::optional<std::array<float, valhalla::baldr::kBucketsPerWeek>>(
-            valhalla::baldr::DirectedEdge&)>;
+    std::function<boost::optional<std::array<float, valhalla::baldr::kBucketsPerWeek>>(
+        valhalla::baldr::DirectedEdge&)>;
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 
-using EdgesCustomize = std::function<void(const valhalla::baldr::GraphId&,
-                                          valhalla::baldr::DirectedEdge&)>;
+using EdgesCustomize =
+    std::function<void(const valhalla::baldr::GraphId&, valhalla::baldr::DirectedEdge&)>;
 void customize_edges(const boost::property_tree::ptree& config, const EdgesCustomize& setter_cb);
 
-}
+} // namespace test

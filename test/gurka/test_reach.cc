@@ -1,8 +1,8 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "loki/reach.h"
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
-#include "datatools/test.h"
 
 #include <gtest/gtest.h>
 #include <valhalla/proto/options.pb.h>

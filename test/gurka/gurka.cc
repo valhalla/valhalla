@@ -16,9 +16,9 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
+#include "datatools/test.h"
 #include "gurka.h"
 #include "test.h"
-#include "datatools/test.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>

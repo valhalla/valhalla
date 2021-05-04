@@ -1,8 +1,8 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "test.h"
-#include "datatools/test.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;

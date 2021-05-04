@@ -58,7 +58,7 @@ typedef struct {
   char _padding[255];
 } mtar_raw_header_t_;
 
-}
+} // namespace
 
 namespace test {
 
@@ -187,7 +187,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       valhalla::baldr::TrafficTile tile(
           std::make_unique<MMapGraphMemory>(memory,
                                             reinterpret_cast<char*>(tar.stream) + tar.pos +
-                                            sizeof(mtar_raw_header_t_),
+                                                sizeof(mtar_raw_header_t_),
                                             tar_header.size));
 
       valhalla::baldr::GraphId tile_id(tile.header->tile_id);
@@ -246,4 +246,4 @@ void customize_edges(const boost::property_tree::ptree& config, const EdgesCusto
   }
 }
 
-}
+} // namespace test

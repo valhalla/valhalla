@@ -1,6 +1,6 @@
+#include "datatools/test.h"
 #include "gurka.h"
 #include "test.h"
-#include "datatools/test.h"
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
