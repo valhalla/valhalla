@@ -22,10 +22,8 @@ struct CPVertex {
 };
 
 struct CPEdge {
-  std::string edge_id;
-  // EdgeInfo edge_info;
   float cost;
-  CPEdge(std::string edge_id = std::string()) : edge_id(edge_id) {
+  CPEdge(float cost = 0) : cost(cost) {
   }
 };
 
@@ -44,6 +42,7 @@ class ChinesePostmanGraph {
 private:
   /* data */
   CPGraph G;
+  std::map<std::string, Vertex> vertices;
 
 public:
   ChinesePostmanGraph(/* args */);
@@ -51,6 +50,8 @@ public:
   void addVertex(CPVertex cpvertex);
   VertexItr findVertex(CPVertex cpvertex);
   int numVertices();
+  int numEdges();
+  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
 };
 
 } // namespace thor

@@ -40,10 +40,12 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
+    CPEdge cpedge = CPEdge(1.0);
+    G.addEdge(start_vertex, end_vertex, cpedge);
   }
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
-  // std::cout << "Num of edges: " << boost::num_edges(G) << std::endl;
+  std::cout << "Num of edges: " << G.numEdges() << std::endl;
   // std::cout << "chinese_edges_ size: " << chinese_edges_.size() << std::endl;
 }
 
