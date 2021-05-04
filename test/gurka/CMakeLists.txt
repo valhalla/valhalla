@@ -5,7 +5,7 @@ if(ENABLE_DATA_TOOLS)
   target_include_directories(valhalla_gurka_test PUBLIC
     ${VALHALLA_SOURCE_DIR}/test/gurka
     ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
-  target_link_libraries(valhalla_gurka_test valhalla_test valhalla_datatools_test)
+  target_link_libraries(valhalla_gurka_test valhalla_test)
 
   add_custom_target(gurka)
   set_target_properties(gurka PROPERTIES FOLDER "Tests")

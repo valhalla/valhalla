@@ -12,7 +12,7 @@ target_include_directories(valhalla_test PUBLIC
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)
-  target_link_libraries(valhalla_test GEOS::GEOS)
+  target_link_libraries(valhalla_test GEOS::GEOS valhalla_datatools_test)
 endif()
 
 ## Lists tests
