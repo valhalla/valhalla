@@ -318,7 +318,7 @@ bool CanGoThroughNode(const node_bundle& node,
  * nodes where all their children have been processed; 'in_progress' - contains nodes that have been
  * visited but some of their children haven't been processed yet (in other words 'in progress' set
  * contains all nodes on the path from the root node to the current node). So, when we reach a node
- * from the 'processed' set we should and an edge to the graph (that goes from the current node to the
+ * from the 'processed' set we should add an edge to the graph (that goes from the current node to the
  * node from 'processed' set); but when we reach a node from the 'in progress' set - it's a cycle
  * (right now we just skip it).
  */
@@ -446,7 +446,7 @@ struct LinkGraphBuilder {
 /*
  * Reclassify links in the acyclic link graph. We maintain a queue of leaf nodes. On each step take
  * some leaf node from the queue, build a link chain, determine the final road class for the whole
- * chain (and set the new class), then virtually "remove" reclassified links from the grpaph and
+ * chain (and set the new class), then virtually "remove" reclassified links from the graph and
  * update the queue if a new leaf is detected. The final link class is defined as maximum from the
  * root node classification and current leaf node classification. After reclassification is done we
  * update the parent node classification and continue.
