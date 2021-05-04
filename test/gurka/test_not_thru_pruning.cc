@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include "datatools/test.h"
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -15,14 +16,14 @@ TEST(Standalone, NotThruPruning) {
   constexpr double gridsize_metres = 100;
 
   const std::string ascii_map = R"(
-            A   
-            | 
+            A
+            |
             |
             |
         B---C---D
         |       |
         |       |
-        |   7   |                                      E 
+        |   7   |                                      E
         F-------G                                       \
         |       |                                        \1
         H-------I---J                                     \
@@ -34,10 +35,10 @@ TEST(Standalone, NotThruPruning) {
         N----O                     |                            \
         |                          P              Q              |
         |                           \             |              |
-        R                            \            |              | 
+        R                            \            |              |
          \      4                    |            |              |
           S-----------T------2-------U------------V--------------W--------X
-           \         /       
+           \         /
             \       /
              \--Y--/6
                /
@@ -100,12 +101,13 @@ TEST(Standalone, NotThruPruning) {
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark these edges with not_thru true...make the test look like real world data
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "S", "R")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "R", "N")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "N", "K")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
         not_thru_edgeids.end()) {
       edge.set_not_thru(true);
@@ -121,7 +123,8 @@ TEST(Standalone, NotThruPruning) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "U", "T")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "T", "U")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
         not_thru_edgeids.end()) {
       edge.set_not_thru(false);

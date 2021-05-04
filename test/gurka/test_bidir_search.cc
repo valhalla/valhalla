@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include "datatools/test.h"
 
 #include <gtest/gtest.h>
 
@@ -25,7 +26,7 @@ TEST(StandAlone, exhaust_reverse_search) {
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark AB, BC & CD not_thru in both directions
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "A", "B")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "A")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "C")));
@@ -33,7 +34,8 @@ TEST(StandAlone, exhaust_reverse_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "D")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "C")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
         not_thru_edgeids.end()) {
       edge.set_not_thru(true);
@@ -69,7 +71,7 @@ TEST(StandAlone, exhaust_forward_search) {
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark CD, DE & EF not_thru in both directions
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "D")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "C")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "E")));
@@ -77,7 +79,8 @@ TEST(StandAlone, exhaust_forward_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "F")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "F", "E")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
         not_thru_edgeids.end()) {
       edge.set_not_thru(true);
@@ -112,7 +115,7 @@ TEST(StandAlone, failed_search) {
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   // mark CD, DE & EF not_thru in both directions
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "B", "C")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "B")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "C", "D")));
@@ -120,7 +123,8 @@ TEST(StandAlone, failed_search) {
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "D", "E")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, layout, "E", "D")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) !=
         not_thru_edgeids.end()) {
       edge.set_not_thru(true);

@@ -18,6 +18,7 @@
 
 #include "gurka.h"
 #include "test.h"
+#include "datatools/test.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -519,7 +520,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
             graph_tile_ptr reverse_tile = nullptr;
-            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+            baldr::GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
             auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                    reverse_directed_edge);

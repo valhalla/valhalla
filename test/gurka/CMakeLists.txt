@@ -1,6 +1,10 @@
 if(ENABLE_DATA_TOOLS)
   file(GLOB_RECURSE TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/test_*.cc")
 
+  add_library(valhalla_gurka_test STATIC gurka.h gurka.cc)
+  target_include_directories(valhalla_gurka_test PUBLIC ${VALHALLA_SOURCE_DIR}/test/gurka)
+  target_link_libraries(valhalla_gurka_test valhalla_test valhalla_datatools_test)
+
   add_custom_target(gurka)
   set_target_properties(gurka PROPERTIES FOLDER "Tests")
   add_custom_target(run-gurka)
@@ -26,7 +30,7 @@ if(ENABLE_DATA_TOOLS)
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
     create_source_groups("Source Files" ${FILENAME})
-    target_link_libraries(${TESTNAME} valhalla_test)
+    target_link_libraries(${TESTNAME} valhalla_gurka_test)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)

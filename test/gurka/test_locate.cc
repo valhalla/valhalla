@@ -2,6 +2,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "test.h"
+#include "datatools/test.h"
 
 using namespace valhalla;
 

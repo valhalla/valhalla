@@ -1,7 +1,9 @@
 #include "gurka.h"
 #include "test.h"
+#include "test/datatools/test.h"
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 /*************************************************************/
 TEST(Standalone, TruckRegression) {

@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 // Expected size is 256. We want to alert if somehow any change grows this structure
 // size as that indicates incompatible tiles.

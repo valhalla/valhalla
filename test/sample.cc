@@ -117,7 +117,7 @@ struct testable_sample_t : public skadi::sample {
     mapped_cache.front().second.map("test/data/blah.hgt", 3601 * 6);
   }
 
-  static uint16_t get_tile_index(const PointLL& coord) {
+  static uint16_t get_tile_index(const midgard::PointLL& coord) {
     return skadi::sample::get_tile_index(coord);
   }
   static std::string get_hgt_file_name(uint16_t index) {

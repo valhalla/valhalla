@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include "datatools/test.h"
 
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
@@ -13,7 +14,7 @@ inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uin
   live_speed->breakpoint1 = breakpoint1;
   live_speed->breakpoint2 = 255;
   live_speed->encoded_speed2 = speed >> 1;
-  live_speed->encoded_speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  live_speed->encoded_speed3 = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
 }
 
 inline void SetLiveSpeedUpto(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
