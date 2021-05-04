@@ -973,8 +973,10 @@ TEST(Standalone, TurnLanesForks) {
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_11");
 
-  // A -> H
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
+  valhalla::Api result;
+
+  // Keep left
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kStayLeft,
@@ -983,5 +985,17 @@ TEST(Standalone, TurnLanesForks) {
   validate_turn_lanes(result, {{3, "[ left | *through* ACTIVE | *through*;right ACTIVE ]"},
                                {3, "[ left | *through* ACTIVE | *through*;right ACTIVE ]"},
                                {2, "[ *through* ACTIVE | slight_right ]"},
+                               {0, ""}});
+
+  // Keep right
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStayRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  validate_turn_lanes(result, {{3, "[ left | *through* ACTIVE | *through*;right ACTIVE ]"},
+                               {3, "[ left | *through* ACTIVE | *through*;right ACTIVE ]"},
+                               {2, "[ through | *slight_right* ACTIVE ]"},
                                {0, ""}});
 }
