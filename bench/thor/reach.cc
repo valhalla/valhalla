@@ -5,6 +5,7 @@
 #include <string>
 
 #include "baldr/graphreader.h"
+#include "datatools/test.h"
 #include "loki/reach.h"
 #include "sif/costfactory.h"
 #include "test.h"

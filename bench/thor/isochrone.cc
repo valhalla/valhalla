@@ -10,6 +10,7 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 
+#include "datatools/test.h"
 #include "test.h"
 
 using namespace valhalla;
