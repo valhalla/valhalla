@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 
@@ -25,15 +27,19 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto& options = *request.mutable_options();
 
   auto* co = options.mutable_costing_options(options.costing());
-  google::protobuf::RepeatedPtrField<::valhalla::ChinesePostmanEdge> edges = co->chinese_edges();
+  std::list<std::string> avoid_edge_ids;
 
-  // User specified edges to route with percent along (for avoiding PathEdges of locations)
-  std::unordered_map<baldr::GraphId, float> chinese_edges_;
-  int i = 0;
+  for (auto& avoid_edge : co->avoid_edges()) {
+    avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
+  }
 
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
-    chinese_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+    bool found = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
+                            std::to_string(GraphId(edge.id()))) != avoid_edge_ids.end());
+    if (found)
+      continue;
+
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
@@ -46,7 +52,6 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
-  // std::cout << "chinese_edges_ size: " << chinese_edges_.size() << std::endl;
 }
 
 } // namespace thor
