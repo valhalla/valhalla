@@ -49,6 +49,7 @@ public:
   ~ChinesePostmanGraph();
   void addVertex(CPVertex cpvertex);
   VertexItr findVertex(CPVertex cpvertex);
+  bool isVertexExist(CPVertex cpvertex);
   int numVertices();
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);

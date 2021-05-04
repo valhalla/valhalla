@@ -18,6 +18,10 @@ ChinesePostmanGraph::ChinesePostmanGraph(/* args */) {
 ChinesePostmanGraph::~ChinesePostmanGraph() {
 }
 
+bool ChinesePostmanGraph::isVertexExist(CPVertex cpvertex) {
+  return this->vertices.count(cpvertex.vertex_id) == 1;
+}
+
 VertexItr ChinesePostmanGraph::findVertex(CPVertex cpvertex) {
   VertexItr vi, vi_end;
   for (boost::tie(vi, vi_end) = boost::vertices(G); vi != vi_end; ++vi) {
@@ -28,10 +32,7 @@ VertexItr ChinesePostmanGraph::findVertex(CPVertex cpvertex) {
 }
 
 void ChinesePostmanGraph::addVertex(CPVertex cpvertex) {
-  const auto iter = this->findVertex(cpvertex);
-  const auto theEnd = boost::vertices(G).second;
-  // not exist
-  if (iter == theEnd) {
+  if (!this->isVertexExist(cpvertex)) {
     Vertex v = boost::add_vertex(cpvertex, this->G);
     this->vertices[cpvertex.vertex_id] = v;
   }
