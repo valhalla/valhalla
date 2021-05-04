@@ -947,7 +947,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // get the avoid chinese polygon in there
-  auto chinese_polygon = rapidjson::get_child_optional(doc, "/chinese_polygon");
+  auto chinese_polygon = rapidjson::get_child_optional(doc, "/chinese_postman_polygon");
   if (chinese_polygon) {
     valhalla::Options_Ring* ring_pbf = options.mutable_chinese_polygon();
     try {

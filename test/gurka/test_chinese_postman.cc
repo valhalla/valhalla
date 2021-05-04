@@ -68,7 +68,7 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  rapidjson::SetValueByPointer(doc, "/chinese_polygon", chinese_polygon);
+  rapidjson::SetValueByPointer(doc, "/chinese_postman_polygon", chinese_polygon);
   rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
 
   rapidjson::StringBuffer sb;
