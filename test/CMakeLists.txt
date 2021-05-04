@@ -8,8 +8,7 @@ set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 add_library(valhalla_test test.h test.cc)
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)

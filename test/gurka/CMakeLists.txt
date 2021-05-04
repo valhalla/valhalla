@@ -2,7 +2,9 @@ if(ENABLE_DATA_TOOLS)
   file(GLOB_RECURSE TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/test_*.cc")
 
   add_library(valhalla_gurka_test STATIC gurka.h gurka.cc)
-  target_include_directories(valhalla_gurka_test PUBLIC ${VALHALLA_SOURCE_DIR}/test/gurka)
+  target_include_directories(valhalla_gurka_test PUBLIC
+    ${VALHALLA_SOURCE_DIR}/test/gurka
+    ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
   target_link_libraries(valhalla_gurka_test valhalla_test valhalla_datatools_test)
 
   add_custom_target(gurka)
