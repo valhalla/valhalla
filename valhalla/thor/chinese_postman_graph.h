@@ -33,6 +33,7 @@ using Vertex = boost::graph_traits<CPGraph>::vertex_descriptor;              // 
 using VertexItr = boost::graph_traits<CPGraph>::vertex_iterator;             // Define Vertex iterator
 using Edge = std::pair<boost::graph_traits<CPGraph>::edge_descriptor, bool>; // Define Edge
 using EdgeItr = boost::graph_traits<CPGraph>::edge_iterator;                 // Define Edge Iterator
+using DegreeSizeType = boost::graph_traits<CPGraph>::degree_size_type; // Define Degree Size Type
 
 /**
  * Graph representation for solving chinese postman problem
@@ -43,6 +44,9 @@ private:
   /* data */
   CPGraph G;
   std::map<std::string, Vertex> vertices;
+  // store the indegree and outdegree for each node, updated when an edge is added.
+  std::map<std::string, int> indegrees;
+  std::map<std::string, int> outdegrees;
 
 public:
   ChinesePostmanGraph(/* args */);
@@ -53,6 +57,7 @@ public:
   int numVertices();
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
+  std::map<std::string, int> getUnbalancedVertices();
 };
 
 } // namespace thor

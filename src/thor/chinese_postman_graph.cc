@@ -35,6 +35,8 @@ void ChinesePostmanGraph::addVertex(CPVertex cpvertex) {
   if (!this->isVertexExist(cpvertex)) {
     Vertex v = boost::add_vertex(cpvertex, this->G);
     this->vertices[cpvertex.vertex_id] = v;
+    this->indegrees[cpvertex.vertex_id] = 0;
+    this->outdegrees[cpvertex.vertex_id] = 0;
   }
 }
 
@@ -49,6 +51,20 @@ int ChinesePostmanGraph::numEdges() {
 void ChinesePostmanGraph::addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge) {
   boost::add_edge(this->vertices[cpStartVertex.vertex_id], this->vertices[cpEndVertex.vertex_id], {},
                   this->G);
+  // Update the indegrees and outdegrees
+  this->indegrees[cpEndVertex.vertex_id]++;
+  this->outdegrees[cpStartVertex.vertex_id]++;
+}
+
+std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
+  std::map<std::string, int> unbalaced_vertices;
+  for (auto const& v : this->vertices) {
+    if (this->indegrees[v.first] != this->outdegrees[v.first]) {
+      unbalaced_vertices[v.first] = this->indegrees[v.first] - this->outdegrees[v.first];
+      ;
+    }
+  }
+  return unbalaced_vertices;
 }
 
 } // namespace thor
