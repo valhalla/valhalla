@@ -165,7 +165,7 @@ struct SpeedAssigner {
   };
 
   // 2 letter country and 2 letter state as key with urban and rural speed tables as value
-  std::unordered_map<std::string, std::array<SpeedTable, 2>> speeds;
+  std::unordered_map<std::string, std::array<SpeedTable, 2>> tables;
 
   SpeedAssigner(const boost::optional<std::string>& config_file) {
     if (!config_file)
@@ -181,14 +181,18 @@ struct SpeedAssigner {
       for (const auto& cs : doc.GetArray()) {
         std::string code = cs["iso3166-1"].GetString();
         code += cs["iso3166-2"].GetString();
-        speeds.emplace(std::move(code), std::array<SpeedTable, 2>{
+        tables.emplace(std::move(code), std::array<SpeedTable, 2>{
                                             SpeedTable(cs["urban"]),
                                             SpeedTable(cs["rural"]),
                                         });
       }
-    } catch (const std::exception& e) {
+    } // something went wrong with parsing or opening the file
+    catch (const std::exception& e) {
       LOG_WARN(std::string("Could not load default speeds: ") + e.what());
-    } catch (...) {}
+    } // something else was thrown
+    catch (...) {
+      LOG_WARN("Could not load default speeds from config");
+    }
   }
 
   bool FromConfig(DirectedEdge& directededge,
@@ -196,16 +200,16 @@ struct SpeedAssigner {
                   const std::string& country_state_code) {
     // let the other function handle ferry stuff or anything not motor vehicle
     if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
-        directededge.forwardaccess() & kVehicularAccess)
+        !(directededge.forwardaccess() & kVehicularAccess))
       return false;
 
     // try first the country state combo, then country only, then neither, then bail
-    auto found = speeds.find(country_state_code);
-    if (found == speeds.end())
-      found = speeds.find(country_state_code.substr(0, 2));
-    if (found == speeds.end())
-      found = speeds.find("");
-    if (found == speeds.end())
+    auto found = tables.find(country_state_code);
+    if (found == tables.end())
+      found = tables.find(country_state_code.substr(0, 2));
+    if (found == tables.end())
+      found = tables.find("");
+    if (found == tables.end())
       return false;
 
     // urban or rural
@@ -268,7 +272,7 @@ struct SpeedAssigner {
                    const std::string& country_state_code) {
 
     // If we have config loaded we'll use that
-    if (FromConfig(directededge, density, country_state_code))
+    if (!tables.empty() && FromConfig(directededge, density, country_state_code))
       return;
 
     // Update speed on ramps (if not a tagged speed) and turn channels
