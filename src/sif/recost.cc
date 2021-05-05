@@ -117,10 +117,10 @@ void recost_forward(baldr::GraphReader& reader,
       edge_pct = std::max(0.f, edge_pct);
     }
 
-    // the cost for traversing this intersection
-    Cost transition_cost = node ? costing.TransitionCost(edge, node, label) : Cost{};
-    // update the cost to the end of this edge
     uint8_t flow_sources;
+    // the cost for traversing this intersection
+    Cost transition_cost = node ? costing.TransitionCost(edge, node, label, tile, offset_time.second_of_week, flow_sources) : Cost{};
+    // update the cost to the end of this edge
     cost += transition_cost +
             costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources) * edge_pct;
     // update the length to the end of this edge

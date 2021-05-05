@@ -259,6 +259,13 @@ public:
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred) const override;
 
+  Cost TransitionCost(const baldr::DirectedEdge* edge,
+                      const baldr::NodeInfo* node,
+                      const EdgeLabel& pred,
+                      const graph_tile_ptr& tile,
+                      const uint32_t seconds,
+                      uint8_t& flow_sources) const override;
+
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
@@ -276,6 +283,16 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const bool has_measured_speed,
                                      const InternalTurn internal_turn) const override;
+
+  virtual Cost TransitionCostReverse1(const uint32_t idx,
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* pred,
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_measured_speed,
+                                     const InternalTurn internal_turn,
+                                     const graph_tile_ptr& tile,
+                                     const uint32_t seconds,
+                                     uint8_t* flow_sources) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -570,6 +587,93 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   return c;
 }
 
+Cost AutoCost::TransitionCost(baldr::DirectedEdge const* edge,
+                              baldr::NodeInfo const* node,
+                              EdgeLabel const& pred,
+                              graph_tile_ptr const& tile,
+                              const uint32_t seconds,
+                              uint8_t& flow_sources) const {
+  auto base_cost = AutoCost::TransitionCost(edge, node, pred);
+  auto turn_type = static_cast<uint8_t>(edge->turntype(pred.opp_local_idx()));
+  if (turn_type < 2 || turn_type > 6) {
+    return base_cost;
+  }
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+
+  const float sec = [&]() -> float {
+    auto final_speed = std::min(edge_speed, top_speed_) / 3.6;
+    //    float sec = edge->length() * speedfactor_[final_speed];
+
+    float low_speed = 10 / 3.6;             // 10 kph
+    constexpr float acceleration = 5 / 3.6; // 5kph
+
+    if (final_speed <= low_speed)
+      return 0;
+
+    float accel_length = (final_speed * final_speed - low_speed * low_speed) / (2 * acceleration);
+
+    float res;
+    if (accel_length <= edge->length()) {
+      float accel_time = accel_length / ((final_speed + low_speed) / 2);
+      res = accel_time - accel_length / final_speed;
+//      float last_time = (edge->length() - accel_length) / final_speed;
+//      res = accel_time + last_time;
+    } else {
+      float last_speed = sqrt(2 * acceleration * edge->length() + low_speed * low_speed);
+      res = edge->length() / ((low_speed + last_speed) / 2) - edge->length() / final_speed;
+//      res = edge->length() / ((low_speed + last_speed) / 2);
+    }
+    return res;
+  }();
+
+
+  float factor = 1;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = density_factor_[edge->density()];
+      break;
+  }
+
+  // TODO: speed_penality hasn't been extensively tested, might alter this in future
+  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            edge->toll() * toll_factor_;
+
+  switch (edge->use()) {
+    case Use::kAlley:
+      factor *= alley_factor_;
+      break;
+    case Use::kTrack:
+      factor *= track_factor_;
+      break;
+    case Use::kLivingStreet:
+      factor *= living_street_factor_;
+      break;
+    case Use::kServiceRoad:
+      factor *= service_factor_;
+      break;
+    default:
+      break;
+  }
+
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
+  }
+  // base cost before the factor is a linear combination of time vs distance, depending on which
+  // one the user thinks is more important to them
+  auto res = Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+//  std::cout << " add " << res.cost;
+  return res + base_cost;
+}
+
 // Returns the cost to make the transition from the predecessor edge
 // when using a reverse search (from destination towards the origin).
 // pred is the opposing current edge in the reverse tree
@@ -635,6 +739,94 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   c.cost *= inv_distance_factor_;
 
   return c;
+}
+Cost AutoCost::TransitionCostReverse1(uint32_t const idx,
+                                      baldr::NodeInfo const* node,
+                                      baldr::DirectedEdge const* pred,
+                                      baldr::DirectedEdge const* edge,
+                                      bool const has_measured_speed,
+                                      InternalTurn const internal_turn,
+                                      graph_tile_ptr const& tile,
+                                      uint32_t const seconds,
+                                      uint8_t* flow_sources) const {
+  auto base_cost = AutoCost::TransitionCostReverse(idx, node, pred, edge, has_measured_speed, internal_turn);
+
+  auto turn_type = static_cast<uint8_t>(edge->turntype(idx));
+  if (turn_type < 2 && turn_type > 6) {
+    return base_cost;
+  }
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, flow_sources);
+
+  const float sec = [&]() -> float {
+    auto final_speed = std::min(edge_speed, top_speed_) / 3.6;
+    //    float sec = edge->length() * speedfactor_[final_speed];
+
+    float low_speed = 10 / 3.6;             // 10 kph
+    constexpr float acceleration = 5 / 3.6; // 5kph
+
+    if (final_speed <= low_speed)
+      return 0;
+
+    float accel_length = (final_speed * final_speed - low_speed * low_speed) / (2 * acceleration);
+
+    float res;
+    if (accel_length <= edge->length()) {
+      float accel_time = accel_length / ((final_speed + low_speed) / 2);
+      float last_time = (edge->length() - accel_length) / final_speed;
+      res = accel_time + last_time;
+    } else {
+      float last_speed = sqrt(2 * acceleration * edge->length() + low_speed * low_speed);
+      res = edge->length() / ((low_speed + last_speed) / 2);
+    }
+    return res;
+  }();
+
+
+  float factor = 1;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = density_factor_[edge->density()];
+      break;
+  }
+
+  // TODO: speed_penality hasn't been extensively tested, might alter this in future
+  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            edge->toll() * toll_factor_;
+
+  switch (edge->use()) {
+    case Use::kAlley:
+      factor *= alley_factor_;
+      break;
+    case Use::kTrack:
+      factor *= track_factor_;
+      break;
+    case Use::kLivingStreet:
+      factor *= living_street_factor_;
+      break;
+    case Use::kServiceRoad:
+      factor *= service_factor_;
+      break;
+    default:
+      break;
+  }
+
+  if (IsClosed(edge, tile)) {
+    // Add a penalty for traversing a closed edge
+    factor *= closure_factor_;
+  }
+  // base cost before the factor is a linear combination of time vs distance, depending on which
+  // one the user thinks is more important to them
+  auto res = Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
+//  std::cout << " add " << res.cost;
+  return res + base_cost;
 }
 
 void ParseAutoCostOptions(const rapidjson::Document& doc,

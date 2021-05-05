@@ -220,14 +220,17 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       return false;
     }
   }
+//  std::cout << pred.edgeid().value << "," << meta.edge_id.value;
 
   // Get cost. Separate out transition cost.
-  sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
-                                                pred.internal_turn());
   uint8_t flow_sources;
+  sif::Cost transition_cost =
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, time_info.second_of_week, flow_sources)
+              : costing_->TransitionCostReverse1(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge, pred.has_measured_speed(),
+                                                pred.internal_turn(), t2, time_info.second_of_week, &flow_sources);
+//  std::cout << '\n';
+//  std::cout << "Cost " << transition_cost.cost << "\n";
   sif::Cost newcost =
       pred.cost() + transition_cost +
       (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
@@ -974,15 +977,15 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE("CONNECTIONS FOUND " + std::to_string(best_connections_.size()));
   for (const auto& b : best_connections_) {
-    auto tile = graphreader.GetGraphTile(b.edgeid);
-    auto nodes = graphreader.GetDirectedEdgeNodes(b.edgeid, tile);
-    auto sll = graphreader.GetGraphTile(nodes.first)
-                   ->node(nodes.first)
-                   ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
-    auto ell = graphreader.GetGraphTile(nodes.second)
-                   ->node(nodes.second)
-                   ->latlng(graphreader.GetGraphTile(nodes.second)->header()->base_ll());
-    printf("[[%.6f,%.6f],[%.6f,%.6f]],\n", sll.lng(), sll.lat(), ell.lng(), ell.lat());
+//    auto tile = graphreader.GetGraphTile(b.edgeid);
+//    auto nodes = graphreader.GetDirectedEdgeNodes(b.edgeid, tile);
+//    auto sll = graphreader.GetGraphTile(nodes.first)
+//                   ->node(nodes.first)
+//                   ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
+//    auto ell = graphreader.GetGraphTile(nodes.second)
+//                   ->node(nodes.second)
+//                   ->latlng(graphreader.GetGraphTile(nodes.second)->header()->base_ll());
+//    printf("[[%.6f,%.6f],[%.6f,%.6f]],\n", sll.lng(), sll.lat(), ell.lng(), ell.lat());
   }
 #endif
 
@@ -1064,6 +1067,11 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // once we recovered the whole path we should construct list of PathInfo objects
     std::vector<PathInfo> path;
     path.reserve(path_edges.size());
+
+//    for (auto id : path_edges) {
+//      std::cout << "Path edges: " << id.value << ' ';
+//    }
+//    std::cout << std::endl;
 
     auto edge_itr = path_edges.begin();
     const auto edge_cb = [&edge_itr, &path_edges]() {
