@@ -752,7 +752,7 @@ Cost AutoCost::TransitionCostReverse1(uint32_t const idx,
   auto base_cost = AutoCost::TransitionCostReverse(idx, node, pred, edge, has_measured_speed, internal_turn);
 
   auto turn_type = static_cast<uint8_t>(edge->turntype(idx));
-  if (turn_type < 2 && turn_type > 6) {
+  if (turn_type < 2 || turn_type > 6) {
     return base_cost;
   }
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, flow_sources);
