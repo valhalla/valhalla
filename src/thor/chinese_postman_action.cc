@@ -52,8 +52,14 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
-  for (auto const& v : G.getUnbalancedVertices()) {
-    std::cout << v.first << " -> " << v.second << std::endl;
+
+  if (G.getUnbalancedVertices().size() == 0) {
+    std::cout << "Ideal graph" << std::endl;
+  } else {
+    std::cout << "Non Ideal graph" << std::endl;
+    for (auto const& v : G.getUnbalancedVertices()) {
+      std::cout << v.first << " -> " << v.second << std::endl;
+    }
   }
 }
 
