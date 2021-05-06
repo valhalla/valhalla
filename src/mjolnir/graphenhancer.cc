@@ -126,7 +126,10 @@ The json basically looks like this:
  */
 
 /**
- *
+ * This class has two methods of deciding the default speed of an edge. The default method is to use
+ * some of the constants above and some of the attributes on the edge to modify the existing speed.
+ * This method can be overridden by a json config which allows for geography specific speed assignment
+ * by country/state, urban/rural, road class, road use and link/ramp type
  */
 struct SpeedAssigner {
   struct SpeedTable {
@@ -197,6 +200,18 @@ struct SpeedAssigner {
     }
   }
 
+  /**
+   * This function determines the speed of an edge based on the json configuration provided to the
+   * classes constructor. If the edge is one of the types that cannot be assigned via config the
+   * method will leave the edges speed unset and signal as much by returning false
+   *
+   * @param directededge         the edge whose speed we may set
+   * @param density              the road density of the end node of the edge
+   * @param country_state_code   the 4 letter country/state code, it may be 2 letters if just the
+   *                             country is known and it may also be an empty string if no admin
+   *                             information has been loaded
+   * @return true if the directededge had its speed set from configuration
+   */
   bool FromConfig(DirectedEdge& directededge,
                   const uint32_t density,
                   const std::string& country_state_code) {
@@ -562,13 +577,14 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
     bool bUpdated = false;
     // handle [left, none, none, right] --> [left, straight, straight, right]
-    // handle [straight, none, [straight, right], right] --> [straight, straight,
-    // [straight, right], right]
+    // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
+    // right]
     bUpdated = ProcessLanes(true, true, enhanced_tls);
 
     if (!bUpdated) {
-      // handle [left, [straight, left], none, straight] --> [left, [straight, left],
-      // straight, straight] handle [left, none, none] --> [left, straight, straight]
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
+      // straight]
+      // handle [left, none, none] --> [left, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
 
       std::set<Turn::Type> outgoing_turn_type;
@@ -671,8 +687,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
         }
       }
     }
-    // if anything was updated, we have to get the new string from the updated
-    // vector.
+    // if anything was updated, we have to get the new string from the updated vector.
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
 
@@ -1363,8 +1378,8 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact -= 1;
     }
   }
-  // add to the stop impact when transitioning from higher to lower class road and we
-  // are not on a TC or ramp penalize lefts when driving on the right.
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
   else if (nodeinfo.drive_on_right() &&
            (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
            from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
@@ -1450,10 +1465,10 @@ void ProcessEdgeTransitions(const uint32_t idx,
 }
 
 /**
- * Get the index of the opposing edge at the end node. This is on the local
- * hierarchy, before adding transition and shortcut edges. Make sure that even if the
- * end nodes and lengths match that the correct edge is selected (match shape) since
- * some loops can have the same length and end node.
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
  * @param  endnodetile   Graph tile at the end node.
  * @param  startnode     Start node of the directed edge.
  * @param  tile          Graph tile of the edge
@@ -1466,19 +1481,17 @@ uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
   // Get the nodeinfo at the end of the edge
   const NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
 
-  // Iterate through the directed edges and return when the end node matches the
-  // specified node, the length matches, and the shape matches (or edgeinfo offset
-  // matches)
+  // Iterate through the directed edges and return when the end node matches the specified
+  // node, the length matches, and the shape matches (or edgeinfo offset matches)
   const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
-      // If in the same tile and the edgeinfo offset matches then the shape and names
-      // will match
+      // If in the same tile and the edgeinfo offset matches then the shape and names will match
       if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
         return i;
       } else {
-        // Need to compare shape if not in the same tile or different EdgeInfo (could
-        // be different names in opposing directions)
+        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
+        // names in opposing directions)
         if (shapes_match(tile->edgeinfo(&edge).shape(),
                          endnodetile->edgeinfo(directededge).shape())) {
           return i;
@@ -1611,8 +1624,8 @@ void enhance(const boost::property_tree::ptree& pt,
         throw std::runtime_error("edge transitions set is empty");
       }
 
-      // Headings must be done first so that we can check if a next edge is internal
-      // or not while processing turn lanes.
+      // Headings must be done first so that we can check if a next edge is internal or not
+      // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
@@ -1726,8 +1739,8 @@ void enhance(const boost::property_tree::ptree& pt,
           // country access logic.
           // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
           // struct, then this means that it has been set by a user of the
-          // OpenStreetMap community.  Therefore, we will not override this tag with
-          // the country defaults.  Otherwise, country specific access wins.
+          // OpenStreetMap community.  Therefore, we will not override this tag with the
+          // country defaults.  Otherwise, country specific access wins.
           // Currently, overrides only exist for Trunk RC and Uses below.
           OSMAccess target{e_offset.wayid()};
           std::unordered_map<std::string, std::vector<int>>::const_iterator country_iterator =
@@ -1740,8 +1753,8 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
             std::vector<int> access = country_access.at(country_code);
-            // leaves tile flag indicates that we have an access record for this
-            // edge. leaves tile flag is updated later to the real value.
+            // leaves tile flag indicates that we have an access record for this edge.
+            // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
               sequence<OSMAccess>::iterator access_it = access_tags.find(target, less_than);
               if (access_it != access_tags.end()) {
@@ -1752,10 +1765,10 @@ void enhance(const boost::property_tree::ptree& pt,
             } else {
               SetCountryAccess(directededge, access, target);
             }
-            // motorroad default.  Only applies to RC <= kPrimary and has no country
-            // override. We just use the defaults which is no bicycles, mopeds and no
-            // pedestrians. leaves tile flag indicates that we have an access record
-            // for this edge. leaves tile flag is updated later to the real value.
+            // motorroad default.  Only applies to RC <= kPrimary and has no country override.
+            // We just use the defaults which is no bicycles, mopeds and no pedestrians.
+            // leaves tile flag indicates that we have an access record for this edge.
+            // leaves tile flag is updated later to the real value.
           } else if (country_iterator == country_access.end() &&
                      directededge.classification() <= RoadClass::kPrimary &&
                      directededge.leaves_tile()) {
