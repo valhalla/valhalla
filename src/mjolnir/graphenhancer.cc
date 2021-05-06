@@ -200,7 +200,7 @@ struct SpeedAssigner {
                   const std::string& country_state_code) {
     // let the other function handle ferry stuff or anything not motor vehicle
     if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
-        !(directededge.forwardaccess() & kVehicularAccess))
+        !((directededge.forwardaccess() | directededge.reverseaccess()) & kVehicularAccess))
       return false;
 
     // try first the country state combo, then country only, then neither, then bail
@@ -218,9 +218,6 @@ struct SpeedAssigner {
 
     // some kind of special use
     switch (directededge.use()) {
-      case Use::kTurnChannel:
-        directededge.set_speed(speed_table.link_turning[rc]);
-        return true;
       case Use::kDriveway:
         directededge.set_speed(speed_table.service[0]);
         return true;
@@ -239,7 +236,17 @@ struct SpeedAssigner {
 
     // exit ramp
     if (directededge.link()) {
-      directededge.set_speed(speed_table.link_exiting[rc]);
+      // there are no unclassified links but there are residential
+      if (rc == static_cast<size_t>(RoadClass::kResidential))
+        rc = 5;
+      // these classes dont have links
+      if (rc >= speed_table.link_exiting.size())
+        return false;
+      // we use signage to tell if its an exit otherwise its just a link/ramp/turn channel
+      if (directededge.sign())
+        directededge.set_speed(speed_table.link_exiting[rc]);
+      else
+        directededge.set_speed(speed_table.link_turning[rc]);
       return true;
     }
 
@@ -1816,7 +1823,8 @@ void enhance(const boost::property_tree::ptree& pt,
                                    country_state_code);
 
         // Update the named flag
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
+        auto info = tilebuilder->edgeinfo(&directededge);
+        auto names = info.GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.

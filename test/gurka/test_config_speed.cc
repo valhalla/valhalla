@@ -5,18 +5,20 @@ using namespace valhalla;
 
 TEST(Standalone, DefaultSpeedConfig) {
   const std::string urban = R"(
-    ABCDE
-    FGHIJ
-    KLMNO
-    PQRST
-    UVWXY
-    Z
+    a  j  i
+     ABCDE
+     FGHIJ
+    bKLMNOh
+     PQRST
+    cUVWXYg
+     Z
+    d  e  f
   )";
 
   auto layout = gurka::detail::map_to_coordinates(urban, 190);
 
   const std::string rural = R"(
-            0tuvwxyz
+            0 klmnopqrstuvwxyz
            9 1
           8   2
           7   3
@@ -24,45 +26,45 @@ TEST(Standalone, DefaultSpeedConfig) {
             5
   )";
 
-  const auto rural_layout = gurka::detail::map_to_coordinates(rural, 10, {7, 58});
+  const auto rural_layout = gurka::detail::map_to_coordinates(rural, 100, {7, 58});
   layout.insert(rural_layout.begin(), rural_layout.end());
 
   std::pair<std::string, std::string> oneway{"oneway", "yes"};
   std::pair<std::string, std::string> dest{"destination", "north pole"};
 
-  const gurka::ways ways = {
-      // way
-      {"AK", {{"maxspeed", "2"}, {"highway", "motorway"}}},
-      {"AL", {{"maxspeed", "3"}, {"highway", "trunk"}}},
-      {"AM", {{"maxspeed", "4"}, {"highway", "primary"}}},
-      {"AN", {{"maxspeed", "5"}, {"highway", "secondary"}}},
-      {"AO", {{"maxspeed", "6"}, {"highway", "tertiary"}}},
-      {"AP", {{"maxspeed", "7"}, {"highway", "unclassified"}}},
-      {"AQ", {{"maxspeed", "8"}, {"highway", "residential"}}},
-      {"AR", {{"maxspeed", "9"}, {"highway", "service"}}},
+  gurka::ways ways = {
+      // way (we throw out speeds lower than 10kph so we had to start higher)
+      {"AK", {{"maxspeed", "66"}, {"highway", "motorway"}}},
+      {"AL", {{"maxspeed", "67"}, {"highway", "trunk"}}},
+      {"AM", {{"maxspeed", "68"}, {"highway", "primary"}}},
+      {"AN", {{"maxspeed", "69"}, {"highway", "secondary"}}},
+      {"DK", {{"maxspeed", "70"}, {"highway", "tertiary"}}},
+      {"DL", {{"maxspeed", "71"}, {"highway", "unclassified"}}},
+      {"DM", {{"maxspeed", "72"}, {"highway", "residential"}}},
+      {"DN", {{"maxspeed", "73"}, {"highway", "service"}}},
       // link exiting
-      {"AS", {{"maxspeed", "10"}, oneway, dest, {"highway", "motorway_link"}}},
-      {"AT", {{"maxspeed", "11"}, oneway, dest, {"highway", "trunk_link"}}},
-      {"AU", {{"maxspeed", "12"}, oneway, dest, {"highway", "primary_link"}}},
-      {"AV", {{"maxspeed", "13"}, oneway, dest, {"highway", "secondary_link"}}},
-      {"AW", {{"maxspeed", "14"}, oneway, dest, {"highway", "tertiary_link"}}},
-      {"AX", {{"maxspeed", "15"}, oneway, dest, {"highway", "residential_link"}}},
+      {"OP", {{"maxspeed", "10"}, oneway, dest, {"highway", "motorway_link"}}},
+      {"QR", {{"maxspeed", "11"}, oneway, dest, {"highway", "trunk_link"}}},
+      {"ST", {{"maxspeed", "12"}, oneway, dest, {"highway", "primary_link"}}},
+      {"UV", {{"maxspeed", "13"}, oneway, dest, {"highway", "secondary_link"}}},
+      {"WX", {{"maxspeed", "14"}, oneway, dest, {"highway", "tertiary_link"}}},
+      {"YZ", {{"maxspeed", "15"}, oneway, dest, {"highway", "residential_link"}}},
       // link turning
       {"AB", {{"maxspeed", "16"}, oneway, {"highway", "motorway_link"}}},
-      {"BC", {{"maxspeed", "17"}, oneway, {"highway", "trunk_link"}}},
-      {"CD", {{"maxspeed", "18"}, oneway, {"highway", "primary_link"}}},
-      {"DE", {{"maxspeed", "19"}, oneway, {"highway", "secondary_link"}}},
-      {"FG", {{"maxspeed", "20"}, oneway, {"highway", "tertiary_link"}}},
-      {"GH", {{"maxspeed", "21"}, oneway, {"highway", "residential_link"}}},
+      {"CD", {{"maxspeed", "17"}, oneway, {"highway", "trunk_link"}}},
+      {"AG", {{"maxspeed", "18"}, oneway, {"highway", "primary_link"}}},
+      {"HI", {{"maxspeed", "19"}, oneway, {"highway", "secondary_link"}}},
+      {"KL", {{"maxspeed", "20"}, oneway, {"highway", "tertiary_link"}}},
+      {"MN", {{"maxspeed", "21"}, oneway, {"highway", "residential_link"}}},
       // roundabout
-      {"BO", {{"maxspeed", "22"}, {"junction", "roundabout"}, {"highway", "motorway"}}},
-      {"BP", {{"maxspeed", "23"}, {"junction", "roundabout"}, {"highway", "trunk"}}},
-      {"BQ", {{"maxspeed", "24"}, {"junction", "roundabout"}, {"highway", "primary"}}},
-      {"BR", {{"maxspeed", "25"}, {"junction", "roundabout"}, {"highway", "secondary"}}},
-      {"BS", {{"maxspeed", "26"}, {"junction", "roundabout"}, {"highway", "tertiary"}}},
-      {"BT", {{"maxspeed", "27"}, {"junction", "roundabout"}, {"highway", "unclassified"}}},
-      {"BU", {{"maxspeed", "28"}, {"junction", "roundabout"}, {"highway", "residential"}}},
-      {"BV", {{"maxspeed", "29"}, {"junction", "roundabout"}, {"highway", "service"}}},
+      {"BC", {{"maxspeed", "22"}, {"junction", "roundabout"}, {"highway", "motorway"}}},
+      {"BD", {{"maxspeed", "23"}, {"junction", "roundabout"}, {"highway", "trunk"}}},
+      {"BI", {{"maxspeed", "24"}, {"junction", "roundabout"}, {"highway", "primary"}}},
+      {"BH", {{"maxspeed", "25"}, {"junction", "roundabout"}, {"highway", "secondary"}}},
+      {"BK", {{"maxspeed", "26"}, {"junction", "roundabout"}, {"highway", "tertiary"}}},
+      {"BE", {{"maxspeed", "27"}, {"junction", "roundabout"}, {"highway", "unclassified"}}},
+      {"BF", {{"maxspeed", "28"}, {"junction", "roundabout"}, {"highway", "residential"}}},
+      {"BJ", {{"maxspeed", "29"}, {"junction", "roundabout"}, {"highway", "service"}}},
       // service
       {"BW", {{"maxspeed", "30"}, {"highway", "service"}, {"service", "driveway"}}},
       {"BX", {{"maxspeed", "31"}, {"highway", "service"}, {"service", "alley"}}},
@@ -82,19 +84,19 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"07", {{"maxspeed", "40"}, {"highway", "residential"}}},
       {"08", {{"maxspeed", "41"}, {"highway", "service"}}},
       // link exiting
-      {"09", {{"maxspeed", "42"}, oneway, dest, {"highway", "motorway_link"}}},
-      {"12", {{"maxspeed", "43"}, oneway, dest, {"highway", "trunk_link"}}},
+      {"wx", {{"maxspeed", "42"}, oneway, dest, {"highway", "motorway_link"}}},
+      {"yz", {{"maxspeed", "43"}, oneway, dest, {"highway", "trunk_link"}}},
       {"13", {{"maxspeed", "44"}, oneway, dest, {"highway", "primary_link"}}},
       {"14", {{"maxspeed", "45"}, oneway, dest, {"highway", "secondary_link"}}},
       {"15", {{"maxspeed", "46"}, oneway, dest, {"highway", "tertiary_link"}}},
       {"16", {{"maxspeed", "47"}, oneway, dest, {"highway", "residential_link"}}},
       // link turning
-      {"tu", {{"maxspeed", "48"}, oneway, {"highway", "motorway_link"}}},
-      {"uv", {{"maxspeed", "49"}, oneway, {"highway", "trunk_link"}}},
-      {"vw", {{"maxspeed", "50"}, oneway, {"highway", "primary_link"}}},
-      {"wx", {{"maxspeed", "51"}, oneway, {"highway", "secondary_link"}}},
-      {"xy", {{"maxspeed", "52"}, oneway, {"highway", "tertiary_link"}}},
-      {"yz", {{"maxspeed", "53"}, oneway, {"highway", "residential_link"}}},
+      {"kl", {{"maxspeed", "48"}, oneway, {"highway", "motorway_link"}}},
+      {"mn", {{"maxspeed", "49"}, oneway, {"highway", "trunk_link"}}},
+      {"op", {{"maxspeed", "50"}, oneway, {"highway", "primary_link"}}},
+      {"qr", {{"maxspeed", "51"}, oneway, {"highway", "secondary_link"}}},
+      {"st", {{"maxspeed", "52"}, oneway, {"highway", "tertiary_link"}}},
+      {"uv", {{"maxspeed", "53"}, oneway, {"highway", "residential_link"}}},
       // roundabouts
       {"24", {{"maxspeed", "54"}, {"junction", "roundabout"}, {"highway", "motorway"}}},
       {"25", {{"maxspeed", "55"}, {"junction", "roundabout"}, {"highway", "trunk"}}},
@@ -114,6 +116,22 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"37", {{"maxspeed", "1"}, {"route", "shuttle_train"}, {"motor_vehicle", "yes"}}},
   };
 
+  // we need to add a bunch of edges to pump up the road density
+  for (char from = 'a'; from <= 'j'; ++from) {
+    for (char to = from + 1; to <= 'j'; ++to) {
+      for (char too = to + 1; too <= 'j'; ++too) {
+        std::string nodes = "";
+        nodes.push_back(from);
+        nodes.push_back(to);
+        nodes.push_back(too);
+        ways.emplace(nodes, std::map<std::string, std::string>{
+                                {"maxspeed", "99"},
+                                {"highway", "residential"},
+                            });
+      }
+    }
+  }
+
   if (!filesystem::create_directories("test/data"))
     throw std::runtime_error("couldn't create directories");
   filesystem::remove("test/data/speed_config.json");
@@ -125,7 +143,7 @@ TEST(Standalone, DefaultSpeedConfig) {
         "iso3166-1": "",
         "iso3166-2": "",
         "urban": {
-          "way": [1,2,3,4,5,6,7,8],
+          "way": [65,66,67,68,69,70,71,72],
           "link_exiting": [9,10,11,12,13,14],
           "link_turning": [15,16,17,18,19,20],
           "roundabout": [21,22,23,24,25,26,27,28],
@@ -163,12 +181,19 @@ TEST(Standalone, DefaultSpeedConfig) {
     for (const auto& edge : tile->GetDirectedEdges()) {
       auto info = tile->edgeinfo(edge.edgeinfo_offset());
       auto name = info.GetNames().front();
+      // skip anything that looks like the extra length we added to make it urban
+      if (name.front() >= 'a' && name.front() <= 'j')
+        continue;
+      // skip links that aren't drivable in the forward direction (since they arent exits or turns)
+      if (edge.link() && !(edge.forwardaccess() & baldr::kVehicularAccess))
+        continue;
+
       int diff = info.speed_limit() - edge.speed();
       if (edge.use() == baldr::Use::kFerry || edge.use() == baldr::Use::kRailFerry)
-        ASSERT_LT(diff, 0)
+        EXPECT_LT(diff, 0)
             << name << " should have had a negative difference in speed limit and default speed";
       else
-        ASSERT_EQ(diff, 1)
+        EXPECT_EQ(diff, 1)
             << name << " should have had a default speed that was one less than the speed limit";
     }
   }
