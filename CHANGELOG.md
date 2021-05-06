@@ -22,6 +22,7 @@
    * CHANGED: Use std::shared_ptr in case if ENABLE_THREAD_SAFE_TILE_REF_COUNT is ON. [#3067](https://github.com/valhalla/valhalla/pull/3067)
    * CHANGED: Reduce stop impact when driving in parking lots [#3051](https://github.com/valhalla/valhalla/pull/3051)
    * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
+   * ADDED: Do not penalise gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
