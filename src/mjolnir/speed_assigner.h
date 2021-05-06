@@ -102,9 +102,9 @@ protected:
         code += ".";
         code += cs["iso3166-2"].GetString();
         tables.emplace(std::move(code), std::array<SpeedTable, 2>{
-            SpeedTable(cs["urban"]),
-            SpeedTable(cs["rural"]),
-        });
+                                            SpeedTable(cs["urban"]),
+                                            SpeedTable(cs["rural"]),
+                                        });
       }
     } // something went wrong with parsing or opening the file
     catch (const std::exception& e) {
