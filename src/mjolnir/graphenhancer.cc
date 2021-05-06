@@ -104,8 +104,8 @@ The json basically looks like this:
   "iso3166-2": "pa",
   "urban": {
     "way": [1,2,3,4,5,6,7,8],
-    "link_exiting": [9,10,11,12,13,14],
-    "link_turning": [15,16,17,18,19,20],
+    "link_exiting": [9,10,11,12,13],
+    "link_turning": [15,16,17,18,19],
     "roundabout": [21,22,23,24,25,26,27,28],
     "driveway": 29,
     "alley": 30,
@@ -114,8 +114,8 @@ The json basically looks like this:
   },
   "rural": {
     "way": [33,34,35,36,37,38,39,40],
-    "link_exiting": [41,42,43,44,45,46],
-    "link_turning": [47,48,49,50,51,52],
+    "link_exiting": [41,42,43,44,45],
+    "link_turning": [47,48,49,50,51],
     "roundabout": [53,54,55,56,57,58,59,60],
     "driveway": 61,
     "alley": 62,
@@ -136,9 +136,9 @@ struct SpeedAssigner {
     // no special uses
     std::array<uint32_t, 8> way;
     // ramps
-    std::array<uint32_t, 6> link_exiting;
+    std::array<uint32_t, 5> link_exiting;
     // turn channel
-    std::array<uint32_t, 6> link_turning;
+    std::array<uint32_t, 5> link_turning;
     // roundabout
     std::array<uint32_t, 8> roundabout;
     // driveway, alley, parking_aisle, drive-through
@@ -183,6 +183,7 @@ struct SpeedAssigner {
       // loop over each country/state pair
       for (const auto& cs : doc.GetArray()) {
         std::string code = cs["iso3166-1"].GetString();
+        code += ".";
         code += cs["iso3166-2"].GetString();
         tables.emplace(std::move(code), std::array<SpeedTable, 2>{
                                             SpeedTable(cs["urban"]),
@@ -214,16 +215,17 @@ struct SpeedAssigner {
    */
   bool FromConfig(DirectedEdge& directededge,
                   const uint32_t density,
-                  const std::string& country_state_code) {
+                  const std::string& country,
+                  const std::string& state) {
     // let the other function handle ferry stuff or anything not motor vehicle
     if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
         !((directededge.forwardaccess() | directededge.reverseaccess()) & kVehicularAccess))
       return false;
 
     // try first the country state combo, then country only, then neither, then bail
-    auto found = tables.find(country_state_code);
+    auto found = tables.find(country + "." + state);
     if (found == tables.end())
-      found = tables.find(country_state_code.substr(0, 2));
+      found = tables.find(country + ".");
     if (found == tables.end())
       found = tables.find("");
     if (found == tables.end())
@@ -253,9 +255,6 @@ struct SpeedAssigner {
 
     // exit ramp
     if (directededge.link()) {
-      // there are no unclassified links but there are residential
-      if (rc == static_cast<size_t>(RoadClass::kResidential))
-        rc = 5;
       // these classes dont have links
       if (rc >= speed_table.link_exiting.size())
         return false;
@@ -293,10 +292,11 @@ struct SpeedAssigner {
                    const uint32_t density,
                    const uint32_t* urban_rc_speed,
                    bool infer_turn_channels,
-                   const std::string& country_state_code) {
+                   const std::string& country_code,
+                   const std::string& state_code) {
 
     // If we have config loaded we'll use that
-    if (!tables.empty() && FromConfig(directededge, density, country_state_code))
+    if (!tables.empty() && FromConfig(directededge, density, country_code, state_code))
       return;
 
     // Update speed on ramps (if not a tagged speed) and turn channels
@@ -1554,7 +1554,7 @@ void enhance(const boost::property_tree::ptree& pt,
   GraphReader reader(hierarchy_properties);
 
   // Config driven speed assignment
-  auto speeds_config = pt.get_optional<std::string>("default_speeds");
+  auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
   SpeedAssigner speed_assigner(speeds_config);
 
   // Default speeds (kph) in urban areas per road class
@@ -1714,7 +1714,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         auto e_offset = tilebuilder->edgeinfo(&directededge);
         std::string end_node_code = "";
-        std::string country_state_code = "";
+        std::string end_node_state_code = "";
         uint32_t end_admin_index = 0;
         // TODO: why do we get this information again, we could use the begin node admin above instead
         // Get the tile at the end node
@@ -1731,8 +1731,7 @@ void enhance(const boost::property_tree::ptree& pt,
           admin = endnodetile->admin(end_admin_index);
         }
         end_node_code = admin->country_iso();
-        if (!end_node_code.empty())
-          country_state_code += admin->state_iso();
+        end_node_state_code = admin->state_iso();
 
         // only process country access logic if the iso country codes match.
         if (apply_country_overrides && country_code == end_node_code) {
@@ -1835,7 +1834,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Speed assignment
         speed_assigner.UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels,
-                                   country_state_code);
+                                   end_node_code, end_node_state_code);
 
         // Update the named flag
         auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);

@@ -48,14 +48,12 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"ST", {{"maxspeed", "12"}, oneway, dest, {"highway", "primary_link"}}},
       {"UV", {{"maxspeed", "13"}, oneway, dest, {"highway", "secondary_link"}}},
       {"WX", {{"maxspeed", "14"}, oneway, dest, {"highway", "tertiary_link"}}},
-      {"YZ", {{"maxspeed", "15"}, oneway, dest, {"highway", "residential_link"}}},
       // link turning
       {"AB", {{"maxspeed", "16"}, oneway, {"highway", "motorway_link"}}},
       {"CD", {{"maxspeed", "17"}, oneway, {"highway", "trunk_link"}}},
       {"AG", {{"maxspeed", "18"}, oneway, {"highway", "primary_link"}}},
       {"HI", {{"maxspeed", "19"}, oneway, {"highway", "secondary_link"}}},
       {"KL", {{"maxspeed", "20"}, oneway, {"highway", "tertiary_link"}}},
-      {"MN", {{"maxspeed", "21"}, oneway, {"highway", "residential_link"}}},
       // roundabout
       {"BC", {{"maxspeed", "22"}, {"junction", "roundabout"}, {"highway", "motorway"}}},
       {"BD", {{"maxspeed", "23"}, {"junction", "roundabout"}, {"highway", "trunk"}}},
@@ -89,14 +87,12 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"13", {{"maxspeed", "44"}, oneway, dest, {"highway", "primary_link"}}},
       {"14", {{"maxspeed", "45"}, oneway, dest, {"highway", "secondary_link"}}},
       {"15", {{"maxspeed", "46"}, oneway, dest, {"highway", "tertiary_link"}}},
-      {"16", {{"maxspeed", "47"}, oneway, dest, {"highway", "residential_link"}}},
       // link turning
       {"kl", {{"maxspeed", "48"}, oneway, {"highway", "motorway_link"}}},
       {"mn", {{"maxspeed", "49"}, oneway, {"highway", "trunk_link"}}},
       {"op", {{"maxspeed", "50"}, oneway, {"highway", "primary_link"}}},
       {"qr", {{"maxspeed", "51"}, oneway, {"highway", "secondary_link"}}},
       {"st", {{"maxspeed", "52"}, oneway, {"highway", "tertiary_link"}}},
-      {"uv", {{"maxspeed", "53"}, oneway, {"highway", "residential_link"}}},
       // roundabouts
       {"24", {{"maxspeed", "54"}, {"junction", "roundabout"}, {"highway", "motorway"}}},
       {"25", {{"maxspeed", "55"}, {"junction", "roundabout"}, {"highway", "trunk"}}},
@@ -144,8 +140,8 @@ TEST(Standalone, DefaultSpeedConfig) {
         "iso3166-2": "",
         "urban": {
           "way": [65,66,67,68,69,70,71,72],
-          "link_exiting": [9,10,11,12,13,14],
-          "link_turning": [15,16,17,18,19,20],
+          "link_exiting": [9,10,11,12,13],
+          "link_turning": [15,16,17,18,19],
           "roundabout": [21,22,23,24,25,26,27,28],
           "driveway": 29,
           "alley": 30,
@@ -154,8 +150,8 @@ TEST(Standalone, DefaultSpeedConfig) {
         },
         "rural": {
           "way": [33,34,35,36,37,38,39,40],
-          "link_exiting": [41,42,43,44,45,46],
-          "link_turning": [47,48,49,50,51,52],
+          "link_exiting": [41,42,43,44,45],
+          "link_turning": [47,48,49,50,51],
           "roundabout": [53,54,55,56,57,58,59,60],
           "driveway": 61,
           "alley": 62,
@@ -167,7 +163,7 @@ TEST(Standalone, DefaultSpeedConfig) {
   }
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/speed_config",
-                               {{"mjolnir.default_speeds", "test/data/speed_config.json"}});
+                               {{"mjolnir.default_speeds_config", "test/data/speed_config.json"}});
 
   // NOTE: So the ways above are specified in the order of the speed config below. Notice that the
   // configs speeds are in ascending order so too are the maxspeed (speed limit) tags on all of the
