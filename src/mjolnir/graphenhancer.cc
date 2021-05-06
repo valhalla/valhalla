@@ -373,7 +373,7 @@ struct SpeedAssigner {
       directededge.set_speed(speed / 2);
     }
   }
-};
+}
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
