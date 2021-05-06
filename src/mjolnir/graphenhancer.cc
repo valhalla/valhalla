@@ -189,9 +189,11 @@ struct SpeedAssigner {
     } // something went wrong with parsing or opening the file
     catch (const std::exception& e) {
       LOG_WARN(std::string("Could not load default speeds: ") + e.what());
+      tables.clear();
     } // something else was thrown
     catch (...) {
       LOG_WARN("Could not load default speeds from config");
+      tables.clear();
     }
   }
 
@@ -373,7 +375,7 @@ struct SpeedAssigner {
       directededge.set_speed(speed / 2);
     }
   }
-}
+};
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
@@ -1823,8 +1825,7 @@ void enhance(const boost::property_tree::ptree& pt,
                                    country_state_code);
 
         // Update the named flag
-        auto info = tilebuilder->edgeinfo(&directededge);
-        auto names = info.GetNamesAndTypes(true);
+        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
