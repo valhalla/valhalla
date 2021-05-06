@@ -144,7 +144,7 @@ protected:
     if (found == tables.end())
       found = tables.find(country + ".");
     if (found == tables.end())
-      found = tables.find("");
+      found = tables.find(".");
     if (found == tables.end())
       return false;
 
