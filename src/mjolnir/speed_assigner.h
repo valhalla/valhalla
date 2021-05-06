@@ -1,13 +1,38 @@
 #pragma once
 
+#include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
+#include "midgard/logging.h"
+
+#include <array>
+#include <cstdint>
+#include <unordered_map>
+
+using namespace valhalla::baldr;
 
 // Factors used to adjust speed assignments
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
 constexpr float kRoundaboutFactor = 0.5f;
+
+// The switch over between rural and urban densities. Anything above this is assumed to be urban.
+// If this density check is changed then we need to modify the urban flag in the osrm response too
+constexpr uint32_t kMaxRuralDensity = 8;
+
+// Default speeds (kph) in urban areas per road class
+constexpr uint32_t urban_rc_speed[] = {
+    89, // 55 MPH - motorway
+    73, // 45 MPH - trunk
+    57, // 35 MPH - primary
+    49, // 30 MPH - secondary
+    40, // 25 MPH - tertiary
+    35, // 22 MPH - unclassified
+    30, // 20 MPH - residential
+    20, // 13 MPH - service/other
+};
 
 /*
 The json basically looks like this:
@@ -149,7 +174,7 @@ protected:
       return false;
 
     // urban or rural
-    const auto& speed_table = found->second[density <= 8];
+    const auto& speed_table = found->second[density <= kMaxRuralDensity];
     size_t rc = static_cast<size_t>(directededge.classification());
 
     // some kind of special use
@@ -203,24 +228,24 @@ public:
   /**
    * Update directed edge speed based on density and other edge parameters like
    * surface type. TODO - add admin specific logic
-   * @param  directededge  Directed edge to update.
-   * @param  density       Relative road density.
-   * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
-   * @param  rc_speed Array of default speeds vs. road class
-   * @param  infer_turn_channels flag indicating if we should infer tc.
-   * @param country_state_code 2 letter country and 2 letter state codes concatinated
-   *
+   * @param directededge         Directed edge to update.
+   * @param density              Relative road density.
+   * @param rc_speed             Array of default speeds vs. road class
+   * @param infer_turn_channels  Flag indicating if turn channels were inferred
+   * @param country_code         2 letter country code
+   * @param state_code           2 letter state code
+   * @return  true if config based speeds were used to update the edge.
+   *          false indicates the conventional heuristic based approach was used
    */
-  void UpdateSpeed(DirectedEdge& directededge,
+  bool UpdateSpeed(DirectedEdge& directededge,
                    const uint32_t density,
-                   const uint32_t* urban_rc_speed,
                    bool infer_turn_channels,
                    const std::string& country_code,
                    const std::string& state_code) const {
 
     // If we have config loaded we'll use that
     if (!tables.empty() && FromConfig(directededge, density, country_code, state_code))
-      return;
+      return true;
 
     // Update speed on ramps (if not a tagged speed) and turn channels
     if (directededge.link()) {
@@ -234,8 +259,9 @@ public:
         RoadClass rc = directededge.classification();
         if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) ||
             (rc == RoadClass::kPrimary)) {
-          speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
-                                : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+          speed = (density > kMaxRuralDensity)
+                      ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
+                      : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
         } else {
           speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
         }
@@ -243,7 +269,7 @@ public:
       directededge.set_speed(speed);
 
       // Done processing links so return...
-      return;
+      return false;
     }
 
     // If speed is assigned from an OSM max_speed tag we only update it based
@@ -259,20 +285,20 @@ public:
           directededge.set_speed(speed - 5);
         }
       }
-      return;
+      return false;
     }
 
     // Set speed on ferries. Base the speed on the length - assumes
     // that longer lengths generally use a faster ferry boat
     if (directededge.use() == Use::kRailFerry) {
       directededge.set_speed(65); // 40 MPH
-      return;
+      return false;
     } else if (directededge.use() == Use::kFerry) {
       // if duration flag is set do nothing with speed - currently set
       // as the leaves tile flag.
       // leaves tile flag is updated later to the real value.
       if (directededge.leaves_tile()) {
-        return;
+        return false;
       } else if (directededge.length() < 2000) {
         directededge.set_speed(10); // 5 knots
       } else if (directededge.length() < 8000) {
@@ -280,14 +306,11 @@ public:
       } else {
         directededge.set_speed(30); // 15 knots
       }
-      return;
+      return false;
     }
 
-    // Modify speed for roads in urban regions - anything above 8 is
-    // assumed to be urban
-    // if this density check is changed to be greater than 8, then we need to modify the urban flag in
-    // the osrm response as well.
-    if (density > 8) {
+    // Modify speed for roads in urban regions
+    if (density > kMaxRuralDensity) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
     }
@@ -312,5 +335,7 @@ public:
       uint32_t speed = directededge.speed();
       directededge.set_speed(speed / 2);
     }
+
+    return false;
   }
 };

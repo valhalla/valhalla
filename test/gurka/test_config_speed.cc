@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "src/mjolnir/speed_assigner.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -192,5 +193,43 @@ TEST(Standalone, DefaultSpeedConfig) {
         EXPECT_EQ(diff, 1)
             << name << " should have had a default speed that was one less than the speed limit";
     }
+  }
+}
+
+struct testable_assigner : public SpeedAssigner {
+public:
+  testable_assigner(const std::string file_path) : SpeedAssigner(file_path) {
+  }
+};
+
+TEST(Standalone, AdminFallback) {
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "iso3166-1": "",
+        "iso3166-2": "",
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11],
+          "link_exiting": [11,11,11,11,11],
+          "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11],
+          "driveway": 11,
+          "alley": 11,
+          "parking_aisle": 11,
+          "drive-through": 11
+        },
+        "rural": {
+          "way": [11,11,11,11,11,11,11,11],
+          "link_exiting": [11,11,11,11,11],
+          "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11],
+          "driveway": 11,
+          "alley": 11,
+          "parking_aisle": 11,
+          "drive-through": 11
+        }
+      }]
+    )";
   }
 }

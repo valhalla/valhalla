@@ -1254,18 +1254,6 @@ void enhance(const boost::property_tree::ptree& pt,
   auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
   const auto& speed_assigner = SpeedAssigner::GetInstance(speeds_config);
 
-  // Default speeds (kph) in urban areas per road class
-  uint32_t urban_rc_speed[] = {
-      89, // 55 MPH - motorway
-      73, // 45 MPH - trunk
-      57, // 35 MPH - primary
-      49, // 30 MPH - secondary
-      40, // 25 MPH - tertiary
-      35, // 22 MPH - unclassified
-      30, // 20 MPH - residential
-      20, // 13 MPH - service/other
-  };
-
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
   const auto& local_level = TileHierarchy::levels().back().level;
@@ -1530,8 +1518,8 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Speed assignment
-        speed_assigner.UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels,
-                                   end_node_code, end_node_state_code);
+        speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
+                                   end_node_state_code);
 
         // Update the named flag
         auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
