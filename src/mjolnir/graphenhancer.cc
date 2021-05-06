@@ -362,8 +362,8 @@ struct SpeedAssigner {
 
     // Modify speed for roads in urban regions - anything above 8 is
     // assumed to be urban
-    // if this density check is changed to be greater than 8, then we need to modify
-    // the urban flag in the osrm response as well.
+    // if this density check is changed to be greater than 8, then we need to modify the urban flag in
+    // the osrm response as well.
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
