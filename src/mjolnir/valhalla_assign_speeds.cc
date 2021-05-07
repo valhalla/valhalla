@@ -53,10 +53,10 @@ void assign(const boost::property_tree::ptree& config,
       lock.unlock();
       const auto* node = end_tile->node(edge.endnode());
       const auto* admin = end_tile->admin(node->admin_index());
+      // TODO: if this was a shortcut we need to bother about turn durations...
       // update the speed
       assigned += assigner.UpdateSpeed(edge, node->density(), infer_turn_channels,
                                        admin->country_iso(), admin->state_iso());
-      // TODO: if this was a shortcut we need to bother about turn durations...
       ++total;
     }
 
