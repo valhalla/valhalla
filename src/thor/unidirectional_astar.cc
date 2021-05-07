@@ -787,6 +787,9 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
 
     GraphId edgeid(edge.graph_id());
     graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      continue;
+    }
     if (FORWARD) {
       // Disallow any user avoided edges if the avoid location is behind the destination along the
       // edge

@@ -1138,8 +1138,15 @@ void TripLegBuilder::Build(
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the
   // opposing edge then use the opposing index to get the opposing edge, and its end node is the
   // begin node of the original edge
-  auto* first_edge = graphreader.GetGraphTile(path_begin->edgeid)->directededge(path_begin->edgeid);
+  auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
+  if (begin_tile == nullptr) {
+    return; // or throw?
+  }
+  auto* first_edge = begin_tile->directededge(path_begin->edgeid);
   auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
+  if (first_tile == nullptr) {
+    return; // or throw?
+  }
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
       first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
@@ -1213,6 +1220,9 @@ void TripLegBuilder::Build(
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
+    if (graphtile == nullptr) {
+      continue;
+    }
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
@@ -1221,6 +1231,9 @@ void TripLegBuilder::Build(
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
     graphreader.GetGraphTile(startnode, start_tile);
+    if (start_tile == nullptr) {
+      continue;
+    }
     const NodeInfo* node = start_tile->node(startnode);
 
     if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset)) {
@@ -1297,7 +1310,7 @@ void TripLegBuilder::Build(
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Process the shape for edges where a route discontinuity occurs
-    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
+    uint32_t begin_index = (is_first_edge || trip_shape.size() == 0) ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -1452,9 +1465,11 @@ void TripLegBuilder::Build(
   auto* node = trip_path.add_node();
   if (controller.attributes.at(kNodeAdminIndex)) {
     auto last_tile = graphreader.GetGraphTile(startnode);
-    node->set_admin_index(
-        GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,
-                      admin_info_list));
+    if (last_tile != nullptr) {
+      node->set_admin_index(
+          GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()),
+                        admin_info_map, admin_info_list));
+    }
   }
   if (controller.attributes.at(kNodeElapsedTime)) {
     node->mutable_cost()->mutable_elapsed_cost()->set_seconds(std::prev(path_end)->elapsed_cost.secs);
