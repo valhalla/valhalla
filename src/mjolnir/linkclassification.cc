@@ -196,17 +196,7 @@ inline bool IsTheSameRoad(const WayTags& road_1, const WayTags& road_2) {
 inline bool IsTheSameRoad(const WayTags& road_1, const WayTags& road_2, const WayTags& road_3) {
   return IsTheSameRoad(road_1, road_2) && IsTheSameRoad(road_2, road_3);
 }
-// Using destination link tags detect if the road is a final destination
-inline bool IsDestinationRoad(const WayTags& road, const WayTags& link) {
-  if (road.refs.empty())
-    return false;
 
-  const auto& road_ref = road.refs.front();
-  return std::find_if(link.dest_refs.begin(), link.dest_refs.end(),
-                      [&road_ref](const std::string& dest_ref) {
-                        return MatchRefs(dest_ref, road_ref);
-                      }) != link.dest_refs.end();
-}
 // Check if the link contains this destination reference
 inline bool IsDestinationRef(const std::string& ref, const WayTags& link) {
   return !ref.empty() && (std::find_if(link.dest_refs.begin(), link.dest_refs.end(),
@@ -214,6 +204,12 @@ inline bool IsDestinationRef(const std::string& ref, const WayTags& link) {
                                          return MatchRefs(ref, dest_ref);
                                        }) != link.dest_refs.end());
 }
+
+// Using destination link tags detect if the road is a final destination
+inline bool IsDestinationRoad(const WayTags& road, const WayTags& link) {
+  return !road.refs.empty() && IsDestinationRef(road.refs.front(), link);
+}
+
 // Check if these two links has common destination road
 bool HasCommonDestination(const WayTags& link_1, const WayTags& link_2) {
   for (const auto& dest_ref_1 : link_1.dest_refs)
@@ -232,13 +228,13 @@ bool HasCommonDestination(const WayTags& link_1, const WayTags& link_2, const Wa
 }
 // Check if this node contains a road that is a destination for the link
 bool IsDestinationNode(const node_bundle& node, const WayTags& link, Data& data) {
-  if (link.dest_refs.empty())
+  if (link.is_empty())
     return false;
 
   for (const auto& edge : node.node_edges) {
     if (IsDriveableNonLink(edge.first)) {
       const auto road = WayTags::Parse(*data.ways[edge.first.wayindex_], data.osmdata);
-      if (IsDestinationRoad(road, link))
+      if (IsTheSameRoad(road, link) || IsDestinationRoad(road, link))
         return true;
     }
   }
@@ -292,20 +288,20 @@ bool CanGoThroughNode(const node_bundle& node,
   if (!HasCommonDestination(root_link, inbound_link) && !IsTheSameRoad(root_link, inbound_link))
     return false;
 
+  bool has_common_dest = false;
   for (const auto& edge : node.node_edges) {
     if (IsDriveForwardLink(edge.first)) {
       const auto link = WayTags::Parse(*data.ways[edge.first.wayindex_], data.osmdata);
       // We can go through this node if the root link, inbound link and outbound link
-      // belong to the same road or this node leads to some destination road and it's not
-      // the last node in the path.
-      if (IsTheSameRoad(link, inbound_link, root_link) ||
-          (!IsDestinationNode(node, root_link, data) &&
-           HasCommonDestination(link, inbound_link, root_link) &&
-           CheckIfNodeLeadsToDestination(node_idx, root_link, visited_nodes, data)))
+      // belong to the same road
+      if (IsTheSameRoad(link, inbound_link, root_link))
         return true;
+
+      if (!has_common_dest && HasCommonDestination(link, inbound_link, root_link))
+        has_common_dest = true;
     }
   }
-  return false;
+  return has_common_dest && CheckIfNodeLeadsToDestination(node_idx, root_link, visited_nodes, data);
 }
 
 /*
