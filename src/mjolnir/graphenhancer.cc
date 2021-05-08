@@ -358,7 +358,7 @@ bool ProcessLanes(bool isLeft, bool endOnTurn, std::vector<uint16_t>& enhanced_t
 void UpdateTurnLanes(const OSMData& osmdata,
                      const uint32_t idx,
                      DirectedEdge& directededge,
-                     boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                     graph_tile_builder_ptr& tilebuilder,
                      GraphReader& reader,
                      std::mutex& lock,
                      std::vector<TurnLanes>& turn_lanes) {
@@ -1398,8 +1398,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    boost::intrusive_ptr<GraphTileBuilder> tilebuilder =
-        new GraphTileBuilder(reader.tile_dir(), tile_id, true, false);
+    graph_tile_builder_ptr tilebuilder{new GraphTileBuilder(reader.tile_dir(), tile_id, true, false)};
     lock.unlock();
 
     // this will be our updated list of restrictions.
