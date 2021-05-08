@@ -348,7 +348,7 @@ TEST(CacheLruHard, InsertWithEvictionBasic) {
 
   GraphId tile1_id(1000, 1, 0);
   const size_t tile1_size = 200;
-  cache.Put(tile1_id, graph_tile_ptr{estGraphTile(tile1_id, tile1_size)}, tile1_size);
+  cache.Put(tile1_id, graph_tile_ptr{new TestGraphTile(tile1_id, tile1_size)}, tile1_size);
 
   GraphId tile2_id(300, 2, 0);
   const size_t tile2_size = 250;

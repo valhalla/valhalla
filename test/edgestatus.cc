@@ -29,7 +29,7 @@ TEST(EdgeStatus, TestStatus) {
   test_tile* tt = new test_tile;
   tt->header_ = &header;
 
-  graph_tile_ptr tile = tt;
+  graph_tile_ptr tile{tt};
 
   // Add some edges
   edgestatus.Set(GraphId(555, 1, 100100), EdgeSet::kPermanent, 1, tile);
