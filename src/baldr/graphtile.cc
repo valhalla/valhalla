@@ -96,7 +96,8 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
     return nullptr;
   }
 
-  return graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)))};
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)))};
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -121,8 +122,9 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
     file.seekg(0, std::ios::beg);
     file.read(data.data(), filesize);
     file.close();
-    return graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)),
-                         std::move(traffic_memory))};
+    return graph_tile_ptr{new GraphTile(graphid,
+                                        std::make_unique<const VectorGraphMemory>(std::move(data)),
+                                        std::move(traffic_memory))};
   }
 
   // Try to load a gzipped tile
@@ -142,7 +144,8 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 }
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid, std::vector<char>&& memory) {
-  return graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)))};
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)))};
 }
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid,
@@ -230,7 +233,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return DecompressTile(graphid, result.bytes_);
   }
 
-  return graph_tile_ptr{new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)))};
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)))};
 }
 
 GraphTile::~GraphTile() = default;
