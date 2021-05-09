@@ -2,11 +2,13 @@
 #define VALHALLA_THOR_CHINESES_POSTMAN_GRAPH_H_
 
 #include "midgard/util.h"
+#include "sif/costconstants.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 
+using namespace valhalla::sif;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
@@ -28,7 +30,8 @@ struct CPEdge {
 };
 
 // Define the graph with the vertex as a mytuple and the vertices container as a vector
-using CPGraph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, CPEdge>;
+using CPGraph =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, valhalla::sif::Cost>;
 using Vertex = boost::graph_traits<CPGraph>::vertex_descriptor;              // Define Vertex
 using VertexItr = boost::graph_traits<CPGraph>::vertex_iterator;             // Define Vertex iterator
 using Edge = std::pair<boost::graph_traits<CPGraph>::edge_descriptor, bool>; // Define Edge
@@ -56,8 +59,9 @@ public:
   bool isVertexExist(CPVertex cpvertex);
   int numVertices();
   int numEdges();
-  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
+  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, Cost edge_cost);
   std::map<std::string, int> getUnbalancedVertices();
+  void importEdges(baldr::GraphReader& reader, Api& request);
 };
 
 } // namespace thor

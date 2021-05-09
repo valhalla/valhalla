@@ -4,19 +4,29 @@
 #include <boost/graph/properties.hpp>
 
 #include "midgard/util.h"
+#include "sif/costconstants.h"
 #include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
+using namespace valhalla::sif;
 
 namespace valhalla {
 namespace thor {
 
+valhalla::sif::Cost getEdgeCost() {
+  valhalla::sif::Cost c(0, 0);
+  return c;
+}
+
 void thor_worker_t::chinese_postman(Api& request) {
 
   ChinesePostmanGraph G;
+  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::TravelMode mode_; // Current travel mode
+  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
@@ -46,8 +56,13 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
-    CPEdge cpedge = CPEdge(1.0);
-    G.addEdge(start_vertex, end_vertex, cpedge);
+    // valhalla::sif::Cost edge_cost = valhalla::sif::Cost();
+    uint8_t flow_sources;
+    // graph_tile_ptr tile = reader->GetGraphTile(edge.id());
+    // const DirectedEdge* directededge = tile->directededge(edge.id());
+    // Cost edge_cost = costing_->EdgeCost(edge, tile, 0, flow_sources);
+    // std::cout << "Cost: " << edge_cost.cost << std::endl;
+    // G.addEdge(start_vertex, end_vertex, edge_cost);
   }
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
