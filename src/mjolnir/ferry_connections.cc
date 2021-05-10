@@ -225,13 +225,27 @@ bool ShortFerry(const uint32_t node_index,
   uint64_t wayid = 0;
   bool short_edge = false;
   for (const auto& edge : bundle.node_edges) {
-    // Check ferry edge. If the end node has a non-ferry edge check
-    // the length of the edge
+    // Check ferry edge.
     if (edge.first.attributes.driveable_ferry) {
       uint32_t endnode =
           (edge.first.sourcenode_ == node_index) ? edge.first.targetnode_ : edge.first.sourcenode_;
       auto end_node_itr = nodes[endnode];
       auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
+
+      // If we notice that either the end node or source node is a connection to another ferry edge,
+      // be cautious and assume this isn't a short edge.
+      for (const auto& edge2 : bundle.node_edges) {
+        if (edge2.first.llindex_ != edge.first.llindex_ && edge2.first.attributes.driveable_ferry) {
+          return false;
+        }
+      }
+      for (const auto& edge2 : bundle2.node_edges) {
+        if (edge2.first.llindex_ != edge.first.llindex_ && edge2.first.attributes.driveable_ferry) {
+          return false;
+        }
+      }
+
+      // If the end node has a non-ferry edge check the length of the edge
       if (bundle2.node.non_ferry_edge_) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
         if (midgard::length(shape) < 2000.0f) {
