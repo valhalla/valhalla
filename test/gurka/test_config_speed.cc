@@ -12,14 +12,14 @@ TEST(Standalone, DefaultSpeedConfig) {
     bKLMNOh
      PQRST
     cUVWXYg
-     Z
+     Z xyz
     d  e  f
   )";
 
   auto layout = gurka::detail::map_to_coordinates(urban, 190);
 
   const std::string rural = R"(
-            0 klmnopqrstuvwxyz
+            0 klmnopqrstuvw
            9 1
           8   2
           7   3
@@ -70,8 +70,8 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"BY", {{"maxspeed", "32"}, {"highway", "service"}, {"service", "parking_aisle"}}},
       {"BZ", {{"maxspeed", "33"}, {"highway", "service"}, {"service", "drive-through"}}},
       // ferry stuff is untouched
-      {"CK", {{"maxspeed", "1"}, {"route", "ferry"}, {"motor_vehicle", "yes"}}},
-      {"CL", {{"maxspeed", "1"}, {"route", "shuttle_train"}, {"motor_vehicle", "yes"}}},
+      {"xy", {{"maxspeed", "1"}, {"route", "ferry"}, {"motor_vehicle", "yes"}}},
+      {"yz", {{"maxspeed", "1"}, {"route", "shuttle_train"}, {"motor_vehicle", "yes"}}},
 
       // way
       {"01", {{"maxspeed", "34"}, {"highway", "motorway"}}},
@@ -83,8 +83,8 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"07", {{"maxspeed", "40"}, {"highway", "residential"}}},
       {"08", {{"maxspeed", "41"}, {"highway", "service"}}},
       // link exiting
-      {"wx", {{"maxspeed", "42"}, oneway, dest, {"highway", "motorway_link"}}},
-      {"yz", {{"maxspeed", "43"}, oneway, dest, {"highway", "trunk_link"}}},
+      {"36", {{"maxspeed", "42"}, oneway, dest, {"highway", "motorway_link"}}},
+      {"37", {{"maxspeed", "43"}, oneway, dest, {"highway", "trunk_link"}}},
       {"13", {{"maxspeed", "44"}, oneway, dest, {"highway", "primary_link"}}},
       {"14", {{"maxspeed", "45"}, oneway, dest, {"highway", "secondary_link"}}},
       {"15", {{"maxspeed", "46"}, oneway, dest, {"highway", "tertiary_link"}}},
@@ -109,8 +109,8 @@ TEST(Standalone, DefaultSpeedConfig) {
       {"19", {{"maxspeed", "64"}, {"highway", "service"}, {"service", "parking_aisle"}}},
       {"23", {{"maxspeed", "65"}, {"highway", "service"}, {"service", "drive-through"}}},
       // ferry stuff is untouched
-      {"36", {{"maxspeed", "1"}, {"route", "ferry"}, {"motor_vehicle", "yes"}}},
-      {"37", {{"maxspeed", "1"}, {"route", "shuttle_train"}, {"motor_vehicle", "yes"}}},
+      {"uv", {{"maxspeed", "1"}, {"route", "ferry"}, {"motor_vehicle", "yes"}}},
+      {"vw", {{"maxspeed", "1"}, {"route", "shuttle_train"}, {"motor_vehicle", "yes"}}},
   };
 
   // we need to add a bunch of edges to pump up the road density
@@ -137,8 +137,6 @@ TEST(Standalone, DefaultSpeedConfig) {
     std::ofstream speed_config("test/data/speed_config.json");
     speed_config << R"(
       [{
-        "iso3166-1": "",
-        "iso3166-2": "",
         "urban": {
           "way": [65,66,67,68,69,70,71,72],
           "link_exiting": [9,10,11,12,13],
@@ -164,7 +162,10 @@ TEST(Standalone, DefaultSpeedConfig) {
   }
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/speed_config",
-                               {{"mjolnir.default_speeds_config", "test/data/speed_config.json"}});
+                               {
+                                   {"mjolnir.default_speeds_config", "test/data/speed_config.json"},
+                                   {"mjolnir.reclassify_links", "false"},
+                               });
 
   // NOTE: So the ways above are specified in the order of the speed config below. Notice that the
   // configs speeds are in ascending order so too are the maxspeed (speed limit) tags on all of the
@@ -200,15 +201,17 @@ struct testable_assigner : public SpeedAssigner {
 public:
   testable_assigner(const std::string& file_path) : SpeedAssigner(file_path) {
   }
+  using SpeedAssigner::tables;
 };
 
 TEST(Standalone, AdminFallback) {
   DirectedEdge edge{};
+  edge.set_all_forward_access();
+
   {
     std::ofstream speed_config("test/data/speed_config.json");
     speed_config << R"(
       [{
-        "iso3166-1": "", "iso3166-2": "",
         "urban": {
           "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
           "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
@@ -221,7 +224,215 @@ TEST(Standalone, AdminFallback) {
     )";
     speed_config.close();
     testable_assigner assigner("test/data/speed_config.json");
-    assigner.UpdateSpeed(edge, 6, true, "foo", "bar");
-    // TODO: assertions
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "foo", "bar"));
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "foo", ""));
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "", "bar"));
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "", ""));
+  }
+
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "iso3166-1": "US", "iso3166-2": "PA",
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        },
+        "rural": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "foo", "bar"));
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "foo", ""));
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "", "bar"));
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "", ""));
+    edge.set_link(true);
+    edge.set_classification(baldr::RoadClass::kServiceOther);
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "US", "PA"));
+    ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "US", "PA"));
+    edge.set_classification(baldr::RoadClass::kMotorway);
+    edge.set_link(false);
+  }
+
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "iso3166-1": "US", "iso3166-2": "PA",
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        },
+        "rural": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        }
+      },
+      {
+        "iso3166-1": "US",
+        "urban": {
+          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning": [12,12,12,12,12],
+          "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12, "parking_aisle": 12, "drive-through": 12
+        },
+        "rural": {
+          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning": [12,12,12,12,12],
+          "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12, "parking_aisle": 12, "drive-through": 12
+        }
+      },
+      {
+        "urban": {
+          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning": [13,13,13,13,13],
+          "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13, "parking_aisle": 13, "drive-through": 13
+        },
+        "rural": {
+          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning": [13,13,13,13,13],
+          "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13, "parking_aisle": 13, "drive-through": 13
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "foo", "bar"));
+    ASSERT_EQ(edge.speed(), 13);
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "US", "bar"));
+    ASSERT_EQ(edge.speed(), 12);
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "PA", "PA"));
+    ASSERT_EQ(edge.speed(), 13);
+    ASSERT_TRUE(assigner.UpdateSpeed(edge, 6, true, "US", "PA"));
+    ASSERT_EQ(edge.speed(), 11);
+  }
+}
+TEST(Standalone, Malformed) {
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(foo)";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"({})";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "iso3166-1": ""
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "iso3166-1": "US", "iso3166-2": ""
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "rural": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"([{"urban": {"way": [11]}}])";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11]
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
+  }
+  {
+    std::ofstream speed_config("test/data/speed_config.json");
+    speed_config << R"(
+      [{
+        "urban": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11
+        }
+      }]
+    )";
+    speed_config.close();
+    testable_assigner assigner("test/data/speed_config.json");
+    ASSERT_TRUE(assigner.tables.empty());
   }
 }

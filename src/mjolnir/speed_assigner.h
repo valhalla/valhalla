@@ -123,9 +123,19 @@ protected:
 
       // loop over each country/state pair
       for (const auto& cs : doc.GetArray()) {
-        std::string code = cs["iso3166-1"].GetString();
-        code += ".";
-        code += cs["iso3166-2"].GetString();
+        std::string code;
+        if (cs.HasMember("iso3166-1")) {
+          code += cs["iso3166-1"].GetString();
+          if (code.empty())
+            throw std::runtime_error("Cannot have empty country code");
+          if (cs.HasMember("iso3166-2")) {
+            code.push_back('.');
+            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
+              throw std::runtime_error("Cannot have emtpy state code");
+          }
+        }
+        if (tables.count(code))
+          throw std::runtime_error("Duplicate country/state entry");
         tables.emplace(std::move(code), std::array<SpeedTable, 2>{
                                             SpeedTable(cs["urban"]),
                                             SpeedTable(cs["rural"]),
@@ -167,9 +177,9 @@ protected:
     // try first the country state combo, then country only, then neither, then bail
     auto found = tables.find(country + "." + state);
     if (found == tables.end())
-      found = tables.find(country + ".");
+      found = tables.find(country);
     if (found == tables.end())
-      found = tables.find(".");
+      found = tables.find("");
     if (found == tables.end())
       return false;
 

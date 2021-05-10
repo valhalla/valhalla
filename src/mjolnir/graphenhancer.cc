@@ -1517,13 +1517,13 @@ void enhance(const boost::property_tree::ptree& pt,
           directededge.set_use(Use::kFootway);
         }
 
-        // Speed assignment
-        speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
-                                   end_node_state_code);
-
         // Update the named flag
         auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
+
+        // Speed assignment
+        speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
+                                   end_node_state_code);
 
         // Name continuity - on the directededge.
         uint32_t ntrans = nodeinfo.local_edge_count();
