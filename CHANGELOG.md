@@ -7,6 +7,7 @@
    * FIXED: Apply conditional restrictions with dow only to the edges when routing [#3039](https://github.com/valhalla/valhalla/pull/3039)
    * FIXED: Missing locking in incident handler needed to hang out to scop lock rather than let the temporary disolve [#3046](https://github.com/valhalla/valhalla/pull/3046)
    * FIXED: Continuous lane guidance fix [#3054](https://github.com/valhalla/valhalla/pull/3054)
+   * FIXED: Fix reclassification for "shorter" ferries and rail ferries (for Chunnel routing issues) [#3038](https://github.com/valhalla/valhalla/pull/3038)
 
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
@@ -14,6 +15,7 @@
    * CHANGED: Use CircleCI XL instances for linux based builds [#3043](https://github.com/valhalla/valhalla/pull/3043)
    * ADDED: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
    * ADDED: Optionally pass preconstructed graphreader to connectivity map [#3046](https://github.com/valhalla/valhalla/pull/3046)
+   * ADDED: Allow configuration-driven default speed assignment based on edge properties [#3055](https://github.com/valhalla/valhalla/pull/3055)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
