@@ -56,7 +56,7 @@ Several other pieces of information about the prior edge are also kept to avoid 
 
 An unordered map (hash map) is used to identify the state of directed edges. The map contains tile id as key and array of EdgeStatusInfo which contains 
 index of the edge in the EdgeLabels vector and the current edge label state: kUnreachedOrReset, temporary or permanent.
-Whenever new tile (new edge in previously unvisited tile) is encountered a new value in the map is inserted with key as tile id and EdgeStatusInfo array of length equal to number of directed edges in the tile as value, all directed edges in the new array are initialized with kUnreachedOrReset status.
+Whenever a new tile (new edge in previously unvisited tile) is encountered a new value in the map is inserted with key as tile id and EdgeStatusInfo array of length equal to number of directed edges in the tile as value, all directed edges in the new array are initialized with kUnreachedOrReset status.
 
 The index of edge in EdgeStatusInfo array is equal to it's id in the tile
 
