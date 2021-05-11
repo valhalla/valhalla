@@ -24,8 +24,7 @@ void assign(const boost::property_tree::ptree& config,
             std::mutex& lock,
             std::promise<std::pair<size_t, size_t>>& result) {
   size_t assigned = 0, total = 0;
-  const auto& assigner =
-      SpeedAssigner::GetInstance(config.get_optional<std::string>("mjolnir.default_speeds_config"));
+  SpeedAssigner assigner(config.get_optional<std::string>("mjolnir.default_speeds_config"));
   bool infer_turn_channels = config.get<bool>("mjolnir.data_processing.infer_turn_channels");
   GraphReader graph_reader(config.get_child("mjolnir"));
 
