@@ -218,6 +218,7 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
+  add_compile_definitions(DATA_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
