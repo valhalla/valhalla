@@ -63,11 +63,14 @@ The json basically looks like this:
 }]
  */
 
+constexpr uint32_t kMinSuburbanDensity = 5;
+constexpr uint32_t kMaxSuburbanDensity = 10;
+
 /**
  * This class has two methods of deciding the default speed of an edge. The default method is to use
  * some of the constants above and some of the attributes on the edge to modify the existing speed.
  * This method can be overridden by a json config which allows for geography specific speed assignment
- * by country/state, urban/rural, road class, road use and link/ramp type
+ * by country/state, urban/suburban/rural, road class, road use and link/ramp type
  */
 class SpeedAssigner {
 protected:
@@ -107,51 +110,7 @@ protected:
   };
 
   // 2 letter country and 2 letter state as key with urban and rural speed tables as value
-  std::unordered_map<std::string, std::array<SpeedTable, 2>> tables;
-
-  SpeedAssigner(const boost::optional<std::string>& config_file) {
-    if (!config_file) {
-      LOG_INFO("Disabled default speeds assignment from config");
-      return;
-    }
-    try {
-      auto doc = rapidjson::read_json(*config_file);
-      if (doc.HasParseError())
-        throw std::runtime_error("malformed json");
-      if (!doc.IsArray())
-        throw std::runtime_error("must be a json array");
-
-      // loop over each country/state pair
-      for (const auto& cs : doc.GetArray()) {
-        std::string code;
-        if (cs.HasMember("iso3166-1")) {
-          code += cs["iso3166-1"].GetString();
-          if (code.empty())
-            throw std::runtime_error("Cannot have empty country code");
-          if (cs.HasMember("iso3166-2")) {
-            code.push_back('.');
-            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
-              throw std::runtime_error("Cannot have emtpy state code");
-          }
-        }
-        if (tables.count(code))
-          throw std::runtime_error("Duplicate country/state entry");
-        tables.emplace(std::move(code), std::array<SpeedTable, 2>{
-                                            SpeedTable(cs["urban"]),
-                                            SpeedTable(cs["rural"]),
-                                        });
-      }
-    } // something went wrong with parsing or opening the file
-    catch (const std::exception& e) {
-      LOG_WARN(std::string("Disabled default speeds assignment from config: ") + e.what());
-      tables.clear();
-    } // something else was thrown
-    catch (...) {
-      LOG_WARN("Disabled default speeds assignment from config: unknown error");
-      tables.clear();
-    }
-    LOG_INFO("Enabled default speeds assignment from config: " + *config_file);
-  }
+  std::unordered_map<std::string, std::array<SpeedTable, 3>> tables;
 
   /**
    * This function determines the speed of an edge based on the json configuration provided to the
@@ -183,8 +142,9 @@ protected:
     if (found == tables.end())
       return false;
 
-    // urban or rural
-    const auto& speed_table = found->second[density <= kMaxRuralDensity];
+    // rural, suburban or urban
+    const auto& speed_table =
+        found->second[(density > kMinSuburbanDensity) + (density > kMaxSuburbanDensity)];
     size_t rc = static_cast<size_t>(directededge.classification());
 
     // some kind of special use
@@ -230,9 +190,49 @@ protected:
   }
 
 public:
-  static const SpeedAssigner& GetInstance(const boost::optional<std::string>& config_file) {
-    static SpeedAssigner assigner(config_file);
-    return assigner;
+  SpeedAssigner(const boost::optional<std::string>& config_file) {
+    if (!config_file) {
+      LOG_INFO("Disabled default speeds assignment from config");
+      return;
+    }
+    try {
+      auto doc = rapidjson::read_json(*config_file);
+      if (doc.HasParseError())
+        throw std::runtime_error("malformed json");
+      if (!doc.IsArray())
+        throw std::runtime_error("must be a json array");
+
+      // loop over each country/state pair
+      for (const auto& cs : doc.GetArray()) {
+        std::string code;
+        if (cs.HasMember("iso3166-1")) {
+          code += cs["iso3166-1"].GetString();
+          if (code.empty())
+            throw std::runtime_error("Cannot have empty country code");
+          if (cs.HasMember("iso3166-2")) {
+            code.push_back('.');
+            if (code.size() == (code += cs["iso3166-2"].GetString()).size())
+              throw std::runtime_error("Cannot have emtpy state code");
+          }
+        }
+        if (tables.count(code))
+          throw std::runtime_error("Duplicate country/state entry");
+        tables.emplace(std::move(code), std::array<SpeedTable, 3>{
+                                            SpeedTable(cs["rural"]),
+                                            SpeedTable(cs["suburban"]),
+                                            SpeedTable(cs["urban"]),
+                                        });
+      }
+    } // something went wrong with parsing or opening the file
+    catch (const std::exception& e) {
+      LOG_WARN(std::string("Disabled default speeds assignment from config: ") + e.what());
+      tables.clear();
+    } // something else was thrown
+    catch (...) {
+      LOG_WARN("Disabled default speeds assignment from config: unknown error");
+      tables.clear();
+    }
+    LOG_INFO("Enabled default speeds assignment from config: " + *config_file);
   }
 
   /**
@@ -254,8 +254,10 @@ public:
                    const std::string& state_code) const {
 
     // If we have config loaded we'll use that
-    if (!tables.empty() && FromConfig(directededge, density, country_code, state_code))
+    if (!tables.empty() && FromConfig(directededge, density, country_code, state_code)) {
+      directededge.set_speed_type(SpeedType::kClassified);
       return true;
+    }
 
     // Update speed on ramps (if not a tagged speed) and turn channels
     if (directededge.link()) {
