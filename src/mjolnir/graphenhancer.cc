@@ -1077,7 +1077,8 @@ uint32_t GetStopImpact(uint32_t from,
     }
   } else if (edges[from].use() == Use::kParkingAisle && edges[to].use() == Use::kParkingAisle) {
     // decrease stop impact inside parking lots
-    stop_impact /= 2;
+    if (stop_impact != 0)
+      stop_impact -= 1;
   }
   // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
   // or ramp penalize lefts when driving on the right.
