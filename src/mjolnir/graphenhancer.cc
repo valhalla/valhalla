@@ -939,7 +939,8 @@ bool IsCyclewayUturn(uint32_t from_index,
  * Higher stop impacts occur when the from and to edges are lower class
  * than the others. There is almost certainly a stop (stop sign, traffic
  * light) and longer waits are likely when a low class road crosses
- * a higher class road. Special cases occur for links (ramps/turn channels).
+ * a higher class road. Special cases occur for links (ramps/turn channels)
+ * and parking aisles.
  * @param  from  Index of the from directed edge.
  * @param  to    Index of the to directed edge.
  * @param  directededge   Directed edge builder - set values.
@@ -1074,6 +1075,10 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
+  } else if (edges[from].use() == Use::kParkingAisle && edges[to].use() == Use::kParkingAisle) {
+    // decrease stop impact inside parking lots
+    if (stop_impact != 0)
+      stop_impact -= 1;
   }
   // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
   // or ramp penalize lefts when driving on the right.
