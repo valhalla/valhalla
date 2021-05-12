@@ -796,10 +796,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                                    valhalla::Location& origin,
                                    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
-  bool has_other_edges = std::any_of(origin.path_edges().begin(), origin.path_edges().end(),
-                                     [](const valhalla::Location::PathEdge& e) {
-                                       return !e.end_node();
-                                     });
+  bool has_other_edges =
+      std::any_of(origin.path_edges().begin(), origin.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.end_node(); });
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
@@ -885,10 +884,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                         const valhalla::Location& dest,
                                         const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
-  bool has_other_edges = std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
-                                     [](const valhalla::Location::PathEdge& e) {
-                                       return !e.begin_node();
-                                     });
+  bool has_other_edges =
+      std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.begin_node(); });
 
   // Iterate through edges and add to adjacency list
   Cost c;
@@ -1007,8 +1005,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       printf("graphreader.GetGraphTile(nodes.first) is null\n");
       continue;
     }
-    auto sll = first_node_tile
-                   ->node(nodes.first)
+    auto sll = first_node_tile->node(nodes.first)
                    ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
 
     auto second_node_tile = graphreader.GetGraphTile(nodes.second);
@@ -1016,9 +1013,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       printf("graphreader.GetGraphTile(nodes.second) is null\n");
       continue;
     }
-    auto ell = second_node_tile
-                   ->node(nodes.second)
-                   ->latlng(second_node_tile->header()->base_ll());
+    auto ell = second_node_tile->node(nodes.second)->latlng(second_node_tile->header()->base_ll());
     printf("[[%.6f,%.6f],[%.6f,%.6f]],\n", sll.lng(), sll.lat(), ell.lng(), ell.lat());
   }
 #endif
