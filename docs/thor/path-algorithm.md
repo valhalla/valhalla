@@ -54,11 +54,14 @@ Several other pieces of information about the prior edge are also kept to avoid 
 
 #### Edge Status
 
-An unordered map (hash map) is used to identify the state of directed edges. The GraphId of the directed edge is used as the key. Values in the EdgeStatus map are the index of the edge in the EdgeLabels vector and the current edge label state: temporary or permanent. Any edge that is not yet visited will not be part of the EdgeStatus map.
+An unordered map (hash map) is used to identify the state of directed edges. The map contains tile id as key and array of EdgeStatusInfo which contains 
+index of the edge in the EdgeLabels vector and the current edge label state: kUnreachedOrReset, temporary or permanent.
+Whenever a new tile (new edge in previously unvisited tile) is encountered a new value in the map is inserted with key as tile id and EdgeStatusInfo array of length equal to number of directed edges in the tile as value, all directed edges in the new array are initialized with kUnreachedOrReset status.
+
+The index of edge in EdgeStatusInfo array is equal to it's id in the tile
 
 EdgeStatus is constructed given an initial size of the edge status map. To avoid rehashing the initial size should be large enough.
 
-- **Init** - Initialize the status to unreached for all edges by clearing the edge status map.
 - **Set** - Sets the status of a directed edge given its GraphId.
 - **Update** - Updates the status of a directed edge given its GraphId.
 - **Get** - Gets the status info of a directed edge given its GraphId.
