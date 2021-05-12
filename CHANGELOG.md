@@ -16,6 +16,7 @@
    * ADDED: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
    * ADDED: Optionally pass preconstructed graphreader to connectivity map [#3046](https://github.com/valhalla/valhalla/pull/3046)
    * ADDED: Allow configuration-driven default speed assignment based on edge properties [#3055](https://github.com/valhalla/valhalla/pull/3055)
+   * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
