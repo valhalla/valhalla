@@ -1136,7 +1136,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified
   DataQuality stats;
   if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file,
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
                     pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   } else {
     LOG_WARN("Not reclassifying link graph edges");
