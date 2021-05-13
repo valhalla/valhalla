@@ -1049,7 +1049,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
       const auto* edge = graphreader.directededge(edgelabel.edgeid(), tile);
       if (edge == nullptr) {
-        LOG_INFO("graphreader.directededge(edgelabel.edgeid(), tile) is nullptr");
         continue;
       }
       if (edge->is_shortcut()) {
