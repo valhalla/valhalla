@@ -1049,7 +1049,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
       const auto* edge = graphreader.directededge(edgelabel.edgeid(), tile);
       if (edge == nullptr) {
-        continue;
+        throw std::runtime_error("BidirectionalAStar::FormPath can't find edge by id " +
+                                 std::to_string(edgelabel.edgeid()));
       }
       if (edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
