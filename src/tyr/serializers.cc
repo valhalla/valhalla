@@ -84,17 +84,24 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 namespace valhalla {
 namespace tyr {
 std::string serializeStatus(const Api& request) {
-  // TODO: once we decide on what's in the status message we'll fill out the proto message in
-  // loki/thor/odin and we'll serialize it here
-  auto status_msg = baldr::json::map({
-      {"version", std::to_string(VALHALLA_VERSION_MAJOR) + "." +
-                      std::to_string(VALHALLA_VERSION_MINOR) + "." +
-                      std::to_string(VALHALLA_VERSION_PATCH)},
-      {"has_tiles", request.status().has_tiles()},
-      {"has_admins", request.status().has_admins()},
-      {"has_timezones", request.status().has_timezones()},
-      {"has_live_traffic", request.status().has_live_traffic()},
-  });
+  static auto actions_array = json::array({});
+  if (actions_array->empty()) {
+    istringstream iss(request.status().actions());
+    std::vector<std::string> actions((istream_iterator<string>(iss)), istream_iterator<string>());
+    for (const auto& action : actions) {
+      actions_array->push_back(action);
+    }
+  }
+
+  auto status_msg = baldr::json::map({{"version", std::to_string(VALHALLA_VERSION_MAJOR) + "." +
+                                                      std::to_string(VALHALLA_VERSION_MINOR) + "." +
+                                                      std::to_string(VALHALLA_VERSION_PATCH)},
+                                      {"has_tiles", request.status().has_tiles()},
+                                      {"has_admins", request.status().has_admins()},
+                                      {"has_timezones", request.status().has_timezones()},
+                                      {"has_live_traffic", request.status().has_live_traffic()},
+                                      {"bbox", request.status().bbox()},
+                                      {"actions", actions_array}});
 
   std::stringstream ss;
   ss << *status_msg;

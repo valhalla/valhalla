@@ -7,8 +7,7 @@ message Status {
   optional bool has_admins = 2;
   optional bool has_timezones = 3;
   optional bool has_live_traffic = 4;
-  repeated string endpoints = 5;
-  repeated float bbox = 6;
+  optional string actions = 5;
+  optional string bbox = 6;
   optional string version = 7;
-  optional string config = 8;
 }

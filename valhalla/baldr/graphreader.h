@@ -455,7 +455,7 @@ public:
   /**
    * Test if traffic tiles exist.   *
    */
-  bool DoTrafficTilesExist() {
+  bool HasLiveTraffic() {
     return !tile_extract_->traffic_tiles.empty();
   }
 
