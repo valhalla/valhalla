@@ -172,7 +172,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       throw std::runtime_error("Action not supported " + path);
     }
     actions.insert(action);
-    action_str.append("/" + path + " ");
+    action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
   if (action_str.empty()) {
