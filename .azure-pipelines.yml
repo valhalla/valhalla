@@ -14,14 +14,14 @@ pr:
       - master
   paths:
     exclude:
-      - docs/
       - README.md
       - CHANGELOG.md
-      - COPYING
-      - .circleci
-      - test/
-      - run_route_scripts/
+      - bench/
       - docker/
+      - docs/
+      - run_route_scripts/
+      - test/
+      - .circleci/
       - .github/
   drafts: false
 
