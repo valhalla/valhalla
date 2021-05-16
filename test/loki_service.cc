@@ -62,7 +62,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
   return config;
 }
 
-std::string write_config(boost::property_tree::ptree pt) {
+std::string write_config(const boost::property_tree::ptree& pt) {
   // config for permanently running server and the status response
   std::stringstream config_stream;
   boost::property_tree::json_parser::write_json(config_stream, pt);
