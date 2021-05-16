@@ -14,7 +14,8 @@ void loki_worker_t::status(Api& request) const {
   if (!tile) {
     for (const auto& tile_id : reader->GetTileSet()) {
       tile = reader->GetGraphTile(tile_id);
-      if (tile->id().level() < baldr::TileHierarchy::GetTransitLevel().level) {
+      if (tile->id().level() < baldr::TileHierarchy::GetTransitLevel().level &&
+          tile->header()->nodecount() > 0) {
         break;
       }
     }
