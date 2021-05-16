@@ -85,8 +85,6 @@ public:
   void Clear() override;
 
 protected:
-  enum class ExpansionType { forward = 0, reverse = 1 };
-
   // Access mode used by the costing method
   uint32_t access_mode_;
 

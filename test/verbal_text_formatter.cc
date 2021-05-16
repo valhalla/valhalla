@@ -53,26 +53,32 @@ TEST(VeralTextFormatter, TestFormNumberSplitTtsString) {
   TryFormNumberSplitTtsString("123456, 123456, 123456", "12 34 56, 12 34 56, 12 34 56");
   TryFormNumberSplitTtsString("County Road 00-122", "County Road 00-1 22");
   TryFormNumberSplitTtsString("Road 0110", "Road 01 10");
+  TryFormNumberSplitTtsString("PA 23", "PA 23");
+  TryFormNumberSplitTtsString("PA 283", "PA 2 83");
+  TryFormNumberSplitTtsString("US 202", "US 2 02");
+  TryFormNumberSplitTtsString("PA 1080", "PA 10 80");
+  TryFormNumberSplitTtsString("PA 40001", "PA 4 00 01");
+  TryFormNumberSplitTtsString("PA 4007", "PA 40 07");
+  TryFormNumberSplitTtsString("SR 1021", "SR 10 21");
+  TryFormNumberSplitTtsString("SR-1021", "SR-10 21");
+  TryFormNumberSplitTtsString("Sr 1021", "Sr 10 21");
+  TryFormNumberSplitTtsString("T609", "T6 09");
+  TryFormNumberSplitTtsString("US 422 Business Alternate", "US 4 22 Business Alternate");
 }
 
 void TryFormat(const string& source, const string& expected) {
-  VerbalTextFormatterTest formatter_test("US", "PA");
+  VerbalTextFormatterTest formatter_test("FR", "IDF");
   string tts = formatter_test.Format(source);
   EXPECT_EQ(tts, expected);
 }
 
 TEST(VeralTextFormatter, TestFormat) {
-  TryFormat("PA 23", "PA 23");
-  TryFormat("PA 283", "PA 2 83");
-  TryFormat("US 202", "US 2 02");
-  TryFormat("PA 1080", "PA 10 80");
-  TryFormat("PA 40001", "PA 4 00 01");
-  TryFormat("PA 4007", "PA 40 07");
-  TryFormat("SR 1021", "SR 10 21");
-  TryFormat("SR-1021", "SR-10 21");
-  TryFormat("Sr 1021", "Sr 10 21");
-  TryFormat("T609", "T6 09");
-  TryFormat("US 422 Business Alternate", "US 4 22 Business Alternate");
+  TryFormat("E411", "E411");
+  TryFormat("A104", "A104");
+  TryFormat("A154", "A154");
+  TryFormat("A320", "A320");
+  TryFormat("A406", "A406");
+  TryFormat("A844", "A844");
 }
 
 } // namespace

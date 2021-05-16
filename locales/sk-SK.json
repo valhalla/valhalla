@@ -1145,8 +1145,7 @@
       },
       "transit_stop_count_labels": {
         "one": "zastávku",
-        "other": "zastávok",
-        "few": "zastávky"
+        "other": "zastávok"
       },
       "example_phrases": {
         "0": [
@@ -1688,8 +1687,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "zastávka",
-        "other": "zastávok",
-        "few": "zastávky"
+        "other": "zastávok"
       },
       "example_phrases": {
         "0": [
@@ -1834,8 +1832,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "zastávka",
-        "other": "zastávok",
-        "few": "zastávky"
+        "other": "zastávok"
       },
       "example_phrases": {
         "0": [
@@ -1888,8 +1885,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "zastávka",
-        "other": "zastávok",
-        "few": "zastávky"
+        "other": "zastávok"
       },
       "example_phrases": {
         "0": [

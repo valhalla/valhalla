@@ -67,3 +67,79 @@ Czech `aliases` entry example:
 #### Tag descriptions
 `TODO`
 
+# Syncing with Transifex
+
+Use the [Transifex command line client, `tx`](https://docs.transifex.com/client/introduction), to sync locale files with the Transifex website.
+
+## Install
+
+* [Install tx](https://docs.transifex.com/client/installing-the-client).
+* Get an API secret from [your settings page](https://www.transifex.com/user/settings/api/).
+* Run `tx status` in the root valhalla directory to confirm.
+
+## One-time setup
+
+These were the steps taken to setup tx for the first time, you can probably just skip to the next section.
+
+* Run `tx init` in the root directory. This will walk you through creating the `.tx/config` file.
+* Use `locales/en-US.json` as the path to the source file.
+* Use `locales/<lang>.json` as the path to the translation files.
+* Use `Valhalla` as the Organization name and `Valhalla Phrases` as the project name.
+
+To learn more about the Config command, visit https://docs.transifex.com/client/config.
+
+## Useful commands
+
+### Pulling translation updates from Transifex
+
+Use this command to pull all changes from Transifex into the Valhalla repo.
+
+```
+tx pull --all
+```
+
+Or for just one language (use --force to overwrite local):
+
+```
+tx pull --language <lang> --force
+```
+
+### Pulling English source file updates from Transifex
+
+When the source file en-US.json has been updated on Transifex manually.
+
+```
+tx pull --source
+```
+
+### Pushing translation updates to Transifex
+
+When edits have been made to the locale JSON files manually in git but not in Transifex.
+
+NOTE: this command will overwrite the file on Transifex, you will want to pull updates first and resolve any conflicts.
+
+```
+tx pull --all
+# resolve conflicts, open PR
+tx push --all
+```
+
+### Pulling NEW translation file FROM Transifex
+
+Translation files for new languages that are contributed in Transifex are not automatically downloaded by tx. Use the `--language` flag to force download the new file and PR it to Valhalla.
+
+```
+tx pull --language <lang> --force
+```
+
+Warning: By using --force, the uploaded files will overwrite remote translations, even if they are newer than your uploaded files.
+
+### Pushing NEW translation file TO Transifex
+
+New language files added in Valhalla need to be uploaded to Transifex for external contributors to make updates in the translation interface. Make sure that language does not already have a translation file in Transifex first by trying a pull command.
+
+```
+tx pull --language <lang>
+# if no translation exists push up a new one
+tx push --language <lang> --translations
+```

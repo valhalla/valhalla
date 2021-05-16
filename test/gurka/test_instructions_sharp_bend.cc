@@ -115,7 +115,7 @@ TEST_F(InstructionsSharpBendPath, IgnoreLeft) {
   // Verify single maneuver prior to the right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Drive east on 船原西浦高原線/127.", "",
-                                                            "Drive east on 船原西浦高原線, 1 27.",
+                                                            "Drive east on 船原西浦高原線, 127.",
                                                             "Continue for 3 kilometers.");
 }
 
@@ -131,7 +131,7 @@ TEST_F(InstructionsSharpBendPath, IgnoreRight) {
   // Verify single maneuver prior to the right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Drive east on 船原西浦高原線/127.", "",
-                                                            "Drive east on 船原西浦高原線, 1 27.",
+                                                            "Drive east on 船原西浦高原線, 127.",
                                                             "Continue for 3 kilometers.");
 }
 //#############################################################################

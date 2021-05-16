@@ -624,21 +624,23 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
     // and next maneuver is not a straight
     // Activate only specific matching turn lanes
     switch (next_maneuver_type) {
-      case DirectionsLeg_Maneuver_Type_kUturnLeft:
-      case DirectionsLeg_Maneuver_Type_kSharpLeft:
-      case DirectionsLeg_Maneuver_Type_kLeft:
       case DirectionsLeg_Maneuver_Type_kSlightLeft:
-      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kStayLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
-      case DirectionsLeg_Maneuver_Type_kExitRight:
-      case DirectionsLeg_Maneuver_Type_kRampRight:
       case DirectionsLeg_Maneuver_Type_kRight:
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
@@ -1728,7 +1730,7 @@ bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const RoadClass road_class
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
-    TripLeg_Use* use) {
+    boost::optional<TripLeg_Use>* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta

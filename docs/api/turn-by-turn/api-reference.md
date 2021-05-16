@@ -261,21 +261,32 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `bg-BG` | `bg` | Bulgarian (Bulgaria) |
 | `ca-ES` | `ca` | Catalan (Spain) |
 | `cs-CZ` | `cs` | Czech (Czech Republic) |
+| `da-DK` | `da` | Danish (Denmark) |
 | `de-DE` | `de` | German (Germany) |
 | `el-GR` | `el` | Greek (Greece) |
-| `en-US` | `en` | English (United States) |
+| `en-GB` | `engb` | English (United Kingdom) |
 | `en-US-x-pirate` | `pirate` | English (United States) Pirate |
+| `en-US` | `en` | English (United States) |
 | `es-ES` | `es` | Spanish (Spain) |
 | `et-EE` | `et` | Estonian (Estonia) |
+| `fi-FI` | `fi` | Finnish (Finland) |
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
+| `hu-HU` | `hu` | Hungarian (Hungary) |
 | `it-IT` | `it` | Italian (Italy) |
 | `ja-JP` | `ja` | Japanese (Japan) |
+| `nb-NO` | `nbno` | Bokmal (Norway) |
+| `nl-NL` | `nl` | Dutch (Netherlands) |
+| `pl-PL` | `pl` | Polish (Poland) |
+| `pt-BR` | `ptbr` | Portuguese (Brazil) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
+| `ro-RO` | `ro` | Romanian (Romania) |
 | `ru-RU` | `ru` | Russian (Russia) |
 | `sk-SK` | `sk` | Slovak (Slovakia) |
 | `sl-SI` | `sl` | Slovenian (Slovenia) |
 | `sv-SE` | `sv` | Swedish (Sweden) |
+| `tr-TR` | `tr` | Turkish (Turkey) |
+| `uk-UA` | `uk` | Ukrainian (Ukraine) |
 
 #### Other request options
 

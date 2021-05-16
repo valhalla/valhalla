@@ -3,12 +3,13 @@
 
 using namespace valhalla;
 
-baldr::RoadClass
+std::pair<baldr::RoadClass, baldr::RoadClass>
 ReclassifyFerryConnectionEdge(std::map<std::string, std::string> const& way_description) {
   constexpr double gridsize_metres = 1000;
 
   const std::string ascii_map = R"(
           A--B--b--C----D--E
+          F--G--g--H----I--J
     )";
 
   const gurka::ways ways = {{"AB", {{"highway", "trunk"}, {"name", ""}}},
@@ -26,15 +27,69 @@ ReclassifyFerryConnectionEdge(std::map<std::string, std::string> const& way_desc
                               {"name", "Cape May-Lewes Ferry"},
                               {"destination:forward", "Cape May"},
                               {"destination:backward", "Lewes"}}},
-                            {"DE", {{"highway", "trunk"}, {"name", ""}}}};
+                            {"DE", {{"highway", "trunk"}, {"name", ""}}},
+                            {"FG", {{"highway", "trunk"}, {"name", ""}}},
+                            {"Gg", way_description},
+                            {"gH", way_description},
+                            {"HI",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
+                            {"IJ", {{"highway", "trunk"}, {"name", ""}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  auto edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "b"));
-  return edge->classification();
+  auto Bb_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "b"));
+  auto Gg_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "G", "g"));
+  return {Bb_edge->classification(), Gg_edge->classification()};
+}
+
+TEST(Standalone, ShortFerry) {
+  const std::string ascii_map = R"(
+          A--B--C--F--D--E--G
+                   |
+                   N
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                            {"BC", {{"highway", "service"}}},
+                            {"CF",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
+                            {"FD",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"foot", "no"},
+                              {"duration", "35"},
+                              {"route", "shuttle_train"},
+                              {"name", "Eurotunnel Shuttle"}}},
+                            {"DE", {{"highway", "service"}}},
+                            {"EG", {{"highway", "trunk"}}},
+                            {"FN", {{"highway", "service"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  auto BC_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "C"));
+  auto DE_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "E"));
+
+  EXPECT_EQ(BC_edge->classification(), baldr::RoadClass::kPrimary);
+  EXPECT_EQ(DE_edge->classification(), baldr::RoadClass::kPrimary);
 }
 
 TEST(Standalone, ReclassifyFerryConnection) {
@@ -45,8 +100,10 @@ TEST(Standalone, ReclassifyFerryConnection) {
                                                         "secondary_link", "tertiary_link"};
   for (const auto& cls : reclassifiable_ways) {
     std::map<std::string, std::string> desc = {{"highway", cls}, {"name", ""}};
-    auto edge_class = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_EQ(edge_class, baldr::RoadClass::kPrimary);
+    baldr::RoadClass bclass, gclass;
+    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
+    EXPECT_EQ(bclass, baldr::RoadClass::kPrimary);
+    EXPECT_EQ(gclass, baldr::RoadClass::kPrimary);
   }
 }
 
@@ -56,8 +113,10 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
   const std::vector<std::string> not_reclassifiable_ways = {"track", "living_street"};
   for (const auto& cls : not_reclassifiable_ways) {
     std::map<std::string, std::string> desc = {{"highway", cls}, {"name", ""}};
-    auto edge_class = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GT(edge_class, baldr::RoadClass::kPrimary);
+    baldr::RoadClass bclass, gclass;
+    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
+    EXPECT_GT(bclass, baldr::RoadClass::kPrimary);
+    EXPECT_GT(gclass, baldr::RoadClass::kPrimary);
   }
 
   // roads with these values of 'service' tag do not participate in search for ferry connection so
@@ -68,7 +127,9 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
     std::map<std::string, std::string> desc = {{"highway", "tertiary"},
                                                {"service", use},
                                                {"name", ""}};
-    auto edge_class = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GT(edge_class, baldr::RoadClass::kPrimary);
+    baldr::RoadClass bclass, gclass;
+    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
+    EXPECT_GT(bclass, baldr::RoadClass::kPrimary);
+    EXPECT_GT(gclass, baldr::RoadClass::kPrimary);
   }
 }
