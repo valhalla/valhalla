@@ -111,7 +111,9 @@ function(valhalla_module)
   # These options do not affect the ABI and should therefore be used whenever possible for
   # predictable numerical results
   # For the x86-64 compiler, these extensions are enabled by default.
-  target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|AMD64|x64|x86|x86_64")
+    target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  endif()
 
   if(ENABLE_COMPILER_WARNINGS)
     cxx_add_warning_flags(${library})
