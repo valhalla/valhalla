@@ -103,8 +103,8 @@ const std::vector<http_request_t> valhalla_requests{
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {200,
-     R"({"has_admins":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"has_live_traffic":false,"has_timezones":false,"has_tiles":false,"bbox":"{\"features\":[],\"type\":\"FeatureCollection\"}","version":")" VALHALLA_VERSION
-     R"("})"},
+     R"({"version":")" VALHALLA_VERSION
+     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"bbox":{"features":[],"type":"FeatureCollection"}})"},
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405,
@@ -289,8 +289,8 @@ const std::vector<http_request_t> osrm_requests{
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {200,
-     R"({"has_admins":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"has_live_traffic":false,"has_timezones":false,"has_tiles":false,"bbox":"{\"features\":[],\"type\":\"FeatureCollection\"}","version":")" VALHALLA_VERSION
-     R"("})"},
+     R"({"version":")" VALHALLA_VERSION
+     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"bbox":{"features":[],"type":"FeatureCollection"}})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},

@@ -2,6 +2,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
+#include <rapidjson/allocators.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -86,29 +87,38 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 namespace valhalla {
 namespace tyr {
 std::string serializeStatus(const Api& request) {
+
+  rapidjson::Document status_doc;
+  status_doc.SetObject();
+  rapidjson::Document::AllocatorType& alloc = status_doc.GetAllocator();
+
   // JSON array of sanitized strings
-  static auto actions_array = json::array({});
-  if (actions_array->empty()) {
-    istringstream iss(request.status().actions());
-    std::vector<std::string> actions((istream_iterator<string>(iss)), istream_iterator<string>());
-    for (auto& action : actions) {
-      boost::replace_all(action, "'", "");
-      boost::replace_all(action, "/", "");
-      actions_array->push_back(action);
-    }
+  rapidjson::Value actions_array(rapidjson::kArrayType);
+  istringstream iss(request.status().actions());
+  std::vector<std::string> actions((istream_iterator<string>(iss)), istream_iterator<string>());
+  for (auto& action : actions) {
+    boost::replace_all(action, "'", "");
+    boost::replace_all(action, "/", "");
+    rapidjson::Value value;
+    value.SetString(action.c_str(), action.length(), alloc);
+    actions_array.PushBack(value, alloc);
   }
 
-  auto status_msg = baldr::json::map({{"version", std::string(VALHALLA_VERSION)},
-                                      {"has_tiles", request.status().has_tiles()},
-                                      {"has_admins", request.status().has_admins()},
-                                      {"has_timezones", request.status().has_timezones()},
-                                      {"has_live_traffic", request.status().has_live_traffic()},
-                                      {"bbox", request.status().bbox()},
-                                      {"actions", actions_array}});
+  status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
+  status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()), alloc);
+  status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                       alloc);
+  status_doc.AddMember("has_timezones", rapidjson::Value().SetBool(request.status().has_timezones()),
+                       alloc);
+  status_doc.AddMember("has_live_traffic",
+                       rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+  status_doc.AddMember("actions", actions_array, alloc);
 
-  std::stringstream ss;
-  ss << *status_msg;
-  return ss.str();
+  rapidjson::Document bbox_doc;
+  bbox_doc.Parse(request.status().bbox());
+  status_doc.AddMember("bbox", bbox_doc, alloc);
+
+  return rapidjson::to_string(status_doc);
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
