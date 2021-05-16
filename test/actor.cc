@@ -49,11 +49,12 @@ TEST(Actor, Basic) {
   auto transit = test::json_to_pt(transit_json);
   ASSERT_NE(transit_json.find(std::to_string(false)), std::string::npos);
 
+  actor.status("");
+  actor.cleanup();
   auto status_json = actor.status("");
-  ASSERT_EQ(
-      status_json,
-      R"({"has_admins":true,"actions":["'\/locate'","'\/route'","'\/height'","'\/sources_to_targets'","'\/optimized_route'","'\/isochrone'","'\/trace_route'","'\/trace_attributes'","'\/transit_available'","'\/expansion'","'\/centroid'","'\/status'"],"has_live_traffic":false,"has_timezones":true,"has_tiles":true,"bbox":"{\"features\":[{\"properties\":{\"id\":1,\"stroke-width\":1,\"stroke\":\"white\",\"fill-opacity\":0.8,\"fill\":\"#665784\"},\"geometry\":{\"coordinates\":[[[-76.500000,40.750000],[-76.500000,40.500000],[-76.250000,40.500000],[-76.250000,40.750000],[-76.500000,40.750000]]],\"type\":\"Polygon\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}","version":")" VALHALLA_VERSION
-      R"("})");
+  actor.cleanup();
+  auto status = test::json_to_pt(status_json);
+  ASSERT_NE(status_json.find("Polygon"), std::string::npos);
 
   // TODO: test the rest of them
 }

@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -12,6 +13,7 @@
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
+#include "config.h"
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -84,18 +86,19 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 namespace valhalla {
 namespace tyr {
 std::string serializeStatus(const Api& request) {
+  // JSON array of sanitized strings
   static auto actions_array = json::array({});
   if (actions_array->empty()) {
     istringstream iss(request.status().actions());
     std::vector<std::string> actions((istream_iterator<string>(iss)), istream_iterator<string>());
-    for (const auto& action : actions) {
+    for (auto& action : actions) {
+      boost::replace_all(action, "'", "");
+      boost::replace_all(action, "/", "");
       actions_array->push_back(action);
     }
   }
 
-  auto status_msg = baldr::json::map({{"version", std::to_string(VALHALLA_VERSION_MAJOR) + "." +
-                                                      std::to_string(VALHALLA_VERSION_MINOR) + "." +
-                                                      std::to_string(VALHALLA_VERSION_PATCH)},
+  auto status_msg = baldr::json::map({{"version", std::string(VALHALLA_VERSION)},
                                       {"has_tiles", request.status().has_tiles()},
                                       {"has_admins", request.status().has_admins()},
                                       {"has_timezones", request.status().has_timezones()},
