@@ -33,7 +33,10 @@ void loki_worker_t::status(Api& request) const {
   status->set_has_admins(!tile ? false : tile->header()->admincount() > 0);
   status->set_has_timezones(!tile ? false : tile->node(0)->timezone() > 0);
   status->set_has_live_traffic(reader->HasLiveTraffic());
-  status->set_actions(action_str);
+
+  std::stringstream ss;
+  boost::property_tree::json_parser::write_json(ss, config);
+  status->set_config(ss.str());
 
 #ifdef HAVE_HTTP
   // if we are in the process of shutting down we signal that here

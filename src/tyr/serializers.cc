@@ -92,18 +92,6 @@ std::string serializeStatus(const Api& request) {
   status_doc.SetObject();
   rapidjson::Document::AllocatorType& alloc = status_doc.GetAllocator();
 
-  // JSON array of sanitized strings
-  rapidjson::Value actions_array(rapidjson::kArrayType);
-  istringstream iss(request.status().actions());
-  std::vector<std::string> actions((istream_iterator<string>(iss)), istream_iterator<string>());
-  for (auto& action : actions) {
-    boost::replace_all(action, "'", "");
-    boost::replace_all(action, "/", "");
-    rapidjson::Value value;
-    value.SetString(action.c_str(), action.length(), alloc);
-    actions_array.PushBack(value, alloc);
-  }
-
   status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
   status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()), alloc);
   status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
@@ -112,11 +100,14 @@ std::string serializeStatus(const Api& request) {
                        alloc);
   status_doc.AddMember("has_live_traffic",
                        rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
-  status_doc.AddMember("actions", actions_array, alloc);
 
   rapidjson::Document bbox_doc;
   bbox_doc.Parse(request.status().bbox());
   status_doc.AddMember("bbox", bbox_doc, alloc);
+
+  rapidjson::Document config_doc;
+  config_doc.Parse(request.status().config());
+  status_doc.AddMember("config", config_doc, alloc);
 
   return rapidjson::to_string(status_doc);
 }

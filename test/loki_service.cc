@@ -6,9 +6,12 @@
 #include "proto/api.pb.h"
 #include "proto_conversions.h"
 
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <iostream>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
+#include <sstream>
 #include <thread>
 #include <unistd.h>
 
@@ -21,6 +24,55 @@ using namespace valhalla;
 using namespace prime_server;
 
 namespace {
+
+boost::property_tree::ptree make_config(const std::vector<std::string>& whitelist = {
+                                            "locate",
+                                            "route",
+                                            "height",
+                                            "sources_to_targets",
+                                            "optimized_route",
+                                            "isochrone",
+                                            "trace_route",
+                                            "trace_attributes",
+                                            "transit_available",
+                                            "expansion",
+                                            "centroid",
+                                            "status",
+                                        }) {
+  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
+                 "loki_service_tmp";
+  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+    throw std::runtime_error("Couldnt make directory to run from");
+
+  auto config = test::make_config(run_dir,
+                                  {
+                                      {"service_limits.skadi.max_shape", "100"},
+                                      {"service_limits.max_avoid_locations", "0"},
+                                  },
+                                  {"loki.actions"});
+
+  boost::property_tree::ptree actions;
+  for (const auto& action_name : whitelist) {
+    boost::property_tree::ptree action;
+    action.put("", action_name);
+    actions.push_back(std::make_pair("", action));
+  }
+  config.add_child("loki.actions", actions);
+
+  return config;
+}
+
+std::string write_config(boost::property_tree::ptree pt) {
+  // config for permanently running server and the status response
+  std::stringstream config_stream;
+  boost::property_tree::json_parser::write_json(config_stream, pt);
+
+  return config_stream.str();
+}
+
+// config for permanently running server
+auto const config = make_config();
+auto const config_str = write_config(config);
 
 const std::vector<http_request_t> valhalla_requests{
     http_request_t(GET, "/status"),
@@ -104,7 +156,8 @@ const std::vector<http_request_t> valhalla_requests{
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {200,
      R"({"version":")" VALHALLA_VERSION
-     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"bbox":{"features":[],"type":"FeatureCollection"}})"},
+     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"config":)" +
+         config_str + "}"},
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405,
@@ -290,7 +343,8 @@ const std::vector<http_request_t> osrm_requests{
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {200,
      R"({"version":")" VALHALLA_VERSION
-     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"actions":["locate","route","height","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available","expansion","centroid","status"],"bbox":{"features":[],"type":"FeatureCollection"}})"},
+     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"config":)" +
+         config_str + "}"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -382,46 +436,6 @@ std::list<std::pair<std::string, std::string>>
          reach destination - too far from a transit stop"},
          */
     };
-
-boost::property_tree::ptree make_config(const std::vector<std::string>& whitelist = {
-                                            "locate",
-                                            "route",
-                                            "height",
-                                            "sources_to_targets",
-                                            "optimized_route",
-                                            "isochrone",
-                                            "trace_route",
-                                            "trace_attributes",
-                                            "transit_available",
-                                            "expansion",
-                                            "centroid",
-                                            "status",
-                                        }) {
-  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
-                 "loki_service_tmp";
-  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
-    throw std::runtime_error("Couldnt make directory to run from");
-
-  auto config = test::make_config(run_dir,
-                                  {
-                                      {"service_limits.skadi.max_shape", "100"},
-                                      {"service_limits.max_avoid_locations", "0"},
-                                  },
-                                  {"loki.actions"});
-
-  boost::property_tree::ptree actions;
-  for (const auto& action_name : whitelist) {
-    boost::property_tree::ptree action;
-    action.put("", action_name);
-    actions.push_back(std::make_pair("", action));
-  }
-  config.add_child("loki.actions", actions);
-
-  return config;
-}
-
-// config for permanently running server
-auto const config = make_config();
 
 // for zmq thead communications
 zmq::context_t context;
