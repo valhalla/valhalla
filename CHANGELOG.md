@@ -16,6 +16,7 @@
    * CHANGED: Use CircleCI XL instances for linux based builds [#3043](https://github.com/valhalla/valhalla/pull/3043)
    * ADDED: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
    * ADDED: Optionally pass preconstructed graphreader to connectivity map [#3046](https://github.com/valhalla/valhalla/pull/3046)
+   * CHANGED: ci: Skip Win CI runs for irrelevant files [#3014](https://github.com/valhalla/valhalla/pull/3014)
    * ADDED: Allow configuration-driven default speed assignment based on edge properties [#3055](https://github.com/valhalla/valhalla/pull/3055)
    * CHANGED: Use std::shared_ptr in case if ENABLE_THREAD_SAFE_TILE_REF_COUNT is ON. [#3067](https://github.com/valhalla/valhalla/pull/3067)
    * CHANGED: Reduce stop impact when driving in parking lots [#3051](https://github.com/valhalla/valhalla/pull/3051)
@@ -117,7 +118,7 @@
    * CHANGED: nit(rename): Renames the encoded live speed properties [#2998](https://github.com/valhalla/valhalla/pull/2998)
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)
-   * CHANGED: ci: Build Python bindings for Mac OS [#3011](https://github.com/valhalla/valhalla/pull/3011)
+   * CHANGED: ci: Build Python bindings for Mac OS [#3013](https://github.com/valhalla/valhalla/pull/3013)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
