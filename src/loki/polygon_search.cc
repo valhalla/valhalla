@@ -157,7 +157,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
 
   // keep track which tile's bins intersect which rings
   bins_collector bins_intersected;
-  std::unordered_set<vb::GraphId> avoid_edge_ids;
+  std::unordered_set<vb::GraphId> cp_edge_ids;
 
   // first pull out all *unique* bins which intersect the ring
   auto line_intersected = tiles.Intersect(ring_bg);
@@ -176,7 +176,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
       reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
       for (const auto& edge_id : tile->GetBin(bin.first)) {
         // std::cout << "edge_id" << std::endl;
-        if (avoid_edge_ids.count(edge_id) != 0) {
+        if (cp_edge_ids.count(edge_id) != 0) {
           continue;
         }
         // TODO: optimize the tile switching by enqueuing edges
@@ -202,15 +202,15 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
         bool intersects = false;
         intersects = bg::intersects(ring_bg, edge_info.shape());
         if (intersects) {
-          avoid_edge_ids.emplace(edge_id);
-          avoid_edge_ids.emplace(
+          cp_edge_ids.emplace(edge_id);
+          cp_edge_ids.emplace(
               opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
         }
       }
     }
   }
-  std::cout << "edges_in_ring avoid_edge_ids size " << avoid_edge_ids.size() << std::endl;
-  return avoid_edge_ids;
+  std::cout << "edges_in_ring cp_edge_ids size " << cp_edge_ids.size() << std::endl;
+  return cp_edge_ids;
 }
 
 } // namespace loki
