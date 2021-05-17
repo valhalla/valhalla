@@ -86,20 +86,19 @@ protected:
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
         A------B------C
-        |      |    / |
-        |      |   /  |
-        |      |  /   |
-        |      | /    |
+        |      |      |
+        |      |      |
+        |      |      |
+        |      |      |
         D------E------F
     )";
     const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
                               {"AD", {{"highway", "residential"}, {"name", "Low"}}},
                               {"BC", {{"highway", "residential"}, {"name", "1st"}}},
                               {"BE", {{"highway", "residential"}, {"name", "2nd"}}},
-                              {"CE", {{"highway", "residential"}, {"name", "3rd"}}},
-                              {"CF", {{"highway", "residential"}, {"name", "4th"}}},
-                              {"DE", {{"highway", "residential"}, {"name", "5th"}}},
-                              {"EF", {{"highway", "residential"}, {"name", "6th"}}}};
+                              {"CF", {{"highway", "residential"}, {"name", "3rd"}}},
+                              {"DE", {{"highway", "residential"}, {"name", "4th"}}},
+                              {"EF", {{"highway", "residential"}, {"name", "5th"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
@@ -124,10 +123,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   // create a chinese polygon covering ABDE and avoid polygon covering AD
   //   c---------------c
   //   |    A------B---|--C
-  //   | a--|--a   |   | /|
-  //   | |  |  |   |   |/ |
-  //   | a--|--a   |  /|  |
-  //   |    |      | / |  |
+  //   | a--|--a   |   |  |
+  //   | |  |  |   |   |  |
+  //   | a--|--a   |   |  |
+  //   |    |      |   |  |
   //   |    D------E---|--F
   //   c---------------c
 

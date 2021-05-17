@@ -196,12 +196,10 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
              !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
-        // TODO: some logic to set percent_along for origin/destination edges
-        // careful: polygon can intersect a single edge multiple times
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-        bool intersects = false;
-        intersects = bg::intersects(ring_bg, edge_info.shape());
-        if (intersects) {
+        bool is_within = false;
+        is_within = bg::within(edge_info.shape(), ring_bg);
+        if (is_within) {
           cp_edge_ids.emplace(edge_id);
           cp_edge_ids.emplace(
               opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
