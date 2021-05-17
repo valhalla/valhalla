@@ -1049,11 +1049,14 @@ void expect_eta(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param expected_names the names of the edges the path should traverse in order
+ * @param message the message prints if a test is failed
  */
-void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+void expect_path(const valhalla::Api& result,
+                 const std::vector<std::string>& expected_names,
+                 const std::string& message) {
   EXPECT_EQ(result.trip().routes_size(), 1);
   const auto actual_names = detail::get_paths(result).front();
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path. " << message;
 }
 
 } // namespace raw
