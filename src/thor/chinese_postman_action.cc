@@ -16,7 +16,13 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-valhalla::sif::Cost getEdgeCost() {
+valhalla::sif::Cost
+getEdgeCost(baldr::GraphReader& reader, const sif::mode_costing_t& costings, uint64_t edge_id) {
+  uint8_t flow_sources;
+  graph_tile_ptr tile = reader.GetGraphTile(GraphId(edge_id));
+  const DirectedEdge* directededge = tile->directededge(0);
+  // Cost edge_cost = costing_->EdgeCost(directededge, tile, 0, flow_sources);
+  // std::cout << "Cost: " << edge_cost.cost << std::endl;
   valhalla::sif::Cost c(0, 0);
   return c;
 }
@@ -56,13 +62,8 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
-    // valhalla::sif::Cost edge_cost = valhalla::sif::Cost();
-    uint8_t flow_sources;
-    // graph_tile_ptr tile = reader->GetGraphTile(edge.id());
-    // const DirectedEdge* directededge = tile->directededge(edge.id());
-    // Cost edge_cost = costing_->EdgeCost(edge, tile, 0, flow_sources);
-    // std::cout << "Cost: " << edge_cost.cost << std::endl;
-    // G.addEdge(start_vertex, end_vertex, edge_cost);
+    valhalla::sif::Cost edge_cost = getEdgeCost(*reader, mode_costing, edge.id());
+    G.addEdge(start_vertex, end_vertex, edge_cost);
   }
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
