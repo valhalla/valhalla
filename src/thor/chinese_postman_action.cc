@@ -16,11 +16,14 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-valhalla::sif::Cost
-getEdgeCost(baldr::GraphReader& reader, const sif::mode_costing_t& costings, uint64_t edge_id) {
+valhalla::sif::Cost getEdgeCost(baldr::GraphReader& reader,
+                                const sif::mode_costing_t& costings,
+                                uint64_t edge_id,
+                                const GraphId& start_node) {
   uint8_t flow_sources;
   graph_tile_ptr tile = reader.GetGraphTile(GraphId(edge_id));
-  const DirectedEdge* directededge = tile->directededge(0);
+  const NodeInfo* node = tile->node(start_node);
+  const DirectedEdge* directededge = tile->directededge(node->edge_index());
   // Cost edge_cost = costing_->EdgeCost(directededge, tile, 0, flow_sources);
   // std::cout << "Cost: " << edge_cost.cost << std::endl;
   valhalla::sif::Cost c(0, 0);
@@ -62,7 +65,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
-    valhalla::sif::Cost edge_cost = getEdgeCost(*reader, mode_costing, edge.id());
+    valhalla::sif::Cost edge_cost = getEdgeCost(*reader, mode_costing, edge.id(), start_node);
     G.addEdge(start_vertex, end_vertex, edge_cost);
   }
 
