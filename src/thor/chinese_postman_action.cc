@@ -16,22 +16,6 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-valhalla::sif::Cost getEdgeCost(baldr::GraphReader& reader,
-                                const sif::mode_costing_t& costings,
-                                uint64_t edge_id,
-                                const GraphId& start_node,
-                                const std::shared_ptr<sif::DynamicCost> costing) {
-  graph_tile_ptr tile = reader.GetGraphTile(GraphId(edge_id));
-  const NodeInfo* node = tile->node(start_node);
-  const DirectedEdge* directededge = tile->directededge(node->edge_index());
-  // The line below gives segmentation fault
-  // Cost edge_cost = costing->EdgeCost(directededge, tile);
-  // bool t = costing->AllowMultiPass();
-  // std::cout << "Cost: " << edge_cost.cost << std::endl;
-  valhalla::sif::Cost c(1, 1);
-  return c;
-}
-
 void thor_worker_t::chinese_postman(Api& request) {
 
   ChinesePostmanGraph G;
@@ -67,9 +51,10 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
-    valhalla::sif::Cost edge_cost =
-        getEdgeCost(*reader, mode_costing, edge.id(), start_node, costing_);
-    G.addEdge(start_vertex, end_vertex, edge_cost);
+    // The cost of an edge is not relevant for the graph since we need to visit all the edges.
+    // For a simplicity, I put Cost(1, 1) for it.
+    // The cost is only considered when matching the unbalanced nodes.
+    G.addEdge(start_vertex, end_vertex, Cost(1, 1));
   }
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
