@@ -19,23 +19,25 @@ namespace thor {
 valhalla::sif::Cost getEdgeCost(baldr::GraphReader& reader,
                                 const sif::mode_costing_t& costings,
                                 uint64_t edge_id,
-                                const GraphId& start_node) {
-  uint8_t flow_sources;
+                                const GraphId& start_node,
+                                const std::shared_ptr<sif::DynamicCost> costing) {
   graph_tile_ptr tile = reader.GetGraphTile(GraphId(edge_id));
   const NodeInfo* node = tile->node(start_node);
   const DirectedEdge* directededge = tile->directededge(node->edge_index());
-  // Cost edge_cost = costing_->EdgeCost(directededge, tile, 0, flow_sources);
+  // The line below gives segmentation fault
+  // Cost edge_cost = costing->EdgeCost(directededge, tile);
+  // bool t = costing->AllowMultiPass();
   // std::cout << "Cost: " << edge_cost.cost << std::endl;
-  valhalla::sif::Cost c(0, 0);
+  valhalla::sif::Cost c(1, 1);
   return c;
 }
 
 void thor_worker_t::chinese_postman(Api& request) {
 
   ChinesePostmanGraph G;
-  std::shared_ptr<sif::DynamicCost> costing_;
   sif::TravelMode mode_; // Current travel mode
-  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+  const std::shared_ptr<sif::DynamicCost> costing_ =
+      mode_costing[static_cast<uint32_t>(sif::TravelMode::kBicycle)];
 
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
@@ -65,7 +67,8 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
-    valhalla::sif::Cost edge_cost = getEdgeCost(*reader, mode_costing, edge.id(), start_node);
+    valhalla::sif::Cost edge_cost =
+        getEdgeCost(*reader, mode_costing, edge.id(), start_node, costing_);
     G.addEdge(start_vertex, end_vertex, edge_cost);
   }
 
