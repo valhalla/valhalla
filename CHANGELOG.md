@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.2
 * **Removed**
 * **Bug Fix**
+   * FIXED: Change unnamed road intersections from being treated as penil point u-turns [#3084](https://github.com/valhalla/valhalla/pull/3084)
    * FIXED: Fix TimeDepReverse termination and path cost calculation (for arrive_by routing) [#2987](https://github.com/valhalla/valhalla/pull/2987)
    * FIXED: Isochrone (::Generalize()) fix to avoid generating self-intersecting polygons [#3026](https://github.com/valhalla/valhalla/pull/3026)
    * FIXED: Handle day_on/day_off/hour_on/hour_off restrictions [#3029](https://github.com/valhalla/valhalla/pull/3029)
