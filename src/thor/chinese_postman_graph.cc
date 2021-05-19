@@ -67,7 +67,7 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   return unbalaced_vertices;
 }
 
-void ChinesePostmanGraph::importEdges(baldr::GraphReader& reader, Api& request) {
+std::vector<CPVertex> ChinesePostmanGraph::computeIdealEulerCycle(CPVertex start_vertex) {
 }
 
 } // namespace thor

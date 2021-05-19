@@ -61,7 +61,7 @@ public:
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, Cost edge_cost);
   std::map<std::string, int> getUnbalancedVertices();
-  void importEdges(baldr::GraphReader& reader, Api& request);
+  std::vector<CPVertex> computeIdealEulerCycle(CPVertex start_vertex);
 };
 
 } // namespace thor
