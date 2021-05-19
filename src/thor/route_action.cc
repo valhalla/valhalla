@@ -366,8 +366,6 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
-  printf("this = 0x%lx\n", this);
-
   // If bidirectional A* disable use of destination-only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   // Other path algorithms can use destination-only edges on the first pass.
