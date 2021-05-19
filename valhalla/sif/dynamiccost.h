@@ -162,6 +162,7 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
+   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -171,6 +172,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
@@ -500,6 +502,7 @@ public:
 
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
+                                   const bool is_dest,
                                    const graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
@@ -518,7 +521,8 @@ public:
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (access_type == baldr::AccessType::kTimedAllowed ||
-          access_type == baldr::AccessType::kTimedDenied) {
+          access_type == baldr::AccessType::kTimedDenied ||
+          access_type == baldr::AccessType::kDestinationAllowed) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
@@ -538,6 +542,8 @@ public:
             // We are in range at the time we are allowed at this edge
             if (access_type == baldr::AccessType::kTimedAllowed)
               return true;
+            else if (access_type == baldr::AccessType::kDestinationAllowed)
+              return allow_conditional_destination_ || is_dest;
             else
               return false;
           }
@@ -678,6 +684,12 @@ public:
    * @param  allow  Flag indicating whether transit connections are allowed.
    */
   virtual void SetAllowTransitConnections(const bool allow);
+
+  /**
+   * Sets the flag indicating whether edges with valid restriction conditional=destination are
+   * allowed.
+   */
+  void set_allow_conditional_destination(const bool allow);
 
   /**
    * Set the current travel mode.
@@ -827,6 +839,8 @@ protected:
   // disable access onto destination only edges for driving routes. Pedestrian
   // and bicycle generally allow access (with small penalties).
   bool allow_destination_only_;
+
+  bool allow_conditional_destination_;
 
   // Travel mode
   TravelMode travel_mode_;

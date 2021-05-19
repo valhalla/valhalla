@@ -377,7 +377,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   uint8_t restriction_idx;
 
   for (auto _ : state) {
-    cost->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);
+    cost->Allowed(edge, false, pred, tile, tgt_edge_id, 0, 0, restriction_idx);
   }
 }
 

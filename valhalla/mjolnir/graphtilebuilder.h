@@ -561,6 +561,12 @@ protected:
   uint32_t lane_connectivity_offset_ = 0;
 };
 
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+using graph_tile_builder_ptr = std::shared_ptr<GraphTileBuilder>;
+#else
+using graph_tile_builder_ptr = boost::intrusive_ptr<GraphTileBuilder>;
+#endif
+
 } // namespace mjolnir
 } // namespace valhalla
 
