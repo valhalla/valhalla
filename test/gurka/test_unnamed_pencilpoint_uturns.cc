@@ -49,7 +49,7 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       int maneuver_index = 1;
 
-      // Verify the left uturn instructions
+      // Verify that it takes the sharp left turn
       gurka::assert::raw::expect_instructions_at_maneuver_index(
           result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
           "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
@@ -62,7 +62,7 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       int maneuver_index = 1;
 
-      // Verify the sharp left instructions
+      // Verify that it takes the sharp left turn
       gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                                 "Make a sharp left.",
                                                                 "Make a sharp left.",
@@ -77,7 +77,7 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       int maneuver_index = 1;
 
-      // Verify the avoiding the pencil point uturn and turn around via 4th instructions
+      // Verify that it takes the sharp left turn
       gurka::assert::raw::expect_instructions_at_maneuver_index(
           result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
           "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
