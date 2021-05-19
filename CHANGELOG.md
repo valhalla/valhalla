@@ -23,6 +23,7 @@
    * CHANGED: Reduce stop impact when driving in parking lots [#3051](https://github.com/valhalla/valhalla/pull/3051)
    * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
    * ADDED: Adds incident-length to metadata proto [#3083](https://github.com/valhalla/valhalla/pull/3083)
+   * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**

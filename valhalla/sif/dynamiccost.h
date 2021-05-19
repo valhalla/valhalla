@@ -1001,7 +1001,7 @@ protected:
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
-    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
