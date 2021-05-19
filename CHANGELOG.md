@@ -8,7 +8,8 @@
    * FIXED: Missing locking in incident handler needed to hang out to scop lock rather than let the temporary disolve [#3046](https://github.com/valhalla/valhalla/pull/3046)
    * FIXED: Continuous lane guidance fix [#3054](https://github.com/valhalla/valhalla/pull/3054)
    * FIXED: Fix reclassification for "shorter" ferries and rail ferries (for Chunnel routing issues) [#3038](https://github.com/valhalla/valhalla/pull/3038)
-
+   * FIXED: Incorrect routing through motor_vehicle:conditional=destination. [#3041](https://github.com/valhalla/valhalla/pull/3041)
+  
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
    * CHANGED: Sync translation files with Transifex command line tool [#3030](https://github.com/valhalla/valhalla/pull/3030)
@@ -71,9 +72,6 @@
    * FIXED: Removed unexpected maneuvers at sharp bends [#2968](https://github.com/valhalla/valhalla/pull/2968)
    * FIXED: Remove large number formatting for non-US countries [#3015](https://github.com/valhalla/valhalla/pull/3015)
    * FIXED: Odin undefined behaviour: handle case when xedgeuse is not initialized [#3020](https://github.com/valhalla/valhalla/pull/3020)
-   * FIXED: Isochrone (::Generalize()) fix to avoid generating self-intersecting polygons [#3026](https://github.com/valhalla/valhalla/pull/3026)
-   * FIXED: Handle day_on/day_off/hour_on/hour_off restrictions [#3029](https://github.com/valhalla/valhalla/pull/3029)
-   * FIXED: Incorrect routing through motor_vehicle:conditional=destination. [#3041](https://github.com/valhalla/valhalla/pull/3041)
 
 * **Enhancement**
    * Pedestrian crossing should be a separate TripLeg_Use [#2950](https://github.com/valhalla/valhalla/pull/2950)
