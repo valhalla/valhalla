@@ -363,12 +363,16 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
                                                                  const Options& options) {
-  // Find the path. If bidirectional A* disable use of destination only edges on the
-  // first pass. If there is a failure, we allow them on the second pass.
+  // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-  if (path_algorithm == &bidir_astar) {
-    cost->set_allow_destination_only(false);
-  }
+
+  printf("this = 0x%lx\n", this);
+
+  // If bidirectional A* disable use of destination-only edges on the
+  // first pass. If there is a failure, we allow them on the second pass.
+  // Other path algorithms can use destination-only edges on the first pass.
+  cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
+
   cost->set_pass(0);
   auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
 
