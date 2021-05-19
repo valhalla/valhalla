@@ -51,10 +51,8 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       // Verify the left uturn instructions
       gurka::assert::raw::expect_instructions_at_maneuver_index(
-          result, maneuver_index, "Make a sharp left.",
-          "Make a sharp left.",
-          "Make a sharp left. Then You will arrive at your destination.",
-          "Continue for 50 meters.");
+          result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
+          "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
     } else if (c == "pedestrian") {
 
       // Verify maneuver types
@@ -65,12 +63,11 @@ TEST(Standalone, UnnamedPencilPointUturns) {
       int maneuver_index = 1;
 
       // Verify the sharp left instructions
-      gurka::assert::raw::
-      expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Make a sharp left.",
-                                            "Make a sharp left.",
-                                            "Make a sharp left.",
-                                            "Continue for 50 meters.");
+      gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                                "Make a sharp left.",
+                                                                "Make a sharp left.",
+                                                                "Make a sharp left.",
+                                                                "Continue for 50 meters.");
     } else {
 
       // Verify maneuver types
@@ -82,11 +79,8 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       // Verify the avoiding the pencil point uturn and turn around via 4th instructions
       gurka::assert::raw::expect_instructions_at_maneuver_index(
-          result, maneuver_index,
-          "Make a sharp left.",
-          "Make a sharp left.",
-          "Make a sharp left. Then You will arrive at your destination.",
-          "Continue for 50 meters.");
+          result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
+          "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
     }
   }
 }
