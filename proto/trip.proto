@@ -265,6 +265,7 @@ message TripLeg {
     optional Traversability walkability = 6;
     optional Use use = 7;
     optional RoadClass road_class = 8;
+    optional uint32 lane_count = 9;
   }
 
   message Cost {
