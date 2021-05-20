@@ -347,8 +347,10 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // find the proper connection).
   for (auto& edge1 : origin.path_edges()) {
     for (auto& edge2 : destination.path_edges()) {
-      if (edge1.graph_id() == edge2.graph_id() ||
-          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
+      bool same_graph_id = edge1.graph_id() == edge2.graph_id();
+      bool are_connected =
+          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
+      if (same_graph_id || are_connected) {
         return &timedep_forward;
       }
     }

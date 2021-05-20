@@ -373,6 +373,45 @@ TEST_F(AlgorithmTest, TDForward) {
   }
 }
 
+// ways are laid out such that the first leg will be bidir A* and the second
+// will be unidir A*. Also, (tries to) test that unidir A* will allow destination
+// only on first-pass (no real way I can think to prove this... but at least we
+// prove dest-only is working).
+TEST(AlgorithmTest, TestAlgoSwapAndDestOnly) {
+  const std::string ascii_map = R"(
+
+      Z---------Q---------W
+       \         \         \
+        \         \         C
+         \         \         \
+          A         \         \
+           \         \         B
+            \         \         \
+             \         \         \
+              Y---------P---------X
+  )";
+
+  const gurka::ways ways = {
+      {"WX", {{"highway", "residential"}, {"oneway", "yes"}, {"access", "destination"}}},
+      {"PQ", {{"highway", "residential"}}},
+      {"XPYZQW", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/dest_only");
+
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "B", "C"}, "auto");
+
+  ASSERT_EQ(api.trip().routes(0).legs_size(), 2);
+
+  EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+  EXPECT_EQ(api.trip().routes(0).legs(1).algorithms(0), "time_dependent_forward_a*");
+
+  EXPECT_EQ(api.trip().routes(0).legs(0).node(0).edge().destination_only(), false);
+  EXPECT_EQ(api.trip().routes(0).legs(1).node(0).edge().destination_only(), true);
+}
+
 // this happens with arrive_by routes trivial or not
 TEST_F(AlgorithmTest, TDReverse) {
   {
