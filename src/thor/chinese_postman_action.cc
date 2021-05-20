@@ -61,6 +61,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
   if (G.getUnbalancedVertices().size() == 0) {
+    const CPVertex c = CPVertex(GraphId(1));
+    std::vector<CPVertex> cpVerticesOrder = G.computeIdealEulerCycle(c);
     std::cout << "Ideal graph" << std::endl;
   } else {
     std::cout << "Non Ideal graph" << std::endl;

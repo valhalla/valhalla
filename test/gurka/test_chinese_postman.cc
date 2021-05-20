@@ -148,7 +148,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   };
 
   std::vector<ring_bg_t> avoid_rings;
-  avoid_rings.push_back(avoid_ring);
+  // avoid_rings.push_back(avoid_ring);
 
   // build request manually for now
   auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["A"]};

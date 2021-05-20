@@ -67,7 +67,34 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   return unbalaced_vertices;
 }
 
-std::vector<CPVertex> ChinesePostmanGraph::computeIdealEulerCycle(CPVertex start_vertex) {
+std::vector<CPVertex> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex) {
+  int edgeVisited = 0;
+  std::map<int, std::vector<int>> adjacency_list;
+
+  boost::graph_traits<CPGraph>::edge_iterator ei, ei_end;
+  for (boost::tie(ei, ei_end) = boost::edges(this->G); ei != ei_end; ++ei) {
+    if (!adjacency_list.count(boost::source(*ei, this->G))) {
+      std::vector<int> target_vertices;
+      adjacency_list[boost::source(*ei, this->G)] = target_vertices;
+    }
+    adjacency_list[boost::source(*ei, this->G)].push_back(boost::target(*ei, this->G));
+    std::cout << "(" << boost::source(*ei, this->G) << "," << boost::target(*ei, this->G) << ") "
+              << std::endl;
+  }
+  // print adjacency_list
+  for (const auto& x : adjacency_list) {
+    std::cout << x.first << ": ";
+    for (const auto& y : x.second) {
+      std::cout << y << ", ";
+    }
+    std::cout << std::endl;
+  }
+
+  while (edgeVisited < this->numEdges()) {
+    edgeVisited++;
+  }
+  std::vector<CPVertex> v;
+  return v;
 }
 
 } // namespace thor

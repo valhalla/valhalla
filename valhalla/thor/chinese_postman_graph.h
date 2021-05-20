@@ -61,7 +61,7 @@ public:
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, Cost edge_cost);
   std::map<std::string, int> getUnbalancedVertices();
-  std::vector<CPVertex> computeIdealEulerCycle(CPVertex start_vertex);
+  std::vector<CPVertex> computeIdealEulerCycle(const CPVertex start_vertex);
 };
 
 } // namespace thor
