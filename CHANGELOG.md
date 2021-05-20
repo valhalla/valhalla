@@ -8,6 +8,7 @@
    * FIXED: Missing locking in incident handler needed to hang out to scop lock rather than let the temporary disolve [#3046](https://github.com/valhalla/valhalla/pull/3046)
    * FIXED: Continuous lane guidance fix [#3054](https://github.com/valhalla/valhalla/pull/3054)
    * FIXED: Fix reclassification for "shorter" ferries and rail ferries (for Chunnel routing issues) [#3038](https://github.com/valhalla/valhalla/pull/3038)
+   * FIXED: Highway/ramp lane bifurcation [#3088](https://github.com/valhalla/valhalla/pull/3088)
 
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
