@@ -51,6 +51,13 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
                    sequence<Edge>& edges,
                    sequence<OSMWayNode>& way_nodes,
                    std::vector<uint32_t>& linkedgeindexes) {
+
+  {
+    auto out = linkedgeindexes.front();
+    Edge edge = edges[out];
+    OSMWay way = ways[edge.wayindex_];
+    way.destination_ref_index();
+  }
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
@@ -76,6 +83,7 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
     }
 
     // Can not be bidirectional
+    /// TODO: check this check? should i save it?
     OSMWay way = *ways[edge.wayindex_];
     if (way.auto_forward() && way.auto_backward()) {
       return false;
@@ -179,6 +187,18 @@ struct WayTags {
       road_tags.refs = GetTagTokens(osmdata.name_offset_map.name(way.ref_index()));
 
     return road_tags;
+  }
+};
+
+struct Name {
+  std::vector<std::string> values;
+
+  bool Empty() const {
+    return values.empty();
+  }
+
+  bool operator==(const Name& rhs) const {
+    return !Empty() && !rhs.Empty() && values[0] == rhs.values[0];
   }
 };
 
@@ -447,6 +467,56 @@ struct LinkGraphBuilder {
  * root node classification and current leaf node classification. After reclassification is done we
  * update the parent node classification and continue.
  */
+
+uint64_t PrintWay(Data& data, const Edge& edge) {
+  OSMWay way = data.ways[edge.wayindex_];
+  return way.way_id();
+}
+
+uint64_t PrintWay(Data& data, uint32_t idx) {
+  return PrintWay(data, *data.edges[idx]);
+}
+int cnt = 0;
+bool dfs(size_t edge_idx, const Edge& edge, Data& data, std::unordered_set<size_t>& nodes_in_progress, Name& to_name) {
+  cnt++;
+  std::cout << "-- Dfs " << edge.sourcenode_ << ' ' << cnt << std::endl;
+  auto GetName = [&](const Edge& edge) {
+    OSMWay way = data.ways[edge.wayindex_];
+//    std::cout << "Way " << way.way_id() << std::endl;
+    return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
+  };
+
+  auto Print = [](const midgard::PointLL& pos) {
+//    std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
+//              << std::endl;
+  };
+  auto bundle = collect_node_edges(data.nodes[edge.targetnode_], data.nodes, data.edges);
+//  nodes_in_progress.insert(edge.targetnode_);
+  nodes_in_progress.insert(edge_idx);
+
+  bool res = false;
+  for (const auto& i : bundle.node_edges) {
+    if (!i.first.attributes.driveableforward)
+      continue;
+    if (nodes_in_progress.count(i.second))
+      continue;
+    if (GetName(i.first) == to_name) {
+      res = true;
+      break;
+    }
+    if (GetName(i.first) == GetName(edge)) {
+      if (dfs(i.second, i.first, data, nodes_in_progress, to_name)) {
+        res = true;
+        break;
+      }
+    }
+  }
+
+  --cnt;
+//  nodes_in_progress.erase(edge.targetnode_);
+  return res;
+}
+
 std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& link_graph,
                                                   uint32_t exit_classification,
                                                   Data& data,
@@ -463,6 +533,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
   // Iterate through leaf nodes and reclassify links
   while (!leaves.empty()) {
+    std::cout << "Leaves size " << leaves.size() << std::endl;
     const auto leaf_idx = leaves.front();
     leaves.pop();
     const auto& leaf = link_graph[leaf_idx];
@@ -545,7 +616,45 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       bool turn_channel = false;
       if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
-        turn_channel = IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges);
+
+        auto GetName = [&](const Edge& edge) {
+          OSMWay way = data.ways[edge.wayindex_];
+//          std::cout << "Way " << way.way_id() << std::endl;
+          return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
+        };
+
+        auto Print = [](const midgard::PointLL& pos) {
+//          std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
+//                    << std::endl;
+        };
+        auto Print2 = [&](const Edge& edge) {
+          Print((*data.nodes[edge.targetnode_]).node.latlng());
+        };
+        Name to_name;
+        for (auto edge_idx : leaf.bundle.node_edges) {
+          if (edge_idx.second == link_edges.front())
+            continue;
+          Edge edge = edge_idx.first;
+          if (!edge.attributes.driveableforward)
+            continue;
+          to_name = GetName(edge);
+          /// TODO: assert size == 1
+          break;
+        }
+
+        std::unordered_set<size_t> nodes_in_progress;
+        auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_], data.nodes, data.edges);
+        for (auto to : bundle.node_edges) {
+          if (to.second == link_edges.back())
+            continue;
+          if (!to.first.attributes.driveableforward)
+            continue;
+          bool res = dfs(to.second, to.first, data, nodes_in_progress, to_name);
+          if (res) {
+            turn_channel = true;
+            break;
+          }
+        }
       }
 
       // Reclassify link edges to the new classification.
