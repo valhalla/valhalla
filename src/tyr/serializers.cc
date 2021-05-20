@@ -313,6 +313,11 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.String(incident_metadata.clear_lanes());
   }
 
+  if (incident_metadata.length() > 0) {
+    writer.Key(key_prefix + "length");
+    writer.Int(incident_metadata.length());
+  }
+
   if (incident_metadata.road_closed()) {
     writer.Key(key_prefix + "closed");
     writer.Bool(incident_metadata.road_closed());

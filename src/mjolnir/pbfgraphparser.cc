@@ -947,6 +947,8 @@ public:
         n.set_type(NodeType::kSumpBuster);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (tag.first == "tagged_access") {
+        n.set_tagged_access(std::stoi(tag.second));
       }
 
       /* TODO: payment type.
@@ -1137,9 +1139,10 @@ public:
         AccessType type = AccessType::kTimedDenied;
         if (tmp == "no") {
           type = AccessType::kTimedDenied;
-        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated" ||
-                   tmp == "destination") {
+        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated") {
           type = AccessType::kTimedAllowed;
+        } else if (tmp == "destination") {
+          type = AccessType::kDestinationAllowed;
         }
 
         if (tokens.size() == 2 && tmp.size()) {

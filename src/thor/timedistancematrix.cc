@@ -94,8 +94,9 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = -1;
+    const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
+        !costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }

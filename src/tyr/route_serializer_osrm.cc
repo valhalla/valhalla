@@ -1761,6 +1761,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
     meta.set_num_lanes_blocked(2);
+    meta.set_length(1337);
     meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
@@ -1796,6 +1797,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "lanes_blocked": [],
           "num_lanes_blocked": 2,
           "clear_lanes": "many lanes clear",
+          "length": 1337,
           "closed": true,
           "congestion": {
             "value": 33
