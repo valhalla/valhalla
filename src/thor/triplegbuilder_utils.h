@@ -416,6 +416,11 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
     itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
   }
+
+  // Set the lane count for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeLaneCount)) {
+    itersecting_edge->set_lane_count(intersecting_de->lanecount());
+  }
 }
 
 /**
