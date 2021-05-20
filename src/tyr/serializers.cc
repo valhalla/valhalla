@@ -92,6 +92,7 @@ std::string serializeStatus(const Api& request) {
   status_doc.SetObject();
   rapidjson::Document::AllocatorType& alloc = status_doc.GetAllocator();
 
+  // set the easy stuff
   status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
   status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()), alloc);
   status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
@@ -101,12 +102,19 @@ std::string serializeStatus(const Api& request) {
   status_doc.AddMember("has_live_traffic",
                        rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
 
+  // add the bbox document from the connectivity_map
   rapidjson::Document bbox_doc;
   bbox_doc.Parse(request.status().bbox());
   status_doc.AddMember("bbox", bbox_doc, alloc);
 
+  // add the entire config and remove sensible paths
   rapidjson::Document config_doc;
   config_doc.Parse(request.status().config());
+  for (const auto& path :
+       {"/mjolnir/tile_dir", "/mjolnir/tile_extract", "/mjolnir/admin", "/mjolnir/timezone",
+        "/mjolnir/transit_dir", "/additional_data/elevation"}) {
+    config_doc.RemoveMember(path);
+  }
   status_doc.AddMember("config", config_doc, alloc);
 
   return rapidjson::to_string(status_doc);
