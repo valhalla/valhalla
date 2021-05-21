@@ -125,7 +125,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
     signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].route_num_type(),
-                                signs_[i].text_offset());
+                                signs_[i].tagged(), signs_[i].text_offset());
   }
 
   // Create turn lane builders
@@ -198,7 +198,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
       textlistbuilder_.push_back(unused_string);
       text_offset_map_.emplace(unused_string, text_list_offset_);
       text_list_offset_ += unused_string.length() + 1;
-      LOG_WARN("Unused text string: " + unused_string);
+      // LOG_WARN("Unused text string: " + unused_string);
     }
     std::string str(textlist_ + ni.name_offset_);
     textlistbuilder_.push_back(str);
@@ -495,13 +495,42 @@ void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction
 }
 
 // Add signs
+void GraphTileBuilder::AddSigns(const uint32_t idx,
+                                const std::vector<SignInfo>& signs,
+                                const std::vector<std::string>& pronunciations) {
+  // Iterate through the list of sign info (with sign text) and add sign
+  // text to the text list. Skip signs with no text.
+  for (size_t i = 0; i < signs.size(); ++i) {
+    auto sign = signs[i];
+    if (!(sign.text().empty())) {
+      uint32_t offset = AddName(sign.text());
+      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
+      if (sign.has_phoneme()) {
+        uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
+        for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
+          std::string text = std::to_string(i) + '\0' + pronunciations[x];
+          uint32_t offset = AddName(std::to_string(text.size()) + '\0' + text);
+          signs_builder_.emplace_back(idx, Sign::Type::kVerbal, false, true, offset);
+        }
+      }
+    }
+  }
+}
+
+// Add signs
 void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>& signs) {
   // Iterate through the list of sign info (with sign text) and add sign
   // text to the text list. Skip signs with no text.
   for (const auto& sign : signs) {
     if (!(sign.text().empty())) {
-      uint32_t offset = AddName(sign.text());
-      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), offset);
+      uint32_t offset = 0;
+      if (sign.is_tagged() && sign.type() == Sign::Type::kVerbal) {
+        std::string text = sign.text();
+        offset = AddName(std::to_string(text.size()) + '\0' + text);
+      } else
+        offset = AddName(sign.text());
+
+      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
     }
   }
 }
@@ -547,6 +576,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -580,6 +610,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_route_num_ = 0;
+        ni.tagged_ = 0;
         if ((types & (1ULL << location))) {
           ni.is_route_num_ = 1; // set the ref bit.
         }
@@ -605,6 +636,25 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         ++name_count;
       }
     }
+
+    if (pronunciations.size()) {
+      if (name_count != kMaxNamesPerEdge) {
+        std::stringstream ss;
+        for (const auto& pronunciation : pronunciations) {
+          ss << '\0' << pronunciation;
+        }
+
+        // Add pronunciations and add its offset to edge info's list.
+        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) +
+                            std::to_string(ss.str().size()) + ss.str())};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      } else
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+    }
+
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -635,6 +685,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
                                                                       const uint16_t,
                                                                       bool&,
                                                                       bool);
@@ -646,6 +697,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const uint32_t,
                                                                     const uint32_t,
                                                                     const std::list<PointLL>&,
+                                                                    const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -663,6 +715,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -696,6 +749,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_route_num_ = 0;
+        ni.tagged_ = 0;
         if ((types & (1ULL << location))) {
           ni.is_route_num_ = 1; // set the ref bit.
         }
@@ -720,6 +774,24 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+    }
+
+    if (pronunciations.size()) {
+      if (name_count != kMaxNamesPerEdge) {
+        std::stringstream ss;
+        for (const auto& pronunciation : pronunciations) {
+          ss << '\0' << pronunciation;
+        }
+
+        // Add pronunciations and add its offset to edge info's list.
+        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) +
+                            std::to_string(ss.str().size()) + ss.str())};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      } else
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
     }
 
     edgeinfo.set_name_info_list(name_info_list);
