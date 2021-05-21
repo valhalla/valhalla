@@ -52,22 +52,16 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
                    sequence<OSMWayNode>& way_nodes,
                    std::vector<uint32_t>& linkedgeindexes) {
 
-  {
-    auto out = linkedgeindexes.front();
-    Edge edge = edges[out];
-    OSMWay way = ways[edge.wayindex_];
-    way.destination_ref_index();
-  }
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::list<PointLL> shape;
-    for (size_t i = 0; i < count; ++i) {
-      auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.latlng());
-    }
-    return shape;
-  };
+  //  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+  //    std::list<PointLL> shape;
+  //    for (size_t i = 0; i < count; ++i) {
+  //      auto node = (*way_nodes[idx++]).node;
+  //      shape.emplace_back(node.latlng());
+  //    }
+  //    return shape;
+  //  };
 
   // Iterate through the link edges. Check if total length exceeds the
   // maximum turn channel length or an exit sign exists.
@@ -76,14 +70,14 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
     // Get the shape and length of the edge
     sequence<Edge>::iterator element = edges[idx];
     auto edge = *element;
-    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-    total_length += valhalla::midgard::length(shape);
-    if (total_length > kMaxTurnChannelLength) {
-      return false;
-    }
-
-    // Can not be bidirectional
-    /// TODO: check this check? should i save it?
+    //    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+    //    total_length += valhalla::midgard::length(shape);
+    //    if (total_length > kMaxTurnChannelLength) {
+    //      return false;
+    //    }
+    //
+    //    // Can not be bidirectional
+    //    /// TODO: check this check? should i save it?
     OSMWay way = *ways[edge.wayindex_];
     if (way.auto_forward() && way.auto_backward()) {
       return false;
@@ -476,44 +470,70 @@ uint64_t PrintWay(Data& data, const Edge& edge) {
 uint64_t PrintWay(Data& data, uint32_t idx) {
   return PrintWay(data, *data.edges[idx]);
 }
-int cnt = 0;
-bool dfs(size_t edge_idx, const Edge& edge, Data& data, std::unordered_set<size_t>& nodes_in_progress, Name& to_name) {
-  cnt++;
-  std::cout << "-- Dfs " << edge.sourcenode_ << ' ' << cnt << std::endl;
+
+void PrintEdge(Data& data, const Edge& edge) {
+  auto from = (*data.nodes[edge.sourcenode_]).node.latlng();
+  auto to = (*data.nodes[edge.targetnode_]).node.latlng();
+
+  std::cout << "[" << std::fixed << std::setprecision(7) << from.lng() << "," << from.lat() << "],";
+  std::cout << "[" << std::fixed << std::setprecision(7) << to.lng() << "," << to.lat() << "]";
+  std::cout << std::endl;
+}
+
+bool dfs(size_t edge_idx,
+         uint32_t node,
+         const Name& parent_name,
+         Data& data,
+         std::unordered_set<size_t>& nodes_in_progress,
+         Name& to_name) {
   auto GetName = [&](const Edge& edge) {
     OSMWay way = data.ways[edge.wayindex_];
-//    std::cout << "Way " << way.way_id() << std::endl;
+    //    std::cout << "Way " << way.way_id() << std::endl;
     return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
   };
 
   auto Print = [](const midgard::PointLL& pos) {
-//    std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
-//              << std::endl;
+    std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat() << std::endl;
   };
-  auto bundle = collect_node_edges(data.nodes[edge.targetnode_], data.nodes, data.edges);
-//  nodes_in_progress.insert(edge.targetnode_);
+  auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
+  //  nodes_in_progress.insert(edge.targetnode_);
   nodes_in_progress.insert(edge_idx);
+  //  Print((*data.nodes[edge.targetnode_]).node.latlng());
 
   bool res = false;
   for (const auto& i : bundle.node_edges) {
-    if (!i.first.attributes.driveableforward)
+    if (i.first.attributes.link) {
+      std::cout << "Skipping link\n";
       continue;
+    }
+    //    std::cout << "Candidate\n";
+    //    PrintEdge(data, i.first);
+    //    Print((*data.nodes[i.first.targetnode_]).node.latlng());
     if (nodes_in_progress.count(i.second))
       continue;
     if (GetName(i.first) == to_name) {
       res = true;
       break;
     }
-    if (GetName(i.first) == GetName(edge)) {
-      if (dfs(i.second, i.first, data, nodes_in_progress, to_name)) {
-        res = true;
-        break;
+    if (i.first.attributes.driveableforward) {
+      if (GetName(i.first) == parent_name) {
+        if (dfs(i.second, i.first.targetnode_, parent_name, data, nodes_in_progress, to_name)) {
+          res = true;
+          break;
+        }
+      }
+    }
+    if (i.first.attributes.driveablereverse) {
+      if (GetName(i.first) == parent_name) {
+        if (dfs(i.second, i.first.sourcenode_, parent_name, data, nodes_in_progress, to_name)) {
+          res = true;
+          break;
+        }
       }
     }
   }
 
-  --cnt;
-//  nodes_in_progress.erase(edge.targetnode_);
+  //  nodes_in_progress.erase(edge.targetnode_);
   return res;
 }
 
@@ -533,7 +553,6 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
   // Iterate through leaf nodes and reclassify links
   while (!leaves.empty()) {
-    std::cout << "Leaves size " << leaves.size() << std::endl;
     const auto leaf_idx = leaves.front();
     leaves.pop();
     const auto& leaf = link_graph[leaf_idx];
@@ -616,44 +635,70 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       bool turn_channel = false;
       if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
+        if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
 
-        auto GetName = [&](const Edge& edge) {
-          OSMWay way = data.ways[edge.wayindex_];
-//          std::cout << "Way " << way.way_id() << std::endl;
-          return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
-        };
+          auto GetName = [&](const Edge& edge) {
+            OSMWay way = data.ways[edge.wayindex_];
+            //          std::cout << "Way " << way.way_id() << std::endl;
+            return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
+          };
 
-        auto Print = [](const midgard::PointLL& pos) {
-//          std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
-//                    << std::endl;
-        };
-        auto Print2 = [&](const Edge& edge) {
-          Print((*data.nodes[edge.targetnode_]).node.latlng());
-        };
-        Name to_name;
-        for (auto edge_idx : leaf.bundle.node_edges) {
-          if (edge_idx.second == link_edges.front())
-            continue;
-          Edge edge = edge_idx.first;
-          if (!edge.attributes.driveableforward)
-            continue;
-          to_name = GetName(edge);
-          /// TODO: assert size == 1
-          break;
-        }
-
-        std::unordered_set<size_t> nodes_in_progress;
-        auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_], data.nodes, data.edges);
-        for (auto to : bundle.node_edges) {
-          if (to.second == link_edges.back())
-            continue;
-          if (!to.first.attributes.driveableforward)
-            continue;
-          bool res = dfs(to.second, to.first, data, nodes_in_progress, to_name);
-          if (res) {
-            turn_channel = true;
+          auto Print = [](const midgard::PointLL& pos) {
+            std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
+                      << std::endl;
+          };
+          auto Print2 = [&](const Edge& edge) {
+            Print((*data.nodes[edge.targetnode_]).node.latlng());
+          };
+          Name to_name;
+          for (auto edge_idx : leaf.bundle.node_edges) {
+            if (edge_idx.second == link_edges.front())
+              continue;
+            Edge edge = edge_idx.first;
+            if (!edge.attributes.driveableforward || edge.attributes.link)
+              continue;
+            to_name = GetName(edge);
+            /// TODO: assert size == 1
             break;
           }
+          //        std::cout << "\nPrint link edges\n";
+          for (auto idx : link_edges) {
+            //          PrintEdge(data, data.edges[idx]);
+          }
+
+          auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
+                                           data.nodes, data.edges);
+          for (auto to : bundle.node_edges) {
+            if (to.first.attributes.link) {
+              std::cout << "Skipping link\n";
+              continue;
+            }
+            //          std::cout << "From Edge\n";
+            //          PrintEdge(data, to.first);
+            uint64_t way_id = (*data.ways[to.first.wayindex_]).way_id();
+            if (to.second == link_edges.back())
+              continue;
+            if (to.first.attributes.driveableforward) {
+              std::unordered_set<size_t> nodes_in_progress;
+              bool res = dfs(to.second, to.first.targetnode_, GetName(to.first), data,
+                             nodes_in_progress, to_name);
+              if (res) {
+                turn_channel = true;
+                break;
+              }
+            }
+            if (to.first.attributes.driveablereverse) {
+              std::unordered_set<size_t> nodes_in_progress;
+              bool res = dfs(to.second, to.first.sourcenode_, GetName(to.first), data,
+                             nodes_in_progress, to_name);
+              if (res) {
+                turn_channel = true;
+                break;
+              }
+            }
+          }
+        } else {
+          std::cout << "Skipping as bidir\n";
         }
       }
 
