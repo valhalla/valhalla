@@ -25,7 +25,8 @@ public:
     kGuideToward,
     kJunctionName,
     kGuidanceViewJunction,
-    kGuidanceViewSignboard
+    kGuidanceViewSignboard,
+    kVerbal = 255
   };
 
   /**
@@ -36,8 +37,12 @@ public:
    * view type.
    * @param  text_offset  Offset to text in the names/text table.
    */
-  Sign(const uint32_t idx, const Sign::Type& type, const bool rn_type, const uint32_t text_offset)
-      : index_(idx), type_(static_cast<uint32_t>(type)), route_num_type_(rn_type), tagged_(0),
+  Sign(const uint32_t idx,
+       const Sign::Type& type,
+       const bool rn_type,
+       const bool tagged,
+       const uint32_t text_offset)
+      : index_(idx), type_(static_cast<uint32_t>(type)), route_num_type_(rn_type), tagged_(tagged),
         text_offset_(text_offset) {
   }
 
@@ -77,7 +82,7 @@ public:
   }
 
   /**
-   * Is the sign text tagged (Future use for special tagging such as language code)
+   * Is the sign text tagged
    * @return Returns true if the sign text is tagged.
    */
   bool tagged() const {
@@ -106,9 +111,7 @@ protected:
   uint32_t index_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_ : 8;
   uint32_t route_num_type_ : 1;
-  uint32_t tagged_ : 1; // For future use to support "tagged" text strings.
-                        // Similar to EdgeInfo, for compatibility any tagged strings
-                        // will be skipped until code is available to properly use them.
+  uint32_t tagged_ : 1;
 
   uint32_t text_offset_;
 };
