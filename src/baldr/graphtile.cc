@@ -657,9 +657,15 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
 
 // Convenience method to get the names for an edge given the offset to the
 // edge info
-std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset,
-                                             bool only_tagged_names) const {
-  return edgeinfo(edgeinfo_offset).GetNames(only_tagged_names);
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset).GetNames();
+}
+
+// Convenience method to get the tagged names for an edge given the offset to the
+// edge info
+std::vector<std::string> GraphTile::GetTaggedNames(const uint32_t edgeinfo_offset,
+                                                   bool only_pronunciations) const {
+  return edgeinfo(edgeinfo_offset).GetTaggedNames(only_pronunciations);
 }
 
 // Convenience method to get the types for the names given the offset to the
@@ -729,8 +735,97 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   // Add signs
   for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
-      // Skip tagged text strings (Future code is needed to handle tagged strings)
-      if (signs_[found].tagged()) {
+
+      std::string text = (textlist_ + signs_[found].text_offset());
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kVerbal) {
+        size_t s = text.size() + 1;
+        text = std::string(textlist_ + signs_[found].text_offset(), std::stoi(text) + s);
+        text = text.substr(s);
+      }
+
+      // only add named signs when asking for signs at the node and
+      // only add edge signs when asking for signs at the edges.
+      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
+          (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
+        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+                           signs_[found].tagged(), false, 0, 0, text);
+    } else {
+      throw std::runtime_error("GetSigns: offset exceeds size of text list");
+    }
+  }
+  if (signs.size() == 0) {
+    LOG_ERROR("No signs found for idx = " + std::to_string(idx));
+  }
+  return signs;
+}
+
+// Convenience method to get the signs for an edge given the
+// directed edge index.
+std::vector<SignInfo> GraphTile::GetSigns(
+    const uint32_t idx,
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+    bool signs_on_node) const {
+  uint32_t count = header_->signcount();
+  std::vector<SignInfo> signs;
+  if (count == 0) {
+    return signs;
+  }
+  key_type_value_pairs.reserve(count);
+
+  // Signs are sorted by edge index.
+  // Binary search to find a sign with matching edge index.
+  int32_t low = 0;
+  int32_t high = count - 1;
+  int32_t mid;
+  int32_t found = count;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    const auto& sign = signs_[mid];
+    // matching edge index
+    if (idx == sign.index()) {
+      found = mid;
+      high = mid - 1;
+    } // need a smaller index
+    else if (idx < sign.index()) {
+      high = mid - 1;
+    } // need a bigger index
+    else {
+      low = mid + 1;
+    }
+  }
+
+  // Add signs
+  for (; found < count && signs_[found].index() == idx; ++found) {
+    if (signs_[found].text_offset() < textlist_size_) {
+
+      std::string text = (textlist_ + signs_[found].text_offset());
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kVerbal) {
+        size_t s = text.size() + 1;
+        text = std::string(textlist_ + signs_[found].text_offset(), std::stoi(text) + s);
+        text = text.substr(s);
+
+        text += '\0';
+        const char* p = text.c_str();
+        // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+        // key  type value
+        uint8_t index = 0;
+        std::string key, type, value;
+        while (*p) {
+          if (index == 0) { // key
+            key = std::string(p);
+            p += key.size() + 1;
+            index++;
+          } else if (index == 1) { // type
+            type = std::string(p);
+            p += type.size() + 1;
+            index++;
+          } else { // value
+            index = 0;
+            value = std::string(p);
+            p += value.size() + 1;
+            key_type_value_pairs[std::stoi(key)] = {std::stoi(type), value};
+          }
+        }
         continue;
       }
 
@@ -739,7 +834,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
       if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
-                           (textlist_ + signs_[found].text_offset()));
+                           signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }

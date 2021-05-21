@@ -356,13 +356,22 @@ public:
   /**
    * Convenience method to get the names for an edge given the offset to the
    * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.   *
+   * @return  Returns a list (vector) of names.
+   */
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+
+  /**
+   * Convenience method to get the tagged names for an edge given the offset to the
+   * edge information.
    * @param  edgeinfo_offset  Offset to the edge info.
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   * @param  only_pronunciations    Bool indicating whether or not to return only the pronunciation
+   * names
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset,
-                                    bool only_tagged_names = false) const;
+  std::vector<std::string> GetTaggedNames(const uint32_t edgeinfo_offset,
+                                          bool only_pronunciations = false) const;
 
   /**
    * Convenience method to get the types for the names given the offset to the
@@ -403,6 +412,19 @@ public:
    * @return  Returns a list (vector) of signs.
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+
+  /**
+   * Convenience method to get the signs for an edge given the directed
+   * edge index.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<SignInfo>
+  GetSigns(const uint32_t idx,
+           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+           bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
