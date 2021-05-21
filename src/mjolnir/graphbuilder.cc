@@ -976,7 +976,7 @@ void BuildTileSet(const std::string& ways_file,
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
-                                       node.traffic_signal());
+                                       node.traffic_signal(), node.tagged_access());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
         graphtile.nodes().back().set_edge_count(bundle.node_edges.size());
@@ -1183,7 +1183,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified
   DataQuality stats;
   if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file,
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
                     pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   } else {
     LOG_WARN("Not reclassifying link graph edges");

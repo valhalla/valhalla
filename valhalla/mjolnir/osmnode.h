@@ -44,7 +44,8 @@ struct OSMNode {
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
-  uint32_t spare1_ : 5;
+  uint32_t tagged_access_ : 1; // Was access originally tagged?
+  uint32_t spare1_ : 4;
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
@@ -454,6 +455,24 @@ struct OSMNode {
    */
   bool has_state_iso_index() const {
     return state_iso_index_ > 0;
+  }
+
+  /**
+   * Set the tagged_access flag.
+   * @param  tagged_access   Was the access originally tagged? True if
+   *         any tags like "access", "auto", "truck", "foot", etc were specified.
+   */
+  void set_tagged_access(const bool tagged_access) {
+    tagged_access_ = tagged_access;
+  }
+
+  /**
+   * Get the tagged_access flag
+   * @return  Returns true if any tags like "access", "auto", "truck", "foot", etc
+   *          were specified. False if not.
+   */
+  bool tagged_access() const {
+    return tagged_access_;
   }
 };
 

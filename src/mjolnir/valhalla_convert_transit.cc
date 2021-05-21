@@ -560,7 +560,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Set the station lat,lon using the tile base LL
       PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-      NodeInfo station_node(base_ll, station_ll, n_access, NodeType::kTransitStation, false);
+      NodeInfo station_node(base_ll, station_ll, n_access, NodeType::kTransitStation, false, true);
       station_node.set_stop_index(station_pbf_id.id());
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
@@ -626,7 +626,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Set the egress lat,lon using the tile base LL
         PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-        NodeInfo egress_node(base_ll, egress_ll, n_access, NodeType::kTransitEgress, false);
+        NodeInfo egress_node(base_ll, egress_ll, n_access, NodeType::kTransitEgress, false, true);
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
@@ -805,7 +805,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // Set the platform lat,lon using the tile base LL
     PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
-    NodeInfo platform_node(base_ll, platform_ll, n_access, NodeType::kMultiUseTransitPlatform, false);
+    NodeInfo platform_node(base_ll, platform_ll, n_access, NodeType::kMultiUseTransitPlatform, false,
+                           true);
     platform_node.set_mode_change(true);
     platform_node.set_stop_index(platform_index);
     platform_node.set_timezone(timezone);

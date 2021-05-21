@@ -555,6 +555,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
   }
 }
 
+#ifdef DATA_TOOLS
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb) {
   // loop over all tiles in the tileset
@@ -599,5 +600,6 @@ void customize_edges(const boost::property_tree::ptree& config, const EdgesCusto
     tile.Update(nodes, edges);
   }
 }
+#endif
 
 } // namespace test

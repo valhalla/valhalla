@@ -165,6 +165,10 @@ public:
    */
   midgard::PointLL base_ll() const {
     GraphId id(graphid_);
+
+    if (id.level() == TileHierarchy::GetTransitLevel().level) {
+      return TileHierarchy::GetTransitLevel().tiles.Base(id.tileid());
+    }
     return TileHierarchy::levels()[id.level()].tiles.Base(id.tileid());
     // return midgard::PointLL(base_ll_.first, base_ll_.second);
   }

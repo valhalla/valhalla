@@ -146,7 +146,7 @@ protected:
       }
       // actually make a spot in the cache synchronously
       try {
-        std::unique_lock<std::mutex>(state->mutex);
+        std::unique_lock<std::mutex> lock(state->mutex);
         found = state->cache.insert({tile_id, {}}).first;
       } // if anything went wrong we have to catch it so that the mutex is unlocked
       catch (...) {

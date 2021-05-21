@@ -553,7 +553,8 @@ enum class AccessType : uint8_t {
   kMaxWeight = 4,
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
-  kTimedDenied = 7
+  kTimedDenied = 7,
+  kDestinationAllowed = 8,
 };
 
 // Minimum meters offset from start/end of shape for finding heading

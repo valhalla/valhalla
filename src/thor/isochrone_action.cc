@@ -44,8 +44,10 @@ std::string thor_worker_t::isochrones(Api& request) {
       grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
 
   // make the final json
-  return tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
-                                  options.show_locations());
+  std::string ret = tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
+                                             options.show_locations());
+
+  return ret;
 }
 
 } // namespace thor
