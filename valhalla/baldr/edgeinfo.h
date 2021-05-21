@@ -37,7 +37,7 @@ struct NameInfo {
                                    // phonetic string, etc.
   uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
                                    // vs just a name.
-  uint32_t tagged_ : 1;            // Future use - this indicates the text string is
+  uint32_t tagged_ : 1;            // This indicates the text string is
                                    // specially tagged (for example uses the first char as
                                    // the tag type). To make this forward and backward
                                    // compatible, tagged text will not be read in GetNames
@@ -139,25 +139,32 @@ public:
 
   /**
    * Convenience method to get the names for an edge
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
    *
    * @return   Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames() const;
 
   /**
-   * Convenience method to get the names and route number flags for an edge.
-   * @param  include_tagged_names  Bool indicating whether or not to return the tagged names too
+   * Convenience method to get the names for an edge
+   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
    *
+   * @return   Returns a list (vector) of tagged names.
+   */
+  std::vector<std::string> GetTaggedNames(bool only_pronunciations = false) const;
+  /**
+   * Convenience method to get the names and route number flags for an edge.  Does not include tagged
+   * names
    * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(bool include_tagged_names = false) const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes() const;
 
   /**
    * Convenience method to get the names and the tagged type for an edge.
    * @return   Returns a list (vector) of name/tagged type pairs.
    */
   std::vector<std::pair<std::string, uint8_t>> GetTaggedNamesAndTypes() const;
+
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
 
   /**
    * Convenience method to get the types for the names.
