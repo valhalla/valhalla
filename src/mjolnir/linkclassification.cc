@@ -506,8 +506,8 @@ bool dfs(size_t edge_idx,
       std::cout << "Skipping link\n";
       continue;
     }
-    //    std::cout << "Candidate\n";
-    //    PrintEdge(data, i.first);
+    std::cout << "Candidate\n";
+    PrintEdge(data, i.first);
     //    Print((*data.nodes[i.first.targetnode_]).node.latlng());
     if (nodes_in_progress.count(i.second))
       continue;
@@ -633,6 +633,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       // nodes along the path can have more than 2 links (fork). The end nodes
       // must have a non-link edge.
       bool turn_channel = false;
+      uint64_t way_id = (*data.ways[(*data.edges[link_edges.front()]).wayindex_]).way_id();
       if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
         if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
@@ -661,9 +662,9 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             /// TODO: assert size == 1
             break;
           }
-          //        std::cout << "\nPrint link edges\n";
+          std::cout << "\nPrint link edges\n";
           for (auto idx : link_edges) {
-            //          PrintEdge(data, data.edges[idx]);
+            PrintEdge(data, data.edges[idx]);
           }
 
           auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
@@ -673,8 +674,8 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
               std::cout << "Skipping link\n";
               continue;
             }
-            //          std::cout << "From Edge\n";
-            //          PrintEdge(data, to.first);
+            std::cout << "From Edge\n";
+            PrintEdge(data, to.first);
             uint64_t way_id = (*data.ways[to.first.wayindex_]).way_id();
             if (to.second == link_edges.back())
               continue;
