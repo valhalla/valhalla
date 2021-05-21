@@ -126,9 +126,17 @@ message TransitPlatformInfo {
   optional string station_name = 9;        // The station name of the platform
 }
 
+enum VerbalType {
+  kPlainText = 0;
+  kIpa = 1;
+  kXSampa = 2;
+}
+
 message StreetName {
-  optional string value = 1;          // The actual street name value, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;  // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional string value = 1;           // The actual street name value, examples: I 95 North or Derry Street
+  optional bool is_route_number = 2;   // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional VerbalType verbal_type = 3; // The verbal type - script or phoneme type
+  optional string verbal_value = 4;    // The verbal script or phoneme that corresponds to the text value
 }
 
 message TurnLane {
