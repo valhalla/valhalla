@@ -1633,7 +1633,7 @@ void enhance(const boost::property_tree::ptree& pt,
         UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
+        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
@@ -1762,8 +1762,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
 
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+   std::max(static_cast<unsigned int>(1),
+          pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;
