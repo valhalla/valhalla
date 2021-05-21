@@ -624,7 +624,7 @@ public:
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+               !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
@@ -633,7 +633,7 @@ public:
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
+               edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
   }

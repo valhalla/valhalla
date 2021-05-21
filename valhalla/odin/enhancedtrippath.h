@@ -296,7 +296,7 @@ public:
     return mutable_edge_->max_downward_grade();
   }
 
-  int32_t lane_count() const {
+  uint32_t lane_count() const {
     return mutable_edge_->lane_count();
   }
 
@@ -304,7 +304,7 @@ public:
     return mutable_edge_->cycle_lane();
   }
 
-  int32_t bicycle_network() const {
+  uint32_t bicycle_network() const {
     return mutable_edge_->bicycle_network();
   }
 
@@ -312,11 +312,11 @@ public:
     return mutable_edge_->sidewalk();
   }
 
-  int32_t density() const {
+  uint32_t density() const {
     return mutable_edge_->density();
   }
 
-  int32_t speed_limit() const {
+  uint32_t speed_limit() const {
     return mutable_edge_->speed_limit();
   }
 
@@ -498,6 +498,10 @@ public:
 
   ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
+  }
+
+  uint32_t lane_count() const {
+    return mutable_intersecting_edge_->lane_count();
   }
 
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
