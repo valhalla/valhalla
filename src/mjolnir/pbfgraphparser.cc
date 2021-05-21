@@ -5,6 +5,7 @@
 #include "graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
+#include "mjolnir/osmpronunciation.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -385,6 +386,111 @@ public:
       if (!tag_.second.empty())
         way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
     tag_handlers_["max_speed"] = [this]() {
       try {
         if (tag_.second == "unlimited") {
@@ -499,6 +605,7 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+
     tag_handlers_["ref"] = [this]() {
       if (!tag_.second.empty()) {
         if (!use_direction_on_ways_)
@@ -515,6 +622,66 @@ public:
           int_ref_ = tag_.second;
       }
     };
+    tag_handlers_["ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_pronunciation_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_pronunciation_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        //else
+          //ref_pronunciation_x_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        //else
+          //int_ref_pronunciation_x_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        //else
+          //ref_pronunciation_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        //else
+          //int_ref_pronunciation_katakana_ = tag_.second;
+      }
+    };
     tag_handlers_["direction"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_ = tag_.second;
@@ -523,6 +690,31 @@ public:
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_ = tag_.second;
     };
+    tag_handlers_["direction:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_pronunciation_ = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_pronunciation_ = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation:x-sampa"] = [this]() {
+      // (!tag_.second.empty() && use_direction_on_ways_)
+        //direction_pronunciation_x_sampa = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation:x-sampa"] = [this]() {
+      //if (!tag_.second.empty() && use_direction_on_ways_)
+        //int_direction_pronunciation_x_sampa = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation:katakana"] = [this]() {
+      //if (!tag_.second.empty() && use_direction_on_ways_)
+        //direction_pronunciation_katakana = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation:katakana"] = [this]() {
+      //if (!tag_.second.empty() && use_direction_on_ways_)
+        //int_direction_pronunciation_katakana = tag_.second;
+    };
+
     tag_handlers_["sac_scale"] = [this]() {
       std::string value = tag_.second;
       boost::algorithm::to_lower(value);
@@ -748,6 +940,174 @@ public:
         way_.set_exit(true);
       }
     };
+    tag_handlers_["destination:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:x-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_x_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
     tag_handlers_["turn:lanes"] = [this]() {
       // Turn lanes in the forward direction
       way_.set_fwd_turn_lanes_index(osmdata_.name_offset_map.index(tag_.second));
@@ -921,6 +1281,18 @@ public:
         n.set_name_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_name_count;
         named_junction = maybe_named_junction;
+      } else if (tag.first == "name:pronunciation") {
+        n.set_name_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:x-sampa") {
+        n.set_name_pronunciation_x_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:katakana") {
+        n.set_name_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation") {
+        n.set_ref_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:x-sampa") {
+        n.set_ref_pronunciation_x_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:katakana") {
+        n.set_ref_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -1093,8 +1465,12 @@ public:
     way_.set_node_count(nodes.size());
 
     osm_access_ = OSMAccess{osmid_};
-    has_user_tags_ = false;
+    osm_pronunciation_ = OSMPronunciation{osmid_};
+
+    has_user_tags_ = false, has_pronunciation_tags_ = false;
     ref_ = int_ref_ = direction_ = int_direction_ = {};
+    ref_pronunciation_ = int_ref_pronunciation_ = direction_pronunciation_ =
+        int_direction_pronunciation_ = {};
 
     const auto& surface_exists = results.find("surface");
     has_surface_tag_ = (surface_exists != results.end());
@@ -1224,6 +1600,32 @@ public:
       }
     }
 
+    if (use_direction_on_ways_ && !ref_pronunciation_.empty()) {
+      if (direction_pronunciation_.empty()) {
+        osm_pronunciation_.set_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(ref_pronunciation_));
+      } else {
+        std::vector<std::string> refs = GetTagTokens(ref_pronunciation_);
+        std::vector<std::string> directions = GetTagTokens(direction_pronunciation_);
+
+        std::string tmp_ref;
+        if (refs.size() == directions.size()) {
+          for (uint32_t i = 0; i < refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!directions.at(i).empty())
+              tmp_ref += refs.at(i) + " " + directions.at(i);
+            else
+              tmp_ref += refs.at(i);
+          }
+          osm_pronunciation_.set_ref_pronunciation_ipa_index(osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          osm_pronunciation_.set_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(ref_pronunciation_));
+      }
+    }
+
     if (use_direction_on_ways_ && !int_ref_.empty()) {
       if (int_direction_.empty()) {
         way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
@@ -1245,6 +1647,33 @@ public:
           way_.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
         } else
           way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
+      }
+    }
+
+    if (use_direction_on_ways_ && !int_ref_pronunciation_.empty()) {
+      if (int_direction_pronunciation_.empty()) {
+        osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(int_ref_pronunciation_));
+      } else {
+        std::vector<std::string> int_refs = GetTagTokens(int_ref_pronunciation_);
+        std::vector<std::string> int_directions = GetTagTokens(int_direction_pronunciation_);
+
+        std::string tmp_ref;
+        if (int_refs.size() == int_directions.size()) {
+          for (uint32_t i = 0; i < int_refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!int_directions.at(i).empty())
+              tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
+            else
+              tmp_ref += int_refs.at(i);
+          }
+          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(int_ref_pronunciation_));
       }
     }
 
@@ -1276,6 +1705,39 @@ public:
       }
       // no matter what, clear out the int_ref.
       way_.set_int_ref_index(0);
+    }
+
+    // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
+    // don't add dups.
+    if (use_direction_on_ways_ && osm_pronunciation_.int_ref_pronunciation_ipa_index()) {
+      std::string tmp =
+          osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_ipa_index());
+
+      std::vector<std::string> rs = GetTagTokens(tmp);
+      std::vector<std::string> is = GetTagTokens(
+          osmdata_.name_offset_map.name(osm_pronunciation_.int_ref_pronunciation_ipa_index()));
+      bool bFound = false;
+
+      for (auto& i : is) {
+        for (auto& r : rs) {
+          if (i == r) {
+            bFound = true;
+            break;
+          }
+        }
+        if (!bFound) {
+          if (!tmp.empty()) {
+            tmp += ";";
+          }
+          tmp += i;
+        }
+        bFound = false;
+      }
+      if (!tmp.empty()) {
+        osm_pronunciation_.set_ref_pronunciation_ipa_index(osmdata_.name_offset_map.index(tmp));
+      }
+      // no matter what, clear out the int_ref.
+      osm_pronunciation_.set_int_ref_pronunciation_ipa_index(0);
     }
 
     // Process mtb tags.
@@ -1491,6 +1953,12 @@ public:
       way_.set_has_user_tags(true);
       access_->push_back(osm_access_);
     }
+
+    if (has_pronunciation_tags_) {
+      way_.set_has_pronunciation_tags(true);
+      pronunciation_->push_back(osm_pronunciation_);
+    }
+
     // Add the way to the list
     ways_->push_back(way_);
   }
@@ -1918,6 +2386,7 @@ public:
   void reset(sequence<OSMWay>* ways,
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
+             sequence<OSMPronunciation>* pronunciation,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
              sequence<OSMNode>* bss_nodes) {
@@ -1925,6 +2394,7 @@ public:
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
+    pronunciation_.reset(pronunciation);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
@@ -1944,8 +2414,11 @@ public:
   bool has_surface_ = true;
   bool has_surface_tag_ = true;
   OSMAccess osm_access_;
-  bool has_user_tags_ = false;
+  OSMPronunciation osm_pronunciation_;
+  bool has_user_tags_ = false, has_pronunciation_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
+  std::string ref_pronunciation_, int_ref_pronunciation_, direction_pronunciation_,
+      int_direction_pronunciation_;
   std::string name_, service_, amenity_;
 
   // Configuration option to include driveways
@@ -1999,6 +2472,8 @@ public:
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
+  // way pronunciations
+  std::unique_ptr<sequence<OSMPronunciation>> pronunciation_;
   // from complex restrictions
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
@@ -2022,7 +2497,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::vector<std::string>& input_files,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
-                                  const std::string& access_file) {
+                                  const std::string& access_file,
+                                  const std::string& pronunciation_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -2048,7 +2524,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr);
+                 new sequence<OSMAccess>(access_file, true),
+                 new sequence<OSMPronunciation>(pronunciation_file, true), nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -2063,13 +2540,21 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
+  }
+
+  // we need to sort the pronunciation indexes so that we can easily find them.
+  LOG_INFO("Sorting pronunciation indexes by way id...");
+  {
+    sequence<OSMPronunciation> pronunciation(pronunciation_file, false);
+    pronunciation.sort(
+        [](const OSMPronunciation& a, const OSMPronunciation& b) { return a.way_id() < b.way_id(); });
   }
 
   LOG_INFO("Finished");
@@ -2110,7 +2595,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
     }
   }
 
-  callback.reset(nullptr, nullptr, nullptr,
+  callback.reset(nullptr, nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
@@ -2128,7 +2613,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -2185,13 +2670,13 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
-      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, true));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
     }
   }
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -2211,7 +2696,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr, nullptr);
+                   nullptr, nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -2220,7 +2705,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 
