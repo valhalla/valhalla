@@ -360,8 +360,11 @@ inline std::string to_string(Use u) {
 
 enum class TaggedName : uint8_t { // must start at 1 due to nulls
   kTunnel = 1,
-  kBridge = 2
+  kBridge = 2,
+  kVerbal = 3
 };
+
+enum class VerbalType : uint8_t { kPlainText = 0, kIpa = 1, kXSampa = 2, kXJeita = 3 };
 
 // Speed type
 enum class SpeedType : uint8_t {
