@@ -648,8 +648,8 @@ public:
         if (!use_direction_on_ways_)
           osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
               osmdata_.name_offset_map.index(tag_.second));
-        //else
-          //ref_pronunciation_x_sampa_ = tag_.second;
+        // else
+        // ref_pronunciation_x_sampa_ = tag_.second;
       }
     };
     tag_handlers_["int_ref:pronunciation:x-sampa"] = [this]() {
@@ -658,8 +658,8 @@ public:
         if (!use_direction_on_ways_)
           osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(
               osmdata_.name_offset_map.index(tag_.second));
-        //else
-          //int_ref_pronunciation_x_sampa_ = tag_.second;
+        // else
+        // int_ref_pronunciation_x_sampa_ = tag_.second;
       }
     };
     tag_handlers_["ref:pronunciation:katakana"] = [this]() {
@@ -668,8 +668,8 @@ public:
         if (!use_direction_on_ways_)
           osm_pronunciation_.set_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(tag_.second));
-        //else
-          //ref_pronunciation_katakana_ = tag_.second;
+        // else
+        // ref_pronunciation_katakana_ = tag_.second;
       }
     };
     tag_handlers_["int_ref:pronunciation:katakana"] = [this]() {
@@ -678,8 +678,8 @@ public:
         if (!use_direction_on_ways_)
           osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(tag_.second));
-        //else
-          //int_ref_pronunciation_katakana_ = tag_.second;
+        // else
+        // int_ref_pronunciation_katakana_ = tag_.second;
       }
     };
     tag_handlers_["direction"] = [this]() {
@@ -700,19 +700,19 @@ public:
     };
     tag_handlers_["direction:pronunciation:x-sampa"] = [this]() {
       // (!tag_.second.empty() && use_direction_on_ways_)
-        //direction_pronunciation_x_sampa = tag_.second;
+      // direction_pronunciation_x_sampa = tag_.second;
     };
     tag_handlers_["int_direction:pronunciation:x-sampa"] = [this]() {
-      //if (!tag_.second.empty() && use_direction_on_ways_)
-        //int_direction_pronunciation_x_sampa = tag_.second;
+      // if (!tag_.second.empty() && use_direction_on_ways_)
+      // int_direction_pronunciation_x_sampa = tag_.second;
     };
     tag_handlers_["direction:pronunciation:katakana"] = [this]() {
-      //if (!tag_.second.empty() && use_direction_on_ways_)
-        //direction_pronunciation_katakana = tag_.second;
+      // if (!tag_.second.empty() && use_direction_on_ways_)
+      // direction_pronunciation_katakana = tag_.second;
     };
     tag_handlers_["int_direction:pronunciation:katakana"] = [this]() {
-      //if (!tag_.second.empty() && use_direction_on_ways_)
-        //int_direction_pronunciation_katakana = tag_.second;
+      // if (!tag_.second.empty() && use_direction_on_ways_)
+      // int_direction_pronunciation_katakana = tag_.second;
     };
 
     tag_handlers_["sac_scale"] = [this]() {

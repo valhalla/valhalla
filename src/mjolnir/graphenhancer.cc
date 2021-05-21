@@ -1762,8 +1762,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
 
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
-   std::max(static_cast<unsigned int>(1),
-          pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;
