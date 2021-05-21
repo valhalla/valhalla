@@ -3,6 +3,7 @@
 
 #include "midgard/logging.h"
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 
 using namespace valhalla::baldr;
 
@@ -94,19 +95,46 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
+void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
+                               const UniqueNames& name_offset_map,
+                               const uint32_t pronunciation_index,
+                               const size_t name_tokens_size,
+                               const size_t key,
+                               const baldr::VerbalType verbal_type) const {
+
+  size_t k = key;
+  std::vector<std::string> pronunciation_tokens;
+  if (pronunciation_index != 0)
+    pronunciation_tokens = GetTagTokens(name_offset_map.name(pronunciation_index));
+  else return;
+
+  if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size()) {
+    for (const auto& t : pronunciation_tokens) {
+      pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(k)) + '\0' +
+                                  std::to_string(static_cast<uint8_t>(verbal_type)) + '\0' +
+                                  t);
+      k++;
+    }
+  }
+}
+
 // Get the names for the edge info based on the road class.
-std::vector<std::string>
-OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
+void OSMWay::GetNames(const std::string& ref,
+                      const UniqueNames& name_offset_map,
+                      const OSMPronunciation& pronunciation,
+                      uint16_t& types,
+                      std::vector<std::string>& names,
+                      std::vector<std::string>& pronunciations) const {
 
   uint16_t location = 0;
   types = 0;
 
-  std::vector<std::string> names;
   // Process motorway and trunk refs
   if ((ref_index_ != 0 || !ref.empty()) &&
       ((static_cast<RoadClass>(road_class_) == RoadClass::kMotorway) ||
        (static_cast<RoadClass>(road_class_) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
+    std::vector<std::string> pronunciation_tokens;
 
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
@@ -120,20 +148,41 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
     }
 
     names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
 
   // TODO int_ref
 
   // Process name
   if (name_index_ != 0) {
-    names.emplace_back(name_offset_map.name(name_index_));
-    location++;
+
+    std::vector<std::string> tokens;
+    tokens = GetTagTokens(name_offset_map.name(name_index_));
+    location += tokens.size();
+
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
 
   // Process non limited access refs
   if (ref_index_ != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
       (static_cast<RoadClass>(road_class_) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
+
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
@@ -146,33 +195,78 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
     }
 
     names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
 
   // Process alt_name
   if (alt_name_index_ != 0 && alt_name_index_ != name_index_) {
-    names.emplace_back(name_offset_map.name(alt_name_index_));
-    location++;
+
+    std::vector<std::string> tokens;
+    tokens = GetTagTokens(name_offset_map.name(alt_name_index_));
+    location += tokens.size();
+
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.alt_name_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.alt_name_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.alt_name_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
   // Process official_name
   if (official_name_index_ != 0 && official_name_index_ != name_index_ &&
       official_name_index_ != alt_name_index_) {
-    names.emplace_back(name_offset_map.name(official_name_index_));
-    location++;
+
+    std::vector<std::string> tokens;
+    tokens = GetTagTokens(name_offset_map.name(official_name_index_));
+    location += tokens.size();
+
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.official_name_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.official_name_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.official_name_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
   // Process name_en_
   // TODO: process country specific names
   if (name_en_index_ != 0 && name_en_index_ != name_index_ && name_en_index_ != alt_name_index_ &&
       name_en_index_ != official_name_index_) {
-    names.emplace_back(name_offset_map.name(name_en_index_));
-    location++;
+
+    std::vector<std::string> tokens;
+    tokens = GetTagTokens(name_offset_map.name(name_en_index_));
+    location += tokens.size();
+
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    size_t key = names.size() - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_en_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_en_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_en_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
   }
-  return names;
 }
 
 // Get the tagged names for an edge
-std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
-
-  std::vector<std::string> names;
+void OSMWay::GetTaggedNames(const UniqueNames& name_offset_map,
+                            const OSMPronunciation& pronunciation,
+                            const size_t& names_size,
+                            std::vector<std::string>& names,
+                            std::vector<std::string>& pronunciations) const {
   std::vector<std::string> tokens;
 
   if (tunnel_name_index_ != 0) {
@@ -181,9 +275,15 @@ std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_m
     for (const auto& t : tokens) {
       names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
     }
-  }
 
-  return names;
+    size_t key = (names_size + names.size()) - tokens.size();
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.tunnel_name_pronunciation_ipa_index(),
+                      names.size(),key,VerbalType::kIpa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.tunnel_name_pronunciation_x_sampa_index(),
+                      names.size(),key,VerbalType::kXSampa);
+    AddPronunciations(pronunciations, name_offset_map, pronunciation.tunnel_name_pronunciation_katakana_index(),
+                      names.size(),key,VerbalType::kPlainText);
+  }
 }
 
 } // namespace mjolnir
