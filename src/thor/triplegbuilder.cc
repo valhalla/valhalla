@@ -514,8 +514,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       trip_edge_name->set_value(name_and_type.first);
       trip_edge_name->set_is_route_number(name_and_type.second);
     }
-  }
 
+    std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
+        edgeinfo.GetPronunciationsMap();
+    for (const auto& pronunciation : pronunciations) {
+      std::cout << static_cast<int>(pronunciation.first) << " "
+                << static_cast<int>((pronunciation.second).first) << " "
+                << (pronunciation.second).second << "-----> "
+                << names_and_types.at(static_cast<int>(pronunciation.first)).first << std::endl;
+    }
+  }
   // Add tagged names to the edge if requested
   if (controller.attributes.at(kEdgeTaggedNames)) {
     auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
@@ -534,7 +542,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
-    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+
+    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
+
+    for (const auto& pronunciation : pronunciations) {
+      std::cout << static_cast<int>(pronunciation.first) << " "
+                << static_cast<int>((pronunciation.second).first) << " "
+                << (pronunciation.second).second << "-----> "
+                << edge_signs.at(static_cast<int>(pronunciation.first)).text() << std::endl;
+    }
+
     if (!edge_signs.empty()) {
       TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : edge_signs) {
