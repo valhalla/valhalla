@@ -322,8 +322,9 @@ void FormTilesInNewLevel(GraphReader& reader,
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetNames(idx, true),
-                                   tile->GetTypes(idx), added, diff_names);
+                                   tile->GetNames(idx), tile->GetTaggedNames(idx),
+                                   tile->GetTaggedNames(idx, true), tile->GetTypes(idx), added,
+                                   diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
