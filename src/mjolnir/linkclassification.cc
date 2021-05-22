@@ -164,6 +164,7 @@ struct Data {
 struct WayTags {
   std::vector<std::string> refs;
   std::vector<std::string> dest_refs;
+  uint64_t way_id;
 
   bool is_empty() const {
     return refs.empty() && dest_refs.empty();
@@ -180,6 +181,8 @@ struct WayTags {
     if (way.ref_index() != 0)
       road_tags.refs = GetTagTokens(osmdata.name_offset_map.name(way.ref_index()));
 
+    road_tags.way_id = way.way_id();
+
     return road_tags;
   }
 };
@@ -188,7 +191,7 @@ struct Name {
   std::vector<std::string> values;
 
   bool Empty() const {
-    return values.empty();
+    return values.empty() || values[0].empty();
   }
 
   bool operator==(const Name& rhs) const {
@@ -203,8 +206,8 @@ inline bool MatchRefs(const std::string& ref_1, const std::string& ref_2) {
 }
 // Check if these two ways belong to the same road
 inline bool IsTheSameRoad(const WayTags& road_1, const WayTags& road_2) {
-  return !road_1.refs.empty() && !road_2.refs.empty() &&
-         MatchRefs(road_1.refs.front(), road_2.refs.front());
+  return (road_1.way_id == road_2.way_id) || (!road_1.refs.empty() && !road_2.refs.empty() &&
+                                              MatchRefs(road_1.refs.front(), road_2.refs.front()));
 }
 // Check if these three ways belong to the same road
 inline bool IsTheSameRoad(const WayTags& road_1, const WayTags& road_2, const WayTags& road_3) {
@@ -318,6 +321,25 @@ bool CanGoThroughNode(const node_bundle& node,
   return has_common_dest && CheckIfNodeLeadsToDestination(node_idx, root_link, visited_nodes, data);
 }
 
+
+uint64_t PrintWay(Data& data, const Edge& edge) {
+  OSMWay way = data.ways[edge.wayindex_];
+  return way.way_id();
+}
+
+uint64_t PrintWay(Data& data, uint32_t idx) {
+  return PrintWay(data, *data.edges[idx]);
+}
+
+void PrintEdge(Data& data, const Edge& edge) {
+  auto from = (*data.nodes[edge.sourcenode_]).node.latlng();
+  auto to = (*data.nodes[edge.targetnode_]).node.latlng();
+
+  std::cout << "[" << std::fixed << std::setprecision(7) << from.lng() << "," << from.lat() << "],";
+  std::cout << "[" << std::fixed << std::setprecision(7) << to.lng() << "," << to.lat() << "]";
+  std::cout << std::endl;
+}
+
 /*
  * This class builds acyclic link graph starting from some exit node. This node is the root node.
  * Then we start recursively traversing the graph using only driveforward links. When we reach a
@@ -354,6 +376,9 @@ struct LinkGraphBuilder {
 
     // Expand link edges from the exit node
     for (const auto& startedge : exit_bundle.node_edges) {
+      uint64_t way_id = PrintWay(data_, startedge.first);
+      std::cout << "Operator()\n";
+      PrintEdge(data_, startedge.first);
       // Get the edge information. Skip non-link edges, link edges that are
       // not driveable in the forward direction, and link edges already
       // tested for reclassification
@@ -421,6 +446,9 @@ struct LinkGraphBuilder {
 
     // Expand link edges from the node
     for (const auto& edge : bundle) {
+      uint64_t way_id = PrintWay(data_, edge.first);
+      std::cout << "expandGraphNode()\n";
+      PrintEdge(data_, edge.first);
       // Use only links drivable in forward direction
       if (!IsDriveForwardLink(edge.first)) {
         continue;
@@ -462,23 +490,6 @@ struct LinkGraphBuilder {
  * update the parent node classification and continue.
  */
 
-uint64_t PrintWay(Data& data, const Edge& edge) {
-  OSMWay way = data.ways[edge.wayindex_];
-  return way.way_id();
-}
-
-uint64_t PrintWay(Data& data, uint32_t idx) {
-  return PrintWay(data, *data.edges[idx]);
-}
-
-void PrintEdge(Data& data, const Edge& edge) {
-  auto from = (*data.nodes[edge.sourcenode_]).node.latlng();
-  auto to = (*data.nodes[edge.targetnode_]).node.latlng();
-
-  std::cout << "[" << std::fixed << std::setprecision(7) << from.lng() << "," << from.lat() << "],";
-  std::cout << "[" << std::fixed << std::setprecision(7) << to.lng() << "," << to.lat() << "]";
-  std::cout << std::endl;
-}
 
 bool dfs(size_t edge_idx,
          uint32_t node,
@@ -634,7 +645,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       // must have a non-link edge.
       bool turn_channel = false;
       uint64_t way_id = (*data.ways[(*data.edges[link_edges.front()]).wayindex_]).way_id();
-      if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
+      if (infer_turn_channels && (rc >= static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
         if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
 
@@ -667,8 +678,13 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             PrintEdge(data, data.edges[idx]);
           }
 
-          auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
-                                           data.nodes, data.edges);
+          auto bundle = [&]() {
+            Edge edge = data.edges[link_edges.back()];
+            auto node = edge.attributes.driveableforward ? data.nodes[edge.sourcenode_] : data.nodes[edge.targetnode_];
+            return collect_node_edges(node, data.nodes, data.edges);
+          }();
+//          auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
+//                                           data.nodes, data.edges);
           for (auto to : bundle.node_edges) {
             if (to.first.attributes.link) {
               std::cout << "Skipping link\n";
