@@ -34,8 +34,9 @@ TEST(SimpleCache, Mine) {
     for (auto i : tile->GetDirectedEdges()) {
       if (i.forward() && !i.shortcut() && (i.use() == Use::kRamp || i.use() == Use::kTurnChannel)) {
         GraphId edge_id = tile_id;
+        uint64_t way_id = tile->edgeinfo(&i).wayid();
         edge_id.set_id(id);
-        std::cout << edge_id.value << ' ' << int(i.use()) << '\n';
+        std::cout << way_id << ' ' << edge_id.value << ' ' << int(i.use()) << '\n';
       }
       ++id;
     }
