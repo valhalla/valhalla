@@ -225,7 +225,7 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
 
   // create a small polygon on the shortcut: should fail if shortcuts are also avoided
   //                x-x
-  //      A------B--|-|-C
+  //      A------B--|-|-C--F
   //                x-x
 
   // one clockwise ring
