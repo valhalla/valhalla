@@ -1337,6 +1337,9 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   str += " | road_class=";
   str += std::to_string(road_class());
 
+  str += " | lane_count=";
+  str += std::to_string(lane_count());
+
   return str;
 }
 
