@@ -88,14 +88,16 @@ protected:
   static gurka::map avoid_map;
 
   static void SetUpTestSuite() {
-    const std::string ascii_map = R"(A------B
+    const std::string ascii_map = R"(A------B---C---F
                                      |      |
                                      |      |
                                      D------E)";
-    const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
-                              {"DE", {{"highway", "residential"}, {"name", "Low"}}},
-                              {"AD", {{"highway", "residential"}, {"name", "1st"}}},
-                              {"BE", {{"highway", "residential"}, {"name", "2nd"}}}};
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"name", "High"}}},
+                              {"BC", {{"highway", "primary"}, {"name", "High"}}},
+                              {"CF", {{"highway", "primary"}, {"name", "High"}}},
+                              {"DE", {{"highway", "primary"}, {"name", "Low"}}},
+                              {"AD", {{"highway", "primary"}, {"name", "1st"}}},
+                              {"BE", {{"highway", "primary"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
@@ -198,6 +200,44 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
   // build request manually for now
   auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto value = get_avoid_polys(rings, allocator);
+  auto type = "avoid_polygons";
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+
+  // make sure the right exception is thrown
+  try {
+    gurka::do_action(Options::route, avoid_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_P(AvoidTest, TestAvoidShortcuts) {
+  auto node_b = avoid_map.nodes.at("B");
+  auto node_c = avoid_map.nodes.at("C");
+  auto node_e = avoid_map.nodes.at("E");
+  auto dx = std::abs(node_c.lng() - node_b.lng());
+  auto dy = std::abs(node_b.lat() - node_e.lat());
+
+  // create a small polygon on the shortcut: should fail if shortcuts are also avoided
+  //                x-x
+  //      A------B--|-|-C
+  //                x-x
+
+  // one clockwise ring
+  std::vector<ring_bg_t> rings;
+  rings.push_back({{node_b.lng() + 0.1 * dx, node_b.lat() + 0.01 * dy},
+                   {node_c.lng() - 0.1 * dx, node_c.lat() + 0.01 * dy},
+                   {node_c.lng() - 0.1 * dx, node_c.lat() - 0.01 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
+                   {node_b.lng() + 0.1 * dx, node_b.lat() + 0.01 * dy}});
+
+  // build request manually for now
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["F"]};
 
   rapidjson::Document doc;
   doc.SetObject();
