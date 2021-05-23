@@ -240,7 +240,7 @@ public:
         ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
         ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
-    return !edge->is_shortcut() && accessible && !assumed_restricted;
+    return accessible && !assumed_restricted;
   }
 
   /**
