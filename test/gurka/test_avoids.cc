@@ -88,13 +88,14 @@ protected:
   static gurka::map avoid_map;
 
   static void SetUpTestSuite() {
-    const std::string ascii_map = R"(A------B---C---F
+    const std::string ascii_map = R"(A------B---C---F---G
                                      |      |
                                      |      |
                                      D------E)";
     const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"name", "High"}}},
-                              {"BC", {{"highway", "primary"}, {"name", "High"}}},
-                              {"CF", {{"highway", "primary"}, {"name", "High"}}},
+                              {"BC", {{"highway", "primary"}, {"name", "High2"}}}, // build shortcut
+                              {"CF", {{"highway", "primary"}, {"name", "High2"}}}, // build shortcut
+                              {"FG", {{"highway", "primary"}, {"name", "High"}}},
                               {"DE", {{"highway", "primary"}, {"name", "Low"}}},
                               {"AD", {{"highway", "primary"}, {"name", "1st"}}},
                               {"BE", {{"highway", "primary"}, {"name", "2nd"}}}};
@@ -225,8 +226,10 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
 
   // create a small polygon on the shortcut: should fail if shortcuts are also avoided
   //                x-x
-  //      A------B--|-|-C--F
+  //      A------B--|-|-C--F--G
   //                x-x
+  //             |_________|
+  //               shortcut
 
   // one clockwise ring
   std::vector<ring_bg_t> rings;
@@ -237,7 +240,10 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
                    {node_b.lng() + 0.1 * dx, node_b.lat() + 0.01 * dy}});
 
   // build request manually for now
-  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["F"]};
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["G"]};
+
+  // TODO: remove before commit
+  std::cout << gurka::dump_geojson_graph(avoid_map) << std::endl;
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -249,6 +255,7 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
   // make sure the right exception is thrown
   try {
     gurka::do_action(Options::route, avoid_map, req);
+    std::cout << "it worked!" << std::endl;
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
