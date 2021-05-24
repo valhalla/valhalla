@@ -2,6 +2,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
+#include "meili/match_result.h"
 #include "odin/enhancedtrippath.h"
 #include "proto_conversions.h"
 #include "thor/attributes_controller.h"
@@ -14,12 +15,6 @@ using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace {
-
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
 
 json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
@@ -452,14 +447,13 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
   return attributes_map;
 }
 
-void append_trace_info(
-    const json::MapPtr& json,
-    const AttributesController& controller,
-    const Options& options,
-    const std::tuple<float, float, std::vector<meili::MatchResult>>& map_match_result,
-    const TripLeg& trip_path) {
+void append_trace_info(const json::MapPtr& json,
+                       const AttributesController& controller,
+                       const Options& options,
+                       const meili::MapMatchResult& map_match_result,
+                       const TripLeg& trip_path) {
   // Set trip path and match results
-  const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
+  const auto& match_results = map_match_result.match_results;
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -473,13 +467,12 @@ void append_trace_info(
 
   // Add confidence_score
   if (controller.attributes.at(kConfidenceScore)) {
-    json->emplace("confidence_score",
-                  json::fixed_t{std::get<kConfidenceScoreIndex>(map_match_result), 3});
+    json->emplace("confidence_score", json::fixed_t{map_match_result.confidence_score, 3});
   }
 
   // Add raw_score
   if (controller.attributes.at(kRawScore)) {
-    json->emplace("raw_score", json::fixed_t{std::get<kRawScoreIndex>(map_match_result), 3});
+    json->emplace("raw_score", json::fixed_t{map_match_result.raw_score, 3});
   }
 
   // Add admins list
@@ -505,10 +498,9 @@ void append_trace_info(
 namespace valhalla {
 namespace tyr {
 
-std::string serializeTraceAttributes(
-    const Api& request,
-    const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
+std::string serializeTraceAttributes(const Api& request,
+                                     const AttributesController& controller,
+                                     std::vector<meili::MapMatchResult>& map_match_results) {
 
   // Create json map to return
   auto json = json::map({});

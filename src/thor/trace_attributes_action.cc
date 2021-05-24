@@ -26,14 +26,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
-namespace {
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
-} // namespace
-
 namespace valhalla {
 namespace thor {
 /*
@@ -60,7 +52,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
 
-  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match_results;
+  std::vector<meili::MapMatchResult> map_match_results;
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
@@ -68,7 +60,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     case ShapeMatch::edge_walk:
       try {
         route_match(request);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<meili::MatchResult>{});
+        map_match_results.push_back({1.0f, 0.0f, std::vector<meili::MatchResult>{}});
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             443, ShapeMatch_Enum_Name(options.shape_match()) +
@@ -94,7 +86,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     case ShapeMatch::walk_or_snap:
       try {
         route_match(request);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<meili::MatchResult>{});
+        map_match_results.push_back({1.0f, 0.0f, std::vector<meili::MatchResult>{}});
       } catch (...) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");

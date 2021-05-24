@@ -784,7 +784,6 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get cost
       uint8_t flow_sources;

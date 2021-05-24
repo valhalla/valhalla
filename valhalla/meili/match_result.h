@@ -66,6 +66,12 @@ struct MatchResult {
   }
 };
 
+struct MapMatchResult {
+  float confidence_score = 0.f;
+  float raw_score = 0.f;
+  std::vector<MatchResult> match_results;
+};
+
 struct EdgeSegment {
   EdgeSegment(baldr::GraphId the_edgeid,
               double the_source = 0.f,

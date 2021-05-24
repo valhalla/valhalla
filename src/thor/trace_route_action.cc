@@ -33,12 +33,6 @@ struct MapMatch {
   int edge_index = -1;
 };
 
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
-
 void add_path_edge(valhalla::Location* l,
                    const GraphId& edge_id,
                    float percent_along,
@@ -181,8 +175,7 @@ void thor_worker_t::route_match(Api& request) {
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>
-thor_worker_t::map_match(Api& request) {
+std::vector<meili::MapMatchResult> thor_worker_t::map_match(Api& request) {
   auto& options = *request.mutable_options();
   // Call Meili for map matching to get a collection of Location Edges
   matcher->set_interrupt(interrupt);
@@ -197,7 +190,7 @@ thor_worker_t::map_match(Api& request) {
   auto topk_match_results = matcher->OfflineMatch(trace, topk);
 
   // Process each score/match result
-  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match_results;
+  std::vector<meili::MapMatchResult> map_match_results;
   for (auto& result : topk_match_results) {
     // There is no path so you're done
     if (result.segments.empty()) {
@@ -250,11 +243,12 @@ thor_worker_t::map_match(Api& request) {
 
     // TODO: move this info to the trip leg
     // Keep the result
-    map_match_results.emplace_back(map_match_results.empty()
-                                       ? 1.0f
-                                       : std::get<kRawScoreIndex>(map_match_results.front()) /
-                                             result.score,
-                                   result.score, std::move(result.results));
+    meili::MapMatchResult res;
+    res.confidence_score =
+        map_match_results.empty() ? 1.0f : map_match_results.front().raw_score / result.score;
+    res.raw_score = result.score;
+    res.match_results = std::move(result.results);
+    map_match_results.push_back(std::move(res));
   }
 
   return map_match_results;

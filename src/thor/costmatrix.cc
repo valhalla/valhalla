@@ -35,7 +35,7 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix()
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), source_count_(0), remaining_sources_(0),
+    : access_mode_(kAutoAccess), mode_(TravelMode::kDrive), source_count_(0), remaining_sources_(0),
       target_count_(0), remaining_targets_(0), current_cost_threshold_(0), targets_{new TargetMap} {
 }
 

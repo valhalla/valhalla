@@ -86,7 +86,7 @@ protected:
    * @param request   The request to map match (options.shape)
    * @return the match results and scores
    */
-  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match(Api& request);
+  std::vector<meili::MapMatchResult> map_match(Api& request);
 
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
