@@ -23,11 +23,18 @@ class Jmap;
 using MapPtr = std::shared_ptr<Jmap>;
 class Jarray;
 using ArrayPtr = std::shared_ptr<Jarray>;
-struct fp_t {
+
+// Fixed precision ser
+struct fixed_t {
   long double value;
   size_t precision;
   // and be able to spit out text
-  friend std::ostream& operator<<(std::ostream& stream, const fp_t&);
+  friend std::ostream& operator<<(std::ostream& stream, const fixed_t&);
+};
+
+struct float_t {
+  long double value;
+  friend std::ostream& operator<<(std::ostream& stream, const float_t&);
 };
 
 struct RawJSON {
@@ -35,8 +42,16 @@ struct RawJSON {
 };
 
 // a variant of all the possible values to go with keys in json
-using Value = boost::
-    variant<std::string, uint64_t, int64_t, fp_t, bool, std::nullptr_t, MapPtr, ArrayPtr, RawJSON>;
+using Value = boost::variant<std::string,
+                             uint64_t,
+                             int64_t,
+                             fixed_t,
+                             float_t,
+                             bool,
+                             std::nullptr_t,
+                             MapPtr,
+                             ArrayPtr,
+                             RawJSON>;
 
 // the map value type in json
 class Jmap : public std::unordered_map<std::string, Value> {
@@ -119,7 +134,10 @@ public:
   std::ostream& operator()(int64_t value) const {
     return ostream_ << value;
   }
-  std::ostream& operator()(fp_t value) const {
+  std::ostream& operator()(fixed_t value) const {
+    return ostream_ << value;
+  }
+  std::ostream& operator()(float_t value) const {
     return ostream_ << value;
   }
   std::ostream& operator()(bool value) const {
@@ -146,11 +164,20 @@ private:
   char fill;
 };
 
-inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp) {
+inline std::ostream& operator<<(std::ostream& stream, const fixed_t& fp) {
   if (std::isfinite(fp.value)) {
     stream << std::setprecision(fp.precision) << std::fixed << fp.value;
   } else {
     stream << std::setprecision(fp.precision) << std::fixed << '"' << fp.value << '"';
+  }
+  return stream;
+}
+
+inline std::ostream& operator<<(std::ostream& stream, const float_t& fp) {
+  if (std::isfinite(fp.value)) {
+    stream << std::defaultfloat << fp.value;
+  } else {
+    stream << std::defaultfloat << '"' << fp.value << '"';
   }
   return stream;
 }

@@ -11,8 +11,8 @@ namespace {
 
 json::MapPtr serialize(const PathLocation& location, bool istransit) {
   // serialze all the edges
-  auto json = json::map({{"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-                         {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
+  auto json = json::map({{"input_lat", json::fixed_t{location.latlng_.lat(), 6}},
+                         {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
                          {"radius", static_cast<uint64_t>(location.radius_)}});
   json->emplace("istransit", istransit);
   return json;

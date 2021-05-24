@@ -4,6 +4,8 @@
 #include "midgard/pointll.h"
 #include "tyr/serializers.h"
 
+#include <rapidjson/internal/ieee754.h>
+
 #include <cmath>
 #include <sstream>
 #include <utility>
@@ -56,7 +58,7 @@ std::string serializeIsochrones(const Api& request,
         // make some geometry
         auto coords = array({});
         for (const auto& coord : contour) {
-          coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
+          coords->push_back(array({fixed_t{coord.first, 6}, fixed_t{coord.second, 6}}));
         }
         // its either a ring
         if (polygons) {
@@ -75,13 +77,13 @@ std::string serializeIsochrones(const Api& request,
                        })},
           {"properties", map({
                              {"metric", std::get<2>(interval)},
-                             {"contour", static_cast<uint64_t>(std::get<1>(interval))},
-                             {"color", hex.str()},            // lines
-                             {"fill", hex.str()},             // geojson.io polys
-                             {"fillColor", hex.str()},        // leaflet polys
-                             {"opacity", fp_t{.33f, 2}},      // lines
-                             {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
-                             {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
+                             {"contour", baldr::json::float_t{std::get<1>(interval)}},
+                             {"color", hex.str()},               // lines
+                             {"fill", hex.str()},                // geojson.io polys
+                             {"fillColor", hex.str()},           // leaflet polys
+                             {"opacity", fixed_t{.33f, 2}},      // lines
+                             {"fill-opacity", fixed_t{.33f, 2}}, // geojson.io polys
+                             {"fillOpacity", fixed_t{.33f, 2}},  // leaflet polys
                          })},
       }));
     }
@@ -99,7 +101,7 @@ std::string serializeIsochrones(const Api& request,
         // remove duplicates of path_edges in case the snapped object is a node
         if (snapped_points.insert(snapped_current).second) {
           snapped_points_array->push_back(
-              array({fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
+              array({fixed_t{snapped_current.lng(), 6}, fixed_t{snapped_current.lat(), 6}}));
         }
       };
       features->emplace_back(map(
@@ -111,7 +113,8 @@ std::string serializeIsochrones(const Api& request,
 
       // then each user input point as separate Point feature
       const valhalla::LatLng& input_latlng = location.ll();
-      const auto input_array = array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
+      const auto input_array =
+          array({fixed_t{input_latlng.lng(), 6}, fixed_t{input_latlng.lat(), 6}});
       features->emplace_back(map(
           {{"type", std::string("Feature")},
            {"properties",
