@@ -52,7 +52,7 @@ if (UNIX)
     util.cc
     validatetransit.cc
     speed_assigner.h
-    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-error=missing-field-initializers")
+    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
 endif (UNIX)
 
 set(sources
