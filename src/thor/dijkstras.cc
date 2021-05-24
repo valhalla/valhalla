@@ -217,9 +217,6 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                 costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
                 transition_cost;
     } else {
-      if (opp_pred_edge == nullptr) {
-        continue;
-      }
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, pred.has_measured_speed(),
@@ -360,9 +357,9 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      const auto opp_edge_tile = graphreader.GetGraphTile(pred.opp_edgeid());
-      if (opp_edge_tile != nullptr) {
-        opp_pred_edge = opp_edge_tile->directededge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      if (opp_pred_edge != nullptr) {
+        continue;
       }
     }
 
@@ -869,15 +866,10 @@ void Dijkstras::SetDestinationLocations(
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it
-      graph_tile_ptr opp_tile = nullptr;
-      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
-        continue;
-      }
-
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
-      graph_tile_ptr opp_edge_tile = graphreader.GetGraphTile(opp_edge_id);
-      if (opp_edge_tile == nullptr) {
+      graph_tile_ptr opp_tile = tile;
+      const DirectedEdge* opp_dir_edge = nullptr;
+      auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_dir_edge, opp_tile);
+      if (opp_dir_edge == nullptr) {
         continue;
       }
 
@@ -911,7 +903,7 @@ void Dijkstras::SetDestinationLocations(
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
-      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_edge_tile, multipath_ ? path_id : 0);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }
   }
 }

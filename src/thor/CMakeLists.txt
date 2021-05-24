@@ -18,6 +18,7 @@ set(sources
   route_action.cc
   route_matcher.cc
   status_action.cc
+  tile_no_longer_available_error.cc
   timedistancematrix.cc
   timedistancebssmatrix.cc
   trace_attributes_action.cc

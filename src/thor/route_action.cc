@@ -176,6 +176,8 @@ std::string thor_worker_t::expansion(Api& request) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
+      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
+                std::to_string(edgeid.Tile_Base()));
       return;
     }
     const auto* edge = tile->directededge(edgeid);

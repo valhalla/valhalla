@@ -22,6 +22,7 @@
 #include "sif/costconstants.h"
 #include "sif/recost.h"
 #include "thor/attributes_controller.h"
+#include "thor/tile_no_longer_available_error.h"
 #include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
 
@@ -1140,12 +1141,12 @@ void TripLegBuilder::Build(
   // begin node of the original edge
   auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
   if (begin_tile == nullptr) {
-    return; // or throw?
+    throw tile_no_longer_available_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
   auto* first_edge = begin_tile->directededge(path_begin->edgeid);
   auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
   if (first_tile == nullptr) {
-    return; // or throw?
+    throw tile_no_longer_available_error_t("TripLegBuilder::Build failed", first_edge->endnode());
   }
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
@@ -1310,7 +1311,7 @@ void TripLegBuilder::Build(
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Process the shape for edges where a route discontinuity occurs
-    uint32_t begin_index = (is_first_edge || trip_shape.size() == 0) ? 0 : trip_shape.size() - 1;
+    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
