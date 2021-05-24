@@ -92,7 +92,8 @@ access = {
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
-["emergency"] = "false"
+["emergency"] = "false",
+["psv"] = "false"
 }
 
 private = {
@@ -895,6 +896,16 @@ function filter_tags_generic(kv)
       end
     end
 
+    if kv["taxi_tag"] == nil or kv["bus_tag"] == nil then
+      if kv["access"] == "psv" then
+        kv["taxi_forward"] = "true"
+        kv["taxi_tag"] = "true"
+
+	kv["bus_forward"] = "true"
+        kv["bus_tag"] = "true"
+      end
+    end
+
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
@@ -969,6 +980,16 @@ function filter_tags_generic(kv)
           kv["bike_tag"] = "true"
         elseif kv["sac_scale"] then
           kv["bike_forward"] = "false"
+        end
+      end
+
+      if kv["taxi_tag"] == nil or kv["bus_tag"] == nil then
+        if kv["access"] == "psv" then
+          kv["taxi_forward"] = "true"
+          kv["taxi_tag"] = "true"
+
+          kv["bus_forward"] = "true"
+          kv["bus_tag"] = "true"
         end
       end
 
