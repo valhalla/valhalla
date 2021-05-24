@@ -6,6 +6,8 @@
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 
+#define UNUSED(x) (void)(x)
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -259,6 +261,7 @@ bool ShortFerry(const uint32_t node_index,
     }
   }
   if (short_edge) {
+    UNUSED(wayid);
     LOG_DEBUG("Skip short ferry: way_id = " + std::to_string(wayid));
   }
   return short_edge;
