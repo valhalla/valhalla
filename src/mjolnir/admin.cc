@@ -17,8 +17,6 @@ sqlite3* GetDBHandle(const std::string& database) {
   sqlite3* db_handle = nullptr;
   if (!database.empty() && filesystem::exists(database)) {
     spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
     std::string sql;
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
                                    SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
@@ -79,7 +77,6 @@ std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_h
 
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char* err_msg = nullptr;
   uint32_t result = 0;
 
   std::string sql = "select TZID, st_astext(geom) from tz_world where ";
@@ -257,7 +254,6 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char* err_msg = nullptr;
   uint32_t result = 0;
   std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, "
                     "cycleway, path, motorroad from admin_access";

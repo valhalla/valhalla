@@ -30,7 +30,7 @@ void DataQuality::AddStatistics(const DataQuality& stats) {
 
 // Adds an issue.
 void DataQuality::AddIssue(const DataIssueType issuetype,
-                           const GraphId& graphid,
+                           const GraphId& /*graphid*/,
                            const uint64_t wayid1,
                            const uint64_t wayid2) {
   if (issuetype == kDuplicateWays) {

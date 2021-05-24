@@ -165,7 +165,6 @@ void ConstructEdges(const std::string& ways_file,
   };
 
   // For each way traversed via the nodes
-  uint32_t edgeindex = 0;
   GraphId graphid;
   size_t current_way_node_index = 0;
   while (current_way_node_index < way_nodes.size()) {
@@ -394,7 +393,6 @@ void BuildTileSet(const std::string& ways_file,
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
-  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
@@ -1327,7 +1325,6 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
   if (!has_branch && !has_toward) {
     if (node.has_exit_to() && !fork) {
       std::string tmp;
-      std::size_t pos;
       std::vector<std::string> exit_tos = GetTagTokens(osmdata.node_names.name(node.exit_to_index()));
       for (auto& exit_to : exit_tos) {
 
