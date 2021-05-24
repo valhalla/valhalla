@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
@@ -294,7 +296,7 @@ public:
     return mutable_edge_->max_downward_grade();
   }
 
-  int32_t lane_count() const {
+  uint32_t lane_count() const {
     return mutable_edge_->lane_count();
   }
 
@@ -302,7 +304,7 @@ public:
     return mutable_edge_->cycle_lane();
   }
 
-  int32_t bicycle_network() const {
+  uint32_t bicycle_network() const {
     return mutable_edge_->bicycle_network();
   }
 
@@ -310,11 +312,11 @@ public:
     return mutable_edge_->sidewalk();
   }
 
-  int32_t density() const {
+  uint32_t density() const {
     return mutable_edge_->density();
   }
 
-  int32_t speed_limit() const {
+  uint32_t speed_limit() const {
     return mutable_edge_->speed_limit();
   }
 
@@ -496,6 +498,10 @@ public:
 
   ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
+  }
+
+  uint32_t lane_count() const {
+    return mutable_intersecting_edge_->lane_count();
   }
 
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
@@ -685,6 +691,13 @@ public:
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
+  bool HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                     const TripLeg_Use exclude_use);
+
+  bool HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
+                                            const TripLeg_TravelMode travel_mode,
+                                            const TripLeg_Use exclude_use);
+
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
@@ -693,9 +706,10 @@ public:
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
-  uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripLeg_TravelMode travel_mode,
-                                                               TripLeg_Use* use = nullptr);
+  uint32_t
+  GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode,
+                                                      boost::optional<TripLeg_Use>* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);

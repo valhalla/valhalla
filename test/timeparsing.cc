@@ -401,6 +401,63 @@ TEST(TimeParsing, TestConditionalRestrictions) {
       TryConditionalRestrictions(conditions.at(x), 0, 1, 64, 3, 3, 0, 15, 0, 12, 1, 5, 17, 0);
     }
   }
+
+  str = "Mon;Wed;Fr;Friday-Friday";
+  conditions = GetTagTokens(str, ';');
+  for (uint32_t x = 0; x < conditions.size(); x++) {
+    if (x == 0) {
+      TryConditionalRestrictions(conditions.at(x), {4});
+      TryConditionalRestrictions(conditions.at(x), 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    } else if (x == 1) {
+      TryConditionalRestrictions(conditions.at(x), {16});
+      TryConditionalRestrictions(conditions.at(x), 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    } else if (x == 2 || x == 3) {
+      TryConditionalRestrictions(conditions.at(x), {64});
+      TryConditionalRestrictions(conditions.at(x), 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
+  }
+
+  str = "-Friday"; // Invalid input, no start day is provided.
+  conditions = GetTagTokens(str, ';');
+  for (uint32_t x = 0; x < conditions.size(); x++) {
+    TryConditionalRestrictions(conditions.at(x), {});
+  }
+
+  str = "monday-friday 7:00-9:30,13:00-15:00";
+  conditions = GetTagTokens(str, ';');
+  for (uint32_t x = 0; x < conditions.size(); x++) {
+    TryConditionalRestrictions(conditions.at(x), {2080911656828, 32212258172});
+    TryConditionalRestrictions(conditions.at(x), 0, 0, 62, 0, 0, 0, 7, 0, 0, 0, 0, 9, 30);
+    TryConditionalRestrictions(conditions.at(x), 1, 0, 62, 0, 0, 0, 13, 0, 0, 0, 0, 15, 0);
+  }
+
+  // includes end of year
+  str = "Jan 04-Jan 01 Mo-Sa;Jan 04-Jan 01 22:00-24:00;Jan 04-Jan 01";
+  conditions = GetTagTokens(str, ';');
+  for (uint32_t x = 0; x < conditions.size(); x++) {
+    if (x == 0) { // Jan 04-Jan 01 Mo-Sa
+      TryConditionalRestrictions(conditions.at(x), {74766824767740});
+    } else if (x == 1) { // Jan 04-Jan 01 22:00-24:00
+      TryConditionalRestrictions(conditions.at(x), {74766824773120});
+    } else if (x == 2) { // Jan 04-Jan 01
+      TryConditionalRestrictions(conditions.at(x), {74766824767488});
+    }
+  }
+
+  // ranges without time
+  str = "Mon-Friday;Mo,Wed;March-May;March 18-April 30";
+  conditions = GetTagTokens(str, ';');
+  for (uint32_t x = 0; x < conditions.size(); x++) {
+    if (x == 0) { // Mon-Friday
+      TryConditionalRestrictions(conditions.at(x), {124});
+    } else if (x == 1) { // Mo,Wed
+      TryConditionalRestrictions(conditions.at(x), {20});
+    } else if (x == 2) { // March-May
+      TryConditionalRestrictions(conditions.at(x), {21990234128384});
+    } else if (x == 3) { // March 18-April 30
+      TryConditionalRestrictions(conditions.at(x), {2128654663942144});
+    }
+  }
 }
 
 int main(int argc, char* argv[]) {

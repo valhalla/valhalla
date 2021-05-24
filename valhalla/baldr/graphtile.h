@@ -42,17 +42,15 @@ namespace baldr {
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
-#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
-using GraphTileRefCounter = boost::thread_safe_counter;
-#else
-using GraphTileRefCounter = boost::thread_unsafe_counter;
-#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
-
 class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
-class GraphTile : public boost::intrusive_ref_counter<GraphTile, GraphTileRefCounter> {
+#ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+class GraphTile : public boost::intrusive_ref_counter<GraphTile, boost::thread_unsafe_counter> {
+#else
+class GraphTile {
+#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
@@ -569,13 +567,13 @@ public:
         partial_live_pct =
             (
                 // First section
-                (live_speed.speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
+                (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
                 // Second section
-                + (live_speed.speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
                        ? (live_speed.breakpoint2 - live_speed.breakpoint1)
                        : 0)
                 // Third section
-                + (live_speed.speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
                        ? (255 - live_speed.breakpoint2)
                        : 0)) /
             255.0;

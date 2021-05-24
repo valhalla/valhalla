@@ -6,6 +6,7 @@
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
 
+#include <list>
 #include <tuple>
 #include <unordered_set>
 #include <vector>
@@ -64,6 +65,15 @@ public:
   template <class container_t> static typename coord_t::value_type Length(const container_t& pts);
 
   /**
+   * In an O(n^2) manner (only useful for debugging/testing), checks if there are any
+   * segments in the polyline that are intersecting. If so, returns those intersection
+   * points.
+   * @param   pts  Polyline vertices.
+   * @return  List of intersections found, if any.
+   */
+  std::vector<coord_t> GetSelfIntersections();
+
+  /**
    * Finds the closest point to the supplied point as well as the distance
    * to that point and the index of the segment where the closest
    * point lies.
@@ -81,14 +91,16 @@ public:
    * Generalize this polyline.
    * @param   t         Generalization tolerance.
    * @param   indices   List of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    * @return  returns the number of points in the generalized polyline.
    */
   uint32_t Generalize(const typename coord_t::value_type t,
-                      const std::unordered_set<size_t>& indices = {}) {
+                      const std::unordered_set<size_t>& indices = {},
+                      bool avoid_self_intersection = false) {
     // Create a vector for the output shape. Recursively call Douglass-Peucker
     // method to generalize the polyline. Square the error tolerance to avoid
     // sqrts.
-    Generalize(pts_, t, indices);
+    Generalize(pts_, t, indices, avoid_self_intersection);
     return pts_.size();
   }
 
@@ -97,14 +109,16 @@ public:
    * unchanged.
    * @param    t   Generalization tolerance.
    * @param    indices   List of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    * @return   returns the generalized polyline.
    */
   Polyline2 GeneralizedPolyline(const typename coord_t::value_type t,
-                                const std::unordered_set<size_t>& indices = {}) {
+                                const std::unordered_set<size_t>& indices = {},
+                                bool avoid_self_intersection = false) {
     // Recursively call Douglass-Peucker method to generalize the polyline.
     // Square the error tolerance to avoid sqrts.
     Polyline2 generalized(pts_);
-    generalized.Generalize(t, indices);
+    generalized.Generalize(t, indices, avoid_self_intersection);
     return generalized;
   }
 
@@ -114,11 +128,13 @@ public:
    * @param polyline    the list of points
    * @param epsilon     the tolerance used in removing points
    * @param  indices    list of indices of points not to generalize
+   * @param avoid_self_intersection  avoid simplifications that cause self-intersection
    */
   template <class container_t>
   static void Generalize(container_t& polyline,
                          typename coord_t::value_type epsilon,
-                         const std::unordered_set<size_t>& indices = {});
+                         const std::unordered_set<size_t>& indices = {},
+                         bool avoid_self_intersection = false);
 
   /**
    * Clip this polyline to the specified bounding box.

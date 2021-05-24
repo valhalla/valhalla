@@ -147,7 +147,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 // connect the forward and reverse paths. In that case we return false to allow uturns only if this
 // edge is a not-thru edge that will be pruned.
 //
-template <const BidirectionalAStar::ExpansionType expansion_direction>
+template <const ExpansionType expansion_direction>
 inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             const sif::BDEdgeLabel& pred,
                                             const baldr::DirectedEdge* opp_pred_edge,
@@ -157,7 +157,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             uint32_t& shortcuts,
                                             const graph_tile_ptr& tile,
                                             const baldr::TimeInfo& time_info) {
-  constexpr bool FORWARD = expansion_direction == BidirectionalAStar::ExpansionType::forward;
+  constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   auto& hierarchy_limits = FORWARD ? hierarchy_limits_forward_ : hierarchy_limits_reverse_;
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -206,8 +206,16 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = -1;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
-                           restriction_idx) ||
+    // Why is is_dest false?
+    // We have to consider next cases:
+    //  1) At least one step of reverse search was done -> forward search will never reach the
+    //  destination edge. 2) There were no steps of the reverse search -> the destination edge is a
+    //  connection edge.
+    // We can set is_dest incorrectly in the second case, but it is the rare case.
+    // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
+    // function in second time.
+    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
+                           time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {
       return false;
@@ -308,7 +316,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
-template <const BidirectionalAStar::ExpansionType expansion_direction>
+template <const ExpansionType expansion_direction>
 bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::GraphId& node,
                                 sif::BDEdgeLabel& pred,
@@ -316,7 +324,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::DirectedEdge* opp_pred_edge,
                                 const baldr::TimeInfo& time_info,
                                 const bool invariant) {
-  constexpr bool FORWARD = expansion_direction == BidirectionalAStar::ExpansionType::forward;
+  constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);

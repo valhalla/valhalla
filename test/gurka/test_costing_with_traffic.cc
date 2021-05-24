@@ -14,8 +14,8 @@ const std::vector<std::string>& costing = {"auto",  "hov",           "taxi",    
 
 void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
   live_speed->breakpoint1 = 255;
-  live_speed->overall_speed = speed >> 1;
-  live_speed->speed1 = speed >> 1;
+  live_speed->overall_encoded_speed = speed >> 1;
+  live_speed->encoded_speed1 = speed >> 1;
 }
 
 void update_dir_edge(baldr::GraphReader& reader,

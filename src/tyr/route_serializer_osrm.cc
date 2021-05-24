@@ -1616,7 +1616,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 
         // k is the number of named segments in the summary. It keeps going
         // up by 1 until route_i's summary is different than the route_j's.
-        size_t k = 1;
+        size_t k = std::min(num_named_segs_needed, num_comparable);
         for (; (k < num_comparable); k++) {
           const std::string& summary_i = rscache.get_n_segment_summary(route_i, leg_idx, k);
           const std::string& summary_j = rscache.get_n_segment_summary(route_j, leg_idx, k);
@@ -1761,6 +1761,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
     meta.set_num_lanes_blocked(2);
+    meta.set_length(1337);
     meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
@@ -1796,6 +1797,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "lanes_blocked": [],
           "num_lanes_blocked": 2,
           "clear_lanes": "many lanes clear",
+          "length": 1337,
           "closed": true,
           "congestion": {
             "value": 33

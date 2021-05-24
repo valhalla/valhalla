@@ -1,0 +1,39 @@
+[main]
+host = https://www.transifex.com
+
+[valhalla-phrases.locales-en-us-json--transifex]
+file_filter = locales/<lang>.json
+minimum_perc = 0
+source_file = locales/en-US.json
+source_lang = en
+type = KEYVALUEJSON
+
+# Mappings from Transifex locale codes to Valhalla file names
+trans.bg = locales/bg-BG.json
+trans.ca_ES = locales/ca-ES.json
+trans.cs = locales/cs-CZ.json
+trans.da = locales/da-DK.json
+trans.de = locales/de-DE.json
+trans.el = locales/el-GR.json
+trans.en_GB = locales/en-GB.json
+trans.en@pirate = locales/en-US-x-pirate.json
+trans.es_ES = locales/es-ES.json
+trans.et = locales/et-EE.json
+trans.fi = locales/fi-FI.json
+trans.fr = locales/fr-FR.json
+trans.hi = locales/hi-IN.json
+trans.hu = locales/hu-HU.json
+trans.it = locales/it-IT.json
+trans.ja = locales/ja-JP.json
+trans.no = locales/nb-NO.json
+trans.nl = locales/nl-NL.json
+trans.pl = locales/pl-PL.json
+trans.pt_BR = locales/pt-BR.json
+trans.pt_PT = locales/pt-PT.json
+trans.ro = locales/ro-RO.json
+trans.ru = locales/ru-RU.json
+trans.sk = locales/sk-SK.json
+trans.sl = locales/sl-SI.json
+trans.sv = locales/sv-SE.json
+trans.tr = locales/tr-TR.json
+trans.uk = locales/uk-UA.json

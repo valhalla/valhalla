@@ -51,13 +51,13 @@ if (UNIX)
     transitbuilder.cc
     util.cc
     validatetransit.cc
+    speed_assigner.h
     PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-error=missing-field-initializers")
 endif (UNIX)
 
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-
   admin.cc
   adminbuilder.cc
   bssbuilder.cc
@@ -87,6 +87,7 @@ set(sources
   restrictionbuilder.cc
   servicedays.cc
   shortcutbuilder.cc
+  speed_assigner.h
   timeparsing.cc
   transitbuilder.cc
   util.cc
