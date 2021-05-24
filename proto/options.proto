@@ -130,7 +130,7 @@ message CostingOptions {
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
   optional string name = 91;
-  repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from exclude_locations
+  repeated AvoidEdge exclude_edges = 92;                       // Exclude edges for any costing - derived from exclude_locations
   optional bool filter_closures = 93 [default = true];
 }
 
