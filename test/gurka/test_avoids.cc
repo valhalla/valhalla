@@ -69,10 +69,10 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  if (type == "avoid_polygons") {
-    rapidjson::SetValueByPointer(doc, "/avoid_polygons", geom_obj);
+  if (type == "exclude_polygons") {
+    rapidjson::SetValueByPointer(doc, "/exclude_polygons", geom_obj);
   } else {
-    rapidjson::SetValueByPointer(doc, "/avoid_locations", geom_obj);
+    rapidjson::SetValueByPointer(doc, "/exclude_locations", geom_obj);
   }
 
   rapidjson::StringBuffer sb;
@@ -97,9 +97,9 @@ protected:
                               {"AD", {{"highway", "residential"}, {"name", "1st"}}},
                               {"BE", {{"highway", "residential"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    // Add low length limit for avoid_polygons so it throws an error
+    // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
-                                  {{"service_limits.max_avoid_polygons_length", "1000"}});
+                                  {{"service_limits.max_exclude_polygons_length", "1000"}});
   }
 };
 
@@ -118,7 +118,7 @@ TEST_F(AvoidTest, TestConfig) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
+  auto type = "exclude_polygons";
   auto req = build_local_req(doc, allocator, lls, "auto", value, type);
 
   // make sure the right exception is thrown
@@ -158,7 +158,7 @@ TEST_P(AvoidTest, TestAvoidPolygon) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
+  auto type = "exclude_polygons";
   auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
 
   // will avoid 1st
@@ -203,7 +203,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
+  auto type = "exclude_polygons";
   auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
 
   // make sure the right exception is thrown
@@ -236,7 +236,7 @@ TEST_P(AvoidTest, TestAvoidLocation) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_locs(points, allocator);
-  auto type = "avoid_locations";
+  auto type = "exclude_locations";
   auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
 
   // will avoid 1st
