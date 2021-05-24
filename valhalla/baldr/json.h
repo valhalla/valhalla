@@ -174,10 +174,11 @@ inline std::ostream& operator<<(std::ostream& stream, const fixed_t& fp) {
 }
 
 inline std::ostream& operator<<(std::ostream& stream, const float_t& fp) {
+  // precision defaults to 6 according to lib stdc++
   if (std::isfinite(fp.value)) {
-    stream << std::defaultfloat << fp.value;
+    stream << std::setprecision(6) << std::defaultfloat << fp.value;
   } else {
-    stream << std::defaultfloat << '"' << fp.value << '"';
+    stream << std::setprecision(6) << std::defaultfloat << '"' << fp.value << '"';
   }
   return stream;
 }
