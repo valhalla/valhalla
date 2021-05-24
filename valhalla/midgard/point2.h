@@ -194,7 +194,7 @@ public:
     return false;
   }
 
-protected:
+  virtual ~PointXY() = default;
 };
 
 using Point2 = PointXY<float>;

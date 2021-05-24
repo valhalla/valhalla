@@ -26,8 +26,6 @@
 namespace {
 
 constexpr double RAD_PER_METER = 1.0 / 6378160.187;
-constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
-constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
