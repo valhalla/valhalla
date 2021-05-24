@@ -294,7 +294,6 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         !ShortFerry(node_itr.position(), bundle, edges, nodes, ways, way_nodes)) {
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
-      bool oneway_reverse = false;
       for (const auto& edge : bundle.node_edges) {
         // Skip ferry edges and non-driveable edges
         if (edge.first.attributes.driveable_ferry ||

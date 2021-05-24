@@ -21,40 +21,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 
-if (UNIX)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    bssbuilder.cc
-    complexrestrictionbuilder.cc
-    countryaccess.cc
-    dataquality.cc
-    directededgebuilder.cc
-    graphtilebuilder.cc
-    edgeinfobuilder.cc
-    elevationbuilder.cc
-    graphenhancer.cc
-    graphvalidator.cc
-    hierarchybuilder.cc
-    linkclassification.cc
-    luatagtransform.cc
-    node_expander.cc
-    osmdata.cc
-    osmpbfparser.cc
-    osmaccessrestriction.cc
-    osmrestriction.cc
-    osmway.cc
-    pbfadminparser.cc
-    restrictionbuilder.cc
-    shortcutbuilder.cc
-    timeparsing.cc
-    transitbuilder.cc
-    util.cc
-    validatetransit.cc
-    speed_assigner.h
-    PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
-endif (UNIX)
-
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
@@ -92,6 +58,14 @@ set(sources
   transitbuilder.cc
   util.cc
   validatetransit.cc)
+
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+          ${sources}
+          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
+endif (UNIX)
 
 valhalla_module(NAME mjolnir
   SOURCES ${sources}
