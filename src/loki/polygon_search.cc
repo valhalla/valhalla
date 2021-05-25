@@ -112,9 +112,9 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
         baldr::GraphId opp_id;
 
         // bail if we wouldnt be allowed on this edge anyway (or its opposing)
-        if ((!costing->Allowed(edge, tile) || edge->is_shortcut()) &&
+        if (!costing->Allowed(edge, tile) &&
             (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
-             !costing->Allowed(opp_edge, opp_tile) || opp_edge->is_shortcut())) {
+             !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
 
