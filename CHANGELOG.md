@@ -27,6 +27,7 @@
    * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
    * ADDED: Adds incident-length to metadata proto [#3083](https://github.com/valhalla/valhalla/pull/3083)
    * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
+   * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3078](https://github.com/valhalla/valhalla/pull/3095)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**

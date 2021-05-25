@@ -474,12 +474,13 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
   json::ArrayPtr tasks = json::array({});
   for (auto& id : way_IDs) {
     // build shape array before the rest of the json
-    json::ArrayPtr coords = json::array({json::array(
-        {json::fp_t{way_shapes.at(id)[0].lng(), 5}, json::fp_t{way_shapes.at(id)[0].lat(), 5}})});
+    json::ArrayPtr coords =
+        json::array({json::array({json::fixed_t{way_shapes.at(id)[0].lng(), 5},
+                                  json::fixed_t{way_shapes.at(id)[0].lat(), 5}})});
     for (size_t i = 1; i < way_shapes.at(id).size(); ++i) {
       const auto& way_point = way_shapes.at(id)[i];
       coords->emplace_back(
-          json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
+          json::array({json::fixed_t{way_point.lng(), 5}, json::fixed_t{way_point.lat(), 5}}));
     }
     // build each task into the json array
     tasks->emplace_back(json::map(
@@ -493,8 +494,8 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
   auto hasher = std::hash<PointLL>();
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
     tasks->emplace_back(json::map(
-        {{"geometry", json::map({{"coordinates", json::array({{json::fp_t{it->lng(), 5}},
-                                                              {json::fp_t{it->lat(), 5}}})},
+        {{"geometry", json::map({{"coordinates", json::array({{json::fixed_t{it->lng(), 5}},
+                                                              {json::fixed_t{it->lat(), 5}}})},
                                  {"type", std::string("Point")}})},
          {"properties",
           json::map({{"type", std::string("Node")}, {"key", static_cast<uint64_t>(hasher(*it))}})},
