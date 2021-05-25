@@ -1021,8 +1021,13 @@ protected:
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
-    c.cost += service_penalty_ *
-              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
+    
+    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
+      // Do not penalize internal roads that are marked as service.
+      if (!edge->internal())
+        c.cost += service_penalty_;
+    }
+
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
