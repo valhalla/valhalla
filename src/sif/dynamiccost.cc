@@ -90,8 +90,8 @@ DynamicCost::DynamicCost(const CostingOptions& options,
   }
 
   // Add avoid edges to internal set
-  for (auto& edge : options.avoid_edges()) {
-    user_avoid_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  for (auto& edge : options.exclude_edges()) {
+    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }
 
@@ -238,9 +238,9 @@ bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
 }
 
 // Adds a list of edges (GraphIds) to the user specified avoid list.
-void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
-  for (auto edge : avoid_edges) {
-    user_avoid_edges_.insert({edge.id, edge.percent_along});
+void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges) {
+  for (auto edge : exclude_edges) {
+    user_exclude_edges_.insert({edge.id, edge.percent_along});
   }
 }
 
