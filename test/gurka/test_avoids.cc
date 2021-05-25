@@ -195,7 +195,7 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
   // create the polygon intersecting a shortcut
   auto* rings = options.mutable_avoid_polygons();
   auto* ring = rings->Add();
-  for (const auto coord :
+  for (const auto& coord :
        {avoid_map.nodes["p"], avoid_map.nodes["q"], avoid_map.nodes["r"], avoid_map.nodes["s"]}) {
     auto* ll = ring->add_coords();
     ll->set_lat(coord.lat());
