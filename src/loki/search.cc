@@ -495,7 +495,7 @@ struct bin_handler_t {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (edge->is_shortcut() || !edge_id.Is_Valid() || !costing->Allowed(edge, tile))
+        if (!edge_id.Is_Valid() || edge->is_shortcut() || !costing->Allowed(edge, tile))
           continue;
       }
 
