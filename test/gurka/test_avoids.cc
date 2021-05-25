@@ -98,7 +98,7 @@ protected:
                                    | | |  | | |
                                    k---j  o---n
                                      |      |   p-q
-                                     C------D---|-|---E
+                                     C------D---|-|---E---F
                                                 s-r
                                      )";
 
@@ -106,7 +106,8 @@ protected:
                               {"CD", {{"highway", "tertiary"}, {"name", "Low"}}},
                               {"AC", {{"highway", "tertiary"}, {"name", "1st"}}},
                               {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
-                              {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}}};
+                              {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
+                              {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
@@ -206,17 +207,15 @@ TEST_P(AvoidTest, TestAvoidShortcuts) {
   GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
-  const auto avoid_edges = vl::edges_in_rings(*rings, reader, costing, 10000);
-
   size_t found_shortcuts = 0;
+  auto avoid_edges = vl::edges_in_rings(*rings, reader, costing, 10000);
   for (const auto& edge_id : avoid_edges) {
-    if (reader.GetGraphTile(edge_id)->directededge(edge_id)) {
+    if (reader.GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
       found_shortcuts++;
-      break;
     }
   }
 
-  ASSERT_EQ(found_shortcuts, 1);
+  ASSERT_EQ(found_shortcuts, 2);
 }
 
 TEST_P(AvoidTest, TestAvoidLocation) {
