@@ -24,7 +24,7 @@ using MapPtr = std::shared_ptr<Jmap>;
 class Jarray;
 using ArrayPtr = std::shared_ptr<Jarray>;
 
-// Fixed precision ser
+// Fixed precision serializer - outputs a fixed number of decimal places
 struct fixed_t {
   long double value;
   size_t precision;
@@ -32,6 +32,7 @@ struct fixed_t {
   friend std::ostream& operator<<(std::ostream& stream, const fixed_t&);
 };
 
+// Floating point serializer - variable number of decimal places (no trailing zeros)
 struct float_t {
   long double value;
   friend std::ostream& operator<<(std::ostream& stream, const float_t&);
