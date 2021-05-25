@@ -165,7 +165,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
                           uint8_t& restriction_idx) {
   bool valid_pred =
-      (!pred_edgelabel.edgeid().Is_Valid() && !edge->is_shortcut() && costing->Allowed(edge, tile)) ||
+      (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile, sif::kDisallowShortcut)) ||
       edgeid == pred_edgelabel.edgeid();
   bool restricted =
       !costing->Allowed(edge, false, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
