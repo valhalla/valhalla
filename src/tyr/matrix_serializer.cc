@@ -29,8 +29,8 @@ serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const 
 json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
                                   size_t start_td,
                                   const size_t td_count,
-                                  const size_t source_index,
-                                  const size_t target_index,
+                                  const size_t /* source_index */,
+                                  const size_t /* target_index */,
                                   double distance_scale) {
   auto distance = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
