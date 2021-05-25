@@ -27,6 +27,7 @@
    * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
    * ADDED: Adds incident-length to metadata proto [#3083](https://github.com/valhalla/valhalla/pull/3083)
    * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
+   * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3078](https://github.com/valhalla/valhalla/pull/3095)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
@@ -118,6 +119,7 @@
    * CHANGED: Factor for service roads is 1.0 by default. [#2988](https://github.com/valhalla/valhalla/pull/2988)
    * ADDED: Support for conditionally skipping CI runs [#2986](https://github.com/valhalla/valhalla/pull/2986)
    * ADDED: Add instructions for building valhalla on `arm64` macbook [#2997](https://github.com/valhalla/valhalla/pull/2997)
+   * NIT: Enables compiler warnings in part of mjolnir module [#2995](https://github.com/valhalla/valhalla/pull/2995)
    * CHANGED: nit(rename): Renames the encoded live speed properties [#2998](https://github.com/valhalla/valhalla/pull/2998)
    * ADDED: ci: Vendors the codecov script [#3002](https://github.com/valhalla/valhalla/pull/3002)
    * CHANGED: Allow None build type [#3005](https://github.com/valhalla/valhalla/pull/3005)

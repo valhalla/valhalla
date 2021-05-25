@@ -6,6 +6,8 @@
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 
+#define UNUSED(x) (void)(x)
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -210,7 +212,6 @@ bool ShortFerry(const uint32_t node_index,
                 node_bundle& bundle,
                 sequence<Edge>& edges,
                 sequence<Node>& nodes,
-                sequence<OSMWay>& ways,
                 sequence<OSMWayNode>& way_nodes) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -222,7 +223,6 @@ bool ShortFerry(const uint32_t node_index,
     }
     return shape;
   };
-  uint64_t wayid = 0;
   bool short_edge = false;
   for (const auto& edge : bundle.node_edges) {
     // Check ferry edge.
@@ -249,17 +249,12 @@ bool ShortFerry(const uint32_t node_index,
       if (bundle2.node.non_ferry_edge_) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
         if (midgard::length(shape) < 2000.0f) {
-          const OSMWay w = *ways[edge.first.wayindex_];
-          wayid = w.way_id();
           short_edge = true;
         }
       } else {
         short_edge = false;
       }
     }
-  }
-  if (short_edge) {
-    LOG_DEBUG("Skip short ferry: way_id = " + std::to_string(wayid));
   }
   return short_edge;
 }
@@ -291,10 +286,9 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > rc &&
-        !ShortFerry(node_itr.position(), bundle, edges, nodes, ways, way_nodes)) {
+        !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
-      bool oneway_reverse = false;
       for (const auto& edge : bundle.node_edges) {
         // Skip ferry edges and non-driveable edges
         if (edge.first.attributes.driveable_ferry ||

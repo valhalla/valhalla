@@ -150,8 +150,8 @@ struct TrafficSpeed {
       if (congestion < 0)
         live_speed->emplace("congestion_0", nullptr);
       else
-        live_speed->emplace("congestion_0", json::fp_t{congestion, 2});
-      live_speed->emplace("breakpoint_0", json::fp_t{breakpoint1 / 255.0, 2});
+        live_speed->emplace("congestion_0", json::fixed_t{congestion, 2});
+      live_speed->emplace("breakpoint_0", json::fixed_t{breakpoint1 / 255.0, 2});
 
       speed = static_cast<uint64_t>(get_speed(1));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -162,8 +162,8 @@ struct TrafficSpeed {
       if (congestion < 0)
         live_speed->emplace("congestion_1", nullptr);
       else
-        live_speed->emplace("congestion_1", json::fp_t{congestion, 2});
-      live_speed->emplace("breakpoint_1", json::fp_t{breakpoint2 / 255.0, 2});
+        live_speed->emplace("congestion_1", json::fixed_t{congestion, 2});
+      live_speed->emplace("breakpoint_1", json::fixed_t{breakpoint2 / 255.0, 2});
 
       speed = static_cast<uint64_t>(get_speed(2));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -174,7 +174,7 @@ struct TrafficSpeed {
       if (congestion < 0)
         live_speed->emplace("congestion_2", nullptr);
       else
-        live_speed->emplace("congestion_2", json::fp_t{congestion, 2});
+        live_speed->emplace("congestion_2", json::fixed_t{congestion, 2});
     }
     return live_speed;
   }

@@ -158,10 +158,10 @@ struct Node {
   baldr::GraphId graph_id;
 
   bool is_start() const {
-    return start_of != -1;
+    return start_of != static_cast<uint32_t>(-1);
   }
   bool is_end() const {
-    return end_of != -1;
+    return end_of != static_cast<uint32_t>(-1);
   }
 };
 

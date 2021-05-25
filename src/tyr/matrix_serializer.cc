@@ -29,14 +29,14 @@ serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const 
 json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
                                   size_t start_td,
                                   const size_t td_count,
-                                  const size_t source_index,
-                                  const size_t target_index,
+                                  const size_t /* source_index */,
+                                  const size_t /* target_index */,
                                   double distance_scale) {
   auto distance = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance in matrix result
     if (tds[i].time != kMaxCost) {
-      distance->emplace_back(json::fp_t{tds[i].dist * distance_scale, 3});
+      distance->emplace_back(json::fixed_t{tds[i].dist * distance_scale, 3});
     } else {
       distance->emplace_back(static_cast<std::nullptr_t>(nullptr));
     }
@@ -82,8 +82,8 @@ valhalla output looks like this:
 json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
   auto input_locs = json::array({});
   for (size_t i = 0; i < correlated.size(); i++) {
-    input_locs->emplace_back(json::map({{"lat", json::fp_t{correlated.Get(i).ll().lat(), 6}},
-                                        {"lon", json::fp_t{correlated.Get(i).ll().lng(), 6}}}));
+    input_locs->emplace_back(json::map({{"lat", json::fixed_t{correlated.Get(i).ll().lat(), 6}},
+                                        {"lon", json::fixed_t{correlated.Get(i).ll().lng(), 6}}}));
   }
   return input_locs;
 }
@@ -102,7 +102,7 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
       row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
                                    {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
                                    {"time", static_cast<uint64_t>(tds[i].time)},
-                                   {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}}));
+                                   {"distance", json::fixed_t{tds[i].dist * distance_scale, 3}}}));
     } else {
       row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
                                    {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},

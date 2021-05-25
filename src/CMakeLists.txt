@@ -92,7 +92,6 @@ function(valhalla_module)
       # However, NOGDI needs to be undefined in logging.h
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
-      RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
@@ -204,9 +203,6 @@ target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
     $<$<BOOL:${MSVC}>:NOMINMAX>
-    RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
-                             # because ${libvalhalla_compile_definitions} must be private.
-                             # To be removed with ${libvalhalla_compile_definitions} below
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
   PRIVATE
