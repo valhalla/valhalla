@@ -26,8 +26,8 @@ TEST(JSON, Serialize) {
                                     {"total_time", uint64_t(145)},
                                     {"total_distance", uint64_t(878)}})},
        {"via_points",
-        json::array({json::array({json::fp_t{40.744377, 3}, json::fp_t{-73.990433, 3}}),
-                     json::array({json::fp_t{40.745811, 3}, json::fp_t{-73.988075, 3}})})},
+        json::array({json::array({json::fixed_t{40.744377, 3}, json::fixed_t{-73.990433, 3}}),
+                     json::array({json::fixed_t{40.745811, 3}, json::fixed_t{-73.988075, 3}})})},
        {"route_instructions",
         json::array(
             {json::array({string("10"), string("West 26th Street"), uint64_t(216), uint64_t(0),
