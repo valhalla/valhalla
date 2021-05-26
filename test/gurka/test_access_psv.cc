@@ -70,14 +70,10 @@ TEST(Standalone, AccessPsvNode) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
-      {"EG", {{"highway", "primary"}}},
-      {"HG", {{"highway", "primary"}}},
-      {"CF", {{"highway", "primary"}}},
-      {"FH", {{"highway", "primary"}}},
+      {"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
+      {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
+      {"EG", {{"highway", "primary"}}}, {"HG", {{"highway", "primary"}}},
+      {"CF", {{"highway", "primary"}}}, {"FH", {{"highway", "primary"}}},
 
   };
 
@@ -89,14 +85,15 @@ TEST(Standalone, AccessPsvNode) {
                                }}};
 
   const auto layout =
-        gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-    auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_access_psv_way", build_config);
-    for (auto& c : costing) {
-      auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, c);
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_access_psv_way", build_config);
+  for (auto& c : costing) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, c);
 
-      if (c == "bus" || c == "taxi")
-        gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FH"});
-      else
-        gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "HG"});
-    }
+    if (c == "bus" || c == "taxi")
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FH"});
+    else
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "HG"});
+  }
 }
