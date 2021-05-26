@@ -12,6 +12,7 @@
    * FIXED: Incorrect routing through motor_vehicle:conditional=destination. [#3041](https://github.com/valhalla/valhalla/pull/3041)
    * FIXED: Highway/ramp lane bifurcation [#3088](https://github.com/valhalla/valhalla/pull/3088)
    * FIXED: out of bound access of tile hierarchy in base_ll function in graphheader [#3089](https://github.com/valhalla/valhalla/pull/3089)
+   * FIXED: include shortcuts in avoid edge set for avoid_polygons [#3090](https://github.com/valhalla/valhalla/pull/3090)
   
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
