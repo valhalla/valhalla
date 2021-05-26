@@ -900,6 +900,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
   // sense relative to your changes.
   std::vector<int> expected_path_edge_sizes = {2, 1, 1};
   std::vector<int> actual_path_edge_sizes;
+  actual_path_edge_sizes.reserve(api.options().locations_size());
   for (int i = 0; i < api.options().locations_size(); i++) {
     actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
   }
