@@ -485,7 +485,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // portion of the graph) rather than strictly alternating.
   // TODO - CostMatrix alternates, maybe should try alternating here?
   int n = 0;
-  uint32_t forward_pred_idx, reverse_pred_idx;
+  uint32_t forward_pred_idx = 0, reverse_pred_idx = 0;
   BDEdgeLabel fwd_pred, rev_pred;
   bool expand_forward = true;
   bool expand_reverse = true;
@@ -1005,10 +1005,12 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     uint32_t idx2 = edgestatus_reverse_.Get(best_connection->opp_edgeid).index();
 
     // Metrics (TODO - more accurate cost)
+#ifdef LOGGING_LEVEL_DEBUG
     uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
     LOG_DEBUG("path_cost::" + std::to_string(pathcost));
     LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
               std::to_string(edgelabels_reverse_.size()));
+#endif
 
     // set of edges recovered from shortcuts (excluding shortcut's start edges)
     std::unordered_set<GraphId> recovered_inner_edges;

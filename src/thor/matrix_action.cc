@@ -22,7 +22,7 @@ constexpr double kMilePerMeter = 0.000621371;
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kCostMatrixThreshold = 5;
+constexpr int kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic

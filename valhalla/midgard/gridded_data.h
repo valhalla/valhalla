@@ -53,7 +53,7 @@ public:
    * @param  set_data Functor to set the desired data value
    */
   inline void SetIfLessThan(const int tile_id, const value_type& value) {
-    if (tile_id >= 0 && tile_id < data_.size()) {
+    if (tile_id >= 0 && tile_id < static_cast<int>(data_.size())) {
       auto& current_value = data_[tile_id];
       for (size_t i = 0; i < dimensions_t; ++i) {
         current_value[i] = std::min(value[i], current_value[i]);

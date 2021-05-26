@@ -113,7 +113,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
   // spaces is checked during the forward search.
-  int n = 0;
+  uint32_t n = 0;
   while (true) {
     // Iterate all target locations in a backwards search
     for (uint32_t i = 0; i < target_count_; i++) {
@@ -183,7 +183,6 @@ void CostMatrix::Initialize(
   }
 
   // Initialize best connection
-  bool all_the_same = true;
   GraphId empty;
   Cost trivial_cost(0.0f, 0.0f);
   Cost max_cost(kMaxCost, kMaxCost);
@@ -196,7 +195,6 @@ void CostMatrix::Initialize(
         best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
         source_status_[i].remaining_locations.insert(j);
         target_status_[j].remaining_locations.insert(i);
-        all_the_same = false;
       }
     }
   }
