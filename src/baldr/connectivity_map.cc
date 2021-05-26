@@ -59,7 +59,7 @@ json::MapPtr to_properties(uint64_t id, const std::string& color) {
       {"fill", color},
       {"stroke", std::string("white")},
       {"stroke-width", static_cast<uint64_t>(1)},
-      {"fill-opacity", json::fp_t{0.8, 1}},
+      {"fill-opacity", json::fixed_t{0.8, 1}},
       {"id", id},
   });
 }
@@ -72,10 +72,10 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
     for (const auto& coord : ring) {
       // if (outer) {
       ring_coords->emplace_back(
-          json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
+          json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
       /*} else {
         ring_coords->emplace_front(
-            json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
+            json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
       }*/
     }
     coords->emplace_back(ring_coords);
