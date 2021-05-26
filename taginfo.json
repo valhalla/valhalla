@@ -1213,7 +1213,7 @@
       "value": "crossing",
       "object_types": [
         "node",
-        "way",
+        "way"
       ],
       "description": "Allows access for all modes unless the mode override is set."
     },
