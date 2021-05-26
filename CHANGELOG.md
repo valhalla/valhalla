@@ -1,4 +1,9 @@
-## Release Date: 2021-??-?? Valhalla 3.1.2
+## Release Date: 2021-??-?? Valhalla 3.1.3
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
 * **Bug Fix**
    * FIXED: Change unnamed road intersections from being treated as penil point u-turns [#3084](https://github.com/valhalla/valhalla/pull/3084)
