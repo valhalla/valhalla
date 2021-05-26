@@ -85,7 +85,6 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
   }
 
   // Expand from end node.
-  uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
 
   EdgeStatusInfo* es =
@@ -191,7 +190,6 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
   SetDestinationsOneToMany(graphreader, locations);
 
   // Find shortest path
-  const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.

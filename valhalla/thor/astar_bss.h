@@ -151,9 +151,8 @@ protected:
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination.
-   * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

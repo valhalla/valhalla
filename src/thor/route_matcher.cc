@@ -264,7 +264,6 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
 
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
-  auto time_info = TimeInfo::invalid();
   for (const auto& e : options.locations(0).path_edges()) {
     GraphId graphid(e.graph_id());
     if (!graphid.Is_Valid() || !reader.GetGraphTile(graphid, tile))

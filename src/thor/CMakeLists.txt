@@ -27,15 +27,12 @@ set(sources
   unidirectional_astar.cc
   worker.cc)
 
-if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
-    alternates.cc
-    attributes_controller.cc
-    triplegbuilder.cc
-    worker.cc
-  PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+    ${sources}
+    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif ()
 
 valhalla_module(NAME thor

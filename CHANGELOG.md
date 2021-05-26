@@ -29,7 +29,8 @@
    * ADDED: Adds incident-length to metadata proto [#3083](https://github.com/valhalla/valhalla/pull/3083)
    * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
    * ADDED: Added missing k/v pairs to taginfo.json.  Updated PR template. [#3101](https://github.com/valhalla/valhalla/pull/3101)
-   * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3078](https://github.com/valhalla/valhalla/pull/3095)
+   * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3095](https://github.com/valhalla/valhalla/pull/3095)
+   * NIT: Enables compiler warnings in thor module for single source files [#3106](https://github.com/valhalla/valhalla/pull/3106)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**

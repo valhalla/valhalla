@@ -28,7 +28,7 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
+    : settled_count_(0), current_cost_threshold_(0), mode_(TravelMode::kDrive) {
 }
 
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
