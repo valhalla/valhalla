@@ -8,8 +8,8 @@
     "project_url": "https://github.com/valhalla",
     "doc_url": "",
     "icon_url": "https://avatars0.githubusercontent.com/u/10232331",
-    "contact_name": "Valhalla",
-    "contact_email": "valhalla@mapzen.com"
+    "contact_name": "Greg Knisely",
+    "contact_email": "greg.knisely@mapbox.com"
   },
   "tags": [
     {
@@ -284,6 +284,14 @@
     },
     {
       "key": "barrier",
+      "value": "sump_buster",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set sump_buster flag to true.  Access for all modes is turned off, unless the override is set."
+    },
+    {
+      "key": "barrier",
       "value": "border_control",
       "object_types": [
         "node"
@@ -305,6 +313,29 @@
         "node"
       ],
       "description": "Sets the toll gantry flag to true"
+    },
+    {
+      "key": "public_transport",
+      "value": "",
+      "object_types": [
+        "node"
+      ],
+      "description": "Used to determine if a node is a named intersection."
+    },
+    {
+      "key": "reference_point",
+      "value": "yes",
+      "object_types": [
+        "node"
+      ],
+      "description": "Used to determine if a node is a named intersection."
+    },
+    {
+      "key": "junction",
+      "object_types": [
+        "node"
+      ],
+      "description": "Used to determine if a node is a named intersection."
     },
     {
       "key": "bicycle",
@@ -842,6 +873,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "bus:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "busway",
       "valuedd": "lane",
       "object_types": [
@@ -1173,7 +1212,8 @@
       "key": "cycleway",
       "value": "crossing",
       "object_types": [
-        "node"
+        "node",
+        "way",
       ],
       "description": "Allows access for all modes unless the mode override is set."
     },
@@ -1544,6 +1584,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "emergency:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
       "value": "psv",
       "key": "except",
@@ -1811,12 +1859,21 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "foot:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "footway",
       "value": "crossing",
       "object_types": [
-        "node"
+        "node",
+        "way"
       ],
-      "description": "Allows access for all modes unless the mode override is set."
+      "description": "For nodes: allows access for all modes unless the mode override is set.  For ways: sets the use to Pedestrian Crossing "
     },
     {
       "key": "hazmat",
@@ -2274,6 +2331,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "hgv:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "hgv:national_network",
       "object_types": [
         "way"
@@ -2566,6 +2631,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "hov:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "hov:lanes",
       "object_types": [
         "way",
@@ -2600,6 +2673,14 @@
     {
       "key": "junction",
       "value": "roundabout",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets auto backward to false."
+    },
+    {
+      "key": "junction",
+      "value": "circular",
       "object_types": [
         "way"
       ],
@@ -3041,6 +3122,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "mofa:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "moped",
       "value": "yes",
       "object_types": [
@@ -3179,6 +3268,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "moped:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "motor_vehicle",
       "value": "no",
       "object_types": [
@@ -3372,6 +3469,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "motor_vehicle:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "motorcar",
       "value": "no",
       "object_types": [
@@ -3566,6 +3671,14 @@
     },
     {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "motorcar:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -3599,6 +3712,14 @@
     {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
+      "key": "motorcycle:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
         "way"
@@ -4267,6 +4388,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "pedestrian:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "psv",
       "value": "no",
       "object_types": [
@@ -4415,6 +4544,14 @@
       ]
     },
     {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
+      "key": "psv:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "railway",
       "value": "rail",
       "description": "If auto access then this is a auto train.",
@@ -4458,8 +4595,6 @@
       "key": "restriction",
       "value": "no_left_turn",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4467,8 +4602,6 @@
       "key": "restriction",
       "value": "no_right_turn",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4476,8 +4609,6 @@
       "key": "restriction",
       "value": "no_straight_on",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4485,8 +4616,6 @@
       "key": "restriction",
       "value": "no_u_turn",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4494,8 +4623,6 @@
       "key": "restriction",
       "value": "only_left_turn",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4503,8 +4630,6 @@
       "key": "restriction",
       "value": "only_right_turn",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4512,8 +4637,6 @@
       "key": "restriction",
       "value": "only_straight_on",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4521,8 +4644,6 @@
       "key": "restriction",
       "value": "no_entry",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4530,8 +4651,6 @@
       "key": "restriction",
       "value": "no_exit",
       "object_types": [
-        "node",
-        "way",
         "relation"
       ]
     },
@@ -4539,8 +4658,78 @@
       "key": "restriction",
       "value": "no_turn",
       "object_types": [
-        "node",
-        "way",
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_right_turn @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_left_turn @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_u_turn @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_straight_on @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "only_right_turn @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "only_left_turn @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "only_straight_on @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_entry @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
+        "relation"
+      ]
+    },
+    {
+      "description": "Conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "no_exit @ (opening_hours format);",
+      "key": "restriction:conditional",
+      "object_types": [
         "relation"
       ]
     },
@@ -5978,6 +6167,14 @@
     {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
+      "key": "taxi:conditional",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "value": "destination @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
         "way"
