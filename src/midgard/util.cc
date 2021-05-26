@@ -25,8 +25,6 @@
 
 namespace {
 
-constexpr double RAD_PER_METER = 1.0 / 6378160.187;
-
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   std::vector<valhalla::midgard::PointLL> resampled;
