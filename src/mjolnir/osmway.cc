@@ -114,7 +114,7 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
       tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
-    for (const auto& t : tokens) {
+    for (size_t i = 0; i < tokens.size(); ++i) {
       types |= static_cast<uint64_t>(1) << location;
       location++;
     }
@@ -140,7 +140,7 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
       tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
-    for (const auto& t : tokens) {
+    for (size_t i = 0; i < tokens.size(); ++i) {
       types |= static_cast<uint64_t>(1) << location;
       location++;
     }
