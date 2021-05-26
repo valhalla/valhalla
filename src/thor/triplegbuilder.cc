@@ -22,7 +22,6 @@
 #include "sif/costconstants.h"
 #include "sif/recost.h"
 #include "thor/attributes_controller.h"
-#include "thor/tile_no_longer_available_error.h"
 #include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
 
@@ -1141,12 +1140,12 @@ void TripLegBuilder::Build(
   // begin node of the original edge
   auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
   if (begin_tile == nullptr) {
-    throw tile_no_longer_available_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
+    throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
   auto* first_edge = begin_tile->directededge(path_begin->edgeid);
   auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
   if (first_tile == nullptr) {
-    throw tile_no_longer_available_error_t("TripLegBuilder::Build failed", first_edge->endnode());
+    throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
   }
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
@@ -1222,7 +1221,7 @@ void TripLegBuilder::Build(
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
     if (graphtile == nullptr) {
-      continue;
+      throw tile_gone_error_t("TripLegBuilder::Build failed", edge);
     }
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
@@ -1233,7 +1232,7 @@ void TripLegBuilder::Build(
     graph_tile_ptr start_tile = graphtile;
     graphreader.GetGraphTile(startnode, start_tile);
     if (start_tile == nullptr) {
-      continue;
+      throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
     }
     const NodeInfo* node = start_tile->node(startnode);
 
@@ -1466,11 +1465,12 @@ void TripLegBuilder::Build(
   auto* node = trip_path.add_node();
   if (controller.attributes.at(kNodeAdminIndex)) {
     auto last_tile = graphreader.GetGraphTile(startnode);
-    if (last_tile != nullptr) {
-      node->set_admin_index(
-          GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()),
-                        admin_info_map, admin_info_list));
+    if (last_tile == nullptr) {
+      throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
     }
+    node->set_admin_index(
+        GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,
+                      admin_info_list));
   }
   if (controller.attributes.at(kNodeElapsedTime)) {
     node->mutable_cost()->mutable_elapsed_cost()->set_seconds(std::prev(path_end)->elapsed_cost.secs);

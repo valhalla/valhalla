@@ -7,7 +7,6 @@
 #include "sif/edgelabel.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
-#include "thor/tile_no_longer_available_error.h"
 #include <algorithm>
 
 using namespace valhalla::midgard;
@@ -38,20 +37,6 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
       return e.percent_along();
   }
   throw std::logic_error("Could not find candidate edge for the location");
-}
-
-const DirectedEdge* get_directed_edge_or_throw(std::string&& errorprefix,
-                                               GraphReader& graphreader,
-                                               const GraphId& edgeid,
-                                               graph_tile_ptr& tile) {
-  using namespace valhalla::thor;
-
-  const DirectedEdge* edge = graphreader.directededge(edgeid, tile);
-  if (edge == nullptr) {
-    throw tile_no_longer_available_error_t(std::move(errorprefix), edgeid);
-  }
-
-  return edge;
 }
 
 } // namespace
@@ -1053,8 +1038,10 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
          edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
 
-      const auto* edge = get_directed_edge_or_throw("BidirectionalAStar::FormPath failed",
-                                                    graphreader, edgelabel.edgeid(), tile);
+      const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
+      if (edge == nullptr) {
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+      }
 
       if (edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
@@ -1082,8 +1069,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       const DirectedEdge* opp_edge = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
       if (opp_edge == nullptr) {
-        throw tile_no_longer_available_error_t("BidirectionalAStar::FormPath failed",
-                                               edgelabel.edgeid());
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
       }
 
       if (opp_edge->is_shortcut()) {
