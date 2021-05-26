@@ -60,13 +60,14 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
  * the decision should be. By default allowed methods will not disallow start/end/simple
- * restrictions and closures are determined by the costing configuration
+ * restrictions/shortcuts and closures are determined by the costing configuration
  */
 constexpr uint16_t kDisallowNone = 0x0;
 constexpr uint16_t kDisallowStartRestriction = 0x1;
 constexpr uint16_t kDisallowEndRestriction = 0x2;
 constexpr uint16_t kDisallowSimpleRestriction = 0x4;
 constexpr uint16_t kDisallowClosure = 0x8;
+constexpr uint16_t kDisallowShortcut = 0x10;
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -239,8 +240,9 @@ public:
     bool assumed_restricted =
         ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
-        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
-    return !edge->is_shortcut() && accessible && !assumed_restricted;
+        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
+        ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
+    return accessible && !assumed_restricted;
   }
 
   /**
