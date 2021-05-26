@@ -16,7 +16,23 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
+}
+
 void thor_worker_t::chinese_postman(Api& request) {
+
+  auto correlated = request.options().locations();
+  auto it = correlated.begin();
+  auto origin = &it;
+  it++;
+  auto destination = &it;
+
+  valhalla::Location originLocation = **origin;
+  valhalla::Location destinationLocation = **destination;
+
+  midgard::PointLL originPoint = to_ll(originLocation);
+  midgard::PointLL destinationPoint = to_ll(destinationLocation);
 
   ChinesePostmanGraph G;
   sif::TravelMode mode_; // Current travel mode
