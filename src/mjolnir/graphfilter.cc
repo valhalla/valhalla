@@ -226,7 +226,6 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   LOG_INFO("Update end nodes of directed edges");
 
   int found = 0;
-  int not_found = 0;
 
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
