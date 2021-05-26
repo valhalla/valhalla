@@ -693,6 +693,7 @@ std::string dump_geojson_graph(const map& graph) {
       properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
                            std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
+      properties.AddMember("is_shortcut", edge.is_shortcut() ? true : false, doc.GetAllocator());
 
       // add the geom
       rapidjson::Value geometry(rapidjson::kObjectType);

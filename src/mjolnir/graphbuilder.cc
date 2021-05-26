@@ -243,7 +243,7 @@ void ConstructEdges(const std::string& ways_file,
           doubled_back = current_way_node_index != last_way_node_index;
         }
 
-        // Either we were done making edges from this way or there is an internal part that is doubled
+        // Either we were done making edges from this way or the is an internal part that is doubled
         // backed over itself and we need to skip it
         if (current_way_node_index == last_way_node_index || doubled_back) {
           edges.push_back(prev_edge);

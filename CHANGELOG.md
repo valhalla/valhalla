@@ -13,6 +13,7 @@
    * FIXED: Allow destination-only routing on the first-pass for non bidirectional A* algorithms. [#3085](https://github.com/valhalla/valhalla/pull/3085)
    * FIXED: Highway/ramp lane bifurcation [#3088](https://github.com/valhalla/valhalla/pull/3088)
    * FIXED: out of bound access of tile hierarchy in base_ll function in graphheader [#3089](https://github.com/valhalla/valhalla/pull/3089)
+   * FIXED: include shortcuts in avoid edge set for avoid_polygons [#3090](https://github.com/valhalla/valhalla/pull/3090)
   
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
@@ -30,6 +31,7 @@
    * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
    * ADDED: Added missing k/v pairs to taginfo.json.  Updated PR template. [#3101](https://github.com/valhalla/valhalla/pull/3101)
    * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3078](https://github.com/valhalla/valhalla/pull/3095)
+   * NIT: Enables compiler warnings as errors in midgard module [#3104](https://github.com/valhalla/valhalla/pull/3104)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**
