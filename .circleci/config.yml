@@ -157,7 +157,10 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-docker-images
+      - build-docker-images:
+          filters:
+            tags:
+              only: /.*/
       - lint-build-debug:
           filters:
             tags:

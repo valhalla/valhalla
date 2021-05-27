@@ -250,8 +250,8 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
 
 json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
   auto m = json::map({
-      {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
-      {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},
+      {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
+      {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
       {"access", access_json(access_)},
       {"tagged_access", static_cast<bool>(tagged_access_)},

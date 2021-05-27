@@ -19,11 +19,11 @@ json::ArrayPtr serialize_range_height(const std::vector<double>& ranges,
   auto range = ranges.cbegin();
 
   for (const auto height : heights) {
-    auto element = json::array({json::fp_t{*range, 0}});
+    auto element = json::array({json::fixed_t{*range, 0}});
     if (height == no_data_value) {
       element->push_back(nullptr);
     } else {
-      element->push_back({json::fp_t{height, precision}});
+      element->push_back({json::fixed_t{height, precision}});
     }
     array->push_back(element);
     ++range;
@@ -41,7 +41,7 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights,
     if (height == no_data_value) {
       array->push_back(nullptr);
     } else {
-      array->push_back({json::fp_t{height, precision}});
+      array->push_back({json::fixed_t{height, precision}});
     }
   }
 
@@ -51,8 +51,8 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights,
 json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
   auto array = json::array({});
   for (const auto& p : shape) {
-    array->emplace_back(
-        json::map({{"lon", json::fp_t{p.ll().lng(), 6}}, {"lat", json::fp_t{p.ll().lat(), 6}}}));
+    array->emplace_back(json::map(
+        {{"lon", json::fixed_t{p.ll().lng(), 6}}, {"lat", json::fixed_t{p.ll().lat(), 6}}}));
   }
   return array;
 }
