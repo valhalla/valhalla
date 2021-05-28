@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: Fix heading on small edge [#3114](https://github.com/valhalla/valhalla/pull/3114)
+   * FIXED: Added support for `access=psv`, which disables routing on these nodes and edges unless the mode is taxi or bus [#3107](https://github.com/valhalla/valhalla/pull/3107)
 
 * **Enhancement**
 
