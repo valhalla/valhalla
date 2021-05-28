@@ -124,6 +124,7 @@ node.intersecting_edge.cyclability
 node.intersecting_edge.walkability
 node.intersecting_edge.use
 node.intersecting_edge.road_class
+node.intersecting_edge.lane_count
 node.elapsed_time
 node.admin_index
 node.type

@@ -88,6 +88,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeIntersectingEdgeWalkability, true},
     {kNodeIntersectingEdgeUse, true},
     {kNodeIntersectingEdgeRoadClass, true},
+    {kNodeIntersectingEdgeLaneCount, true},
     {kNodeElapsedTime, true},
     {kNodeAdminIndex, true},
     {kNodeType, true},

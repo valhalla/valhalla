@@ -624,21 +624,23 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
     // and next maneuver is not a straight
     // Activate only specific matching turn lanes
     switch (next_maneuver_type) {
-      case DirectionsLeg_Maneuver_Type_kUturnLeft:
-      case DirectionsLeg_Maneuver_Type_kSharpLeft:
-      case DirectionsLeg_Maneuver_Type_kLeft:
       case DirectionsLeg_Maneuver_Type_kSlightLeft:
-      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kStayLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
-      case DirectionsLeg_Maneuver_Type_kExitRight:
-      case DirectionsLeg_Maneuver_Type_kRampRight:
       case DirectionsLeg_Maneuver_Type_kRight:
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
@@ -1334,6 +1336,9 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   str += " | road_class=";
   str += std::to_string(road_class());
+
+  str += " | lane_count=";
+  str += std::to_string(lane_count());
 
   return str;
 }

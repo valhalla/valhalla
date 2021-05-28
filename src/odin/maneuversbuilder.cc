@@ -2204,7 +2204,6 @@ bool ManeuversBuilder::IsFork(int node_index,
 
   // If node is fork
   // and prev to curr edge is relative straight
-  // and the intersecting edge count is less than 3
   // and there is a relative straight intersecting edge
   if (node->fork() &&
       curr_edge->IsWiderForward(
@@ -2249,7 +2248,6 @@ bool ManeuversBuilder::IsFork(int node_index,
   // Possibly move some logic to data processing in the future
   // Verify that both previous and current edges are highways
   // and the path is in the forward direction
-  // and there are at most 2 intersecting edges
   // and there is an intersecting highway edge in the forward direction
   else if (prev_edge->IsHighway() && curr_edge->IsHighway() &&
            curr_edge->IsWiderForward(
@@ -2273,6 +2271,41 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                           prev_edge->travel_mode(),
                                                           prev_edge->road_class())) {
     return true;
+  }
+  // Determine if highway/ramp lane bifurcation
+  else if (node->intersecting_edge_size() == 1) {
+    auto xedge = node->GetIntersectingEdge(0);
+
+    // For now, includes lane bifurcation patterns like:
+    // 2 lanes split into 1 lane left and 1 lane right
+    // 3 lanes split into 2 lanes left and 2 lanes right
+    // 4 lanes split into 2 lanes left and 2 lanes right
+    // 5 lanes split into 3 lanes left and 3 lanes right
+    // 6 lanes split into 3 lanes left and 3 lanes right
+    // ...
+    auto has_lane_bifurcation = [](uint32_t prev_lane_count, uint32_t curr_lane_count,
+                                   uint32_t xedge_lane_count) -> bool {
+      uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
+      if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
+        return true;
+      } else if ((prev_lane_count > 2) && (curr_lane_count == post_split_min_count) &&
+                 (xedge_lane_count == post_split_min_count)) {
+        return true;
+      }
+      return false;
+    };
+
+    // The curr edge and intersecting edge must be highway or ramp but not both
+    // validate lane bifurcation
+    if (prev_edge->IsHighway() &&
+        ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
+         (xedge->IsHighway() && curr_edge->IsRampUse())) &&
+        prev_edge->IsForkForward(
+            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading())) &&
+        has_lane_bifurcation(prev_edge->lane_count(), curr_edge->lane_count(), xedge->lane_count())) {
+      return true;
+    }
   }
 
   return false;
@@ -2308,7 +2341,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     // This is needed to ensure we don't consider footways and crosswalks as
     // different uses for determining pedestrian forks
     bool is_current_and_intersecting_edge_of_similar_use =
-        (xedge_use.has_value() &&
+        (xedge_use &&
          (curr_edge->use() == *xedge_use ||
           (curr_edge->IsFootwayUse() && (*xedge_use == TripLeg_Use_kPedestrianCrossingUse ||
                                          *xedge_use == TripLeg_Use_kFootwayUse))));

@@ -82,14 +82,14 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
 
         // basic rest of it plus edge metadata
         array->emplace_back(json::map({
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
+            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
             {"side_of_street",
              edge.sos == PathLocation::LEFT
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
-            {"distance", json::fp_t{edge.distance, 1}},
+            {"percent_along", json::fixed_t{edge.percent_along, 5}},
+            {"distance", json::fixed_t{edge.distance, 1}},
             {"outbound_reach", static_cast<int64_t>(edge.outbound_reach)},
             {"inbound_reach", static_cast<int64_t>(edge.inbound_reach)},
             {"edge_id", edge.id.json()},
@@ -103,13 +103,13 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       else {
         array->emplace_back(json::map({
             {"way_id", static_cast<uint64_t>(edge_info.wayid())},
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
+            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
             {"side_of_street",
              edge.sos == PathLocation::LEFT
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
+            {"percent_along", json::fixed_t{edge.percent_along, 5}},
         }));
       }
     } catch (...) {
@@ -141,7 +141,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
       node = json::map({
-          {"lon", json::fp_t{node_ll.first, 6}}, {"lat", json::fp_t{node_ll.second, 6}},
+          {"lon", json::fixed_t{node_ll.first, 6}}, {"lat", json::fixed_t{node_ll.second, 6}},
           // TODO: osm_id
       });
     }
@@ -156,8 +156,8 @@ json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool v
   auto m = json::map({
       {"edges", serialize_edges(location, reader, verbose)},
       {"nodes", serialize_nodes(location, reader, verbose)},
-      {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
+      {"input_lat", json::fixed_t{location.latlng_.lat(), 6}},
+      {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
   });
   return m;
 }
@@ -166,8 +166,8 @@ json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bo
   auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"nodes", static_cast<std::nullptr_t>(nullptr)},
-      {"input_lat", json::fp_t{ll.lat(), 6}},
-      {"input_lon", json::fp_t{ll.lng(), 6}},
+      {"input_lat", json::fixed_t{ll.lat(), 6}},
+      {"input_lon", json::fixed_t{ll.lng(), 6}},
   });
   if (verbose) {
     m->emplace("reason", reason);

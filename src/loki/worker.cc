@@ -151,7 +151,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
-                           ? new connectivity_map_t(config.get_child("mjolnir"))
+                           ? new connectivity_map_t(config.get_child("mjolnir"), graph_reader)
                            : nullptr),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_contour_min(config.get<size_t>("service_limits.isochrone.max_time_contour")),

@@ -32,7 +32,7 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
-option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON tiles reference counters are thread safe" OFF)
+option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
@@ -218,6 +218,7 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
+  add_compile_definitions(DATA_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
@@ -278,7 +279,8 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
-  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic)
+  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic
+  valhalla_assign_speeds)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)

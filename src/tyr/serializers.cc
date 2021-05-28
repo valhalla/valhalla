@@ -136,8 +136,8 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
   auto loc = json::array({});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lng(), 6});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lat(), 6});
+  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lng(), 6});
+  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lat(), 6});
   waypoint->emplace("location", loc);
 
   // Add street name.
@@ -151,7 +151,8 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // TODO: since distance was normalized in thor - need to recalculate here
   //       in the future we shall have store separately from score
   waypoint->emplace("distance",
-                    json::fp_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
+                    json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())),
+                                  3});
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
@@ -280,6 +281,11 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   if (!incident_metadata.clear_lanes().empty()) {
     writer.Key(key_prefix + "clear_lanes");
     writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.length() > 0) {
+    writer.Key(key_prefix + "length");
+    writer.Int(incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {

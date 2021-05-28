@@ -92,7 +92,8 @@ access = {
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
-["emergency"] = "false"
+["emergency"] = "false",
+["psv"] = "false"
 }
 
 private = {
@@ -895,6 +896,14 @@ function filter_tags_generic(kv)
       end
     end
 
+    if kv["access"] == "psv" then
+      kv["taxi_forward"] = "true"
+      kv["taxi_tag"] = "true"
+
+      kv["bus_forward"] = "true"
+      kv["bus_tag"] = "true"
+    end
+
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
@@ -970,6 +979,14 @@ function filter_tags_generic(kv)
         elseif kv["sac_scale"] then
           kv["bike_forward"] = "false"
         end
+      end
+
+      if kv["access"] == "psv" then
+        kv["taxi_forward"] = "true"
+        kv["taxi_tag"] = "true"
+
+        kv["bus_forward"] = "true"
+        kv["bus_tag"] = "true"
       end
 
       if kv["motorroad"] == "yes" then
@@ -1661,7 +1678,8 @@ function nodes_proc (kv, nokeys)
   end
 
   --normalize a few tags that we care about
-  local access = access[kv["access"]] or "true"
+  local initial_access = access[kv["access"]]
+  local access = initial_access or "true"
 
   if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
@@ -1684,7 +1702,17 @@ function nodes_proc (kv, nokeys)
   if auto_tag == nil then
     auto_tag = motor_vehicle_tag
   end
-  local bus_tag = bus_node[kv["bus"]]
+  local bus_tag
+  local taxi_tag
+
+  if (kv["access"] == "psv") then
+    bus_tag = 64
+    taxi_tag = 32
+  else
+    bus_tag = bus_node[kv["bus"]]
+    taxi_tag = taxi_node[kv["taxi"]]
+  end
+
   if bus_tag == nil then
     bus_tag = psv_bus_node[kv["psv"]]
   end
@@ -1703,7 +1731,6 @@ function nodes_proc (kv, nokeys)
     hov_tag = 128
   end
 
-  local taxi_tag = taxi_node[kv["taxi"]]
   if taxi_tag == nil then
     taxi_tag = psv_taxi_node[kv["psv"]]
   end
@@ -1912,6 +1939,15 @@ function nodes_proc (kv, nokeys)
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
+
+  --if no information about access is given.
+  if initial_access == nil and auto_tag == nil and truck_tag == nil and bus_tag == nil and taxi_tag == nil and
+   foot_tag == nil and wheelchair_tag == nil and bike_tag == nil and moped_tag == nil and
+   motorcycle_tag == nil and emergency_tag == nil and hov_tag == nil then
+    kv["tagged_access"] = 0
+  else
+    kv["tagged_access"] = 1
+  end
 
   return 0, kv
 end

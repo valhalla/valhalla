@@ -32,9 +32,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Absurd classification.
-constexpr uint32_t kAbsurdRoadClass = 777777;
-
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
 int get_number(const std::string& tag, const std::string& value) { // NOLINT
@@ -58,7 +55,7 @@ public:
   }
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : osmdata_(osmdata), lua_(get_lua(pt)) {
+      : lua_(get_lua(pt)), osmdata_(osmdata) {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -947,6 +944,8 @@ public:
         n.set_type(NodeType::kSumpBuster);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (tag.first == "tagged_access") {
+        n.set_tagged_access(std::stoi(tag.second));
       }
 
       /* TODO: payment type.
@@ -1102,10 +1101,6 @@ public:
       has_surface_ = false;
     }
 
-    const auto& highway_junction = results.find("highway");
-    bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
-
     way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
@@ -1137,9 +1132,10 @@ public:
         AccessType type = AccessType::kTimedDenied;
         if (tmp == "no") {
           type = AccessType::kTimedDenied;
-        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated" ||
-                   tmp == "destination") {
+        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated") {
           type = AccessType::kTimedAllowed;
+        } else if (tmp == "destination") {
+          type = AccessType::kDestinationAllowed;
         }
 
         if (tokens.size() == 2 && tmp.size()) {
@@ -1828,13 +1824,15 @@ public:
             // simple restriction, but is a timed restriction
             // change to complex and set date and time info
             if (condition.empty()) {
-              condition = day_start + "-";
-              condition += day_end;
+              if (!day_start.empty() && !day_end.empty()) {
+                condition = day_start + '-' + day_end;
+              }
               // do we have multiple times entered?
               if (!has_multiple_times) {
                 // no we do not...add the hours to the condition
-                condition += " " + hour_start + "-";
-                condition += hour_end;
+                if (!hour_start.empty() && !hour_end.empty()) {
+                  condition += ' ' + hour_start + '-' + hour_end;
+                }
               }
               // yes multiple times
               // 06:00;17:00
@@ -2026,9 +2024,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
@@ -2087,9 +2085,9 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
@@ -2156,9 +2154,9 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
