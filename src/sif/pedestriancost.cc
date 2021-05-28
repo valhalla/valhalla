@@ -443,7 +443,40 @@ public:
   bool project_on_bss_connection = 0;
 
   /**
-   * Override the base transition cost to not add maneuver penalties onto transit edges.
+   * Overrides DynamicCost::base_transition_cost.
+   * Returns the transition cost (cost, elapsed time).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edge.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const baldr::DirectedEdge* pred,
+                                 const uint32_t idx) const override {
+    return base_transition_cost_impl(node, edge, pred, idx);
+  }
+
+  /**
+   * Overrides DynamicCost::base_transition_cost.
+   * Returns the transition cost (cost, elapsed time).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edgelabel.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const EdgeLabel* pred,
+                                 const uint32_t idx) const override {
+    return base_transition_cost_impl(node, edge, pred, idx);
+  }
+
+private:
+  /**
+   * It does not add maneuver penalties onto transit edges.
    * Base transition cost that all costing methods use. Includes costs for
    * country crossing, boarding a ferry, toll booth, gates, entering destination
    * only, alleys, and maneuver penalties. Each costing method can provide different
@@ -462,10 +495,10 @@ public:
    * @return Returns the transition cost (cost, elapsed time).
    */
   template <typename predecessor_t>
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const predecessor_t* pred,
-                                 const uint32_t idx) const {
+  sif::Cost base_transition_cost_impl(const baldr::NodeInfo* node,
+                                      const baldr::DirectedEdge* edge,
+                                      const predecessor_t* pred,
+                                      const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
