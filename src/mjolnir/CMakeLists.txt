@@ -67,7 +67,7 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   set_source_files_properties(
           ${sources}
           PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
-endif (UNIX)
+endif ()
 
 valhalla_module(NAME mjolnir
   SOURCES ${sources} ${sources_with_warnings}
