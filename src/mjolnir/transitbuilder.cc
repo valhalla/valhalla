@@ -94,7 +94,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t nodecount = currentnodes.size();
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
-  uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -229,7 +228,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   nodecount = currentnodes.size();
   tilebuilder_transit.nodes().clear();
   currentedges = tilebuilder_transit.directededges();
-  edgecount = currentedges.size();
   tilebuilder_transit.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -380,7 +378,6 @@ void FindOSMConnection(const PointLL& stop_ll,
   // We do this because the associated way could have been deleted from the
   // OSM data, but we may have not updated the stops yet in TransitLand.
   double mindist = 10000000.0;
-  uint32_t edgelength = 0;
   double rm = kMetersPerKm; // one km
   double mr2 = rm * rm;
 
@@ -437,7 +434,6 @@ void FindOSMConnection(const PointLL& stop_ll,
             mindist = std::get<1>(this_closest);
             closest = this_closest;
             closest_shape = this_shape;
-            edgelength = directededge->length();
           }
         }
       }
@@ -520,7 +516,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::list<PointLL> shape;
-    for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
+    for (int i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
     shape.push_back(std::get<0>(closest));

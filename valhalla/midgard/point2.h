@@ -38,6 +38,8 @@ public:
   using typename std::pair<PrecisionT, PrecisionT>::second_type;
   using value_type = typename std::pair<PrecisionT, PrecisionT>::first_type;
 
+  virtual ~PointXY() = default;
+
   /**
    * Get the x component.
    * @return  Returns the x component of the point.
@@ -193,8 +195,6 @@ public:
   static bool IsSpherical() {
     return false;
   }
-
-protected:
 };
 
 using Point2 = PointXY<float>;
