@@ -984,11 +984,11 @@ protected:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const baldr::DirectedEdge* pred,
-                                         const uint32_t idx) const {
-    return base_transition_cost_impl(node, edge, pred, idx);
+  virtual sif::Cost transition_cost(const baldr::NodeInfo* node,
+                                    const baldr::DirectedEdge* edge,
+                                    const baldr::DirectedEdge* pred,
+                                    const uint32_t idx) const {
+    return transition_cost_impl(node, edge, pred, idx);
   }
 
   /**
@@ -999,11 +999,11 @@ protected:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const EdgeLabel* pred,
-                                         const uint32_t idx) const {
-    return base_transition_cost_impl(node, edge, pred, idx);
+  virtual sif::Cost transition_cost(const baldr::NodeInfo* node,
+                                    const baldr::DirectedEdge* edge,
+                                    const EdgeLabel* pred,
+                                    const uint32_t idx) const {
+    return transition_cost_impl(node, edge, pred, idx);
   }
 
 private:
@@ -1026,10 +1026,10 @@ private:
    * @return Returns the transition cost (cost, elapsed time).
    */
   template <typename predecessor_t>
-  sif::Cost base_transition_cost_impl(const baldr::NodeInfo* node,
-                                      const baldr::DirectedEdge* edge,
-                                      const predecessor_t* pred,
-                                      const uint32_t idx) const {
+  sif::Cost transition_cost_impl(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);

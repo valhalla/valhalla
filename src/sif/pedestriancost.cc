@@ -443,7 +443,7 @@ public:
   bool project_on_bss_connection = 0;
 
   /**
-   * Overrides DynamicCost::base_transition_cost.
+   * Overrides DynamicCost::transition_cost.
    * Returns the transition cost (cost, elapsed time).
    * @param node Node at the intersection where the edge transition occurs.
    * @param edge Directed edge entering.
@@ -451,15 +451,15 @@ public:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const baldr::DirectedEdge* pred,
-                                 const uint32_t idx) const override {
-    return base_transition_cost_impl(node, edge, pred, idx);
+  sif::Cost transition_cost(const baldr::NodeInfo* node,
+                            const baldr::DirectedEdge* edge,
+                            const baldr::DirectedEdge* pred,
+                            const uint32_t idx) const override {
+    return transition_cost_impl(node, edge, pred, idx);
   }
 
   /**
-   * Overrides DynamicCost::base_transition_cost.
+   * Overrides DynamicCost::transition_cost.
    * Returns the transition cost (cost, elapsed time).
    * @param node Node at the intersection where the edge transition occurs.
    * @param edge Directed edge entering.
@@ -467,11 +467,11 @@ public:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const EdgeLabel* pred,
-                                 const uint32_t idx) const override {
-    return base_transition_cost_impl(node, edge, pred, idx);
+  sif::Cost transition_cost(const baldr::NodeInfo* node,
+                            const baldr::DirectedEdge* edge,
+                            const EdgeLabel* pred,
+                            const uint32_t idx) const override {
+    return transition_cost_impl(node, edge, pred, idx);
   }
 
 private:
@@ -495,10 +495,10 @@ private:
    * @return Returns the transition cost (cost, elapsed time).
    */
   template <typename predecessor_t>
-  sif::Cost base_transition_cost_impl(const baldr::NodeInfo* node,
-                                      const baldr::DirectedEdge* edge,
-                                      const predecessor_t* pred,
-                                      const uint32_t idx) const {
+  sif::Cost transition_cost_impl(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
@@ -698,7 +698,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, &pred, idx);
+  Cost c = transition_cost(node, edge, &pred, idx);
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -731,7 +731,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = transition_cost(node, edge, pred, idx);
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
