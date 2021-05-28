@@ -1,6 +1,8 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.3
 * **Removed**
 * **Bug Fix**
+   * FIXED: Fix heading on small edge [#3114](https://github.com/valhalla/valhalla/pull/3114)
+
 * **Enhancement**
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
@@ -15,7 +17,7 @@
    * FIXED: Continuous lane guidance fix [#3054](https://github.com/valhalla/valhalla/pull/3054)
    * FIXED: Fix reclassification for "shorter" ferries and rail ferries (for Chunnel routing issues) [#3038](https://github.com/valhalla/valhalla/pull/3038)
    * FIXED: Incorrect routing through motor_vehicle:conditional=destination. [#3041](https://github.com/valhalla/valhalla/pull/3041)
-   * FIXED: Allow destination-only routing on the first-pass for non bidirectional A* algorithms. [#3085](https://github.com/valhalla/valhalla/pull/3085)
+   * FIXED: Allow destination-only routing on the first-pass for non bidirectional Astar algorithms. [#3085](https://github.com/valhalla/valhalla/pull/3085)
    * FIXED: Highway/ramp lane bifurcation [#3088](https://github.com/valhalla/valhalla/pull/3088)
    * FIXED: out of bound access of tile hierarchy in base_ll function in graphheader [#3089](https://github.com/valhalla/valhalla/pull/3089)
    * FIXED: include shortcuts in avoid edge set for avoid_polygons [#3090](https://github.com/valhalla/valhalla/pull/3090)
