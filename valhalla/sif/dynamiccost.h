@@ -313,6 +313,15 @@ public:
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred) const;
 
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const uint32_t seconds,
+                              uint8_t& flow_sources) const {
+    return TransitionCost(edge, node, pred);
+  }
+
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
@@ -334,6 +343,19 @@ public:
                                      const baldr::DirectedEdge* opp_pred_edge,
                                      const bool has_measured_speed = false,
                                      const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
+
+  virtual Cost TransitionCostReverse1(const uint32_t idx,
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* opp_edge,
+                                     const baldr::DirectedEdge* opp_pred_edge,
+                                     const bool has_measured_speed = false,
+                                     const InternalTurn internal_turn = InternalTurn::kNoTurn,
+                                     const graph_tile_ptr& tile = {},
+                                     const uint32_t seconds = {},
+                                     uint8_t* flow_sources = {}) const {
+    return TransitionCostReverse(idx, node, opp_edge, opp_pred_edge, has_measured_speed,
+                                 internal_turn);
+  }
 
   /**
    * Test if an edge should be restricted due to a complex restriction.

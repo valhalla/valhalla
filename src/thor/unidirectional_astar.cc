@@ -234,11 +234,14 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                        ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
                        : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
 
+  uint8_t blob;
   auto transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
-                                                pred.internal_turn());
+      FORWARD
+          ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, time_info.second_of_week, blob)
+          : costing_->TransitionCostReverse1(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                             opp_pred_edge, pred.has_measured_speed(),
+                                             pred.internal_turn(), t2, time_info.second_of_week,
+                                             &blob);
   Cost newcost = pred.cost() + edge_cost;
   newcost += transition_cost;
 
