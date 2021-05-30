@@ -425,7 +425,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Get names and types - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
-      auto tagged_names = edgeinfo.GetNames();
+      auto tagged_names = edgeinfo.GetNames(true);
       auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
