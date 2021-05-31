@@ -40,6 +40,7 @@
    * ADDED: Added missing k/v pairs to taginfo.json.  Updated PR template. [#3101](https://github.com/valhalla/valhalla/pull/3101)
    * CHANGED: Serialize isochrone 'contour' properties as floating point so they match user supplied value [#3078](https://github.com/valhalla/valhalla/pull/3095)
    * NIT: Enables compiler warnings as errors in midgard module [#3104](https://github.com/valhalla/valhalla/pull/3104)
+   * CHANGED: Check all tiles for nullptr that reads from graphreader to avoid fails in case tiles might be missing. [#3065](https://github.com/valhalla/valhalla/pull/3065)
 
 ## Release Date: 2021-04-21 Valhalla 3.1.1
 * **Removed**

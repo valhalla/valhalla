@@ -1142,7 +1142,7 @@ void TripLegBuilder::Build(
   if (begin_tile == nullptr) {
     throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
   }
-  auto* first_edge = begin_tile->directededge(path_begin->edgeid);
+  const auto* first_edge = begin_tile->directededge(path_begin->edgeid);
   auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
   if (first_tile == nullptr) {
     throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
