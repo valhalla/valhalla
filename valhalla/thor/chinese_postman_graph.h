@@ -7,6 +7,7 @@
 #include "tyr/serializers.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
+#include <stack>
 
 using namespace valhalla::sif;
 using namespace valhalla::baldr;
@@ -51,17 +52,27 @@ private:
   std::map<std::string, int> indegrees;
   std::map<std::string, int> outdegrees;
 
+  // Used for Hiezholer's algorithm
+  std::vector<int> reversedEulerPath; // Storing euler path
+  std::map<int, int> outEdges;        // Storing the number of outedges from a node index
+  std::map<int, std::vector<int>>
+      expandedAdjacencyList; // Storing the adjacency list after being expanded
+
 public:
   ChinesePostmanGraph(/* args */);
   ~ChinesePostmanGraph();
   void addVertex(CPVertex cpvertex);
   VertexItr findVertex(CPVertex cpvertex);
+  int getVertexIndex(CPVertex cpvertex);
   bool isVertexExist(CPVertex cpvertex);
   int numVertices();
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, Cost edge_cost);
   std::map<std::string, int> getUnbalancedVertices();
   std::vector<CPVertex> computeIdealEulerCycle(const CPVertex start_vertex);
+  void setupDFSEulerCycle();
+  std::map<int, std::vector<int>> getAdjacencyList();
+  void dfsEulerCycle(int startNodeIndex);
 };
 
 } // namespace thor

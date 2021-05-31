@@ -54,6 +54,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
   }
 
+  bool originNodeFound = false;
+  CPVertex originVertex;
+
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
     bool found = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
@@ -64,6 +67,10 @@ void thor_worker_t::chinese_postman(Api& request) {
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
+    if (!originNodeFound) {
+      originVertex = start_vertex;
+      originNodeFound = true;
+    }
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
     G.addVertex(end_vertex);
@@ -77,8 +84,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
   if (G.getUnbalancedVertices().size() == 0) {
-    const CPVertex c = CPVertex(GraphId(1));
-    std::vector<CPVertex> cpVerticesOrder = G.computeIdealEulerCycle(c);
+    std::vector<CPVertex> cpVerticesOrder = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
   } else {
     std::cout << "Non Ideal graph" << std::endl;

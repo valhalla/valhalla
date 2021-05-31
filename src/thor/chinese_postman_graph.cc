@@ -1,5 +1,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
+#include <stack>
 
 #include "midgard/util.h"
 #include "thor/chinese_postman_graph.h"
@@ -11,6 +12,30 @@ using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace thor {
+
+void printStack(std::stack<int> s) {
+  if (s.empty()) {
+    return;
+  }
+  int x = s.top();
+
+  s.pop();
+
+  printStack(s);
+
+  std::cout << x << ", ";
+
+  s.push(x);
+}
+
+void printAdjacencyList(std::map<int, std::vector<int>> adjacency_list) {
+  for (const auto& x : adjacency_list) {
+    std::cout << x.first << ": ";
+    for (const auto& y : x.second)
+      std::cout << y << ", ";
+    std::cout << std::endl;
+  }
+}
 
 ChinesePostmanGraph::ChinesePostmanGraph(/* args */) {
 }
@@ -29,6 +54,14 @@ VertexItr ChinesePostmanGraph::findVertex(CPVertex cpvertex) {
       return vi;
   }
   return vi_end;
+}
+
+int ChinesePostmanGraph::getVertexIndex(CPVertex cpvertex) {
+  for (int i = 0; i < boost::num_vertices(this->G); i++)
+    if (this->G[i].graph_id == cpvertex.graph_id) {
+      return i;
+    }
+  return -1;
 }
 
 void ChinesePostmanGraph::addVertex(CPVertex cpvertex) {
@@ -68,9 +101,41 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
 }
 
 std::vector<CPVertex> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex) {
+  int startNodeIndex = this->getVertexIndex(start_vertex);
   int edgeVisited = 0;
-  std::map<int, std::vector<int>> adjacency_list;
+  std::map<int, std::vector<int>> adjacency_list = this->getAdjacencyList();
 
+  std::cout << "Adjacency list: " << std::endl;
+  printAdjacencyList(adjacency_list);
+  this->setupDFSEulerCycle();
+  this->dfsEulerCycle(startNodeIndex);
+
+  std::cout << "Euler path (node IDs): ";
+  std::vector<CPVertex> eulerPathVertices;
+  for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
+    eulerPathVertices.push_back(this->G[*it]);
+  }
+
+  for (auto v : eulerPathVertices) {
+    std::cout << v.graph_id << ", ";
+  }
+  std::cout << std::endl;
+
+  return eulerPathVertices;
+}
+
+void ChinesePostmanGraph::setupDFSEulerCycle() {
+  this->reversedEulerPath.clear();
+  this->outEdges.clear();
+  // populate out edges
+  this->expandedAdjacencyList = this->getAdjacencyList();
+  for (const auto& x : this->expandedAdjacencyList) {
+    this->outEdges[x.first] = x.second.size();
+  }
+}
+
+std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList() {
+  std::map<int, std::vector<int>> adjacency_list;
   boost::graph_traits<CPGraph>::edge_iterator ei, ei_end;
   for (boost::tie(ei, ei_end) = boost::edges(this->G); ei != ei_end; ++ei) {
     if (!adjacency_list.count(boost::source(*ei, this->G))) {
@@ -78,23 +143,18 @@ std::vector<CPVertex> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex
       adjacency_list[boost::source(*ei, this->G)] = target_vertices;
     }
     adjacency_list[boost::source(*ei, this->G)].push_back(boost::target(*ei, this->G));
-    std::cout << "(" << boost::source(*ei, this->G) << "," << boost::target(*ei, this->G) << ") "
-              << std::endl;
   }
-  // print adjacency_list
-  for (const auto& x : adjacency_list) {
-    std::cout << x.first << ": ";
-    for (const auto& y : x.second) {
-      std::cout << y << ", ";
-    }
-    std::cout << std::endl;
-  }
+  return adjacency_list;
+}
 
-  while (edgeVisited < this->numEdges()) {
-    edgeVisited++;
+void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
+  while (this->outEdges[startNodeIndex] != 0) {
+    int nextNodeIndex =
+        this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
+    this->outEdges[startNodeIndex]--;
+    this->dfsEulerCycle(nextNodeIndex);
   }
-  std::vector<CPVertex> v;
-  return v;
+  this->reversedEulerPath.push_back(startNodeIndex);
 }
 
 } // namespace thor
