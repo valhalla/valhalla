@@ -124,15 +124,15 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
-  auto n1 = test2.GetNames(0, false);
+  auto n1 = ei.GetNames(false);
   EXPECT_EQ(n1.size(), 1);
   EXPECT_EQ(n1.at(0), "einzelweg");
 
-  auto n2 = test2.GetNames(0); // defaults to false
+  auto n2 = ei.GetNames(); // defaults to false
   EXPECT_EQ(n2.size(), 1);
   EXPECT_EQ(n2.at(0), "einzelweg");
 
-  auto n3 = test2.GetNames(0, true);
+  auto n3 = ei.GetNames(true);
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
