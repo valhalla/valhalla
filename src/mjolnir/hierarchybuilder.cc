@@ -308,7 +308,6 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
       // If end node is in the same tile and there is no opposing edge with matching
       // edge_info_offset).
-      uint32_t idx = directededge->edgeinfo_offset();
       bool diff_names = directededge->endnode().tileid() == base_edge_id.tileid() &&
                         !OpposingEdgeInfoMatches(tile, directededge);
 
@@ -322,8 +321,8 @@ void FormTilesInNewLevel(GraphReader& reader,
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetNames(idx, true),
-                                   tile->GetTypes(idx), added, diff_names);
+                                   edgeinfo.GetNames(), edgeinfo.GetNames(true), edgeinfo.GetTypes(),
+                                   added, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

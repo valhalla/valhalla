@@ -58,7 +58,7 @@ GraphId GetOpposingEdge(GraphReader& reader,
     if (opp_edge->endnode() == node && opp_edge->classification() == edge->classification() &&
         opp_edge->length() == edge->length() &&
         ((opp_edge->link() && edge->link()) || (opp_edge->use() == edge->use())) &&
-        way_id == end_node_tile->edgeinfo(opp_edge->edgeinfo_offset()).wayid()) {
+        way_id == end_node_tile->edgeinfo(opp_edge).wayid()) {
       return opp_id;
     }
   }
