@@ -23,6 +23,8 @@
 #include <boost/archive/iterators/remove_whitespace.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 
+#define UNUSED(x) (void)(x)
+
 namespace {
 
 std::vector<valhalla::midgard::PointLL>

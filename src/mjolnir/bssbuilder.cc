@@ -283,6 +283,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
     LOG_INFO("Storing local tile data with bss nodes, tile id: " +
              std::to_string(tile.id().tileid()));
+    UNUSED(tile);
     std::lock_guard<std::mutex> l(lock);
     tilebuilder_local.StoreTileData();
   });
