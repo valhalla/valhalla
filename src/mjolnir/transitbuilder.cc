@@ -358,10 +358,11 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid()) + ": added " +
            std::to_string(connedges) + " connection edges, " + std::to_string(nodecount) +
-           " nodes. time = " + std::to_string(msecs) + " ms");
+           " nodes. time = " +
+           std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) +
+           " ms");
 }
 
 // Fallback to find connection edges from the transit stop to an OSM edge.
