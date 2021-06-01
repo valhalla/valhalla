@@ -513,7 +513,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        auto names = tile->GetNames(forward_directed_edge);
         for (const auto& name : names) {
           if (name == way_name) {
             auto forward_edge_id = tile_id;

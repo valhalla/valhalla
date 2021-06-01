@@ -196,6 +196,15 @@
       "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
     },
     {
+      "key": "access",
+      "value": "psv",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Sets access to false for all modes except for taxis and buses"
+    },
+    {
       "key": "admin_level",
       "value": "2",
       "object_types": [
