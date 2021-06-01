@@ -2,16 +2,16 @@
 #define __VALHALLA_SAMPLE_H__
 
 #include <cstdint>
+#include <functional>
+#include <future>
+#include <map>
 #include <memory>
+#include <mutex>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <map>
-#include <set>
-#include <functional>
-#include <mutex>
-#include <future>
 
 #include <valhalla/midgard/sequence.h>
 
@@ -63,25 +63,26 @@ protected:
    */
   static std::string get_hgt_file_name(uint16_t index);
 
-  enum class format_t { UNKNOWN = 0, RAW = 1, GZIP = 2};
+  enum class format_t { UNKNOWN = 0, RAW = 1, GZIP = 2 };
 
   class tile_data {
-    private:
-      sample *s;
-      const int16_t* data;
-      uint16_t index;
-      bool reusable;
-    public:
-      tile_data(sample *s, uint16_t index, bool reusable, const int16_t* data);
-      tile_data(const tile_data& other);
-      ~tile_data();
-//      tile_data& operator= (tile_data &other);
-      tile_data& operator= (tile_data &&other);
+  private:
+    sample* s;
+    const int16_t* data;
+    uint16_t index;
+    bool reusable;
 
-      inline operator bool() const {
-        return data != nullptr;
-      }
-      double get(double u, double v);
+  public:
+    tile_data(sample* s, uint16_t index, bool reusable, const int16_t* data);
+    tile_data(const tile_data& other);
+    ~tile_data();
+    //      tile_data& operator= (tile_data &other);
+    tile_data& operator=(tile_data&& other);
+
+    inline operator bool() const {
+      return data != nullptr;
+    }
+    double get(double u, double v);
   };
 
   /**
@@ -94,37 +95,48 @@ protected:
   void decrement_usages(uint16_t index);
 
   class cache_item_t {
-    private:
-      format_t format;
-      midgard::mem_map<char> data;
-      int usages;
-      const char *unpacked;
-    public:
-      cache_item_t() : format(format_t::UNKNOWN), usages(0), unpacked(nullptr) {}
-      cache_item_t(cache_item_t&&) = default;
-      ~cache_item_t() {
-        free((void *)unpacked);
-      }
-      bool init(const std::string &file, format_t format);
+  private:
+    format_t format;
+    midgard::mem_map<char> data;
+    int usages;
+    const char* unpacked;
 
-      inline const char *get_data() const { return data.get(); }
-      inline format_t get_format() const { return format; }
-      inline int &get_usages() { return usages; }
-      inline const char *get_unpacked() { return unpacked; }
-      inline const char *detach_unpacked() { 
-        auto rv = unpacked;
-        unpacked = nullptr;
-        return rv; 
-      }
+  public:
+    cache_item_t() : format(format_t::UNKNOWN), usages(0), unpacked(nullptr) {
+    }
+    cache_item_t(cache_item_t&&) = default;
+    ~cache_item_t() {
+      free((void*)unpacked);
+    }
+    bool init(const std::string& file, format_t format);
 
-      bool unpack(const char *unpacked);
-      static boost::optional<std::pair<uint16_t, sample::format_t>> parse_hgt_name(const std::string& name);
+    inline const char* get_data() const {
+      return data.get();
+    }
+    inline format_t get_format() const {
+      return format;
+    }
+    inline int& get_usages() {
+      return usages;
+    }
+    inline const char* get_unpacked() {
+      return unpacked;
+    }
+    inline const char* detach_unpacked() {
+      auto rv = unpacked;
+      unpacked = nullptr;
+      return rv;
+    }
+
+    bool unpack(const char* unpacked);
+    static boost::optional<std::pair<uint16_t, sample::format_t>>
+    parse_hgt_name(const std::string& name);
   };
 
   // using memory maps
   std::vector<cache_item_t> cache;
   std::set<uint16_t> reusable;
-  std::map<uint16_t, std::shared_future<tile_data> > pending_tiles;
+  std::map<uint16_t, std::shared_future<tile_data>> pending_tiles;
   std::recursive_mutex mutex;
   std::string data_source;
 };

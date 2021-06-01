@@ -64,12 +64,15 @@ uint64_t file_size(const std::string& file_name) {
 namespace valhalla {
 namespace skadi {
 
-boost::optional<std::pair<uint16_t, sample::format_t>> sample::cache_item_t::parse_hgt_name(const std::string& name) {
+boost::optional<std::pair<uint16_t, sample::format_t>>
+sample::cache_item_t::parse_hgt_name(const std::string& name) {
   std::smatch m;
   std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
   if (std::regex_search(name, m, e)) {
     // enum class format_t{ UNKNOWN = 0, GZIP = 1, RAW = 3 };
-    sample::format_t fmt = m[5].length() ? (m[5] == ".gz" ? sample::format_t::GZIP : sample::format_t::UNKNOWN) : sample::format_t::RAW;
+    sample::format_t fmt = m[5].length()
+                               ? (m[5] == ".gz" ? sample::format_t::GZIP : sample::format_t::UNKNOWN)
+                               : sample::format_t::RAW;
     auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
     auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
     if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
@@ -79,17 +82,17 @@ boost::optional<std::pair<uint16_t, sample::format_t>> sample::cache_item_t::par
   return boost::none;
 }
 
-bool sample::cache_item_t::init(const std::string &path, format_t format) {
+bool sample::cache_item_t::init(const std::string& path, format_t format) {
   auto size = file_size(path);
   if (format == format_t::RAW && size != HGT_BYTES) {
     return false;
-  }  
+  }
   this->format = format;
   data.map(path, size, POSIX_MADV_SEQUENTIAL);
   return true;
 }
 
-bool sample::cache_item_t::unpack(const char *unpacked) {
+bool sample::cache_item_t::unpack(const char* unpacked) {
   this->unpacked = unpacked;
   // for setting where to read compressed data from
   auto src_func = [this](z_stream& s) -> void {
@@ -110,27 +113,29 @@ bool sample::cache_item_t::unpack(const char *unpacked) {
     format = format_t::UNKNOWN;
     return false;
   }
-  return true;  
+  return true;
 }
 
-sample::tile_data::tile_data(sample* s, uint16_t index, bool reusable, const int16_t* data): s(s), index(index), reusable(reusable), data(data) {
-  if(reusable) {
+sample::tile_data::tile_data(sample* s, uint16_t index, bool reusable, const int16_t* data)
+    : s(s), index(index), reusable(reusable), data(data) {
+  if (reusable) {
     s->increment_usages(index);
   }
 }
 
-sample::tile_data::tile_data(const tile_data& other): s(other.s), index(other.index), reusable(other.reusable), data(other.data) {
-  if(reusable) {
+sample::tile_data::tile_data(const tile_data& other)
+    : s(other.s), index(other.index), reusable(other.reusable), data(other.data) {
+  if (reusable) {
     s->increment_usages(index);
   }
 }
 
-sample::tile_data& sample::tile_data::operator= (sample::tile_data &&other) {
+sample::tile_data& sample::tile_data::operator=(sample::tile_data&& other) {
   std::swap(s, other.s);
   std::swap(index, other.index);
   std::swap(reusable, other.reusable);
   std::swap(data, other.data);
-  
+
   return *this;
 }
 
@@ -140,7 +145,7 @@ sample::tile_data::~tile_data() {
   }
 }
 
-double sample::tile_data::get(double u, double v){
+double sample::tile_data::get(double u, double v) {
   // integer pixel
   size_t x = std::floor(u);
   size_t y = std::floor(v);
@@ -195,8 +200,7 @@ double sample::tile_data::get(double u, double v){
   return value / adjust;
 }
 
-::valhalla::skadi::sample::sample(const std::string& data_source)
-    : data_source(data_source) {
+::valhalla::skadi::sample::sample(const std::string& data_source) : data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
          this->data_source.back() == filesystem::path::preferred_separator) {
@@ -215,9 +219,9 @@ double sample::tile_data::get(double u, double v){
   for (const auto& f : files) {
     // make sure its a valid index
     auto data = cache_item_t::parse_hgt_name(f);
-    if (data && data->second != format_t::UNKNOWN) {      
+    if (data && data->second != format_t::UNKNOWN) {
       if (!cache[data->first].init(f, data->second)) {
-        LOG_WARN("Corrupt elevation data: " + f);  
+        LOG_WARN("Corrupt elevation data: " + f);
       }
     }
   }
@@ -230,10 +234,10 @@ void sample::increment_usages(uint16_t index) {
 
 void sample::decrement_usages(uint16_t index) {
   std::lock_guard<std::recursive_mutex> lock(mutex);
-  cache[index].get_usages()--;  
+  cache[index].get_usages()--;
 }
 
-sample::tile_data sample::source(uint16_t index)  {
+sample::tile_data sample::source(uint16_t index) {
   // bail if its out of bounds
   if (index >= TILE_COUNT) {
     return tile_data(this, index, false, nullptr);
@@ -252,20 +256,20 @@ sample::tile_data sample::source(uint16_t index)  {
 
   // we have it raw or we dont
   if (item.get_format() == format_t::RAW) {
-    return tile_data(this, index, false, (const int16_t *)item.get_data());
-  }  
+    return tile_data(this, index, false, (const int16_t*)item.get_data());
+  }
 
   mutex.lock();
   auto it = pending_tiles.find(index);
-  if(it != pending_tiles.end()) {
+  if (it != pending_tiles.end()) {
     auto future = it->second;
     mutex.unlock();
     return future.get();
   }
 
-  const char *unpacked = item.get_unpacked();
-  if(unpacked) {
-    auto rv = tile_data(this, index, true, (const int16_t *)unpacked);
+  const char* unpacked = item.get_unpacked();
+  if (unpacked) {
+    auto rv = tile_data(this, index, true, (const int16_t*)unpacked);
     mutex.unlock();
     return rv;
   }
@@ -273,26 +277,26 @@ sample::tile_data sample::source(uint16_t index)  {
   std::promise<tile_data> promise;
   it = pending_tiles.emplace(index, promise.get_future()).first;
 
-  if(reusable.size() >= UNPACKED_TILES_COUNT) {
-    for(auto i : reusable) {
-      if(cache[i].get_usages() <= 0) {
+  if (reusable.size() >= UNPACKED_TILES_COUNT) {
+    for (auto i : reusable) {
+      if (cache[i].get_usages() <= 0) {
         reusable.erase(i);
         unpacked = cache[i].detach_unpacked();
         break;
       }
     }
   }
-  if(!unpacked) {
-    unpacked = (char *)malloc(HGT_BYTES);
+  if (!unpacked) {
+    unpacked = (char*)malloc(HGT_BYTES);
   }
   reusable.insert(index);
-  auto rv = tile_data(this, index, true, (const int16_t *)unpacked);  
+  auto rv = tile_data(this, index, true, (const int16_t*)unpacked);
   mutex.unlock();
-  
+
   if (!item.unpack(unpacked)) {
     rv = tile_data(this, index, false, nullptr);
   }
-  
+
   mutex.lock();
   promise.set_value(rv);
   pending_tiles.erase(it);
@@ -337,7 +341,7 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
       curIndex = index;
     }
 
-    double value = NO_DATA_VALUE; 
+    double value = NO_DATA_VALUE;
     if (tile) {
       double u = (coord.first - lon) * (HGT_DIM - 1);
       double v = (1.0 - (coord.second - lat)) * (HGT_DIM - 1);
@@ -390,14 +394,14 @@ template double sample::get<std::pair<double, double>>(const std::pair<double, d
 template double sample::get<std::pair<float, float>>(const std::pair<float, float>&);
 template double sample::get<midgard::PointLL>(const midgard::PointLL&);
 template double sample::get<midgard::Point2>(const midgard::Point2&);
-template std::vector<double> sample::get_all<std::list<std::pair<double, double>>>(
-    const std::list<std::pair<double, double>>&);
+template std::vector<double>
+sample::get_all<std::list<std::pair<double, double>>>(const std::list<std::pair<double, double>>&);
 template std::vector<double> sample::get_all<std::vector<std::pair<double, double>>>(
     const std::vector<std::pair<double, double>>&);
 template std::vector<double>
 sample::get_all<std::list<std::pair<float, float>>>(const std::list<std::pair<float, float>>&);
-template std::vector<double> sample::get_all<std::vector<std::pair<float, float>>>(
-    const std::vector<std::pair<float, float>>&);
+template std::vector<double>
+sample::get_all<std::vector<std::pair<float, float>>>(const std::vector<std::pair<float, float>>&);
 template std::vector<double>
 sample::get_all<std::list<midgard::PointLL>>(const std::list<midgard::PointLL>&);
 template std::vector<double>

@@ -45,15 +45,17 @@ int main(int argc, char** argv) {
   LOG_INFO("Loading coordinate postings");
   std::vector<std::vector<std::pair<double, double>>> postings;
   postings.resize(thread_count);
-  
+
   size_t posting_count = 0;
   std::ifstream file(argv[2]);
   std::string line;
   while (std::getline(file, line)) {
     std::istringstream iss(line);
     double lat, lon;
-    if (!(iss >> lat >> lon)) { continue; } // error
-    
+    if (!(iss >> lat >> lon)) {
+      continue; // error
+    }
+
     postings[posting_count % thread_count].emplace_back(lat, lon);
     posting_count++;
   }
