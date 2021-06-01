@@ -124,24 +124,24 @@ TEST(Maneuversbuilder, TestSetSimpleDirectionalManeuverType) {
   // Sharp right lower bound
   TrySetSimpleDirectionalManeuverType(136, DirectionsLeg_Maneuver_Type_kSharpRight);
   // Sharp right middle
-  TrySetSimpleDirectionalManeuverType(158, DirectionsLeg_Maneuver_Type_kSharpRight);
+  TrySetSimpleDirectionalManeuverType(148, DirectionsLeg_Maneuver_Type_kSharpRight);
   // Sharp right upper bound
-  TrySetSimpleDirectionalManeuverType(169, DirectionsLeg_Maneuver_Type_kSharpRight);
+  TrySetSimpleDirectionalManeuverType(159, DirectionsLeg_Maneuver_Type_kSharpRight);
 
   // Right side of street driving
   // Reverse lower bound
-  TrySetSimpleDirectionalManeuverType(170, DirectionsLeg_Maneuver_Type_kUturnRight);
+  TrySetSimpleDirectionalManeuverType(160, DirectionsLeg_Maneuver_Type_kUturnRight);
   // Reverse middle
   TrySetSimpleDirectionalManeuverType(179, DirectionsLeg_Maneuver_Type_kUturnRight);
   // Reverse middle
   TrySetSimpleDirectionalManeuverType(180, DirectionsLeg_Maneuver_Type_kUturnLeft);
   // Reverse upper bound
-  TrySetSimpleDirectionalManeuverType(190, DirectionsLeg_Maneuver_Type_kUturnLeft);
+  TrySetSimpleDirectionalManeuverType(200, DirectionsLeg_Maneuver_Type_kUturnLeft);
 
   // Sharp left lower bound
-  TrySetSimpleDirectionalManeuverType(191, DirectionsLeg_Maneuver_Type_kSharpLeft);
+  TrySetSimpleDirectionalManeuverType(201, DirectionsLeg_Maneuver_Type_kSharpLeft);
   // Sharp left middle
-  TrySetSimpleDirectionalManeuverType(203, DirectionsLeg_Maneuver_Type_kSharpLeft);
+  TrySetSimpleDirectionalManeuverType(213, DirectionsLeg_Maneuver_Type_kSharpLeft);
   // Sharp left upper bound
   TrySetSimpleDirectionalManeuverType(224, DirectionsLeg_Maneuver_Type_kSharpLeft);
 
