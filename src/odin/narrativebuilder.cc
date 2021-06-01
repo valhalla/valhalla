@@ -225,10 +225,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           // Set stay on instruction
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
 
-          // Set verbal succinct transition instruction
-          maneuver.set_verbal_succinct_transition_instruction(
-              FormVerbalSuccinctKeepTransitionInstruction(maneuver));
-
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(
               FormVerbalAlertKeepToStayOnInstruction(maneuver));
@@ -251,10 +247,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         } else {
           // Set instruction
           maneuver.set_instruction(FormKeepInstruction(maneuver));
-
-          // Set verbal succinct transition instruction
-          maneuver.set_verbal_succinct_transition_instruction(
-              FormVerbalSuccinctKeepTransitionInstruction(maneuver));
 
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertKeepInstruction(maneuver));
@@ -346,10 +338,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       case DirectionsLeg_Maneuver_Type_kFerryEnter: {
         // Set instruction
         maneuver.set_instruction(FormEnterFerryInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctEnterFerryTransitionInstruction(maneuver));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
@@ -4078,68 +4066,6 @@ NarrativeBuilder::FormVerbalSuccinctUturnTransitionInstruction(Maneuver& maneuve
 }
 
 std::string
-NarrativeBuilder::FormVerbalSuccinctKeepTransitionInstruction(Maneuver& maneuver,
-                                                              bool limit_by_consecutive_count,
-                                                              uint32_t element_max_count,
-                                                              const std::string& delim) {
-  // "0": "Keep <RELATIVE_DIRECTION> at the fork."
-  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-  // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-  // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-
-  std::string exit_number_sign;
-  std::string toward_sign;
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-
-  // If they exist, process guide signs
-  if (maneuver.HasGuideSign()) {
-    if (maneuver.HasGuideTowardSign()) {
-      // Assign guide sign
-      toward_sign =
-          maneuver.signs().GetGuideTowardString(element_max_count, limit_by_consecutive_count, delim,
-                                                maneuver.verbal_formatter());
-    }
-  } else {
-    // If it exists, process exit toward sign
-    if (maneuver.HasExitTowardSign()) {
-      // Assign toward sign
-      toward_sign =
-          maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
-                                               maneuver.verbal_formatter());
-    }
-  }
-
-  uint8_t phrase_id = 0;
-  if (maneuver.HasExitNumberSign()) {
-    phrase_id += 1;
-    // Assign number sign
-    exit_number_sign =
-        maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
-  }
-  if (!toward_sign.empty()) {
-    phrase_id += 4;
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.keep_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-                     FormRelativeThreeDirection(maneuver.type(),
-                                                dictionary_.keep_verbal_subset.relative_directions));
-  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
-  boost::replace_all(instruction, kTowardSignTag, toward_sign);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string
 NarrativeBuilder::FormVerbalSuccinctMergeTransitionInstruction(Maneuver& maneuver,
                                                                bool limit_by_consecutive_count,
                                                                uint32_t element_max_count,
@@ -4259,40 +4185,6 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruct
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.exit_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  boost::replace_all(instruction, kTowardSignTag, guide_sign);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string
-NarrativeBuilder::FormVerbalSuccinctEnterFerryTransitionInstruction(Maneuver& maneuver,
-                                                                    bool limit_by_consecutive_count,
-                                                                    uint32_t element_max_count,
-                                                                    const std::string& delim) {
-  // "0": "Take the Ferry."
-  // "3": "Take the ferry toward <TOWARD_SIGN>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-  std::string guide_sign;
-
-  if (maneuver.HasGuideSign()) {
-    // Skip to the toward phrase - it takes priority over street names
-    phrase_id = 3;
-    // Assign guide sign
-    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
-                                                 maneuver.verbal_formatter());
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.enter_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   boost::replace_all(instruction, kTowardSignTag, guide_sign);
 

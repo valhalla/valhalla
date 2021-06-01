@@ -94,8 +94,7 @@ TEST_F(InstructionsCollapseMerge, RightRampMerge) {
 
   // Ramp right with collapsed merge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn right to take the A 76 West ramp toward Pittsburgh.",
-      "Turn right to take the A 76 West ramp toward Pittsburgh.",
+      result, maneuver_index, "Turn right to take the A 76 West ramp toward Pittsburgh.", "",
       "Turn right to take the A 76 West ramp.",
       "Turn right to take the A 76 West ramp toward Pittsburgh.", "Continue for 5 kilometers.");
 
@@ -124,8 +123,7 @@ TEST_F(InstructionsCollapseMerge, LeftRampMerge) {
 
   // Ramp left with collapsed merge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left to take the A 76 East ramp toward Philadelphia.",
-      "Turn left to take the A 76 East ramp toward Philadelphia.",
+      result, maneuver_index, "Turn left to take the A 76 East ramp toward Philadelphia.", "",
       "Turn left to take the A 76 East ramp.",
       "Turn left to take the A 76 East ramp toward Philadelphia.", "Continue for 8 kilometers.");
 
@@ -156,8 +154,7 @@ TEST_F(InstructionsCollapseMerge, RightRampLeftForkMerge) {
   // Right ramp
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
-      "Turn right to take the A 76 East/A 70 East ramp toward Philadelphia/Baltimore.",
-      "Turn right to take the A 76 East, A 70 East ramp toward Philadelphia, Baltimore.",
+      "Turn right to take the A 76 East/A 70 East ramp toward Philadelphia/Baltimore.", "",
       "Turn right to take the A 76 East ramp.",
       "Turn right to take the A 76 East, A 70 East ramp toward Philadelphia, Baltimore.",
       "Continue for 2.5 kilometers.");
@@ -167,8 +164,8 @@ TEST_F(InstructionsCollapseMerge, RightRampLeftForkMerge) {
   // Keep left with collapsed merge
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep left to take A 76/Pennsylvania Turnpike.",
-                                            "Keep left at the fork.", "Keep left to take A 76.",
+                                            "Keep left to take A 76/Pennsylvania Turnpike.", "",
+                                            "Keep left to take A 76.",
                                             "Keep left to take A 76, Pennsylvania Turnpike.",
                                             "Continue for 8 kilometers.");
   // Collapsed merge info
@@ -199,8 +196,7 @@ TEST_F(InstructionsCollapseMerge, RightRampRightForkMerge) {
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Turn right to take the A 70 East ramp toward Baltimore.",
-                                            "Turn right to take the A 70 East ramp toward Baltimore.",
-                                            "Turn right to take the A 70 East ramp.",
+                                            "", "Turn right to take the A 70 East ramp.",
                                             "Turn right to take the A 70 East ramp toward Baltimore.",
                                             "Continue for 2.5 kilometers.");
 
@@ -209,8 +205,7 @@ TEST_F(InstructionsCollapseMerge, RightRampRightForkMerge) {
   // Keep right with collapsed merge
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep right to take A 70 East toward Baltimore.",
-                                            "Keep right toward Baltimore.",
+                                            "Keep right to take A 70 East toward Baltimore.", "",
                                             "Keep right to take A 70 East.",
                                             "Keep right to take A 70 East toward Baltimore.",
                                             "Continue for 6 kilometers.");

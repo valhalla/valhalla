@@ -72,9 +72,7 @@ TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
 
   // Verify the L turn instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left to take the ramp.",
-      "Turn left to take the ramp. Then, in 70 meters, You will arrive at your destination.",
-      "Turn left to take the ramp.",
+      result, maneuver_index, "Turn left to take the ramp.", "", "Turn left to take the ramp.",
       "Turn left to take the ramp. Then, in 70 meters, You will arrive at your destination.",
       "Continue for 70 meters.");
 }
