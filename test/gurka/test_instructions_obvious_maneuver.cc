@@ -146,9 +146,8 @@ TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRam
 
   // Verify continue because of same name intersecting edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
+                                                            "Keep left to take US 422.", "",
                                                             "Keep left to take US 422.",
-                                                            "Keep left at the fork.",
-                                                            "Keep left to take US 4 22.",
-                                                            "Keep left to take US 4 22.",
+                                                            "Keep left to take US 422.",
                                                             "Continue for 6 kilometers.");
 }
