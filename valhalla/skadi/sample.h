@@ -7,8 +7,15 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <map>
+#include <set>
+#include <functional>
+#include <mutex>
+#include <future>
 
 #include <valhalla/midgard/sequence.h>
+
+#include <boost/optional.hpp>
 
 namespace valhalla {
 namespace skadi {
@@ -17,8 +24,8 @@ class sample {
 public:
   // non-default-constructable and non-copyable
   sample() = delete;
-  sample(sample&&) = default;
-  sample& operator=(sample&&) = default;
+  sample(sample&&) = delete;
+  sample& operator=(sample&&) = delete;
   sample(const sample&) = delete;
   sample& operator=(const sample&) = delete;
 
@@ -32,13 +39,13 @@ public:
    * Get a single sample from the datasource
    * @param coord  the single posting at which to sample the datasource
    */
-  template <class coord_t> double get(const coord_t& coord) const;
+  template <class coord_t> double get(const coord_t& coord);
 
   /**
    * Get multiple samples from the datasource
    * @param coords  the list of postings at which to sample the datasource
    */
-  template <class coords_t> std::vector<double> get_all(const coords_t& coords) const;
+  template <class coords_t> std::vector<double> get_all(const coords_t& coords);
 
   /**
    * @return the no data value for this data source
@@ -56,30 +63,69 @@ protected:
    */
   static std::string get_hgt_file_name(uint16_t index);
 
+  enum class format_t { UNKNOWN = 0, RAW = 1, GZIP = 2};
+
+  class tile_data {
+    private:
+      sample *s;
+      const int16_t* data;
+      uint16_t index;
+      bool reusable;
+    public:
+      tile_data(sample *s, uint16_t index, bool reusable, const int16_t* data);
+      tile_data(const tile_data& other);
+      ~tile_data();
+//      tile_data& operator= (tile_data &other);
+      tile_data& operator= (tile_data &&other);
+
+      inline operator bool() const {
+        return data != nullptr;
+      }
+      double get(double u, double v);
+  };
+
   /**
    * @param  index  the index of the data tile being requested
    * @return the array of data or nullptr if there was none
    */
-  const int16_t* source(uint16_t index) const;
+  sample::tile_data source(uint16_t index);
 
-  enum class format_t { UNKNOWN = 0, GZIP = 1, RAW = 3 };
-  /**
-   * maps a new source, used at start up and called periodically
-   * for lazily loaded sources
-   *
-   * @param  index  the index of the data tile being mapped
-   * @param  format the format of the data tile being mapped
-   * @param  file   the file name of the data tile being mapped
-   */
-  void map(uint16_t index, format_t format, const std::string& file);
+  void increment_usages(uint16_t index);
+  void decrement_usages(uint16_t index);
+
+  class cache_item_t {
+    private:
+      format_t format;
+      midgard::mem_map<char> data;
+      int usages;
+      const char *unpacked;
+    public:
+      cache_item_t() : format(format_t::UNKNOWN), usages(0), unpacked(nullptr) {}
+      cache_item_t(cache_item_t&&) = default;
+      ~cache_item_t() {
+        free((void *)unpacked);
+      }
+      bool init(const std::string &file, format_t format);
+
+      inline const char *get_data() const { return data.get(); }
+      inline format_t get_format() const { return format; }
+      inline int &get_usages() { return usages; }
+      inline const char *get_unpacked() { return unpacked; }
+      inline const char *detach_unpacked() { 
+        auto rv = unpacked;
+        unpacked = nullptr;
+        return rv; 
+      }
+
+      bool unpack(const char *unpacked);
+      static boost::optional<std::pair<uint16_t, sample::format_t>> parse_hgt_name(const std::string& name);
+  };
 
   // using memory maps
-  mutable std::vector<std::pair<format_t, midgard::mem_map<char>>> mapped_cache;
-
-  // TODO: make an LRU
-  using unzipped_t = std::pair<int16_t, std::vector<int16_t>>;
-  mutable unzipped_t unzipped_cache;
-
+  std::vector<cache_item_t> cache;
+  std::set<uint16_t> reusable;
+  std::map<uint16_t, std::shared_future<tile_data> > pending_tiles;
+  std::recursive_mutex mutex;
   std::string data_source;
 };
 
