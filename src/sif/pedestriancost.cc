@@ -24,7 +24,7 @@ namespace {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultGatePenalty = 10.0f;   // Seconds
+constexpr float kDefaultGatePenalty = 600.0f;  // Seconds
 constexpr float kDefaultBssCost = 120.0f;      // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;     // Seconds
 constexpr float kDefaultServicePenalty = 0.0f; // Seconds
@@ -456,7 +456,7 @@ public:
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
-    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += ferry_transition_cost_ *
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);

@@ -116,6 +116,26 @@ TEST_F(MultipleBarriers, BothClosed) {
   }
 }
 
+TEST_F(MultipleBarriers, BothPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "gate"}, {"access", "private"}}},
+      {"2", {{"barrier", "gate"}, {"access", "private"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_both_private");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, ShortestPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "gate"}, {"access", "private"}}},
+      {"2", {{"barrier", "gate"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_one_private");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
 class AccessibleBarriers : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -167,4 +187,10 @@ TEST_F(AccessibleBarriers, Bicycle) {
   const std::string cost = "bicycle";
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, cost);
   gurka::assert::raw::expect_path(result, {"AF", "F3", "3E", "ED"});
+}
+
+TEST_F(AccessibleBarriers, Pedestrian) {
+  const std::string cost = "pedestrian";
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, cost);
+  gurka::assert::raw::expect_path(result, {"AB", "B1C", "B1C", "CD"});
 }

@@ -2024,8 +2024,9 @@ function nodes_proc (kv, nokeys)
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
 
-  --if no information about access is given.
-  if initial_access == nil and auto_tag == nil and truck_tag == nil and bus_tag == nil and taxi_tag == nil and
+  --if no information about access is given or access is set to private.
+  if (initial_access == nil or private[kv["access"]] == "true") and
+   auto_tag == nil and truck_tag == nil and bus_tag == nil and taxi_tag == nil and
    foot_tag == nil and wheelchair_tag == nil and bike_tag == nil and moped_tag == nil and
    motorcycle_tag == nil and emergency_tag == nil and hov_tag == nil then
     kv["tagged_access"] = 0

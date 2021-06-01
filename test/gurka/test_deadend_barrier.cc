@@ -50,6 +50,22 @@ TEST_P(DeadendBarrier, AllowedAccess) {
   gurka::assert::raw::expect_path(result, {"A1", "1B"});
 }
 
+TEST_P(DeadendBarrier, PrivateAccess) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", GetParam()}, {"access", "private"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/deadend_barrier_private_access");
+
+  // auto
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+  gurka::assert::raw::expect_path(result, {"A1", "1B"});
+
+  // pedestrian
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"A1", "1B"});
+}
+
 class GateBarrier : public DeadendBarrier {};
 
 TEST_P(GateBarrier, NoInfoBarrierAccess) {
@@ -122,7 +138,8 @@ const std::vector<std::string> bollards = {"bollard", "block", "jersey_barrier"}
 
 INSTANTIATE_TEST_SUITE_P(GateBasicAccess, DeadendBarrier, testing::ValuesIn(gates));
 
-// TODO: bollards basic behaviour is wrong for Allowed Access. Add tests, when it is fixed.
+// TODO: bollards basic behaviour is wrong for Allowed and Private Access. Add tests, when it is
+// fixed.
 // INSTANTIATE_TEST_SUITE_P(BollardBasicAccess, DeadendBarrier, testing::ValuesIn(bollards));
 
 INSTANTIATE_TEST_SUITE_P(GateAccess, GateBarrier, testing::ValuesIn(gates));
