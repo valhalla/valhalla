@@ -113,8 +113,7 @@ struct testable_sample_t : public skadi::sample {
       for (size_t i = 0; i < 3601 * 4; ++i)
         s.push_back(((-32768 & 0xFF) << 8) | ((-32768 >> 8) & 0xFF));
     }
-    mapped_cache.front().first = format_t::RAW;
-    mapped_cache.front().second.map("test/data/blah.hgt", 3601 * 6);
+    cache.front().init("test/data/blah.hgt", format_t::RAW);
   }
 
   static uint16_t get_tile_index(const PointLL& coord) {
