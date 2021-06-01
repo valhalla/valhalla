@@ -560,6 +560,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
               " Start Node Tile: " + std::to_string(startnode.tileid()) +
               " End Node Tile: " + std::to_string(endnode.tileid()));
   }
+  UNUSED(stop_name);
 }
 
 // We make sure to lock on reading and writing since tiles are now being

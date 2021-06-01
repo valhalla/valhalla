@@ -363,6 +363,8 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
 
     LOG_INFO("Tile id: " + std::to_string(tile.id().tileid()) + " It took " + std::to_string(secs) +
              " seconds to create edges. Now storing local tile data with new edges");
+    UNUSED(tile);
+    UNUSED(secs);
     std::lock_guard<std::mutex> l(lock);
     tilebuilder_local.StoreTileData();
   });
