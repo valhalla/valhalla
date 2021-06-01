@@ -94,8 +94,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepRightBranchToward) {
   // Verify the keep right toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep right to take B2 toward Baltimore/Washington.",
-                                            "Keep right toward Baltimore, Washington.",
+                                            "Keep right to take B2 toward Baltimore/Washington.", "",
                                             "Keep right to take B2.",
                                             "Keep right to take B2 toward Baltimore, Washington.",
                                             "Continue for 4 kilometers.");
@@ -115,8 +114,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepLeftBranchToward) {
   // Verify the keep left toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep left to take B1 toward Harrisburg/Lancaster.",
-                                            "Keep left toward Harrisburg, Lancaster.",
+                                            "Keep left to take B1 toward Harrisburg/Lancaster.", "",
                                             "Keep left to take B1.",
                                             "Keep left to take B1 toward Harrisburg, Lancaster.",
                                             "Continue for 4 kilometers.");
@@ -137,8 +135,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepStraightBranchToward) {
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Keep straight to take B3 toward New York/Philadelphia.",
-                                            "Keep straight toward New York, Philadelphia.",
-                                            "Keep straight to take B3.",
+                                            "", "Keep straight to take B3.",
                                             "Keep straight to take B3 toward New York, Philadelphia.",
                                             "Continue for 4 kilometers.");
 }
@@ -157,8 +154,8 @@ TEST_F(InstructionsKeepHighwaySigns, KeepRightExitNumberBranchToward) {
 
   // Verify the keep right to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep right to take exit 22C onto C2 toward Baltimore/Washington.",
-      "Keep right to take exit 22C toward Baltimore, Washington.", "Keep right to take exit 22C.",
+      result, maneuver_index, "Keep right to take exit 22C onto C2 toward Baltimore/Washington.", "",
+      "Keep right to take exit 22C.",
       "Keep right to take exit 22C onto C2 toward Baltimore, Washington.",
       "Continue for 4 kilometers.");
 }
@@ -176,8 +173,8 @@ TEST_F(InstructionsKeepHighwaySigns, KeepLeftExitNumberBranchToward) {
 
   // Verify the keep left to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep left to take exit 22A onto C1 toward Harrisburg/Lancaster.",
-      "Keep left to take exit 22A toward Harrisburg, Lancaster.", "Keep left to take exit 22A.",
+      result, maneuver_index, "Keep left to take exit 22A onto C1 toward Harrisburg/Lancaster.", "",
+      "Keep left to take exit 22A.",
       "Keep left to take exit 22A onto C1 toward Harrisburg, Lancaster.",
       "Continue for 4 kilometers.");
 }
@@ -196,8 +193,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepStraightExitNumberBranchToward) {
   // Verify the keep straight to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Keep straight to take exit 22B onto C3 toward New York/Philadelphia.",
-      "Keep straight to take exit 22B toward New York, Philadelphia.",
-      "Keep straight to take exit 22B.",
+      "", "Keep straight to take exit 22B.",
       "Keep straight to take exit 22B onto C3 toward New York, Philadelphia.",
       "Continue for 4 kilometers.");
 }
@@ -289,7 +285,7 @@ TEST_F(InstructionsKeepHighway4LanesTo2And2, KeepLeftBranchToward) {
   // Verify the keep left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
-      "Keep left to stay on I 696 West/Walter P Reuther Freeway toward Lansing.",
+      "Keep left to stay on I 696 West/Walter P Reuther Freeway toward Lansing.", "",
       "Keep left to stay on I 696 West.",
       "Keep left to stay on I 696 West, Walter P Reuther Freeway toward Lansing.",
       "Continue for 16 kilometers.");
@@ -308,7 +304,7 @@ TEST_F(InstructionsKeepHighway4LanesTo2And2, KeepRightExitBranchToward) {
 
   // Verify the right right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep right to take exit 1 onto I 96 East/I 275 toward Toledo.",
+      result, maneuver_index, "Keep right to take exit 1 onto I 96 East/I 275 toward Toledo.", "",
       "Keep right to take exit 1.", "Keep right to take exit 1 onto I 96 East, I 275 toward Toledo.",
       "Continue for 6 kilometers.");
 }
@@ -386,7 +382,7 @@ TEST_F(InstructionsKeepHighway3LanesTo2And2, KeepLeftBranchToward) {
   // Verify the keep left toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep left to stay on I 75 South toward Dayton.",
+                                            "Keep left to stay on I 75 South toward Dayton.", "",
                                             "Keep left to stay on I 75 South.",
                                             "Keep left to stay on I 75 South toward Dayton.",
                                             "Continue for 6 kilometers.");
@@ -405,7 +401,7 @@ TEST_F(InstructionsKeepHighway3LanesTo2And2, KeepRightExitBranchToward) {
 
   // Verify the right right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep right to take exit 208 onto I 280 South toward Cleveland.",
+      result, maneuver_index, "Keep right to take exit 208 onto I 280 South toward Cleveland.", "",
       "Keep right to take exit 208.",
       "Keep right to take exit 208 onto I 280 South toward Cleveland.", "Continue for 6 kilometers.");
 }
@@ -482,7 +478,7 @@ TEST_F(InstructionsKeepHighway2LanesTo1And1, KeepLeftBranchToward) {
 
   // Verify the keep left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep left to stay on CA 120 toward Sacramento/Yosemite/Sonora.",
+      result, maneuver_index, "Keep left to stay on CA 120 toward Sacramento/Yosemite/Sonora.", "",
       "Keep left to stay on CA 120.", "Keep left to stay on CA 120 toward Sacramento, Yosemite.",
       "Continue for 6 kilometers.");
 }
@@ -500,7 +496,7 @@ TEST_F(InstructionsKeepHighway2LanesTo1And1, KeepRightExitBranchToward) {
 
   // Verify the right right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep right to take exit 6 onto CA 99 South toward Modesto/Fresno.",
+      result, maneuver_index, "Keep right to take exit 6 onto CA 99 South toward Modesto/Fresno.", "",
       "Keep right to take exit 6.",
       "Keep right to take exit 6 onto CA 99 South toward Modesto, Fresno.",
       "Continue for 6 kilometers.");
