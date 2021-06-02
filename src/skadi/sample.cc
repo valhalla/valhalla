@@ -117,14 +117,14 @@ bool sample::cache_item_t::unpack(const char* unpacked) {
 }
 
 sample::tile_data::tile_data(sample* s, uint16_t index, bool reusable, const int16_t* data)
-    : s(s), index(index), reusable(reusable), data(data) {
+    : s(s), data(data), index(index), reusable(reusable) {
   if (reusable) {
     s->increment_usages(index);
   }
 }
 
 sample::tile_data::tile_data(const tile_data& other)
-    : s(other.s), index(other.index), reusable(other.reusable), data(other.data) {
+    : s(other.s), data(other.data), index(other.index), reusable(other.reusable) {
   if (reusable) {
     s->increment_usages(index);
   }
@@ -132,9 +132,9 @@ sample::tile_data::tile_data(const tile_data& other)
 
 sample::tile_data& sample::tile_data::operator=(sample::tile_data&& other) {
   std::swap(s, other.s);
+  std::swap(data, other.data);
   std::swap(index, other.index);
   std::swap(reusable, other.reusable);
-  std::swap(data, other.data);
 
   return *this;
 }

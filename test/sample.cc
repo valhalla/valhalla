@@ -110,7 +110,7 @@ struct testable_sample_t : public skadi::sample {
       // first row is 1's second is 2's
       for (size_t i = 0; i < 3601 * 2; ++i)
         s.push_back(((i / 3601 + 1) & 0xFF) << 8);
-      for (size_t i = 0; i < 3601 * 4; ++i)
+      for (size_t i = 0; i < 3601 * (3601 - 2); ++i)
         s.push_back(((-32768 & 0xFF) << 8) | ((-32768 >> 8) & 0xFF));
     }
     cache.front().init("test/data/blah.hgt", format_t::RAW);
