@@ -4,12 +4,11 @@
 #include <cstdint>
 #include <functional>
 #include <future>
-#include <map>
 #include <memory>
 #include <mutex>
-#include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -135,8 +134,8 @@ protected:
 
   // using memory maps
   std::vector<cache_item_t> cache;
-  std::set<uint16_t> reusable;
-  std::map<uint16_t, std::shared_future<tile_data>> pending_tiles;
+  std::unordered_set<uint16_t> reusable;
+  std::unordered_map<uint16_t, std::shared_future<tile_data>> pending_tiles;
   std::recursive_mutex mutex;
   std::string data_source;
 };
