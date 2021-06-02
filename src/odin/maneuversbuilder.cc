@@ -1505,14 +1505,19 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       case Maneuver::RelativeDirection::KReverse: {
-        switch (Turn::GetType(maneuver.turn_degree())) {
-          case Turn::Type::kSharpLeft: {
+        if (maneuver.drive_on_right()) {
+          if (maneuver.turn_degree() < 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
+            LOG_TRACE("ManeuverType=RAMP_RIGHT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
             LOG_TRACE("ManeuverType=RAMP_LEFT");
-            break;
           }
-          // For now default to right
-          default: {
+        } else {
+          if (maneuver.turn_degree() > 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
+            LOG_TRACE("ManeuverType=RAMP_LEFT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
             LOG_TRACE("ManeuverType=RAMP_RIGHT");
           }
@@ -2640,7 +2645,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kLeft) &&
         ((new_turn_type == Turn::Type::kSlightRight) || (new_turn_type == Turn::Type::kRight) ||
-         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 
@@ -2652,7 +2658,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kRight) &&
         ((new_turn_type == Turn::Type::kSlightLeft) || (new_turn_type == Turn::Type::kLeft) ||
-         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 
