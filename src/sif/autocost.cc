@@ -26,6 +26,9 @@ namespace sif {
 // Default options/values
 namespace {
 
+// Base transition costs
+constexpr float kDefaultServicePenalty = 75.0f;          // Seconds
+
 // Other options
 constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
@@ -66,7 +69,6 @@ constexpr float kMaxFactor = 100000.0f;
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
@@ -105,6 +107,7 @@ constexpr float kInvMedianSpeed = 1.f / 16.f; // about 37mph
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
+  cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   return cfg;
 }
