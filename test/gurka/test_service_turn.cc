@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "test.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -103,4 +104,48 @@ TEST_F(ServiceRoadsTest, test_avoid_service_roads) {
                                    {{"/costing_options/" + c + "/service_penalty", "300"},
                                     {"/costing_options/" + c + "/service_factor", "8"}}),
                   {"AB", "BC", "CD", "DE", "EF"});
+}
+
+TEST(Standalone, service_and_internal) {
+  const std::string ascii_map = R"(
+    A----B----C
+         |    |
+    D----E----F
+   )";
+
+  const gurka::ways ways =
+      {{"AB", {{"highway", "trunk"}, {"oneway", "yes"}}},
+       {"BC", {{"highway", "trunk"}, {"oneway", "yes"}}},
+       {"FE", {{"highway", "trunk"}, {"oneway", "yes"}}},
+       {"ED", {{"highway", "trunk"}, {"oneway", "yes"}}},
+       {"CF", {{"highway", "trunk_link"}, {"oneway", "yes"}}},
+       {"BE", {{"highway", "service"}, {"internal_intersection", "true"}, {"oneway", "yes"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  // BE is an internal and service edge.
+  {
+    const auto map =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_service_and_internal_0",
+                          {{"mjolnir.data_processing.infer_internal_intersections", "false"}});
+
+    const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    const auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "B", "E");
+    EXPECT_TRUE(std::get<1>(edge)->internal());
+
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
+    gurka::assert::raw::expect_path(result, {"AB", "BE", "ED"});
+  }
+  // BE is a service edge.
+  {
+    const auto map =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_service_and_internal_1",
+                          {{"mjolnir.data_processing.infer_internal_intersections", "true"}});
+
+    const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    const auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "B", "E");
+    EXPECT_FALSE(std::get<1>(edge)->internal());
+
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FE", "ED"});
+  }
 }
