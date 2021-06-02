@@ -1279,7 +1279,7 @@ std::string Maneuver::ToString() const {
   for (const auto& guidance_view : guidance_views_) {
     man_str += "[";
     man_str += " data_id=" + guidance_view.data_id();
-    man_str += " type=" + guidance_view.type();
+    man_str += " type=" + std::to_string(guidance_view.type());
     man_str += " base_id=" + guidance_view.base_id();
     man_str += " overlay_ids=";
     for (const auto& overlay_id : guidance_view.overlay_ids()) {

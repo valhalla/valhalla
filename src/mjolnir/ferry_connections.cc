@@ -6,8 +6,6 @@
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 
-#define UNUSED(x) (void)(x)
-
 namespace valhalla {
 namespace mjolnir {
 

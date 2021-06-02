@@ -334,7 +334,6 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   // Compute sample distance that splits the polyline equally to create n vertices.
   // Divisor is n-1 since there is 1 more vertex than edge on the subdivided polyline.
   double sample_distance = length / (n - 1);
-  double d0 = sample_distance;
 
   // for each point
   std::vector<PointLL> resampled = {polyline.front()};
@@ -391,7 +390,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   if (resampled.size() != n) {
     LOG_ERROR("resampled polyline not expected size! n: " + std::to_string(n) +
               " actual: " + std::to_string(resampled.size()) + " length: " + std::to_string(length) +
-              " d: " + std::to_string(d0));
+              " d: " + std::to_string(sample_distance));
   }
   return resampled;
 }

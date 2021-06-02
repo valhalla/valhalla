@@ -66,6 +66,7 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+                -DLOGGING_LEVEL=NONE \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j8
@@ -107,6 +108,7 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+                -DLOGGING_LEVEL=TRACE \
                 -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
