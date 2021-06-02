@@ -673,6 +673,16 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             /// TODO: assert size == 1
             break;
           }
+          std::cout << "Looking for name: <";
+          bool first = true;
+          for (auto i : to_name.values) {
+              if (!first)
+                  std::cout << "|";
+              first = false;
+              std::cout << i;
+          }
+          std::cout << ">\n";
+
           std::cout << "\nPrint link edges\n";
           for (auto idx : link_edges) {
             PrintEdge(data, data.edges[idx]);
