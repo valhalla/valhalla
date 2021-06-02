@@ -27,7 +27,7 @@ namespace sif {
 namespace {
 
 // Base transition costs
-constexpr float kDefaultServicePenalty = 75.0f;          // Seconds
+constexpr float kDefaultServicePenalty = 75.0f; // Seconds
 
 // Other options
 constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
