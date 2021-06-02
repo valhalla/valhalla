@@ -39,7 +39,7 @@ constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultRailFerryCost = 300.0f;          // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultServicePenalty = 75.0f;          // Seconds
 
 // Other options
 constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
