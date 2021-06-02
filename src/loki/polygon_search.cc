@@ -1,4 +1,6 @@
 #include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
@@ -24,6 +26,10 @@ namespace {
 using line_bg_t = bg::model::linestring<vm::PointLL>;
 using ring_bg_t = std::vector<vm::PointLL>;
 
+typedef bg::model::d2::point_xy<double> point_type;
+typedef bg::model::polygon<point_type> polygon_type;
+typedef bg::model::linestring<point_type> linestring_t;
+
 // map of tile for map of bin ids & their ring ids
 // TODO: simplify the logic behind this a little
 using bins_collector =
@@ -46,6 +52,15 @@ double GetRingLength(const ring_bg_t& ring) {
   line_bg_t line{ring.begin(), ring.end()};
   auto length = bg::length(line, Haversine());
   return length;
+}
+// This custon within is created because using the boost::within for edge_info
+// shape will give different result depending on the order of the point.
+bool IsWithin(vb::EdgeInfo edge_info, polygon_type polygon) {
+  // create temporary line from edge_info
+  point_type p1(edge_info.shape()[0].first, edge_info.shape()[0].second);
+  point_type p2(edge_info.shape()[1].first, edge_info.shape()[1].second);
+  linestring_t edge_line{p1, p2};
+  return bg::within(edge_line, polygon);
 }
 } // namespace
 
@@ -151,6 +166,15 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
   if (GetRingLength(ring_bg) > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
   }
+  polygon_type polygon;
+
+  std::vector<point_type> points;
+  for (auto p : ring_bg) {
+    // point_type new_point(p.first, p.second);
+    // points.push_back(point_type(p.first, p.second));
+    bg::append(polygon.outer(), point_type(p.first, p.second));
+  }
+  // polygon_type polygon{{points}};
   // Get the lowest level and tiles
   const auto tiles = vb::TileHierarchy::levels().back().tiles;
   const auto bin_level = vb::TileHierarchy::levels().back().level;
@@ -196,9 +220,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
              !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
-        auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-        bool is_within = false;
-        is_within = bg::within(edge_info.shape(), ring_bg);
+        bool is_within = IsWithin(tile->edgeinfo(edge->edgeinfo_offset()), polygon);
         if (is_within) {
           cp_edge_ids.emplace(edge_id);
           cp_edge_ids.emplace(
