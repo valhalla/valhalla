@@ -20,6 +20,8 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/util_core.h>
 
+#define UNUSED(x) (void)(x)
+
 namespace valhalla {
 namespace midgard {
 

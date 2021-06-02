@@ -39,21 +39,21 @@ TEST(Turn, TestGetType) {
   // Sharp right lower bound
   EXPECT_EQ(Turn::GetType(136), Turn::Type::kSharpRight);
   // Sharp right middle
-  EXPECT_EQ(Turn::GetType(158), Turn::Type::kSharpRight);
+  EXPECT_EQ(Turn::GetType(148), Turn::Type::kSharpRight);
   // Sharp right upper bound
-  EXPECT_EQ(Turn::GetType(169), Turn::Type::kSharpRight);
+  EXPECT_EQ(Turn::GetType(159), Turn::Type::kSharpRight);
 
   // Reverse lower bound
-  EXPECT_EQ(Turn::GetType(170), Turn::Type::kReverse);
+  EXPECT_EQ(Turn::GetType(160), Turn::Type::kReverse);
   // Reverse middle
   EXPECT_EQ(Turn::GetType(180), Turn::Type::kReverse);
   // Reverse upper bound
-  EXPECT_EQ(Turn::GetType(190), Turn::Type::kReverse);
+  EXPECT_EQ(Turn::GetType(200), Turn::Type::kReverse);
 
   // Sharp left lower bound
-  EXPECT_EQ(Turn::GetType(191), Turn::Type::kSharpLeft);
+  EXPECT_EQ(Turn::GetType(201), Turn::Type::kSharpLeft);
   // Sharp left middle
-  EXPECT_EQ(Turn::GetType(203), Turn::Type::kSharpLeft);
+  EXPECT_EQ(Turn::GetType(213), Turn::Type::kSharpLeft);
   // Sharp left upper bound
   EXPECT_EQ(Turn::GetType(224), Turn::Type::kSharpLeft);
 
