@@ -6,7 +6,7 @@
    * FIXED: Disables logging in CI to catch issues [#3121](https://github.com/valhalla/valhalla/pull/3121)
    * FIXED: Fixed U-turns through service roads [#3082](https://github.com/valhalla/valhalla/pull/3082)
    * FIXED: Added forgotten penalties for kLivingStreet and kTrack for pedestrian costing model [#3116](https://github.com/valhalla/valhalla/pull/3116)
-
+   * FIXED: Updated the reverse turn bounds [#3122](https://github.com/valhalla/valhalla/pull/3122)
 
 * **Enhancement**
 
