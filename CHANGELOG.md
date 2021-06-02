@@ -5,6 +5,7 @@
    * FIXED: Added support for `access=psv`, which disables routing on these nodes and edges unless the mode is taxi or bus [#3107](https://github.com/valhalla/valhalla/pull/3107)
 
 * **Enhancement**
+   * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
