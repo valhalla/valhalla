@@ -131,6 +131,8 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {445, "Shape match algorithm specification in api request is incorrect. Please see "
           "documentation for valid shape_match input."},
 
+    {450, "Can not find the routing path because the graph is not strongly connected"},
+
     {499, "Unknown"},
 
     // tyr project 5xx

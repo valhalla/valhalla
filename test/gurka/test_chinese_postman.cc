@@ -164,4 +164,65 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   // gurka::assert::raw::expect_path(route, {"High", "Low", "5th", "2nd"});
 }
 
+TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
+  std::cout << ">>>>>> TestChinesePostmanNotConnected" << std::endl;
+  auto node_a = chinese_postman_map.nodes.at("A");
+  auto node_b = chinese_postman_map.nodes.at("B");
+  auto node_c = chinese_postman_map.nodes.at("C");
+  auto node_d = chinese_postman_map.nodes.at("D");
+  auto node_e = chinese_postman_map.nodes.at("E");
+  auto node_f = chinese_postman_map.nodes.at("F");
+
+  auto c_b = node_c.lng() - node_b.lng();
+  auto b_a = node_b.lng() - node_a.lng();
+  auto a_d = node_a.lat() - node_d.lat();
+
+  // create a chinese polygon covering ABDE and avoid polygon covering AD, BE
+  //   c---------------c
+  //   |    A------B---|--C
+  //   | a--|------|-a |  |
+  //   | |  |      | | |  |
+  //   | a--|------|-a |  |
+  //   |    |      |   |  |
+  //   |    D------E---|--F
+  //   c---------------c
+
+  auto ratio = 0.2;
+  ring_bg_t chinese_ring{{node_b.lng() + ratio * c_b, node_b.lat() + ratio * a_d},
+                         {node_e.lng() + ratio * c_b, node_e.lat() - ratio * a_d},
+                         {node_d.lng() - ratio * c_b, node_d.lat() - ratio * a_d},
+                         {node_a.lng() - ratio * c_b, node_a.lat() + ratio * a_d},
+                         {node_b.lng() + ratio * c_b, node_b.lat() + ratio * a_d}};
+
+  auto avoid_ratio = 0.1;
+  auto small_avoid_ratio = 0.01;
+  ring_bg_t avoid_ring{
+      {node_b.lng() + avoid_ratio * c_b, node_b.lat() - small_avoid_ratio * a_d},
+      {node_b.lng() + avoid_ratio * c_b, node_b.lat() - avoid_ratio * a_d},
+      {node_a.lng() - avoid_ratio * b_a, node_a.lat() - avoid_ratio * a_d},
+      {node_a.lng() - avoid_ratio * b_a, node_a.lat() - small_avoid_ratio * a_d},
+      {node_b.lng() + avoid_ratio * c_b, node_b.lat() - small_avoid_ratio * a_d},
+  };
+
+  std::vector<ring_bg_t> avoid_rings;
+  avoid_rings.push_back(avoid_ring);
+
+  // build request manually for now
+  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["A"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
+  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
+
+  // make sure the right exception is thrown
+  try {
+    gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 450); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
