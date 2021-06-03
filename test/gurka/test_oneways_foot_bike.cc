@@ -25,26 +25,26 @@ TEST(Standalone, Oneway) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
-      {"EF", {{"highway", "primary"}}},
-      {"FG", {{"highway", "primary"}}},
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC", {{"highway", "unclassified"}}},
+      {"CD", {{"highway", "unclassified"}}},
+      {"DE", {{"highway", "unclassified"}}},
+      {"EF", {{"highway", "unclassified"}}},
+      {"FG", {{"highway", "unclassified"}}},
       {"DG",
-       {{"highway", "primary"},
+       {{"highway", "unclassified"},
         {"oneway", "yes"},
         {"oneway:bicycle", "yes"},
         {"oneway:foot", "yes"}}},
-      {"GH", {{"highway", "primary"}}},
-      {"HI", {{"highway", "primary"}}},
-      {"IJ", {{"highway", "primary"}}},
+      {"GH", {{"highway", "unclassified"}}},
+      {"HI", {{"highway", "unclassified"}}},
+      {"IJ", {{"highway", "unclassified"}}},
 
   };
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oneway_primary", build_config);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oneway_unclassified", build_config);
   for (auto& c : costing) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c);
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
@@ -67,20 +67,20 @@ TEST(Standalone, OnewayFootway) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
-      {"EF", {{"highway", "primary"}}},
-      {"FG", {{"highway", "primary"}}},
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC", {{"highway", "unclassified"}}},
+      {"CD", {{"highway", "unclassified"}}},
+      {"DE", {{"highway", "unclassified"}}},
+      {"EF", {{"highway", "unclassified"}}},
+      {"FG", {{"highway", "unclassified"}}},
       {"DG",
        {{"highway", "footway"},
         {"bicycle", "yes"},
         {"oneway:bicycle", "yes"},
         {"oneway:foot", "yes"}}},
-      {"GH", {{"highway", "primary"}}},
-      {"HI", {{"highway", "primary"}}},
-      {"IJ", {{"highway", "primary"}}},
+      {"GH", {{"highway", "unclassified"}}},
+      {"HI", {{"highway", "unclassified"}}},
+      {"IJ", {{"highway", "unclassified"}}},
 
   };
 
@@ -89,7 +89,7 @@ TEST(Standalone, OnewayFootway) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oneway_footway", build_config);
   for (auto& c : costing) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c);
-    if (c == "pedestrian")
+    if (c == "pedestrian" || c == "bicycle")
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
     else
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI", "IJ"});
@@ -112,19 +112,19 @@ TEST(Standalone, OnewayFootwayAllowBike) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC", {{"highway", "unclassified"}}},
+      {"CD", {{"highway", "unclassified"}}},
+      {"DE", {{"highway", "unclassified"}}},
       {"EF",
-       {{"highway", "primary"},
+       {{"highway", "unclassified"},
         {"oneway", "yes"},
         {"bicycle", "no"}}}, // tend not to favor footways, so make the costing use it
-      {"FG", {{"highway", "primary"}}},
+      {"FG", {{"highway", "unclassified"}}},
       {"DG", {{"highway", "footway"}, {"bicycle", "yes"}, {"oneway", "yes"}}},
-      {"GH", {{"highway", "primary"}}},
-      {"HI", {{"highway", "primary"}}},
-      {"IJ", {{"highway", "primary"}}},
+      {"GH", {{"highway", "unclassified"}}},
+      {"HI", {{"highway", "unclassified"}}},
+      {"IJ", {{"highway", "unclassified"}}},
 
   };
 
@@ -153,17 +153,17 @@ TEST(Standalone, OnewayFlipped) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
-      {"EF", {{"highway", "primary"}}},
-      {"FG", {{"highway", "primary"}}},
+      {"AB", {{"highway", "unclassified"}}},
+      {"BC", {{"highway", "unclassified"}}},
+      {"CD", {{"highway", "unclassified"}}},
+      {"DE", {{"highway", "unclassified"}}},
+      {"EF", {{"highway", "unclassified"}}},
+      {"FG", {{"highway", "unclassified"}}},
       {"DG",
        {{"highway", "footway"}, {"bicycle", "yes"}, {"oneway:bicycle", "-1"}, {"oneway:foot", "-1"}}},
-      {"GH", {{"highway", "primary"}}},
-      {"HI", {{"highway", "primary"}}},
-      {"IJ", {{"highway", "primary"}}},
+      {"GH", {{"highway", "unclassified"}}},
+      {"HI", {{"highway", "unclassified"}}},
+      {"IJ", {{"highway", "unclassified"}}},
 
   };
 
