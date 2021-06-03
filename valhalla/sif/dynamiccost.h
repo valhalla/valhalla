@@ -1028,7 +1028,7 @@ using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kM
 
 /*
  * Structure that stores default values for costing options that are common for most costing models.
- * It mostly contains options used in DynamicCost::gate_base_costs() method.
+ * It mostly contains options used in DynamicCost::get_base_costs() method.
  */
 struct BaseCostingOptionsConfig {
   BaseCostingOptionsConfig();
