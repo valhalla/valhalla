@@ -1101,11 +1101,7 @@ function filter_tags_generic(kv)
   end
 
   if kv["pedestrian_backward"] == nil then
-    if (kv["highway"] == "footway" or kv["highway"] == "pedestrian" or kv["highway"] == "steps" or kv["highway"] == "path") then
       kv["pedestrian_backward"] = "false"
-    else
-      kv["pedestrian_backward"] = "true"
-    end
   end
 
   if ((kv["oneway"] == "yes" and kv["oneway:foot"] == "no") or kv["foot:backward"] == "yes") then
@@ -1165,12 +1161,16 @@ function filter_tags_generic(kv)
         kv["motorcycle_forward"] = "true"
       end
     end
-    if kv["pedestrian_backward"] == "true" then
-      if (oneway_foot == "true") then --pedestrian only in reverse direction on street
-        kv["pedestrian_forward"] = "false"
-      elseif oneway_foot == "false" then
-        kv["pedestrian_forward"] = "true"
+    if (kv["highway"] == "footway" or kv["highway"] == "pedestrian" or kv["highway"] == "steps" or kv["highway"] == "path" or kv["oneway:foot"]) then --don't apply oneway tag unless oneway:foot or pedestrian only way
+      if kv["pedestrian_backward"] == "true" then
+        if (oneway_foot == "true") then --pedestrian only in reverse direction on street
+          kv["pedestrian_forward"] = "false"
+        elseif oneway_foot == "false" then
+          kv["pedestrian_forward"] = "true"
+        end
       end
+    else
+      kv["pedestrian_backward"] = kv["pedestrian_forward"]
     end
   elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
@@ -1197,7 +1197,8 @@ function filter_tags_generic(kv)
       kv["moped_backward"] = kv["moped_forward"]
     end
 
-    if (kv["motorcycle_backward"] == "false" and (kv["oneway:motorcycle"] == nil or oneway[kv["oneway:motorcycle"]] == false or kv["oneway:motorcycle"] == "no")) then
+    if (kv["motorcycle_backward"] == "false" and kv["oneway:motorcycle"] ~= "-1" and
+       (kv["oneway:motorcycle"] == nil or oneway[kv["oneway:motorcycle"]] == false or kv["oneway:motorcycle"] == "no")) then
       kv["motorcycle_backward"] = kv["motorcycle_forward"]
     end
 
