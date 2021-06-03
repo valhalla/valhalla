@@ -269,10 +269,10 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
 
   // Convert distance to meters. Output distance and duration.
   distance = units_to_meters(distance, !imperial);
-  route->emplace("distance", json::fp_t{distance, 3});
-  route->emplace("duration", json::fp_t{duration, 3});
+  route->emplace("distance", json::fixed_t{distance, 3});
+  route->emplace("duration", json::fixed_t{duration, 3});
 
-  route->emplace("weight", json::fp_t{weight, 3});
+  route->emplace("weight", json::fixed_t{weight, 3});
   assert(api.options().costing_options(api.options().costing()).has_name());
   route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
 
@@ -282,8 +282,8 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
       route->emplace("duration_" + recosting_itr->name(), nullptr_t());
       route->emplace("weight_" + recosting_itr->name(), nullptr_t());
     } else {
-      route->emplace("duration_" + recosting_itr->name(), json::fp_t{recost.first, 3});
-      route->emplace("weight_" + recosting_itr->name(), json::fp_t{recost.second, 3});
+      route->emplace("duration_" + recosting_itr->name(), json::fixed_t{recost.first, 3});
+      route->emplace("weight_" + recosting_itr->name(), json::fixed_t{recost.second, 3});
     }
     ++recosting_itr;
   }
@@ -295,8 +295,8 @@ json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto coords = json::array({});
   coords->reserve(shape.size());
   for (const auto& p : shape) {
-    coords->emplace_back(
-        json::array({json::fp_t{p.lng(), DIGITS_PRECISION}, json::fp_t{p.lat(), DIGITS_PRECISION}}));
+    coords->emplace_back(json::array(
+        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
   }
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", std::move(coords));
@@ -381,7 +381,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     duration_array->reserve(trip_leg.shape_attributes().time_size());
     for (const auto& time : trip_leg.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      duration_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+      duration_array->push_back(json::fixed_t{time * kSecPerMillisecond, 3});
     }
     attributes_map->emplace("duration", duration_array);
   }
@@ -391,7 +391,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     distance_array->reserve(trip_leg.shape_attributes().length_size());
     for (const auto& length : trip_leg.shape_attributes().length()) {
       // decimeters (dm) to meters (m)
-      distance_array->push_back(json::fp_t{length * kMeterPerDecimeter, 1});
+      distance_array->push_back(json::fixed_t{length * kMeterPerDecimeter, 1});
     }
     attributes_map->emplace("distance", distance_array);
   }
@@ -401,7 +401,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     speeds_array->reserve(trip_leg.shape_attributes().speed_size());
     for (const auto& speed : trip_leg.shape_attributes().speed()) {
       // dm/s to m/s
-      speeds_array->push_back(json::fp_t{speed * kMeterPerDecimeter, 1});
+      speeds_array->push_back(json::fixed_t{speed * kMeterPerDecimeter, 1});
     }
     attributes_map->emplace("speed", speeds_array);
   }
@@ -495,8 +495,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     auto loc = json::array({});
     size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
     PointLL ll = shape[shape_index];
-    loc->emplace_back(json::fp_t{ll.lng(), 6});
-    loc->emplace_back(json::fp_t{ll.lat(), 6});
+    loc->emplace_back(json::fixed_t{ll.lng(), 6});
+    loc->emplace_back(json::fixed_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
 
@@ -521,17 +521,18 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       intersection->emplace("toll_collection", toll_collection);
 
     if (node->cost().transition_cost().seconds() > 0)
-      intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
+      intersection->emplace("turn_duration",
+                            json::fixed_t{node->cost().transition_cost().seconds(), 3});
     if (node->cost().transition_cost().cost() > 0)
-      intersection->emplace("turn_weight", json::fp_t{node->cost().transition_cost().cost(), 3});
+      intersection->emplace("turn_weight", json::fixed_t{node->cost().transition_cost().cost(), 3});
     auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
     if (next_node) {
       auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
       auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
       if (secs > 0)
-        intersection->emplace("duration", json::fp_t{secs, 3});
+        intersection->emplace("duration", json::fixed_t{secs, 3});
       if (cost > 0)
-        intersection->emplace("weight", json::fp_t{cost, 3});
+        intersection->emplace("weight", json::fixed_t{cost, 3});
     }
 
     // TODO: add recosted durations to the intersection?
@@ -1090,8 +1091,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   // Set the location
   auto loc = json::array({});
-  loc->emplace_back(json::fp_t{man_ll.lng(), 6});
-  loc->emplace_back(json::fp_t{man_ll.lat(), 6});
+  loc->emplace_back(json::fixed_t{man_ll.lng(), 6});
+  loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
   osrm_man->emplace("location", loc);
 
   // Get incoming and outgoing bearing. For the incoming heading, use the
@@ -1379,24 +1380,24 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("distance", json::fp_t{distance, 3});
-      step->emplace("duration", json::fp_t{duration, 3});
+      step->emplace("distance", json::fixed_t{distance, 3});
+      step->emplace("duration", json::fixed_t{duration, 3});
       const auto& end_node = path_leg.node(maneuver.end_path_index());
       const auto& begin_node = path_leg.node(maneuver.begin_path_index());
       auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
-      step->emplace("weight", json::fp_t{weight, 3});
+      step->emplace("weight", json::fixed_t{weight, 3});
       auto recost_itr = options.recostings().begin();
       auto begin_recost_itr = begin_node.recosts().begin();
       for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost()) {
           step->emplace("duration_" + recost_itr->name(),
-                        json::fp_t{end_recost.elapsed_cost().seconds() -
-                                       begin_recost_itr->elapsed_cost().seconds(),
-                                   3});
+                        json::fixed_t{end_recost.elapsed_cost().seconds() -
+                                          begin_recost_itr->elapsed_cost().seconds(),
+                                      3});
           step->emplace("weight_" + recost_itr->name(),
-                        json::fp_t{end_recost.elapsed_cost().cost() -
-                                       begin_recost_itr->elapsed_cost().cost(),
-                                   3});
+                        json::fixed_t{end_recost.elapsed_cost().cost() -
+                                          begin_recost_itr->elapsed_cost().cost(),
+                                      3});
         } else {
           step->emplace("duration_" + recost_itr->name(), nullptr_t());
           step->emplace("weight_" + recost_itr->name(), nullptr_t());
@@ -1509,17 +1510,17 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     double duration = leg->summary().time();
     double distance = units_to_meters(leg->summary().length(), !imperial);
     output_leg->emplace("summary", leg_summaries[leg_index]);
-    output_leg->emplace("distance", json::fp_t{distance, 3});
-    output_leg->emplace("duration", json::fp_t{duration, 3});
+    output_leg->emplace("distance", json::fixed_t{distance, 3});
+    output_leg->emplace("duration", json::fixed_t{duration, 3});
     output_leg->emplace("weight",
-                        json::fp_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
+                        json::fixed_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
     auto recost_itr = options.recostings().begin();
     for (const auto& recost : path_leg.node().rbegin()->recosts()) {
       if (recost.has_elapsed_cost()) {
         output_leg->emplace("duration_" + recost_itr->name(),
-                            json::fp_t{recost.elapsed_cost().seconds(), 3});
+                            json::fixed_t{recost.elapsed_cost().seconds(), 3});
         output_leg->emplace("weight_" + recost_itr->name(),
-                            json::fp_t{recost.elapsed_cost().cost(), 3});
+                            json::fixed_t{recost.elapsed_cost().cost(), 3});
       } else {
         output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
         output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
@@ -1616,7 +1617,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 
         // k is the number of named segments in the summary. It keeps going
         // up by 1 until route_i's summary is different than the route_j's.
-        size_t k = 1;
+        size_t k = std::min(num_named_segs_needed, num_comparable);
         for (; (k < num_comparable); k++) {
           const std::string& summary_i = rscache.get_n_segment_summary(route_i, leg_idx, k);
           const std::string& summary_j = rscache.get_n_segment_summary(route_j, leg_idx, k);
@@ -1689,7 +1690,7 @@ std::string serialize(valhalla::Api& api) {
 
     if (options.action() == Options::trace_route) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.
-      route->emplace("confidence", json::fp_t{1, 1});
+      route->emplace("confidence", json::fixed_t{1, 1});
     }
     // Add linear references, if applicable
     route_references(route, api.trip().routes(i), options);
@@ -1761,6 +1762,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
     meta.set_num_lanes_blocked(2);
+    meta.set_length(1337);
     meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
@@ -1796,6 +1798,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "lanes_blocked": [],
           "num_lanes_blocked": 2,
           "clear_lanes": "many lanes clear",
+          "length": 1337,
           "closed": true,
           "congestion": {
             "value": 33

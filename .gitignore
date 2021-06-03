@@ -60,10 +60,6 @@ CMakeLists.txt.user
 .idea
 /.tidytmp
 
-# nodejs
-node_modules
-lib/binding/node_valhalla.node
-
 # documentation
 site/
 

@@ -1505,14 +1505,19 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       case Maneuver::RelativeDirection::KReverse: {
-        switch (Turn::GetType(maneuver.turn_degree())) {
-          case Turn::Type::kSharpLeft: {
+        if (maneuver.drive_on_right()) {
+          if (maneuver.turn_degree() < 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
+            LOG_TRACE("ManeuverType=RAMP_RIGHT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
             LOG_TRACE("ManeuverType=RAMP_LEFT");
-            break;
           }
-          // For now default to right
-          default: {
+        } else {
+          if (maneuver.turn_degree() > 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
+            LOG_TRACE("ManeuverType=RAMP_LEFT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
             LOG_TRACE("ManeuverType=RAMP_RIGHT");
           }
@@ -2045,13 +2050,22 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   // Intersecting forward edge
   if (IsIntersectingForwardEdge(node_index, prev_edge.get(), curr_edge.get())) {
     maneuver.set_intersecting_forward_edge(true);
+    LOG_TRACE("IntersectingForwardEdge");
     return false;
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Determine previous edge names and common base names
+  std::unique_ptr<StreetNames> prev_edge_names =
+      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+  std::unique_ptr<StreetNames> common_base_names =
+      prev_edge_names->FindCommonBaseNames(maneuver.street_names());
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process 'T' intersection
-  if (IsTee(node_index, prev_edge.get(), curr_edge.get())) {
+  if (IsTee(node_index, prev_edge.get(), curr_edge.get(), !common_base_names->empty())) {
     maneuver.set_tee(true);
+    LOG_TRACE("T intersection");
     return false;
   }
 
@@ -2062,17 +2076,13 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
                                     prev_edge->end_heading(), prev_edge->travel_mode())) &&
       !node->HasForwardTraversableIntersectingEdge(prev_edge->end_heading(),
                                                    prev_edge->travel_mode()) &&
-      node->HasTraversableIntersectingEdge(prev_edge->travel_mode())) {
+      node->HasTraversableExcludeUseXEdge(prev_edge->travel_mode(), TripLeg_Use_kTrackUse)) {
+    LOG_TRACE("Non-forward transition with intersecting traversable edge");
     return false;
   }
 
-  std::unique_ptr<StreetNames> prev_edge_names =
-      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
-
   /////////////////////////////////////////////////////////////////////////////
   // Process common base names
-  std::unique_ptr<StreetNames> common_base_names =
-      prev_edge_names->FindCommonBaseNames(maneuver.street_names());
   if (!common_base_names->empty()) {
     maneuver.set_street_names(std::move(common_base_names));
     return true;
@@ -2160,7 +2170,6 @@ bool ManeuversBuilder::IsFork(int node_index,
 
   // If node is fork
   // and prev to curr edge is relative straight
-  // and the intersecting edge count is less than 3
   // and there is a relative straight intersecting edge
   if (node->fork() &&
       curr_edge->IsWiderForward(
@@ -2205,7 +2214,6 @@ bool ManeuversBuilder::IsFork(int node_index,
   // Possibly move some logic to data processing in the future
   // Verify that both previous and current edges are highways
   // and the path is in the forward direction
-  // and there are at most 2 intersecting edges
   // and there is an intersecting highway edge in the forward direction
   else if (prev_edge->IsHighway() && curr_edge->IsHighway() &&
            curr_edge->IsWiderForward(
@@ -2229,6 +2237,41 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                           prev_edge->travel_mode(),
                                                           prev_edge->road_class())) {
     return true;
+  }
+  // Determine if highway/ramp lane bifurcation
+  else if (node->intersecting_edge_size() == 1) {
+    auto xedge = node->GetIntersectingEdge(0);
+
+    // For now, includes lane bifurcation patterns like:
+    // 2 lanes split into 1 lane left and 1 lane right
+    // 3 lanes split into 2 lanes left and 2 lanes right
+    // 4 lanes split into 2 lanes left and 2 lanes right
+    // 5 lanes split into 3 lanes left and 3 lanes right
+    // 6 lanes split into 3 lanes left and 3 lanes right
+    // ...
+    auto has_lane_bifurcation = [](uint32_t prev_lane_count, uint32_t curr_lane_count,
+                                   uint32_t xedge_lane_count) -> bool {
+      uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
+      if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
+        return true;
+      } else if ((prev_lane_count > 2) && (curr_lane_count == post_split_min_count) &&
+                 (xedge_lane_count == post_split_min_count)) {
+        return true;
+      }
+      return false;
+    };
+
+    // The curr edge and intersecting edge must be highway or ramp but not both
+    // validate lane bifurcation
+    if (prev_edge->IsHighway() &&
+        ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
+         (xedge->IsHighway() && curr_edge->IsRampUse())) &&
+        prev_edge->IsForkForward(
+            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading())) &&
+        has_lane_bifurcation(prev_edge->lane_count(), curr_edge->lane_count(), xedge->lane_count())) {
+      return true;
+    }
   }
 
   return false;
@@ -2255,7 +2298,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
 
-    TripLeg_Use xedge_use;
+    boost::optional<TripLeg_Use> xedge_use;
     uint32_t straightest_traversable_xedge_turn_degree =
         node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
                                                                   prev_edge->travel_mode(),
@@ -2264,9 +2307,10 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     // This is needed to ensure we don't consider footways and crosswalks as
     // different uses for determining pedestrian forks
     bool is_current_and_intersecting_edge_of_similar_use =
-        (curr_edge->use() == xedge_use ||
-         (curr_edge->IsFootwayUse() &&
-          (xedge_use == TripLeg_Use_kPedestrianCrossingUse || xedge_use == TripLeg_Use_kFootwayUse)));
+        (xedge_use &&
+         (curr_edge->use() == *xedge_use ||
+          (curr_edge->IsFootwayUse() && (*xedge_use == TripLeg_Use_kPedestrianCrossingUse ||
+                                         *xedge_use == TripLeg_Use_kFootwayUse))));
 
     // if there is a similar traversable intersecting edge
     //    or there is a relative straight traversable intersecting edge
@@ -2287,7 +2331,8 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
 
 bool ManeuversBuilder::IsTee(int node_index,
                              EnhancedTripLeg_Edge* prev_edge,
-                             EnhancedTripLeg_Edge* curr_edge) const {
+                             EnhancedTripLeg_Edge* curr_edge,
+                             bool prev_edge_has_common_base_name) const {
 
   auto node = trip_path_->GetEnhancedNode(node_index);
   // Verify only one intersecting edge
@@ -2301,6 +2346,11 @@ bool ManeuversBuilder::IsTee(int node_index,
 
     // Intersecting edge must be traversable
     if (!(node->GetIntersectingEdge(0)->IsTraversable(prev_edge->travel_mode()))) {
+      return false;
+    }
+
+    if (prev_edge_has_common_base_name &&
+        !node->HasTraversableExcludeUseXEdge(prev_edge->travel_mode(), TripLeg_Use_kTrackUse)) {
       return false;
     }
 
@@ -2404,7 +2454,8 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(int node_index,
     // and forward intersecting edge exists
     // then return true
     if (!curr_edge->IsForward(turn_degree) &&
-        node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
+        node->HasForwardTraversableExcludeUseXEdge(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                   TripLeg_Use_kTrackUse)) {
       return true;
     }
     // if path edge is forward
@@ -2594,7 +2645,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kLeft) &&
         ((new_turn_type == Turn::Type::kSlightRight) || (new_turn_type == Turn::Type::kRight) ||
-         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 
@@ -2606,7 +2658,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kRight) &&
         ((new_turn_type == Turn::Type::kSlightLeft) || (new_turn_type == Turn::Type::kLeft) ||
-         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 

@@ -630,8 +630,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       }
       sum += density;
     }
-    float average_density = sum / densities[level].size();
-    LOG_DEBUG("Average density = " + std::to_string(average_density) +
+    LOG_DEBUG("Average density = " + std::to_string(sum / densities[level].size()) +
               " max = " + std::to_string(max_density));
   }
 }

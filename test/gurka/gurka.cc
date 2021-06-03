@@ -513,7 +513,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        auto names = tile->GetNames(forward_directed_edge);
         for (const auto& name : names) {
           if (name == way_name) {
             auto forward_edge_id = tile_id;
@@ -693,6 +693,7 @@ std::string dump_geojson_graph(const map& graph) {
       properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
                            std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
+      properties.AddMember("is_shortcut", edge.is_shortcut() ? true : false, doc.GetAllocator());
 
       // add the geom
       rapidjson::Value geometry(rapidjson::kObjectType);
@@ -1049,11 +1050,14 @@ void expect_eta(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param expected_names the names of the edges the path should traverse in order
+ * @param message the message prints if a test is failed
  */
-void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+void expect_path(const valhalla::Api& result,
+                 const std::vector<std::string>& expected_names,
+                 const std::string& message) {
   EXPECT_EQ(result.trip().routes_size(), 1);
   const auto actual_names = detail::get_paths(result).front();
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path. " << message;
 }
 
 } // namespace raw

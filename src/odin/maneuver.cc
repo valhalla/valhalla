@@ -170,23 +170,25 @@ bool Maneuver::IsMergeType() const {
 }
 
 bool Maneuver::IsLeftType() const {
-  return ((type_ == DirectionsLeg_Maneuver_Type_kUturnLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kSharpLeft ||
+  return ((type_ == DirectionsLeg_Maneuver_Type_kSlightLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kSlightLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kExitLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kSharpLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kUturnLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kRampLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kExitLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kStayLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kMergeLeft));
 }
 
 bool Maneuver::IsRightType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kSlightRight ||
-           type_ == DirectionsLeg_Maneuver_Type_kExitRight ||
-           type_ == DirectionsLeg_Maneuver_Type_kRampRight ||
            type_ == DirectionsLeg_Maneuver_Type_kRight ||
            type_ == DirectionsLeg_Maneuver_Type_kSharpRight ||
            type_ == DirectionsLeg_Maneuver_Type_kUturnRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kRampRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kExitRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kStayRight ||
            type_ == DirectionsLeg_Maneuver_Type_kDestinationRight ||
            type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
@@ -1277,7 +1279,7 @@ std::string Maneuver::ToString() const {
   for (const auto& guidance_view : guidance_views_) {
     man_str += "[";
     man_str += " data_id=" + guidance_view.data_id();
-    man_str += " type=" + guidance_view.type();
+    man_str += " type=" + std::to_string(guidance_view.type());
     man_str += " base_id=" + guidance_view.base_id();
     man_str += " overlay_ids=";
     for (const auto& overlay_id : guidance_view.overlay_ids()) {

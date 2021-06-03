@@ -213,8 +213,8 @@ protected:
     test::build_live_traffic_data(map.config);
     test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                       valhalla::baldr::TrafficSpeed* traffic_speed) {
-      traffic_speed->overall_speed = 50 >> 1;
-      traffic_speed->speed1 = 50 >> 1;
+      traffic_speed->overall_encoded_speed = 50 >> 1;
+      traffic_speed->encoded_speed1 = 50 >> 1;
       traffic_speed->breakpoint1 = 255;
     });
 

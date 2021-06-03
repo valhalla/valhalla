@@ -5,6 +5,13 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
+namespace {
+const std::array<std::string, 3> kDateTimeTypes = {"1", "2", "3"};
+const std::array<std::string, 6> kMotorVehicleCostingModels = {"auto",  "bus",
+                                                               "taxi",  "motor_scooter",
+                                                               "truck", "motorcycle"};
+} // namespace
+
 using namespace valhalla;
 
 /*
@@ -18,28 +25,28 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
+    constexpr double grid_size_meters = 100;
 
     const std::string ascii_map = R"(
          A----B
          |    |
          D    C
           \  /
-           E    
+           E
+
+         F----G----H----I----J----K----L
+                             |    |
+                             M----N
     )";
 
-    const std::string timeDenied =
-        "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string yesAllowed =
-        "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string privateAllowed =
-        "private @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string deliveryAllowed =
-        "delivery @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string designatedAllowed =
-        "designated @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
-    const std::string destinationAllowed =
-        "destination @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string condition =
+        "(Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00)";
+    const std::string timeDenied = "no @ " + condition;
+    const std::string yesAllowed = "yes @ " + condition;
+    const std::string privateAllowed = "private @ " + condition;
+    const std::string deliveryAllowed = "delivery @ " + condition;
+    const std::string designatedAllowed = "designated @ " + condition;
+    const std::string destinationAllowed = "destination @ " + condition;
     const gurka::ways ways = {
         {"AD",
          {{"highway", "service"},
@@ -70,9 +77,19 @@ protected:
           {"bicycle:conditional", timeDenied},
           {"foot:conditional", yesAllowed}}},
 
+        {"FG", {{"highway", "residential"}}},
+        {"GH", {{"highway", "residential"}}},
+        {"HI", {{"highway", "residential"}, {"motor_vehicle:conditional", destinationAllowed}}},
+        {"IJ", {{"highway", "residential"}}},
+        {"JK", {{"highway", "residential"}, {"motor_vehicle:conditional", destinationAllowed}}},
+        {"KL", {{"highway", "residential"}}},
+        {"JM", {{"highway", "residential"}}},
+        {"MN", {{"highway", "residential"}}},
+        {"NK", {{"highway", "residential"}}},
+
     };
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/conditional_restrictions",
                             {{"mjolnir.timezone", {"test/data/tz.sqlite"}}});
   }
@@ -97,20 +114,11 @@ TEST_F(ConditionalRestrictions, NoRestrictionAuto) {
 }
 
 TEST_F(ConditionalRestrictions, RestrictionAuto) {
-  // this tests that the expected exception is thrown
-  EXPECT_THROW(
-      {
-        try {
-          auto result =
-              gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
-                               {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
-        } catch (const std::exception& e) {
-          // and this tests that it has the correct message
-          EXPECT_STREQ("No path could be found for input", e.what());
-          throw;
-        }
-      },
-      std::exception);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto",
+                       {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CE"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBikeNoDate) {
@@ -173,4 +181,82 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
         }
       },
       std::exception);
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnLastEdgeIsValid) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnLastEdgeIsNotValid) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "I"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsValid_OnlyAlternative) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsNotValid_OnlyAlternative) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsValid_ManyAlternatives) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T20:00"}});
+      gurka::assert::raw::expect_path(result, {"IJ", "JM", "MN", "NK", "KL"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
+}
+
+TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsNotValid_ManyAlternatives) {
+  for (auto const& date_time_type : kDateTimeTypes) {
+    for (auto const& costing : kMotorVehicleCostingModels) {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                                     {{"/date_time/type", date_time_type},
+                                      {"/date_time/value", "2020-04-04T12:00"}});
+      gurka::assert::raw::expect_path(result, {"IJ", "JK", "KL"},
+                                      "Date time type: " + date_time_type +
+                                          ", costing type: " + costing);
+    }
+  }
 }

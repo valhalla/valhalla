@@ -165,7 +165,6 @@ void ConstructEdges(const std::string& ways_file,
   };
 
   // For each way traversed via the nodes
-  uint32_t edgeindex = 0;
   GraphId graphid;
   size_t current_way_node_index = 0;
   while (current_way_node_index < way_nodes.size()) {
@@ -244,7 +243,7 @@ void ConstructEdges(const std::string& ways_file,
           doubled_back = current_way_node_index != last_way_node_index;
         }
 
-        // Either we were done making edges from this way or there is an internal part that is doubled
+        // Either we were done making edges from this way or the is an internal part that is doubled
         // backed over itself and we need to skip it
         if (current_way_node_index == last_way_node_index || doubled_back) {
           edges.push_back(prev_edge);
@@ -394,7 +393,6 @@ void BuildTileSet(const std::string& ways_file,
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
-  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
@@ -956,7 +954,7 @@ void BuildTileSet(const std::string& ways_file,
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
-                                       node.traffic_signal());
+                                       node.traffic_signal(), node.tagged_access());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
         graphtile.nodes().back().set_edge_count(bundle.node_edges.size());
@@ -1136,7 +1134,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified
   DataQuality stats;
   if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file,
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
                     pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   } else {
     LOG_WARN("Not reclassifying link graph edges");
@@ -1327,7 +1325,6 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
   if (!has_branch && !has_toward) {
     if (node.has_exit_to() && !fork) {
       std::string tmp;
-      std::size_t pos;
       std::vector<std::string> exit_tos = GetTagTokens(osmdata.node_names.name(node.exit_to_index()));
       for (auto& exit_to : exit_tos) {
 

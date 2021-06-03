@@ -117,7 +117,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
       }
       if (edge.has_weighted_grade()) {
-        edge_map->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
+        edge_map->emplace("weighted_grade", json::fixed_t{edge.weighted_grade(), 3});
       }
       if (edge.has_mean_elevation()) {
         // Convert to feet if a valid elevation and units are miles
@@ -194,7 +194,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
       if (edge.has_length_km()) {
-        edge_map->emplace("length", json::fp_t{edge.length_km() * scale, 3});
+        edge_map->emplace("length", json::fixed_t{edge.length_km() * scale, 3});
       }
       // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {
@@ -207,11 +207,12 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.traffic_segment().size() > 0) {
         auto segments_array = json::array({});
         for (const auto& segment : edge.traffic_segment()) {
-          json::MapPtr segmap = json::map({{"segment_id", segment.segment_id()},
-                                           {"begin_percent", json::fp_t{segment.begin_percent(), 3}},
-                                           {"end_percent", json::fp_t{segment.end_percent(), 3}},
-                                           {"starts_segment", segment.starts_segment()},
-                                           {"ends_segment", segment.ends_segment()}});
+          json::MapPtr segmap =
+              json::map({{"segment_id", segment.segment_id()},
+                         {"begin_percent", json::fixed_t{segment.begin_percent(), 3}},
+                         {"end_percent", json::fixed_t{segment.end_percent(), 3}},
+                         {"starts_segment", segment.starts_segment()},
+                         {"ends_segment", segment.ends_segment()}});
           segments_array->emplace_back(segmap);
         }
         edge_map->emplace("traffic_segments", segments_array);
@@ -301,7 +302,8 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 
         if (node.has_cost() && node.cost().has_elapsed_cost() &&
             node.cost().elapsed_cost().has_seconds()) {
-          end_node_map->emplace("elapsed_time", json::fp_t{node.cost().elapsed_cost().seconds(), 3});
+          end_node_map->emplace("elapsed_time",
+                                json::fixed_t{node.cost().elapsed_cost().seconds(), 3});
         }
         if (node.has_admin_index()) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
@@ -318,7 +320,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         if (node.has_cost() && node.cost().has_transition_cost() &&
             node.cost().transition_cost().has_seconds()) {
           end_node_map->emplace("transition_time",
-                                json::fp_t{node.cost().transition_cost().seconds(), 3});
+                                json::fixed_t{node.cost().transition_cost().seconds(), 3});
         }
 
         // TODO transit info at node
@@ -363,8 +365,8 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
 
     // Process matched point
     if (controller.attributes.at(kMatchedPoint)) {
-      match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first, 6});
-      match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second, 6});
+      match_points_map->emplace("lon", json::fixed_t{match_result.lnglat.first, 6});
+      match_points_map->emplace("lat", json::fixed_t{match_result.lnglat.second, 6});
     }
 
     // Process matched type
@@ -405,14 +407,14 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
     // Process matched point distance along edge
     if (controller.attributes.at(kMatchedDistanceAlongEdge) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along, 3});
+      match_points_map->emplace("distance_along_edge", json::fixed_t{match_result.distance_along, 3});
     }
 
     // Process matched point distance from trace point
     if (controller.attributes.at(kMatchedDistanceFromTracePoint) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
       match_points_map->emplace("distance_from_trace_point",
-                                json::fp_t{match_result.distance_from, 3});
+                                json::fixed_t{match_result.distance_from, 3});
     }
 
     match_points_array->push_back(match_points_map);
@@ -427,7 +429,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto times_array = json::array({});
     for (const auto& time : trip_path.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      times_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+      times_array->push_back(json::fixed_t{time * kSecPerMillisecond, 3});
     }
     attributes_map->emplace("time", times_array);
   }
@@ -435,7 +437,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto lengths_array = json::array({});
     for (const auto& length : trip_path.shape_attributes().length()) {
       // decimeters (dm) to kilometer (km)
-      lengths_array->push_back(json::fp_t{length * kKmPerDecimeter, 3});
+      lengths_array->push_back(json::fixed_t{length * kKmPerDecimeter, 3});
     }
     attributes_map->emplace("length", lengths_array);
   }
@@ -443,7 +445,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto speeds_array = json::array({});
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
-      speeds_array->push_back(json::fp_t{speed * kDecimeterPerSectoKPH, 3});
+      speeds_array->push_back(json::fixed_t{speed * kDecimeterPerSectoKPH, 3});
     }
     attributes_map->emplace("speed", speeds_array);
   }
@@ -472,12 +474,12 @@ void append_trace_info(
   // Add confidence_score
   if (controller.attributes.at(kConfidenceScore)) {
     json->emplace("confidence_score",
-                  json::fp_t{std::get<kConfidenceScoreIndex>(map_match_result), 3});
+                  json::fixed_t{std::get<kConfidenceScoreIndex>(map_match_result), 3});
   }
 
   // Add raw_score
   if (controller.attributes.at(kRawScore)) {
-    json->emplace("raw_score", json::fp_t{std::get<kRawScoreIndex>(map_match_result), 3});
+    json->emplace("raw_score", json::fixed_t{std::get<kRawScoreIndex>(map_match_result), 3});
   }
 
   // Add admins list

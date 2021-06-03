@@ -12,19 +12,19 @@ namespace {
 inline void SetLiveSpeedFrom(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
   live_speed->breakpoint1 = breakpoint1;
   live_speed->breakpoint2 = 255;
-  live_speed->speed2 = speed >> 1;
-  live_speed->speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  live_speed->encoded_speed2 = speed >> 1;
+  live_speed->encoded_speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
 }
 
 inline void SetLiveSpeedUpto(baldr::TrafficSpeed* live_speed, uint8_t speed, uint8_t breakpoint1) {
   live_speed->breakpoint1 = breakpoint1;
-  live_speed->speed1 = speed >> 1;
+  live_speed->encoded_speed1 = speed >> 1;
 }
 
 inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint8_t speed) {
   live_speed->breakpoint1 = 255;
-  live_speed->overall_speed = speed >> 1;
-  live_speed->speed1 = speed >> 1;
+  live_speed->overall_encoded_speed = speed >> 1;
+  live_speed->encoded_speed1 = speed >> 1;
 }
 
 void close_partial_dir_edge_from(baldr::GraphReader& reader,
