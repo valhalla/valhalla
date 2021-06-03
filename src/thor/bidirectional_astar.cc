@@ -996,8 +996,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       printf("graphreader.GetGraphTile(nodes.first) is null\n");
       continue;
     }
-    auto sll = first_node_tile->node(nodes.first)
-                   ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
+
+    auto sll = first_node_tile->node(nodes.first)->latlng(first_node_tile->header()->base_ll());
 
     auto second_node_tile = graphreader.GetGraphTile(nodes.second);
     if (second_node_tile == nullptr) {
