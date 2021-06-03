@@ -222,10 +222,11 @@ TEST_P(OnewayTest, TestSharedLane) {
   auto cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
-  way_attributes.emplace("cycleway","shared_lane");
+  way_attributes.emplace("cycleway", "shared_lane");
   test_ways.emplace("DG", way_attributes);
 
-  auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_shared", build_config);
+  auto map =
+      gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_shared", build_config);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
@@ -239,16 +240,16 @@ TEST_P(OnewayTest, TestSharedLane) {
   }
 }
 
-
 TEST_P(OnewayTest, TestOpposite) {
 
   auto cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
-  way_attributes.emplace("cycleway","opposite");
+  way_attributes.emplace("cycleway", "opposite");
   test_ways.emplace("DG", way_attributes);
 
-  auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite", build_config);
+  auto map =
+      gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite", build_config);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
 
   if (cost == "bicycle") // opposite flips the onewayness
@@ -283,10 +284,11 @@ TEST_P(OnewayTest, TestOppositeWithNo) {
         is_psv = true;
     }
   }
-  updated_attributes.emplace("cycleway","opposite");
+  updated_attributes.emplace("cycleway", "opposite");
   test_ways.emplace("DG", updated_attributes);
 
-  auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite_no", build_config);
+  auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite_no",
+                               build_config);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 

@@ -44,7 +44,8 @@ TEST(Standalone, Oneway) {
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oneway_unclassified", build_config);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_oneway_unclassified", build_config);
   for (auto& c : costing) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c);
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
