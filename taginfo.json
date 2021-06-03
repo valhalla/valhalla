@@ -4076,6 +4076,46 @@
       "description": "If oneway = yes and oneway:bicycle = no then set the bike reverse flag to true."
     },
     {
+      "key": "oneway:foot",
+      "value": "-1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true.  A value of -1 will flip the direction of the oneway for pedestrians."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "true",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "If oneway = yes and oneway:foot = no then set the foot reverse flag to true."
+    },
+    {
       "key": "oneway:bus",
       "value": "-1",
       "object_types": [
