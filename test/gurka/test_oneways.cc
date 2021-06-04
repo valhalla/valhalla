@@ -58,18 +58,18 @@ std::map<std::string, midgard::PointLL> OnewayTest::layout = {};
 
 TEST_P(OnewayTest, TestOneways) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   test_ways.emplace("DG", std::get<1>(GetParam()));
 
   auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == "pedestrian" && c != cost)
+    if (c == "pedestrian" && c != param_cost)
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
@@ -78,7 +78,7 @@ TEST_P(OnewayTest, TestOneways) {
 
 TEST_P(OnewayTest, TestReverseOneways) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -98,13 +98,13 @@ TEST_P(OnewayTest, TestReverseOneways) {
 
   auto map =
       gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_reverse_oneway", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == cost || c == "pedestrian" || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == param_cost || c == "pedestrian" || (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else // still has to go around the block...oneway:<mode>=-1 should have no impact on this costing.
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
@@ -113,7 +113,7 @@ TEST_P(OnewayTest, TestReverseOneways) {
 
 TEST_P(OnewayTest, TestOnewaysWithYes) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -134,13 +134,13 @@ TEST_P(OnewayTest, TestOnewaysWithYes) {
 
   auto map =
       gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_with_yes", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == cost || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == param_cost || (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
@@ -149,7 +149,7 @@ TEST_P(OnewayTest, TestOnewaysWithYes) {
 
 TEST_P(OnewayTest, TestOnewaysWithOnewayNo) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -169,13 +169,13 @@ TEST_P(OnewayTest, TestOnewaysWithOnewayNo) {
   test_ways.emplace("DG", updated_attributes);
 
   auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_no", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == cost || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == param_cost || (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
@@ -184,7 +184,7 @@ TEST_P(OnewayTest, TestOnewaysWithOnewayNo) {
 
 TEST_P(OnewayTest, TestOnewaysWithNo) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -204,13 +204,13 @@ TEST_P(OnewayTest, TestOnewaysWithNo) {
 
   auto map =
       gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_with_no", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == cost || c == "pedestrian" || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == param_cost || c == "pedestrian" || (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
@@ -219,7 +219,7 @@ TEST_P(OnewayTest, TestOnewaysWithNo) {
 
 TEST_P(OnewayTest, TestSharedLane) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
   way_attributes.emplace("cycleway", "shared_lane");
@@ -227,13 +227,13 @@ TEST_P(OnewayTest, TestSharedLane) {
 
   auto map =
       gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_shared", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == "pedestrian" && c != cost)
+    if (c == "pedestrian" && c != param_cost)
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
@@ -242,7 +242,7 @@ TEST_P(OnewayTest, TestSharedLane) {
 
 TEST_P(OnewayTest, TestOpposite) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
   way_attributes.emplace("cycleway", "opposite");
@@ -250,9 +250,9 @@ TEST_P(OnewayTest, TestOpposite) {
 
   auto map =
       gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite", build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
 
-  if (cost == "bicycle") // opposite flips the onewayness
+  if (param_cost == "bicycle") // opposite flips the onewayness
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI", "IJ"});
   else
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
@@ -260,7 +260,7 @@ TEST_P(OnewayTest, TestOpposite) {
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if ((c == "pedestrian" && c != cost) || c == "bicycle")
+    if ((c == "pedestrian" && c != param_cost) || c == "bicycle")
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
@@ -269,7 +269,7 @@ TEST_P(OnewayTest, TestOpposite) {
 
 TEST_P(OnewayTest, TestOppositeWithNo) {
 
-  auto cost = std::get<0>(GetParam());
+  auto param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -289,13 +289,13 @@ TEST_P(OnewayTest, TestOppositeWithNo) {
 
   auto map = gurka::buildtiles(layout, test_ways, {}, {}, "test/data/gurka_oneway_opposite_no",
                                build_config);
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, cost);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, param_cost);
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI", "IJ"});
 
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == "pedestrian" || c == "bicycle" || c == cost || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == "pedestrian" || c == "bicycle" || c == param_cost || (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
