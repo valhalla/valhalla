@@ -88,8 +88,8 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
 
 inline bool IsDriveableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
-         (edge.attributes.driveableforward || edge.attributes.driveablereverse) &&
-         edge.attributes.importance != kServiceClass;
+         (edge.attributes.driveableforward || edge.attributes.driveablereverse);
+//         edge.attributes.importance != kServiceClass;
 }
 
 inline bool IsDriveForwardLink(const Edge& edge) {
@@ -106,6 +106,24 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   }
   return bestrc;
 }
+struct Data {
+  Data(const std::string& nodes_file,
+       const std::string& edges_file,
+       const std::string& ways_file,
+       const std::string& way_nodes_file,
+       const OSMData& osmdata)
+      : nodes(nodes_file, false), edges(edges_file, false), ways(ways_file, false),
+        way_nodes(way_nodes_file, false), osmdata(osmdata) {
+  }
+
+  sequence<Node> nodes;
+  sequence<Edge> edges;
+  sequence<OSMWay> ways;
+  sequence<OSMWayNode> way_nodes;
+  const OSMData& osmdata;
+};
+
+Data * d;
 
 // Form a list of all nodes - sorted by highest classification of non-link
 // edges at the node.
@@ -118,6 +136,7 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
       // Check if this node has a link edge that is driveable from the node
       for (const auto& edge : bundle.node_edges) {
+        uint64_t way_id = (*(*d).ways[edge.first.wayindex_]).way_id();
         if (edge.first.attributes.link && edge.first.attributes.driveforward) {
           // Get the highest classification of non-link edges at this node.
           // Add to the exit node list if a valid classification...if no
@@ -143,22 +162,6 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
 }
 
 // Helper structure that contains all osm data we need in one place
-struct Data {
-  Data(const std::string& nodes_file,
-       const std::string& edges_file,
-       const std::string& ways_file,
-       const std::string& way_nodes_file,
-       const OSMData& osmdata)
-      : nodes(nodes_file, false), edges(edges_file, false), ways(ways_file, false),
-        way_nodes(way_nodes_file, false), osmdata(osmdata) {
-  }
-
-  sequence<Node> nodes;
-  sequence<Edge> edges;
-  sequence<OSMWay> ways;
-  sequence<OSMWayNode> way_nodes;
-  const OSMData& osmdata;
-};
 
 // Way tags that are used to determine correct link class
 struct WayTags {
@@ -187,15 +190,17 @@ struct WayTags {
   }
 };
 
-struct Name {
-  std::vector<std::string> values;
+bool Equal(const std::vector<std::string>& lhs, const std::vector<std::string>& rhs) {
+  return lhs.size() && rhs.size() && lhs[0].size() && rhs[0].size() && lhs[0] == rhs[0];
+}
 
-  bool Empty() const {
-    return values.empty() || values[0].empty();
-  }
+struct Name {
+  std::vector<std::string> names;
+  std::vector<std::string> ref;
+  uint64_t way_id;
 
   bool operator==(const Name& rhs) const {
-    return !Empty() && !rhs.Empty() && values[0] == rhs.values[0];
+    return Equal(names, rhs.names) || Equal(ref, rhs.ref) || (way_id == rhs.way_id);
   }
 };
 
@@ -321,7 +326,6 @@ bool CanGoThroughNode(const node_bundle& node,
   return has_common_dest && CheckIfNodeLeadsToDestination(node_idx, root_link, visited_nodes, data);
 }
 
-
 uint64_t PrintWay(Data& data, const Edge& edge) {
   OSMWay way = data.ways[edge.wayindex_];
   return way.way_id();
@@ -378,6 +382,7 @@ struct LinkGraphBuilder {
     for (const auto& startedge : exit_bundle.node_edges) {
       uint64_t way_id = PrintWay(data_, startedge.first);
       std::cout << "Operator()\n";
+      std::cout << way_id << '\n';
       PrintEdge(data_, startedge.first);
       // Get the edge information. Skip non-link edges, link edges that are
       // not driveable in the forward direction, and link edges already
@@ -490,6 +495,15 @@ struct LinkGraphBuilder {
  * update the parent node classification and continue.
  */
 
+Name GetName(Data& data, const Edge& edge) {
+  OSMWay way = data.ways[edge.wayindex_];
+  Name name;
+  //          std::cout << "Way " << way.way_id() << std::endl;
+  name.names = GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()));
+  name.ref = GetTagTokens(data.osmdata.name_offset_map.name(way.ref_index()));
+  name.way_id = way.way_id();
+  return name;
+}
 
 bool dfs(size_t edge_idx,
          uint32_t node,
@@ -497,12 +511,6 @@ bool dfs(size_t edge_idx,
          Data& data,
          std::unordered_set<size_t>& nodes_in_progress,
          Name& to_name) {
-  auto GetName = [&](const Edge& edge) {
-    OSMWay way = data.ways[edge.wayindex_];
-    //    std::cout << "Way " << way.way_id() << std::endl;
-    return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
-  };
-
   auto Print = [](const midgard::PointLL& pos) {
     std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat() << std::endl;
   };
@@ -522,12 +530,12 @@ bool dfs(size_t edge_idx,
     //    Print((*data.nodes[i.first.targetnode_]).node.latlng());
     if (nodes_in_progress.count(i.second))
       continue;
-    if (GetName(i.first) == to_name) {
+    if (GetName(data, i.first) == to_name) {
       res = true;
       break;
     }
     if (i.first.attributes.driveableforward) {
-      if (GetName(i.first) == parent_name) {
+      if (GetName(data, i.first) == parent_name) {
         if (dfs(i.second, i.first.targetnode_, parent_name, data, nodes_in_progress, to_name)) {
           res = true;
           break;
@@ -535,7 +543,7 @@ bool dfs(size_t edge_idx,
       }
     }
     if (i.first.attributes.driveablereverse) {
-      if (GetName(i.first) == parent_name) {
+      if (GetName(data, i.first) == parent_name) {
         if (dfs(i.second, i.first.sourcenode_, parent_name, data, nodes_in_progress, to_name)) {
           res = true;
           break;
@@ -622,6 +630,11 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       // Check the non-link count
       ends_have_non_link = ends_have_non_link && link_graph[current_idx].bundle.non_link_count > 0;
 
+      std::cout << "\nBefore Print link edges\n";
+      for (auto idx : link_edges) {
+        PrintEdge(data, data.edges[idx]);
+      }
+
       // leaf classification may be invalid in case of cycle; use parent's
       // classification instead or just skip these links
       uint32_t leaf_classification = leaf.classification;
@@ -649,12 +662,6 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
                                   !has_exit && ends_have_non_link)) {
         if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
 
-          auto GetName = [&](const Edge& edge) {
-            OSMWay way = data.ways[edge.wayindex_];
-            //          std::cout << "Way " << way.way_id() << std::endl;
-            return Name{GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()))};
-          };
-
           auto Print = [](const midgard::PointLL& pos) {
             std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
                       << std::endl;
@@ -669,17 +676,17 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             Edge edge = edge_idx.first;
             if (!edge.attributes.driveableforward || edge.attributes.link)
               continue;
-            to_name = GetName(edge);
+            to_name = GetName(data, edge);
             /// TODO: assert size == 1
             break;
           }
           std::cout << "Looking for name: <";
           bool first = true;
-          for (auto i : to_name.values) {
-              if (!first)
-                  std::cout << "|";
-              first = false;
-              std::cout << i;
+          for (auto i : to_name.names) {
+            if (!first)
+              std::cout << "|";
+            first = false;
+            std::cout << i;
           }
           std::cout << ">\n";
 
@@ -690,11 +697,13 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
           auto bundle = [&]() {
             Edge edge = data.edges[link_edges.back()];
-            auto node = edge.attributes.driveableforward ? data.nodes[edge.sourcenode_] : data.nodes[edge.targetnode_];
+            auto node = edge.attributes.driveableforward ? data.nodes[edge.sourcenode_]
+                                                         : data.nodes[edge.targetnode_];
             return collect_node_edges(node, data.nodes, data.edges);
           }();
-//          auto bundle = collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
-//                                           data.nodes, data.edges);
+          //          auto bundle =
+          //          collect_node_edges(data.nodes[(*data.edges[link_edges.back()]).sourcenode_],
+          //                                           data.nodes, data.edges);
           for (auto to : bundle.node_edges) {
             if (to.first.attributes.link) {
               std::cout << "Skipping link\n";
@@ -707,7 +716,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
               continue;
             if (to.first.attributes.driveableforward) {
               std::unordered_set<size_t> nodes_in_progress;
-              bool res = dfs(to.second, to.first.targetnode_, GetName(to.first), data,
+              bool res = dfs(to.second, to.first.targetnode_, GetName(data, to.first), data,
                              nodes_in_progress, to_name);
               if (res) {
                 turn_channel = true;
@@ -716,7 +725,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             }
             if (to.first.attributes.driveablereverse) {
               std::unordered_set<size_t> nodes_in_progress;
-              bool res = dfs(to.second, to.first.sourcenode_, GetName(to.first), data,
+              bool res = dfs(to.second, to.first.sourcenode_, GetName(data, to.first), data,
                              nodes_in_progress, to_name);
               if (res) {
                 turn_channel = true;
@@ -774,6 +783,7 @@ void ReclassifyLinks(const std::string& ways_file,
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
   Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);
+  d = &data;
   // Find list of exit nodes - nodes where driveable outbound links connect to
   // non-link edges. Group by best road class of the non-link connecting edges.
   nodelist_t exit_nodes = FormExitNodes(data.nodes, data.edges);
