@@ -41,8 +41,8 @@ TimeDistanceBSSMatrix::TimeDistanceBSSMatrix() : settled_count_(0), current_cost
 
 float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) const {
   // The threshold should be the time consumed by the pedestrian, because in the worst case,
-  // the route may be pure pedestrian.
-  return max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
+  // the route may be pure pedestrian. Use a conservative walking speed of 2 MPH.
+  return max_matrix_distance / (2.0f * kMPHtoMetersPerSec);
 }
 
 // Clear the temporary information generated during time + distance matrix
