@@ -83,7 +83,7 @@ class ChinesePostmanTest : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map chinese_postman_map;
 
-  //    A------B------C--->--G
+  //    A------B---<--C--->--G
   //    |      |      |      |
   //    |      |      ^      v
   //    |      |      |      |
@@ -100,16 +100,27 @@ protected:
         D------E------F------H
     )";
     const gurka::ways ways = {
-        {"AB", {{"highway", "residential"}, {"name", "High"}}},
-        {"AD", {{"highway", "residential"}, {"name", "Low"}}},
-        {"BC", {{"highway", "residential"}, {"name", "1st"}}},
-        {"BE", {{"highway", "residential"}, {"name", "2nd"}}},
-        {"FC", {{"highway", "residential"}, {"name", "3rd"}, {"oneway", "yes"}}},
-        {"DE", {{"highway", "residential"}, {"name", "4th"}}},
-        {"EF", {{"highway", "residential"}, {"name", "5th"}}},
-        {"CG", {{"highway", "residential"}, {"name", "6th"}, {"oneway", "yes"}}},
-        {"GH", {{"highway", "residential"}, {"name", "7th"}, {"oneway", "yes"}}},
-        {"HF", {{"highway", "residential"}, {"name", "8th"}, {"oneway", "yes"}}},
+        {"AB", {{"highway", "residential"}, {"name", "AB"}}},
+        {"BA", {{"highway", "residential"}, {"name", "BA"}}},
+
+        {"AD", {{"highway", "residential"}, {"name", "AD"}}},
+        {"DA", {{"highway", "residential"}, {"name", "DA"}}},
+
+        {"CB", {{"highway", "residential"}, {"name", "CB"}, {"oneway", "yes"}}},
+
+        {"BE", {{"highway", "residential"}, {"name", "BE"}}},
+        {"EB", {{"highway", "residential"}, {"name", "EB"}}},
+
+        {"DE", {{"highway", "residential"}, {"name", "DE"}}},
+        {"ED", {{"highway", "residential"}, {"name", "ED"}}},
+
+        {"EF", {{"highway", "residential"}, {"name", "EF"}}},
+        {"FE", {{"highway", "residential"}, {"name", "FE"}}},
+
+        {"FC", {{"highway", "residential"}, {"name", "FC"}, {"oneway", "yes"}}},
+        {"CG", {{"highway", "residential"}, {"name", "CG"}, {"oneway", "yes"}}},
+        {"GH", {{"highway", "residential"}, {"name", "GH"}, {"oneway", "yes"}}},
+        {"HF", {{"highway", "residential"}, {"name", "HF"}, {"oneway", "yes"}}},
     };
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
@@ -236,7 +247,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   };
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOneWay) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -249,14 +260,14 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOneWay) {
   auto c_b = node_c.lng() - node_b.lng();
 
   // create a chinese polygon covering CGHF
-  //            c1-------------c2
+  //            c4-------------c1
   //  A------B--|---C--->--G   |
   //  |      |  |   |      |   |
   //  |      |  |   |      |   |
   //  |      |  |   ^      v   |
   //  |      |  |   |      |   |
   //  D------E--|---F--<---H   |
-  //            c4------------c3
+  //            c1-------------c2
 
   auto ratio = 0.2;
   ring_bg_t chinese_ring{{node_g.lng() + ratio * c_b, node_g.lat() + ratio * c_b},
@@ -269,6 +280,52 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOneWay) {
 
   // build request manually for now
   auto lls = {chinese_postman_map.nodes["C"], chinese_postman_map.nodes["C"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
+  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
+
+  gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+  auto node_a = chinese_postman_map.nodes.at("A");
+  auto node_b = chinese_postman_map.nodes.at("B");
+  auto node_c = chinese_postman_map.nodes.at("C");
+  auto node_d = chinese_postman_map.nodes.at("D");
+  auto node_e = chinese_postman_map.nodes.at("E");
+  auto node_f = chinese_postman_map.nodes.at("F");
+  auto node_g = chinese_postman_map.nodes.at("G");
+  auto node_h = chinese_postman_map.nodes.at("H");
+
+  auto c_b = node_c.lng() - node_b.lng();
+  auto b_a = node_b.lng() - node_a.lng();
+  auto g_c = node_g.lng() - node_c.lng();
+
+  // create a chinese polygon covering BCEF
+  //     c4------------c1
+  //  A--|---B------C---|>--G
+  //  |  |   |      |   |   |
+  //  |  |   |      |   |   |
+  //  |  |   |      ^   |   v
+  //  |  |   |      |   |   |
+  //  D--|---E------F--<|---H
+  //     c3------------c2
+
+  auto ratio = 0.2;
+  ring_bg_t chinese_ring{{node_c.lng() + ratio * g_c, node_c.lat() + ratio * c_b},
+                         {node_f.lng() + ratio * g_c, node_f.lat() - ratio * c_b},
+                         {node_e.lng() - ratio * b_a, node_e.lat() - ratio * c_b},
+                         {node_b.lng() - ratio * b_a, node_b.lat() + ratio * c_b},
+                         {node_c.lng() + ratio * g_c, node_c.lat() + ratio * c_b}};
+
+  std::vector<ring_bg_t> avoid_rings;
+
+  // build request manually for now
+  auto lls = {chinese_postman_map.nodes["B"], chinese_postman_map.nodes["B"]};
 
   rapidjson::Document doc;
   doc.SetObject();
