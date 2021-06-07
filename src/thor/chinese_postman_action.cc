@@ -59,11 +59,15 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
+    // skip the edge if it's not allowed (reverse one way)
+    const DirectedEdge* directed_edge = reader->directededge(baldr::GraphId(edge.id()));
+    if (!directed_edge->forward()) {
+      continue;
+    }
     bool found = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
                             std::to_string(GraphId(edge.id()))) != avoid_edge_ids.end());
     if (found)
       continue;
-
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
