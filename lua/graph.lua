@@ -92,7 +92,8 @@ access = {
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
-["emergency"] = "false"
+["emergency"] = "false",
+["psv"] = "false"
 }
 
 private = {
@@ -895,6 +896,14 @@ function filter_tags_generic(kv)
       end
     end
 
+    if kv["access"] == "psv" then
+      kv["taxi_forward"] = "true"
+      kv["taxi_tag"] = "true"
+
+      kv["bus_forward"] = "true"
+      kv["bus_tag"] = "true"
+    end
+
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
@@ -970,6 +979,14 @@ function filter_tags_generic(kv)
         elseif kv["sac_scale"] then
           kv["bike_forward"] = "false"
         end
+      end
+
+      if kv["access"] == "psv" then
+        kv["taxi_forward"] = "true"
+        kv["taxi_tag"] = "true"
+
+        kv["bus_forward"] = "true"
+        kv["bus_tag"] = "true"
       end
 
       if kv["motorroad"] == "yes" then
@@ -1685,7 +1702,17 @@ function nodes_proc (kv, nokeys)
   if auto_tag == nil then
     auto_tag = motor_vehicle_tag
   end
-  local bus_tag = bus_node[kv["bus"]]
+  local bus_tag
+  local taxi_tag
+
+  if (kv["access"] == "psv") then
+    bus_tag = 64
+    taxi_tag = 32
+  else
+    bus_tag = bus_node[kv["bus"]]
+    taxi_tag = taxi_node[kv["taxi"]]
+  end
+
   if bus_tag == nil then
     bus_tag = psv_bus_node[kv["psv"]]
   end
@@ -1704,7 +1731,6 @@ function nodes_proc (kv, nokeys)
     hov_tag = 128
   end
 
-  local taxi_tag = taxi_node[kv["taxi"]]
   if taxi_tag == nil then
     taxi_tag = psv_taxi_node[kv["psv"]]
   end

@@ -187,7 +187,7 @@ TEST(Standalone, DefaultSpeedConfig) {
   for (auto tile_id : reader.GetTileSet()) {
     auto tile = reader.GetGraphTile(tile_id);
     for (const auto& edge : tile->GetDirectedEdges()) {
-      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+      auto info = tile->edgeinfo(&edge);
       auto name = info.GetNames().front();
       // skip anything that looks like the extra length we added to make it urban
       if (name.front() >= 'a' && name.front() <= 'j')
@@ -340,7 +340,7 @@ TEST(Standalone, SuburbanSpeedConfig) {
   for (auto tile_id : reader.GetTileSet()) {
     auto tile = reader.GetGraphTile(tile_id);
     for (const auto& edge : tile->GetDirectedEdges()) {
-      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+      auto info = tile->edgeinfo(&edge);
       auto name = info.GetNames().front();
       // skip anything that looks like the extra length we added to make it urban
       if (name.front() >= 'a' && name.front() <= 'j')

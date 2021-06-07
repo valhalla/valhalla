@@ -24,6 +24,11 @@
 namespace valhalla {
 namespace baldr {
 
+struct tile_gone_error_t : public std::runtime_error {
+  explicit tile_gone_error_t(const std::string& errormessage);
+  tile_gone_error_t(std::string prefix, baldr::GraphId edgeid);
+};
+
 struct IncidentResult {
   std::shared_ptr<const IncidentsTile> tile;
   // Index into the Location array
