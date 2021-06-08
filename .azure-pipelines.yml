@@ -56,11 +56,11 @@ jobs:
       - task: Cache@2
         displayName: "Cache build"
         inputs:
-          key: '"msvc-v16.9.0" | build | "$(Build.SourceBranch)"'
+          key: '"msvc-v16.10.0" | build | "$(Build.SourceBranch)"'
           path: "$(BUILD_DIR)"
           restoreKeys: |
-            "msvc-v16.9.0" | build | "$(Build.SourceBranch)"
-            "msvc-v16.9.0" | build
+            "msvc-v16.10.0" | build | "$(Build.SourceBranch)"
+            "msvc-v16.10.0" | build
           cacheHitVar: BUILD_CACHE_RESTORED
 
       - task: UsePythonVersion@0
