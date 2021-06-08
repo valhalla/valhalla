@@ -178,7 +178,8 @@ TEST(loops, use_kCuldesac_false) {
       {"LKF", {{"highway", "living_street"}, {"oneway", "yes"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_kCuldesac_false", build_config);
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_kCuldesac_false", build_config);
   const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   const auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "F", "C");
   EXPECT_NE(std::get<1>(edge)->use(), Use::kCuldesac);
@@ -197,7 +198,8 @@ TEST(loops, use_kCuldesac_true) {
       {"ABC", {{"highway", "residential"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_kCuldesac_true", build_config);
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use_kCuldesac_true", build_config);
   const auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   const auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "C", "F");
   EXPECT_EQ(std::get<1>(edge)->use(), Use::kCuldesac);
