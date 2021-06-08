@@ -295,7 +295,8 @@ TEST_P(OnewayTest, TestOppositeWithNo) {
   // loop over the other modes
   for (auto const& c : costing) {
     result = gurka::do_action(valhalla::Options::route, map, {"J", "A"}, c);
-    if (c == "pedestrian" || c == "bicycle" || c == param_cost || (is_psv && (c == "bus" || c == "taxi")))
+    if (c == "pedestrian" || c == "bicycle" || c == param_cost ||
+        (is_psv && (c == "bus" || c == "taxi")))
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "DG", "CD", "BC", "AB"});
     else
       gurka::assert::raw::expect_path(result, {"IJ", "HI", "GH", "FG", "EF", "DE", "CD", "BC", "AB"});
