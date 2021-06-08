@@ -317,3 +317,29 @@ TEST_F(TrafficBasedTest, forward) {
     EXPECT_EQ(speed_from_edge(api), freeflow);
   }
 }
+
+TEST(MapMatchRoute, IgnoreRestrictions) {
+  const std::string ascii_map = R"(
+    A------B----C
+     )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}},
+      {"BC", {{"highway", "motorway"}}},
+  };
+  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const gurka::relations relations = {{{
+                                           {gurka::way_member, "AB", "from"},
+                                           {gurka::way_member, "BC", "to"},
+                                           {gurka::node_member, "B", "via"},
+                                       },
+                                       {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, relations, "test/data/mapmatch_restrictions",
+                        {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+
+  // ignore_restrictions when route with map_matching
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"A", "C"}, "auto",
+                                 {{"/costing_options/auto/ignore_restrictions", "1"}});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
