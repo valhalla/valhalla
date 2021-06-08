@@ -2238,6 +2238,20 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                           prev_edge->road_class())) {
     return true;
   }
+  // Determine if road split is a fork
+  else if (curr_edge->IsForkForward(
+               GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+           !prev_edge->IsRampUse() && !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
+           !prev_edge->IsRailFerryUse() && !curr_edge->IsRampUse() &&
+           !curr_edge->IsTurnChannelUse() && !curr_edge->IsFerryUse() &&
+           !curr_edge->IsRailFerryUse() &&
+           node->HasRoadForkTraversableIntersectingEdge(prev_edge->end_heading(),
+                                                        prev_edge->travel_mode(),
+                                                        ((prev_edge->road_class() == kServiceOther) ||
+                                                         (curr_edge->road_class() ==
+                                                          kServiceOther)))) {
+    return true;
+  }
   // Determine if highway/ramp lane bifurcation
   else if (node->intersecting_edge_size() == 1) {
     auto xedge = node->GetIntersectingEdge(0);
