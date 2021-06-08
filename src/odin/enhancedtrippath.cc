@@ -1517,6 +1517,7 @@ bool EnhancedTripLeg_Node::HasRoadForkTraversableIntersectingEdge(
         xedge->IsTraversableOutbound(travel_mode) && xedge->prev_name_consistency() &&
         (xedge->use() != TripLeg_Use_kRampUse) && (xedge->use() != TripLeg_Use_kTurnChannelUse) &&
         (xedge->use() != TripLeg_Use_kFerryUse) && (xedge->use() != TripLeg_Use_kRailFerryUse)) {
+      // If service roads are not allowed then skip intersecting service roads
       if (!allow_service_road && (xedge->road_class() == kServiceOther)) {
         continue;
       }
