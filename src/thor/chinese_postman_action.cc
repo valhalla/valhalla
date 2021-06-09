@@ -19,6 +19,11 @@ namespace thor {
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
+midgard::PointLL thor_worker_t::getPointLL(baldr::GraphId node) {
+  const NodeInfo* ni_start = reader->nodeinfo(node);
+  graph_tile_ptr tile = reader->GetGraphTile(node);
+  return ni_start->latlng(tile->header()->base_ll());
+}
 
 void thor_worker_t::chinese_postman(Api& request) {
 
@@ -92,8 +97,13 @@ void thor_worker_t::chinese_postman(Api& request) {
     std::cout << "Ideal graph" << std::endl;
   } else {
     std::cout << "Non Ideal graph" << std::endl;
+    std::vector<std::string> overNodes; // Node that has too many incoing
+    std::vector<std::string> underNodes;
+    std::vector<midgard::PointLL> locations;
     for (auto const& v : G.getUnbalancedVertices()) {
-      std::cout << v.first << " -> " << v.second << std::endl;
+      auto l = getPointLL(GraphId(v.first));
+      std::cout << "location (" << v.first << "): " << l.lng() << ", " << l.lat() << std::endl;
+      locations.push_back(l);
     }
   }
 }
