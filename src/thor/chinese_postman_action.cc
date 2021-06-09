@@ -24,6 +24,39 @@ midgard::PointLL thor_worker_t::getPointLL(baldr::GraphId node) {
   graph_tile_ptr tile = reader->GetGraphTile(node);
   return ni_start->latlng(tile->header()->base_ll());
 }
+std::string pointLLToJson(const midgard::PointLL l) {
+  // // To be something like this {"lat":40.739735,"lon":-73.979713}
+  std::string json = "{";
+  json += "\"lat\":";
+  json += std::to_string(l.lat());
+
+  json += ",\"lon\":";
+  json += std::to_string(l.lng());
+
+  json += "}";
+
+  return json;
+}
+
+std::string locationsToJson(std::map<std::string, midgard::PointLL> locations) {
+  // To be something like this [{"lat":40.744014,"lon":-73.990508},
+  // {"lat":40.739735,"lon":-73.979713}]
+  std::string json = "[";
+  bool extraCharacter = false;
+  for (const auto& element : locations) {
+    // std::cout << kv.first << " has value " << kv.second << std::endl;
+    json += pointLLToJson(element.second) + ", ";
+    extraCharacter = true;
+  }
+  // remove last two character ", "
+  if (extraCharacter) {
+    json.pop_back();
+    json.pop_back();
+  }
+
+  json += "]";
+  return json;
+}
 
 void thor_worker_t::chinese_postman(Api& request) {
 
@@ -97,14 +130,26 @@ void thor_worker_t::chinese_postman(Api& request) {
     std::cout << "Ideal graph" << std::endl;
   } else {
     std::cout << "Non Ideal graph" << std::endl;
-    std::vector<std::string> overNodes; // Node that has too many incoing
-    std::vector<std::string> underNodes;
+    std::map<std::string, midgard::PointLL> overNodes; // Node that has too many incoming
+    std::map<std::string, midgard::PointLL> underNodes;
     std::vector<midgard::PointLL> locations;
     for (auto const& v : G.getUnbalancedVertices()) {
       auto l = getPointLL(GraphId(v.first));
       std::cout << "location (" << v.first << "): " << l.lng() << ", " << l.lat() << std::endl;
       locations.push_back(l);
+      if (v.second > 0) {
+        overNodes[v.first] = l;
+      } else if (v.second < 0) {
+        underNodes[v.first] = l;
+      }
     }
+    // Copy the request
+    Api matrix_request(request);
+    std::cout << "overNodes: " << locationsToJson(overNodes) << std::endl;
+    std::cout << "underNodes: " << locationsToJson(underNodes) << std::endl;
+    // Update request with source and target for over and under nodes
+    ParseApi("", Options::sources_to_targets, matrix_request);
+    matrix(matrix_request);
   }
 }
 
