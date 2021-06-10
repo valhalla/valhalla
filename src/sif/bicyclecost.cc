@@ -25,10 +25,11 @@ namespace sif {
 namespace {
 
 // Base transition costs
-constexpr float kDefaultAlleyPenalty = 60.0f; // Seconds
-constexpr float kDefaultGatePenalty = 600.0f; // Seconds
-constexpr float kDefaultBssCost = 120.0f;     // Seconds
-constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
+constexpr float kDefaultAlleyPenalty = 60.0f;          // Seconds
+constexpr float kDefaultGatePenalty = 600.0f;          // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 750.0f; // Seconds
+constexpr float kDefaultBssCost = 120.0f;              // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
 
 // Other options
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
@@ -196,6 +197,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   // override defaults
   cfg.alley_penalty_.def = kDefaultAlleyPenalty;
   cfg.gate_penalty_.def = kDefaultGatePenalty;
+  cfg.private_access_penalty_.def = kDefaultPrivateAccessPenalty;
   cfg.disable_toll_booth_ = true;
   cfg.disable_rail_ferry_ = true;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
