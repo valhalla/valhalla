@@ -342,3 +342,138 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn4thRight) {
       "Turn right onto US 50, US 1 Alternate. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
+
+//#############################################################################
+class InstructionsRightLinkThenTurnExample3 : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 20;
+
+    const std::string ascii_map = R"(
+             C
+             |
+     H-------|-F-----------G
+             | |
+             | |
+             | E
+             | |\
+             | D \
+             |/   \
+             B     I
+             |
+             |
+             |
+             |
+             A
+    )";
+
+    const gurka::ways ways = {{"AB",
+                               {{"highway", "primary"},
+                                {"name", "Den Boschsingel"},
+                                {"ref", "R23"},
+                                {"oneway", "yes"},
+                                {"lanes", "2"}}},
+                              {"BC",
+                               {{"highway", "primary"},
+                                {"name", "Den Boschsingel"},
+                                {"ref", "R23"},
+                                {"oneway", "yes"},
+                                {"lanes", "2"}}},
+                              {"BD",
+                               {{"highway", "primary_link"},
+                                {"name", "Den Boschsingel"},
+                                {"oneway", "yes"},
+                                {"destination", "Centrum;Brussel"},
+                                {"destination:ref", "N2"},
+                                {"lanes", "1"}}},
+                              {"DE",
+                               {{"highway", "primary_link"},
+                                {"name", "'s-Hertogenlaan"},
+                                {"oneway", "yes"},
+                                {"lanes", "1"}}},
+                              {"EF",
+                               {{"highway", "primary_link"},
+                                {"name", "'s-Hertogenlaan"},
+                                {"oneway", "yes"},
+                                {"lanes", "1"}}},
+                              {"FG",
+                               {{"highway", "primary"},
+                                {"name", "Brusselsesteenweg"},
+                                {"ref", "N2"},
+                                {"oneway", "no"},
+                                {"lanes", "1"}}},
+                              {"FH",
+                               {{"highway", "primary"},
+                                {"name", "Brusselsesteenweg"},
+                                {"ref", "N2"},
+                                {"oneway", "no"},
+                                {"lanes", "1"}}},
+                              {"IE",
+                               {{"highway", "residential"},
+                                {"name", "'s-Hertogenlaan"},
+                                {"oneway", "yes"},
+                                {"lanes", "1"}}}};
+
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+    map = gurka::buildtiles(layout, ways, {}, {},
+                            "test/data/gurka_instructions_right_link_then_turn_example3",
+                            {{"mjolnir.admin",
+                              {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
+  }
+};
+
+gurka::map InstructionsRightLinkThenTurnExample3::map = {};
+
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnRight) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
+
+  // Verify maneuver types (turn_degree=302)
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kSlightRight,
+                                                DirectionsLeg_Maneuver_Type_kRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the bear right instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      "Bear right toward N2, Centrum. Then Turn right onto Brusselsesteenweg.",
+      "Continue for 100 meters.");
+
+  // Verify the turn right instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, ++maneuver_index, "Turn right onto Brusselsesteenweg/N2.",
+      "Turn right onto Brusselsesteenweg.",
+      "Turn right onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
+      "Continue for 100 meters.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnLeft) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
+
+  // Verify maneuver types (turn_degree=302)
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kSlightRight,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the bear right instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      "Bear right toward N2, Centrum. Then Turn left onto Brusselsesteenweg.",
+      "Continue for 100 meters.");
+
+  // Verify the turn left instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, ++maneuver_index, "Turn left onto Brusselsesteenweg/N2.",
+      "Turn left onto Brusselsesteenweg.",
+      "Turn left onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
+      "Continue for 100 meters.");
+}
