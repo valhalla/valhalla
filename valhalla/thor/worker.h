@@ -98,6 +98,9 @@ protected:
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
   midgard::PointLL getPointLL(baldr::GraphId node);
+  std::string computeFloydWarshall(std::vector<midgard::PointLL> sources,
+                                   std::vector<midgard::PointLL> targets,
+                                   std::string costing);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
