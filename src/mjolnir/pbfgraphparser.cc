@@ -46,6 +46,78 @@ int get_number(const std::string& tag, const std::string& value) { // NOLINT
   return num;
 }
 
+// This class helps to set "culdesac" labels to loop roads correctly.
+class culdesac_processor {
+public:
+  // Adds a loop road as a candidate to be a "culdesac" road.
+  void add_candidate(uint64_t osm_way_id,
+                     size_t osm_way_index,
+                     const std::vector<uint64_t>& osm_node_ids) {
+    loops_meta_.emplace(osm_way_id, loop_meta(osm_way_index));
+    for (auto const osm_node_id : osm_node_ids)
+      node_to_loop_way_[osm_node_id] = osm_way_id;
+  }
+
+  // Clarifies types of loop roads and saves fixed ways.
+  void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    osm_way_node_seq.flush();
+    osm_way_seq.flush();
+
+    size_t number_of_nodes = 0;
+    size_t count_node = 0;
+    OSMWay osm_way;
+    for (const auto& osm_way_node : osm_way_node_seq) {
+      // Reads a new way only after its nodes are read.
+      if (number_of_nodes == count_node) {
+        osm_way = *osm_way_seq[osm_way_node.way_index];
+        number_of_nodes = osm_way.node_count();
+        count_node = 0;
+      }
+
+      const auto node_to_loop_way_it = node_to_loop_way_.find(osm_way_node.node.osmid_);
+      if (node_to_loop_way_it != node_to_loop_way_.cend() &&
+          osm_way.way_id() != node_to_loop_way_it->second) {
+        ++loops_meta_.at(node_to_loop_way_it->second).count_of_adjacent_ways;
+      }
+
+      ++count_node;
+    }
+
+    fix(osm_way_node_seq, osm_way_seq);
+  }
+
+private:
+  // loop_meta is a helper struct. It's used as a std::pair with named fields.
+  struct loop_meta {
+    explicit loop_meta(size_t way_index) : way_index(way_index), count_of_adjacent_ways(0) {
+    }
+
+    size_t way_index;
+    size_t count_of_adjacent_ways;
+  };
+
+  // Sets "culdesac" labels to loop roads and saves ways.
+  void fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    size_t number_of_culdesac = 0;
+    for (const auto& loop_way_id_to_meta : loops_meta_) {
+      const auto& meta = loop_way_id_to_meta.second;
+      if (meta.count_of_adjacent_ways <= 1) {
+        auto way_it = osm_way_seq.at(meta.way_index);
+        auto way = *way_it;
+        way.set_use(Use::kCuldesac);
+        way_it = way;
+        ++number_of_culdesac;
+      }
+    }
+
+    LOG_INFO("Added " + std::to_string(number_of_culdesac) + " culdesac roundabouts from " +
+             std::to_string(loops_meta_.size()) + " candidates.");
+  }
+
+  std::unordered_map<uint64_t, uint64_t> node_to_loop_way_;
+  std::unordered_map<uint64_t, loop_meta> loops_meta_;
+};
+
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
 public:
@@ -1485,7 +1557,8 @@ public:
     // Infer cul-de-sac if a road edge is a loop and is low classification.
     if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
-      way_.set_use(Use::kCuldesac);
+      // Adds a loop road as a candidate to be a "culdesac" road.
+      culdesac_processor_.add_candidate(way_.way_id(), ways_->size(), nodes);
     }
 
     if (has_user_tags_) {
@@ -2016,6 +2089,9 @@ public:
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 
+  // used to set "culdesac" labels to loop roads correctly
+  culdesac_processor culdesac_processor_;
+
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_results_;
   Tags empty_way_results_;
@@ -2069,6 +2145,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
+
+  // Clarifies types of loop roads and saves fixed ways.
+  callback.culdesac_processor_.clarify_and_fix(*callback.way_nodes_, *callback.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
