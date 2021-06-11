@@ -660,6 +660,10 @@ public:
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
 
+  bool HasRoadForkTraversableIntersectingEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode,
+                                              bool allow_service_road);
+
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,
                                                       RoadClass path_road_class);
