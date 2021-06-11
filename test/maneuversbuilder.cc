@@ -1565,6 +1565,9 @@ TEST(Maneuversbuilder, TestSimpleRightTurnChannelCombine) {
                valhalla::RoadClass::kSecondary, 188, 188, 11, 14, TripLeg_Traversability_kBoth, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
+  // node:3 end node
+  node = path.add_node();
+
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
 

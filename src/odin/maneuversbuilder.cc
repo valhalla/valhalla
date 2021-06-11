@@ -42,6 +42,11 @@ namespace {
 constexpr uint32_t kRelativeStraightTurnDegreeLowerBound = 330;
 constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
 
+constexpr uint32_t kTurnChannelTurnDegreeLowerBound = 290;
+constexpr uint32_t kTurnChannelTurnDegreeUpperBound = 70;
+
+constexpr float kShortTurnChannelThreshold = 0.036f; // Kilometers
+
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
 // Kilometers - picked since the next rounded maneuver announcement will happen
@@ -2677,13 +2682,34 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
 
     Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
 
+    auto turn_channel_end_node_index = curr_man->end_node_index();
+    auto node = trip_path_->GetEnhancedNode(turn_channel_end_node_index);
+    auto prev_edge = trip_path_->GetPrevEdge(turn_channel_end_node_index);
+    auto curr_edge = trip_path_->GetCurrEdge(turn_channel_end_node_index);
+
+    // Validate node and edges
+    if (!node || !prev_edge || !curr_edge) {
+      return false;
+    }
+    // Calculate this value in case next maneuver turn degree is modified
+    // because of internal intersection collapsing
+    auto post_turn_channel_turn_degree =
+        GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
+
+    auto is_within_turn_channel_range = [](uint32_t turn_degree) -> bool {
+      return ((turn_degree >= kTurnChannelTurnDegreeLowerBound) ||
+              (turn_degree <= kTurnChannelTurnDegreeUpperBound));
+    };
+
     // Turn channel cannot exceed kMaxTurnChannelLength (200m)
     // and turn channel cannot have forward traversable intersecting edge
-    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    // and (the post turn channel degree is somewhat straight or the turn channel is short)
     bool common_turn_channel_criteria =
         ((curr_man->length(Options::kilometers) <= (kMaxTurnChannelLength * kKmPerMeter)) &&
          !node->HasForwardTraversableIntersectingEdge(curr_man->end_heading(),
-                                                      curr_man->travel_mode()));
+                                                      curr_man->travel_mode()) &&
+         (is_within_turn_channel_range(post_turn_channel_turn_degree) ||
+          (curr_man->length(Options::kilometers) < kShortTurnChannelThreshold)));
 
     // Verify common turn channel criteria
     if (!common_turn_channel_criteria) {
