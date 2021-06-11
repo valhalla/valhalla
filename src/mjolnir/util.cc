@@ -391,6 +391,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
+    remove_temp_file(pronunciation_bin);
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
