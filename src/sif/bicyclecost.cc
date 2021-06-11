@@ -569,7 +569,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
-  // Get the default speed of the edge. Do not use traffic information. Road speed 
+  // Get the default speed of the edge. Do not use traffic information. Road speed
   // is used to penalize higher class roads that are high speed. We do not want to
   // reduce that penalty when heavy traffic slows the speed on the edge.
   uint32_t road_speed = edge->speed();
