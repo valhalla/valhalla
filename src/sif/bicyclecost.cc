@@ -365,6 +365,7 @@ public:
   std::vector<float> speedfactor_; // Cost factors based on speed in kph
   float use_roads_;                // Preference of using roads between 0 and 1
   float road_factor_;              // Road factor based on use_roads_
+  float sidepath_factor_;          // Factor to use when use_sidepath is set on an edge
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
@@ -456,6 +457,9 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
   road_factor_ = (use_roads_ >= 0.5f) ? 1.5f - use_roads_ : 2.0f - use_roads_ * 2.0f;
+
+  // Factor for avoiding roads when use sidepath is set on an edge
+  sidepath_factor_ = 3.0f * (1.0f - use_roads_);
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
@@ -559,19 +563,22 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const graph_tile_ptr& tile,
                            const uint32_t seconds,
                            uint8_t& flow_sources) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
-
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
     return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
+  // Get the default speed of the edge. Do not use traffic information. Road speed 
+  // is used to penalize higher class roads that are high speed. We do not want to
+  // reduce that penalty when heavy traffic slows the speed on the edge.
+  uint32_t road_speed = edge->speed();
+
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(speed < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[speed]);
+    assert(road_speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[road_speed]);
     return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
@@ -592,7 +599,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float accommodation_factor = 1.0f;
 
   // Special use cases: cycleway, footway, and path
-  uint32_t road_speed = static_cast<uint32_t>(speed + 0.5f);
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
 
     // Differentiate how segregated the way is from pedestrians
@@ -643,12 +649,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // We want to try and avoid roads that specify to use a cycling path to the side
   if (edge->use_sidepath()) {
-    accommodation_factor += 3.0f * (1.0f - use_roads_);
+    accommodation_factor += sidepath_factor_;
   }
 
-  // Favor bicycle networks very slightly.
-  // TODO - do we need to differentiate between types of network?
-  if (edge->bike_network() > 0) {
+  // Favor bicycle networks slightly
+  if (edge->bike_network()) {
     accommodation_factor *= kBicycleNetworkFactor;
   }
 
