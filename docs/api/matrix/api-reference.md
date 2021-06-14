@@ -44,11 +44,11 @@ A source and target must include a latitude and longitude in decimal degrees. Th
 | `lat` | Latitude of the source/target in degrees. |
 | `lon` | Longitude of the source/target in degrees. |
 
-You can refer to the [route location documentation](/turn-by-turn/api-reference.md#locations) for more information on specifying locations.  NOTE: Using `type` in addition to the `lat` and `lon` within the location parameter has no meaning for matrices.
+You can refer to the [route location documentation](/docs/api/turn-by-turn/api-reference.md#locations) for more information on specifying locations.  NOTE: Using `type` in addition to the `lat` and `lon` within the location parameter has no meaning for matrices.
 
 ### Costing parameters
 
-The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `bikeshare` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `bikeshare` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/docs/api/turn-by-turn/api-reference.md#costing-models) and [costing options](/docs/api/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request options
 
@@ -72,7 +72,7 @@ These are the results of a request to the Time-Distance Matrix service.
 | `locations` | The specified array of lat/lngs from the input request.
 | `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
 
-See the [HTTP return codes](/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
+See the [HTTP return codes](/docs/api/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
 ## Demonstration
 
