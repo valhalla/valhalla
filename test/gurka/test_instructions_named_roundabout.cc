@@ -210,7 +210,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
   // Verify the exit_roundabout is suppressed
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "You have arrived at your destination.",
-                                                            "You have arrived at your destination.",
+                                                            "",
                                                             "You will arrive at your destination.",
                                                             "You have arrived at your destination.",
                                                             "");

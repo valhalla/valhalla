@@ -3953,8 +3953,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at your destination.",
-                                  "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at your destination.", "",
                                   "You will arrive at your destination.",
                                   "You have arrived at your destination.", "");
 
@@ -3990,8 +3989,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at 3206 Powelton Avenue.",
-                                  "You have arrived at your destination.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "You have arrived at 3206 Powelton Avenue.", "",
                                   "You will arrive at 32 o6 Powelton Avenue.",
                                   "You have arrived at 32 o6 Powelton Avenue.", "");
 
@@ -4029,8 +4027,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Your destination is on the right.",
-                                  "Your destination is on the right.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Your destination is on the right.", "",
                                   "Your destination will be on the right.",
                                   "Your destination is on the right.", "");
 
@@ -4068,8 +4065,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateDestinationManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Lancaster Brewing Company is on the left.",
-                                  "Your destination is on the left.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Lancaster Brewing Company is on the left.", "",
                                   "Lancaster Brewing Company will be on the left.",
                                   "Lancaster Brewing Company is on the left.", "");
 

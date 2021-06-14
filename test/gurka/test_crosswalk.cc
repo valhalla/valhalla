@@ -79,7 +79,7 @@ TEST(Crosswalk, StraightRoute) {
 
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1,
                                                             "You have arrived at your destination.",
-                                                            "You have arrived at your destination.",
+                                                            "",
                                                             "You will arrive at your destination.",
                                                             "You have arrived at your destination.",
                                                             "");

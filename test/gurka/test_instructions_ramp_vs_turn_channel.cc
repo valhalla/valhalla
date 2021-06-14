@@ -449,14 +449,16 @@ TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnRight) {
 
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.",
+      "Bear right toward N2, Centrum. Then Turn right onto Brusselsesteenweg.",
+      "Bear right toward N2.",
       "Bear right toward N2, Centrum. Then Turn right onto Brusselsesteenweg.",
       "Continue for 100 meters.");
 
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto Brusselsesteenweg/N2.",
-      "Turn right onto Brusselsesteenweg.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto Brusselsesteenweg.",
       "Turn right onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -474,14 +476,16 @@ TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnLeft) {
 
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.",
+      "Bear right toward N2, Centrum. Then Turn left onto Brusselsesteenweg.",
+      "Bear right toward N2.",
       "Bear right toward N2, Centrum. Then Turn left onto Brusselsesteenweg.",
       "Continue for 100 meters.");
 
   // Verify the turn left instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Brusselsesteenweg/N2.",
-      "Turn left onto Brusselsesteenweg.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Brusselsesteenweg.",
       "Turn left onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
