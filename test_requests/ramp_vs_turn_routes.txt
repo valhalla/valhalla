@@ -31,3 +31,5 @@
 -j '{"locations":[{"lat":53.92824412679647,"lon":27.50899576679126},{"lat":53.92551332645405,"lon":27.521586966855693}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":39.992585,"lon":-76.024084,"street":"US 30"},{"lat":39.990999,"lon":-76.021027,"street":"PA 41"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":39.885051,"lon":-75.529767,"street":"US 1 North"},{"lat":39.884298,"lon":-75.526149,"street":"US 322 East"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":50.886183,"lon":4.686228,"street":"Den Boschsingel"},{"lat":50.883620,"lon":4.681439,"street":"Brusselsesteenweg"}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":50.886183,"lon":4.686228,"street":"Den Boschsingel"},{"lat":50.882707,"lon":4.685079,"street":"Brusselsestraat"}],"costing":"auto","units":"kilometers"}'
