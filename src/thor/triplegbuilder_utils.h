@@ -334,6 +334,89 @@ private:
   }
 };
 
+static void AddSignInfo(const AttributesController& controller,
+                        const std::vector<SignInfo>& edge_signs,
+                        TripLeg_Sign* trip_sign) {
+
+  if (!edge_signs.empty()) {
+    for (const auto &sign : edge_signs) {
+      switch (sign.type()) {
+        case Sign::Type::kExitNumber: {
+          if (controller.attributes.at(kEdgeSignExitNumber)) {
+            auto *trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
+            trip_sign_exit_number->set_text(sign.text());
+            trip_sign_exit_number->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kExitBranch: {
+          if (controller.attributes.at(kEdgeSignExitBranch)) {
+            auto *trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+            trip_sign_exit_onto_street->set_text(sign.text());
+            trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kExitToward: {
+          if (controller.attributes.at(kEdgeSignExitToward)) {
+            auto *trip_sign_exit_toward_location =
+                trip_sign->mutable_exit_toward_locations()->Add();
+            trip_sign_exit_toward_location->set_text(sign.text());
+            trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kExitName: {
+          if (controller.attributes.at(kEdgeSignExitName)) {
+            auto *trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
+            trip_sign_exit_name->set_text(sign.text());
+            trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kGuideBranch: {
+          if (controller.attributes.at(kEdgeSignGuideBranch)) {
+            auto *trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
+            trip_sign_guide_onto_street->set_text(sign.text());
+            trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kGuideToward: {
+          if (controller.attributes.at(kEdgeSignGuideToward)) {
+            auto *trip_sign_guide_toward_location =
+                trip_sign->mutable_guide_toward_locations()->Add();
+            trip_sign_guide_toward_location->set_text(sign.text());
+            trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kGuidanceViewJunction: {
+          if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+            auto *trip_sign_guidance_view_junction =
+                trip_sign->mutable_guidance_view_junctions()->Add();
+            trip_sign_guidance_view_junction->set_text(sign.text());
+            trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case Sign::Type::kGuidanceViewSignboard: {
+          if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
+            auto *trip_sign_guidance_view_signboard =
+                trip_sign->mutable_guidance_view_signboards()->Add();
+            trip_sign_guidance_view_signboard->set_text(sign.text());
+            trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+  }
+}
+
 /**
  * Add trip intersecting edge.
  * @param  controller   Controller to determine which attributes to set.
@@ -346,17 +429,19 @@ private:
  *                         on the local hierarchy.
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
+                             valhalla::baldr::GraphReader& graphreader,
+                             const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
                              const NodeInfo* nodeinfo,
                              TripLeg_Node* trip_node,
                              const DirectedEdge* intersecting_de) {
-  TripLeg_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
+  TripLeg_IntersectingEdge* intersecting_edge = trip_node->add_intersecting_edge();
 
   // Set the heading for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeBeginHeading)) {
-    itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
+    intersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
   }
 
   Traversability traversability = Traversability::kNone;
@@ -372,7 +457,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   }
   // Set the walkability flag for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeWalkability)) {
-    itersecting_edge->set_walkability(GetTripLegTraversability(traversability));
+    intersecting_edge->set_walkability(GetTripLegTraversability(traversability));
   }
 
   traversability = Traversability::kNone;
@@ -386,12 +471,12 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   }
   // Set the cyclability flag for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeCyclability)) {
-    itersecting_edge->set_cyclability(GetTripLegTraversability(traversability));
+    intersecting_edge->set_cyclability(GetTripLegTraversability(traversability));
   }
 
   // Set the driveability flag for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeDriveability)) {
-    itersecting_edge->set_driveability(
+    intersecting_edge->set_driveability(
         GetTripLegTraversability(nodeinfo->local_driveability(local_edge_index)));
   }
 
@@ -399,27 +484,48 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
     bool name_consistency =
         (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
-    itersecting_edge->set_prev_name_consistency(name_consistency);
+    intersecting_edge->set_prev_name_consistency(name_consistency);
   }
 
   // Set the current/intersecting edge name consistency if requested
   if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-    itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
+    intersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
   }
 
   // Set the use for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeUse)) {
-    itersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
+    intersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
   }
 
   // Set the road class for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
-    itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
+    intersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
   }
 
   // Set the lane count for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeLaneCount)) {
-    itersecting_edge->set_lane_count(intersecting_de->lanecount());
+    intersecting_edge->set_lane_count(intersecting_de->lanecount());
+  }
+
+  if (intersecting_de->use() == Use::kRestArea) {
+    GraphId endnode = intersecting_de->endnode();
+    valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(endnode);
+
+//    PointLL pt = t2->get_node_ll(endnode);
+//    printf("pt: %.6f, %.6f\n", pt.lat(), pt.lng());
+//    printf("Rest area:\n");
+//    printf("t2->id().level() = %d\n", t2->id().level());
+//    printf("t2->id().tileid() = %d\n", t2->id().tileid());
+
+    const DirectedEdge * de0 = t2->directededge(0);
+    if (intersecting_de->sign()) {
+      size_t idx = intersecting_de - de0;
+      std::vector<SignInfo> edge_signs = t2->GetSigns(idx);
+      if (!edge_signs.empty()) {
+        TripLeg_Sign* trip_sign = intersecting_edge->mutable_sign();
+        AddSignInfo(controller, edge_signs, trip_sign);
+      }
+    }
   }
 }
 
@@ -469,21 +575,21 @@ void AddIntersectingEdges(const AttributesController& controller,
 
   // Iterate through edges on this level to find any intersecting edges
   // Follow any upwards or downward transitions
-  const DirectedEdge* de = start_tile->directededge(node->edge_index());
-  for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, de++) {
+  const DirectedEdge* intersecting_edge = start_tile->directededge(node->edge_index());
+  for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, intersecting_edge++) {
 
     // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
     // the current edge in the path AND the superceded edge of the current edge in the path
     // if the current edge in the path is a shortcut
-    if (de->is_shortcut() || de->localedgeidx() == prior_opp_local_index ||
-        de->localedgeidx() == directededge->localedgeidx() ||
-        (directededge->is_shortcut() && directededge->shortcut() & de->superseded())) {
+    if (intersecting_edge->is_shortcut() || intersecting_edge->localedgeidx() == prior_opp_local_index ||
+        intersecting_edge->localedgeidx() == directededge->localedgeidx() ||
+        (directededge->is_shortcut() && directededge->shortcut() & intersecting_edge->superseded())) {
       continue;
     }
 
     // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), node, trip_node,
-                            de);
+    AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+                            intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
   }
 
   // Add intersecting edges on different levels (follow NodeTransitions)
@@ -497,15 +603,16 @@ void AddIntersectingEdges(const AttributesController& controller,
         continue;
       }
       const NodeInfo* nodeinfo2 = endtile->node(endnode);
-      const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
-      for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
+      const DirectedEdge* intersecting_edge2 = endtile->directededge(nodeinfo2->edge_index());
+      for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, intersecting_edge2++) {
         // Skip shortcut edges and edges on the path
-        if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-            de2->localedgeidx() == directededge->localedgeidx()) {
+        if (intersecting_edge2->is_shortcut() || intersecting_edge2->localedgeidx() == prior_opp_local_index ||
+            intersecting_edge2->localedgeidx() == directededge->localedgeidx()) {
           continue;
         }
-        AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(), nodeinfo2,
-                                trip_node, de2);
+
+        AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+                                intersecting_edge2->localedgeidx(), nodeinfo2, trip_node, intersecting_edge2);
       }
     }
   }

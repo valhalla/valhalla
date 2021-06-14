@@ -470,254 +470,6 @@ struct IntersectionEdges {
   }
 };
 
-// Add intersections along a step/maneuver.
-json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                             valhalla::odin::EnhancedTripLeg* etp,
-                             const std::vector<PointLL>& shape,
-                             uint32_t& count,
-                             const bool arrive_maneuver) {
-  // Iterate through the nodes/intersections of the path for this maneuver
-  count = 0;
-  auto intersections = json::array({});
-  uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
-  EnhancedTripLeg_Node* prev_node = nullptr;
-  for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
-    auto intersection = json::map({});
-
-    // Get the node and current edge from the enhanced trip path
-    // NOTE: curr_edge does not exist for the arrive maneuver
-    auto node = etp->GetEnhancedNode(i);
-    auto curr_edge = etp->GetCurrEdge(i);
-    auto prev_edge = etp->GetPrevEdge(i);
-
-    // Add the node location (lon, lat). Use the last shape point for
-    // the arrive step
-    auto loc = json::array({});
-    size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
-    PointLL ll = shape[shape_index];
-    loc->emplace_back(json::fixed_t{ll.lng(), 6});
-    loc->emplace_back(json::fixed_t{ll.lat(), 6});
-    intersection->emplace("location", loc);
-    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
-
-    // Add index into admin list
-    if (node->has_admin_index()) {
-      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
-    }
-
-    if (!arrive_maneuver) {
-      if (curr_edge->has_is_urban()) {
-        intersection->emplace("is_urban", curr_edge->is_urban());
-      }
-    }
-
-    auto toll_collection = json::map({});
-    if (node->type() == TripLeg_Node::kTollBooth) {
-      toll_collection->emplace("type", std::string("toll_booth"));
-    } else if (node->type() == TripLeg_Node::kTollGantry) {
-      toll_collection->emplace("type", std::string("toll_gantry"));
-    }
-    if (!toll_collection->empty())
-      intersection->emplace("toll_collection", toll_collection);
-
-    if (node->cost().transition_cost().seconds() > 0)
-      intersection->emplace("turn_duration",
-                            json::fixed_t{node->cost().transition_cost().seconds(), 3});
-    if (node->cost().transition_cost().cost() > 0)
-      intersection->emplace("turn_weight", json::fixed_t{node->cost().transition_cost().cost(), 3});
-    auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
-    if (next_node) {
-      auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
-      auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
-      if (secs > 0)
-        intersection->emplace("duration", json::fixed_t{secs, 3});
-      if (cost > 0)
-        intersection->emplace("weight", json::fixed_t{cost, 3});
-    }
-
-    // TODO: add recosted durations to the intersection?
-
-    // Add rest_stop when passing by a rest_area or service_area
-    if (i > 0 && !arrive_maneuver) {
-      auto rest_stop = json::map({});
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-
-        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
-          rest_stop->emplace("type", std::string("rest_area"));
-          intersection->emplace("rest_stop", rest_stop);
-          break;
-        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
-          rest_stop->emplace("type", std::string("service_area"));
-          intersection->emplace("rest_stop", rest_stop);
-          break;
-        }
-      }
-    }
-
-    // Get bearings and access to outgoing intersecting edges. Do not add
-    // any intersecting edges for the first depart intersection and for
-    // the arrive step.
-    std::vector<IntersectionEdges> edges;
-
-    // Add the edge departing the node
-    if (!arrive_maneuver) {
-      edges.emplace_back(curr_edge->begin_heading(), true, false, true);
-    }
-
-    // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
-    // TODO - what if a true U-turn - need to set it to routeable.
-    if (i > 0) {
-      bool entry = (arrive_maneuver) ? true : false;
-      uint32_t prior_heading = prev_edge->end_heading();
-      edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
-    }
-
-    // Create bearing and entry output
-    auto bearings = json::array({});
-    auto entries = json::array({});
-
-    // Sort edges by increasing bearing and update the in/out edge indexes
-    std::sort(edges.begin(), edges.end());
-    uint32_t incoming_index, outgoing_index;
-    for (uint32_t n = 0; n < edges.size(); ++n) {
-      if (edges[n].in_edge) {
-        incoming_index = n;
-      }
-      if (edges[n].out_edge) {
-        outgoing_index = n;
-      }
-      bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
-      entries->emplace_back(edges[n].routeable);
-    }
-
-    // Add the index of the input edge and output edge
-    if (i > 0) {
-      intersection->emplace("in", static_cast<uint64_t>(incoming_index));
-    }
-    if (!arrive_maneuver) {
-      intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
-    }
-
-    intersection->emplace("entry", entries);
-    intersection->emplace("bearings", bearings);
-
-    // Add tunnel_name for tunnels
-    if (!arrive_maneuver) {
-      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
-          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
-          }
-        }
-      }
-    }
-
-    // Add classes based on the first edge after the maneuver (not needed
-    // for arrive maneuver).
-    if (!arrive_maneuver) {
-      std::vector<std::string> classes;
-      if (curr_edge->tunnel()) {
-        classes.push_back("tunnel");
-      }
-      if (maneuver.portions_toll() || curr_edge->toll()) {
-        classes.push_back("toll");
-      }
-      if (curr_edge->road_class() == valhalla::RoadClass::kMotorway) {
-        classes.push_back("motorway");
-      }
-      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
-        classes.push_back("ferry");
-      }
-
-      if (curr_edge->destination_only()) {
-        classes.push_back("restricted");
-      }
-      if (classes.size() > 0) {
-        auto class_list = json::array({});
-        for (const auto& cl : classes) {
-          class_list->emplace_back(cl);
-        }
-        intersection->emplace("classes", class_list);
-      }
-    }
-
-    // Process turn lanes - which are stored on the previous edge to the node
-    // Check if there is an active turn lane
-    // Verify that turn lanes are not non-directional
-    if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
-        !prev_edge->HasNonDirectionalTurnLane()) {
-      auto lanes = json::array({});
-      for (const auto& turn_lane : prev_edge->turn_lanes()) {
-        auto lane = json::map({});
-        // Process 'valid' & 'active' flags
-        bool is_active = turn_lane.state() == TurnLane::kActive;
-        // an active lane is also valid
-        bool is_valid = is_active || turn_lane.state() == TurnLane::kValid;
-        lane->emplace("active", is_active);
-        lane->emplace("valid", is_valid);
-        // Add valid_indication for a valid & active lanes
-        if (turn_lane.state() != TurnLane::kInvalid) {
-          lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
-        }
-
-        // Process 'indications' array - add indications from left to right
-        auto indications = json::array({});
-        uint16_t mask = turn_lane.directions_mask();
-
-        // TODO make map for lane mask to osrm indication string
-
-        // reverse (left u-turn)
-        if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        // sharp_left
-        if (mask & kTurnLaneSharpLeft) {
-          indications->emplace_back(osrmconstants::kModifierSharpLeft);
-        }
-        // left
-        if (mask & kTurnLaneLeft) {
-          indications->emplace_back(osrmconstants::kModifierLeft);
-        }
-        // slight_left
-        if (mask & kTurnLaneSlightLeft) {
-          indications->emplace_back(osrmconstants::kModifierSlightLeft);
-        }
-        // through
-        if (mask & kTurnLaneThrough) {
-          indications->emplace_back(osrmconstants::kModifierStraight);
-        }
-        // slight_right
-        if (mask & kTurnLaneSlightRight) {
-          indications->emplace_back(osrmconstants::kModifierSlightRight);
-        }
-        // right
-        if (mask & kTurnLaneRight) {
-          indications->emplace_back(osrmconstants::kModifierRight);
-        }
-        // sharp_right
-        if (mask & kTurnLaneSharpRight) {
-          indications->emplace_back(osrmconstants::kModifierSharpRight);
-        }
-        // reverse (right u-turn)
-        if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        lane->emplace("indications", std::move(indications));
-        lanes->emplace_back(std::move(lane));
-      }
-      intersection->emplace("lanes", std::move(lanes));
-    }
-
-    // Add the intersection to the JSON array
-    intersections->emplace_back(intersection);
-    count++;
-  }
-  return intersections;
-}
-
 // Add exits (exit numbers) along a step/maneuver.
 std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   // Iterate through the exit numbers
@@ -787,8 +539,8 @@ void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
-                                      ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+template <typename SignElementProto>
+std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
                                   const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
@@ -807,9 +559,9 @@ std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
 
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
+template <typename SignElementProto>
 std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
-        sign_elements,
+    const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
   for (const auto& sign_element : sign_elements) {
@@ -828,8 +580,8 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
-                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+template <typename SignElementProto>
+std::string get_sign_elements(const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
                               const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
@@ -843,7 +595,8 @@ std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
   return sign_elements_string;
 }
 
-bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+template <typename SignProto>
+bool exit_destinations_exist(const SignProto& sign) {
   if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
       (sign.exit_names_size() > 0)) {
     return true;
@@ -852,15 +605,16 @@ bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) 
 }
 
 // Return the exit destinations
-std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+template <typename SignProto, typename SignElementProto>
+std::string exit_destinations(const SignProto& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string branch_refs = get_sign_element_refs(sign.exit_onto_streets());
+  std::string branch_refs = get_sign_element_refs<SignElementProto>(sign.exit_onto_streets());
 
   // Get the toward refs
-  std::string toward_refs = get_sign_element_refs(sign.exit_toward_locations());
+  std::string toward_refs = get_sign_element_refs<SignElementProto>(sign.exit_toward_locations());
 
   // Create the refs by combining the branch and toward ref lists
   std::string refs = branch_refs;
@@ -873,15 +627,15 @@ std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign)
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
   // Get the branch nonrefs
-  std::string branch_nonrefs = get_sign_element_nonrefs(sign.exit_onto_streets());
+  std::string branch_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_onto_streets());
 
   // Get the towards nonrefs
-  std::string toward_nonrefs = get_sign_element_nonrefs(sign.exit_toward_locations());
+  std::string toward_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_toward_locations());
 
   // Get the name nonrefs only if the others are empty
   std::string name_nonrefs;
   if (branch_nonrefs.empty() && toward_nonrefs.empty()) {
-    name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
+    name_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_names());
   }
 
   // Create nonrefs by combining the branch, toward, name nonref lists
@@ -909,15 +663,16 @@ std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign)
 }
 
 // Return the guide destinations
-std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+template<typename SignProto, typename SignElementProto>
+std::string guide_destinations(const SignProto& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
+  std::string branch_refs = get_sign_element_refs<SignElementProto>(sign.guide_onto_streets());
 
   // Get the toward refs
-  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
+  std::string toward_refs = get_sign_element_refs<SignElementProto>(sign.guide_toward_locations());
 
   // Create the refs by combining the branch and toward ref lists
   std::string refs = branch_refs;
@@ -930,10 +685,10 @@ std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
   // Get the branch nonrefs
-  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
+  std::string branch_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.guide_onto_streets());
 
   // Get the towards nonrefs
-  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
+  std::string toward_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.guide_toward_locations());
 
   // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
@@ -961,11 +716,12 @@ std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign
 //   3. <ref>: <non-ref>
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
-  if (exit_destinations_exist(sign)) {
-    return exit_destinations(sign);
+template <typename SignProto, typename SignElementProto>
+std::string destinations(const SignProto& sign) {
+  if (exit_destinations_exist<SignProto>(sign)) {
+    return exit_destinations<SignProto, SignElementProto>(sign);
   }
-  return guide_destinations(sign);
+  return guide_destinations<SignProto, SignElementProto>(sign);
 }
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -1308,6 +1064,263 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return std::make_pair(names, refs);
 }
 
+
+// Add intersections along a step/maneuver.
+json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                             valhalla::odin::EnhancedTripLeg* etp,
+                             const std::vector<PointLL>& shape,
+                             uint32_t& count,
+                             const bool arrive_maneuver) {
+  // Iterate through the nodes/intersections of the path for this maneuver
+  count = 0;
+  auto intersections = json::array({});
+  uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
+  EnhancedTripLeg_Node* prev_node = nullptr;
+  for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
+    auto intersection = json::map({});
+
+    // Get the node and current edge from the enhanced trip path
+    // NOTE: curr_edge does not exist for the arrive maneuver
+    auto node = etp->GetEnhancedNode(i);
+    auto curr_edge = etp->GetCurrEdge(i);
+    auto prev_edge = etp->GetPrevEdge(i);
+
+    // Add the node location (lon, lat). Use the last shape point for
+    // the arrive step
+    auto loc = json::array({});
+    size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
+    PointLL ll = shape[shape_index];
+    loc->emplace_back(json::fixed_t{ll.lng(), 6});
+    loc->emplace_back(json::fixed_t{ll.lat(), 6});
+    intersection->emplace("location", loc);
+    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+
+    // Add index into admin list
+    if (node->has_admin_index()) {
+      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+    }
+
+    if (!arrive_maneuver) {
+      if (curr_edge->has_is_urban()) {
+        intersection->emplace("is_urban", curr_edge->is_urban());
+      }
+    }
+
+    auto toll_collection = json::map({});
+    if (node->type() == TripLeg_Node::kTollBooth) {
+      toll_collection->emplace("type", std::string("toll_booth"));
+    } else if (node->type() == TripLeg_Node::kTollGantry) {
+      toll_collection->emplace("type", std::string("toll_gantry"));
+    }
+    if (!toll_collection->empty())
+      intersection->emplace("toll_collection", toll_collection);
+
+    if (node->cost().transition_cost().seconds() > 0)
+      intersection->emplace("turn_duration",
+                            json::fixed_t{node->cost().transition_cost().seconds(), 3});
+    if (node->cost().transition_cost().cost() > 0)
+      intersection->emplace("turn_weight", json::fixed_t{node->cost().transition_cost().cost(), 3});
+    auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
+    if (next_node) {
+      auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
+      auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
+      if (secs > 0)
+        intersection->emplace("duration", json::fixed_t{secs, 3});
+      if (cost > 0)
+        intersection->emplace("weight", json::fixed_t{cost, 3});
+    }
+
+    // TODO: add recosted durations to the intersection?
+
+    // Add rest_stop when passing by a rest_area or service_area
+    if (i > 0 && !arrive_maneuver) {
+      auto rest_stop = json::map({});
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+
+        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          rest_stop->emplace("type", std::string("rest_area"));
+          if (intersecting_edge->has_sign()) {
+            const TripLeg_Sign& trip_leg_sign = intersecting_edge->sign();
+            // should I call "destinations()" or "guide_destinations"?
+            std::string sign_guidance = guide_destinations<TripLeg_Sign, TripLeg_SignElement>(trip_leg_sign);
+            rest_stop->emplace("name", sign_guidance);
+            printf("Rest stop: %s\n", sign_guidance.c_str());
+          }
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          rest_stop->emplace("type", std::string("service_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        }
+      }
+    }
+
+    // Get bearings and access to outgoing intersecting edges. Do not add
+    // any intersecting edges for the first depart intersection and for
+    // the arrive step.
+    std::vector<IntersectionEdges> edges;
+
+    // Add the edge departing the node
+    if (!arrive_maneuver) {
+      edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+    }
+
+    // Add the incoming edge except for the first depart intersection.
+    // Set routeable to false except for arrive.
+    // TODO - what if a true U-turn - need to set it to routeable.
+    if (i > 0) {
+      bool entry = (arrive_maneuver) ? true : false;
+      uint32_t prior_heading = prev_edge->end_heading();
+      edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
+    }
+
+    // Create bearing and entry output
+    auto bearings = json::array({});
+    auto entries = json::array({});
+
+    // Sort edges by increasing bearing and update the in/out edge indexes
+    std::sort(edges.begin(), edges.end());
+    uint32_t incoming_index, outgoing_index;
+    for (uint32_t n = 0; n < edges.size(); ++n) {
+      if (edges[n].in_edge) {
+        incoming_index = n;
+      }
+      if (edges[n].out_edge) {
+        outgoing_index = n;
+      }
+      bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
+      entries->emplace_back(edges[n].routeable);
+    }
+
+    // Add the index of the input edge and output edge
+    if (i > 0) {
+      intersection->emplace("in", static_cast<uint64_t>(incoming_index));
+    }
+    if (!arrive_maneuver) {
+      intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+    }
+
+    intersection->emplace("entry", entries);
+    intersection->emplace("bearings", bearings);
+
+    // Add tunnel_name for tunnels
+    if (!arrive_maneuver) {
+      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
+          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+          }
+        }
+      }
+    }
+
+    // Add classes based on the first edge after the maneuver (not needed
+    // for arrive maneuver).
+    if (!arrive_maneuver) {
+      std::vector<std::string> classes;
+      if (curr_edge->tunnel()) {
+        classes.push_back("tunnel");
+      }
+      if (maneuver.portions_toll() || curr_edge->toll()) {
+        classes.push_back("toll");
+      }
+      if (curr_edge->road_class() == valhalla::RoadClass::kMotorway) {
+        classes.push_back("motorway");
+      }
+      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
+        classes.push_back("ferry");
+      }
+
+      if (curr_edge->destination_only()) {
+        classes.push_back("restricted");
+      }
+      if (classes.size() > 0) {
+        auto class_list = json::array({});
+        for (const auto& cl : classes) {
+          class_list->emplace_back(cl);
+        }
+        intersection->emplace("classes", class_list);
+      }
+    }
+
+    // Process turn lanes - which are stored on the previous edge to the node
+    // Check if there is an active turn lane
+    // Verify that turn lanes are not non-directional
+    if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
+        !prev_edge->HasNonDirectionalTurnLane()) {
+      auto lanes = json::array({});
+      for (const auto& turn_lane : prev_edge->turn_lanes()) {
+        auto lane = json::map({});
+        // Process 'valid' & 'active' flags
+        bool is_active = turn_lane.state() == TurnLane::kActive;
+        // an active lane is also valid
+        bool is_valid = is_active || turn_lane.state() == TurnLane::kValid;
+        lane->emplace("active", is_active);
+        lane->emplace("valid", is_valid);
+        // Add valid_indication for a valid & active lanes
+        if (turn_lane.state() != TurnLane::kInvalid) {
+          lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
+        }
+
+        // Process 'indications' array - add indications from left to right
+        auto indications = json::array({});
+        uint16_t mask = turn_lane.directions_mask();
+
+        // TODO make map for lane mask to osrm indication string
+
+        // reverse (left u-turn)
+        if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
+          indications->emplace_back(osrmconstants::kModifierUturn);
+        }
+        // sharp_left
+        if (mask & kTurnLaneSharpLeft) {
+          indications->emplace_back(osrmconstants::kModifierSharpLeft);
+        }
+        // left
+        if (mask & kTurnLaneLeft) {
+          indications->emplace_back(osrmconstants::kModifierLeft);
+        }
+        // slight_left
+        if (mask & kTurnLaneSlightLeft) {
+          indications->emplace_back(osrmconstants::kModifierSlightLeft);
+        }
+        // through
+        if (mask & kTurnLaneThrough) {
+          indications->emplace_back(osrmconstants::kModifierStraight);
+        }
+        // slight_right
+        if (mask & kTurnLaneSlightRight) {
+          indications->emplace_back(osrmconstants::kModifierSlightRight);
+        }
+        // right
+        if (mask & kTurnLaneRight) {
+          indications->emplace_back(osrmconstants::kModifierRight);
+        }
+        // sharp_right
+        if (mask & kTurnLaneSharpRight) {
+          indications->emplace_back(osrmconstants::kModifierSharpRight);
+        }
+        // reverse (right u-turn)
+        if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
+          indications->emplace_back(osrmconstants::kModifierUturn);
+        }
+        lane->emplace("indications", std::move(indications));
+        lanes->emplace_back(std::move(lane));
+      }
+      intersection->emplace("lanes", std::move(lanes));
+    }
+
+    // Add the intersection to the JSON array
+    intersections->emplace_back(intersection);
+    count++;
+  }
+  return intersections;
+}
+
+
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                               const std::vector<std::string>& leg_summaries,
@@ -1441,7 +1454,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       // Add destinations
       const auto& sign = maneuver.sign();
-      std::string dest = destinations(sign);
+      std::string dest = destinations<DirectionsLeg_Maneuver_Sign, DirectionsLeg_Maneuver_SignElement>(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
         // If the maneuver is an exit roundabout

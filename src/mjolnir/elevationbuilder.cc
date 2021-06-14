@@ -1,6 +1,5 @@
 #include "mjolnir/util.h"
 
-#include <boost/format.hpp>
 #include <future>
 #include <set>
 #include <thread>

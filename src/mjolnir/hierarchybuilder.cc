@@ -1,7 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <iostream>
