@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <boost/format.hpp>
 #include <list>
 #include <set>
 #include <stdexcept>

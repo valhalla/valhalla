@@ -31,15 +31,9 @@ set(sources
   directededgebuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
-  elevationbuilder.cc
   ferry_connections.cc
-  graphbuilder.cc
-  graphenhancer.cc
   graphfilter.cc
-  graphvalidator.cc
-  hierarchybuilder.cc
   linkclassification.cc
-  luatagtransform.cc
   node_expander.cc
   osmdata.cc
   osmpbfparser.cc
@@ -57,6 +51,12 @@ set(sources
 set (sources_with_warnings
   bssbuilder.cc
   dataquality.cc
+  elevationbuilder.cc
+  graphbuilder.cc
+  graphenhancer.cc
+  graphvalidator.cc
+  hierarchybuilder.cc
+  luatagtransform.cc
   shortcutbuilder.cc
   transitbuilder.cc
   validatetransit.cc)
