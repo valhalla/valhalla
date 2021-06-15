@@ -184,7 +184,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   const baldr::DirectedEdge* opp_edge = nullptr;
 
   if (!FORWARD) {
-    // TODO Why is this check necessary? opp_edge.forwardaccess() is checked in Allowed(...)
+    // Check the access mode and skip this edge if access is not allowed in the reverse
+    // direction. This avoids the (somewhat expensive) retrieval of the opposing directed
+    // edge when no access is allowed in the reverse direction.
     if (!(meta.edge->reverseaccess() & access_mode_)) {
       return false;
     }

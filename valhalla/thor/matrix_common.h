@@ -22,15 +22,6 @@
 namespace valhalla {
 namespace thor {
 
-// These cost thresholds are in addition to the distance
-// thresholds for quick rejection
-constexpr float kTimeDistCostThresholdAutoDivisor =
-    112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
-constexpr float kTimeDistCostThresholdBicycleDivisor =
-    19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
-constexpr float kTimeDistCostThresholdPedestrianDivisor =
-    7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
-
 // Structure to hold information about each destination.
 struct Destination {
   bool settled;        // Has the best time/distance to this destination

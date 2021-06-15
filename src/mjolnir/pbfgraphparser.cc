@@ -207,6 +207,9 @@ public:
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
+    tag_handlers_["pedestrian_forward"] = [this]() {
+      way_.set_pedestrian_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["auto_backward"] = [this]() {
       way_.set_auto_backward(tag_.second == "true" ? true : false);
     };
@@ -234,8 +237,8 @@ public:
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["pedestrian"] = [this]() {
-      way_.set_pedestrian(tag_.second == "true" ? true : false);
+    tag_handlers_["pedestrian_backward"] = [this]() {
+      way_.set_pedestrian_backward(tag_.second == "true" ? true : false);
     };
     tag_handlers_["private"] = [this]() {
       // Make sure we do not unset this flag if set previously
@@ -1553,7 +1556,7 @@ public:
                   tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
                   tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
                   tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
-                  tag.first == "restriction:emergency") &&
+                  tag.first == "restriction:emergency" || tag.first == "restriction:foot") &&
                  !tag.second.empty()) {
         isRestriction = true;
         if (tag.first != "restriction") {
@@ -1574,6 +1577,10 @@ public:
           modes |= kTruckAccess;
         } else if (tag.first == "restriction:emergency") {
           modes |= kEmergencyAccess;
+        } else if (tag.first == "restriction:psv") {
+          modes |= (kTaxiAccess | kBusAccess);
+        } else if (tag.first == "restriction:foot") {
+          modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
         RestrictionType type = (RestrictionType)std::stoi(tag.second);
@@ -1803,6 +1810,8 @@ public:
               modes = modes & ~kTruckAccess;
             } else if (t == "emergency") {
               modes = modes & ~kEmergencyAccess;
+            } else if (t == "foot") {
+              modes = modes & ~(kPedestrianAccess | kWheelchairAccess);
             }
           }
         }
