@@ -77,6 +77,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set instruction
         maneuver.set_instruction(FormDestinationInstruction(maneuver));
 
+        // Set verbal succinct transition instruction
+        maneuver.set_verbal_succinct_transition_instruction(
+            FormVerbalSuccinctDestinationTransitionInstruction(maneuver));
+
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
             FormVerbalAlertDestinationInstruction(maneuver));
