@@ -76,7 +76,7 @@ public:
 
       const auto node_to_loop_way_it = node_to_loop_way_.find(osm_way_node.node.osmid_);
       if (node_to_loop_way_it != node_to_loop_way_.cend() &&
-          osm_way.way_id() != node_to_loop_way_it->second) {
+          osm_way.way_id() != node_to_loop_way_it->second && osm_way.use() == Use::kRoad) {
         ++loops_meta_.at(node_to_loop_way_it->second).count_of_adjacent_ways;
       }
 
