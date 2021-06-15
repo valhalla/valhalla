@@ -4131,8 +4131,8 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.", "Continue.",
-                                  "Continue.", "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "", "Continue.", "Continue.",
+                                  "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4154,7 +4154,7 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.", "Continue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "", "Continue.",
                                   "Continue for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -4177,7 +4177,7 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_2(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.", "Continue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.", "",
                                   "Continue on 10th Avenue.", "Continue on 10th Avenue.",
                                   "Continue for a quarter mile.");
 
@@ -4201,7 +4201,7 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_3_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_3(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.", "Continue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.", "",
                                   "Continue on 10th Avenue.",
                                   "Continue on 10th Avenue for a quarter mile.",
                                   "Continue for a quarter mile.");

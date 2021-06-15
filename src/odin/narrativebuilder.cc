@@ -477,10 +477,6 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
-
-        // Set verbal succinct transition instruction
-        maneuver.set_verbal_succinct_transition_instruction(
-            FormVerbalSuccinctContinueTransitionInstruction(maneuver));
         break;
       }
     }
@@ -3882,30 +3878,6 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
   boost::replace_all(instruction, kLengthTag,
                      FormLength(maneuver, dictionary_.start_verbal_subset.metric_lengths,
                                 dictionary_.start_verbal_subset.us_customary_lengths));
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver) {
-  // "0": "Continue.",
-  // "1": "Continue for <LENGTH>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.continue_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kLengthTag,
-                     FormLength(maneuver, dictionary_.continue_verbal_subset.metric_lengths,
-                                dictionary_.continue_verbal_subset.us_customary_lengths));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
