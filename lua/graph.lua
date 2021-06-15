@@ -93,20 +93,26 @@ access = {
 ["restricted"] = "true",
 ["allowed"] = "true",
 ["emergency"] = "false",
-["psv"] = "false"
+["psv"] = "false",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 private = {
 ["private"] = "true",
 ["destination"] = "true",
 ["customers"] = "true",
-["delivery"] = "true"
+["delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 no_thru_traffic = {
 ["destination"] = "true",
 ["customers"] = "true",
-["delivery"] = "true"
+["delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 sidewalk = {
@@ -121,9 +127,7 @@ sidewalk = {
 ["this"] = "true",
 ["detached"] = "false",
 ["raised"] = "true",
-["separate_double"] = "false",
-["sidepath"] = "false",
-["explicit"] = "true"
+["separate_double"] = "false"
 }
 
 use = {
@@ -149,7 +153,9 @@ motor_vehicle = {
 ["official"] = "false",
 ["public"] = "true",
 ["restricted"] = "true",
-["allowed"] = "true"
+["allowed"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 moped = {
@@ -162,7 +168,9 @@ moped = {
 ["dismount"] = "true",
 ["no"] = "false",
 ["unknown"] = "false",
-["agricultural"] = "false"
+["agricultural"] = "false",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 foot = {
@@ -185,7 +193,9 @@ foot = {
 ["sidewalk"] = "true",
 ["allowed"] = "true",
 ["passable"] = "true",
-["footway"] = "true"
+["footway"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 wheelchair = {
@@ -203,7 +213,9 @@ wheelchair = {
 ["partial"] = "false",
 ["bad"] = "false",
 ["half"] = "false",
-["assisted"] = "true"
+["assisted"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 bus = {
@@ -256,7 +268,9 @@ truck = {
 ["agricultural;forestry"] = "false",
 ["official"] = "false",
 ["forestry"] = "false",
-["destination;delivery"] = "true"
+["destination;delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 hazmat = {
@@ -298,7 +312,9 @@ bicycle = {
 ["none"] = "false",
 ["allowed"] = "true",
 ["private"] = "true",
-["official"] = "true"
+["official"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 cycleway = {
@@ -401,7 +417,9 @@ motor_vehicle_node = {
 ["official"] = 0,
 ["public"] = 1,
 ["restricted"] = 1,
-["allowed"] = 1
+["allowed"] = 1,
+["permit"] = 1,
+["residents"] = 1
 }
 
 bicycle_node = {
@@ -421,7 +439,9 @@ bicycle_node = {
 ["none"] = 0,
 ["allowed"] = 4,
 ["private"] = 4,
-["official"] = 4
+["official"] = 4,
+["permit"] = 4,
+["residents"] = 4
 }
 
 foot_node = {
@@ -444,7 +464,9 @@ foot_node = {
 ["sidewalk"] = 2,
 ["allowed"] = 2,
 ["passable"] = 2,
-["footway"] = 2
+["footway"] = 2,
+["permit"] = 2,
+["residents"] = 2
 }
 
 wheelchair_node = {
@@ -462,7 +484,9 @@ wheelchair_node = {
 ["partial"] = 0,
 ["bad"] = 0,
 ["half"] = 0,
-["assisted"] = 256
+["assisted"] = 256,
+["permit"] = 256,
+["residents"] = 256
 }
 
 moped_node = {
@@ -475,7 +499,9 @@ moped_node = {
 ["dismount"] = 512,
 ["no"] = 0,
 ["unknown"] = 0,
-["agricultural"] = 0
+["agricultural"] = 0,
+["permit"] = 512,
+["residents"] = 512
 }
 
 motor_cycle_node = {
@@ -535,7 +561,9 @@ truck_node = {
 ["agricultural;forestry"] = 0,
 ["official"] = 0,
 ["forestry"] = 0,
-["destination;delivery"] = 8
+["destination;delivery"] = 8,
+["permit"] = 8,
+["residents"] = 8
 }
 
 psv_bus_node = {
