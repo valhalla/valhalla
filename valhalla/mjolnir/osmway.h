@@ -1707,7 +1707,7 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare3_ : 4;
+  uint16_t spare2_ : 4;
 
   uint16_t nodecount_;
 
