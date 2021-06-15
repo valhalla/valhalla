@@ -1828,6 +1828,14 @@
       "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
     },
     {
+      "key": "foot:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets the foot reverse flag to true."
+    },
+    {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "foot:conditional",
