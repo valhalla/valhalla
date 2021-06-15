@@ -1828,6 +1828,14 @@
       "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
     },
     {
+      "key": "foot:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Sets the foot reverse flag to true."
+    },
+    {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "foot:conditional",
@@ -4074,6 +4082,46 @@
         "way"
       ],
       "description": "If oneway = yes and oneway:bicycle = no then set the bike reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "-1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true.  A value of -1 will flip the direction of the oneway for pedestrians."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "true",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "1",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides oneway flag.  Sets foot reverse flag to true."
+    },
+    {
+      "key": "oneway:foot",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "If oneway = yes and oneway:foot = no then set the foot reverse flag to true."
     },
     {
       "key": "oneway:bus",
