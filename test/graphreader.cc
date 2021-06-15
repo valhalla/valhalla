@@ -43,7 +43,6 @@ TEST(SimpleCache, Mine) {
   }
 }
 
-
 TEST(SimpleCache, QueryByPointOutOfRangeLL) {
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
