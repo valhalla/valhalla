@@ -3891,40 +3891,6 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalSuccinctDestinationTransitionInstruction(Maneuver& maneuver) {
-  // "0": "You have arrived at your destination."
-  // "2": "Your destination is on the <RELATIVE_DIRECTION>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-
-  // Check for side of street relative direction
-  std::string relative_direction;
-  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationLeft) {
-    phrase_id += 2;
-    relative_direction = dictionary_.destination_subset.relative_directions.at(0);
-  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationRight) {
-    phrase_id += 2;
-    relative_direction = dictionary_.destination_subset.relative_directions.at(1);
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.destination_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  if (phrase_id > 0) {
-    // Replace phrase tags with values
-    boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
-  }
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
 std::string NarrativeBuilder::FormVerbalSuccinctContinueTransitionInstruction(Maneuver& maneuver) {
   // "0": "Continue.",
   // "1": "Continue for <LENGTH>."
