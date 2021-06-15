@@ -535,7 +535,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
     if (!edge_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       AddSignInfo(controller, edge_signs, trip_sign);
     }
   }
@@ -546,10 +546,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
-          case Sign::Type::kJunctionName: {
+          case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
               auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
               trip_sign_junction_name->set_text(sign.text());

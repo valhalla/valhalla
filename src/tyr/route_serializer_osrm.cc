@@ -471,7 +471,7 @@ struct IntersectionEdges {
 };
 
 // Add exits (exit numbers) along a step/maneuver.
-std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exits(const valhalla::Sign& sign) {
   // Iterate through the exit numbers
   std::string exits;
   for (const auto& number : sign.exit_numbers()) {
@@ -539,8 +539,7 @@ void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-template <typename SignElementProto>
-std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
+std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
                                   const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
@@ -559,9 +558,8 @@ std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<SignE
 
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-template <typename SignElementProto>
 std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
+    const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
   for (const auto& sign_element : sign_elements) {
@@ -580,8 +578,7 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-template <typename SignElementProto>
-std::string get_sign_elements(const google::protobuf::RepeatedPtrField<SignElementProto>& sign_elements,
+std::string get_sign_elements(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
                               const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
@@ -595,8 +592,7 @@ std::string get_sign_elements(const google::protobuf::RepeatedPtrField<SignEleme
   return sign_elements_string;
 }
 
-template <typename SignProto>
-bool exit_destinations_exist(const SignProto& sign) {
+bool exit_destinations_exist(const valhalla::Sign& sign) {
   if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
       (sign.exit_names_size() > 0)) {
     return true;
@@ -605,16 +601,15 @@ bool exit_destinations_exist(const SignProto& sign) {
 }
 
 // Return the exit destinations
-template <typename SignProto, typename SignElementProto>
-std::string exit_destinations(const SignProto& sign) {
+std::string exit_destinations(const valhalla::Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string branch_refs = get_sign_element_refs<SignElementProto>(sign.exit_onto_streets());
+  std::string branch_refs = get_sign_element_refs(sign.exit_onto_streets());
 
   // Get the toward refs
-  std::string toward_refs = get_sign_element_refs<SignElementProto>(sign.exit_toward_locations());
+  std::string toward_refs = get_sign_element_refs(sign.exit_toward_locations());
 
   // Create the refs by combining the branch and toward ref lists
   std::string refs = branch_refs;
@@ -627,15 +622,15 @@ std::string exit_destinations(const SignProto& sign) {
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
   // Get the branch nonrefs
-  std::string branch_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_onto_streets());
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.exit_onto_streets());
 
   // Get the towards nonrefs
-  std::string toward_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_toward_locations());
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.exit_toward_locations());
 
   // Get the name nonrefs only if the others are empty
   std::string name_nonrefs;
   if (branch_nonrefs.empty() && toward_nonrefs.empty()) {
-    name_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.exit_names());
+    name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
   }
 
   // Create nonrefs by combining the branch, toward, name nonref lists
@@ -663,16 +658,15 @@ std::string exit_destinations(const SignProto& sign) {
 }
 
 // Return the guide destinations
-template<typename SignProto, typename SignElementProto>
-std::string guide_destinations(const SignProto& sign) {
+std::string guide_destinations(const valhalla::Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string branch_refs = get_sign_element_refs<SignElementProto>(sign.guide_onto_streets());
+  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
 
   // Get the toward refs
-  std::string toward_refs = get_sign_element_refs<SignElementProto>(sign.guide_toward_locations());
+  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
 
   // Create the refs by combining the branch and toward ref lists
   std::string refs = branch_refs;
@@ -685,10 +679,10 @@ std::string guide_destinations(const SignProto& sign) {
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
   // Get the branch nonrefs
-  std::string branch_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.guide_onto_streets());
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
 
   // Get the towards nonrefs
-  std::string toward_nonrefs = get_sign_element_nonrefs<SignElementProto>(sign.guide_toward_locations());
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
 
   // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
@@ -716,12 +710,11 @@ std::string guide_destinations(const SignProto& sign) {
 //   3. <ref>: <non-ref>
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-template <typename SignProto, typename SignElementProto>
-std::string destinations(const SignProto& sign) {
-  if (exit_destinations_exist<SignProto>(sign)) {
-    return exit_destinations<SignProto, SignElementProto>(sign);
+std::string destinations(const valhalla::Sign& sign) {
+  if (exit_destinations_exist(sign)) {
+    return exit_destinations(sign);
   }
-  return guide_destinations<SignProto, SignElementProto>(sign);
+  return guide_destinations(sign);
 }
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -1142,9 +1135,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
           if (intersecting_edge->has_sign()) {
-            const TripLeg_Sign& trip_leg_sign = intersecting_edge->sign();
-            // should I call "destinations()" or "guide_destinations"?
-            std::string sign_guidance = guide_destinations<TripLeg_Sign, TripLeg_SignElement>(trip_leg_sign);
+            const valhalla::Sign& trip_leg_sign = intersecting_edge->sign();
+            // should I call "destinations()" or "guide_destinations()" or "exit_destinations()"?
+            std::string sign_guidance = guide_destinations(trip_leg_sign);
             rest_stop->emplace("name", sign_guidance);
             printf("Rest stop: %s\n", sign_guidance.c_str());
           }
@@ -1454,7 +1447,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       // Add destinations
       const auto& sign = maneuver.sign();
-      std::string dest = destinations<DirectionsLeg_Maneuver_Sign, DirectionsLeg_Maneuver_SignElement>(sign);
+      std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
         // If the maneuver is an exit roundabout

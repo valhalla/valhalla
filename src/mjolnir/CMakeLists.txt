@@ -29,13 +29,9 @@ set(sources
   complexrestrictionbuilder.cc
   countryaccess.cc
   directededgebuilder.cc
-  graphtilebuilder.cc
   edgeinfobuilder.cc
-  elevationbuilder.cc
   ferry_connections.cc
-  graphenhancer.cc
   graphfilter.cc
-  hierarchybuilder.cc
   linkclassification.cc
   node_expander.cc
   osmdata.cc
@@ -44,7 +40,6 @@ set(sources
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
-  pbfgraphparser.cc
   restrictionbuilder.cc
   servicedays.cc
   speed_assigner.h
@@ -54,9 +49,14 @@ set(sources
 set (sources_with_warnings
   bssbuilder.cc
   dataquality.cc
+  elevationbuilder.cc
   graphbuilder.cc
+  graphenhancer.cc
+  graphtilebuilder.cc
   graphvalidator.cc
+  hierarchybuilder.cc
   luatagtransform.cc
+  pbfgraphparser.cc
   shortcutbuilder.cc
   transitbuilder.cc
   validatetransit.cc)
