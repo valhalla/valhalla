@@ -11,6 +11,7 @@
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
+   * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
