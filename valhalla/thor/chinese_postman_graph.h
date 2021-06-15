@@ -25,14 +25,14 @@ struct CPVertex {
 };
 
 struct CPEdge {
-  float cost;
-  CPEdge(float cost = 0) : cost(cost) {
+  Cost cost;
+  GraphId graph_id;
+  CPEdge(Cost cost = Cost(0, 0), GraphId graph_id = GraphId()) : cost(cost), graph_id(graph_id) {
   }
 };
 
 // Define the graph with the vertex as a mytuple and the vertices container as a vector
-using CPGraph =
-    boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, valhalla::sif::Cost>;
+using CPGraph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, CPEdge>;
 using Vertex = boost::graph_traits<CPGraph>::vertex_descriptor;              // Define Vertex
 using VertexItr = boost::graph_traits<CPGraph>::vertex_iterator;             // Define Vertex iterator
 using Edge = std::pair<boost::graph_traits<CPGraph>::edge_descriptor, bool>; // Define Edge
@@ -67,7 +67,7 @@ public:
   bool isVertexExist(CPVertex cpvertex);
   int numVertices();
   int numEdges();
-  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, Cost edge_cost);
+  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
   std::map<std::string, int> getUnbalancedVertices();
   std::vector<CPVertex> computeIdealEulerCycle(const CPVertex start_vertex);
   void setupDFSEulerCycle();

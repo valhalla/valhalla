@@ -132,7 +132,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     // The cost of an edge is not relevant for the graph since we need to visit all the edges.
     // For a simplicity, I put Cost(1, 1) for it.
     // The cost is only considered when matching the unbalanced nodes.
-    G.addEdge(start_vertex, end_vertex, Cost(1, 1));
+    Cost cost(1, 1);
+    CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
+    G.addEdge(start_vertex, end_vertex, cpEdge);
   }
 
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
