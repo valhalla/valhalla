@@ -89,7 +89,7 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
 inline bool IsDriveableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
          (edge.attributes.driveableforward || edge.attributes.driveablereverse);
-//         edge.attributes.importance != kServiceClass;
+  //         edge.attributes.importance != kServiceClass;
 }
 
 inline bool IsDriveForwardLink(const Edge& edge) {
@@ -123,7 +123,7 @@ struct Data {
   const OSMData& osmdata;
 };
 
-Data * d;
+Data* d;
 
 // Form a list of all nodes - sorted by highest classification of non-link
 // edges at the node.
@@ -335,6 +335,7 @@ uint64_t PrintWay(Data& data, uint32_t idx) {
   return PrintWay(data, *data.edges[idx]);
 }
 
+#if DEBUG_PRINT
 void PrintEdge(Data& data, const Edge& edge) {
   auto from = (*data.nodes[edge.sourcenode_]).node.latlng();
   auto to = (*data.nodes[edge.targetnode_]).node.latlng();
@@ -343,6 +344,7 @@ void PrintEdge(Data& data, const Edge& edge) {
   std::cout << "[" << std::fixed << std::setprecision(7) << to.lng() << "," << to.lat() << "]";
   std::cout << std::endl;
 }
+#endif
 
 /*
  * This class builds acyclic link graph starting from some exit node. This node is the root node.
@@ -381,9 +383,11 @@ struct LinkGraphBuilder {
     // Expand link edges from the exit node
     for (const auto& startedge : exit_bundle.node_edges) {
       uint64_t way_id = PrintWay(data_, startedge.first);
+#if DEBUG_PRINT
       std::cout << "Operator()\n";
       std::cout << way_id << '\n';
       PrintEdge(data_, startedge.first);
+#endif
       // Get the edge information. Skip non-link edges, link edges that are
       // not driveable in the forward direction, and link edges already
       // tested for reclassification
@@ -452,8 +456,10 @@ struct LinkGraphBuilder {
     // Expand link edges from the node
     for (const auto& edge : bundle) {
       uint64_t way_id = PrintWay(data_, edge.first);
+#if DEBUG_PRINT
       std::cout << "expandGraphNode()\n";
       PrintEdge(data_, edge.first);
+#endif
       // Use only links drivable in forward direction
       if (!IsDriveForwardLink(edge.first)) {
         continue;
@@ -511,9 +517,11 @@ bool dfs(size_t edge_idx,
          Data& data,
          std::unordered_set<size_t>& nodes_in_progress,
          Name& to_name) {
+#if DEBUG_PRINT
   auto Print = [](const midgard::PointLL& pos) {
     std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat() << std::endl;
   };
+#endif
   auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
   //  nodes_in_progress.insert(edge.targetnode_);
   nodes_in_progress.insert(edge_idx);
@@ -522,11 +530,15 @@ bool dfs(size_t edge_idx,
   bool res = false;
   for (const auto& i : bundle.node_edges) {
     if (i.first.attributes.link) {
+#if DEBUG_PRINT
       std::cout << "Skipping link\n";
+#endif
       continue;
     }
+#if DEBUG_PRINT
     std::cout << "Candidate\n";
     PrintEdge(data, i.first);
+#endif
     //    Print((*data.nodes[i.first.targetnode_]).node.latlng());
     if (nodes_in_progress.count(i.second))
       continue;
@@ -630,10 +642,12 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       // Check the non-link count
       ends_have_non_link = ends_have_non_link && link_graph[current_idx].bundle.non_link_count > 0;
 
+#if DEBUG_PRINT
       std::cout << "\nBefore Print link edges\n";
       for (auto idx : link_edges) {
         PrintEdge(data, data.edges[idx]);
       }
+#endif
 
       // leaf classification may be invalid in case of cycle; use parent's
       // classification instead or just skip these links
@@ -662,6 +676,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
                                   !has_exit && ends_have_non_link)) {
         if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
 
+#if DEBUG_PRINT
           auto Print = [](const midgard::PointLL& pos) {
             std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
                       << std::endl;
@@ -669,6 +684,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
           auto Print2 = [&](const Edge& edge) {
             Print((*data.nodes[edge.targetnode_]).node.latlng());
           };
+#endif
           Name to_name;
           for (auto edge_idx : leaf.bundle.node_edges) {
             if (edge_idx.second == link_edges.front())
@@ -680,6 +696,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
             /// TODO: assert size == 1
             break;
           }
+#if DEBUG_PRINT
           std::cout << "Looking for name: <";
           bool first = true;
           for (auto i : to_name.names) {
@@ -694,6 +711,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
           for (auto idx : link_edges) {
             PrintEdge(data, data.edges[idx]);
           }
+#endif
 
           auto bundle = [&]() {
             Edge edge = data.edges[link_edges.back()];
@@ -706,11 +724,15 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
           //                                           data.nodes, data.edges);
           for (auto to : bundle.node_edges) {
             if (to.first.attributes.link) {
+#if DEBUG_PRINT
               std::cout << "Skipping link\n";
+#endif
               continue;
             }
+#if DEBUG_PRINT
             std::cout << "From Edge\n";
             PrintEdge(data, to.first);
+#endif
             uint64_t way_id = (*data.ways[to.first.wayindex_]).way_id();
             if (to.second == link_edges.back())
               continue;
@@ -733,9 +755,12 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
               }
             }
           }
-        } else {
+        }
+#if DEBUG_PRINT
+        else {
           std::cout << "Skipping as bidir\n";
         }
+#endif
       }
 
       // Reclassify link edges to the new classification.
