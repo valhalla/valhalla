@@ -58,7 +58,7 @@ std::map<std::string, midgard::PointLL> OnewayTest::layout = {};
 
 TEST_P(OnewayTest, TestOneways) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   test_ways.emplace("DG", std::get<1>(GetParam()));
 
@@ -78,7 +78,7 @@ TEST_P(OnewayTest, TestOneways) {
 
 TEST_P(OnewayTest, TestReverseOneways) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -113,7 +113,7 @@ TEST_P(OnewayTest, TestReverseOneways) {
 
 TEST_P(OnewayTest, TestOnewaysWithYes) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -149,7 +149,7 @@ TEST_P(OnewayTest, TestOnewaysWithYes) {
 
 TEST_P(OnewayTest, TestOnewaysWithOnewayNo) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -184,7 +184,7 @@ TEST_P(OnewayTest, TestOnewaysWithOnewayNo) {
 
 TEST_P(OnewayTest, TestOnewaysWithNo) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
@@ -219,7 +219,7 @@ TEST_P(OnewayTest, TestOnewaysWithNo) {
 
 TEST_P(OnewayTest, TestSharedLane) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
   way_attributes.emplace("cycleway", "shared_lane");
@@ -242,7 +242,7 @@ TEST_P(OnewayTest, TestSharedLane) {
 
 TEST_P(OnewayTest, TestOpposite) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   auto way_attributes = std::get<1>(GetParam());
   way_attributes.emplace("cycleway", "opposite");
@@ -269,7 +269,7 @@ TEST_P(OnewayTest, TestOpposite) {
 
 TEST_P(OnewayTest, TestOppositeWithNo) {
 
-  auto param_cost = std::get<0>(GetParam());
+  const auto& param_cost = std::get<0>(GetParam());
   auto test_ways = ways;
   bool is_psv = false;
   auto way_attributes = std::get<1>(GetParam());
