@@ -7,6 +7,7 @@
 #include "mjolnir/osmaccess.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <future>
