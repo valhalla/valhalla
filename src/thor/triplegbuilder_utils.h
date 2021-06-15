@@ -339,11 +339,11 @@ static void AddSignInfo(const AttributesController& controller,
                         valhalla::Sign* trip_sign) {
 
   if (!edge_signs.empty()) {
-    for (const auto &sign : edge_signs) {
+    for (const auto& sign : edge_signs) {
       switch (sign.type()) {
         case valhalla::baldr::Sign::Type::kExitNumber: {
           if (controller.attributes.at(kEdgeSignExitNumber)) {
-            auto *trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
+            auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
             trip_sign_exit_number->set_text(sign.text());
             trip_sign_exit_number->set_is_route_number(sign.is_route_num());
           }
@@ -351,7 +351,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kExitBranch: {
           if (controller.attributes.at(kEdgeSignExitBranch)) {
-            auto *trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+            auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
             trip_sign_exit_onto_street->set_text(sign.text());
             trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
           }
@@ -359,8 +359,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kExitToward: {
           if (controller.attributes.at(kEdgeSignExitToward)) {
-            auto *trip_sign_exit_toward_location =
-                trip_sign->mutable_exit_toward_locations()->Add();
+            auto* trip_sign_exit_toward_location = trip_sign->mutable_exit_toward_locations()->Add();
             trip_sign_exit_toward_location->set_text(sign.text());
             trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
           }
@@ -368,7 +367,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kExitName: {
           if (controller.attributes.at(kEdgeSignExitName)) {
-            auto *trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
+            auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
             trip_sign_exit_name->set_text(sign.text());
             trip_sign_exit_name->set_is_route_number(sign.is_route_num());
           }
@@ -376,7 +375,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kGuideBranch: {
           if (controller.attributes.at(kEdgeSignGuideBranch)) {
-            auto *trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
+            auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
             trip_sign_guide_onto_street->set_text(sign.text());
             trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
           }
@@ -384,7 +383,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kGuideToward: {
           if (controller.attributes.at(kEdgeSignGuideToward)) {
-            auto *trip_sign_guide_toward_location =
+            auto* trip_sign_guide_toward_location =
                 trip_sign->mutable_guide_toward_locations()->Add();
             trip_sign_guide_toward_location->set_text(sign.text());
             trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
@@ -393,7 +392,7 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
           if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
-            auto *trip_sign_guidance_view_junction =
+            auto* trip_sign_guidance_view_junction =
                 trip_sign->mutable_guidance_view_junctions()->Add();
             trip_sign_guidance_view_junction->set_text(sign.text());
             trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
@@ -402,16 +401,14 @@ static void AddSignInfo(const AttributesController& controller,
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
           if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
-            auto *trip_sign_guidance_view_signboard =
+            auto* trip_sign_guidance_view_signboard =
                 trip_sign->mutable_guidance_view_signboards()->Add();
             trip_sign_guidance_view_signboard->set_text(sign.text());
             trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
           }
           break;
         }
-        default: {
-          break;
-        }
+        default: { break; }
       }
     }
   }
@@ -510,16 +507,9 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   if (intersecting_de->use() == Use::kRestArea) {
     GraphId endnode = intersecting_de->endnode();
     valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(endnode);
-
-//    PointLL pt = t2->get_node_ll(endnode);
-//    printf("pt: %.6f, %.6f\n", pt.lat(), pt.lng());
-//    printf("Rest area:\n");
-//    printf("t2->id().level() = %d\n", t2->id().level());
-//    printf("t2->id().tileid() = %d\n", t2->id().tileid());
-
-    const DirectedEdge * de0 = t2->directededge(0);
+    const DirectedEdge* zeroth_de = t2->directededge(0);
     if (intersecting_de->sign()) {
-      size_t idx = intersecting_de - de0;
+      size_t idx = intersecting_de - zeroth_de;
       std::vector<SignInfo> edge_signs = t2->GetSigns(idx);
       if (!edge_signs.empty()) {
         valhalla::Sign* trip_sign = intersecting_edge->mutable_sign();
@@ -581,7 +571,8 @@ void AddIntersectingEdges(const AttributesController& controller,
     // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
     // the current edge in the path AND the superceded edge of the current edge in the path
     // if the current edge in the path is a shortcut
-    if (intersecting_edge->is_shortcut() || intersecting_edge->localedgeidx() == prior_opp_local_index ||
+    if (intersecting_edge->is_shortcut() ||
+        intersecting_edge->localedgeidx() == prior_opp_local_index ||
         intersecting_edge->localedgeidx() == directededge->localedgeidx() ||
         (directededge->is_shortcut() && directededge->shortcut() & intersecting_edge->superseded())) {
       continue;
@@ -606,13 +597,15 @@ void AddIntersectingEdges(const AttributesController& controller,
       const DirectedEdge* intersecting_edge2 = endtile->directededge(nodeinfo2->edge_index());
       for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, intersecting_edge2++) {
         // Skip shortcut edges and edges on the path
-        if (intersecting_edge2->is_shortcut() || intersecting_edge2->localedgeidx() == prior_opp_local_index ||
+        if (intersecting_edge2->is_shortcut() ||
+            intersecting_edge2->localedgeidx() == prior_opp_local_index ||
             intersecting_edge2->localedgeidx() == directededge->localedgeidx()) {
           continue;
         }
 
         AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
-                                intersecting_edge2->localedgeidx(), nodeinfo2, trip_node, intersecting_edge2);
+                                intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
+                                intersecting_edge2);
       }
     }
   }

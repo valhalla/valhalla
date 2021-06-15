@@ -540,7 +540,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-
   // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs

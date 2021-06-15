@@ -539,8 +539,9 @@ void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
-                                  const std::string& delimiter = kSignElementDelimiter) {
+std::string
+get_sign_element_refs(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
+                      const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
     // Only process refs
@@ -578,8 +579,9 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_elements(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
-                              const std::string& delimiter = kSignElementDelimiter) {
+std::string
+get_sign_elements(const google::protobuf::RepeatedPtrField<valhalla::SignElement>& sign_elements,
+                  const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
     // If the sign_elements_string is not empty, append specified delimiter
@@ -1057,7 +1059,6 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return std::make_pair(names, refs);
 }
 
-
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -1136,10 +1137,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
           rest_stop->emplace("type", std::string("rest_area"));
           if (intersecting_edge->has_sign()) {
             const valhalla::Sign& trip_leg_sign = intersecting_edge->sign();
-            // should I call "destinations()" or "guide_destinations()" or "exit_destinations()"?
-            std::string sign_guidance = guide_destinations(trip_leg_sign);
-            rest_stop->emplace("name", sign_guidance);
-            printf("Rest stop: %s\n", sign_guidance.c_str());
+            // I've looked at the results from guide_destinations(), destinations(), and
+            // exit_destinations(). exit_destinations() doe not contain rest-area names.
+            // guide_destinations() and destinations() return the same string value for
+            // the rest area name. So I've decided to use guide_destinations().
+            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
+            rest_stop->emplace("name", guide_destinations_str);
           }
           intersection->emplace("rest_stop", rest_stop);
           break;
@@ -1312,7 +1315,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   }
   return intersections;
 }
-
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
