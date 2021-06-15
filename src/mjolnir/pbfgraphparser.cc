@@ -77,7 +77,7 @@ public:
       const auto node_to_loop_way_it = node_to_loop_way_.find(osm_way_node.node.osmid_);
       if (node_to_loop_way_it != node_to_loop_way_.cend() &&
           osm_way.way_id() != node_to_loop_way_it->second && osm_way.use() == Use::kRoad) {
-        ++loops_meta_.at(node_to_loop_way_it->second).count_of_adjacent_ways;
+        loops_meta_.at(node_to_loop_way_it->second).add_id_of_intersection(osm_way_node.node.osmid_);
       }
 
       ++count_node;
@@ -87,13 +87,28 @@ public:
   }
 
 private:
-  // loop_meta is a helper struct. It's used as a std::pair with named fields.
-  struct loop_meta {
-    explicit loop_meta(size_t way_index) : way_index(way_index), count_of_adjacent_ways(0) {
+  // loop_meta is a helper class that stores loop info.
+  class loop_meta {
+  public:
+    explicit loop_meta(size_t way_index) : way_index_(way_index) {
     }
 
-    size_t way_index;
-    size_t count_of_adjacent_ways;
+    size_t get_way_index() const {
+      return way_index_;
+    }
+
+    bool is_culdesac() const {
+      return node_ids_of_intersections_.size() <= 1;
+    }
+
+    void add_id_of_intersection(uint64_t node_id) {
+      node_ids_of_intersections_.insert(node_id);
+    }
+
+  private:
+    size_t way_index_;
+    // Stores nodes that are intersections of loop road loop and adjacent roads.
+    std::unordered_set<uint64_t> node_ids_of_intersections_;
   };
 
   // Sets "culdesac" labels to loop roads and saves ways.
@@ -101,8 +116,8 @@ private:
     size_t number_of_culdesac = 0;
     for (const auto& loop_way_id_to_meta : loops_meta_) {
       const auto& meta = loop_way_id_to_meta.second;
-      if (meta.count_of_adjacent_ways <= 1) {
-        auto way_it = osm_way_seq.at(meta.way_index);
+      if (meta.is_culdesac()) {
+        auto way_it = osm_way_seq.at(meta.get_way_index());
         auto way = *way_it;
         way.set_use(Use::kCuldesac);
         way_it = way;
