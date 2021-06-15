@@ -73,8 +73,8 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // Names must match
   // TODO - this allows matches in any order. Do we need to maintain order?
   // TODO - should allow near matches?
-  std::vector<std::string> edge1names = tile->GetNames(edge1->edgeinfo_offset());
-  std::vector<std::string> edge2names = tile->GetNames(edge2->edgeinfo_offset());
+  std::vector<std::string> edge1names = tile->GetNames(edge1);
+  std::vector<std::string> edge2names = tile->GetNames(edge2);
   if (edge1names.size() != edge2names.size()) {
     return false;
   }
@@ -424,10 +424,10 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       }
 
       // Get names - they apply over all edges of the shortcut
-      auto names = tile->GetNames(directededge->edgeinfo_offset());
-      auto tagged_names = tile->GetTaggedNames(directededge->edgeinfo_offset());
-      auto pronunciations = tile->GetTaggedNames(directededge->edgeinfo_offset(), true);
-      auto types = tile->GetTypes(directededge->edgeinfo_offset());
+      auto names = edgeinfo.GetNames();
+      auto tagged_names = edgeinfo.GetTaggedNames();
+      auto pronunciations = edgeinfo.GetTaggedNames(true);
+      auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
       // across edges with different restrictions.
@@ -683,10 +683,10 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(),
-                                    tile->GetNames(directededge->edgeinfo_offset()),
-                                    tile->GetTaggedNames(directededge->edgeinfo_offset()),
-                                    tile->GetTaggedNames(directededge->edgeinfo_offset(), true),
-                                    tile->GetTypes(directededge->edgeinfo_offset()), added);
+                                    edgeinfo.GetNames(),
+                                    edgeinfo.GetTaggedNames(),
+                                    edgeinfo.GetTaggedNames(true),
+                                    edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Set the superseded mask - this is the shortcut mask that supersedes this edge

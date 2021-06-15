@@ -41,6 +41,11 @@ namespace {
 constexpr uint32_t kRelativeStraightTurnDegreeLowerBound = 330;
 constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
 
+constexpr uint32_t kTurnChannelTurnDegreeLowerBound = 290;
+constexpr uint32_t kTurnChannelTurnDegreeUpperBound = 70;
+
+constexpr float kShortTurnChannelThreshold = 0.036f; // Kilometers
+
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
 // Kilometers - picked since the next rounded maneuver announcement will happen
@@ -1505,14 +1510,19 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       case Maneuver::RelativeDirection::KReverse: {
-        switch (Turn::GetType(maneuver.turn_degree())) {
-          case Turn::Type::kSharpLeft: {
+        if (maneuver.drive_on_right()) {
+          if (maneuver.turn_degree() < 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
+            LOG_TRACE("ManeuverType=RAMP_RIGHT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
             LOG_TRACE("ManeuverType=RAMP_LEFT");
-            break;
           }
-          // For now default to right
-          default: {
+        } else {
+          if (maneuver.turn_degree() > 180) {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
+            LOG_TRACE("ManeuverType=RAMP_LEFT");
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
             LOG_TRACE("ManeuverType=RAMP_RIGHT");
           }
@@ -2233,6 +2243,20 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                           prev_edge->road_class())) {
     return true;
   }
+  // Determine if road split is a fork
+  else if (curr_edge->IsForkForward(
+               GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+           !prev_edge->IsRampUse() && !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
+           !prev_edge->IsRailFerryUse() && !curr_edge->IsRampUse() &&
+           !curr_edge->IsTurnChannelUse() && !curr_edge->IsFerryUse() &&
+           !curr_edge->IsRailFerryUse() &&
+           node->HasRoadForkTraversableIntersectingEdge(prev_edge->end_heading(),
+                                                        prev_edge->travel_mode(),
+                                                        ((prev_edge->road_class() == kServiceOther) ||
+                                                         (curr_edge->road_class() ==
+                                                          kServiceOther)))) {
+    return true;
+  }
   // Determine if highway/ramp lane bifurcation
   else if (node->intersecting_edge_size() == 1) {
     auto xedge = node->GetIntersectingEdge(0);
@@ -2619,13 +2643,34 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
 
     Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
 
+    auto turn_channel_end_node_index = curr_man->end_node_index();
+    auto node = trip_path_->GetEnhancedNode(turn_channel_end_node_index);
+    auto prev_edge = trip_path_->GetPrevEdge(turn_channel_end_node_index);
+    auto curr_edge = trip_path_->GetCurrEdge(turn_channel_end_node_index);
+
+    // Validate node and edges
+    if (!node || !prev_edge || !curr_edge) {
+      return false;
+    }
+    // Calculate this value in case next maneuver turn degree is modified
+    // because of internal intersection collapsing
+    auto post_turn_channel_turn_degree =
+        GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
+
+    auto is_within_turn_channel_range = [](uint32_t turn_degree) -> bool {
+      return ((turn_degree >= kTurnChannelTurnDegreeLowerBound) ||
+              (turn_degree <= kTurnChannelTurnDegreeUpperBound));
+    };
+
     // Turn channel cannot exceed kMaxTurnChannelLength (200m)
     // and turn channel cannot have forward traversable intersecting edge
-    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    // and (the post turn channel degree is somewhat straight or the turn channel is short)
     bool common_turn_channel_criteria =
         ((curr_man->length(Options::kilometers) <= (kMaxTurnChannelLength * kKmPerMeter)) &&
          !node->HasForwardTraversableIntersectingEdge(curr_man->end_heading(),
-                                                      curr_man->travel_mode()));
+                                                      curr_man->travel_mode()) &&
+         (is_within_turn_channel_range(post_turn_channel_turn_degree) ||
+          (curr_man->length(Options::kilometers) < kShortTurnChannelThreshold)));
 
     // Verify common turn channel criteria
     if (!common_turn_channel_criteria) {
@@ -2640,7 +2685,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kLeft) &&
         ((new_turn_type == Turn::Type::kSlightRight) || (new_turn_type == Turn::Type::kRight) ||
-         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpRight) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 
@@ -2652,7 +2698,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
          (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) &&
         (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kRight) &&
         ((new_turn_type == Turn::Type::kSlightLeft) || (new_turn_type == Turn::Type::kLeft) ||
-         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kStraight))) {
+         (new_turn_type == Turn::Type::kSharpLeft) || (new_turn_type == Turn::Type::kReverse) ||
+         (new_turn_type == Turn::Type::kStraight))) {
       return true;
     }
 

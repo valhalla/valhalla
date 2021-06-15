@@ -357,7 +357,10 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      opp_pred_edge = graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      if (opp_pred_edge == nullptr) {
+        continue;
+      }
     }
 
     // Check if we should stop
@@ -776,6 +779,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it
@@ -854,15 +860,18 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it
-      graph_tile_ptr opp_tile = nullptr;
-      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      graph_tile_ptr opp_tile = tile;
+      const DirectedEdge* opp_dir_edge = nullptr;
+      auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_dir_edge, opp_tile);
+      if (opp_dir_edge == nullptr) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get the cost
       uint8_t flow_sources;
@@ -894,8 +903,7 @@ void Dijkstras::SetDestinationLocations(
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
-      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id),
-                      multipath_ ? path_id : 0);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }
   }
 }
@@ -929,6 +937,9 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the tile at the end node. Skip if tile not found as we won't be

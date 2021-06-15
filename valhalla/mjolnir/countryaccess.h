@@ -24,16 +24,18 @@ ProcessAccess(const uint32_t current_access, const uint32_t country_access, cons
 /**
  * Get the new access for a DE.  If a user entered tags then we will not update
  * the access.  Also, we have to take into account if the DE is oneway or not.
- * @param  current_access   Current access for the DE.
- * @param  country_access   Country specific access.
- * @param  oneway_vehicle   Is the DE oneway in the opposite direction for vehicles?
- * @param  oneway_bicycle   Is the DE oneway in the opposite direction for bicycles?
- * @param  target           User entered access tags.
+ * @param  current_access     Current access for the DE.
+ * @param  country_access     Country specific access.
+ * @param  oneway_vehicle     Is the DE oneway in the opposite direction for vehicles?
+ * @param  oneway_bicycle     Is the DE oneway in the opposite direction for bicycles?
+ * @param  oneway_pedestrian  Is the DE oneway in the opposite direction for pedestrians?
+ * @param  target             User entered access tags.
  */
 uint32_t GetAccess(const uint32_t current_access,
                    const uint32_t country_access,
                    const bool oneway_vehicle,
                    const bool oneway_bicycle,
+                   const bool oneway_pedestrian,
                    const OSMAccess& target);
 
 /**

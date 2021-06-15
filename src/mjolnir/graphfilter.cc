@@ -142,16 +142,15 @@ void FilterTiles(GraphReader& reader,
         // highway hierarchy can cross base tiles! Use a hash based on the
         // encoded shape plus way Id.
         bool added;
-        uint32_t idx = directededge->edgeinfo_offset();
         auto edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
-                                    edgeinfo.speed_limit(), encoded_shape, tile->GetNames(idx),
-                                    tile->GetTaggedNames(idx), tile->GetTaggedNames(idx, true),
-                                    tile->GetTypes(idx), added);
+                                    edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
+                                    edgeinfo.GetTaggedNames(), edgeinfo.GetTaggedNames(true),
+                                    edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
         endnode.push_back(directededge->endnode());
@@ -227,7 +226,6 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   LOG_INFO("Update end nodes of directed edges");
 
   int found = 0;
-  int not_found = 0;
 
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);

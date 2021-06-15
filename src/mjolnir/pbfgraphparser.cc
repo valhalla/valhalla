@@ -33,9 +33,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Absurd classification.
-constexpr uint32_t kAbsurdRoadClass = 777777;
-
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
 int get_number(const std::string& tag, const std::string& value) { // NOLINT
@@ -59,7 +56,7 @@ public:
   }
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : osmdata_(osmdata), lua_(get_lua(pt)) {
+      : lua_(get_lua(pt)), osmdata_(osmdata) {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -212,6 +209,9 @@ public:
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
+    tag_handlers_["pedestrian_forward"] = [this]() {
+      way_.set_pedestrian_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["auto_backward"] = [this]() {
       way_.set_auto_backward(tag_.second == "true" ? true : false);
     };
@@ -239,8 +239,8 @@ public:
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["pedestrian"] = [this]() {
-      way_.set_pedestrian(tag_.second == "true" ? true : false);
+    tag_handlers_["pedestrian_backward"] = [this]() {
+      way_.set_pedestrian_backward(tag_.second == "true" ? true : false);
     };
     tag_handlers_["private"] = [this]() {
       // Make sure we do not unset this flag if set previously
@@ -1480,10 +1480,6 @@ public:
       has_surface_ = false;
     }
 
-    const auto& highway_junction = results.find("highway");
-    bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
-
     way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
@@ -2029,7 +2025,7 @@ public:
                   tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
                   tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
                   tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
-                  tag.first == "restriction:emergency") &&
+                  tag.first == "restriction:emergency" || tag.first == "restriction:foot") &&
                  !tag.second.empty()) {
         isRestriction = true;
         if (tag.first != "restriction") {
@@ -2050,6 +2046,10 @@ public:
           modes |= kTruckAccess;
         } else if (tag.first == "restriction:emergency") {
           modes |= kEmergencyAccess;
+        } else if (tag.first == "restriction:psv") {
+          modes |= (kTaxiAccess | kBusAccess);
+        } else if (tag.first == "restriction:foot") {
+          modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
         RestrictionType type = (RestrictionType)std::stoi(tag.second);
@@ -2279,6 +2279,8 @@ public:
               modes = modes & ~kTruckAccess;
             } else if (t == "emergency") {
               modes = modes & ~kEmergencyAccess;
+            } else if (t == "foot") {
+              modes = modes & ~(kPedestrianAccess | kWheelchairAccess);
             }
           }
         }
@@ -2507,9 +2509,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
@@ -2577,9 +2579,9 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
@@ -2646,9 +2648,9 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);

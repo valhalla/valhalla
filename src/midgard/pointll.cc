@@ -141,7 +141,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
                                    PrecisionT forward_dist_cutoff,
                                    PrecisionT reverse_dist_cutoff) const {
   // setup
-  if (pts.empty() || pivot_index < 0 || pivot_index > pts.size() - 1)
+  if (pts.empty() || pivot_index < 0 || pivot_index > static_cast<int>(pts.size()) - 1)
     return std::make_tuple(GeoPoint(), std::numeric_limits<PrecisionT>::max(), -1);
 
   int closest_segment = pivot_index;

@@ -21,28 +21,13 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 
-if (UNIX)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    graphenhancer.cc
-    hierarchybuilder.cc
-    luatagtransform.cc
-    osmdata.cc
-    osmrestriction.cc
-    speed_assigner.h
-    PROPERTIES COMPILE_FLAGS "-Werror -Wall")
-endif (UNIX)
-
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   admin.cc
   adminbuilder.cc
-  bssbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc
-  dataquality.cc
   directededgebuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
@@ -65,15 +50,27 @@ set(sources
   pbfgraphparser.cc
   restrictionbuilder.cc
   servicedays.cc
-  shortcutbuilder.cc
   speed_assigner.h
   timeparsing.cc
+  util.cc)
+
+set (sources_with_warnings
+  bssbuilder.cc
+  dataquality.cc
+  shortcutbuilder.cc
   transitbuilder.cc
-  util.cc
   validatetransit.cc)
 
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+          ${sources}
+          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
+endif ()
+
 valhalla_module(NAME mjolnir
-  SOURCES ${sources}
+  SOURCES ${sources} ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
