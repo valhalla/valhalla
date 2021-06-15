@@ -131,7 +131,7 @@ protected:
 
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -291,7 +291,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");

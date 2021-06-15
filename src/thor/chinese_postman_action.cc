@@ -141,8 +141,12 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
   if (G.getUnbalancedVertices().size() == 0) {
-    std::vector<CPVertex> cpVerticesOrder = G.computeIdealEulerCycle(originVertex);
+    std::vector<CPEdge> cpEdgesOrder = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
+    for (auto e : cpEdgesOrder) {
+      std::cout << e.graph_id << ", ";
+    }
+
   } else {
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
