@@ -16,7 +16,7 @@
    * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
    * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844)
    * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
-   * ADDED: Exposed HERE rest-area names in passive maneuvers [#3150](https://github.com/valhalla/valhalla/pull/3150)
+   * ADDED: Exposing rest-area names in passive maneuvers [#3150](https://github.com/valhalla/valhalla/pull/3150)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
