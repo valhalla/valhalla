@@ -187,7 +187,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   };
 }
 
-TEST_P(AvoidTest, TestAvoidShortcuts) {
+TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
   options.set_costing(valhalla::Costing::truck);
   auto* co = options.add_costing_options();
