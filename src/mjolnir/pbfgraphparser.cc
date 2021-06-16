@@ -84,7 +84,7 @@ public:
       ++count_node;
     }
 
-    fix(osm_way_node_seq, osm_way_seq);
+    fix(osm_way_seq);
   }
 
 private:
@@ -113,7 +113,7 @@ private:
   };
 
   // Sets "culdesac" labels to loop roads and saves ways.
-  void fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+  void fix(sequence<OSMWay>& osm_way_seq) {
     size_t number_of_culdesac = 0;
     for (const auto& loop_way_id_to_meta : loops_meta_) {
       const auto& meta = loop_way_id_to_meta.second;
