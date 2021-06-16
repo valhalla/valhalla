@@ -84,14 +84,15 @@ TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_TurnLeft_P
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Turn left onto Patuxent Woods Drive.", "",
       "Drive north on Broken Land Parkway. Then Turn left onto Patuxent Woods Drive.",
       "Continue for 70 meters.");
 
   // Verify the turn left onto Patuxent Woods Drive instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Patuxent Woods Drive.",
-      "Turn left onto Patuxent Woods Drive.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Patuxent Woods Drive.",
       "Turn left onto Patuxent Woods Drive. Then You will arrive at your destination.",
       "Continue for 40 meters.");
 
@@ -127,14 +128,15 @@ TEST_F(InstructionsInternalIntersection,
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Turn left onto Patuxent Woods Drive.", "",
       "Drive north on Broken Land Parkway. Then Turn left onto Patuxent Woods Drive.",
       "Continue for 20 meters.");
 
   // Verify the turn left onto Patuxent Woods Drive instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Patuxent Woods Drive.",
-      "Turn left onto Patuxent Woods Drive.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Patuxent Woods Drive.",
       "Turn left onto Patuxent Woods Drive. Then You will arrive at your destination.",
       "Continue for 40 meters.");
 }
@@ -161,14 +163,15 @@ TEST_F(InstructionsInternalIntersection,
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Turn left onto Snowden River Parkway.", "",
       "Drive north on Broken Land Parkway. Then Turn left onto Snowden River Parkway.",
       "Continue for 70 meters.");
 
   // Verify the turn left onto Snowden River Parkway instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Snowden River Parkway.",
-      "Turn left onto Snowden River Parkway.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Snowden River Parkway.",
       "Turn left onto Snowden River Parkway. Then You will arrive at your destination.",
       "Continue for 10 meters.");
 }
@@ -194,14 +197,15 @@ TEST_F(InstructionsInternalIntersection,
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Turn left onto Snowden River Parkway.", "",
       "Drive north on Broken Land Parkway. Then Turn left onto Snowden River Parkway.",
       "Continue for 20 meters.");
 
   // Verify the turn left onto Snowden River Parkway instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Snowden River Parkway.",
-      "Turn left onto Snowden River Parkway.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Snowden River Parkway.",
       "Turn left onto Snowden River Parkway. Then You will arrive at your destination.",
       "Continue for 10 meters.");
 }
@@ -227,14 +231,15 @@ TEST_F(InstructionsInternalIntersection, DriveSouth_BrokenLandParkway_TurnLeft_S
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive south on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive south on Broken Land Parkway.",
+      "Drive south. Then Turn left onto Snowden River Parkway.", "",
       "Drive south on Broken Land Parkway. Then Turn left onto Snowden River Parkway.",
       "Continue for 70 meters.");
 
   // Verify the turn left onto Snowden River Parkway instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Snowden River Parkway.",
-      "Turn left onto Snowden River Parkway.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Snowden River Parkway.",
       "Turn left onto Snowden River Parkway. Then You will arrive at your destination.",
       "Continue for 40 meters.");
 }
@@ -260,14 +265,15 @@ TEST_F(InstructionsInternalIntersection, DriveEast_PatuxentWoodsDrive_TurnLeft_B
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive east on Patuxent Woods Drive.", "",
+      result, maneuver_index, "Drive east on Patuxent Woods Drive.",
+      "Drive east. Then Turn left onto Broken Land Parkway.", "",
       "Drive east on Patuxent Woods Drive. Then Turn left onto Broken Land Parkway.",
       "Continue for 40 meters.");
 
   // Verify the turn left onto Broken Land Parkway instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Broken Land Parkway.",
-      "Turn left onto Broken Land Parkway.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Broken Land Parkway.",
       "Turn left onto Broken Land Parkway. Then You will arrive at your destination.",
       "Continue for 70 meters.");
 }
@@ -293,14 +299,15 @@ TEST_F(InstructionsInternalIntersection, DriveWest_SnowdenRiverParkway_TurnLeft_
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive west on Snowden River Parkway.", "",
+      result, maneuver_index, "Drive west on Snowden River Parkway.",
+      "Drive west. Then Turn left onto Broken Land Parkway.", "",
       "Drive west on Snowden River Parkway. Then Turn left onto Broken Land Parkway.",
       "Continue for 40 meters.");
 
   // Verify the turn left onto Broken Land Parkway instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Broken Land Parkway.",
-      "Turn left onto Broken Land Parkway.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Broken Land Parkway.",
       "Turn left onto Broken Land Parkway. Then You will arrive at your destination.",
       "Continue for 70 meters.");
 }
@@ -327,7 +334,8 @@ TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_UturnLeft_
 
   // Verify start distance includes internal edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Drive north on Broken Land Parkway.", "",
+      result, maneuver_index, "Drive north on Broken Land Parkway.",
+      "Drive north. Then Make a left U-turn at Snowden River Parkway.", "",
       "Drive north on Broken Land Parkway. Then Make a left U-turn at Snowden River Parkway.",
       "Continue for 70 meters.");
 
@@ -335,6 +343,7 @@ TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_UturnLeft_
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index,
       "Make a left U-turn at Snowden River Parkway to stay on Broken Land Parkway.",
+      "Make a left U-turn. Then You will arrive at your destination.",
       "Make a left U-turn at Snowden River Parkway.",
       "Make a left U-turn at Snowden River Parkway to stay on Broken Land Parkway. Then You will arrive at your destination.",
       "Continue for 80 meters.");
