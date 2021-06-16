@@ -54,7 +54,7 @@ public:
                      size_t osm_way_index,
                      const std::vector<uint64_t>& osm_node_ids) {
     loops_meta_.emplace(osm_way_id, loop_meta(osm_way_index));
-    for (auto const osm_node_id : osm_node_ids)
+    for (auto osm_node_id : osm_node_ids)
       node_to_loop_way_.emplace(osm_node_id, osm_way_id);
   }
 
