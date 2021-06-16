@@ -16,6 +16,13 @@
 namespace valhalla {
 namespace odin {
 
+const bool kLimitByConseuctiveCount = true;
+constexpr uint32_t kElementMaxCount = 4;
+constexpr uint32_t kVerbalAlertElementMaxCount = 1;
+constexpr uint32_t kVerbalPreElementMaxCount = 2;
+constexpr uint32_t kVerbalPostElementMaxCount = 2;
+const std::string kVerbalDelim = ", ";
+
 /**
  * Returns the specified item surrounded with quotes.
  * @param item  specified text to surround with quotes
@@ -67,6 +74,10 @@ const std::unordered_map<std::string, std::string>& get_locales_json();
  * @return lane direction string.
  */
 std::string turn_lane_direction(uint16_t turn_lane);
+
+size_t get_word_count(const std::string& street_name);
+
+std::size_t strlen_utf8(const std::string& str);
 
 } // namespace odin
 } // namespace valhalla

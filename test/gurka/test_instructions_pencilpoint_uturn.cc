@@ -48,6 +48,7 @@ TEST_F(InstructionsPencilPointUturn, UturnLeft) {
   // prev2curr_turn_degree=216
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a left U-turn to stay on Silverbrook Road.",
+      "Make a left U-turn. Then You will arrive at your destination.",
       "Make a left U-turn to stay on Silverbrook Road.",
       "Make a left U-turn to stay on Silverbrook Road. Then You will arrive at your destination.",
       "Continue for 50 meters.");

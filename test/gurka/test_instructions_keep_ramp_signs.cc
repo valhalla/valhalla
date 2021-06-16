@@ -68,7 +68,7 @@ TEST_F(InstructionsKeepRampSigns, KeepRightBranchToward) {
   // Verify the keep right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Keep right to take A 61 toward Koblenz.",
-                                                            "Keep right to take A 61.",
+                                                            "", "Keep right to take A 61.",
                                                             "Keep right to take A 61 toward Koblenz.",
                                                             "Continue for 4 kilometers.");
 }
@@ -86,7 +86,7 @@ TEST_F(InstructionsKeepRampSigns, KeepLeftBranchToward) {
 
   // Verify the keep left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Keep left to take A 4 toward Köln.",
+                                                            "Keep left to take A 4 toward Köln.", "",
                                                             "Keep left to take A 4.",
                                                             "Keep left to take A 4 toward Köln.",
                                                             "Continue for 4 kilometers.");
@@ -106,7 +106,7 @@ TEST_F(InstructionsKeepRampSigns, KeepStraightBranchToward) {
   // Verify the keep straight toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep straight to take A 61 toward Venlo.",
+                                            "Keep straight to take A 61 toward Venlo.", "",
                                             "Keep straight to take A 61.",
                                             "Keep straight to take A 61 toward Venlo.",
                                             "Continue for 4 kilometers.");
