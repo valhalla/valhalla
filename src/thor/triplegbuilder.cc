@@ -640,11 +640,11 @@ void AddTripIntersectingEdge(const AttributesController& controller,
       // Need the index of the intersecting-edge to access its sign info from the tile
       GraphId endnode = intersecting_de->endnode();
       valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(endnode);
-      const DirectedEdge *zeroth_de = t2->directededge(0);
+      const DirectedEdge* zeroth_de = t2->directededge(0);
       size_t idx = intersecting_de - zeroth_de;
       std::vector<SignInfo> edge_signs = t2->GetSigns(idx);
       if (!edge_signs.empty()) {
-        valhalla::Sign *sign = intersecting_edge->mutable_sign();
+        valhalla::Sign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
       }
     }
