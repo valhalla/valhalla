@@ -5,6 +5,7 @@
 
 #include "midgard/util.h"
 #include "sif/costconstants.h"
+#include "sif/recost.h"
 #include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -58,6 +59,66 @@ std::string locationsToJson(std::vector<midgard::PointLL> locations) {
   return json;
 }
 
+inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
+  for (const auto& e : location.path_edges()) {
+    if (e.graph_id() == edge_id)
+      return e.percent_along();
+  }
+  throw std::logic_error("Could not find candidate edge for the location");
+}
+
+void buildPath(GraphReader& graphreader,
+               const Options& /*options*/,
+               std::vector<GraphId> path_edges,
+               const valhalla::Location& origin,
+               const valhalla::Location& dest,
+               const baldr::TimeInfo& time_info,
+               const bool invariant,
+               const std::shared_ptr<sif::DynamicCost> costing_) {
+  // Build a vector of path info
+  for (auto edge_id : path_edges) {
+    std::cout << edge_id << ", ";
+  }
+  std::cout << std::endl;
+
+  // once we recovered the whole path we should construct list of PathInfo objects
+  // set of edges recovered from shortcuts (excluding shortcut's start edges)
+  std::unordered_set<GraphId> recovered_inner_edges;
+
+  std::vector<PathInfo> path;
+  path.reserve(path_edges.size());
+
+  auto edge_itr = path_edges.begin();
+  const auto edge_cb = [&edge_itr, &path_edges]() {
+    return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
+  };
+
+  const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
+    path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
+                      label.transition_cost(), recovered_inner_edges.count(label.edgeid()));
+  };
+
+  float source_pct;
+  try {
+    source_pct = find_percent_along(origin, path_edges.front());
+  } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
+
+  float target_pct;
+  try {
+    target_pct = find_percent_along(dest, path_edges.back());
+  } catch (...) {
+    throw std::logic_error("Could not find candidate edge used for destination label");
+  }
+
+  // recost edges in final path; ignore access restrictions
+  try {
+    sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct, time_info,
+                        invariant, true);
+  } catch (const std::exception& e) {
+    LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
+  }
+}
+
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
                                                 std::vector<midgard::PointLL> targets,
                                                 std::string costing) {
@@ -72,6 +133,8 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
 }
 
 void thor_worker_t::chinese_postman(Api& request) {
+
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
   auto correlated = request.options().locations();
   auto it = correlated.begin();
@@ -88,7 +151,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   ChinesePostmanGraph G;
   sif::TravelMode mode_; // Current travel mode
   const std::shared_ptr<sif::DynamicCost> costing_ =
-      mode_costing[static_cast<uint32_t>(sif::TravelMode::kBicycle)];
+      mode_costing[static_cast<uint32_t>(sif::TravelMode::kDrive)];
 
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
@@ -143,10 +206,18 @@ void thor_worker_t::chinese_postman(Api& request) {
   if (G.getUnbalancedVertices().size() == 0) {
     std::vector<GraphId> edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
-    for (auto graph_id : edgeGraphIds) {
-      std::cout << graph_id << ", ";
-    }
+    // GraphReader& graphreader,
+    //           const Options& /*options*/,
+    //           std::vector<GraphId> path_edges,
+    //           const valhalla::Location& origin,
+    //           const valhalla::Location& dest,
+    //           const baldr::TimeInfo& time_info,
+    //           const bool invariant
 
+    bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
+    auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
+    buildPath(*reader, options, edgeGraphIds, originLocation, destinationLocation, time_info,
+              invariant, costing_);
   } else {
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
