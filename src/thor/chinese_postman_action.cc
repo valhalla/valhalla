@@ -141,10 +141,10 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
   if (G.getUnbalancedVertices().size() == 0) {
-    std::vector<CPEdge> cpEdgesOrder = G.computeIdealEulerCycle(originVertex);
+    std::vector<GraphId> edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
-    for (auto e : cpEdgesOrder) {
-      std::cout << e.graph_id << ", ";
+    for (auto graph_id : edgeGraphIds) {
+      std::cout << graph_id << ", ";
     }
 
   } else {

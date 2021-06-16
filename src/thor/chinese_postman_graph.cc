@@ -100,7 +100,7 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   return unbalaced_vertices;
 }
 
-std::vector<CPEdge> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex) {
+std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
   int edgeVisited = 0;
 
@@ -118,7 +118,7 @@ std::vector<CPEdge> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex s
   }
   std::cout << "Euler path (node IDs): ";
   std::vector<CPVertex> eulerPathVertices;
-  std::vector<CPEdge> eulerPathEdges;
+  std::vector<GraphId> eulerPathEdgeGraphIDs;
   // for (int i = 0; i < (this->reversedEulerPath.size() - 1); ++i){
   //   std::cout << i << ": " << this->G[i].graph_id << std::endl;
   //   // std::cout << boost::edge(i, i+1, this->G).first << " " << boost::edge(i, i+1,
@@ -131,14 +131,14 @@ std::vector<CPEdge> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex s
     }
     // eulerPathVertices.push_back(this->G[*it]);
     auto e = boost::edge(*it, *(it + 1), G);
-    eulerPathEdges.push_back(this->G[e.first]);
+    eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
   }
   std::cout << "\n";
   for (auto v : eulerPathVertices) {
     std::cout << v.graph_id << ", ";
   }
   std::cout << std::endl;
-  return eulerPathEdges;
+  return eulerPathEdgeGraphIDs;
 }
 
 void ChinesePostmanGraph::setupDFSEulerCycle() {

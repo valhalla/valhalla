@@ -69,7 +69,7 @@ public:
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
   std::map<std::string, int> getUnbalancedVertices();
-  std::vector<CPEdge> computeIdealEulerCycle(const CPVertex start_vertex);
+  std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex);
   void setupDFSEulerCycle();
   std::map<int, std::vector<int>> getAdjacencyList();
   void dfsEulerCycle(int startNodeIndex);
