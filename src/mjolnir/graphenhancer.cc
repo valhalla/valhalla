@@ -1492,16 +1492,21 @@ void enhance(const boost::property_tree::ptree& pt,
                 bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
                 bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
+                bool f_oneway_pedestrian =
+                    ((forward & kPedestrianAccess) && !(reverse & kPedestrianAccess));
+                bool r_oneway_pedestrian =
+                    (!(forward & kPedestrianAccess) && (reverse & kPedestrianAccess));
+
                 // motorroad defaults remove ped, wheelchair, moped, and bike access.
                 // still check for user tags via access.
                 forward = GetAccess(forward,
                                     (forward & ~(kPedestrianAccess | kWheelchairAccess |
                                                  kMopedAccess | kBicycleAccess)),
-                                    r_oneway_vehicle, r_oneway_bicycle, access);
+                                    r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, access);
                 reverse = GetAccess(reverse,
                                     (reverse & ~(kPedestrianAccess | kWheelchairAccess |
                                                  kMopedAccess | kBicycleAccess)),
-                                    f_oneway_vehicle, f_oneway_bicycle, access);
+                                    f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, access);
 
                 directededge.set_forwardaccess(forward);
                 directededge.set_reverseaccess(reverse);

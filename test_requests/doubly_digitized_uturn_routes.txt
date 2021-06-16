@@ -7,3 +7,6 @@
 -j '{"locations":[{"lat":39.738953,"lon":-105.153786,"type":"break","name":"Cole Blvd"},{"lat":39.738953,"lon":-105.153603,"type":"break","name":"Cole Blvd"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.308140,"lon":-76.532784,"type":"break","name":"Pulaski Highway"},{"lat":39.308372,"lon":-76.532722,"type":"break","name":"Pulaski Highway"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":-20.0021744,"lon":-44.03589946},{"lat":-20.00277306329366,"lon":-44.03552706922852}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":53.895553,"lon":27.564903,"street":"Ульяновская улица"},{"lat":53.903046,"lon":27.580251,"street":"Первомайская улица"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":53.904291,"lon":27.583958,"street":"Первомайская улица"},{"lat":53.904393,"lon":27.583861,"street":"Первомайская улица"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":50.282726,"lon":3.973968,"street":"Avenue Jean Jaurès"},{"lat":50.282546,"lon":3.973741,"street":"Avenue Jean Jaurès"}],"costing":"auto","units":"miles"}'

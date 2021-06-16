@@ -8,7 +8,6 @@
 #include "sif/recost.h"
 #include "thor/alternates.h"
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -185,7 +184,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   const baldr::DirectedEdge* opp_edge = nullptr;
 
   if (!FORWARD) {
-    // TODO Why is this check necessary? opp_edge.forwardaccess() is checked in Allowed(...)
+    // Check the access mode and skip this edge if access is not allowed in the reverse
+    // direction. This avoids the (somewhat expensive) retrieval of the opposing directed
+    // edge when no access is allowed in the reverse direction.
     if (!(meta.edge->reverseaccess() & access_mode_)) {
       return false;
     }
@@ -644,8 +645,11 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
-      const DirectedEdge* opp_pred_edge =
-          graphreader.GetGraphTile(rev_pred.opp_edgeid())->directededge(rev_pred.opp_edgeid());
+      const auto rev_pred_tile = graphreader.GetGraphTile(rev_pred.opp_edgeid());
+      if (rev_pred_tile == nullptr) {
+        continue;
+      }
+      const DirectedEdge* opp_pred_edge = rev_pred_tile->directededge(rev_pred.opp_edgeid());
 
       // Expand from the end node in reverse direction.
       Expand<ExpansionType::reverse>(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
@@ -793,11 +797,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                                    valhalla::Location& origin,
                                    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
-  bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.end_node();
-                });
+  bool has_other_edges =
+      std::any_of(origin.path_edges().begin(), origin.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.end_node(); });
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
@@ -816,6 +818,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // Get the directed edge
     graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      continue;
+    }
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
@@ -880,11 +885,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                         const valhalla::Location& dest,
                                         const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
-                });
+  bool has_other_edges =
+      std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.begin_node(); });
 
   // Iterate through edges and add to adjacency list
   Cost c;
@@ -903,15 +906,18 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     }
     // Get the directed edge
     graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      continue;
+    }
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
-    GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-    if (!opp_edge_id.Is_Valid()) {
+    graph_tile_ptr opp_tile = tile;
+    const DirectedEdge* opp_dir_edge = nullptr;
+    auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_dir_edge, opp_tile);
+    if (!opp_dir_edge) {
       continue;
     }
-
-    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the origin. Make sure we use the reverse A* heuristic. Use the
@@ -933,8 +939,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // to invalid to indicate the origin of the path. Make sure the opposing
     // edge (edgeid) is set.
     uint32_t idx = edgelabels_reverse_.size();
-    edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
-                            graphreader.GetGraphTile(opp_edge_id));
+    edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile);
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
@@ -983,13 +988,25 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   LOG_TRACE("CONNECTIONS FOUND " + std::to_string(best_connections_.size()));
   for (const auto& b : best_connections_) {
     auto tile = graphreader.GetGraphTile(b.edgeid);
+    if (tile == nullptr) {
+      printf("graphreader.GetGraphTile(b.edgeid) is null\n");
+      continue;
+    }
     auto nodes = graphreader.GetDirectedEdgeNodes(b.edgeid, tile);
-    auto sll = graphreader.GetGraphTile(nodes.first)
-                   ->node(nodes.first)
-                   ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
-    auto ell = graphreader.GetGraphTile(nodes.second)
-                   ->node(nodes.second)
-                   ->latlng(graphreader.GetGraphTile(nodes.second)->header()->base_ll());
+    auto first_node_tile = graphreader.GetGraphTile(nodes.first);
+    if (first_node_tile == nullptr) {
+      printf("graphreader.GetGraphTile(nodes.first) is null\n");
+      continue;
+    }
+
+    auto sll = first_node_tile->node(nodes.first)->latlng(first_node_tile->header()->base_ll());
+
+    auto second_node_tile = graphreader.GetGraphTile(nodes.second);
+    if (second_node_tile == nullptr) {
+      printf("graphreader.GetGraphTile(nodes.second) is null\n");
+      continue;
+    }
+    auto ell = second_node_tile->node(nodes.second)->latlng(second_node_tile->header()->base_ll());
     printf("[[%.6f,%.6f],[%.6f,%.6f]],\n", sll.lng(), sll.lat(), ell.lng(), ell.lat());
   }
 #endif
@@ -1023,7 +1040,11 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
          edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
 
-      const auto* edge = graphreader.directededge(edgelabel.edgeid(), tile);
+      const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
+      if (edge == nullptr) {
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+      }
+
       if (edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
         recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
@@ -1049,6 +1070,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
       const DirectedEdge* opp_edge = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
+      if (opp_edge == nullptr) {
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+      }
 
       if (opp_edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(opp_edge_id);
@@ -1187,10 +1211,6 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       throw std::logic_error("Tile pointer was null in IsBridgingEdgeRestricted");
     }
     const auto* edge = tile->directededge(edgeid);
-    if (edge == nullptr) {
-      throw std::logic_error("Edge pointer was null in IsBridgingEdgeRestricted");
-      return false;
-    }
     if (edge->end_restriction() & costing->access_mode()) {
       auto restrictions = tile->GetRestrictions(true, edgeid, costing->access_mode());
       if (restrictions.size() == 0) {

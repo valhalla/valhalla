@@ -175,6 +175,11 @@ std::string thor_worker_t::expansion(Api& request) {
                                 baldr::GraphId edgeid, const char* status, bool full_shape = false) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
+                std::to_string(edgeid.Tile_Base()));
+      return;
+    }
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge).shape();
     if (!edge->forward())

@@ -276,7 +276,8 @@ TEST(RampsTCs, test_tc_infer) {
 
   // Verify that we are marking the internal edge.  If not, there will be a continue instruction
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left onto KJ.", "Turn left onto KJ.",
+      result, maneuver_index, "Turn left onto KJ.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto KJ.",
       "Turn left onto KJ. Then You will arrive at your destination.", "Continue for 50 meters.");
 }
 

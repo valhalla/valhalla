@@ -536,10 +536,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
     if (!edge_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : edge_signs) {
         switch (sign.type()) {
-          case Sign::Type::kExitNumber: {
+          case valhalla::baldr::Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
               auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
               trip_sign_exit_number->set_text(sign.text());
@@ -547,7 +547,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitBranch: {
+          case valhalla::baldr::Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
               auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
               trip_sign_exit_onto_street->set_text(sign.text());
@@ -555,7 +555,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitToward: {
+          case valhalla::baldr::Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
               auto* trip_sign_exit_toward_location =
                   trip_sign->mutable_exit_toward_locations()->Add();
@@ -564,7 +564,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitName: {
+          case valhalla::baldr::Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
               auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
               trip_sign_exit_name->set_text(sign.text());
@@ -572,7 +572,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideBranch: {
+          case valhalla::baldr::Sign::Type::kGuideBranch: {
             if (controller.attributes.at(kEdgeSignGuideBranch)) {
               auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
               trip_sign_guide_onto_street->set_text(sign.text());
@@ -580,7 +580,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideToward: {
+          case valhalla::baldr::Sign::Type::kGuideToward: {
             if (controller.attributes.at(kEdgeSignGuideToward)) {
               auto* trip_sign_guide_toward_location =
                   trip_sign->mutable_guide_toward_locations()->Add();
@@ -589,7 +589,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewJunction: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
             if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
               auto* trip_sign_guidance_view_junction =
                   trip_sign->mutable_guidance_view_junctions()->Add();
@@ -598,7 +598,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewSignboard: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
             if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
               auto* trip_sign_guidance_view_signboard =
                   trip_sign->mutable_guidance_view_signboards()->Add();
@@ -618,10 +618,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
-          case Sign::Type::kJunctionName: {
+          case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
               auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
               trip_sign_junction_name->set_text(sign.text());
@@ -1138,8 +1138,15 @@ void TripLegBuilder::Build(
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the
   // opposing edge then use the opposing index to get the opposing edge, and its end node is the
   // begin node of the original edge
-  auto* first_edge = graphreader.GetGraphTile(path_begin->edgeid)->directededge(path_begin->edgeid);
+  auto begin_tile = graphreader.GetGraphTile(path_begin->edgeid);
+  if (begin_tile == nullptr) {
+    throw tile_gone_error_t("TripLegBuilder::Build failed", path_begin->edgeid);
+  }
+  const auto* first_edge = begin_tile->directededge(path_begin->edgeid);
   auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
+  if (first_tile == nullptr) {
+    throw tile_gone_error_t("TripLegBuilder::Build failed", first_edge->endnode());
+  }
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
       first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
@@ -1213,6 +1220,9 @@ void TripLegBuilder::Build(
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
+    if (graphtile == nullptr) {
+      throw tile_gone_error_t("TripLegBuilder::Build failed", edge);
+    }
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
@@ -1221,6 +1231,9 @@ void TripLegBuilder::Build(
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
     graphreader.GetGraphTile(startnode, start_tile);
+    if (start_tile == nullptr) {
+      throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
+    }
     const NodeInfo* node = start_tile->node(startnode);
 
     if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset)) {
@@ -1297,7 +1310,7 @@ void TripLegBuilder::Build(
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Process the shape for edges where a route discontinuity occurs
-    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
+    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -1452,6 +1465,9 @@ void TripLegBuilder::Build(
   auto* node = trip_path.add_node();
   if (controller.attributes.at(kNodeAdminIndex)) {
     auto last_tile = graphreader.GetGraphTile(startnode);
+    if (last_tile == nullptr) {
+      throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
+    }
     node->set_admin_index(
         GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,
                       admin_info_list));

@@ -46,17 +46,6 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
 
-constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                                 baldr::kMaxSpeedKph};
-
-// Default penalty factor for avoiding closures (increases the cost of an edge as if its being
-// traversed at kMinSpeedKph)
-constexpr float kDefaultClosureFactor = 9.0f;
-// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
-// penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
-// non-closure end
-constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
-
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
  * the decision should be. By default allowed methods will not disallow start/end/simple
@@ -1021,8 +1010,13 @@ protected:
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
-    c.cost += service_penalty_ *
-              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
+
+    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
+      // Do not penalize internal roads that are marked as service.
+      if (!edge->internal())
+        c.cost += service_penalty_;
+    }
+
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
@@ -1032,12 +1026,69 @@ protected:
 using cost_ptr_t = std::shared_ptr<DynamicCost>;
 using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kMaxTravelMode)>;
 
+/*
+ * Structure that stores default values for costing options that are common for most costing models.
+ * It mostly contains options used in DynamicCost::get_base_costs() method.
+ */
+struct BaseCostingOptionsConfig {
+  BaseCostingOptionsConfig();
+
+  ranged_default_t<float> dest_only_penalty_;
+  ranged_default_t<float> maneuver_penalty_;
+  ranged_default_t<float> alley_penalty_;
+  ranged_default_t<float> gate_cost_;
+  ranged_default_t<float> gate_penalty_;
+  ranged_default_t<float> country_crossing_cost_;
+  ranged_default_t<float> country_crossing_penalty_;
+
+  bool disable_toll_booth_ = false;
+  ranged_default_t<float> toll_booth_cost_;
+  ranged_default_t<float> toll_booth_penalty_;
+
+  bool disable_ferry_ = false;
+  ranged_default_t<float> ferry_cost_;
+  ranged_default_t<float> use_ferry_;
+
+  bool disable_rail_ferry_ = false;
+  ranged_default_t<float> rail_ferry_cost_;
+  ranged_default_t<float> use_rail_ferry_;
+
+  ranged_default_t<float> service_penalty_;
+  ranged_default_t<float> service_factor_;
+
+  ranged_default_t<float> use_tracks_;
+  ranged_default_t<float> use_living_streets_;
+
+  ranged_default_t<float> closure_factor_;
+};
+
 /**
  * Parses the cost options from json and stores values in pbf.
  * @param object The json request represented as a DOM tree.
  * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+
+/**
+ * Parses base cost options that are common for most costing models. If you use this function
+ * make sure that different default values were overridden in the config. Also explicitly
+ * disable options that shouldn't be parsed.
+ * @param obj The json request represented as a DOM tree.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ */
+void ParseBaseCostOptions(const rapidjson::Value& obj,
+                          CostingOptions* pbf_costing_options,
+                          const BaseCostingOptionsConfig& base_cfg);
+
+/**
+ * Set default values of base costing options to pbf structure. Skip options that were
+ * explicitly disabled.
+ * @param pbf_costing_options A mutable protocol buffer where default values will be stored.
+ * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ */
+void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
+                               const BaseCostingOptionsConfig& base_cfg);
 
 /**
  * Parses all the costing options for all supported costings

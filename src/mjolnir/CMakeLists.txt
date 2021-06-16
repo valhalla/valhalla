@@ -26,22 +26,13 @@ set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   admin.cc
   adminbuilder.cc
-  bssbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc
-  dataquality.cc
   directededgebuilder.cc
-  graphtilebuilder.cc
   edgeinfobuilder.cc
-  elevationbuilder.cc
   ferry_connections.cc
-  graphbuilder.cc
-  graphenhancer.cc
   graphfilter.cc
-  graphvalidator.cc
-  hierarchybuilder.cc
   linkclassification.cc
-  luatagtransform.cc
   node_expander.cc
   osmdata.cc
   osmpbfparser.cc
@@ -49,14 +40,25 @@ set(sources
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
-  pbfgraphparser.cc
   restrictionbuilder.cc
   servicedays.cc
-  shortcutbuilder.cc
   speed_assigner.h
   timeparsing.cc
+  util.cc)
+
+set (sources_with_warnings
+  bssbuilder.cc
+  dataquality.cc
+  elevationbuilder.cc
+  graphbuilder.cc
+  graphenhancer.cc
+  graphtilebuilder.cc
+  graphvalidator.cc
+  hierarchybuilder.cc
+  luatagtransform.cc
+  pbfgraphparser.cc
+  shortcutbuilder.cc
   transitbuilder.cc
-  util.cc
   validatetransit.cc)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
@@ -65,10 +67,10 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   set_source_files_properties(
           ${sources}
           PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
-endif (UNIX)
+endif ()
 
 valhalla_module(NAME mjolnir
-  SOURCES ${sources}
+  SOURCES ${sources} ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
