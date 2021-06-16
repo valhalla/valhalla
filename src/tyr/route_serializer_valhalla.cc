@@ -237,6 +237,10 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       if (maneuver.has_verbal_transition_alert_instruction()) {
         writer("verbal_transition_alert_instruction", maneuver.verbal_transition_alert_instruction());
       }
+      if (maneuver.has_verbal_succinct_transition_instruction()) {
+        writer("verbal_succinct_transition_instruction",
+               maneuver.verbal_succinct_transition_instruction());
+      }
       if (maneuver.has_verbal_pre_transition_instruction()) {
         writer("verbal_pre_transition_instruction", maneuver.verbal_pre_transition_instruction());
       }
