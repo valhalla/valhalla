@@ -557,7 +557,7 @@ void AddSignInfo(const AttributesController& controller,
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
                              valhalla::baldr::GraphReader& graphreader,
-                             const graph_tile_ptr& graphtile,
+                             graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
@@ -637,12 +637,10 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      // Need the index of the intersecting-edge to access its sign info from the tile
-      GraphId endnode = intersecting_de->endnode();
-      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(endnode);
-      const DirectedEdge* zeroth_de = t2->directededge(0);
-      size_t idx = intersecting_de - zeroth_de;
-      std::vector<SignInfo> edge_signs = t2->GetSigns(idx);
+      GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
+      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
+      size_t edge_idx = intersecting_de - t2->directededge(0);
+      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx);
       if (!edge_signs.empty()) {
         valhalla::Sign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -664,7 +662,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          const graph_tile_ptr& start_tile,
+                          graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
