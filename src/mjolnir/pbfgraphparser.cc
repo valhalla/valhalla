@@ -55,7 +55,7 @@ public:
                      const std::vector<uint64_t>& osm_node_ids) {
     loops_meta_.emplace(osm_way_id, loop_meta(osm_way_index));
     for (auto const osm_node_id : osm_node_ids)
-      node_to_loop_way_[osm_node_id] = osm_way_id;
+      node_to_loop_way_.emplace(osm_node_id, osm_way_id);
   }
 
   // Clarifies types of loop roads and saves fixed ways.
@@ -74,10 +74,11 @@ public:
         count_node = 0;
       }
 
-      const auto node_to_loop_way_it = node_to_loop_way_.find(osm_way_node.node.osmid_);
-      if (node_to_loop_way_it != node_to_loop_way_.cend() &&
-          osm_way.way_id() != node_to_loop_way_it->second && osm_way.use() == Use::kRoad) {
-        loops_meta_.at(node_to_loop_way_it->second).add_id_of_intersection(osm_way_node.node.osmid_);
+      const auto node_to_loop_way_range = node_to_loop_way_.equal_range(osm_way_node.node.osmid_);
+      for (auto it = node_to_loop_way_range.first; it != node_to_loop_way_range.second; ++it) {
+        if (osm_way.way_id() != it->second && osm_way.use() == Use::kRoad) {
+          loops_meta_.at(it->second).add_id_of_intersection(osm_way_node.node.osmid_);
+        }
       }
 
       ++count_node;
@@ -129,7 +130,7 @@ private:
              std::to_string(loops_meta_.size()) + " candidates.");
   }
 
-  std::unordered_map<uint64_t, uint64_t> node_to_loop_way_;
+  std::unordered_multimap<uint64_t, uint64_t> node_to_loop_way_;
   std::unordered_map<uint64_t, loop_meta> loops_meta_;
 };
 
