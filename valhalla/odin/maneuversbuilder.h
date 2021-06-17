@@ -71,6 +71,8 @@ protected:
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
 
+  void ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers);
+
   void CountAndSortSigns(std::list<Maneuver>& maneuvers);
 
   void ConfirmManeuverTypeAssignment(std::list<Maneuver>& maneuvers);

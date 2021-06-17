@@ -135,7 +135,7 @@ Maneuver::Maneuver()
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false) {
+      pedestrian_crossing_(false), has_long_street_name_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -571,6 +571,24 @@ bool Maneuver::intersecting_forward_edge() const {
 
 void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
   intersecting_forward_edge_ = intersecting_forward_edge;
+}
+
+const std::string& Maneuver::verbal_succinct_transition_instruction() const {
+  return verbal_succinct_transition_instruction_;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    const std::string& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = verbal_succinct_transition_instruction;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    std::string&& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = std::move(verbal_succinct_transition_instruction);
+}
+
+bool Maneuver::HasVerbalSuccinctTransitionInstruction() const {
+  return (!verbal_succinct_transition_instruction_.empty());
 }
 
 const std::string& Maneuver::verbal_transition_alert_instruction() const {
@@ -1092,6 +1110,15 @@ void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type
   bss_maneuver_type_ = type;
 }
 
+bool Maneuver::has_long_street_name() const {
+
+  return has_long_street_name_;
+}
+
+void Maneuver::set_long_street_name(bool has_long_street_name) {
+  has_long_street_name_ = has_long_street_name;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -1190,6 +1217,9 @@ std::string Maneuver::ToString() const {
   man_str += " | intersecting_forward_edge=";
   man_str += std::to_string(intersecting_forward_edge_);
 
+  man_str += " | verbal_succinct_transition_instruction=";
+  man_str += verbal_succinct_transition_instruction_;
+
   man_str += " | verbal_transition_alert_instruction=";
   man_str += verbal_transition_alert_instruction_;
 
@@ -1261,6 +1291,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | bus=";
   man_str += std::to_string(bus_);
+
+  man_str += " | has_long_street_name=";
+  man_str += std::to_string(has_long_street_name_);
 
   // TODO travel types
 
@@ -1413,6 +1446,11 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_shape_index_);
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_succinct_transition_instruction_;
+  man_str += "\"";
 
   man_str += delim;
   man_str += "\"";
