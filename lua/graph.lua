@@ -127,7 +127,9 @@ sidewalk = {
 ["this"] = "true",
 ["detached"] = "false",
 ["raised"] = "true",
-["separate_double"] = "false"
+["separate_double"] = "false",
+["sidepath"] = "false",
+["explicit"] = "true"
 }
 
 use = {
