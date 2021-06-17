@@ -1850,13 +1850,15 @@ function nodes_proc (kv, nokeys)
   end
 
   --check for gates, bollards, and sump_busters
-  local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate"
+  local gate = kv["barrier"] == "gate" or kv["barrier"] == "yes" or
+    kv["barrier"] == "lift_gate" or kv["barrier"] == "swing_gate"
   local bollard = false
   local sump_buster = false
 
   if gate == false then
     --if there was a bollard cars can't get through it
-    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or kv["bollard"] == "removable" or false
+    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or
+      kv["barrier"] == "jersey_barrier" or kv["bollard"] == "removable" or false
 
     --if sump_buster then no access for auto, hov, and taxi unless a tag exists.
     sump_buster = kv["barrier"] == "sump_buster" or false
