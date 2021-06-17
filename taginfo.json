@@ -103,7 +103,7 @@
         "node",
         "way"
       ],
-      "description": "Sets access flag to true; however, if access = private and (emergency = yes or service = emergency_access) then access flag is false. In case a gate or bollard has access = private the node will be avoided if there is a path that does not include it"
+      "description": "Sets access flag to true; however, if access = private and (emergency = yes or service = emergency_access) then access flag is false."
     },
     {
       "key": "access",

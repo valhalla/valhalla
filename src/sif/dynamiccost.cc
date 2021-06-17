@@ -77,7 +77,6 @@ constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
 constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
-constexpr float kDefaultPrivateAccessCost = 5.0f;        // Seconds
 constexpr float kDefaultPrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
@@ -118,7 +117,6 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
       gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
                                                                     kMaxPenalty},
-      private_access_cost_{0.f, kDefaultPrivateAccessCost, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -384,10 +382,6 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
   pbf_costing_options->set_gate_penalty(base_cfg.gate_penalty_(
       rapidjson::get<float>(value, "/gate_penalty", base_cfg.gate_penalty_.def)));
 
-  // private_access_cost
-  pbf_costing_options->set_private_access_cost(base_cfg.private_access_cost_(
-      rapidjson::get<float>(value, "/private_access_cost", base_cfg.private_access_cost_.def)));
-
   // private_access_penalty
   pbf_costing_options->set_private_access_penalty(base_cfg.private_access_penalty_(
       rapidjson::get<float>(value, "/private_access_penalty", base_cfg.private_access_penalty_.def)));
@@ -459,7 +453,6 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_alley_penalty(shared_opts.alley_penalty_.def);
   pbf_costing_options->set_gate_cost(shared_opts.gate_cost_.def);
   pbf_costing_options->set_gate_penalty(shared_opts.gate_penalty_.def);
-  pbf_costing_options->set_private_access_cost(shared_opts.private_access_cost_.def);
   pbf_costing_options->set_private_access_penalty(shared_opts.private_access_penalty_.def);
   pbf_costing_options->set_country_crossing_cost(shared_opts.country_crossing_cost_.def);
   pbf_costing_options->set_country_crossing_penalty(shared_opts.country_crossing_penalty_.def);
