@@ -18,6 +18,7 @@
    * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
    * CHORE: Updates robin-hood-hashing third-party library
    * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
+   * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
