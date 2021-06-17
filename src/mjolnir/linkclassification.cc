@@ -45,23 +45,25 @@ struct LinkGraphNode {
   }
 };
 
+enum class TurnChannelRes { ItIs, TooLong, Bidirectional };
+
 // Test if the set of edges can be classified as a turn channel. Total length
 // must be less than kMaxTurnChannelLength and there cannot be any exit signs.
-bool IsTurnChannel(sequence<OSMWay>& ways,
-                   sequence<Edge>& edges,
-                   sequence<OSMWayNode>& way_nodes,
-                   std::vector<uint32_t>& linkedgeindexes) {
+TurnChannelRes IsTurnChannel(sequence<OSMWay>& ways,
+                             sequence<Edge>& edges,
+                             sequence<OSMWayNode>& way_nodes,
+                             std::vector<uint32_t>& linkedgeindexes) {
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  //  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-  //    std::list<PointLL> shape;
-  //    for (size_t i = 0; i < count; ++i) {
-  //      auto node = (*way_nodes[idx++]).node;
-  //      shape.emplace_back(node.latlng());
-  //    }
-  //    return shape;
-  //  };
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+    std::list<PointLL> shape;
+    for (size_t i = 0; i < count; ++i) {
+      auto node = (*way_nodes[idx++]).node;
+      shape.emplace_back(node.latlng());
+    }
+    return shape;
+  };
 
   // Iterate through the link edges. Check if total length exceeds the
   // maximum turn channel length or an exit sign exists.
@@ -70,20 +72,20 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
     // Get the shape and length of the edge
     sequence<Edge>::iterator element = edges[idx];
     auto edge = *element;
-    //    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-    //    total_length += valhalla::midgard::length(shape);
-    //    if (total_length > kMaxTurnChannelLength) {
-    //      return false;
-    //    }
+    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+    total_length += valhalla::midgard::length(shape);
+    if (total_length > kMaxTurnChannelLength) {
+      return TurnChannelRes::TooLong;
+    }
     //
     //    // Can not be bidirectional
     //    /// TODO: check this check? should i save it?
     OSMWay way = *ways[edge.wayindex_];
     if (way.auto_forward() && way.auto_backward()) {
-      return false;
+      return TurnChannelRes::Bidirectional;
     }
   }
-  return true;
+  return TurnChannelRes::ItIs;
 }
 
 inline bool IsDriveableNonLink(const Edge& edge) {
@@ -674,7 +676,9 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       uint64_t way_id = (*data.ways[(*data.edges[link_edges.front()]).wayindex_]).way_id();
       if (infer_turn_channels && (rc >= static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
-        if (IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges)) {
+        auto is_turn_channel = IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges);
+        turn_channel = is_turn_channel == TurnChannelRes::ItIs;
+        if (is_turn_channel == TurnChannelRes::TooLong) {
 
 #if DEBUG_PRINT
           auto Print = [](const midgard::PointLL& pos) {
