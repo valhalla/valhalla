@@ -119,17 +119,10 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
   std::cout << "Euler path (node IDs): ";
   std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
-  // for (int i = 0; i < (this->reversedEulerPath.size() - 1); ++i){
-  //   std::cout << i << ": " << this->G[i].graph_id << std::endl;
-  //   // std::cout << boost::edge(i, i+1, this->G).first << " " << boost::edge(i, i+1,
-  //   this->G).second << std::endl;
-  //   // VertexItr vi_start = this->findVertex()
-  // }
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
     if (it + 1 == this->reversedEulerPath.rend()) {
       continue;
     }
-    // eulerPathVertices.push_back(this->G[*it]);
     auto e = boost::edge(*it, *(it + 1), G);
     eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
   }

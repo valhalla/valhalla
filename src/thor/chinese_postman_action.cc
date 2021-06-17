@@ -26,7 +26,7 @@ midgard::PointLL thor_worker_t::getPointLL(baldr::GraphId node) {
   return ni_start->latlng(tile->header()->base_ll());
 }
 std::string pointLLToJson(const midgard::PointLL l) {
-  // // To be something like this {"lat":40.739735,"lon":-73.979713}
+  // To be something like this {"lat":40.739735,"lon":-73.979713}
   std::string json = "{";
   json += "\"lat\":";
   json += std::to_string(l.lat());
@@ -69,12 +69,12 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
 
 void buildPath(GraphReader& graphreader,
                const Options& /*options*/,
-               std::vector<GraphId> path_edges,
                const valhalla::Location& origin,
                const valhalla::Location& dest,
                const baldr::TimeInfo& time_info,
                const bool invariant,
-               const std::shared_ptr<sif::DynamicCost> costing_) {
+               std::vector<GraphId> path_edges,
+               const std::shared_ptr<sif::DynamicCost>& costing_) {
   // Build a vector of path info
   for (auto edge_id : path_edges) {
     std::cout << edge_id << ", ";
@@ -117,6 +117,11 @@ void buildPath(GraphReader& graphreader,
   } catch (const std::exception& e) {
     LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
   }
+
+  // for (auto p: path){
+  //   std::cout << p.edgeid << ", " << p.elapsed_cost.cost << ", " << p.transition_cost.cost <<
+  //   std::endl;
+  // }
 }
 
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
@@ -150,8 +155,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   ChinesePostmanGraph G;
   sif::TravelMode mode_; // Current travel mode
-  const std::shared_ptr<sif::DynamicCost> costing_ =
-      mode_costing[static_cast<uint32_t>(sif::TravelMode::kDrive)];
+  const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
 
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
@@ -206,18 +210,11 @@ void thor_worker_t::chinese_postman(Api& request) {
   if (G.getUnbalancedVertices().size() == 0) {
     std::vector<GraphId> edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
-    // GraphReader& graphreader,
-    //           const Options& /*options*/,
-    //           std::vector<GraphId> path_edges,
-    //           const valhalla::Location& origin,
-    //           const valhalla::Location& dest,
-    //           const baldr::TimeInfo& time_info,
-    //           const bool invariant
 
     bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
     auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
-    buildPath(*reader, options, edgeGraphIds, originLocation, destinationLocation, time_info,
-              invariant, costing_);
+    buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
+              edgeGraphIds, costing_);
   } else {
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
