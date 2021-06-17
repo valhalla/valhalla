@@ -674,12 +674,12 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       // must have a non-link edge.
       bool turn_channel = false;
       uint64_t way_id = (*data.ways[(*data.edges[link_edges.front()]).wayindex_]).way_id();
-      if (infer_turn_channels && (rc >= static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
+      if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
+
         auto is_turn_channel = IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges);
         turn_channel = is_turn_channel == TurnChannelRes::ItIs;
         if (is_turn_channel == TurnChannelRes::TooLong) {
-
 #if DEBUG_PRINT
           auto Print = [](const midgard::PointLL& pos) {
             std::cout << std::fixed << std::setprecision(7) << pos.lng() << "," << pos.lat()
