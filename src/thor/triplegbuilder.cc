@@ -536,10 +536,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
     if (!edge_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : edge_signs) {
         switch (sign.type()) {
-          case Sign::Type::kExitNumber: {
+          case valhalla::baldr::Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
               auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
               trip_sign_exit_number->set_text(sign.text());
@@ -547,7 +547,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitBranch: {
+          case valhalla::baldr::Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
               auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
               trip_sign_exit_onto_street->set_text(sign.text());
@@ -555,7 +555,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitToward: {
+          case valhalla::baldr::Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
               auto* trip_sign_exit_toward_location =
                   trip_sign->mutable_exit_toward_locations()->Add();
@@ -564,7 +564,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitName: {
+          case valhalla::baldr::Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
               auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
               trip_sign_exit_name->set_text(sign.text());
@@ -572,7 +572,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideBranch: {
+          case valhalla::baldr::Sign::Type::kGuideBranch: {
             if (controller.attributes.at(kEdgeSignGuideBranch)) {
               auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
               trip_sign_guide_onto_street->set_text(sign.text());
@@ -580,7 +580,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideToward: {
+          case valhalla::baldr::Sign::Type::kGuideToward: {
             if (controller.attributes.at(kEdgeSignGuideToward)) {
               auto* trip_sign_guide_toward_location =
                   trip_sign->mutable_guide_toward_locations()->Add();
@@ -589,7 +589,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewJunction: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
             if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
               auto* trip_sign_guidance_view_junction =
                   trip_sign->mutable_guidance_view_junctions()->Add();
@@ -598,7 +598,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewSignboard: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
             if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
               auto* trip_sign_guidance_view_signboard =
                   trip_sign->mutable_guidance_view_signboards()->Add();
@@ -618,10 +618,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
-          case Sign::Type::kJunctionName: {
+          case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
               auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
               trip_sign_junction_name->set_text(sign.text());

@@ -59,7 +59,8 @@ TEST_F(InstructionsIsStraightest, SingleStraight) {
   // prev2curr_turn_degree=355
   // straightest_xedge_turn_degree=0
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Drive east on Belair Road/US 1.", "",
+                                                            "Drive east on Belair Road/US 1.",
+                                                            "Drive east.", "",
                                                             "Drive east on Belair Road, US 1.",
                                                             "Continue for 30 kilometers.");
 }

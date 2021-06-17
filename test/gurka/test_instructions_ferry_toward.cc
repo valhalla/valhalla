@@ -60,7 +60,7 @@ TEST_F(InstructionsFerryToward, TakeFerryTowardForward) {
 
   // Verify the ferry toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Take the ferry toward Cape May.",
+                                                            "Take the ferry toward Cape May.", "",
                                                             "Take the ferry toward Cape May.",
                                                             "Take the ferry toward Cape May.",
                                                             "Continue for 3 kilometers.");
@@ -81,7 +81,7 @@ TEST_F(InstructionsFerryToward, TakeFerryTowardBackward) {
 
   // Verify the ferry toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Take the ferry toward Lewes.",
+                                                            "Take the ferry toward Lewes.", "",
                                                             "Take the ferry toward Lewes.",
                                                             "Take the ferry toward Lewes.",
                                                             "Continue for 3 kilometers.");

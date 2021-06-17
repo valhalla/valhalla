@@ -28,6 +28,7 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
+#include "odin/util.h"
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -59,6 +60,10 @@ constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
 
 // Small end ramp fork threshold in kilometers
 constexpr float kSmallEndRampForkThreshold = 0.125f;
+
+// Thresholds for succinct phrase usage
+constexpr uint32_t kMaxWordCount = 5;
+constexpr uint32_t kMaxStreetNameLength = 25;
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -135,6 +140,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
+
+  ProcessVerbalSuccinctTransitionInstruction(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -912,6 +919,38 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
     // Update iterators
     curr_man = prev_man;
     ++prev_man;
+  }
+}
+
+void ManeuversBuilder::ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers) {
+  for (auto& maneuver : maneuvers) {
+    uint32_t street_name_count = 0;
+    for (const auto& street_name : maneuver.street_names()) {
+      if (street_name_count == kVerbalPreElementMaxCount) {
+        break;
+      }
+      if (get_word_count(street_name->value()) > kMaxWordCount ||
+          strlen_utf8(street_name->value()) > kMaxStreetNameLength) {
+        maneuver.set_long_street_name(true);
+        break;
+      }
+      ++street_name_count;
+    }
+    if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
+        !maneuver.has_long_street_name()) {
+      uint32_t roundabout_exit_street_name_count = 0;
+      for (const auto& roundabout_exit_street_name : maneuver.roundabout_exit_street_names()) {
+        if (roundabout_exit_street_name_count == kVerbalPreElementMaxCount) {
+          break;
+        }
+        if (get_word_count(roundabout_exit_street_name->value()) > kMaxWordCount ||
+            strlen_utf8(roundabout_exit_street_name->value()) > kMaxStreetNameLength) {
+          maneuver.set_long_street_name(true);
+          break;
+        }
+        ++roundabout_exit_street_name_count;
+      }
+    }
   }
 }
 
