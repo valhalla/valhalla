@@ -269,6 +269,22 @@
     },
     {
       "key": "barrier",
+      "value": "yes",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
+    {
+      "key": "barrier",
+      "value": "swing_gate",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
+    {
+      "key": "barrier",
       "value": "bollard",
       "object_types": [
         "node"
@@ -286,6 +302,14 @@
     {
       "key": "barrier",
       "value": "removable",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+    },
+    {
+      "key": "barrier",
+      "value": "jersey_barrier",
       "object_types": [
         "node"
       ],
