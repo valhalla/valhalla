@@ -20,6 +20,7 @@
    * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
    * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
    * CHANGED: Replace `avoid_*` API parameters with more accurate `exclude_*` [#3093](https://github.com/valhalla/valhalla/pull/3093)
+   * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
