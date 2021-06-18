@@ -118,10 +118,10 @@ void buildPath(GraphReader& graphreader,
     LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
   }
 
-  // for (auto p: path){
-  //   std::cout << p.edgeid << ", " << p.elapsed_cost.cost << ", " << p.transition_cost.cost <<
-  //   std::endl;
-  // }
+  for (auto p : path) {
+    std::cout << p.edgeid << ", " << p.elapsed_cost.cost << ", " << p.transition_cost.cost
+              << std::endl;
+  }
 }
 
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
@@ -154,8 +154,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   midgard::PointLL destinationPoint = to_ll(destinationLocation);
 
   ChinesePostmanGraph G;
-  sif::TravelMode mode_; // Current travel mode
-  const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
+  // Only for auto for now
+  const auto& costing_ = mode_costing[Costing::auto_];
 
   std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
