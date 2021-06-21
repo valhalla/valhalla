@@ -67,14 +67,14 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
   throw std::logic_error("Could not find candidate edge for the location");
 }
 
-void buildPath(GraphReader& graphreader,
-               const Options& /*options*/,
-               const valhalla::Location& origin,
-               const valhalla::Location& dest,
-               const baldr::TimeInfo& time_info,
-               const bool invariant,
-               std::vector<GraphId> path_edges,
-               const std::shared_ptr<sif::DynamicCost>& costing_) {
+std::vector<PathInfo> buildPath(GraphReader& graphreader,
+                                const Options& /*options*/,
+                                const valhalla::Location& origin,
+                                const valhalla::Location& dest,
+                                const baldr::TimeInfo& time_info,
+                                const bool invariant,
+                                std::vector<GraphId> path_edges,
+                                const std::shared_ptr<sif::DynamicCost>& costing_) {
   // Build a vector of path info
   for (auto edge_id : path_edges) {
     std::cout << edge_id << ", ";
@@ -122,6 +122,7 @@ void buildPath(GraphReader& graphreader,
     std::cout << p.edgeid << ", " << p.elapsed_cost.cost << ", " << p.transition_cost.cost
               << std::endl;
   }
+  return path;
 }
 
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
@@ -207,14 +208,10 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
+  std::vector<GraphId> edgeGraphIds;
   if (G.getUnbalancedVertices().size() == 0) {
-    std::vector<GraphId> edgeGraphIds = G.computeIdealEulerCycle(originVertex);
+    edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
-
-    bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
-    auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
-    buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
-              edgeGraphIds, costing_);
   } else {
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
@@ -233,6 +230,15 @@ void thor_worker_t::chinese_postman(Api& request) {
     std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
     std::cout << "matrix output:\n" << matrixOutput;
   }
+  // Start build path here
+  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
+  auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
+  std::vector<PathInfo> path = buildPath(*reader, options, originLocation, destinationLocation,
+                                         time_info, invariant, edgeGraphIds, costing_);
+
+  // TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
+  //                     originLocation, destinationLocation, throughs, leg, algorithms, interrupt,
+  //                     &vias);
 }
 
 } // namespace thor
