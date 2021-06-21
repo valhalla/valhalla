@@ -932,7 +932,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   parse_locations(doc, options, "targets", 132, ignore_closures);
 
   // get the avoids in there
-  if (doc.HasMember("avoid_locations")
+  // TODO: remove "avoid_locations/polygons" after some while
+  if (doc.HasMember("avoid_locations"))
     parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
   else
     parse_locations(doc, options, "exclude_locations", 133, ignore_closures);

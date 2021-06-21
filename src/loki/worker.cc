@@ -89,7 +89,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
         edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : edges) {
-      auto* avoid = co->add_avoid_edges();
+      auto* avoid = co->add_exclude_edges();
       avoid->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
       avoid->set_percent_along(0);
@@ -115,7 +115,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = co->add_avoid_edges();
+            auto* avoid = co->add_exclude_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -128,7 +128,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid_shortcut = co->add_avoid_edges();
+                auto* avoid_shortcut = co->add_exclude_edges();
                 avoid_shortcut->set_id(shortcut);
                 avoid_shortcut->set_percent_along(0);
               }

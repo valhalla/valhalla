@@ -28,12 +28,6 @@
       "long_request": 110
     }
   },
-  "skadi": {
-    "actons": ["height"],
-    "logging": {
-      "long_request": 5
-    }
-  },
   "meili": {
     "customizable": [
       "turn_penalty_factor",
