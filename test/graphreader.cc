@@ -20,28 +20,28 @@ public:
   using SimpleTileCache::SimpleTileCache;
 };
 
-TEST(SimpleCache, Mine) {
-  boost::property_tree::ptree config;
-  rapidjson::read_json("/Users/pavelmerkis/config.json", config);
-  config.get_child("mjolnir").erase("tile_extract");
-  config.get_child("mjolnir").erase("tile_url");
-  config.get_child("mjolnir").erase("traffic_extract");
-  GraphReader reader(config.get_child("mjolnir"));
+// TEST(SimpleCache, Mine) {
+  // boost::property_tree::ptree config;
+  // rapidjson::read_json("/Users/pavelmerkis/config.json", config);
+  // config.get_child("mjolnir").erase("tile_extract");
+  // config.get_child("mjolnir").erase("tile_url");
+  // config.get_child("mjolnir").erase("traffic_extract");
+  // GraphReader reader(config.get_child("mjolnir"));
 
-  for (auto tile_id : reader.GetTileSet()) {
-    auto tile = reader.GetGraphTile(tile_id);
-    uint32_t id = 0;
-    for (auto i : tile->GetDirectedEdges()) {
-      if (i.forward() && !i.shortcut() && (i.use() == Use::kRamp || i.use() == Use::kTurnChannel)) {
-        GraphId edge_id = tile_id;
-        uint64_t way_id = tile->edgeinfo(&i).wayid();
-        edge_id.set_id(id);
-        std::cout << way_id << ' ' << edge_id.value << ' ' << int(i.use()) << '\n';
-      }
-      ++id;
-    }
-  }
-}
+  // for (auto tile_id : reader.GetTileSet()) {
+    // auto tile = reader.GetGraphTile(tile_id);
+    // uint32_t id = 0;
+    // for (auto i : tile->GetDirectedEdges()) {
+      // if (i.forward() && !i.shortcut() && (i.use() == Use::kRamp || i.use() == Use::kTurnChannel)) {
+        // GraphId edge_id = tile_id;
+        // uint64_t way_id = tile->edgeinfo(&i).wayid();
+        // edge_id.set_id(id);
+        // std::cout << way_id << ' ' << edge_id.value << ' ' << int(i.use()) << '\n';
+      // }
+      // ++id;
+    // }
+  // }
+// }
 
 TEST(SimpleCache, QueryByPointOutOfRangeLL) {
   boost::property_tree::ptree pt;
