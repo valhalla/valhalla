@@ -236,9 +236,20 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::vector<PathInfo> path = buildPath(*reader, options, originLocation, destinationLocation,
                                          time_info, invariant, edgeGraphIds, costing_);
 
-  // TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-  //                     originLocation, destinationLocation, throughs, leg, algorithms, interrupt,
-  //                     &vias);
+  std::list<valhalla::Location> throughs; // Empty
+  std::vector<std::string> algorithms{"Chinese Postman"};
+  TripRoute* route = nullptr;
+  valhalla::Trip& trip = *request.mutable_trip();
+  // Form output information based on path edges
+  if (trip.routes_size() == 0 || options.alternates() > 0) {
+    route = trip.mutable_routes()->Add();
+    route->mutable_legs()->Reserve(options.locations_size());
+  }
+  auto& leg = *route->mutable_legs()->Add();
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias; // Empty
+  TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
+                        originLocation, destinationLocation, throughs, leg, algorithms, interrupt,
+                        &vias);
 }
 
 } // namespace thor
