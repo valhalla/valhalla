@@ -376,8 +376,8 @@ void parse_locations(const rapidjson::Document& doc,
     locations = options.mutable_sources();
   } else if (node == "targets") {
     locations = options.mutable_targets();
-  } else if (node == "avoid_locations") {
-    locations = options.mutable_avoid_locations();
+  } else if (node == "exclude_locations" || node == "avoid_locations") {
+    locations = options.mutable_exclude_locations();
   } else {
     return;
   }
@@ -932,12 +932,18 @@ void from_json(rapidjson::Document& doc, Options& options) {
   parse_locations(doc, options, "targets", 132, ignore_closures);
 
   // get the avoids in there
-  parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+  // TODO: remove "avoid_locations/polygons" after some while
+  if (doc.HasMember("avoid_locations"))
+    parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+  else
+    parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
 
   // get the avoid polygons in there
-  auto rings_req = rapidjson::get_child_optional(doc, "/avoid_polygons");
+  auto rings_req =
+      rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
+                                                                         : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_avoid_polygons();
+    auto* rings_pbf = options.mutable_exclude_polygons();
     try {
       for (const auto& req_poly : rings_req->GetArray()) {
         auto* ring = rings_pbf->Add();
