@@ -939,7 +939,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
     parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
 
   // get the avoid polygons in there
-  auto rings_req = rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons" : "/exclude_polygons");
+  auto rings_req =
+      rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
+                                                                         : "/exclude_polygons");
   if (rings_req) {
     auto* rings_pbf = options.mutable_exclude_polygons();
     try {
