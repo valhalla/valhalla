@@ -27,11 +27,12 @@ uint32_t GetAccess(const uint32_t current_access,
                    const uint32_t country_access,
                    const bool oneway_vehicle,
                    const bool oneway_bicycle,
+                   const bool oneway_pedestrian,
                    const OSMAccess& user_access) {
 
   uint32_t new_access = current_access;
 
-  if (!user_access.foot_tag()) {
+  if (!oneway_pedestrian && !user_access.foot_tag()) {
     new_access = ProcessAccess(new_access, country_access, (kPedestrianAccess | kWheelchairAccess));
   }
 
@@ -104,6 +105,9 @@ void SetCountryAccess(DirectedEdge& directededge,
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
   bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
+  bool f_oneway_pedestrian = ((forward & kPedestrianAccess) && !(reverse & kPedestrianAccess));
+  bool r_oneway_pedestrian = (!(forward & kPedestrianAccess) && (reverse & kPedestrianAccess));
+
   // country_access.at(X) = -1 means that no default country overrides are needed.
   // user_access.<type>_tag() == true means that a user set the <type> tag.
 
@@ -113,9 +117,9 @@ void SetCountryAccess(DirectedEdge& directededge,
     if (country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)) != -1) {
 
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)),
-                          r_oneway_vehicle, r_oneway_bicycle, user_access);
+                          r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
       reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)),
-                          f_oneway_vehicle, f_oneway_bicycle, user_access);
+                          f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
     } else {
       // do the trunk and trunk_link logic first
       if (directededge.classification() == RoadClass::kTrunk) {
@@ -124,16 +128,16 @@ void SetCountryAccess(DirectedEdge& directededge,
 
           forward =
               GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
           reverse =
               GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
         } else if (country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)) != -1) {
 
           forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                              r_oneway_vehicle, r_oneway_bicycle, user_access);
+                              r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
           reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                              f_oneway_vehicle, f_oneway_bicycle, user_access);
+                              f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
         }
       }
       // now remove pedestian, moped and bike access if it is set.  This is the default for
@@ -141,67 +145,67 @@ void SetCountryAccess(DirectedEdge& directededge,
       forward = GetAccess(forward,
                           (forward &
                            ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
-                          r_oneway_vehicle, r_oneway_bicycle, user_access);
+                          r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
       reverse = GetAccess(reverse,
                           (reverse &
                            ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
-                          f_oneway_vehicle, f_oneway_bicycle, user_access);
+                          f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
     }
   } // trunk and trunk_link
   else if (directededge.classification() == RoadClass::kTrunk) {
     if (directededge.link() &&
         country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)) != -1) {
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                          r_oneway_vehicle, r_oneway_bicycle, user_access);
+                          r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
       reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                          f_oneway_vehicle, f_oneway_bicycle, user_access);
+                          f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
     } else if (country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)) != -1) {
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                          r_oneway_vehicle, r_oneway_bicycle, user_access);
+                          r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
       reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                          f_oneway_vehicle, f_oneway_bicycle, user_access);
+                          f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
     }
   }
   // track, footway, pedestrian, bridleway, cycleway, and path
   if (directededge.use() == Use::kTrack &&
       country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
   } else if (directededge.use() == Use::kFootway &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
 
   } else if (directededge.use() == Use::kPedestrian &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)) != -1) {
 
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
   } else if (directededge.use() == Use::kBridleway &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kBridleway)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
   } else if (directededge.use() == Use::kCycleway &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kCycleway)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
 
   } else if (directededge.use() == Use::kPath &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kPath)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kPath)),
-                        r_oneway_vehicle, r_oneway_bicycle, user_access);
+                        r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kPath)),
-                        f_oneway_vehicle, f_oneway_bicycle, user_access);
+                        f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
   }
 
   directededge.set_forwardaccess(forward);

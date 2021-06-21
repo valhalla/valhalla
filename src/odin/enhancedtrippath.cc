@@ -1004,8 +1004,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
   std::string str;
 
   for (const auto& sign_element : sign_elements) {
@@ -1253,8 +1252,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
   std::string str;
   std::string param_list;
 
@@ -1500,6 +1498,27 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
         GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasRoadForkTraversableIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    bool allow_service_road) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_fork_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->prev_name_consistency() &&
+        (xedge->use() != TripLeg_Use_kRampUse) && (xedge->use() != TripLeg_Use_kTurnChannelUse) &&
+        (xedge->use() != TripLeg_Use_kFerryUse) && (xedge->use() != TripLeg_Use_kRailFerryUse)) {
+      // If service roads are not allowed then skip intersecting service roads
+      if (!allow_service_road && (xedge->road_class() == kServiceOther)) {
+        continue;
+      }
       return true;
     }
   }

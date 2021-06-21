@@ -54,10 +54,12 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   max_reach_ = max_reach;
 
   // these are used below to get conservative estimates of forward and reverse reach
-  constexpr uint16_t forward_disallow_mask =
-      sif::kDisallowEndRestriction | sif::kDisallowSimpleRestriction | sif::kDisallowClosure;
-  constexpr uint16_t reverse_disallow_mask =
-      sif::kDisallowStartRestriction | sif::kDisallowSimpleRestriction | sif::kDisallowClosure;
+  constexpr uint16_t forward_disallow_mask = sif::kDisallowEndRestriction |
+                                             sif::kDisallowSimpleRestriction | sif::kDisallowClosure |
+                                             sif::kDisallowShortcut;
+  constexpr uint16_t reverse_disallow_mask = sif::kDisallowStartRestriction |
+                                             sif::kDisallowSimpleRestriction | sif::kDisallowClosure |
+                                             sif::kDisallowShortcut;
 
   // TODO: here we stay extra conservative by avoiding starting on a simple restriction because we
   // TODO: dont have predecessor information in the simple reach expansion so we bail 1 edge earlier
@@ -68,7 +70,8 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   // seed the expansion with a place to start expanding from
   Clear();
   graph_tile_ptr tile, start_tile = reader.GetGraphTile(edge_id);
-  if ((tile = start_tile) && costing->Allowed(edge, tile, sif::kDisallowSimpleRestriction))
+  if ((tile = start_tile) &&
+      costing->Allowed(edge, tile, sif::kDisallowSimpleRestriction | sif::kDisallowShortcut))
     enqueue(edge->endnode(), reader, costing, tile);
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -103,7 +106,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from, tile may have changed so reset it
   Clear();
-  if ((tile = start_tile) && costing->Allowed(edge, tile))
+  if ((tile = start_tile) && costing->Allowed(edge, tile, sif::kDisallowShortcut))
     enqueue(reader.GetBeginNodeId(edge, tile), reader, costing, tile);
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
@@ -160,7 +163,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   directed_reach reach{};
 
   graph_tile_ptr tile = reader.GetGraphTile(edge_id);
-  if (!tile || !costing->Allowed(edge, tile)) {
+  if (!tile || !costing->Allowed(edge, tile, sif::kDisallowShortcut)) {
     return reach;
   }
 

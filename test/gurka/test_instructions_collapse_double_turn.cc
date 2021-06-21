@@ -64,14 +64,15 @@ TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
 
   // Verify the L turn instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left onto South River Road.", "Turn left onto South River Road.",
+      result, maneuver_index, "Turn left onto South River Road.",
+      "Turn left. Then Turn left to take the ramp.", "Turn left onto South River Road.",
       "Turn left onto South River Road. Then Turn left to take the ramp.", "Continue for 50 meters.");
 
   maneuver_index = 2;
 
   // Verify the L turn instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left to take the ramp.", "Turn left to take the ramp.",
+      result, maneuver_index, "Turn left to take the ramp.", "", "Turn left to take the ramp.",
       "Turn left to take the ramp. Then, in 70 meters, You will arrive at your destination.",
       "Continue for 70 meters.");
 }

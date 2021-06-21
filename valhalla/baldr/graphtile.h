@@ -322,12 +322,6 @@ public:
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  EdgeInfo edgeinfo(const size_t offset) const;
-
-  /**
-   * Get a pointer to edge info.
-   * @return  Returns edge info.
-   */
   EdgeInfo edgeinfo(const DirectedEdge* edge) const;
 
   /**
@@ -352,23 +346,20 @@ public:
   GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
 
   /**
-   * Convenience method to get the names for an edge given the offset to the
-   * edge information.
-   * @param  edgeinfo_offset  Offset to the edge info.
+   * Convenience method to get the names for an edge
+   * @param  edge  Directed edge
    * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset,
-                                    bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(const DirectedEdge* edge, bool only_tagged_names = false) const;
 
   /**
-   * Convenience method to get the types for the names given the offset to the
-   * edge information.
-   * @param  edgeinfo_offset  Offset to the edge info.
+   * Convenience method to get the types for the names given the edge
+   * @param  edge  Directed edge
    * @return  Returns unit16_t.  If a bit is set, then it is a ref.
    */
-  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
+  uint16_t GetTypes(const DirectedEdge* edge) const;
 
   /**
    * Get the admininfo at the specified index. Populates the state name and

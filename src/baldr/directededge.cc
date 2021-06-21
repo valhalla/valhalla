@@ -589,9 +589,9 @@ json::MapPtr DirectedEdge::json() const {
       {"geo_attributes",
        json::map({
            {"length", static_cast<uint64_t>(length_)},
-           {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
-           {"max_up_slope", json::fp_t{static_cast<double>(max_up_slope()), 2}},
-           {"max_down_slope", json::fp_t{static_cast<double>(max_down_slope()), 2}},
+           {"weighted_grade", json::fixed_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
+           {"max_up_slope", json::fixed_t{static_cast<double>(max_up_slope()), 2}},
+           {"max_down_slope", json::fixed_t{static_cast<double>(max_down_slope()), 2}},
            {"curvature", static_cast<uint64_t>(curvature_)},
        })},
       {"access", access_json(forwardaccess_)},

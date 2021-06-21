@@ -120,7 +120,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
 
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
-        auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+        auto edge_info = tile->edgeinfo(edge);
         bool intersects = false;
         for (const auto& ring_loc : bin.second) {
           intersects = bg::intersects(rings_bg[ring_loc], edge_info.shape());

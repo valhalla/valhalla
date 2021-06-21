@@ -1,12 +1,5 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
 
-if ((UNIX OR APPLE) AND ENABLE_SINGLE_FILES_WERROR)
- set_source_files_properties(
-        polyline2.cc
-        point_tile_index.cc
-        PROPERTIES COMPILE_FLAGS "-Werror -Wuninitialized")
-endif()
-
 set(sources
   linesegment2.cc
   tiles.cc
@@ -19,6 +12,12 @@ set(sources
   util.cc
   ellipse.cc
   logging.cc)
+
+if ((UNIX OR APPLE) AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(
+            ${sources}
+            PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra")
+endif()
 
 valhalla_module(NAME midgard
   SOURCES ${sources}

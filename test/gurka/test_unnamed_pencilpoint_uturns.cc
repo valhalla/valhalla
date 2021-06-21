@@ -51,7 +51,8 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       // Verify that it takes the sharp left turn
       gurka::assert::raw::expect_instructions_at_maneuver_index(
-          result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
+          result, maneuver_index, "Make a sharp left.",
+          "Make a sharp left. Then You will arrive at your destination.", "Make a sharp left.",
           "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
     } else if (c == "pedestrian") {
 
@@ -67,6 +68,7 @@ TEST(Standalone, UnnamedPencilPointUturns) {
                                                                 "Make a sharp left.",
                                                                 "Make a sharp left.",
                                                                 "Make a sharp left.",
+                                                                "Make a sharp left.",
                                                                 "Continue for 50 meters.");
     } else {
 
@@ -79,7 +81,8 @@ TEST(Standalone, UnnamedPencilPointUturns) {
 
       // Verify that it takes the sharp left turn
       gurka::assert::raw::expect_instructions_at_maneuver_index(
-          result, maneuver_index, "Make a sharp left.", "Make a sharp left.",
+          result, maneuver_index, "Make a sharp left.",
+          "Make a sharp left. Then You will arrive at your destination.", "Make a sharp left.",
           "Make a sharp left. Then You will arrive at your destination.", "Continue for 50 meters.");
     }
   }

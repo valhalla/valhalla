@@ -256,7 +256,7 @@ public:
     return mutable_edge_->has_sign();
   }
 
-  const ::valhalla::TripLeg_Sign& sign() const {
+  const ::valhalla::Sign& sign() const {
     return mutable_edge_->sign();
   }
 
@@ -447,16 +447,14 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-      const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-      const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const;
 #endif
 };
 
@@ -659,6 +657,10 @@ public:
 
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
+
+  bool HasRoadForkTraversableIntersectingEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode,
+                                              bool allow_service_road);
 
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,

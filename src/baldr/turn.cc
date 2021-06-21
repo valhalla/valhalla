@@ -25,11 +25,11 @@ Turn::Type Turn::GetType(uint32_t turn_degree) {
     return Turn::Type::kSlightRight;
   } else if ((turn_degree > 44) && (turn_degree < 136)) {
     return Turn::Type::kRight;
-  } else if ((turn_degree > 135) && (turn_degree < 170)) {
+  } else if ((turn_degree > 135) && (turn_degree < 160)) {
     return Turn::Type::kSharpRight;
-  } else if ((turn_degree > 169) && (turn_degree < 191)) {
+  } else if ((turn_degree > 159) && (turn_degree < 201)) {
     return Turn::Type::kReverse;
-  } else if ((turn_degree > 190) && (turn_degree < 225)) {
+  } else if ((turn_degree > 200) && (turn_degree < 225)) {
     return Turn::Type::kSharpLeft;
   } else if ((turn_degree > 224) && (turn_degree < 316)) {
     return Turn::Type::kLeft;

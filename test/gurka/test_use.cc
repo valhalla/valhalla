@@ -124,7 +124,9 @@ TEST_F(Use, test_entering_rest_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Rest Area.", "Turn left toward Rest Area.",
+      result, step_idx, "Turn left toward Rest Area.",
+      "Turn left toward Rest Area. Then You will arrive at your destination.",
+      "Turn left toward Rest Area.",
       "Turn left toward Rest Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 
@@ -189,7 +191,9 @@ TEST_F(Use, test_entering_service_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Service Area.", "Turn left toward Service Area.",
+      result, step_idx, "Turn left toward Service Area.",
+      "Turn left toward Service Area. Then You will arrive at your destination.",
+      "Turn left toward Service Area.",
       "Turn left toward Service Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 

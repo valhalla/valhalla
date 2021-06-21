@@ -84,7 +84,8 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_FALSE(way_85744121.moped_forward());
   EXPECT_TRUE(way_85744121.bike_forward());
   EXPECT_TRUE(way_85744121.bus_forward());
-  EXPECT_TRUE(way_85744121.pedestrian());
+  EXPECT_TRUE(way_85744121.pedestrian_forward());
+  EXPECT_TRUE(way_85744121.pedestrian_backward());
   EXPECT_FALSE(way_85744121.auto_backward());
   EXPECT_FALSE(way_85744121.moped_backward());
   EXPECT_FALSE(way_85744121.bike_backward());
@@ -95,7 +96,8 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_TRUE(way_86260080.bike_forward());
   EXPECT_TRUE(way_86260080.bus_forward());
   EXPECT_TRUE(way_86260080.moped_forward());
-  EXPECT_TRUE(way_86260080.pedestrian());
+  EXPECT_TRUE(way_86260080.pedestrian_forward());
+  EXPECT_TRUE(way_86260080.pedestrian_backward());
   EXPECT_TRUE(way_86260080.auto_backward());
   EXPECT_TRUE(way_86260080.bike_backward());
   EXPECT_TRUE(way_86260080.bus_backward());
@@ -106,7 +108,8 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_TRUE(way_161683833.bike_forward());
   EXPECT_TRUE(way_161683833.bus_forward());
   EXPECT_TRUE(way_161683833.moped_forward());
-  EXPECT_TRUE(way_161683833.pedestrian());
+  EXPECT_TRUE(way_161683833.pedestrian_forward());
+  EXPECT_TRUE(way_161683833.pedestrian_backward());
   EXPECT_TRUE(way_161683833.auto_backward());
   EXPECT_TRUE(way_161683833.bike_backward());
   EXPECT_TRUE(way_161683833.bus_backward());
@@ -336,7 +339,8 @@ void Baltimore(const std::string& config_file) {
   EXPECT_FALSE(way_216240466.bus_forward());
   EXPECT_FALSE(way_216240466.moped_forward());
   EXPECT_TRUE(way_216240466.bike_forward());
-  EXPECT_TRUE(way_216240466.pedestrian());
+  EXPECT_TRUE(way_216240466.pedestrian_forward());
+  EXPECT_TRUE(way_216240466.pedestrian_backward());
   EXPECT_FALSE(way_216240466.auto_backward());
   EXPECT_FALSE(way_216240466.bus_backward());
   EXPECT_FALSE(way_216240466.moped_backward());
@@ -348,7 +352,8 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_138388359.bus_forward());
   EXPECT_TRUE(way_138388359.moped_forward());
   EXPECT_TRUE(way_138388359.bike_forward());
-  EXPECT_TRUE(way_138388359.pedestrian());
+  EXPECT_TRUE(way_138388359.pedestrian_forward());
+  EXPECT_TRUE(way_138388359.pedestrian_backward());
   EXPECT_TRUE(way_138388359.auto_backward());
   EXPECT_TRUE(way_138388359.bus_backward());
   EXPECT_TRUE(way_138388359.moped_backward());
@@ -360,7 +365,8 @@ void Baltimore(const std::string& config_file) {
   EXPECT_FALSE(way_133689121.bus_forward());
   EXPECT_FALSE(way_133689121.moped_forward());
   EXPECT_FALSE(way_133689121.bike_forward());
-  EXPECT_TRUE(way_133689121.pedestrian());
+  EXPECT_TRUE(way_133689121.pedestrian_forward());
+  EXPECT_TRUE(way_133689121.pedestrian_backward());
   EXPECT_FALSE(way_133689121.auto_backward());
   EXPECT_FALSE(way_133689121.bus_backward());
   EXPECT_FALSE(way_133689121.moped_backward());
@@ -372,7 +378,8 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_49641455.bus_forward());
   EXPECT_TRUE(way_49641455.moped_forward());
   EXPECT_TRUE(way_49641455.bike_forward());
-  EXPECT_TRUE(way_49641455.pedestrian());
+  EXPECT_TRUE(way_49641455.pedestrian_forward());
+  EXPECT_TRUE(way_49641455.pedestrian_backward());
   EXPECT_FALSE(way_49641455.auto_backward());
   EXPECT_FALSE(way_49641455.bus_backward());
   EXPECT_FALSE(way_49641455.moped_backward());
@@ -385,7 +392,8 @@ void Baltimore(const std::string& config_file) {
   EXPECT_TRUE(way_192573108.bus_forward());
   EXPECT_TRUE(way_192573108.moped_forward());
   EXPECT_TRUE(way_192573108.bike_forward());
-  EXPECT_TRUE(way_192573108.pedestrian());
+  EXPECT_TRUE(way_192573108.pedestrian_forward());
+  EXPECT_TRUE(way_192573108.pedestrian_backward());
   EXPECT_TRUE(way_192573108.auto_backward());
   EXPECT_TRUE(way_192573108.bus_backward());
   EXPECT_TRUE(way_192573108.moped_backward());
@@ -456,7 +464,8 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_6885577.bus_forward());
   EXPECT_TRUE(way_6885577.moped_forward());
   EXPECT_FALSE(way_6885577.bike_forward());
-  EXPECT_TRUE(way_6885577.pedestrian());
+  EXPECT_TRUE(way_6885577.pedestrian_forward());
+  EXPECT_TRUE(way_6885577.pedestrian_backward());
   EXPECT_TRUE(way_6885577.auto_backward());
   EXPECT_TRUE(way_6885577.bus_backward());
   EXPECT_TRUE(way_6885577.moped_backward());
@@ -467,7 +476,8 @@ void Bike(const std::string& config_file) {
   EXPECT_FALSE(way_156539494.bus_forward());
   EXPECT_FALSE(way_156539494.moped_forward());
   EXPECT_TRUE(way_156539494.bike_forward());
-  EXPECT_FALSE(way_156539494.pedestrian());
+  EXPECT_FALSE(way_156539494.pedestrian_forward());
+  EXPECT_FALSE(way_156539494.pedestrian_backward());
   EXPECT_FALSE(way_156539494.auto_backward());
   EXPECT_FALSE(way_156539494.bus_backward());
   EXPECT_FALSE(way_156539494.moped_backward());
@@ -478,7 +488,8 @@ void Bike(const std::string& config_file) {
   EXPECT_FALSE(way_6885404.bus_forward());
   EXPECT_FALSE(way_6885404.moped_forward());
   EXPECT_TRUE(way_6885404.bike_forward());
-  EXPECT_FALSE(way_6885404.pedestrian());
+  EXPECT_FALSE(way_6885404.pedestrian_forward());
+  EXPECT_FALSE(way_6885404.pedestrian_backward());
   EXPECT_FALSE(way_6885404.auto_backward());
   EXPECT_FALSE(way_6885404.bus_backward());
   EXPECT_FALSE(way_6885404.moped_backward());
@@ -489,7 +500,8 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539492.bus_forward());
   EXPECT_TRUE(way_156539492.moped_forward());
   EXPECT_FALSE(way_156539492.bike_forward());
-  EXPECT_TRUE(way_156539492.pedestrian());
+  EXPECT_TRUE(way_156539492.pedestrian_forward());
+  EXPECT_TRUE(way_156539492.pedestrian_backward());
   EXPECT_TRUE(way_156539492.auto_backward());
   EXPECT_TRUE(way_156539492.bus_backward());
   EXPECT_TRUE(way_156539492.moped_backward());
@@ -500,7 +512,8 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539491.bus_forward());
   EXPECT_TRUE(way_156539491.moped_forward());
   EXPECT_TRUE(way_156539491.bike_forward());
-  EXPECT_TRUE(way_156539491.pedestrian());
+  EXPECT_TRUE(way_156539492.pedestrian_forward());
+  EXPECT_TRUE(way_156539492.pedestrian_backward());
   EXPECT_TRUE(way_156539491.auto_backward());
   EXPECT_TRUE(way_156539491.bus_backward());
   EXPECT_TRUE(way_156539491.moped_forward());
@@ -543,7 +556,8 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_14327599.moped_forward());
   EXPECT_TRUE(way_14327599.bus_forward());
   EXPECT_TRUE(way_14327599.bike_forward());
-  EXPECT_TRUE(way_14327599.pedestrian());
+  EXPECT_TRUE(way_14327599.pedestrian_forward());
+  EXPECT_TRUE(way_14327599.pedestrian_backward());
   EXPECT_FALSE(way_14327599.auto_backward());
   EXPECT_FALSE(way_14327599.moped_backward());
   EXPECT_FALSE(way_14327599.bus_backward());
@@ -554,7 +568,8 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_87358588.moped_forward());
   EXPECT_FALSE(way_87358588.bus_forward());
   EXPECT_TRUE(way_87358588.bike_forward());
-  EXPECT_TRUE(way_87358588.pedestrian());
+  EXPECT_TRUE(way_87358588.pedestrian_forward());
+  EXPECT_TRUE(way_87358588.pedestrian_backward());
   EXPECT_FALSE(way_87358588.auto_backward());
   EXPECT_FALSE(way_87358588.moped_backward());
   EXPECT_FALSE(way_87358588.bus_backward());
@@ -565,7 +580,8 @@ void Bus(const std::string& config_file) {
   EXPECT_TRUE(way_49771553.moped_forward());
   EXPECT_TRUE(way_49771553.bus_forward());
   EXPECT_TRUE(way_49771553.bike_forward());
-  EXPECT_TRUE(way_49771553.pedestrian());
+  EXPECT_TRUE(way_49771553.pedestrian_forward());
+  EXPECT_TRUE(way_49771553.pedestrian_backward());
   EXPECT_TRUE(way_49771553.auto_backward());
   EXPECT_TRUE(way_49771553.moped_backward());
   EXPECT_TRUE(way_49771553.bus_backward());
@@ -576,7 +592,8 @@ void Bus(const std::string& config_file) {
   EXPECT_TRUE(way_225895737.moped_forward());
   EXPECT_TRUE(way_225895737.bus_forward());
   EXPECT_TRUE(way_225895737.bike_forward());
-  EXPECT_TRUE(way_225895737.pedestrian());
+  EXPECT_TRUE(way_225895737.pedestrian_forward());
+  EXPECT_TRUE(way_225895737.pedestrian_backward());
   EXPECT_FALSE(way_225895737.auto_backward());
   EXPECT_FALSE(way_225895737.moped_backward());
   EXPECT_FALSE(way_225895737.bus_backward());

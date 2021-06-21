@@ -18,6 +18,7 @@
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
 
+#define USE_UNSTABLE_GEOS_CPP_API
 #if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
 #include <geos/geom/CoordinateArraySequence.h>
 #else
@@ -381,7 +382,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   uint32_t count = 0;
-  uint64_t nodeid;
   bool has_data;
 #if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
   auto gf = GeometryFactory::create();
@@ -414,7 +414,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         std::unique_ptr<CoordinateSequence> coords(
             gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
 #endif
-        size_t j = 0;
 
         for (const auto ref_id : itr->second) {
 
