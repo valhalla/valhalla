@@ -342,14 +342,14 @@ std::string actor_t::chinese_postman(const std::string& request_str,
   // parse the request
   Api request;
   ParseApi(request_str, Options::chinese_postman, request);
-  // check lokis status
+  // check the request and locate the locations in the graph
   pimpl->loki_worker.chinese_postman(request);
-  // check thors status
+  // Find chinese postman route
   pimpl->thor_worker.chinese_postman(request);
-  // check odins status
-  pimpl->odin_worker.status(request);
-  // get the json
-  auto json = tyr::serializeStatus(request);
+  // get some directions back from them
+  pimpl->odin_worker.narrate(request);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -358,7 +358,7 @@ std::string actor_t::chinese_postman(const std::string& request_str,
   if (api) {
     api->Swap(&request);
   }
-  return json;
+  return bytes;
 }
 
 } // namespace tyr
