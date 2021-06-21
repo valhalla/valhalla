@@ -3,5 +3,5 @@
 using namespace valhalla::sif;
 
 bool HierarchyLimits::StopExpanding(const float dist) const {
-  return (dist > expansion_within_dist && up_transition_count > max_up_transitions);
+  return (up_transition_count > max_up_transitions && dist > expansion_within_dist);
 }

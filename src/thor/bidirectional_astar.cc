@@ -272,9 +272,11 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
+  float dist = 0.0f;
   float sortcost =
-      newcost.cost + (FORWARD ? astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()))
-                              : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode())));
+      newcost.cost + (FORWARD
+                          ? astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist)
+                          : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
@@ -283,8 +285,11 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   uint32_t idx = 0;
   if (FORWARD) {
     idx = edgelabels_forward_.size();
-    // Calculate distance from the origin. It will be used by hierarchy limits
-    const auto dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    if (hierarchy_limits_forward_[meta.edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+      // Override distance to the destination with a distance from the origin.
+      // It will be used by hierarchy limits
+      dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    }
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, thru,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
@@ -294,8 +299,11 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
-    // Calculate distance from the destination. It will be used by hierarchy limits
-    const auto dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    if (hierarchy_limits_reverse_[meta.edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+      // Override distance to the origin with a distance from the destination.
+      // It will be used by hierarchy limits
+      dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    }
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, thru,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
@@ -852,16 +860,18 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float sortcost =
-        cost.cost + astarheuristic_forward_.Get(nodeinfo->latlng(endtile->header()->base_ll()));
+    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    // Calculate distance from the origin. It will be used by hierarchy limits
-    const auto dist =
-        astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    if (hierarchy_limits_forward_[edgeid.level()].max_up_transitions != kUnlimitedTransitions) {
+      // Override distance to the destination with a distance from the origin.
+      // It will be used by hierarchy limits
+      dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
+    }
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1, !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -941,16 +951,19 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float sortcost =
-        cost.cost + astarheuristic_reverse_.Get(tile->get_node_ll(opp_dir_edge->endnode()));
+    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path. Make sure the opposing
     // edge (edgeid) is set.
     uint32_t idx = edgelabels_reverse_.size();
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile);
-    // Calculate distance from the destination. It will be used by hierarchy limits
-    const auto dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    if (hierarchy_limits_reverse_[opp_edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+      // Override distance to the origin with a distance from the destination.
+      // It will be used by hierarchy limits
+      dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+    }
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
@@ -1153,8 +1166,11 @@ void BidirectionalAStar::ModifyHierarchyLimits() {
   // Distance threshold optimized for unidirectional search. For bidirectional case
   // they can be lowered.
   // Decrease distance thresholds only for arterial roads for now
-  hierarchy_limits_forward_[1].expansion_within_dist /= 5.f;
-  hierarchy_limits_reverse_[1].expansion_within_dist /= 5.f;
+  if (hierarchy_limits_forward_[1].max_up_transitions != kUnlimitedTransitions)
+    hierarchy_limits_forward_[1].expansion_within_dist /= 5.f;
+
+  if (hierarchy_limits_reverse_[1].max_up_transitions != kUnlimitedTransitions)
+    hierarchy_limits_reverse_[1].expansion_within_dist /= 5.f;
 }
 
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,
