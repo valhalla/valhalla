@@ -698,6 +698,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the pedestrian forward flag.
+   * @param  pedestrian_forward   Are pedestrians allowed in the forward direction?
+   */
+  void set_pedestrian_forward(const bool pedestrian_forward) {
+    pedestrian_forward_ = pedestrian_forward;
+  }
+
+  /**
+   * Get the pedestrian forward flag.
+   * @return  Returns pedestrian forward flag.
+   */
+  bool pedestrian_forward() const {
+    return pedestrian_forward_;
+  }
+
+  /**
    * Sets the auto_backward flag.
    * @param  auto_backward   Can you drive in the reverse direction?
    */
@@ -845,6 +861,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the pedestrian backward flag.
+   * @param  pedestrian_backward   Are pedestrians allowed in the reverse direction?
+   */
+  void set_pedestrian_backward(const bool pedestrian_backward) {
+    pedestrian_backward_ = pedestrian_backward;
+  }
+
+  /**
+   * Get the pedestrian backward flag.
+   * @return  Returns pedestrian backward flag.
+   */
+  bool pedestrian_backward() const {
+    return pedestrian_backward_;
+  }
+
+  /**
    * Sets the destination_only flag.
    * @param  destination_only   Is private?
    */
@@ -858,22 +890,6 @@ struct OSMWay {
    */
   bool destination_only() const {
     return destination_only_;
-  }
-
-  /**
-   * Sets the pedestrian flag.
-   * @param  pedestrian   Are pedestrians allowed?
-   */
-  void set_pedestrian(const bool pedestrian) {
-    pedestrian_ = pedestrian;
-  }
-
-  /**
-   * Get the pedestrian flag.
-   * @return  Returns pedestrian flag.
-   */
-  bool pedestrian() const {
-    return pedestrian_;
   }
 
   /**
@@ -1653,12 +1669,14 @@ struct OSMWay {
   uint32_t forward_lanes_ : 4;
   uint32_t backward_lanes_ : 4;
   uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
-  uint16_t wheelchair_ : 1;
-  uint16_t wheelchair_tag_ : 1;
-  uint32_t pedestrian_ : 1;
+  uint32_t wheelchair_ : 1;
+  uint32_t wheelchair_tag_ : 1;
+  uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare0_ : 4; // Spare
+  uint32_t spare1_ : 2; // Spare
+  uint32_t pedestrian_forward_ : 1;
+  uint32_t pedestrian_backward_ : 1;
 
   // Access
   uint16_t auto_forward_ : 1;
@@ -1689,7 +1707,7 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare1_ : 4;
+  uint16_t spare2_ : 4;
 
   uint16_t nodecount_;
 

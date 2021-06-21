@@ -8,9 +8,17 @@
    * FIXED: Added forgotten penalties for kLivingStreet and kTrack for pedestrian costing model [#3116](https://github.com/valhalla/valhalla/pull/3116)
    * FIXED: Updated the reverse turn bounds [#3122](https://github.com/valhalla/valhalla/pull/3122)
    * FIXED: Missing fork maneuver [#3134](https://github.com/valhalla/valhalla/pull/3134)
+   * FIXED: Update turn channel logic to call out specific turn at the end of the turn channel if needed [#3140](https://github.com/valhalla/valhalla/pull/3140)
+   * FIXED: Fixed cost thresholds for TimeDistanceMatrix. [#3131](https://github.com/valhalla/valhalla/pull/3131)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
+   * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
+   * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844)
+   * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
+   * CHORE: Updates robin-hood-hashing third-party library
+   * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
+   * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**

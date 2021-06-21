@@ -33,6 +33,7 @@ TEST(Crosswalk, CrosswalkInstructions) {
   int maneuver_index = 1;
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Turn right onto the crosswalk.",
+                                                            "Turn right.",
                                                             "Turn right onto the crosswalk.",
                                                             "Turn right onto the crosswalk.",
                                                             "Continue for 300 meters.");
@@ -72,11 +73,13 @@ TEST(Crosswalk, StraightRoute) {
 
   // Verify instructions for start and end maneuvers
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 0, "Walk east on the walkway.",
-                                                            "", "Walk east on the walkway.",
+                                                            "Walk east.", "",
+                                                            "Walk east on the walkway.",
                                                             "Continue for 1.5 kilometers.");
 
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1,
                                                             "You have arrived at your destination.",
+                                                            "",
                                                             "You will arrive at your destination.",
                                                             "You have arrived at your destination.",
                                                             "");
@@ -116,6 +119,7 @@ TEST(Crosswalk, TransitionFromNonFootways) {
   int maneuver_index = 1;
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Turn right onto the walkway.",
+                                                            "Turn right.",
                                                             "Turn right onto the walkway.",
                                                             "Turn right onto the walkway.",
                                                             "Continue for 500 meters.");
