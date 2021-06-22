@@ -98,6 +98,7 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
+sudo add-apt-repository ppa:kevinkreiser/prime-server 
 sudo apt-get update
 sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
