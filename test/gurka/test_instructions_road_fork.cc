@@ -63,7 +63,7 @@ TEST_F(InstructionsRoadFork1, KeepLeft) {
 
   // Verify the keep left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Keep left to take Oostertunnel/R23.",
+                                                            "Keep left to take Oostertunnel/R23.", "",
                                                             "Keep left to take Oostertunnel.",
                                                             "Keep left to take Oostertunnel, R23.",
                                                             "Continue for 4 kilometers.");
@@ -82,7 +82,7 @@ TEST_F(InstructionsRoadFork1, KeepRight) {
 
   // Verify the right right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Keep right to stay on Diestsevest.",
+                                                            "Keep right to stay on Diestsevest.", "",
                                                             "Keep right to stay on Diestsevest.",
                                                             "Keep right to stay on Diestsevest.",
                                                             "Continue for 4 kilometers.");
