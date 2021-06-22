@@ -2021,6 +2021,10 @@ function nodes_proc (kv, nokeys)
     end
   end
 
+  if private[kv["access"]] == "true" then
+    kv["private"] = "true"
+  end
+
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
 
