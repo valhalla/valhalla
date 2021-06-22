@@ -67,6 +67,15 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
   throw std::logic_error("Could not find candidate edge for the location");
 }
 
+bool is_starting_node(const valhalla::Location& location, const GraphId& edge_id) {
+  for (const auto& e : location.path_edges()) {
+    if (e.graph_id() == edge_id) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
                                 const Options& /*options*/,
                                 const valhalla::Location& origin,
@@ -191,8 +200,10 @@ void thor_worker_t::chinese_postman(Api& request) {
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
     if (!originNodeFound) {
-      originVertex = start_vertex;
-      originNodeFound = true;
+      if (is_starting_node(originLocation, GraphId(edge.id()))) {
+        originVertex = start_vertex;
+        originNodeFound = true;
+      }
     }
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
@@ -205,6 +216,11 @@ void thor_worker_t::chinese_postman(Api& request) {
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
 
+  if (!originNodeFound) {
+    throw std::logic_error("Could not find candidate edge for the origin location");
+  } else {
+    std::cout << "Origin node is found: " << originVertex.graph_id << std::endl;
+  }
   std::cout << "Num of vertices: " << G.numVertices() << std::endl;
   std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
