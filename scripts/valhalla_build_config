@@ -40,6 +40,7 @@ config = {
     'global_synchronized_cache': False,
     'max_concurrent_reader_users' : 1,
     'reclassify_links': True,
+    'default_speeds_config': optional(str),
     'data_processing': {
       'infer_internal_intersections': True,
       'infer_turn_channels': True,
@@ -92,7 +93,8 @@ config = {
     'service': {
       'proxy': 'ipc:///tmp/thor'
     },
-    'max_reserved_labels_count': 1000000
+    'max_reserved_labels_count': 1000000,
+    'extended_search': False
   },
   'odin': {
     'logging': {
@@ -262,11 +264,12 @@ config = {
       'max_distance': 200000.0,
       'max_locations': 5
     },
-    'max_avoid_locations': 50,
+    'max_exclude_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
     'max_timedep_distance': 500000,
-    'max_alternates': 2
+    'max_alternates': 2,
+    'max_exclude_polygons_length': 10000
   }
 }
 
@@ -301,6 +304,7 @@ help_text = {
     'global_synchronized_cache': 'bool indicating whether global_synchronized_cache is used - default to False',
     'max_concurrent_reader_users' : 'number of threads in the threadpool which can be used to fetch tiles over the network via curl',
     'reclassify_links' : 'bool indicating whether or not to reclassify links - reclassifies ramps based on the lowest class connecting road',
+    'default_speeds_config': 'a path indicating the json config file which graph enhancer will use to set the speeds of edges in the graph based on their geographic location (state/country), density (urban/rural), road class, road use (form of way)',
     'data_processing': {
       'infer_internal_intersections': 'bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf',
       'infer_turn_channels': 'bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf',
@@ -353,7 +357,8 @@ help_text = {
     'service': {
       'proxy': 'IPC linux domain socket file location'
     },
-    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.'
+    'max_reserved_labels_count': 'Maximum capacity for edge labels reserved in path algorithm',
+    'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge'
   },
   'odin': {
     'logging': {
@@ -424,37 +429,37 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'auto_shorter': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'bus': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'hov': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'taxi': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'pedestrian': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix',
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix',
       'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
@@ -462,37 +467,37 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'motorcycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'truck': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'skadi': {
       'max_shape': 'Maximum number of input shapes',
@@ -517,17 +522,18 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
     'centroid': {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',
       'max_locations': 'Maximum number of input locations, 127 is a hard limit and cannot be increased in config'
     },
-    'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
+    'max_exclude_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
-    'max_alternates': 'Maximum number of alternate routes to allow in a request'
+    'max_alternates': 'Maximum number of alternate routes to allow in a request',
+    'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters'
   }
 }
 

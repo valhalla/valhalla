@@ -73,6 +73,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {29, "kBridlewayUse"},
       {30, "kRestAreaUse"},
       {31, "kServiceAreaUse"},
+      {32, "kPedestrianCrossingUse"},
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
@@ -368,7 +369,11 @@ bool EnhancedTripLeg_Edge::IsSidewalkUse() const {
 }
 
 bool EnhancedTripLeg_Edge::IsFootwayUse() const {
-  return (use() == TripLeg_Use_kFootwayUse);
+  return (use() == TripLeg_Use_kFootwayUse || use() == TripLeg_Use_kPedestrianCrossingUse);
+}
+
+bool EnhancedTripLeg_Edge::IsPedestrianCrossingUse() const {
+  return (use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
 bool EnhancedTripLeg_Edge::IsStepsUse() const {
@@ -619,21 +624,23 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
     // and next maneuver is not a straight
     // Activate only specific matching turn lanes
     switch (next_maneuver_type) {
-      case DirectionsLeg_Maneuver_Type_kUturnLeft:
-      case DirectionsLeg_Maneuver_Type_kSharpLeft:
-      case DirectionsLeg_Maneuver_Type_kLeft:
       case DirectionsLeg_Maneuver_Type_kSlightLeft:
-      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kStayLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
-      case DirectionsLeg_Maneuver_Type_kExitRight:
-      case DirectionsLeg_Maneuver_Type_kRampRight:
       case DirectionsLeg_Maneuver_Type_kRight:
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
@@ -997,8 +1004,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
   std::string str;
 
   for (const auto& sign_element : sign_elements) {
@@ -1246,8 +1252,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
   std::string str;
   std::string param_list;
 
@@ -1329,6 +1334,9 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   str += " | road_class=";
   str += std::to_string(road_class());
+
+  str += " | lane_count=";
+  str += std::to_string(lane_count());
 
   return str;
 }
@@ -1496,6 +1504,27 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasRoadForkTraversableIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    bool allow_service_road) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_fork_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->prev_name_consistency() &&
+        (xedge->use() != TripLeg_Use_kRampUse) && (xedge->use() != TripLeg_Use_kTurnChannelUse) &&
+        (xedge->use() != TripLeg_Use_kFerryUse) && (xedge->use() != TripLeg_Use_kRailFerryUse)) {
+      // If service roads are not allowed then skip intersecting service roads
+      if (!allow_service_road && (xedge->road_class() == kServiceOther)) {
+        continue;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
@@ -1655,6 +1684,37 @@ bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
+                                                         const TripLeg_Use exclude_use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // If is traversable based on mode
+    // and the intersecting edge use does not equal the specified exclude use
+    if (xedge->IsTraversableOutbound(travel_mode) && (xedge->use() != exclude_use)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
+                                                                const TripLeg_TravelMode travel_mode,
+                                                                const TripLeg_Use exclude_use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // if the intersecting edge is forward
+    // and the intersecting edge is traversable based on mode
+    // and the intersecting edge use does not equal the specified exclude use
+    if (is_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && (xedge->use() != exclude_use)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
                                                  uint32_t from_heading,
                                                  const TripLeg_TravelMode travel_mode) {
@@ -1692,7 +1752,7 @@ bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const RoadClass road_class
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
-    TripLeg_Use* use) {
+    boost::optional<TripLeg_Use>* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta

@@ -126,6 +126,45 @@ D--3--4--C--5--6--E)";
   }
 }
 
+TEST(MapMatch, NodeSnapFix) {
+  const std::string ascii_map = R"(
+      B-C------------1----F---------D
+  )";
+
+  // The challenge posed by this case is that the gps point "B" is exactly the
+  // lat/lon as the point "B" in the graph.
+  gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+
+  // Another thing about this case... if I declare the ways in this manner the
+  // original code works fine. The reason, I believe, is that this creates one
+  // edge with a trivial node-to-node (along the same edge) route.
+  //  const gurka::ways ways = {
+  //      {"BCFD", {{"highway", "primary"}}}
+  //  };
+
+  // To expose the issue and prove the fix, the ways must be declared in this
+  // manner. This results in a routing solution along two edges.
+  const gurka::ways ways = {
+      {"BC", {{"highway", "primary"}}},
+      {"CF", {{"highway", "primary"}}},
+      {"FD", {{"highway", "primary"}}},
+  };
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mapmatch_node_snapping");
+
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"B", "1", "F"}, "auto", {}, {},
+                                 nullptr, "via");
+
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+
+  auto expected_shape = decltype(shape){map.nodes["B"], map.nodes["C"], map.nodes["F"]};
+  EXPECT_EQ(shape.size(), expected_shape.size());
+  for (int i = 0; i < shape.size(); ++i) {
+    EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
+  }
+}
+
 /****************THIS BOILERPLATE WAS COPYPASTA'D FROM THE ROUTE TEST****************/
 class TrafficBasedTest : public ::testing::Test {
 protected:
@@ -174,8 +213,8 @@ protected:
     test::build_live_traffic_data(map.config);
     test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                       valhalla::baldr::TrafficSpeed* traffic_speed) {
-      traffic_speed->overall_speed = 50 >> 1;
-      traffic_speed->speed1 = 50 >> 1;
+      traffic_speed->overall_encoded_speed = 50 >> 1;
+      traffic_speed->encoded_speed1 = 50 >> 1;
       traffic_speed->breakpoint1 = 255;
     });
 
@@ -277,4 +316,30 @@ TEST_F(TrafficBasedTest, forward) {
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
     EXPECT_EQ(speed_from_edge(api), freeflow);
   }
+}
+
+TEST(MapMatchRoute, IgnoreRestrictions) {
+  const std::string ascii_map = R"(
+    A------B----C
+     )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}},
+      {"BC", {{"highway", "motorway"}}},
+  };
+  const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const gurka::relations relations = {{{
+                                           {gurka::way_member, "AB", "from"},
+                                           {gurka::way_member, "BC", "to"},
+                                           {gurka::node_member, "B", "via"},
+                                       },
+                                       {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, relations, "test/data/mapmatch_restrictions",
+                        {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+
+  // ignore_restrictions when route with map_matching
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"A", "C"}, "auto",
+                                 {{"/costing_options/auto/ignore_restrictions", "1"}});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }

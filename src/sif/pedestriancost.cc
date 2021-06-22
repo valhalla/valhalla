@@ -24,17 +24,11 @@ namespace {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
-constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
-constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
-constexpr float kDefaultGatePenalty = 10.0f;             // Seconds
-constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
-constexpr float kDefaultFerryCost = 300.0f;              // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultBssCost = 120.0f;                // Seconds
-constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
-constexpr float kDefaultServicePenalty = 0.0f;           // Seconds
+constexpr float kDefaultGatePenalty = 10.0f;           // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 600.0f; // Seconds
+constexpr float kDefaultBssCost = 120.0f;              // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;         // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -60,7 +54,6 @@ constexpr float kDefaultSideWalkFactor = 1.0f;     // Neutral value for sidewalk
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
-constexpr float kDefaultUseTracks = 0.5f;        // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.6f; // Factor between 0 and 1
 
 // Maximum distance at the beginning or end of a multimodal route
@@ -75,9 +68,6 @@ constexpr uint32_t kTransitTransferMaxDistance = 805; // 0.5 miles
 
 // Avoid roundabouts
 constexpr float kRoundaboutFactor = 2.0f;
-
-// How much to avoid generic service roads.
-constexpr float kDefaultServiceFactor = 1.0f;
 
 // Minimum and maximum average pedestrian speed (to validate input).
 constexpr float kMinPedestrianSpeed = 0.5f;
@@ -112,35 +102,19 @@ constexpr ranged_default_t<uint32_t> kMaxGradeFootRange{0, kDefaultMaxGradeFoot,
 // Other valid ranges and defaults (not dependent on type)
 constexpr ranged_default_t<uint8_t> kMaxHikingDifficultyRange{0, kDefaultMaxHikingDifficulty, 6};
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
-constexpr ranged_default_t<float> kManeuverPenaltyRange{kMinFactor, kDefaultManeuverPenalty,
-                                                        kMaxPenalty};
-constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
-                                                               kMaxPenalty};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kWalkwayFactorRange{kMinFactor, kDefaultWalkwayFactor, kMaxFactor};
 constexpr ranged_default_t<float> kSideWalkFactorRange{kMinFactor, kDefaultSideWalkFactor,
                                                        kMaxFactor};
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kDrivewayFactorRange{kMinFactor, kDefaultDrivewayFactor,
                                                        kMaxFactor};
-constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxPenalty};
-constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
-                                                            kMaxPenalty};
-constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty,
-                                                               kMaxPenalty};
 constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransitStartEndMaxDistance,
                                                                       100000}; // Max 100k
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
                                                                       50000}; // Max 50k
-constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
-constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
-constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -161,6 +135,21 @@ constexpr float kSacScaleCostFactor[] = {
     2.5f,  // kDemandingAlpineHiking
     3.0f   // kDifficultAlpineHiking
 };
+
+BaseCostingOptionsConfig GetBaseCostOptsConfig() {
+  BaseCostingOptionsConfig cfg{};
+  // override defaults
+  cfg.gate_penalty_.def = kDefaultGatePenalty;
+  cfg.private_access_penalty_.def = kDefaultPrivateAccessPenalty;
+  cfg.disable_toll_booth_ = true;
+  cfg.disable_rail_ferry_ = true;
+  cfg.service_penalty_.def = kDefaultServicePenalty;
+  cfg.use_ferry_.def = kDefaultUseFerry;
+  cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  return cfg;
+}
+
+const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 } // namespace
 
@@ -224,6 +213,7 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
+   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -233,6 +223,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
@@ -320,13 +311,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
-                                     const bool /*has_measured_speed*/) const override;
+                                     const bool /*has_measured_speed*/,
+                                     const InternalTurn /*internal_turn*/) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -465,9 +458,9 @@ public:
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
-    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ * (node->type() == baldr::NodeType::kGate) * node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
-    c += toll_booth_cost_ * (node->type() == baldr::NodeType::kTollBooth);
     c += ferry_transition_cost_ *
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
     c += rail_ferry_transition_cost_ *
@@ -480,6 +473,10 @@ public:
     c.cost +=
         maneuver_penalty_ * (!edge->link() && edge->use() != Use::kEgressConnection &&
                              edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx));
+    c.cost += living_street_penalty_ *
+              (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
+    c.cost +=
+        track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
     c.cost += service_penalty_ *
               (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
 
@@ -550,13 +547,16 @@ PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
 // the minimum allowed surface type, or if max grade is exceeded.
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
+                             const bool is_dest,
                              const EdgeLabel& pred,
                              const graph_tile_ptr& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx) const {
-  if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
+      (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
@@ -564,6 +564,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
   }
+
   // Disallow transit connections (except when set for multi-modal routes)
   if (!allow_transit_connections_ &&
       (edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection ||
@@ -571,8 +572,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
-                                           restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -588,9 +589,10 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
-  if (!IsAccessible(opp_edge) || (opp_edge->surface() > minimal_allowed_surface_) ||
-      opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
-      edge->sac_scale() > max_hiking_difficulty_ ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
+      (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
+      IsUserAvoidEdge(opp_edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
@@ -599,7 +601,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 
@@ -679,8 +681,11 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
-                                           const bool /*has_measured_speed*/) const {
+                                           const bool /*has_measured_speed*/,
+                                           const InternalTurn /*internal_turn*/) const {
 
+  // Pedestrians should be able to make uturns on short internal edges; therefore, InternalTurn
+  // is ignored for now.
   // TODO: do we want to update the cost if we have flow or speed from traffic.
 
   // Special cases: fixed penalty for steps/stairs
@@ -709,50 +714,10 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
-    // TODO: farm more common stuff out to parent class
     ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
+    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
 
     // If specified, parse json and set pbf values
-
-    // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
-
-    // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
-
-    // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
-
-    // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
-
-    // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
-
-    // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
-
-    // ferry_cost
-    pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
-
-    // use_ferry
-    pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
 
     // type (transport_type)
     pbf_costing_options->set_transport_type(
@@ -850,36 +815,10 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(
         kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
-
-    // use_tracks
-    pbf_costing_options->set_use_tracks(
-        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
-                            .get_value_or(kDefaultUseTracks)));
-
-    // use_living_street
-    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
-            .get_value_or(kDefaultUseLivingStreets)));
-
-    // service_penalty
-    pbf_costing_options->set_service_penalty(
-        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
-                                 .get_value_or(kDefaultServicePenalty)));
-
-    // service_factor
-    pbf_costing_options->set_service_factor(
-        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
-                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
+
     pbf_costing_options->set_transport_type("foot");
     pbf_costing_options->set_max_distance(kMaxDistanceFoot);
     pbf_costing_options->set_walking_speed(kDefaultSpeedFoot);
@@ -895,10 +834,6 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
     pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
-    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
-    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
-    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
-    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
   }
 }
 
@@ -970,22 +905,24 @@ TEST(PedestrianCost, testPedestrianCostParams) {
   std::shared_ptr<std::uniform_int_distribution<uint32_t>> int_distributor;
   std::shared_ptr<TestPedestrianCost> ctorTester;
 
+  const auto& defaults = kBaseCostOptsConfig;
+
   // maneuver_penalty_
-  real_distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  real_distributor.reset(make_distributor_from_range(defaults.maneuver_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("maneuver_penalty", (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->maneuver_penalty_,
-                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
+                test::IsBetween(defaults.maneuver_penalty_.min, defaults.maneuver_penalty_.max));
   }
 
   // gate_penalty_
-  real_distributor.reset(make_distributor_from_range(kGatePenaltyRange));
+  real_distributor.reset(make_distributor_from_range(defaults.gate_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("gate_penalty", (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->gate_cost_.cost,
-                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max));
+                test::IsBetween(defaults.gate_penalty_.min, defaults.gate_penalty_.max));
   }
 
   // alley_factor_
@@ -998,31 +935,33 @@ TEST(PedestrianCost, testPedestrianCostParams) {
   }
 
   // ferry_cost_
-  real_distributor.reset(make_distributor_from_range(kFerryCostRange));
+  real_distributor.reset(make_distributor_from_range(defaults.ferry_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("ferry_cost", (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
-                test::IsBetween(kFerryCostRange.min, kFerryCostRange.max));
+                test::IsBetween(defaults.ferry_cost_.min, defaults.ferry_cost_.max));
   }
 
   // country_crossing_cost_
-  real_distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  real_distributor.reset(make_distributor_from_range(defaults.country_crossing_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("country_crossing_cost",
                                                    (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->country_crossing_cost_.secs,
-                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
+                test::IsBetween(defaults.country_crossing_cost_.min,
+                                defaults.country_crossing_cost_.max));
   }
 
   // country_crossing_penalty_
-  real_distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  real_distributor.reset(make_distributor_from_range(defaults.country_crossing_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_pedestriancost_from_json("country_crossing_penalty",
                                                    (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
-                test::IsBetween(kCountryCrossingPenaltyRange.min,
-                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
+                test::IsBetween(defaults.country_crossing_penalty_.min,
+                                defaults.country_crossing_penalty_.max +
+                                    defaults.country_crossing_cost_.def));
   }
 
   // Wheelchair tests
@@ -1110,11 +1049,12 @@ TEST(PedestrianCost, testPedestrianCostParams) {
 
   /*
    // use_ferry_
-   real_distributor.reset(make_distributor_from_range(kUseFerryRange));
+   real_distributor.reset(make_distributor_from_range(defaults.use_ferry_));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(
          make_pedestriancost_from_json("use_ferry", (*real_distributor)(generator), "foot"));
-EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFerryRange.max));
+EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween(defaults.use_ferry_.min,
+defaults.use_ferry_.max));
    }
 
    */
@@ -1167,21 +1107,21 @@ EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFe
   }
 
   // service_penalty_
-  real_distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  real_distributor.reset(make_distributor_from_range(defaults.service_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("service_penalty", (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->service_penalty_,
-                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+                test::IsBetween(defaults.service_penalty_.min, defaults.service_penalty_.max));
   }
 
   // service_factor_
-  real_distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  real_distributor.reset(make_distributor_from_range(defaults.service_factor_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("service_factor", (*real_distributor)(generator), "foot"));
     EXPECT_THAT(ctorTester->service_factor_,
-                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
+                test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
   }
 }
 } // namespace

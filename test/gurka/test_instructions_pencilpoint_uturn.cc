@@ -15,18 +15,13 @@ protected:
     constexpr double gridsize_metres = 10;
 
     const std::string ascii_map = R"(
-               G
-        A---B\ |
-        C---D/ E---F
-               |
-               H
+        A---B\
+        C---D/ E
     )";
 
     const gurka::ways ways =
         {{"ABE", {{"highway", "primary"}, {"name", "Silverbrook Road"}, {"oneway", "-1"}}},
-         {"CDE", {{"highway", "primary"}, {"name", "Silverbrook Road"}, {"oneway", "yes"}}},
-         {"EF", {{"highway", "primary"}, {"name", "Silverbrook Road"}, {"oneway", "yes"}}},
-         {"GEH", {{"highway", "secondary"}, {"name", "Old Barrington Boulevard"}}}};
+         {"CDE", {{"highway", "primary"}, {"name", "Silverbrook Road"}, {"oneway", "yes"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
@@ -53,6 +48,7 @@ TEST_F(InstructionsPencilPointUturn, UturnLeft) {
   // prev2curr_turn_degree=216
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a left U-turn to stay on Silverbrook Road.",
+      "Make a left U-turn. Then You will arrive at your destination.",
       "Make a left U-turn to stay on Silverbrook Road.",
       "Make a left U-turn to stay on Silverbrook Road. Then You will arrive at your destination.",
       "Continue for 50 meters.");

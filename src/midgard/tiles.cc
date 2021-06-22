@@ -50,10 +50,10 @@ void bresenham_line(float x0,
 
 // a functor to generate closest first subdivisions of a set of tiles
 template <class coord_t> struct closest_first_generator_t {
-  coord_t seed;
   valhalla::midgard::Tiles<coord_t> tiles;
-  int32_t subcols, subrows;
+  coord_t seed;
   std::unordered_set<int32_t> queued;
+  int32_t subcols, subrows;
   using best_t = std::pair<double, int32_t>;
   std::set<best_t, std::function<bool(const best_t&, const best_t&)>> queue;
 
@@ -164,8 +164,8 @@ Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds,
                       const float tilesize,
                       unsigned short subdivisions,
                       bool wrapx)
-    : tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions),
-      subdivision_size_(tilesize_ / nsubdivisions_), wrapx_(wrapx) {
+    : wrapx_(wrapx), tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions),
+      subdivision_size_(tilesize_ / nsubdivisions_) {
   auto columns = bounds.Width() / tilesize_;
   auto rows = bounds.Height() / tilesize_;
   // TODO: delete this constructor and force use of the lower one
@@ -184,10 +184,11 @@ Tiles<coord_t>::Tiles(const coord_t& min_pt,
                       const int32_t rows,
                       const unsigned short subdivisions,
                       bool wrapx)
-    : tilebounds_(min_pt,
+    : wrapx_(wrapx),
+      tilebounds_(min_pt,
                   coord_t{min_pt.first + columns * tile_size, min_pt.second + rows * tile_size}),
-      tilesize_(tile_size), ncolumns_(columns), nrows_(rows),
-      subdivision_size_(tilesize_ / nsubdivisions_), nsubdivisions_(subdivisions), wrapx_(wrapx) {
+      tilesize_(tile_size), nrows_(rows), ncolumns_(columns), nsubdivisions_(subdivisions),
+      subdivision_size_(tilesize_ / nsubdivisions_) {
 }
 
 // Get the list of tiles that lie within the specified bounding box. Since tiles as well as the

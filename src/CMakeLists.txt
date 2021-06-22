@@ -74,7 +74,11 @@ function(valhalla_module)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(library valhalla-${MODULE_NAME})
-  add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
+  if (ENABLE_STATIC_LIBRARY_MODULES)
+    add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
+  else()
+    add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
+  endif()
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
   set_target_properties(${library} PROPERTIES FOLDER "Modules")
 
@@ -88,7 +92,6 @@ function(valhalla_module)
       # However, NOGDI needs to be undefined in logging.h
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
-      RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
@@ -107,7 +110,9 @@ function(valhalla_module)
   # These options do not affect the ABI and should therefore be used whenever possible for
   # predictable numerical results
   # For the x86-64 compiler, these extensions are enabled by default.
-  target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|AMD64|x64|x86|x86_64")
+    target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  endif()
 
   if(ENABLE_COMPILER_WARNINGS)
     cxx_add_warning_flags(${library})
@@ -136,8 +141,12 @@ function(valhalla_module)
   set(libvalhalla_compile_definitions "${libvalhalla_compile_definitions};$<TARGET_PROPERTY:${library},COMPILE_DEFINITIONS>" CACHE INTERNAL "")
   set(libvalhalla_compile_options "${libvalhalla_compile_options};$<TARGET_PROPERTY:${library},COMPILE_OPTIONS>" CACHE INTERNAL "")
   set(libvalhalla_include_directories "${libvalhalla_include_directories};$<TARGET_PROPERTY:${library},INCLUDE_DIRECTORIES>" CACHE INTERNAL "")
-  set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
-  set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
+  if (ENABLE_STATIC_LIBRARY_MODULES)
+    set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends};${library}" CACHE INTERNAL "")
+  else()
+    set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
+    set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
+  endif()
 endfunction()
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
@@ -175,11 +184,11 @@ set(valhalla_src
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif()
 
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
@@ -194,9 +203,6 @@ target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
     $<$<BOOL:${MSVC}>:NOMINMAX>
-    RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
-                             # because ${libvalhalla_compile_definitions} must be private.
-                             # To be removed with ${libvalhalla_compile_definitions} below
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
   PRIVATE

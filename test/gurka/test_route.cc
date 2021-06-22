@@ -291,8 +291,8 @@ protected:
     test::build_live_traffic_data(map.config);
     test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                       valhalla::baldr::TrafficSpeed* traffic_speed) {
-      traffic_speed->overall_speed = 50 >> 1;
-      traffic_speed->speed1 = 50 >> 1;
+      traffic_speed->overall_encoded_speed = 50 >> 1;
+      traffic_speed->encoded_speed1 = 50 >> 1;
       traffic_speed->breakpoint1 = 255;
     });
 
@@ -718,4 +718,191 @@ TEST(Standalone, HonorAccessPropertyWhenConstructingRestriction) {
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
+}
+
+TEST(MultipointRoute, WithIsolatedPoints) {
+  /*
+   * Locations 2 and 3 lie on isolated island, but location 1 belongs to a big connectivity component.
+   * This test checks that we snap points on isolated island to the main road.
+   */
+  const std::string ascii_map = R"(
+                                   C------------------D
+                                   |   X---2---3--Y   |
+  A-1------------------------------B                  |
+                                   |                  |
+                                   |                  |
+                                   F------------------E
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},   {"BC", {{"highway", "primary"}}},
+      {"CD", {{"highway", "primary"}}},   {"DE", {{"highway", "primary"}}},
+      {"EF", {{"highway", "primary"}}},   {"FB", {{"highway", "primary"}}},
+
+      {"XY", {{"highway", "secondary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  std::unordered_map<std::string, std::string> config_opts = {
+      {"mjolnir.concurrency", "1"},
+      {"loki.service_defaults.minimum_reachability", "5"},
+  };
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_isolated_points",
+                               config_opts);
+
+  // Locations 2 and 3 should be snapped to the main road CD.
+  // no datetime, check bidirectional astar
+  auto result = gurka::do_action(valhalla::Options::route, map, {"3", "2", "1"}, "auto", {}, {},
+                                 nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"CD", "CD", "BC", "AB"});
+
+  // with depart_at, check timedep forward astar
+  result = gurka::do_action(valhalla::Options::route, map, {"3", "2", "1"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2021-03-12T19:00"}}, {},
+                            nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"CD", "CD", "BC", "AB"});
+
+  // with arrive_by, check timedep reverse astar
+  result = gurka::do_action(valhalla::Options::route, map, {"1", "2", "3"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2021-03-12T19:00"}}, {},
+                            nullptr, "break_through");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "CD"});
+}
+
+TEST(MultipointRoute, WithPointsOnDeadends) {
+  const std::string ascii_map = R"(
+    A-1--2-B-3--4-C
+          / \
+         D   E
+  )";
+
+  // BD and BE are oneways that lead away, and toward the main road A-B-C
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"BD", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BE", {{"highway", "secondary"}, {"oneway", "yes"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  std::unordered_map<std::string, std::string> config_opts = {
+      {"mjolnir.concurrency", "1"},
+      {"loki.service_defaults.minimum_reachability", "3"},
+  };
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/multipoint_with_points_on_deadends",
+                               config_opts);
+
+  {
+    // Verify simple waypoint routing works
+    auto result1 = gurka::do_action(valhalla::Options::route, map, {"1", "2", "4"}, "auto", {}, {},
+                                    nullptr, "break_through");
+    gurka::assert::raw::expect_path(result1, {"AB", "AB", "BC"});
+
+    auto result2 = gurka::do_action(valhalla::Options::route, map, {"1", "3", "4"}, "auto", {}, {},
+                                    nullptr, "break_through");
+    gurka::assert::raw::expect_path(result2, {"AB", "BC", "BC"});
+  }
+  {
+    // BD is a oneway leading away from ABC with no escape
+    // input coordinate at D should get snapped to the ABC way
+    // Should give the same result as 1->2->4
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "D", "4"}, "auto", {}, {},
+                                   nullptr, "break_through");
+    gurka::assert::raw::expect_path(result, {"AB", "AB", "BC"});
+  }
+  {
+    // BE is a oneway leading towards ABC with no way in
+    // input coordinate at E should get snapped to the ABC way
+    // Should give the same result as 1->3->4
+    auto result = gurka::do_action(valhalla::Options::route, map, {"1", "E", "4"}, "auto", {}, {},
+                                   nullptr, "break_through");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
+  }
+}
+
+// prove that non-bidir A* algorithms allow destination-only routing in their first pass
+TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
+  constexpr double gridsize = 100;
+
+  const std::string ascii_map = R"(
+      B---------------C
+      |               |
+      |               8
+      |               ↑
+      |               |
+      Y---------------Z
+      |               |
+      7               9
+      |               |
+      A---------------D
+           )";
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"CZ",
+                             {{"highway", "primary"}, {"oneway", "-1"}, {"access", "destination"}}},
+                            {"ZD", {{"highway", "primary"}, {"access", "destination"}}},
+                            {"DA", {{"highway", "primary"}}},
+                            {"AY", {{"highway", "primary"}}},
+                            {"YZ", {{"highway", "primary"}}}};
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
+
+  // Notes on this test:
+  // * We want the first leg to choose bidir A*:
+  // == The path from 7 to 8 cannot be directly/trivially connected, hence YZ exists. This ensures
+  //    the first leg of the route chooses bidir A*.
+  // * We want the second leg to choose unidir A*:
+  // == The path between 8 & 9 needs to be directly/trivially connected so unidir A* is chosen for
+  //    second leg.
+  // == However, to ensure the 8->9 route cannot be solved without destination_only=true, we have
+  //    "oneway" attribution on ZC. This forces a trip "around the block" for the second leg.
+  // == ZD & CZ need access=destination or second leg will use bidir A*.
+  // == Also, CZ needs access access=destination so we prove that unidir A* solves the route
+  //    from 8->9 in its first pass (we are trying to prove that non-bidir A* algorithms allow
+  //    destination-only routing in their first pass).
+  //
+  // * Below, see that a heading is specified. This ensures filtered-edges are added to the final
+  //   destination node (9). Another important part of the test, see more comments below.
+  auto from = "7";
+  auto mid = "8";
+  auto to = "9";
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"heading":180,"heading_tolerance":45}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(mid).lat()) % std::to_string(map.nodes.at(mid).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+
+  auto api = gurka::do_action(valhalla::Options::route, map, request);
+
+  ASSERT_EQ(api.trip().routes(0).legs_size(), 2);
+
+  EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+  EXPECT_EQ(api.trip().routes(0).legs(1).algorithms(0), "time_dependent_forward_a*");
+
+  EXPECT_EQ(api.trip().routes(0).legs(0).node(0).edge().destination_only(), false);
+  EXPECT_EQ(api.trip().routes(0).legs(1).node(0).edge().destination_only(), true);
+
+  // These "expected_path_edge_sizes" are from the perspective of each node (7, 8, 9).
+  // Without the fix, the path-edge sizes are {2, 1, 2}. The third int is 2 because unidir A*
+  // would previously enter fallback logic to solve the second leg (8->9) and consequently
+  // add a "filtered edge". We prove we aren't entering fallback logic by asserting that the
+  // third int is 1.
+  //
+  // Honestly, this is a slightly convoluted way to test that "non-bidir A* algorithms allow
+  // destination only routing on their first-pass". This relies on some internal counts that
+  // imply some knowledge about the inner workings of Valhalla. Valhalla could evolve for
+  // the better, these numbers could change and this test could fail. But that doesn't mean
+  // your code is bad. Just consider this test's intent and whether what its testing still makes
+  // sense relative to your changes.
+  std::vector<int> expected_path_edge_sizes = {2, 1, 1};
+  std::vector<int> actual_path_edge_sizes;
+  actual_path_edge_sizes.reserve(api.options().locations_size());
+  for (int i = 0; i < api.options().locations_size(); i++) {
+    actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
+  }
+  ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
 }

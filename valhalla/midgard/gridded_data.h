@@ -98,7 +98,7 @@ public:
     typename PointLL::first_type s[5]; // Values at the tile corners and center
     PointLL tile_corners[5];           // PointLL at tile corners and center
     int m1, m2, m3;                    // Indices into the tile corners
-    PointLL pt1, pt2;                  // The intersection points in the tile
+    PointLL from_pt, to_pt;            // The intersection points in the tile
     int tile_inc[4] = {0, 1, this->ncolumns_ + 1, this->ncolumns_};
 
     // Find the intersection along a tile edge
@@ -115,55 +115,77 @@ public:
     // function stored in the array
     int case_table[3][3][3] = {
         {{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
-        {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
+        {{0, 3, 4}, {1, 0, 1}, {4, 3, 0}},
         {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}},
     };
+
+    // swap_table indicates whether the (from_pt, to_pt) segment orientation should be changed or not
+    // Lets take case_index=3: case[1][0][1] and case[1][2][1]. They correspond to the (0, -1, 0) and
+    // (0, 1, 0) sh[] values respectively. Though both cases correspond to the case_value=3 but they
+    // have different m1--m3 segment orientation.
+    /*
+     *          sh[m2]=-1        |          sh[m2]=1
+     *           /\              |              /\
+     *          /  \             |             /  \
+     *         /    \            |            /    \
+     * sh[m1]=0 ----> sh[m3]=0   |    sh[m1]=0 <---- sh[m3]=0
+     */
+    // This is needed to keep contours oriented correctly, according to the
+    // right-hand rule:
+    // "A linear ring MUST follow the right-hand rule with respect to the area it
+    // bounds, i.e., exterior rings are counterclockwise, and holes are clockwise."  (c)
+    // (c) https://tools.ietf.org/html/rfc7946#section-3.1.6
+    bool swap_table[3][3][3] = {
+        {{false, false, true}, {false, true, true}, {true, false, false}},
+        {{false, true, false}, {true, false, false}, {true, false, false}},
+        {{true, true, false}, {false, false, false}, {false, false, false}},
+    };
     std::array<std::function<void()>, 10> cases{
-        []() {},
+        [&]() {},
         // Line between vertices 1 and 2
         [&]() {
-          pt1 = tile_corners[m1];
-          pt2 = tile_corners[m2];
+          from_pt = tile_corners[m1];
+          to_pt = tile_corners[m2];
         },
         // Line between vertices 2 and 3
         [&]() {
-          pt1 = tile_corners[m2];
-          pt2 = tile_corners[m3];
+          from_pt = tile_corners[m2];
+          to_pt = tile_corners[m3];
         },
         // Line between vertices 3 and 1
         [&]() {
-          pt1 = tile_corners[m3];
-          pt2 = tile_corners[m1];
+          from_pt = tile_corners[m3];
+          to_pt = tile_corners[m1];
         },
         // Line between vertex 1 and side 2-3
         [&]() {
-          pt1 = tile_corners[m1];
-          pt2 = intersect(m2, m3);
+          from_pt = tile_corners[m1];
+          to_pt = intersect(m2, m3);
         },
         // Line between vertex 2 and side 3-1
         [&]() {
-          pt1 = tile_corners[m2];
-          pt2 = intersect(m3, m1);
+          from_pt = tile_corners[m2];
+          to_pt = intersect(m3, m1);
         },
         // Line between vertex 3 and side 1-2
         [&]() {
-          pt1 = tile_corners[m3];
-          pt2 = intersect(m1, m2);
+          from_pt = tile_corners[m3];
+          to_pt = intersect(m1, m2);
         },
         // Line between sides 1-2 and 2-3
         [&]() {
-          pt1 = intersect(m1, m2);
-          pt2 = intersect(m2, m3);
+          from_pt = intersect(m1, m2);
+          to_pt = intersect(m2, m3);
         },
         // Line between sides 2-3 and 3-1
         [&]() {
-          pt1 = intersect(m2, m3);
-          pt2 = intersect(m3, m1);
+          from_pt = intersect(m2, m3);
+          to_pt = intersect(m3, m1);
         },
         // Line between sides 3-1 and 1-2
         [&]() {
-          pt1 = intersect(m3, m1);
-          pt2 = intersect(m1, m2);
+          from_pt = intersect(m3, m1);
+          to_pt = intersect(m1, m2);
         },
     };
 
@@ -181,8 +203,10 @@ public:
     contours_t contours(intervals.size(), std::list<feature_t>{feature_t{}});
 
     // and something to find them quickly
-    using contour_lookup_t = std::unordered_map<PointLL, typename feature_t::iterator>;
-    std::vector<contour_lookup_t> lookups(intervals.size());
+    using contour_lookup_t = std::map<PointLL, typename feature_t::iterator>;
+    // store begins and ends of the segments separately not to loose segment orientation
+    std::vector<contour_lookup_t> begin_lookups(intervals.size());
+    std::vector<contour_lookup_t> end_lookups(intervals.size());
     // TODO: preallocate the lookups for each interval
 
     // For each metric we tracked
@@ -208,7 +232,8 @@ public:
           // For each requested contour value
           for (size_t i = 0; i < intervals.size(); ++i) {
             // some setup to process this contour
-            auto& lookup = lookups[i];
+            auto& begin_lookup = begin_lookups[i];
+            auto& end_lookup = end_lookups[i];
             auto& contour = contours[i];
             auto contour_value = std::get<1>(intervals[i]);
 
@@ -265,6 +290,7 @@ public:
               m2 = 0;
               m3 = (m != 4) ? m + 1 : 1;
               int case_index = case_table[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
+              bool swap_points = swap_table[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
 
               // there is no intersection of this triangle
               if (case_index == 0) {
@@ -275,82 +301,50 @@ public:
               cases[case_index]();
 
               // this isnt a segment..
-              if (pt1 == pt2) {
+              if (from_pt == to_pt) {
                 continue;
+              }
+              if (swap_points) {
+                std::swap(from_pt, to_pt);
               }
 
               // see if we have anything to connect this segment to
-              typename contour_lookup_t::iterator rec_a = lookup.find(pt1);
-              typename contour_lookup_t::iterator rec_b = lookup.find(pt2);
-              if (rec_b != lookup.end()) {
-                std::swap(pt1, pt2);
-                std::swap(rec_a, rec_b);
-              }
+              typename contour_lookup_t::iterator end_lookup_it = end_lookup.find(from_pt);
+              typename contour_lookup_t::iterator begin_lookup_it = begin_lookup.find(to_pt);
 
-              // we want to merge two records
-              if (rec_b != lookup.end()) {
-                // get the segments in question and remove their lookup info
-                auto segment_a = rec_a->second;
-                bool head_a = rec_a->first == segment_a->front();
-                auto segment_b = rec_b->second;
-                bool head_b = rec_b->first == segment_b->front();
-                lookup.erase(rec_a);
-                lookup.erase(rec_b);
+              if (end_lookup_it != end_lookup.end() && begin_lookup_it != begin_lookup.end()) {
+                // we want to merge two records
+                //   first_segment                               second_segment
+                // (... ------> from_pt) + (from_pt, to_pt) + (to_pt ------> ...)
+                auto first_segment = end_lookup_it->second;
+                auto second_segment = begin_lookup_it->second;
+                end_lookup.erase(end_lookup_it);
+                begin_lookup.erase(begin_lookup_it);
 
                 // this segment is now a ring
-                if (segment_a == segment_b) {
-                  segment_a->push_back(segment_a->front());
+                if (first_segment == second_segment) {
+                  first_segment->push_back(first_segment->front());
                   continue;
                 }
 
-                // erase the other lookups
-                lookup.erase(
-                    lookup.find(pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
-                lookup.erase(
-                    lookup.find(pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
-
-                // add b to a
-                if (!head_a && head_b) {
-                  segment_a->splice(segment_a->end(), *segment_b);
-                  contour.front().erase(segment_b);
-                } // add a to b
-                else if (!head_b && head_a) {
-                  segment_b->splice(segment_b->end(), *segment_a);
-                  contour.front().erase(segment_a);
-                  segment_a = segment_b;
-                } // flip a and add b
-                else if (head_a && head_b) {
-                  segment_a->reverse();
-                  segment_a->splice(segment_a->end(), *segment_b);
-                  contour.front().erase(segment_b);
-                } // flip b and add to a
-                else if (!head_a && !head_b) {
-                  segment_b->reverse();
-                  segment_a->splice(segment_a->end(), *segment_b);
-                  contour.front().erase(segment_b);
-                }
-
-                // update the look up
-                lookup.emplace(segment_a->front(), segment_a);
-                lookup.emplace(segment_a->back(), segment_a);
-              } // ap/prepend to an existing one
-              else if (rec_a != lookup.end()) {
-                // it goes on the front
-                if (rec_a->second->front() == pt1) {
-                  rec_a->second->push_front(pt2);
-                  // it goes on the back
-                } else {
-                  rec_a->second->push_back(pt2);
-                }
-
-                // update the lookup table
-                lookup.emplace(pt2, rec_a->second);
-                lookup.erase(rec_a);
-              } // this is an orphan segment for now
-              else {
-                contour.front().push_front(contour_t{pt1, pt2});
-                lookup.emplace(pt1, contour.front().begin());
-                lookup.emplace(pt2, contour.front().begin());
+                end_lookup[second_segment->back()] = first_segment;
+                first_segment->splice(first_segment->end(), *second_segment);
+                contour.front().erase(second_segment);
+              } else if (end_lookup_it != end_lookup.end()) {
+                // (... ------> from_pt) + (from_pt, to_pt)
+                end_lookup_it->second->push_back(to_pt);
+                end_lookup.emplace(to_pt, end_lookup_it->second);
+                end_lookup.erase(end_lookup_it);
+              } else if (begin_lookup_it != begin_lookup.end()) {
+                // (from_pt, to_pt) + (to_pt ------> ...)
+                begin_lookup_it->second->push_front(from_pt);
+                begin_lookup.emplace(from_pt, begin_lookup_it->second);
+                begin_lookup.erase(begin_lookup_it);
+              } else {
+                // this is an orphan segment for now
+                contour.front().push_front(contour_t{from_pt, to_pt});
+                begin_lookup.emplace(from_pt, contour.front().begin());
+                end_lookup.emplace(to_pt, contour.front().begin());
               }
             }
           } // Each contour
@@ -382,6 +376,7 @@ public:
       contour.sort([&cache](const contour_t& a, const contour_t& b) {
         return std::abs(cache[&a]) > std::abs(cache[&b]);
       });
+
       // they only want the most significant ones!
       if (denoise > 0.f) {
         contour.remove_if([&cache, &contour, denoise](const contour_t& c) {
@@ -390,13 +385,8 @@ public:
       }
       // clean up the lines
       for (auto& line : contour) {
-        // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          Polyline2<PointLL>::Generalize(line, gen_factor, {});
-        }
-        // if this ends up as an inner we'll undo this later
-        if (cache[&line] > 0) {
-          line.reverse();
+          Polyline2<PointLL>::Generalize(line, gen_factor, {}, /* avoid_self_intersections */ true);
         }
         // sampling the bottom left corner means everything is skewed, so unskew it
         for (auto& coord : line) {
@@ -404,6 +394,9 @@ public:
           coord.second += h;
         }
       }
+      // remove points and lines
+      contour.remove_if([](const contour_t& line) { return line.size() < 4; });
+
       // if they just wanted linestrings we need only one per feature
       if (!rings_only) {
         for (auto& linestring : contour) {

@@ -80,6 +80,32 @@ void via_discontinuity(
   }
 }
 
+inline bool is_through_point(const valhalla::Location& l) {
+  return l.type() == valhalla::Location::kThrough || l.type() == valhalla::Location::kBreakThrough;
+}
+
+inline bool is_break_point(const valhalla::Location& l) {
+  return l.type() == valhalla::Location::kBreak || l.type() == valhalla::Location::kBreakThrough;
+}
+
+inline bool is_highly_reachable(const valhalla::Location& loc,
+                                const valhalla::Location_PathEdge& edge) {
+  return edge.inbound_reach() >= loc.minimum_reachability() &&
+         edge.outbound_reach() >= loc.minimum_reachability();
+}
+
+template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
+  auto new_end =
+      std::remove_if(loc.mutable_path_edges()->begin(), loc.mutable_path_edges()->end(), pred);
+  int start_idx = std::distance(loc.mutable_path_edges()->begin(), new_end);
+  loc.mutable_path_edges()->DeleteSubrange(start_idx, loc.path_edges_size() - start_idx);
+
+  new_end = std::remove_if(loc.mutable_filtered_edges()->begin(), loc.mutable_filtered_edges()->end(),
+                           pred);
+  start_idx = std::distance(loc.mutable_filtered_edges()->begin(), new_end);
+  loc.mutable_filtered_edges()->DeleteSubrange(start_idx, loc.filtered_edges_size() - start_idx);
+}
+
 /**
 // removes any edges from the location that aren't connected to it (because of radius)
 void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& reader) {
@@ -149,6 +175,11 @@ std::string thor_worker_t::expansion(Api& request) {
                                 baldr::GraphId edgeid, const char* status, bool full_shape = false) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
+                std::to_string(edgeid.Tile_Base()));
+      return;
+    }
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge).shape();
     if (!edge->forward())
@@ -321,8 +352,10 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // find the proper connection).
   for (auto& edge1 : origin.path_edges()) {
     for (auto& edge2 : destination.path_edges()) {
-      if (edge1.graph_id() == edge2.graph_id() ||
-          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
+      bool same_graph_id = edge1.graph_id() == edge2.graph_id();
+      bool are_connected =
+          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
+      if (same_graph_id || are_connected) {
         return &timedep_forward;
       }
     }
@@ -337,12 +370,14 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
                                                                  const Options& options) {
-  // Find the path. If bidirectional A* disable use of destination only edges on the
-  // first pass. If there is a failure, we allow them on the second pass.
+  // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-  if (path_algorithm == &bidir_astar) {
-    cost->set_allow_destination_only(false);
-  }
+
+  // If bidirectional A* disable use of destination-only edges on the
+  // first pass. If there is a failure, we allow them on the second pass.
+  // Other path algorithms can use destination-only edges on the first pass.
+  cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
+
   cost->set_pass(0);
   auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
 
@@ -373,7 +408,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
-
+    cost->set_allow_conditional_destination(true);
+    path_algorithm->set_not_thru_pruning(false);
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
         path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
@@ -382,10 +418,6 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     }
   }
 
-  // All or nothing
-  if (paths.empty()) {
-    throw valhalla_exception_t{442};
-  }
   return paths;
 }
 
@@ -395,38 +427,34 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   GraphId first_edge;
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
   std::vector<thor::PathInfo> path;
-  auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
-  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
+  const Options& options = api.options();
+  valhalla::Trip& trip = *api.mutable_trip();
+  trip.mutable_routes()->Reserve(options.alternates() + 1);
 
-  // For each pair of locations
-  for (auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
+  auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
-    auto destination = std::prev(origin);
     thor::PathAlgorithm* path_algorithm =
-        get_path_algorithm(costing, *origin, *destination, api.options());
+        this->get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
-    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    bool through = destination->type() == valhalla::Location::kThrough ||
-                   destination->type() == valhalla::Location::kBreakThrough;
-    while (through && first_edge.Is_Valid() && destination->path_edges_size() > 1) {
-      if (destination->path_edges().rbegin()->graph_id() == first_edge) {
-        destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
-      }
-      destination->mutable_path_edges()->RemoveLast();
+    if (is_through_point(*destination) && first_edge.Is_Valid()) {
+      remove_path_edges(*destination,
+                        [&first_edge](const auto& edge) { return edge.graph_id() != first_edge; });
     }
 
     // Get best path and keep it
-    auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    if (temp_paths.empty())
+      return false;
+
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time() &&
-          api.options().date_time_type() != valhalla::Options::invariant) {
+      if (destination->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
@@ -455,32 +483,29 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (origin->type() == valhalla::Location::kBreak ||
-          origin->type() == valhalla::Location::kBreakThrough) {
+      if (is_break_point(*origin)) {
         // Move destination back to the last break and collect the throughs
         std::list<valhalla::Location> throughs;
-        while (destination->type() != valhalla::Location::kBreak &&
-               destination->type() != valhalla::Location::kBreakThrough) {
+        while (!is_break_point(*destination)) {
           throughs.push_back(*destination);
           --destination;
         }
 
         // We have to flip the via indices because we built them in backwards order
-        decltype(vias) flipped;
+        std::remove_reference<decltype(vias)>::type flipped;
         flipped.reserve(vias.size());
         for (const auto& kv : vias)
           flipped.emplace(path.size() - kv.first, kv.second);
         vias.swap(flipped);
 
         // Form output information based on path edges
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
-          route = api.mutable_trip()->mutable_routes()->Add();
-          route->mutable_legs()->Reserve(correlated.size());
+        if (trip.routes_size() == 0 || options.alternates() > 0) {
+          route = trip.mutable_routes()->Add();
+          route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
-        TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
-                              path.end(), *origin, *destination, throughs, leg, algorithms, interrupt,
-                              &vias);
+        TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
+                              *origin, *destination, throughs, leg, algorithms, interrupt, &vias);
         path.clear();
         vias.clear();
       }
@@ -489,50 +514,91 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     // if we just made a leg that means we are done recording which algorithms were used
     if (path.empty())
       algorithms.clear();
-  }
 
+    return true;
+  };
+
+  auto correlated = options.locations();
+  bool allow_retry = true;
+
+  // For each pair of locations
+  auto origin = ++correlated.rbegin();
+  while (origin != correlated.rend()) {
+    auto destination = std::prev(origin);
+    if (!route_two_locations(origin, destination)) {
+      // if routing failed because an intermediate waypoint was snapped to the low reachability road
+      // (such road lies in a small connectivity component that is not connected to other locations)
+      // we should leave only high reachability candidates and try to route again
+      if (allow_retry && destination != correlated.rbegin() && is_through_point(*destination) &&
+          destination->path_edges_size() > 0 &&
+          !is_highly_reachable(*destination, destination->path_edges(0))) {
+        allow_retry = false;
+        // for each intermediate waypoint remove candidates with low reachability
+        correlated = options.locations();
+        for (auto loc = std::next(correlated.begin()); loc != std::prev(correlated.end()); ++loc) {
+          remove_path_edges(*loc,
+                            [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
+          // it doesn't make sense to continue if there are no more path edges
+          if (loc->path_edges_size() == 0)
+            // no route found
+            throw valhalla_exception_t{442};
+        }
+        // resets the entire state of all the legs of the route and starts completely
+        // over from the beginning doing all the legs over
+        route = nullptr;
+        first_edge = {};
+        vias.clear();
+        path.clear();
+        algorithms.clear();
+        trip.mutable_routes()->Clear();
+        origin = ++correlated.rbegin();
+        continue;
+      }
+      // no route found
+      throw valhalla_exception_t{442};
+    }
+    ++origin;
+  }
   // Reverse the legs because protobuf only has adding to the end
   std::reverse(route->mutable_legs()->begin(), route->mutable_legs()->end());
+  // assign changed locations
+  *api.mutable_options()->mutable_locations() = std::move(correlated);
 }
 
 void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // Things we'll need
-  GraphId last_edge;
   TripRoute* route = nullptr;
+  GraphId last_edge;
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
   std::vector<thor::PathInfo> path;
-  std::list<valhalla::TripLeg> trip_paths;
-  auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
-  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
+  const Options& options = api.options();
+  valhalla::Trip& trip = *api.mutable_trip();
+  trip.mutable_routes()->Reserve(options.alternates() + 1);
 
-  // For each pair of locations
-  for (auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
+  auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
-    auto origin = std::prev(destination);
     thor::PathAlgorithm* path_algorithm =
-        get_path_algorithm(costing, *origin, *destination, api.options());
+        this->get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
-    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    bool through = origin->type() == valhalla::Location::kThrough ||
-                   origin->type() == valhalla::Location::kBreakThrough;
-    while (through && last_edge.Is_Valid() && origin->path_edges_size() > 1) {
-      if (origin->path_edges().rbegin()->graph_id() == last_edge) {
-        origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
-      }
-      origin->mutable_path_edges()->RemoveLast();
+    if (is_through_point(*origin) && last_edge.Is_Valid()) {
+      remove_path_edges(*origin,
+                        [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
 
     // Get best path and keep it
-    auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    if (temp_paths.empty())
+      return false;
+
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time() && api.options().date_time_type() != valhalla::Options::invariant) {
+      if (origin->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);
@@ -563,23 +629,21 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (destination->type() == valhalla::Location::kBreak ||
-          destination->type() == valhalla::Location::kBreakThrough) {
+      if (is_break_point(*destination)) {
         // Move origin back to the last break and collect the throughs
         std::list<valhalla::Location> throughs;
-        while (origin->type() != valhalla::Location::kBreak &&
-               origin->type() != valhalla::Location::kBreakThrough) {
+        while (!is_break_point(*origin)) {
           throughs.push_front(*origin);
           --origin;
         }
 
         // Form output information based on path edges. vias are a route discontinuity map
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
-          route = api.mutable_trip()->mutable_routes()->Add();
-          route->mutable_legs()->Reserve(correlated.size());
+        if (trip.routes_size() == 0 || options.alternates() > 0) {
+          route = trip.mutable_routes()->Add();
+          route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
-        thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
+        thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, throughs, leg, algorithms,
                                     interrupt, &vias);
         path.clear();
@@ -590,7 +654,52 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     // if we just made a leg that means we are done recording which algorithms were used
     if (path.empty())
       algorithms.clear();
+
+    return true;
+  };
+
+  auto correlated = options.locations();
+  bool allow_retry = true;
+
+  // For each pair of locations
+  auto destination = ++correlated.begin();
+  while (destination != correlated.end()) {
+    auto origin = std::prev(destination);
+    if (!route_two_locations(origin, destination)) {
+      // if routing failed because an intermediate waypoint was snapped to the low reachability road
+      // (such road lies in a small connectivity component that is not connected to other locations)
+      // we should leave only high reachability candidates and try to route again
+      if (allow_retry && origin != correlated.begin() && is_through_point(*origin) &&
+          origin->path_edges_size() > 0 && !is_highly_reachable(*origin, origin->path_edges(0))) {
+        allow_retry = false;
+        // for each intermediate waypoint remove candidates with low reachability
+        correlated = options.locations();
+        for (auto loc = std::next(correlated.begin()); loc != std::prev(correlated.end()); ++loc) {
+          remove_path_edges(*loc,
+                            [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
+          // it doesn't make sense to continue if there are no more path edges
+          if (loc->path_edges_size() == 0)
+            // no route found
+            throw valhalla_exception_t{442};
+        }
+        // resets the entire state of all the legs of the route and starts completely
+        // over from the beginning doing all the legs over
+        route = nullptr;
+        last_edge = {};
+        vias.clear();
+        path.clear();
+        algorithms.clear();
+        trip.mutable_routes()->Clear();
+        destination = ++correlated.begin();
+        continue;
+      }
+      // no route found
+      throw valhalla_exception_t{442};
+    }
+    ++destination;
   }
+  // assign changed locations
+  *api.mutable_options()->mutable_locations() = std::move(correlated);
 }
 
 /**

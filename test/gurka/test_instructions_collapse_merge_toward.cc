@@ -70,7 +70,7 @@ TEST_F(InstructionsCollapseMergeToward, MergeLeftToward) {
   // Verify left fork and collapsed merge
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep left to take A6 toward Harrisburg/Lancaster.",
+                                            "Keep left to take A6 toward Harrisburg/Lancaster.", "",
                                             "Keep left to take A6.",
                                             "Keep left to take A6 toward Harrisburg, Lancaster.",
                                             "Continue for 6 kilometers.");
@@ -82,6 +82,7 @@ TEST_F(InstructionsCollapseMergeToward, MergeLeftToward) {
   //  gurka::assert::raw::
   //      expect_instructions_at_maneuver_index(result, maneuver_index,
   //                                            "Merge left toward A6/Harrisburg/Lancaster.",
+  //                                            "Merge left.",
   //                                            "Merge left toward A6.",
   //                                            "Merge left toward A6, Harrisburg.",
   //                                            "Continue for 4 kilometers.");

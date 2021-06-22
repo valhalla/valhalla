@@ -716,6 +716,54 @@ TEST(UtilMidgard, SequenceSort) {
   EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));
 }
 
+TEST(UtilMidgard, TriangleContains) {
+  PointLL a = {1, 1}, b = {2, 1}, c = {2, 2};
+
+  // obviously not in triangle
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{0, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{2, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{3, 1}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{3, 3}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{2, 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{0, 1}));
+
+  // close but not in triangle
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1.01, 1.1}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1.5, 0.99}));
+
+  // in triangle
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.2, 1.01}));
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.5, 1.3}));
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.7, 1.1}));
+
+  // triangle corners are not considered contained
+  EXPECT_FALSE(triangle_contains(a, b, c, a));
+  EXPECT_FALSE(triangle_contains(a, b, c, b));
+  EXPECT_FALSE(triangle_contains(a, b, c, c));
+
+  // triangle edges are not considered contained
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + b.x()) / 2, (a.y() + b.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + c.x()) / 2, (a.y() + c.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(c.x() + b.x()) / 2, (c.y() + b.y()) / 2}));
+}
+
+TEST(UtilMidgard, PolygonArea) {
+  std::vector<PointLL> a{{1, 1}, {2, 2}, {3, 1}};
+  {
+    // area is negative in case of clockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, -1, 1e-7);
+  }
+
+  std::reverse(a.begin(), a.end());
+  {
+    // area is positive in case of counterclockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, 1, 1e-7);
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

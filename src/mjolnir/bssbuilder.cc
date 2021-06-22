@@ -283,14 +283,20 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
     LOG_INFO("Storing local tile data with bss nodes, tile id: " +
              std::to_string(tile.id().tileid()));
+    UNUSED(tile);
     std::lock_guard<std::mutex> l(lock);
     tilebuilder_local.StoreTileData();
   });
 
   for (auto it = new_connections.begin(); it != new_connections.end(); std::advance(it, 4)) {
     size_t edge_index = tilebuilder_local.directededges().size();
-    NodeInfo new_bss_node{tile.header()->base_ll(), it->bss_ll, (kPedestrianAccess | kBicycleAccess),
-                          NodeType::kBikeShare, false};
+    NodeInfo new_bss_node{tile.header()->base_ll(),
+                          it->bss_ll,
+                          (kPedestrianAccess | kBicycleAccess),
+                          NodeType::kBikeShare,
+                          false,
+                          true,
+                          false};
 
     new_bss_node.set_mode_change(true);
     new_bss_node.set_edge_index(edge_index);
@@ -362,13 +368,14 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
 
     LOG_INFO("Tile id: " + std::to_string(tile.id().tileid()) + " It took " + std::to_string(secs) +
              " seconds to create edges. Now storing local tile data with new edges");
+    UNUSED(tile);
+    UNUSED(secs);
     std::lock_guard<std::mutex> l(lock);
     tilebuilder_local.StoreTileData();
   });
 
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder_local.nodes()));
-  uint32_t nodecount = currentnodes.size();
 
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
@@ -580,7 +587,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   auto local_level = TileHierarchy::levels().back().level;
 
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
-  for (const auto& node : osm_nodes) {
+  for (auto node : osm_nodes) {
     auto latlng = node.latlng();
     auto tile_id = TileHierarchy::GetGraphId({latlng.first, latlng.second}, local_level);
     graph_tile_ptr local_tile = reader.GetGraphTile(tile_id);

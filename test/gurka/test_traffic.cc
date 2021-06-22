@@ -54,11 +54,11 @@ TEST(Traffic, BasicUpdates) {
     auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
     current->breakpoint1 = 255;
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-      current->overall_speed = 0;
-      current->speed1 = 0;
+      current->overall_encoded_speed = 0;
+      current->encoded_speed1 = 0;
     } else {
-      current->overall_speed = 24 >> 1;
-      current->speed1 = 24 >> 1;
+      current->overall_encoded_speed = 24 >> 1;
+      current->encoded_speed1 = 24 >> 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_24kmh);
@@ -82,9 +82,9 @@ TEST(Traffic, BasicUpdates) {
     auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
     current->breakpoint1 = 255;
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-      current->overall_speed = 0;
+      current->overall_encoded_speed = 0;
     } else {
-      current->overall_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
+      current->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);
@@ -210,8 +210,8 @@ TEST(Traffic, CutGeoms) {
         0u,
         0u,
     };
-    ts.overall_speed = 42 >> 1;
-    ts.speed1 = 42 >> 1;
+    ts.overall_encoded_speed = 42 >> 1;
+    ts.encoded_speed1 = 42 >> 1;
     ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
     ts.breakpoint1 = 127;
 
@@ -221,8 +221,8 @@ TEST(Traffic, CutGeoms) {
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
       if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-        current->overall_speed = 0;
-        current->speed1 = 0;
+        current->overall_encoded_speed = 0;
+        current->encoded_speed1 = 0;
         current->breakpoint1 = 255;
       } else {
         *current = ts;
@@ -279,13 +279,13 @@ TEST(Traffic, CutGeoms) {
           0u,
           0u,
       };
-      ts.overall_speed = 30 >> 1;
+      ts.overall_encoded_speed = 30 >> 1;
 
-      ts.speed1 = 20 >> 1;
+      ts.encoded_speed1 = 20 >> 1;
       ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
       ts.breakpoint1 = 100;
 
-      ts.speed2 = 40 >> 1;
+      ts.encoded_speed2 = 40 >> 1;
       ts.congestion2 = 1; // low but not unknown - 0 = unknown
       ts.breakpoint2 = 200;
 
@@ -297,8 +297,8 @@ TEST(Traffic, CutGeoms) {
             const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-          current->overall_speed = 0;
-          current->speed1 = 0;
+          current->overall_encoded_speed = 0;
+          current->encoded_speed1 = 0;
         } else {
           *current = ts;
         }
@@ -360,17 +360,17 @@ TEST(Traffic, CutGeoms) {
           0u,
           0u,
       };
-      ts.overall_speed = 36 >> 1;
+      ts.overall_encoded_speed = 36 >> 1;
 
-      ts.speed1 = 20 >> 1;
+      ts.encoded_speed1 = 20 >> 1;
       ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
       ts.breakpoint1 = 100;
 
-      ts.speed2 = 40 >> 1;
+      ts.encoded_speed2 = 40 >> 1;
       ts.congestion2 = 1;
       ts.breakpoint2 = 200;
 
-      ts.speed3 = 60 >> 1;
+      ts.encoded_speed3 = 60 >> 1;
       ts.congestion3 = 1;
 
       auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
@@ -379,8 +379,8 @@ TEST(Traffic, CutGeoms) {
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-          current->overall_speed = 0;
-          current->speed1 = 0;
+          current->overall_encoded_speed = 0;
+          current->encoded_speed1 = 0;
         } else {
           *current = ts;
         }
@@ -479,17 +479,17 @@ TEST(Traffic, CutGeoms) {
             0u,
             0u,
         };
-        ts.overall_speed = 36 >> 1;
+        ts.overall_encoded_speed = 36 >> 1;
 
-        ts.speed1 = 20 >> 1;
+        ts.encoded_speed1 = 20 >> 1;
         ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
         ts.breakpoint1 = 100;
 
-        ts.speed2 = 40 >> 1;
+        ts.encoded_speed2 = 40 >> 1;
         ts.congestion2 = 1;
         ts.breakpoint2 = 200;
 
-        ts.speed3 = 60 >> 1;
+        ts.encoded_speed3 = 60 >> 1;
         ts.congestion3 = 50;
 
         auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
@@ -498,8 +498,8 @@ TEST(Traffic, CutGeoms) {
           auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
           current->breakpoint1 = 255;
           if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-            current->overall_speed = 0;
-            current->speed1 = 0;
+            current->overall_encoded_speed = 0;
+            current->encoded_speed1 = 0;
           } else {
             *current = ts;
           }
@@ -701,6 +701,94 @@ TEST(Traffic, CutGeoms) {
         EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[8]));
       }
     }
+    // Test regression when cutting
+    {
+      {
+        valhalla::baldr::TrafficSpeed ts{
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+        };
+        ts.overall_encoded_speed = 36 >> 1;
+
+        ts.encoded_speed1 = 20 >> 1;
+        ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
+        ts.breakpoint1 = 100;
+
+        ts.encoded_speed2 = 40 >> 1;
+        ts.congestion2 = 1;
+
+        // Regression is when breakpoint2 is set to 255,
+        // but speed3 is not set to UNKNOWN - we would incorrectly
+        // emit an additional 0-length slice in the API response
+        ts.breakpoint2 = 255;
+
+        // This needs to be set
+        ts.encoded_speed3 = 60 >> 1;
+        ts.congestion3 = 50;
+
+        auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                           int index, baldr::TrafficSpeed* current) -> void {
+          baldr::GraphId tile_id(tile.header->tile_id);
+          auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
+          current->breakpoint1 = 255;
+          if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
+            current->overall_encoded_speed = 0;
+            current->encoded_speed1 = 0;
+          } else {
+            *current = ts;
+          }
+        };
+
+        test::customize_live_traffic_data(map.config, cb_setter_speed);
+      }
+
+      auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+      tyr::actor_t actor(map.config, *clean_reader);
+      valhalla::Api api;
+      {
+        // Test the full edge CE
+        actor.route(
+            R"({"locations":[
+        {"lat":)" +
+                std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
+                std::to_string(map.nodes["C"].first) +
+                R"(},
+        {"lat":)" +
+                std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
+                std::to_string(map.nodes["E"].first) +
+                R"(}
+      ],"costing":"auto","date_time":{"type":0},
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})",
+            nullptr, &api);
+
+        const auto& leg = api.trip().routes(0).legs(0);
+        auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+
+        EXPECT_EQ(leg.node_size(), 2); // 1 edge
+        EXPECT_EQ(shapes.size(), 3);   // The third record should not create a slice
+        // An attribute for each pair formed by the shape-points
+        EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+
+        EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0]));
+        {
+          auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
+          EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
+        }
+        EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[2]));
+      }
+    }
   }
 }
 
@@ -747,8 +835,8 @@ std::shared_ptr<baldr::GraphReader> WaypointsOnClosuresTest::clean_reader;
 namespace {
 inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
   live_speed->breakpoint1 = 255;
-  live_speed->overall_speed = speed >> 1;
-  live_speed->speed1 = speed >> 1;
+  live_speed->overall_encoded_speed = speed >> 1;
+  live_speed->encoded_speed1 = speed >> 1;
 }
 } // namespace
 

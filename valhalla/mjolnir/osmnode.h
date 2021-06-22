@@ -44,7 +44,9 @@ struct OSMNode {
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
-  uint32_t spare1_ : 5;
+  uint32_t tagged_access_ : 1; // Was access originally tagged?
+  uint64_t private_access_ : 1;
+  uint32_t spare1_ : 3;
 
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
@@ -81,7 +83,7 @@ struct OSMNode {
    *
    */
   void set_latlng(const double lng, double lat) {
-    lng7_ = lat7_ = -1;
+    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
     if (lng >= -180 && lng <= 180)
       lng7_ = std::round((lng + 180) * 1e7);
     if (lat >= -90 && lat <= 90)
@@ -94,7 +96,8 @@ struct OSMNode {
    */
   midgard::PointLL latlng() const {
     // if either coord is borked we return invalid pointll
-    if (lng7_ == -1 || lat7_ == -1)
+    if (lng7_ == std::numeric_limits<uint32_t>::max() ||
+        lat7_ == std::numeric_limits<uint32_t>::max())
       return {};
     return {lng7_ * 1e-7 - 180, lat7_ * 1e-7 - 90};
   }
@@ -349,6 +352,40 @@ struct OSMNode {
    */
   bool has_state_iso_index() const {
     return state_iso_index_ > 0;
+  }
+
+  /**
+   * Set the tagged_access flag.
+   * @param  tagged_access   Was the access originally tagged? True if
+   *         any tags like "access", "auto", "truck", "foot", etc were specified.
+   */
+  void set_tagged_access(const bool tagged_access) {
+    tagged_access_ = tagged_access;
+  }
+
+  /**
+   * Get the tagged_access flag
+   * @return  Returns true if any tags like "access", "auto", "truck", "foot", etc
+   *          were specified. False if not.
+   */
+  bool tagged_access() const {
+    return tagged_access_;
+  }
+
+  /**
+   * Sets the private_access flag.
+   * @param  private_access bool.
+   */
+  void set_private_access(const bool private_access) {
+    private_access_ = private_access;
+  }
+
+  /**
+   * Get the private_access flag.
+   * @return  Returns private_access flag.
+   */
+  bool private_access() const {
+    return private_access_;
   }
 };
 

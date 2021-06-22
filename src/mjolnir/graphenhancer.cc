@@ -3,6 +3,7 @@
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "speed_assigner.h"
 
 #include <cinttypes>
 #include <future>
@@ -20,14 +21,12 @@
 #include <vector>
 
 #include <boost/format.hpp>
-#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <sqlite3.h>
 
-#include "baldr/admininfo.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -35,7 +34,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
-#include "baldr/streetnames_us.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
@@ -65,12 +63,6 @@ constexpr float kDensityRadius = 2.0f;
 constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
 constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
 
-// Factors used to adjust speed assignments
-constexpr float kTurnChannelFactor = 1.25f;
-constexpr float kRampDensityFactor = 0.8f;
-constexpr float kRampFactor = 0.85f;
-constexpr float kRoundaboutFactor = 0.5f;
-
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
@@ -96,111 +88,6 @@ struct enhancer_stats {
     }
   }
 };
-
-/**
- * Update directed edge speed based on density and other edge parameters like
- * surface type. TODO - add admin specific logic
- * @param  directededge  Directed edge to update.
- * @param  density       Relative road density.
- * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
- * @param  rc_speed Array of default speeds vs. road class
- * @param  infer_turn_channels flag indicating if we should infer tc.
- *
- */
-void UpdateSpeed(DirectedEdge& directededge,
-                 const uint32_t density,
-                 const uint32_t* urban_rc_speed,
-                 bool infer_turn_channels) {
-
-  // Update speed on ramps (if not a tagged speed) and turn channels
-  if (directededge.link()) {
-    uint32_t speed = directededge.speed();
-    Use use = directededge.use();
-    if (use == Use::kTurnChannel && infer_turn_channels) {
-      speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
-    } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
-      // If no tagged speed set ramp speed to slightly lower than speed
-      // for roads of this classification
-      RoadClass rc = directededge.classification();
-      if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) || (rc == RoadClass::kPrimary)) {
-        speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
-                              : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
-      } else {
-        speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
-      }
-    }
-    directededge.set_speed(speed);
-
-    // Done processing links so return...
-    return;
-  }
-
-  // If speed is assigned from an OSM max_speed tag we only update it based
-  // on surface type.
-  if (directededge.speed_type() == SpeedType::kTagged) {
-    // Reduce speed on rough pavements. TODO - do we want to increase
-    // more on worse surface types?
-    if (directededge.surface() >= Surface::kPavedRough) {
-      uint32_t speed = directededge.speed();
-      if (speed >= 50) {
-        directededge.set_speed(speed - 10);
-      } else if (speed > 15) {
-        directededge.set_speed(speed - 5);
-      }
-    }
-  } else {
-    // Set speed on ferries. Base the speed on the length - assumes
-    // that longer lengths generally use a faster ferry boat
-    if (directededge.use() == Use::kRailFerry) {
-      directededge.set_speed(65); // 40 MPH
-      return;
-    } else if (directededge.use() == Use::kFerry) {
-      // if duration flag is set do nothing with speed - currently set
-      // as the leaves tile flag.
-      // leaves tile flag is updated later to the real value.
-      if (directededge.leaves_tile()) {
-        return;
-      } else if (directededge.length() < 2000) {
-        directededge.set_speed(10); // 5 knots
-      } else if (directededge.length() < 8000) {
-        directededge.set_speed(20); // 10 knots
-      } else {
-        directededge.set_speed(30); // 15 knots
-      }
-      return;
-    }
-
-    // Modify speed for roads in urban regions - anything above 8 is
-    // assumed to be urban
-    // if this density check is changed to be greater than 8, then we need to modify the urban flag in
-    // the osrm response as well.
-    if (density > 8) {
-      uint32_t rc = static_cast<uint32_t>(directededge.classification());
-      directededge.set_speed(urban_rc_speed[rc]);
-    }
-
-    if (directededge.roundabout()) {
-      uint32_t speed = directededge.speed(); // could be default or urban speed
-      directededge.set_speed(static_cast<uint32_t>((speed * kRoundaboutFactor) + 0.5f));
-    }
-
-    // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
-    // marked as destination only in pbfgraphparser.
-    if (directededge.use() == Use::kParkingAisle) {
-      directededge.set_speed(kParkingAisleSpeed);
-    } else if (directededge.use() == Use::kDriveway) {
-      directededge.set_speed(kDrivewaySpeed);
-    } else if (directededge.use() == Use::kDriveThru) {
-      directededge.set_speed(kDriveThruSpeed);
-    }
-
-    // Modify speed based on surface.
-    if (directededge.surface() >= Surface::kPavedRough) {
-      uint32_t speed = directededge.speed();
-      directededge.set_speed(speed / 2);
-    }
-  }
-}
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
@@ -361,7 +248,7 @@ bool ProcessLanes(bool isLeft, bool endOnTurn, std::vector<uint16_t>& enhanced_t
 void UpdateTurnLanes(const OSMData& osmdata,
                      const uint32_t idx,
                      DirectedEdge& directededge,
-                     boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                     graph_tile_builder_ptr& tilebuilder,
                      GraphReader& reader,
                      std::mutex& lock,
                      std::vector<TurnLanes>& turn_lanes) {
@@ -831,92 +718,6 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
-// Get the Headings for the node.
-void GetHeadings(const graph_tile_ptr& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
-  if (ntrans == 0) {
-    throw std::runtime_error("edge transitions set is empty");
-  }
-
-  std::vector<uint32_t> heading(ntrans);
-  nodeinfo.set_local_edge_count(ntrans);
-  for (uint32_t j = 0; j < ntrans; j++) {
-    const DirectedEdge* de = tile->directededge(nodeinfo.edge_index() + j);
-
-    auto e_offset = tile->edgeinfo(de);
-    auto shape = e_offset.shape();
-    if (!de->forward()) {
-      std::reverse(shape.begin(), shape.end());
-    }
-    heading[j] = std::round(
-        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de->classification(), de->use())));
-
-    // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
-    // same heading - should one be "adjusted" so the relative direction
-    // is maintained.
-    nodeinfo.set_heading(j, heading[j]);
-  }
-}
-
-bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
-                            const graph_tile_ptr& tilebuilder,
-                            const graph_tile_ptr& end_node_tile,
-                            const NodeInfo& end_node_info,
-                            GraphReader& reader,
-                            std::mutex& lock,
-                            bool infer_internal_intersections) {
-  // Iterate through outbound edges to find the next edge
-  for (uint32_t i = 0; i < end_node_info.edge_count(); i++) {
-    const DirectedEdge* diredge = end_node_tile->directededge(end_node_info.edge_index() + i);
-
-    // Skip opposing directed edge and any edge that is not a road. Skip any
-    // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || !diredge->is_road() ||
-        !(diredge->forwardaccess() & kAutoAccess)) {
-      continue;
-    }
-
-    // if the edge from the endnode is the next edge for this way, then
-    // check if it is internal.
-    if (tilebuilder->edgeinfo(&directededge).wayid() == end_node_tile->edgeinfo(diredge).wayid()) {
-
-      if (!infer_internal_intersections)
-        return diredge->internal();
-      else
-        return IsIntersectionInternal(end_node_tile, reader, lock, end_node_info, *diredge, i);
-    }
-  }
-  return false;
-}
-
-// Is the next edge from the end node of the directededge is internal or not.
-bool IsNextEdgeInternal(const DirectedEdge directededge,
-                        const graph_tile_ptr& tilebuilder,
-                        GraphReader& reader,
-                        std::mutex& lock,
-                        bool infer_internal_intersections) {
-  if (tilebuilder->id() == directededge.endnode().Tile_Base()) {
-    const NodeInfo& end_node_info = *tilebuilder->node(directededge.endnode().id());
-    return IsNextEdgeInternalImpl(directededge, tilebuilder, tilebuilder, end_node_info, reader, lock,
-                                  infer_internal_intersections);
-  } else {
-    // Get the tile at the end node. and find inbound heading of the candidate
-    // edge to the end node.
-    lock.lock();
-    auto end_node_tile = GraphTile::Create(reader.tile_dir(), directededge.endnode());
-    lock.unlock();
-
-    // this tile may not have been updated yet; therefore, we must
-    // compute the headings for the end node as they are needed for the
-    // IsIntersectionInternal function
-    NodeInfo end_node_info = *end_node_tile->node(directededge.endnode().id());
-    uint32_t count = end_node_info.edge_count();
-    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-    GetHeadings(end_node_tile, end_node_info, ntrans);
-    return IsNextEdgeInternalImpl(directededge, tilebuilder, end_node_tile, end_node_info, reader,
-                                  lock, infer_internal_intersections);
-  }
-}
-
 /**
  * Get the road density around the specified lat,lng position. This is a
  * value from 0-15 indicating a relative road density. This can be used
@@ -1138,7 +939,8 @@ bool IsCyclewayUturn(uint32_t from_index,
  * Higher stop impacts occur when the from and to edges are lower class
  * than the others. There is almost certainly a stop (stop sign, traffic
  * light) and longer waits are likely when a low class road crosses
- * a higher class road. Special cases occur for links (ramps/turn channels).
+ * a higher class road. Special cases occur for links (ramps/turn channels)
+ * and parking aisles.
  * @param  from  Index of the from directed edge.
  * @param  to    Index of the to directed edge.
  * @param  directededge   Directed edge builder - set values.
@@ -1273,6 +1075,10 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
+  } else if (edges[from].use() == Use::kParkingAisle && edges[to].use() == Use::kParkingAisle) {
+    // decrease stop impact inside parking lots
+    if (stop_impact != 0)
+      stop_impact -= 1;
   }
   // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
   // or ramp penalize lefts when driving on the right.
@@ -1449,19 +1255,12 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
-  // Default speeds (kph) in urban areas per road class
-  // (TODO - get from property tree)
-  // 55 MPH - motorway
-  // 45 MPH - trunk
-  // 35 MPH - primary
-  // 30 MPH - secondary
-  // 25 MPH - tertiary
-  // 20 MPH - residential and unclassified
-  // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
+  // Config driven speed assignment
+  auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
+  SpeedAssigner speed_assigner(speeds_config);
 
   // Get some things we need throughout
-  enhancer_stats stats{std::numeric_limits<float>::min(), 0};
+  enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
   const auto& local_level = TileHierarchy::levels().back().level;
   const auto& tiles = TileHierarchy::levels().back().tiles;
 
@@ -1487,8 +1286,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    boost::intrusive_ptr<GraphTileBuilder> tilebuilder =
-        new GraphTileBuilder(reader.tile_dir(), tile_id, true, false);
+    graph_tile_builder_ptr tilebuilder{new GraphTileBuilder(reader.tile_dir(), tile_id, true, false)};
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1605,19 +1403,24 @@ void enhance(const boost::property_tree::ptree& pt,
 
         auto e_offset = tilebuilder->edgeinfo(&directededge);
         std::string end_node_code = "";
+        std::string end_node_state_code = "";
         uint32_t end_admin_index = 0;
+        // TODO: why do we get this information again, we could use the begin node admin above instead
         // Get the tile at the end node
         graph_tile_ptr endnodetile;
+        const Admin* admin = nullptr;
         if (tile->id() == directededge.endnode().Tile_Base()) {
           end_admin_index = tile->node(directededge.endnode().id())->admin_index();
-          end_node_code = tile->admin(end_admin_index)->country_iso();
+          admin = tile->admin(end_admin_index);
         } else {
           lock.lock();
           endnodetile = reader.GetGraphTile(directededge.endnode());
           lock.unlock();
           end_admin_index = endnodetile->node(directededge.endnode().id())->admin_index();
-          end_node_code = endnodetile->admin(end_admin_index)->country_iso();
+          admin = endnodetile->admin(end_admin_index);
         }
+        end_node_code = admin->country_iso();
+        end_node_state_code = admin->state_iso();
 
         // only process country access logic if the iso country codes match.
         if (apply_country_overrides && country_code == end_node_code) {
@@ -1689,16 +1492,21 @@ void enhance(const boost::property_tree::ptree& pt,
                 bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
                 bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
+                bool f_oneway_pedestrian =
+                    ((forward & kPedestrianAccess) && !(reverse & kPedestrianAccess));
+                bool r_oneway_pedestrian =
+                    (!(forward & kPedestrianAccess) && (reverse & kPedestrianAccess));
+
                 // motorroad defaults remove ped, wheelchair, moped, and bike access.
                 // still check for user tags via access.
                 forward = GetAccess(forward,
                                     (forward & ~(kPedestrianAccess | kWheelchairAccess |
                                                  kMopedAccess | kBicycleAccess)),
-                                    r_oneway_vehicle, r_oneway_bicycle, access);
+                                    r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, access);
                 reverse = GetAccess(reverse,
                                     (reverse & ~(kPedestrianAccess | kWheelchairAccess |
                                                  kMopedAccess | kBicycleAccess)),
-                                    f_oneway_vehicle, f_oneway_bicycle, access);
+                                    f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, access);
 
                 directededge.set_forwardaccess(forward);
                 directededge.set_reverseaccess(reverse);
@@ -1718,12 +1526,13 @@ void enhance(const boost::property_tree::ptree& pt,
           directededge.set_use(Use::kFootway);
         }
 
-        // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
-
         // Update the named flag
         auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
+
+        // Speed assignment
+        speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
+                                   end_node_state_code);
 
         // Name continuity - on the directededge.
         uint32_t ntrans = nodeinfo.local_edge_count();
@@ -1887,7 +1696,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   }
 
   // Check all of the outcomes, to see about maximum density (km/km2)
-  enhancer_stats stats{std::numeric_limits<float>::min(), 0};
+  enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {0}};
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
@@ -1904,9 +1713,11 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   LOG_DEBUG("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
   LOG_DEBUG("Ramp Count = " + std::to_string(stats.rampcount));
   LOG_DEBUG("Pencil Point Uturn count = " + std::to_string(stats.pencilucount));
+#ifdef LOGGING_LEVEL_DEBUG
   for (auto density : stats.density_counts) {
     LOG_DEBUG("Density: " + std::to_string(density));
   }
+#endif
 }
 
 } // namespace mjolnir

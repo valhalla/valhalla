@@ -8,6 +8,7 @@
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -192,13 +193,8 @@ TEST(TimeTracking, routes) {
 
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  auto opp_start_edge = gurka::findEdge(reader, map.nodes, "AB", "B");
-  graph_tile_ptr tile;
-  const auto* node = reader.nodeinfo(std::get<3>(opp_start_edge)->endnode(), tile);
-  auto start = node->latlng(tile->header()->base_ll());
-  auto end_edge = gurka::findEdge(reader, map.nodes, "GH", "H");
-  node = reader.nodeinfo(std::get<1>(end_edge)->endnode(), tile);
-  auto end = node->latlng(tile->header()->base_ll());
+  auto start = map.nodes["A"];
+  auto end = map.nodes["H"];
 
   // route between them with a current time
   auto req =
@@ -218,11 +214,9 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
-                                  193.9319, 245.4273, 269.4273, 293.4273};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+  const std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
+                                        193.9319, 245.4273, 269.4273, 293.4273};
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a depart_at
   req =
@@ -240,10 +234,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  expected = {0, 17.1429, 34.2857, 51.4286, 193.9319, 245.4273, 269.4273, 293.4273};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a arrive_by
   req =
@@ -262,11 +253,7 @@ TEST(TimeTracking, routes) {
     }
   }
 
-  // TODO: why does arrive by have an extra node in here...
-  expected = {0, 0, 44.6402, 61.7830, 78.9259, 221.4292, 272.9246, 296.9246, 320.9246};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 }
 
 TEST(TimeTracking, dst) {

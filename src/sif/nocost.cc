@@ -45,6 +45,7 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
+   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -54,6 +55,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const bool,
                        const EdgeLabel&,
                        const graph_tile_ptr&,
                        const baldr::GraphId&,
@@ -167,13 +169,15 @@ public:
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
    * @param  has_measured_speed Do we have any of the measured speed types set?
+   * @param  internal_turn  Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t,
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
                                      const baldr::DirectedEdge*,
-                                     const bool) const override {
+                                     const bool,
+                                     const InternalTurn) const override {
     return {};
   }
 

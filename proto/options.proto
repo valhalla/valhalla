@@ -125,11 +125,13 @@ message CostingOptions {
   optional float use_distance = 67;
   optional float use_living_streets = 68;
   optional float service_factor = 69;
+  optional float closure_factor = 70;
+  optional float private_access_penalty = 71;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
   optional string name = 91;
-  repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from avoid_locations
+  repeated AvoidEdge exclude_edges = 92;                       // Exclude edges for any costing - derived from exclude_locations
   optional bool filter_closures = 93 [default = true];
 }
 
@@ -168,6 +170,10 @@ message Options {
     invariant = 3;
   }
 
+  message Ring {
+    repeated LatLng coords = 1;
+  }
+
   optional Units units = 1;                                               // kilometers or miles
   optional string language = 2 [default = "en-US"];                       // Based on IETF BCP 47 language tag string
   optional DirectionsType directions_type = 3 [default = instructions];   // Enable/disable narrative production
@@ -182,7 +188,7 @@ message Options {
   optional Costing costing = 12;                                          // Used to tell what type of costing to use
   repeated CostingOptions costing_options = 13;                           // A list of costing options for each costing model
   repeated Location locations = 14;                                       // Locations for /route /optimized /locate /isochrone
-  repeated Location avoid_locations = 15;                                 // Avoids for any costing
+  repeated Location exclude_locations = 15;                               // Avoids for any costing
   repeated Location sources = 16;                                         // Sources for /sources_to_targets
   repeated Location targets = 17;                                         // Targets for /sources_to_targets
   optional DateTimeType date_time_type = 18;                              // Are you leaving now or then or arriving then
@@ -214,4 +220,5 @@ message Options {
   optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
+  repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
 }

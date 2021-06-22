@@ -4,30 +4,6 @@
     "fi"
   ],
   "instructions": {
-    "approach_verbal_alert": {
-      "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
-      },
-      "metric_lengths": [
-        "<KILOMETERS> kilometriä",
-        "1 kilometri",
-        "<METERS> metriä",
-        "alle 10 metriä"
-      ],
-      "us_customary_lengths": [
-        "<MILES> mailia",
-        "1 maili",
-        "puoli mailia",
-        "neljännesmaili",
-        "<FEET> jalkaa",
-        "alle 10 jalkaa"
-      ],
-      "example_phrases": {
-        "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
-        ]
-      }
-    },
     "arrive": {
       "phrases": {
         "0": "Saavu: <TIME>.",
@@ -68,7 +44,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -107,7 +84,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -164,7 +142,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -195,7 +174,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -248,7 +228,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -384,7 +365,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "ferry_label": "Lautta",
       "example_phrases": {
@@ -412,7 +394,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "ferry_label": "Lautta",
       "example_phrases": {
@@ -449,11 +432,6 @@
         "14": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Jatka kadulla ‎‎<ROUNDABOUT_EXIT_STREET_NAMES>.",
         "15": "Mene kadulle <STREET_NAMES> ja valitse ulosmeno ‎suuntana <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "kävelyreitti",
-        "pyöräilyreitti",
-        "maastopyöräreitti"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -465,6 +443,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -545,11 +529,6 @@
         "14": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno kadulle <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "15": "Mene kadulle <STREET_NAMES> ja valitse ‎ulosmeno suuntana <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "kävelyreitti",
-        "pyöräilyreitti",
-        "maastopyöräreitti"
-      ],
       "ordinal_values": [
         "1.",
         "2.",
@@ -561,6 +540,12 @@
         "8.",
         "9.",
         "10."
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -739,7 +724,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -766,7 +752,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -914,7 +901,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -960,7 +948,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -994,7 +983,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -1032,7 +1022,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalla",
@@ -1077,14 +1068,15 @@
         "4": "Liity suuntana <TOWARD_SIGN>.",
         "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "kävelyreitti",
-        "pyöräilyreitti",
-        "maastopyöräreitti"
-      ],
       "relative_directions": [
         "vasemmalle",
         "oikealle"
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1116,14 +1108,15 @@
         "4": "Liity suuntana <TOWARD_SIGN>.",
         "5": "Liity <RELATIVE_DIRECTION> suuntana <TOWARD_SIGN>."
       },
-      "empty_street_name_labels": [
-        "kävelyreitti",
-        "pyöräilyreitti",
-        "maastopyöräreitti"
-      ],
       "relative_directions": [
         "vasemmalle",
         "oikealle"
+      ],
+      "empty_street_name_labels": [
+        "kävelyreitti",
+        "pyöräilyreitti",
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1169,7 +1162,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -1404,7 +1398,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1443,7 +1438,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1498,7 +1494,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1582,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometriä",
@@ -1959,7 +1957,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -1998,7 +1997,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -2039,7 +2039,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -2086,7 +2087,8 @@
       "empty_street_name_labels": [
         "kävelyreitti",
         "pyöräilyreitti",
-        "maastopyöräreitti"
+        "maastopyöräreitti",
+        "the crosswalk"
       ],
       "relative_directions": [
         "vasemmalle",
@@ -2144,6 +2146,30 @@
         ],
         "1": [
           "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometriä",
+        "1 kilometri",
+        "<METERS> metriä",
+        "alle 10 metriä"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mailia",
+        "1 maili",
+        "puoli mailia",
+        "neljännesmaili",
+        "<FEET> jalkaa",
+        "alle 10 jalkaa"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

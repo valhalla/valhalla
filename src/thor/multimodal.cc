@@ -41,10 +41,11 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
-MultiModalPathAlgorithm::MultiModalPathAlgorithm(uint32_t max_reserved_labels_count)
+MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(TravelMode::kPedestrian), travel_type_(0),
-      max_reserved_labels_count_(max_reserved_labels_count) {
+      max_reserved_labels_count_(
+          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
 }
 
 // Destructor
@@ -350,9 +351,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
+      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
         continue;
       }
       // check if excluded.
@@ -428,8 +430,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               restriction_idx)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, is_dest, pred, tile,
+                                                               edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -723,8 +725,9 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     uint8_t restriction_idx = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
+        !costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
       continue;
     }
 
@@ -749,7 +752,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                             walking_distance, transition_cost, baldr::kInvalidRestriction, true,
-                            false);
+                            false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }
@@ -806,7 +809,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length,
-                            Cost{}, baldr::kInvalidRestriction, true, false);
+                            Cost{}, baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;

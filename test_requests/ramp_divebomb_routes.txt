@@ -9,3 +9,5 @@
 -j '{"locations":[{"lat":47.073784,"lon":21.909929,"street":"Bulevardul Dacia"},{"lat":47.075020,"lon":21.905964,"street":"DN1"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.730610,"lon":-73.968201,"street":""},{"lat":38.580379,"lon":-121.494286,"street":"J Street"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":41.630287,"lon":-108.302292,"street":"I 80"},{"lat":41.630810,"lon":-108.316872,"street":"I 80"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":49.204263,"lon":7.950965096},{"lat":49.2043375,"lon":7.94726737}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":49.204185,"lon":7.947682851},{"lat":49.2042266,"lon":7.95099682}],"costing":"auto","units":"miles"}'

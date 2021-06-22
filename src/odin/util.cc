@@ -71,7 +71,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t intersecting_turn_degree,
                          bool is_right,
                          uint32_t turn_degree_threshold) {
-  int32_t turn_degree_delta = 0;
+  uint32_t turn_degree_delta = 0;
   if (is_right) {
     turn_degree_delta = (((intersecting_turn_degree - path_turn_degree) + 360) % 360);
   } else {
@@ -160,6 +160,39 @@ std::string turn_lane_direction(uint16_t turn_lane) {
       return "";
   }
   return "";
+}
+
+size_t get_word_count(const std::string& street_name) {
+  size_t word_count = 0;
+  std::string::const_iterator pos = street_name.begin();
+  std::string::const_iterator end = street_name.end();
+
+  while (pos != end) {
+    // Skip over space, white space, and punctuation
+    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos))) {
+      ++pos;
+    }
+
+    // Word found - increment
+    word_count += (pos != end);
+
+    // Skip over letters in word
+    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos)))) {
+      ++pos;
+    }
+  }
+  return word_count;
+}
+
+// https://en.wikipedia.org/wiki/UTF-8#Description
+std::size_t strlen_utf8(const std::string& str) {
+  std::size_t length = 0;
+  for (char c : str) {
+    if ((c & 0xC0) != 0x80) {
+      ++length;
+    }
+  }
+  return length;
 }
 
 } // namespace odin

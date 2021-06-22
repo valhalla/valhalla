@@ -38,6 +38,22 @@ There are several key features that we hope can differentiate the Valhalla proje
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
 
+## Platform Compatibility
+
+Valhalla is fully functional on many Linux and Mac OS distributions.
+
+In Windows all functionality is not yet fully supported. Building the Valhalla library works flawlessly, as well as the following application modules:
+
+- `TOOLS`: utilities to query and benchmark various components
+- `DATA_TOOLS`: utilities to build input data and handle transit
+- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
+
+Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
+- no/falsy time-dependent routing
+- no border-crossing penalties
+- driving side will be off in LHT countries
+- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
+
 ## Organization
 
 The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
@@ -92,12 +108,36 @@ if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get
 sudo apt-get install -y python-all-dev
 ```
 
-To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+### Building from Source - MacOS
+
+#### Configuring Rosetta for ARM64 MacBook
+
+Check your architecture typing `arch` in the terminal. In case the result is `arm64` set up Rosetta terminal to emulate x86_64 behavior. Otherwise, skip this step.
+
+1. Go to `Finder > Application > Utilities`.
+2. Select `Terminal` and right-click on it, then choose `Duplicate`.
+3. Rename the duplicated app `Rosetta Terminal`.
+4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
+5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
+6. Make shure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
+7. Now it fully supports Homebrew and other x86_64 command line applications.
+
+Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.
+
+```
+echo "alias ibrew='arch -x86_64 /usr/local/bin/brew'" >> ~/.zshrc
+echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
+```
+
+You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
+
+#### Installing dependencies
+
+To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
 brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -119,6 +159,12 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
 sudo make install
+```
+
+In `Rosetta Terminal` use these flags for cmake:
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
 ```
 
 Important build options include:
@@ -148,12 +194,6 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 
 ### Building from Source - Windows
 
-Support for Windows is not yet fully exploited. Building the Valhalla library works flawlessly, as well as the following application modules:
-
-- `TOOLS`: utilities to query and benchmark various components
-- `DATA_TOOLS`: utilities to build input data and handle transit
-- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full Python distribution in the `PATH`)
-
 It's recommended to work with the following toolset:
 - Visual Studio with C++ support
 - Visual Studio Code (easier and lighter to handle)
@@ -163,13 +203,19 @@ It's recommended to work with the following toolset:
 1. Install the following packages with `vcpkg` and your platform triplet (e.g. `x64-windows`). Note, you can remove all packages after `zlib` in `.\.vcpkg_deps.txt` if you don't want to build `TOOLS` & `DATA_TOOLS`:
 ```
 # Basic packages
-C:\path\to\vcpkg.exe --triplet x64-windows "@.vcpkg_deps.txt"
+git -C C:\path\to\vcpkg checkout f4bd6423
+cd C:\path\to\project
+C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 ```
 2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
 ```
 "C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
 3. Run the build for all targets.
+```
+cd C:\path\to\project
+cmake -B build .
+```
 
 ## Running
 
@@ -254,7 +300,7 @@ valhalla_service valhalla.json isochrone '{"locations":[{"lat":42.552448,"lon":1
 valhalla_service valhalla.json isochrone isochrone_request.txt
 ```
 
-It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file. 
+It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file.
 
 
 ### Batch Script Tool

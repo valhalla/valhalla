@@ -71,6 +71,8 @@ protected:
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
 
+  void ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers);
+
   void CountAndSortSigns(std::list<Maneuver>& maneuvers);
 
   void ConfirmManeuverTypeAssignment(std::list<Maneuver>& maneuvers);
@@ -113,7 +115,10 @@ protected:
                         EnhancedTripLeg_Edge* prev_edge,
                         EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
+  bool IsTee(int node_index,
+             EnhancedTripLeg_Edge* prev_edge,
+             EnhancedTripLeg_Edge* curr_edge,
+             bool prev_edge_has_common_base_name) const;
 
   bool IsLeftPencilPointUturn(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,

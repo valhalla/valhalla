@@ -41,8 +41,8 @@ TimeDistanceBSSMatrix::TimeDistanceBSSMatrix() : settled_count_(0), current_cost
 
 float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) const {
   // The threshold should be the time consumed by the pedestrian, because in the worst case,
-  // the route may be pure pedestrian.
-  return max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
+  // the route may be pure pedestrian. Use a conservative walking speed of 2 MPH.
+  return max_matrix_distance / (2.0f * kMPHtoMetersPerSec);
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -103,8 +103,9 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = -1;
+    const bool is_dest = dest_edges_.find(edgeid.value) != dest_edges_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
+        !current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -135,7 +136,8 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false);
+                             distance, transition_cost, restriction_idx, true, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -328,7 +330,8 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false);
+                             distance, transition_cost, restriction_idx, true, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -514,7 +517,8 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -565,7 +569,8 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false);
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);

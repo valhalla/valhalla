@@ -18,17 +18,16 @@ set(sources
   route_action.cc
   route_matcher.cc
   status_action.cc
-  timedep_forward.cc
-  timedep_reverse.cc
   timedistancematrix.cc
   timedistancebssmatrix.cc
   trace_attributes_action.cc
   trace_route_action.cc
   triplegbuilder.cc
   triplegbuilder_utils.h
+  unidirectional_astar.cc
   worker.cc)
 
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(

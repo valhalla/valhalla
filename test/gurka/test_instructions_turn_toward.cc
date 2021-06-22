@@ -22,8 +22,8 @@ protected:
               ||
          I----JK----L
          M----NO----P----A----B----C
-              ||       D-----/|\-----F
-              ||              |
+              ||             /|\
+              ||       D----- | -----F
               ||              |
               ||              |
               QR              E
@@ -86,6 +86,7 @@ TEST_F(InstructionsTurnToward, TurnRightToward) {
   // Verify the turn right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right toward Baltimore/Washington.",
+      "Turn right toward Baltimore, Washington. Then You will arrive at your destination.",
       "Turn right toward Baltimore.",
       "Turn right toward Baltimore, Washington. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -106,6 +107,7 @@ TEST_F(InstructionsTurnToward, SharpRightToward) {
   // Verify the sharp right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a sharp right toward Pittsburgh/Columbus.",
+      "Make a sharp right toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Make a sharp right toward Pittsburgh.",
       "Make a sharp right toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -126,6 +128,7 @@ TEST_F(InstructionsTurnToward, BearRightToward) {
   // Verify the slight right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward Philadelphia/New York.",
+      "Bear right toward Philadelphia, New York. Then You will arrive at your destination.",
       "Bear right toward Philadelphia.",
       "Bear right toward Philadelphia, New York. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -145,7 +148,9 @@ TEST_F(InstructionsTurnToward, TurnRightTowardIgnoreJunctionName) {
 
   // Verify the turn right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn right toward Lancaster.", "Turn right toward Lancaster.",
+      result, maneuver_index, "Turn right toward Lancaster.",
+      "Turn right toward Lancaster. Then You will arrive at your destination.",
+      "Turn right toward Lancaster.",
       "Turn right toward Lancaster. Then You will arrive at your destination.",
       "Continue for 80 meters.");
 }
@@ -164,7 +169,9 @@ TEST_F(InstructionsTurnToward, TurnLeftToward) {
 
   // Verify the turn left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left toward Baltimore/Washington.", "Turn left toward Baltimore.",
+      result, maneuver_index, "Turn left toward Baltimore/Washington.",
+      "Turn left toward Baltimore, Washington. Then You will arrive at your destination.",
+      "Turn left toward Baltimore.",
       "Turn left toward Baltimore, Washington. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -184,6 +191,7 @@ TEST_F(InstructionsTurnToward, SharpLeftToward) {
   // Verify the sharp left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a sharp left toward Philadelphia/New York.",
+      "Make a sharp left toward Philadelphia, New York. Then You will arrive at your destination.",
       "Make a sharp left toward Philadelphia.",
       "Make a sharp left toward Philadelphia, New York. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -203,7 +211,9 @@ TEST_F(InstructionsTurnToward, BearLeftToward) {
 
   // Verify the slight left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear left toward Pittsburgh/Columbus.", "Bear left toward Pittsburgh.",
+      result, maneuver_index, "Bear left toward Pittsburgh/Columbus.",
+      "Bear left toward Pittsburgh, Columbus. Then You will arrive at your destination.",
+      "Bear left toward Pittsburgh.",
       "Bear left toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -222,7 +232,9 @@ TEST_F(InstructionsTurnToward, TurnLeftTowardUsingInternalEdge) {
 
   // Verify the turn left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left toward B1/C1/Little Italy.", "Turn left toward B1.",
+      result, maneuver_index, "Turn left toward B1/C1/Little Italy.",
+      "Turn left toward B1, Little Italy. Then You will arrive at your destination.",
+      "Turn left toward B1.",
       "Turn left toward B1, Little Italy. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -242,6 +254,7 @@ TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
   // Verify the left u-turn toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a left U-turn toward Lancaster.",
+      "Make a left U-turn toward Lancaster. Then You will arrive at your destination.",
       "Make a left U-turn toward Lancaster.",
       "Make a left U-turn toward Lancaster. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -264,7 +277,7 @@ TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
 //
 //  // Verify the turn left toward instructions
 //  gurka::assert::raw::expect_instructions_at_maneuver_index(
-//      result, maneuver_index, "Continue toward B1/C1/Little Italy.", "Continue toward B1.",
-//      "Continue toward B1, Little Italy. Then You will arrive at your destination.",
-//      "Continue for 200 meters.");
+//      result, maneuver_index, "Continue toward B1/C1/Little Italy.", "Continue.", "Continue toward
+//      B1.", "Continue toward B1, Little Italy. Then You will arrive at your destination.", "Continue
+//      for 200 meters.");
 //}
