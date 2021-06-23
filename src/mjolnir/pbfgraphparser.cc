@@ -47,6 +47,11 @@ int get_number(const std::string& tag, const std::string& value) { // NOLINT
 }
 
 // This class helps to set "culdesac" labels to loop roads correctly.
+// How does it work?
+// First needs to add loop roads (that are candidates to be a "culdesac" roads) using add_candidate
+// method. After that, needs to call clarify_and_fix. It clarifies types of roads and marks roads as
+// "culdesac" correctly. This call requires sets of OSMWayNode and OSMWay. clarify_and_fix must to
+// call after finishing collecting these sets.
 class culdesac_processor {
 public:
   // Adds a loop road as a candidate to be a "culdesac" road.
