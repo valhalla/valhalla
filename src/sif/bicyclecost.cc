@@ -147,6 +147,21 @@ constexpr float kGradeBasedSpeedFactor[] = {
     0.3f   // 15%   - 5.5
 };
 
+// Cycle lane transition costing factors
+constexpr float kCycleLaneTransitionFactor[] = {
+    1.0f,  // No shoulder or cycle lane
+    0.5f,  // No shoulder, shared cycle lane
+    0.25f, // No shoulder, dedicated cycle lane
+    0.1f,  // No shoulder, separated cycle lane
+    0.4f,  // Shoulder, no cycle lane
+    0.5f,  // Shoulder, shared cycle lane
+    0.25f, // Shoulder, dedicated cycle lane
+    0.1f   // Shoulder, separated cycle lane
+};
+
+// Factor when transitioning onto a living street
+constexpr float kLivingStreetTransitionFactor = 0.15f;
+
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
 // hills) to 1 (take hills when they offer a more direct, less time, path).
 constexpr float kDefaultUseHills = 0.25f;
@@ -299,9 +314,9 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const graph_tile_ptr& tile,
-                        const uint32_t seconds,
-                        uint8_t& flow_sources) const override;
+                        const graph_tile_ptr&,
+                        const uint32_t,
+                        uint8_t&) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -344,7 +359,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return speedfactor_[2 * static_cast<uint32_t>(speed_)];
+    return speedfactor_[static_cast<uint32_t>(2 * speed_)];
   }
 
   /**
@@ -364,7 +379,11 @@ public:
 
   std::vector<float> speedfactor_; // Cost factors based on speed in kph
   float use_roads_;                // Preference of using roads between 0 and 1
+  float avoid_roads_;              // Inverse of use roads
   float road_factor_;              // Road factor based on use_roads_
+  float sidepath_factor_;          // Factor to use when use_sidepath is set on an edge
+  float livingstreet_factor_;      // Factor to use for living streets
+  float track_factor_;             // Factor to use tracks
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
@@ -377,11 +396,14 @@ public:
   Surface minimal_surface_penalized_;
   Surface worst_allowed_surface_;
 
+  // Cycle lane accomodation factors
+  float cyclelane_factor_[8];
+  float path_cyclelane_factor_[4];
+
   // Surface speed factors (based on road surface type).
   const float* surface_speed_factor_;
 
-  // Speed penalty factor. Penalties apply above a threshold
-  // (based on the use_roads factor)
+  // Road speed penalty factor. Penalties apply above a threshold (based on the use_roads factor)
   float speedpenalty_[kMaxSpeedKph + 1];
   uint32_t speed_penalty_threshold_;
 
@@ -451,11 +473,29 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
 
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
+  avoid_roads_ = 1.0f - use_roads_;
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
   road_factor_ = (use_roads_ >= 0.5f) ? 1.5f - use_roads_ : 2.0f - use_roads_ * 2.0f;
+
+  // Set edge costing factors
+  sidepath_factor_ = 3.0f * (1.0f - use_roads_);
+  livingstreet_factor_ = 0.2f + use_roads_ * 0.8f;
+  track_factor_ = 0.5f + use_roads_;
+  cyclelane_factor_[0] = 1.0f;                          // No shoulder or cycle lane
+  cyclelane_factor_[1] = 0.9f + use_roads_ * 0.05f;     // No shoulder, shared cycle lane
+  cyclelane_factor_[2] = 0.4f + use_roads_ * 0.45f;     // No shoulder, dedicated cycle lane
+  cyclelane_factor_[3] = 0.15f + use_roads_ * 0.6f;     // No shoulder, separated cycle lane
+  cyclelane_factor_[4] = 0.7f + use_roads_ * 0.2f;      // Shoulder, no cycle lane
+  cyclelane_factor_[5] = 0.9f + use_roads_ * 0.05f;     // Shoulder, shared cycle lane
+  cyclelane_factor_[6] = 0.4f + use_roads_ * 0.45f;     // Shoulder, dedicated cycle lane
+  cyclelane_factor_[7] = 0.15f + use_roads_ * 0.6f;     // Shoulder, separated cycle lane
+  path_cyclelane_factor_[0] = 0.2f + use_roads_;        // Share path with pedestrians
+  path_cyclelane_factor_[1] = 0.2f + use_roads_;        // Share path with pedestrians
+  path_cyclelane_factor_[2] = 0.1f + use_roads_ * 0.9f; // Segregated lane from pedestrians
+  path_cyclelane_factor_[3] = use_roads_ * 0.8f;        // No pedestrians allowed on path
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
@@ -556,11 +596,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
-                           const graph_tile_ptr& tile,
-                           const uint32_t seconds,
-                           uint8_t& flow_sources) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
-
+                           const graph_tile_ptr&,
+                           const uint32_t,
+                           uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
@@ -570,59 +608,33 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(speed < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[speed]);
+    assert(edge->speed() < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
-  // If you have to dismount on the edge then we set speed to an average walking speed
-  // Otherwise, Update speed based on surface factor. Lower speed for rougher surfaces
-  // depending on the bicycle type. Modulate speed based on weighted grade
-  // (relative measure of elevation change along the edge)
-  uint32_t bike_speed =
-      edge->dismount() ? kDismountSpeed
-                       : static_cast<uint32_t>(
-                             (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-                              kGradeBasedSpeedFactor[edge->weighted_grade()]) +
-                             0.5f);
-
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
   float roadway_stress = 1.0f;
+
   // Represents the amount of accommodation that is being made for bicycling
   float accommodation_factor = 1.0f;
 
-  // Special use cases: cycleway, footway, and path
-  uint32_t road_speed = static_cast<uint32_t>(speed + 0.5f);
+  // Special use cases: cycleway, footway, path, living street, track
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
-
-    // Differentiate how segregated the way is from pedestrians
-    if (edge->cyclelane() == CycleLane::kSeparated) { // No pedestrians allowed on path
-      accommodation_factor = use_roads_ * 0.8f;
-    } else if (edge->cyclelane() == CycleLane::kDedicated) { // Segregated lane from pedestrians
-      accommodation_factor = 0.1f + use_roads_ * 0.9f;
-    } else { // Share path with pedestrians
-      accommodation_factor = 0.2f + use_roads_;
-    }
+    // Differentiate how segregated the cycleway/path is from pedestrians
+    accommodation_factor = path_cyclelane_factor_[static_cast<uint32_t>(edge->cyclelane())];
   } else if (edge->use() == Use::kMountainBike && type_ == BicycleType::kMountain) {
     // Slightly less reduction than a footway or path because even with a mountain bike
     // these paths can be a little stressful to ride. No traffic though so still favorable
     accommodation_factor = 0.3f + use_roads_;
   } else if (edge->use() == Use::kLivingStreet) {
-    roadway_stress = 0.2f + use_roads_ * 0.8f;
+    roadway_stress = livingstreet_factor_;
   } else if (edge->use() == Use::kTrack) {
-    roadway_stress = 0.5f + use_roads_;
+    roadway_stress = track_factor_;
   } else {
-    // Favor roads where a cycle lane exists
-    if (edge->cyclelane() == CycleLane::kShared) {
-      accommodation_factor = 0.9f + use_roads_ * 0.05f;
-    } else if (edge->cyclelane() == CycleLane::kDedicated) {
-      accommodation_factor = 0.4f + use_roads_ * 0.45f;
-    } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      accommodation_factor = 0.15f + use_roads_ * 0.6f;
-    } else if (edge->shoulder()) {
-      // If no cycle lane, but there is a shoulder then have a slight preference for this road
-      accommodation_factor = 0.7f + use_roads_ * 0.2f;
-    }
+    // Favor roads where a cycle lane and/or shoulder exists
+    accommodation_factor =
+        cyclelane_factor_[edge->shoulder() * 4 + static_cast<uint32_t>(edge->cyclelane())];
 
     // Penalize roads that have more than one lane (in the direction of travel)
     if (edge->lanecount() > 1) {
@@ -634,39 +646,50 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
       roadway_stress += kTruckStress;
     }
 
-    // Add in penalization for road classification
+    // Add in penalization for road classification (higher class roads are more stress)
     roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
-    // Then multiply by speed so that higher classified roads are more severely punished for being
-    // fast.
-    roadway_stress *= speedpenalty_[road_speed];
+
+    // Multiply by speed so that higher classified roads are more severely punished for being fast.
+    // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't
+    // use it here. High speed penalized edges so we want the "default" speed rather than a traffic
+    // influenced speed anyway.
+    roadway_stress *= speedpenalty_[edge->speed()];
   }
 
   // We want to try and avoid roads that specify to use a cycling path to the side
   if (edge->use_sidepath()) {
-    accommodation_factor += 3.0f * (1.0f - use_roads_);
+    accommodation_factor += sidepath_factor_;
   }
 
-  // Favor bicycle networks very slightly.
-  // TODO - do we need to differentiate between types of network?
-  if (edge->bike_network() > 0) {
+  // Favor bicycle networks slightly
+  if (edge->bike_network()) {
     accommodation_factor *= kBicycleNetworkFactor;
   }
 
-  // The stress of this road after accommodation but before grade
-  float total_stress = accommodation_factor * roadway_stress;
+  // Create an edge factor based on total stress (sum of accommodation factor and roadway
+  // stress) and the weighted grade penalty for the edge.
+  float factor =
+      1.0f + grade_penalty[edge->weighted_grade()] + (accommodation_factor * roadway_stress);
 
-  float surface_factor = 0.0f;
+  // If surface is worse than the minimum we add a surface factor
   if (edge->surface() >= minimal_surface_penalized_) {
-    surface_factor =
+    factor +=
         avoid_bad_surfaces_ * kSurfaceFactors[static_cast<uint32_t>(edge->surface()) -
                                               static_cast<uint32_t>(minimal_surface_penalized_)];
   }
 
-  // Create a final edge factor based on total stress and the weighted grade penalty for the edge.
-  float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress + surface_factor;
+  // Compute bicycle speed. If you have to dismount on the edge then set speed to an average
+  // walking speed. Otherwise, set speed based on surface factor and grade. Lower bike speed
+  // for rougher surfaces (amount depends on on the bicycle type). Weighted grade (relative
+  // measure of elevation change along the edge) modulates speed based on elevation changes.
+  uint32_t bike_speed =
+      edge->dismount() ? kDismountSpeed
+                       : static_cast<uint32_t>(
+                             (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+                              kGradeBasedSpeedFactor[edge->weighted_grade()]) +
+                             0.5f);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
-  assert(bike_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[bike_speed]);
   return {shortest_ ? edge->length() : sec * factor, sec};
 }
@@ -680,13 +703,9 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
 
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
-
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
+  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
   float bike_accom = 1.0f;
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     bike_accom = 0.05f;
@@ -694,32 +713,24 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     // change it's factor
     class_factor = 0.1f;
   } else if (edge->use() == Use::kLivingStreet) {
-    bike_accom = 0.15f;
+    bike_accom = kLivingStreetTransitionFactor;
   } else {
-    if (edge->cyclelane() == CycleLane::kShared) {
-      bike_accom = 0.5f;
-    } else if (edge->cyclelane() == CycleLane::kDedicated) {
-      bike_accom = 0.25f;
-    } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      bike_accom = 0.1f;
-    } else if (edge->shoulder()) {
-      bike_accom = 0.4f;
-    }
+    bike_accom =
+        kCycleLaneTransitionFactor[edge->shoulder() * 4 + static_cast<uint32_t>(edge->cyclelane())];
   }
 
+  float seconds = 0.0f;
   float turn_stress = 1.0f;
-
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (node->drive_on_right())
-                             ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
-                             : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    uint32_t turn_type = static_cast<uint32_t>(edge->turntype(idx));
+    float turn_penalty = (node->drive_on_right()) ? kRightSideTurnPenalties[turn_type]
+                                                  : kLeftSideTurnPenalties[turn_type];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
-    float turn_cost = (node->drive_on_right())
-                          ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                          : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    float turn_cost =
+        (node->drive_on_right()) ? kRightSideTurnCosts[turn_type] : kLeftSideTurnCosts[turn_type];
     if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
     }
@@ -729,19 +740,19 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
-  float avoid_roads = 1.0f - use_roads_;
-  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 1.0f;
+  turn_stress *= (class_factor * avoid_roads_) + use_roads_ + 1.0f;
 
   // Penalize transition to higher class road.
+  float penalty = 0.0f;
   if (edge->classification() < pred.classification() && edge->use() != Use::kLivingStreet) {
     penalty += 10.0f * (static_cast<uint32_t>(pred.classification()) -
                         static_cast<uint32_t>(edge->classification()));
     // Reduce the turn stress if there is a traffic signal
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
-  }
 
-  // Reduce penalty by bike_accom the closer use_roads_ is to 0
-  penalty *= (bike_accom * avoid_roads) + use_roads_;
+    // Reduce penalty by bike_accom the closer use_roads_ is to 0
+    penalty *= (bike_accom * avoid_roads_) + use_roads_;
+  }
 
   // Return cost (time and penalty)
   c.cost += shortest_ ? 0 : seconds * (turn_stress + 1.0f) + penalty;
@@ -768,10 +779,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
 
-  // Additional costs
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
   float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
@@ -782,31 +789,24 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     // change it's factor
     class_factor = 0.1f;
   } else if (edge->use() == Use::kLivingStreet) {
-    bike_accom = 0.15f;
+    bike_accom = kLivingStreetTransitionFactor;
   } else {
-    if (edge->cyclelane() == CycleLane::kShared) {
-      bike_accom = 0.5f;
-    } else if (edge->cyclelane() == CycleLane::kDedicated) {
-      bike_accom = 0.25f;
-    } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      bike_accom = 0.1f;
-    } else if (edge->shoulder()) {
-      bike_accom = 0.4f;
-    }
+    bike_accom =
+        kCycleLaneTransitionFactor[edge->shoulder() * 4 + static_cast<uint32_t>(edge->cyclelane())];
   }
 
+  float seconds = 0.0f;
   float turn_stress = 1.0f;
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (node->drive_on_right())
-                             ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
-                             : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    uint32_t turn_type = static_cast<uint32_t>(edge->turntype(idx));
+    float turn_penalty = (node->drive_on_right()) ? kRightSideTurnPenalties[turn_type]
+                                                  : kLeftSideTurnPenalties[turn_type];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
-    float turn_cost = (node->drive_on_right())
-                          ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                          : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    float turn_cost =
+        (node->drive_on_right()) ? kRightSideTurnCosts[turn_type] : kLeftSideTurnCosts[turn_type];
     if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
     }
@@ -816,19 +816,19 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
-  float avoid_roads = 1.0f - use_roads_;
-  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 1.0f;
+  turn_stress *= (class_factor * avoid_roads_) + use_roads_ + 1.0f;
 
   // Penalize transition to higher class road.
+  float penalty = 0.0f;
   if (edge->classification() < pred->classification() && edge->use() != Use::kLivingStreet) {
     penalty += 10.0f * (static_cast<uint32_t>(pred->classification()) -
                         static_cast<uint32_t>(edge->classification()));
     // Reduce the turn stress if there is a traffic signal
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
-  }
 
-  // Reduce penalty by bike_accom the closer use_roads_ is to 0
-  penalty *= (bike_accom * avoid_roads) + use_roads_;
+    // Reduce penalty by bike_accom the closer use_roads_ is to 0
+    penalty *= (bike_accom * avoid_roads_) + use_roads_;
+  }
 
   // Return cost (time and penalty)
   c.cost += shortest_ ? 0.f : seconds * (turn_stress + 1.0f) + penalty;
