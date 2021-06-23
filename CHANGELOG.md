@@ -21,6 +21,7 @@
    * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
    * CHANGED: Replace `avoid_*` API parameters with more accurate `exclude_*` [#3093](https://github.com/valhalla/valhalla/pull/3093)
    * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
+   * CHANGED: Renamed protobuf Sign/SignElement to TripSign/TripSignElement [#3168](https://github.com/valhalla/valhalla/pull/3168)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
