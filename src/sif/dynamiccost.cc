@@ -68,7 +68,69 @@ constexpr float kMaxLivingStreetPenalty = 500.f;
 constexpr float kMinLivingStreetFactor = 0.8f;
 constexpr float kMaxLivingStreetFactor = 3.f;
 
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
+// Base transition costs
+constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultGateCost = 30.0f;                // Seconds
+constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 450.0f;   // Seconds
+constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultRailFerryCost = 300.0f;          // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
+
+// Other options
+constexpr float kDefaultUseFerry = 0.5f;         // Default preference of using a ferry 0-1
+constexpr float kDefaultUseRailFerry = 0.4f;     // Default preference of using a rail ferry 0-1
+constexpr float kDefaultUseTracks = 0.5f;        // Default preference of using tracks 0-1
+constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
+
+// How much to avoid generic service roads.
+constexpr float kDefaultServiceFactor = 1.0f;
+
+// Default penalty factor for avoiding closures (increases the cost of an edge as if its being
+// traversed at kMinSpeedKph)
+constexpr float kDefaultClosureFactor = 9.0f;
+// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
+// penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
+// non-closure end
+constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
+
+constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
+                                                        baldr::kMaxSpeedKph};
 } // namespace
+
+/*
+ * Assign default values for costing options in constructor. In case of different
+ * default values they should be overrided in "<type>cost.cc" file.
+ */
+BaseCostingOptionsConfig::BaseCostingOptionsConfig()
+    : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
+      maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
+      alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
+                                                                    kMaxPenalty},
+      private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
+      country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
+      country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
+      toll_booth_cost_{0.f, kDefaultTollBoothCost, kMaxPenalty},
+      toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
+      ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
+      rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
+                                                                        kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
+                                                                                  kDefaultUseTracks,
+                                                                                  1.f},
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange} {
+}
 
 DynamicCost::DynamicCost(const CostingOptions& options,
                          const TravelMode mode,
@@ -90,8 +152,8 @@ DynamicCost::DynamicCost(const CostingOptions& options,
   }
 
   // Add avoid edges to internal set
-  for (auto& edge : options.avoid_edges()) {
-    user_avoid_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  for (auto& edge : options.exclude_edges()) {
+    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }
 
@@ -238,9 +300,9 @@ bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
 }
 
 // Adds a list of edges (GraphIds) to the user specified avoid list.
-void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
-  for (auto edge : avoid_edges) {
-    user_avoid_edges_.insert({edge.id, edge.percent_along});
+void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges) {
+  for (auto edge : exclude_edges) {
+    user_exclude_edges_.insert({edge.id, edge.percent_along});
   }
 }
 
@@ -282,6 +344,7 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+
   pbf_costing_options->set_ignore_restrictions(
       rapidjson::get<bool>(value, "/ignore_restrictions", false));
   pbf_costing_options->set_ignore_oneways(rapidjson::get<bool>(value, "/ignore_oneways", false));
@@ -294,8 +357,128 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
   pbf_costing_options->set_top_speed(
       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
-  pbf_costing_options->set_closure_factor(
-      kClosureFactorRange(rapidjson::get<float>(value, "/closure_factor", kDefaultClosureFactor)));
+}
+
+void ParseBaseCostOptions(const rapidjson::Value& value,
+                          CostingOptions* pbf_costing_options,
+                          const BaseCostingOptionsConfig& base_cfg) {
+  // destination only penalty
+  pbf_costing_options->set_destination_only_penalty(base_cfg.dest_only_penalty_(
+      rapidjson::get<float>(value, "/destination_only_penalty", base_cfg.dest_only_penalty_.def)));
+
+  // maneuver_penalty
+  pbf_costing_options->set_maneuver_penalty(base_cfg.maneuver_penalty_(
+      rapidjson::get<float>(value, "/maneuver_penalty", base_cfg.maneuver_penalty_.def)));
+
+  // alley_penalty
+  pbf_costing_options->set_alley_penalty(base_cfg.alley_penalty_(
+      rapidjson::get<float>(value, "/alley_penalty", base_cfg.alley_penalty_.def)));
+
+  // gate_cost
+  pbf_costing_options->set_gate_cost(
+      base_cfg.gate_cost_(rapidjson::get<float>(value, "/gate_cost", base_cfg.gate_cost_.def)));
+
+  // gate_penalty
+  pbf_costing_options->set_gate_penalty(base_cfg.gate_penalty_(
+      rapidjson::get<float>(value, "/gate_penalty", base_cfg.gate_penalty_.def)));
+
+  // private_access_penalty
+  pbf_costing_options->set_private_access_penalty(base_cfg.private_access_penalty_(
+      rapidjson::get<float>(value, "/private_access_penalty", base_cfg.private_access_penalty_.def)));
+
+  // country_crossing_cost
+  pbf_costing_options->set_country_crossing_cost(base_cfg.country_crossing_cost_(
+      rapidjson::get<float>(value, "/country_crossing_cost", base_cfg.country_crossing_cost_.def)));
+
+  // country_crossing_penalty
+  pbf_costing_options->set_country_crossing_penalty(base_cfg.country_crossing_penalty_(
+      rapidjson::get<float>(value, "/country_crossing_penalty",
+                            base_cfg.country_crossing_penalty_.def)));
+
+  if (!base_cfg.disable_toll_booth_) {
+    // toll_booth_cost
+    pbf_costing_options->set_toll_booth_cost(base_cfg.toll_booth_cost_(
+        rapidjson::get<float>(value, "/toll_booth_cost", base_cfg.toll_booth_cost_.def)));
+
+    // toll_booth_penalty
+    pbf_costing_options->set_toll_booth_penalty(base_cfg.toll_booth_penalty_(
+        rapidjson::get<float>(value, "/toll_booth_penalty", base_cfg.toll_booth_penalty_.def)));
+  }
+
+  if (!base_cfg.disable_ferry_) {
+    // ferry_cost
+    pbf_costing_options->set_ferry_cost(
+        base_cfg.ferry_cost_(rapidjson::get<float>(value, "/ferry_cost", base_cfg.ferry_cost_.def)));
+
+    // use_ferry
+    pbf_costing_options->set_use_ferry(
+        base_cfg.use_ferry_(rapidjson::get<float>(value, "/use_ferry", base_cfg.use_ferry_.def)));
+  }
+
+  if (!base_cfg.disable_rail_ferry_) {
+    // rail_ferry_cost
+    pbf_costing_options->set_rail_ferry_cost(base_cfg.rail_ferry_cost_(
+        rapidjson::get<float>(value, "/rail_ferry_cost", base_cfg.rail_ferry_cost_.def)));
+
+    // use_rail_ferry
+    pbf_costing_options->set_use_rail_ferry(base_cfg.use_rail_ferry_(
+        rapidjson::get<float>(value, "/use_rail_ferry", base_cfg.use_rail_ferry_.def)));
+  }
+
+  // service_penalty
+  pbf_costing_options->set_service_penalty(base_cfg.service_penalty_(
+      rapidjson::get<float>(value, "/service_penalty", base_cfg.service_penalty_.def)));
+
+  // service_factor
+  pbf_costing_options->set_service_factor(base_cfg.service_factor_(
+      rapidjson::get<float>(value, "/service_factor", base_cfg.service_factor_.def)));
+
+  // use_tracks
+  pbf_costing_options->set_use_tracks(
+      base_cfg.use_tracks_(rapidjson::get<float>(value, "/use_tracks", base_cfg.use_tracks_.def)));
+
+  // use_living_streets
+  pbf_costing_options->set_use_living_streets(base_cfg.use_living_streets_(
+      rapidjson::get<float>(value, "/use_living_streets", base_cfg.use_living_streets_.def)));
+
+  // closure_factor
+  pbf_costing_options->set_closure_factor(base_cfg.closure_factor_(
+      rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
+}
+
+void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
+                               const BaseCostingOptionsConfig& shared_opts) {
+  pbf_costing_options->set_destination_only_penalty(shared_opts.dest_only_penalty_.def);
+  pbf_costing_options->set_maneuver_penalty(shared_opts.maneuver_penalty_.def);
+  pbf_costing_options->set_alley_penalty(shared_opts.alley_penalty_.def);
+  pbf_costing_options->set_gate_cost(shared_opts.gate_cost_.def);
+  pbf_costing_options->set_gate_penalty(shared_opts.gate_penalty_.def);
+  pbf_costing_options->set_private_access_penalty(shared_opts.private_access_penalty_.def);
+  pbf_costing_options->set_country_crossing_cost(shared_opts.country_crossing_cost_.def);
+  pbf_costing_options->set_country_crossing_penalty(shared_opts.country_crossing_penalty_.def);
+
+  if (!shared_opts.disable_toll_booth_) {
+    pbf_costing_options->set_toll_booth_cost(shared_opts.toll_booth_cost_.def);
+    pbf_costing_options->set_toll_booth_penalty(shared_opts.toll_booth_penalty_.def);
+  }
+
+  if (!shared_opts.disable_ferry_) {
+    pbf_costing_options->set_ferry_cost(shared_opts.ferry_cost_.def);
+    pbf_costing_options->set_use_ferry(shared_opts.use_ferry_.def);
+  }
+
+  if (!shared_opts.disable_rail_ferry_) {
+    pbf_costing_options->set_rail_ferry_cost(shared_opts.rail_ferry_cost_.def);
+    pbf_costing_options->set_use_rail_ferry(shared_opts.use_rail_ferry_.def);
+  }
+
+  pbf_costing_options->set_service_penalty(shared_opts.service_penalty_.def);
+  pbf_costing_options->set_service_factor(shared_opts.service_factor_.def);
+
+  pbf_costing_options->set_use_tracks(shared_opts.use_tracks_.def);
+  pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
+
+  pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,

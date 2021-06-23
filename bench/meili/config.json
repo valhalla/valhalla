@@ -28,14 +28,6 @@
       "long_request": 110
     }
   },
-  "skadi": {
-    "actons": [
-      "height"
-    ],
-    "logging": {
-      "long_request": 5
-    }
-  },
   "meili": {
     "customizable": [
       "turn_penalty_factor",
@@ -83,11 +75,11 @@
       "max_time_contour": 120,
       "max_distance_contour": 200
     },
-    "max_avoid_locations": 50,
+    "max_exclude_locations": 50,
     "max_radius": 200,
     "max_reachability": 100,
     "max_alternates": 2,
-    "max_avoid_polygons_length":10000,
+    "max_exclude_polygons_length": 10000,
     "multimodal": {
       "max_distance": 500000,
       "max_locations": 50,

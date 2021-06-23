@@ -144,7 +144,7 @@ const std::vector<http_request_t> valhalla_requests{
         R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}]})"),
     http_request_t(
         GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}]})"),
+        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}]})"),
     http_request_t(
         POST,
         "/trace_attributes",
@@ -331,7 +331,7 @@ const std::vector<http_request_t> osrm_requests{
         R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
     http_request_t(
         GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
+        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
     http_request_t(
         POST,
         "/trace_attributes",
@@ -440,6 +440,46 @@ std::list<std::pair<std::string, std::string>>
          reach destination - too far from a transit stop"},
          */
     };
+
+boost::property_tree::ptree make_config(const std::vector<std::string>& whitelist = {
+                                            "locate",
+                                            "route",
+                                            "height",
+                                            "sources_to_targets",
+                                            "optimized_route",
+                                            "isochrone",
+                                            "trace_route",
+                                            "trace_attributes",
+                                            "transit_available",
+                                            "expansion",
+                                            "centroid",
+                                            "status",
+                                        }) {
+  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
+                 "loki_service_tmp";
+  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+    throw std::runtime_error("Couldnt make directory to run from");
+
+  auto config = test::make_config(run_dir,
+                                  {
+                                      {"service_limits.skadi.max_shape", "100"},
+                                      {"service_limits.max_exclude_locations", "0"},
+                                  },
+                                  {"loki.actions"});
+
+  boost::property_tree::ptree actions;
+  for (const auto& action_name : whitelist) {
+    boost::property_tree::ptree action;
+    action.put("", action_name);
+    actions.push_back(std::make_pair("", action));
+  }
+  config.add_child("loki.actions", actions);
+
+  return config;
+}
+
+// config for permanently running server
+auto const config = make_config();
 
 // for zmq thead communications
 zmq::context_t context;

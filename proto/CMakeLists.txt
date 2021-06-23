@@ -4,6 +4,7 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   directions.proto
   info.proto
   options.proto
+  sign.proto
   tripcommon.proto
   trip.proto
   transit.proto

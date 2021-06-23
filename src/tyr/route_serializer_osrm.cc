@@ -719,7 +719,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 }
 
 // Add exits (exit numbers) along a step/maneuver.
-std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exits(const valhalla::Sign& sign) {
   // Iterate through the exit numbers
   std::string exits;
   for (const auto& number : sign.exit_numbers()) {
@@ -787,9 +787,9 @@ void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
-                                      ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
-                                  const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_element_refs(
+    const google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
     // Only process refs
@@ -808,8 +808,7 @@ std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
-        sign_elements,
+    const google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
   for (const auto& sign_element : sign_elements) {
@@ -828,9 +827,9 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
-                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
-                              const std::string& delimiter = kSignElementDelimiter) {
+std::string
+get_sign_elements(const google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements,
+                  const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
     // If the sign_elements_string is not empty, append specified delimiter
@@ -843,7 +842,7 @@ std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
   return sign_elements_string;
 }
 
-bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+bool exit_destinations_exist(const valhalla::Sign& sign) {
   if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
       (sign.exit_names_size() > 0)) {
     return true;
@@ -852,7 +851,7 @@ bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) 
 }
 
 // Return the exit destinations
-std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exit_destinations(const valhalla::Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -909,7 +908,7 @@ std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign)
 }
 
 // Return the guide destinations
-std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string guide_destinations(const valhalla::Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -961,7 +960,7 @@ std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign
 //   3. <ref>: <non-ref>
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string destinations(const valhalla::Sign& sign) {
   if (exit_destinations_exist(sign)) {
     return exit_destinations(sign);
   }

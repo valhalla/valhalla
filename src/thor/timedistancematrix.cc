@@ -31,21 +31,25 @@ TimeDistanceMatrix::TimeDistanceMatrix()
     : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
+// Compute a cost threshold in seconds based on average speed for the travel mode.
+// Use a conservative speed estimate (in MPH) for each travel mode.
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
-  float cost_threshold;
+  float average_speed_mph;
   switch (mode_) {
     case TravelMode::kBicycle:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdBicycleDivisor;
+      average_speed_mph = 10.0f;
       break;
     case TravelMode::kPedestrian:
     case TravelMode::kPublicTransit:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
+      average_speed_mph = 2.0f;
       break;
     case TravelMode::kDrive:
     default:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdAutoDivisor;
+      average_speed_mph = 35.0f;
   }
-  return cost_threshold;
+
+  // Convert max_matrix_distance to seconds based on the average speed
+  return max_matrix_distance / (average_speed_mph * kMPHtoMetersPerSec);
 }
 
 // Clear the temporary information generated during time + distance matrix

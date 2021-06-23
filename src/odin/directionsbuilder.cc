@@ -181,6 +181,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
     }
 
+    if (maneuver.HasVerbalSuccinctTransitionInstruction()) {
+      trip_maneuver->set_verbal_succinct_transition_instruction(
+          maneuver.verbal_succinct_transition_instruction());
+    }
+
     if (maneuver.HasVerbalTransitionAlertInstruction()) {
       trip_maneuver->set_verbal_transition_alert_instruction(
           maneuver.verbal_transition_alert_instruction());
