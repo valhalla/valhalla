@@ -21,6 +21,7 @@
    * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
    * CHANGED: Replace `avoid_*` API parameters with more accurate `exclude_*` [#3093](https://github.com/valhalla/valhalla/pull/3093)
    * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
+   * ADDED: Added info to /status endpoint [#3008](https://github.com/valhalla/valhalla/pull/3008)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
@@ -51,7 +52,6 @@
    * CHANGED: Use std::shared_ptr in case if ENABLE_THREAD_SAFE_TILE_REF_COUNT is ON. [#3067](https://github.com/valhalla/valhalla/pull/3067)
    * CHANGED: Reduce stop impact when driving in parking lots [#3051](https://github.com/valhalla/valhalla/pull/3051)
    * ADDED: Added another through route test [#3074](https://github.com/valhalla/valhalla/pull/3074)
-   * ADDED: Added info to /status endpoint [#3008](https://github.com/valhalla/valhalla/pull/3008)
    * ADDED: Adds incident-length to metadata proto [#3083](https://github.com/valhalla/valhalla/pull/3083)
    * ADDED: Do not penalize gates that have allowed access [#3078](https://github.com/valhalla/valhalla/pull/3078)
    * ADDED: Added missing k/v pairs to taginfo.json.  Updated PR template. [#3101](https://github.com/valhalla/valhalla/pull/3101)
