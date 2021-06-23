@@ -455,7 +455,7 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 #endif
 };
 

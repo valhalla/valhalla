@@ -1252,7 +1252,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const {
   std::string str;
   std::string param_list;
 
