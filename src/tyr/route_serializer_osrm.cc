@@ -827,9 +827,9 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string
-get_sign_elements(const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
-                  const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_elements(
+    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
     // If the sign_elements_string is not empty, append specified delimiter
