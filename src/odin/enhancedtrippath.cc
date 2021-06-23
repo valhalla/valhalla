@@ -1004,7 +1004,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const {
   std::string str;
 
   for (const auto& sign_element : sign_elements) {

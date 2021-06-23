@@ -404,7 +404,7 @@ void PopulateEdge(TripLeg_Edge* edge,
   edge->set_bridge(bridge);
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
-  valhalla::Sign* sign = edge->mutable_sign();
+  valhalla::TripSign* sign = edge->mutable_sign();
   for (const auto& exit_number : exit_numbers) {
     auto* edge_exit_number = sign->add_exit_numbers();
     edge_exit_number->set_text(exit_number.first);
