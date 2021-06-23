@@ -1208,49 +1208,6 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   return result;
 }
 
-worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
-                               http_request_info_t& request_info,
-                               const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
-  if (request.options().has_jsonp()) {
-    stream << request.options().jsonp() << '(';
-  }
-  stream << *array;
-  if (request.options().has_jsonp()) {
-    stream << ')';
-  }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
-                                                                         : worker::JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t
-to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
-  if (request.options().has_jsonp()) {
-    stream << request.options().jsonp() << '(';
-  }
-  stream << *map;
-  if (request.options().has_jsonp()) {
-    stream << ')';
-  }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
-                                                                         : worker::JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
 worker_t::result_t to_response(const std::string& data,
                                http_request_info_t& request_info,
                                const Api& request,
