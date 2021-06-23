@@ -360,14 +360,14 @@ public:
    *              directed edge index) within the tile.
    * @return  Returns a reference to the sign builder.
    */
-  Sign& sign(const size_t idx);
+  valhalla::baldr::Sign& sign(const size_t idx);
 
   /**
    * Get the sign builder at the specified index.
    * @param  idx  Index of the sign builder.
    * @return  Returns a reference to the sign builder.
    */
-  Sign& sign_builder(const size_t idx);
+  valhalla::baldr::Sign& sign_builder(const size_t idx);
 
   /**
    * Gets a const admin builder at specified index.
@@ -515,7 +515,7 @@ protected:
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<Sign> signs_builder_;
+  std::vector<valhalla::baldr::Sign> signs_builder_;
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.

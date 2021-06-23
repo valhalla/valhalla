@@ -77,6 +77,7 @@ constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
 constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
@@ -116,6 +117,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
       gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
                                                                     kMaxPenalty},
+      private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
       toll_booth_cost_{0.f, kDefaultTollBoothCost, kMaxPenalty},
@@ -150,8 +152,8 @@ DynamicCost::DynamicCost(const CostingOptions& options,
   }
 
   // Add avoid edges to internal set
-  for (auto& edge : options.avoid_edges()) {
-    user_avoid_edges_.insert({GraphId(edge.id()), edge.percent_along()});
+  for (auto& edge : options.exclude_edges()) {
+    user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }
 
@@ -298,9 +300,9 @@ bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
 }
 
 // Adds a list of edges (GraphIds) to the user specified avoid list.
-void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
-  for (auto edge : avoid_edges) {
-    user_avoid_edges_.insert({edge.id, edge.percent_along});
+void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges) {
+  for (auto edge : exclude_edges) {
+    user_exclude_edges_.insert({edge.id, edge.percent_along});
   }
 }
 
@@ -380,6 +382,10 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
   pbf_costing_options->set_gate_penalty(base_cfg.gate_penalty_(
       rapidjson::get<float>(value, "/gate_penalty", base_cfg.gate_penalty_.def)));
 
+  // private_access_penalty
+  pbf_costing_options->set_private_access_penalty(base_cfg.private_access_penalty_(
+      rapidjson::get<float>(value, "/private_access_penalty", base_cfg.private_access_penalty_.def)));
+
   // country_crossing_cost
   pbf_costing_options->set_country_crossing_cost(base_cfg.country_crossing_cost_(
       rapidjson::get<float>(value, "/country_crossing_cost", base_cfg.country_crossing_cost_.def)));
@@ -447,6 +453,7 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_alley_penalty(shared_opts.alley_penalty_.def);
   pbf_costing_options->set_gate_cost(shared_opts.gate_cost_.def);
   pbf_costing_options->set_gate_penalty(shared_opts.gate_penalty_.def);
+  pbf_costing_options->set_private_access_penalty(shared_opts.private_access_penalty_.def);
   pbf_costing_options->set_country_crossing_cost(shared_opts.country_crossing_cost_.def);
   pbf_costing_options->set_country_crossing_penalty(shared_opts.country_crossing_penalty_.def);
 

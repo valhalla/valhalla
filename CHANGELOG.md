@@ -16,6 +16,11 @@
    * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
    * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844)
    * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
+   * CHORE: Updates robin-hood-hashing third-party library
+   * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
+   * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
+   * CHANGED: Replace `avoid_*` API parameters with more accurate `exclude_*` [#3093](https://github.com/valhalla/valhalla/pull/3093)
+   * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**

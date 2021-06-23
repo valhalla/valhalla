@@ -107,6 +107,24 @@
     },
     {
       "key": "access",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Sets access flag to true"
+    },
+    {
+      "key": "access",
+      "value": "residents",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Sets access flag to true"
+    },
+    {
+      "key": "access",
       "value": "permissive",
       "object_types": [
         "node",
@@ -269,6 +287,22 @@
     },
     {
       "key": "barrier",
+      "value": "yes",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
+    {
+      "key": "barrier",
+      "value": "swing_gate",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
+    {
+      "key": "barrier",
       "value": "bollard",
       "object_types": [
         "node"
@@ -286,6 +320,14 @@
     {
       "key": "barrier",
       "value": "removable",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+    },
+    {
+      "key": "barrier",
+      "value": "jersey_barrier",
       "object_types": [
         "node"
       ],
@@ -484,6 +526,24 @@
     {
       "key": "bicycle",
       "value": "private",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+    },
+    {
+      "key": "bicycle",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+    },
+    {
+      "key": "bicycle",
+      "value": "residents",
       "object_types": [
         "node",
         "way"
@@ -1721,6 +1781,24 @@
     },
     {
       "key": "foot",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+    },
+    {
+      "key": "foot",
+      "value": "residents",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+    },
+    {
+      "key": "foot",
       "value": "permissive",
       "object_types": [
         "node",
@@ -2238,6 +2316,24 @@
     {
       "key": "hgv",
       "value": "private",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+    },
+    {
+      "key": "hgv",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+    },
+    {
+      "key": "hgv",
+      "value": "residents",
       "object_types": [
         "node",
         "way"
@@ -3175,6 +3271,24 @@
     },
     {
       "key": "moped",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+    },
+    {
+      "key": "moped",
+      "value": "residents",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+    },
+    {
+      "key": "moped",
       "value": "permissive",
       "object_types": [
         "node",
@@ -3358,6 +3472,24 @@
     {
       "key": "motor_vehicle",
       "value": "private",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for auto.  Auto Routing allowed."
+    },
+    {
+      "key": "motor_vehicle",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for auto.  Auto Routing allowed."
+    },
+    {
+      "key": "motor_vehicle",
+      "value": "residents",
       "object_types": [
         "node",
         "way"
@@ -3559,6 +3691,24 @@
     {
       "key": "motorcar",
       "value": "private",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for auto.  Auto Routing allowed."
+    },
+    {
+      "key": "motorcar",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for auto.  Auto Routing allowed."
+    },
+    {
+      "key": "motorcar",
+      "value": "residents",
       "object_types": [
         "node",
         "way"
@@ -4302,6 +4452,22 @@
     {
       "key": "pedestrian",
       "value": "private",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+    },
+    {
+      "key": "pedestrian",
+      "value": "permit",
+      "object_types": [
+        "way"
+      ],
+      "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+    },
+    {
+      "key": "pedestrian",
+      "value": "residents",
       "object_types": [
         "way"
       ],
@@ -6574,6 +6740,24 @@
     {
       "key": "wheelchair",
       "value": "private",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+    },
+    {
+      "key": "wheelchair",
+      "value": "permit",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+    },
+    {
+      "key": "wheelchair",
+      "value": "residents",
       "object_types": [
         "node",
         "way"
