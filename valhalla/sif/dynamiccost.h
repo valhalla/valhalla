@@ -745,9 +745,9 @@ public:
    * This can be used by test programs - alternatively a list of avoid
    * edges will be passed in the property tree for the costing options
    * of a specified type.
-   * @param  avoid_edges  Set of edge Ids to avoid along with the percent along the edge.
+   * @param  exclude_edges  Set of edge Ids to avoid along with the percent along the edge.
    */
-  void AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges);
+  void AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges);
 
   /**
    * Check if the edge is in the user-specified avoid list.
@@ -756,8 +756,8 @@ public:
    *         false otherwise.
    */
   bool IsUserAvoidEdge(const baldr::GraphId& edgeid) const {
-    return (user_avoid_edges_.size() != 0 &&
-            user_avoid_edges_.find(edgeid) != user_avoid_edges_.end());
+    return (user_exclude_edges_.size() != 0 &&
+            user_exclude_edges_.find(edgeid) != user_exclude_edges_.end());
   }
 
   /**
@@ -770,8 +770,8 @@ public:
    *         false otherwise.
    */
   bool AvoidAsOriginEdge(const baldr::GraphId& edgeid, const float percent_along) const {
-    auto avoid = user_avoid_edges_.find(edgeid);
-    return (avoid != user_avoid_edges_.end() && avoid->second >= percent_along);
+    auto avoid = user_exclude_edges_.find(edgeid);
+    return (avoid != user_exclude_edges_.end() && avoid->second >= percent_along);
   }
 
   /**
@@ -784,8 +784,8 @@ public:
    *         false otherwise.
    */
   bool AvoidAsDestinationEdge(const baldr::GraphId& edgeid, const float percent_along) const {
-    auto avoid = user_avoid_edges_.find(edgeid);
-    return (avoid != user_avoid_edges_.end() && avoid->second <= percent_along);
+    auto avoid = user_exclude_edges_.find(edgeid);
+    return (avoid != user_exclude_edges_.end() && avoid->second <= percent_along);
   }
 
   /**
@@ -843,7 +843,7 @@ protected:
   std::vector<HierarchyLimits> hierarchy_limits_;
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
-  std::unordered_map<baldr::GraphId, float> user_avoid_edges_;
+  std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
@@ -855,6 +855,7 @@ protected:
   // Transition costs
   sif::Cost country_crossing_cost_;
   sif::Cost gate_cost_;
+  sif::Cost private_access_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
   sif::Cost bike_share_cost_;
@@ -903,6 +904,8 @@ protected:
                               costing_options.country_crossing_cost()};
     gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
                   costing_options.gate_cost()};
+    private_access_cost_ = {costing_options.gate_cost() + costing_options.private_access_penalty(),
+                            costing_options.gate_cost()};
 
     bike_share_cost_ = {costing_options.bike_share_cost() + costing_options.bike_share_penalty(),
                         costing_options.bike_share_cost()};
@@ -993,6 +996,7 @@ protected:
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
     c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ * (node->type() == baldr::NodeType::kGate) * node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
@@ -1038,6 +1042,7 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> alley_penalty_;
   ranged_default_t<float> gate_cost_;
   ranged_default_t<float> gate_penalty_;
+  ranged_default_t<float> private_access_penalty_;
   ranged_default_t<float> country_crossing_cost_;
   ranged_default_t<float> country_crossing_penalty_;
 
