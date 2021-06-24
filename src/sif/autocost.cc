@@ -1213,10 +1213,12 @@ public:
   using AutoCost::ferry_transition_cost_;
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
+  using AutoCost::height_;
   using AutoCost::maneuver_penalty_;
   using AutoCost::service_factor_;
   using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
+  using AutoCost::width_;
 };
 
 template <class T>
@@ -1361,6 +1363,20 @@ TEST(AutoCost, testAutoCostParams) {
     tester = make_autocost_from_json("service_factor", distributor(generator));
     EXPECT_THAT(tester->service_factor_,
                 test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
+  }
+
+  // height_
+  distributor = make_distributor_from_range(defaults.height_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("height", distributor(generator));
+    EXPECT_THAT(tester->height_, test::IsBetween(defaults.height_.min, defaults.height_.max));
+  }
+
+  // width_
+  distributor = make_distributor_from_range(defaults.width_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("width", distributor(generator));
+    EXPECT_THAT(tester->width_, test::IsBetween(defaults.width_.min, defaults.width_.max));
   }
 
   // flow_mask_
