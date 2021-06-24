@@ -14,6 +14,7 @@
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/sign.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -256,7 +257,7 @@ public:
     return mutable_edge_->has_sign();
   }
 
-  const ::valhalla::Sign& sign() const {
+  const ::valhalla::TripSign& sign() const {
     return mutable_edge_->sign();
   }
 
@@ -447,14 +448,14 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::SignElement>& sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 #endif
 };
 
