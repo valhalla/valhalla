@@ -162,7 +162,7 @@ message DirectionsLeg {
     optional string verbal_pre_transition_instruction = 13;      // verbal pre-transition instruction
     optional string verbal_post_transition_instruction = 14;     // verbal post-transition instruction
     repeated StreetName begin_street_name = 15;                  // begin street names
-    optional Sign sign = 16;                                     // associated sign information, for example: exit number
+    optional TripSign sign = 16;                                 // associated sign information, for example: exit number
     optional uint32 roundabout_exit_count = 17;                  // which spoke to exit roundabout after entering
     optional string depart_instruction = 18;                     // depart instruction - used with transit
     optional string verbal_depart_instruction = 19;              // verbal depart instruction - used with transit
