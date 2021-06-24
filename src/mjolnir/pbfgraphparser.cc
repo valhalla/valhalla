@@ -949,6 +949,8 @@ public:
         n.set_access(std::stoi(tag.second));
       } else if (tag.first == "tagged_access") {
         n.set_tagged_access(std::stoi(tag.second));
+      } else if (tag.first == "private") {
+        n.set_private_access(tag.second == "true");
       }
 
       /* TODO: payment type.

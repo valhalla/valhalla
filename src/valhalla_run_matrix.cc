@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : pt.get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
-    if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
+    if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
         kv.first == "trace" || kv.first == "isochrone") {
       continue;
