@@ -16,7 +16,7 @@
    * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
    * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844)
    * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
-   * ADDED: Exposing rest-area names in passive maneuvers [#3150](https://github.com/valhalla/valhalla/pull/3150)
+   * ADDED: Exposing rest-area names in passive maneuvers [#3172](https://github.com/valhalla/valhalla/pull/3172)
    * CHORE: Updates robin-hood-hashing third-party library
    * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
    * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
