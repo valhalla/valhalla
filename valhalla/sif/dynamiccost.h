@@ -996,7 +996,9 @@ protected:
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
     c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
-    c += private_access_cost_ * (node->type() == baldr::NodeType::kGate) * node->private_access();
+    c += private_access_cost_ *
+         (node->type() == baldr::NodeType::kGate || node->type() == baldr::NodeType::kBollard) *
+         node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
