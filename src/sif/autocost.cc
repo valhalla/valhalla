@@ -195,6 +195,12 @@ public:
                               uint8_t& restriction_idx) const override;
 
   /**
+   * Callback for Allowed doing mode  specific restriction checks
+   */
+  virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
+
+
+  /**
    * Only transit costings are valid for this method call, hence we throw
    * @param edge
    * @param departure
@@ -300,6 +306,10 @@ public:
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
 
+  // Vehicle attributes (used for special restrictions and costing)
+  float height_; // Vehicle height in meters
+  float width_;  // Vehicle width in meters
+
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -359,6 +369,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  // Get the vehicle attributes
+  height_ = costing_options.height();
+  width_ = costing_options.width();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -420,6 +434,20 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
+}
+
+bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  switch (restriction.type()) {
+    case AccessType::kMaxHeight:
+      return height_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxWidth:
+      return width_ <= static_cast<float>(restriction.value() * 0.01);
+    default:
+      return true;
+  };
+
+  // Unreachable line
+  return true;
 }
 
 // Get the cost to traverse the edge in seconds
