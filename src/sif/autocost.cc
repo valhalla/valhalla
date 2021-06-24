@@ -65,11 +65,17 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
+// Default auto attributes
+constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
+constexpr float kDefaultAutoWidth = 1.4f;  // Meters (55.1181 inches)
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
+constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
+constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -198,7 +204,6 @@ public:
    * Callback for Allowed doing mode  specific restriction checks
    */
   virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
-
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -677,6 +682,16 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
                               .get_value_or(kDefaultUseDistance)));
 
+    // height
+    pbf_costing_options->set_height(
+        kAutoHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
+                             .get_value_or(kDefaultAutoHeight)));
+
+    // width
+    pbf_costing_options->set_width(
+        kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
+                            .get_value_or(kDefaultAutoWidth)));
+
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults
@@ -687,6 +702,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
+    pbf_costing_options->set_height(kDefaultAutoHeight);
+    pbf_costing_options->set_width(kDefaultAutoWidth);
   }
 }
 
