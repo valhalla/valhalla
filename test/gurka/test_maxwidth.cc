@@ -3,6 +3,12 @@
 
 using namespace valhalla;
 
+namespace {
+const std::vector<std::string> kSupportedCostingTypes = {"auto", "truck", "bus", "taxi", "hov"};
+const std::vector<std::string> kUnsupportedCostingTypes = {"bicycle", "pedestrian", "motorcycle",
+                                                           "motor_scooter"};
+} // namespace
+
 TEST(Standalone, Maxwidth) {
   const std::string ascii_map = R"(
       A----B----C----D----E
@@ -25,60 +31,31 @@ TEST(Standalone, Maxwidth) {
 
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxwidth");
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxwidth");
 
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                   {{"/costing_options/" + costing + "/width", "2.0"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  }
 
-  auto from = "A";
-  auto to = "I";
-  // set odd width just to confirm we get the correct route.
-  const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"truck","costing_options":{"truck":{"width":1.8}}})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                   {{"/costing_options/" + costing + "/width", "1.8"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
 
-  result = gurka::do_action(valhalla::Options::route, map, request);
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  for (const auto& costing : kSupportedCostingTypes) {
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                  {{"/costing_options/" + costing + "/width", "2.1"}}),
+                 valhalla_exception_t);
+  }
 
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "bus");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "taxi");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "hov");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "bicycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "pedestrian");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "motorcycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BI"});
-
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "motor_scooter");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  for (const auto& costing : kUnsupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing);
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
 }
