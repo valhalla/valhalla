@@ -3,7 +3,7 @@
 
 using namespace valhalla;
 
-TEST(Standalone, Maxspeed) {
+TEST(Standalone, Maxwidth) {
   const std::string ascii_map = R"(
       A----B----C----D----E
            |         |    |
