@@ -1847,6 +1847,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
+  --if access=private use allowed modes, but consider private_access tag as true.
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
@@ -1899,8 +1900,8 @@ function nodes_proc (kv, nokeys)
       bollard = false
     end
 
-    --bollard = true shuts off access unless the tag exists.
-    if bollard == true then
+    --bollard = true shuts off access when access is not originally specified.
+    if bollard == true and initial_access == nil then
       auto = auto_tag or 0
       truck = truck_tag or 0
       bus = bus_tag or 0
@@ -2020,6 +2021,8 @@ function nodes_proc (kv, nokeys)
        kv["junction"] = "named"
     end
   end
+
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
