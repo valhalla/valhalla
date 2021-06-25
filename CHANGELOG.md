@@ -12,6 +12,7 @@
    * FIXED: Missing fork maneuver [#3134](https://github.com/valhalla/valhalla/pull/3134)
    * FIXED: Update turn channel logic to call out specific turn at the end of the turn channel if needed [#3140](https://github.com/valhalla/valhalla/pull/3140)
    * FIXED: Fixed cost thresholds for TimeDistanceMatrix. [#3131](https://github.com/valhalla/valhalla/pull/3131)
+   * FIXED: Use distance threshold in hierarchy limits for bidirectional astar to expand more important lower level roads [#3156](https://github.com/valhalla/valhalla/pull/3156)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)

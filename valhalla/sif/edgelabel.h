@@ -187,6 +187,8 @@ public:
 
   /**
    * Get the distance to the destination.
+   * In case of bidirectional search it may represent the distance to the start point:
+   * origin for the forward search and destination for the reverse search.
    * @return  Returns the distance in meters.
    */
   float distance() const {
