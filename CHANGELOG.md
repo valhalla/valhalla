@@ -1,5 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.3
 * **Removed**
+   * REMOVED: Unused overloads of `to_response` function [#3167](https://github.com/valhalla/valhalla/pull/3167)
+
 * **Bug Fix**
    * FIXED: Fix heading on small edge [#3114](https://github.com/valhalla/valhalla/pull/3114)
    * FIXED: Added support for `access=psv`, which disables routing on these nodes and edges unless the mode is taxi or bus [#3107](https://github.com/valhalla/valhalla/pull/3107)
@@ -10,6 +12,7 @@
    * FIXED: Missing fork maneuver [#3134](https://github.com/valhalla/valhalla/pull/3134)
    * FIXED: Update turn channel logic to call out specific turn at the end of the turn channel if needed [#3140](https://github.com/valhalla/valhalla/pull/3140)
    * FIXED: Fixed cost thresholds for TimeDistanceMatrix. [#3131](https://github.com/valhalla/valhalla/pull/3131)
+   * FIXED: Use distance threshold in hierarchy limits for bidirectional astar to expand more important lower level roads [#3156](https://github.com/valhalla/valhalla/pull/3156)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
@@ -24,6 +27,7 @@
    * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
    * CHANGED: Renamed protobuf Sign/SignElement to TripSign/TripSignElement [#3168](https://github.com/valhalla/valhalla/pull/3168)
    * CHORE: Updates googletest to release-1.11.0 [#3166](Updates googletest to release-1.11.0)
+   * ADDED: Allow going through accessible `barrier=bollard` and penalize routing through it, when the access is private [#3175](https://github.com/valhalla/valhalla/pull/3175)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**

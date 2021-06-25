@@ -133,14 +133,55 @@ TEST_P(BollardBarrier, NoInfoBarrierAccess) {
   gurka::assert::raw::expect_path(result, {"A1", "1B"});
 }
 
+TEST_P(BollardBarrier, BikeRestricted) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", GetParam()}, {"bicycle", "no"}}},
+  };
+  const gurka::map map = gurka::buildtiles(layout, ways, nodes, {},
+                                           "test/data/deadend_bollarrd_bike_restricted_barrier");
+
+  // auto
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+
+  // bicycle
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "bicycle");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
+TEST_P(BollardBarrier, BikeAllowedNoOtherInformation) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", GetParam()}, {"bicycle", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/deadend_bollard_bike_allowed_barrier");
+
+  // auto
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+
+  // bicycle
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "bicycle");
+  gurka::assert::raw::expect_path(result, {"A1", "1B"});
+}
+
 const std::vector<std::string> gates = {"gate", "yes", "lift_gate", "swing_gate"};
 const std::vector<std::string> bollards = {"bollard", "block", "jersey_barrier"};
 
 INSTANTIATE_TEST_SUITE_P(GateBasicAccess, DeadendBarrier, testing::ValuesIn(gates));
-
-// TODO: bollards basic behaviour is wrong for Allowed and Private Access. Add tests, when it is
-// fixed.
-// INSTANTIATE_TEST_SUITE_P(BollardBasicAccess, DeadendBarrier, testing::ValuesIn(bollards));
+INSTANTIATE_TEST_SUITE_P(BollardBasicAccess, DeadendBarrier, testing::ValuesIn(bollards));
 
 INSTANTIATE_TEST_SUITE_P(GateAccess, GateBarrier, testing::ValuesIn(gates));
 INSTANTIATE_TEST_SUITE_P(BollardAccess, BollardBarrier, testing::ValuesIn(bollards));
