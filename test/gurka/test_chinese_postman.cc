@@ -185,6 +185,19 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
 
   auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
   gurka::assert::raw::expect_path(route, {"AB", "BE", "ED", "DE", "EB", "BA"});
+
+  // build request manually for now
+  auto lls2 = {chinese_postman_map.nodes["E"], chinese_postman_map.nodes["E"]};
+
+  rapidjson::Document doc2;
+  doc2.SetObject();
+  auto& allocator2 = doc2.GetAllocator();
+  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
+  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
+  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
+
+  auto route2 = gurka::do_action(Options::chinese_postman, chinese_postman_map, req2);
+  gurka::assert::raw::expect_path(route2, {"ED", "DE", "EB", "BA", "AB", "BE"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
@@ -290,6 +303,19 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
 
   auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
   gurka::assert::raw::expect_path(route, {"CG", "GH", "HF", "FC"});
+
+  // build request manually for now
+  auto lls2 = {chinese_postman_map.nodes["H"], chinese_postman_map.nodes["H"]};
+
+  rapidjson::Document doc2;
+  doc2.SetObject();
+  auto& allocator2 = doc2.GetAllocator();
+  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
+  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
+  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
+
+  auto route2 = gurka::do_action(Options::chinese_postman, chinese_postman_map, req2);
+  gurka::assert::raw::expect_path(route2, {"HF", "FC", "CG", "GH"});
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
