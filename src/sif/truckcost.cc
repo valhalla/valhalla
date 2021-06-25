@@ -64,22 +64,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
-// Weighting factor based on road class. These apply penalties to lower class
-// roads.
-constexpr float kRoadClassFactor[] = {
-    0.0f,  // Motorway
-    0.05f, // Trunk
-    0.1f,  // Primary
-    0.25f, // Secondary
-    0.35f, // Tertiary
-    0.5f,  // Unclassified
-    0.75f, // Residential
-    0.1f   // Service, other
-};
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0, kDefaultLowClassPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kTruckWeightRange{0, kDefaultTruckWeight, 100.0f};

@@ -26,7 +26,9 @@
    * ADDED: Penalize private gates [#3144](https://github.com/valhalla/valhalla/pull/3144)
    * CHANGED: Renamed protobuf Sign/SignElement to TripSign/TripSignElement [#3168](https://github.com/valhalla/valhalla/pull/3168)
    * CHORE: Updates googletest to release-1.11.0 [#3166](Updates googletest to release-1.11.0)
+   * CHORE: Enables -Wall on sif sources [#3178](https://github.com/valhalla/valhalla/pull/3178)
    * ADDED: Allow going through accessible `barrier=bollard` and penalize routing through it, when the access is private [#3175](https://github.com/valhalla/valhalla/pull/3175)
+
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**
