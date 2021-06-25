@@ -223,7 +223,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
   }
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
-    writer.Key(key_prefix + "iso_3166_1");
+    writer.Key(key_prefix + "iso_3166_1_alpha2");
     writer.String(incident_metadata.iso_3166_1_alpha2());
   }
   if (!incident_metadata.iso_3166_1_alpha3().empty()) {

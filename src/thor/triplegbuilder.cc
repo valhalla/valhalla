@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
@@ -24,7 +25,6 @@
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
-#include "tyr/util.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -95,18 +95,14 @@ void AssignAdmins(const AttributesController& controller,
 
 // Helper function to get the iso country code from an edge
 inline std::string country_code_from_edge(const graph_tile_ptr& tile,
-                                          const valhalla::baldr::DirectedEdge* de) {
-  return tile->admininfo(tile->node(de->endnode())->admin_index()).country_iso();
-}
-
-inline const DirectedEdge*
-get_opposite_de(const DirectedEdge* edge, GraphReader& reader, const graph_tile_ptr& tile) {
-  graph_tile_ptr t2 = edge->leaves_tile() ? reader.GetGraphTile(edge->endnode()) : tile;
-  if (t2 == nullptr) {
-    return nullptr;
+                                          const valhalla::baldr::DirectedEdge* de,
+                                          GraphReader& reader) {
+  if (!tile || !de) {
+      return std::string();
   }
-  GraphId oppedge = t2->GetOpposingEdgeId(edge);
-  return t2->directededge(oppedge);
+  // GraphReader::GetDirectedEdgeNodes(tile, de) returns a pair of start & end nodes for the
+  // given directed edge. We use the start node for determining the country code of the edge
+  return tile->admininfo(tile->node(reader.GetDirectedEdgeNodes(tile, de).first)->admin_index()).country_iso();
 }
 
 /**
@@ -121,7 +117,8 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index,
                     const graph_tile_ptr& tile,
-                    const valhalla::baldr::DirectedEdge* de) {
+                    const valhalla::baldr::DirectedEdge* de,
+                    GraphReader& reader) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
@@ -140,10 +137,14 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
-    std::string country_code_iso_2 = country_code_from_edge(tile, de);
-    std::string country_code_iso_3 = valhalla::tyr::get_iso_3166_1_alpha3(country_code_iso_2);
-    new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
-    new_incident->mutable_metadata()->set_iso_3166_1_alpha3(country_code_iso_3.c_str());
+    std::string country_code_iso_2 = country_code_from_edge(tile, de, reader);
+    if (!country_code_iso_2.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
+    }
+    std::string country_code_iso_3 = valhalla::baldr::get_iso_3166_1_alpha3(country_code_iso_2);
+    if (!country_code_iso_3.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha3(country_code_iso_3.c_str());
+    }
 
     new_incident->set_begin_shape_index(index);
     new_incident->set_end_shape_index(index);
@@ -180,7 +181,6 @@ valhalla::TripLeg_Closure* fetch_or_create_closure_annotation(TripLeg& leg) {
 void SetShapeAttributes(const AttributesController& controller,
                         const graph_tile_ptr& tile,
                         const DirectedEdge* edge,
-                        const DirectedEdge* opposite_de,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
                         TripLeg& leg,
@@ -188,7 +188,8 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const valhalla::baldr::IncidentResult& incidents) {
+                        const valhalla::baldr::IncidentResult& incidents,
+                        GraphReader& reader) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
@@ -269,7 +270,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, opposite_de);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, edge, reader);
         continue;
       }
 
@@ -388,7 +389,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i, tile, opposite_de);
+        UpdateIncident(incidents.tile, leg, incident, i, tile, edge, reader);
       }
     }
 
@@ -1442,13 +1443,9 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    // Get the opposing edge. This will be used for fetching the country code of incidents
-    // and later for name consistency
-    const DirectedEdge* opposite_de = get_opposite_de(directededge, graphreader, graphtile);
-
-    SetShapeAttributes(controller, graphtile, directededge, opposite_de, trip_shape, begin_index,
+    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,
-                       costing->flow_mask() & kCurrentFlowMask, incidents);
+                       costing->flow_mask() & kCurrentFlowMask, incidents, graphreader);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1478,7 +1475,13 @@ void TripLegBuilder::Build(
 
     // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {
-      prev_de = opposite_de;
+      graph_tile_ptr t2 =
+          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
+      if (t2 == nullptr) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+      prev_de = t2->directededge(oppedge);
     }
 
     // Save the index of the opposing local directed edge at the end node

@@ -14,7 +14,6 @@
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
-#include "tyr/util.h"
 #include "worker.h"
 
 #include "proto/directions.pb.h"
@@ -1490,7 +1489,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       auto admin_map = json::map({});
       if (admin.has_country_code()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
-        auto country_iso3 = valhalla::tyr::get_iso_3166_1_alpha3(admin.country_code());
+        auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {
           admin_map->emplace("iso_3166_1_alpha3", country_iso3);
         }
@@ -1741,7 +1740,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
         {
           "id": "18446744073709551615",
           "type": "weather",
-          "iso_3166_1": "AU",
+          "iso_3166_1_alpha2": "AU",
           "iso_3166_1_alpha3": "AUS",
           "creation_time": "2020-08-12T14:17:09Z",
           "start_time": "2020-08-12T14:18:49Z",
@@ -1834,7 +1833,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
           "description": "Fooo",
           "creation_time": "2020-08-12T14:17:09Z",
           "type": "weather",
-          "iso_3166_1": "SE",
+          "iso_3166_1_alpha2": "SE",
           "iso_3166_1_alpha3": "SWE",
           "lanes_blocked": [],
           "geometry_index_start": 87,
@@ -1846,7 +1845,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
           "start_time": "2020-08-12T14:18:20Z",
           "end_time": "2020-08-12T14:46:40Z",
           "type": "accident",
-          "iso_3166_1": "SE",
+          "iso_3166_1_alpha2": "SE",
           "iso_3166_1_alpha3": "SWE",
           "lanes_blocked": [],
           "geometry_index_start": 21,

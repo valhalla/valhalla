@@ -13,7 +13,6 @@ valhalla_module(NAME tyr
     transit_available_serializer.cc
     trace_serializer.cc
     actor.cc
-    util.cc
   HEADERS
     ${headers}
   INCLUDE_DIRECTORIES
