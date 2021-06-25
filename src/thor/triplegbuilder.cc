@@ -98,11 +98,12 @@ inline std::string country_code_from_edge(const graph_tile_ptr& tile,
                                           const valhalla::baldr::DirectedEdge* de,
                                           GraphReader& reader) {
   if (!tile || !de) {
-      return std::string();
+    return std::string();
   }
   // GraphReader::GetDirectedEdgeNodes(tile, de) returns a pair of start & end nodes for the
   // given directed edge. We use the start node for determining the country code of the edge
-  return tile->admininfo(tile->node(reader.GetDirectedEdgeNodes(tile, de).first)->admin_index()).country_iso();
+  return tile->admininfo(tile->node(reader.GetDirectedEdgeNodes(tile, de).first)->admin_index())
+      .country_iso();
 }
 
 /**
@@ -1443,8 +1444,8 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index,
-                       trip_path, trim_start_pct, trim_end_pct, edge_seconds,
+    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
+                       trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents, graphreader);
 
     // Set begin shape index if requested
