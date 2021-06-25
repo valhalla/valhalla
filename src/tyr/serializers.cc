@@ -17,7 +17,6 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
