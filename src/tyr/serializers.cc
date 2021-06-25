@@ -17,6 +17,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
@@ -179,6 +180,31 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   return waypoint;
 }
 
+valhalla::baldr::json::MapPtr via_waypoint(const valhalla::Location& location,
+                                           const uint64_t geometry_idx) {
+  // Create a via waypoint to add to the array
+  auto via_waypoint = json::map({});
+
+  // Add distance in meters from the input location to the nearest
+  // point on the road used in the route
+  // TODO: since distance was normalized in thor - need to recalculate here
+  //       in the future we shall have store separately from score
+  via_waypoint
+      ->emplace("distance_from_leg_start",
+                json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
+
+  if (location.shape_index() == numeric_limits<uint32_t>::max()) {
+    // when waypoint is neither a break nor leg's starting/ending
+    // point (shape_index is uint32_t max), we assign null to its waypoint_index
+    via_waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
+  } else {
+    via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+  }
+  via_waypoint->emplace("geometry_index", geometry_idx);
+
+  return via_waypoint;
+}
+
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
 json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
@@ -207,6 +233,33 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
     }
   }
   return waypoints;
+}
+
+json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointLL>& shape) {
+  // Create a vector of indexes.
+  auto locs = *options.mutable_locations();
+  uint32_t i = 0;
+  std::vector<uint32_t> indexes;
+  for (const auto& loc : locs) {
+    indexes.push_back(i++);
+  }
+
+  auto via_waypoints = json::array({});
+  for (const auto& index : indexes) {
+    locs.Mutable(index)->set_shape_index(index);
+    int geometry_idx = 0;
+    for (const auto& ll : shape) {
+      geometry_idx++;
+      if (json::fixed_t{locs.Get(index).path_edges(0).ll().lng(), 6}.value ==
+              json::fixed_t{ll.first, 6}.value &&
+          json::fixed_t{locs.Get(index).path_edges(0).ll().lat(), 6}.value ==
+              json::fixed_t{ll.second, 6}.value) {
+        via_waypoints->emplace_back(osrm::via_waypoint(locs.Get(index), geometry_idx - 1));
+        break;
+      }
+    }
+  }
+  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,

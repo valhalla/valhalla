@@ -1324,6 +1324,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   // Iterate through the legs in DirectionsLeg and TripLeg
   int leg_index = 0;
   auto leg = legs.begin();
+
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
@@ -1551,6 +1552,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     if (path_leg.has_shape_attributes()) {
       output_leg->emplace("annotation", serialize_annotations(path_leg));
     }
+
+    // silent/via waypoints
+    output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
