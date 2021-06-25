@@ -136,6 +136,61 @@ TEST_F(MultipleBarriers, ShortestPrivate) {
   check_auto_path(map, {"AC2", "2DB"});
 }
 
+TEST_F(MultipleBarriers, BollardPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_one_private");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BollardPrivateMotorVehicle) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"motor_vehicle", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_private_motor_vehicle");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BollardPrivateAndNoInfo) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"motor_vehicle", "private"}}},
+      {"2", {{"barrier", "bollard"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_private_no_info");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, BollardBothPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "private"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_both_private");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, BollardNoAccessInformation) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "no"}}},
+      {"2", {{"barrier", "bollard"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_no_access_info");
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
 class AccessibleBarriers : public ::testing::Test {
 protected:
   static gurka::map map;
