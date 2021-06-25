@@ -85,7 +85,7 @@ if __name__ == "__main__":
   parser.add_argument('--output-dir', type=str, help='The directory in which to place the result of each request')
   parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=multiprocessing.cpu_count())
   parser.add_argument('--format', type=str, help='Supports csv, json, raw and null output formats', default='csv')
-  parser.add_argument('--headers', type=str, help='Additional http headers to send with the requests. Follows the http header spec, eg. some-header-name: some-header-value', action='append', nargs='*')
+  parser.add_argument('--headers', type=str, help='Additional http headers to send with the requests. Follows the http header spec, eg. some-header-name: some-header-value', action='append', nargs='*', default=[])
   parsed_args = parser.parse_args()
 
   # make the output directory
