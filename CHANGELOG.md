@@ -1,5 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.3
 * **Removed**
+   * REMOVED: Unused overloads of `to_response` function [#3167](https://github.com/valhalla/valhalla/pull/3167)
+
 * **Bug Fix**
    * FIXED: Fix heading on small edge [#3114](https://github.com/valhalla/valhalla/pull/3114)
    * FIXED: Added support for `access=psv`, which disables routing on these nodes and edges unless the mode is taxi or bus [#3107](https://github.com/valhalla/valhalla/pull/3107)

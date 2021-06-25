@@ -180,12 +180,6 @@ std::string jsonify_error(const valhalla_exception_t& exception, const Api& opti
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                                prime_server::http_request_info_t& request_info,
                                                const Api& options);
-prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
-prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
 namespace worker {
 using content_type = prime_server::headers_t::value_type;
 const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
