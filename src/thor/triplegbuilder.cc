@@ -93,17 +93,13 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
-// Helper function to get the iso country code from an edge
+// Helper function to get the iso country code from an edge using its endnode
 inline std::string country_code_from_edge(const graph_tile_ptr& tile,
-                                          const valhalla::baldr::DirectedEdge* de,
-                                          GraphReader& reader) {
-  if (!tile || !de) {
+                                          const valhalla::baldr::DirectedEdge& de) {
+  if (!tile) {
     return std::string();
   }
-  // GraphReader::GetDirectedEdgeNodes(tile, de) returns a pair of start & end nodes for the
-  // given directed edge. We use the start node for determining the country code of the edge
-  return tile->admininfo(tile->node(reader.GetDirectedEdgeNodes(tile, de).first)->admin_index())
-      .country_iso();
+  return tile->admininfo(tile->node(de.endnode())->admin_index()).country_iso();
 }
 
 /**
@@ -118,8 +114,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index,
                     const graph_tile_ptr& tile,
-                    const valhalla::baldr::DirectedEdge* de,
-                    GraphReader& reader) {
+                    const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
@@ -138,7 +133,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
-    std::string country_code_iso_2 = country_code_from_edge(tile, de, reader);
+    std::string country_code_iso_2 = country_code_from_edge(tile, de);
     if (!country_code_iso_2.empty()) {
       new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
     }
@@ -189,8 +184,7 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const valhalla::baldr::IncidentResult& incidents,
-                        GraphReader& reader) {
+                        const valhalla::baldr::IncidentResult& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
@@ -271,7 +265,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, edge, reader);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
         continue;
       }
 
@@ -390,7 +384,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i, tile, edge, reader);
+        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
       }
     }
 
@@ -1446,7 +1440,7 @@ void TripLegBuilder::Build(
 
     SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
                        trim_start_pct, trim_end_pct, edge_seconds,
-                       costing->flow_mask() & kCurrentFlowMask, incidents, graphreader);
+                       costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {

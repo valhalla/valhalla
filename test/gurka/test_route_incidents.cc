@@ -398,7 +398,7 @@ TEST_F(IncidentsTest, multiedge) {
                                    });
   // check incident country code
   const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
-                                                                     {"CA", "CAN"},
+                                                                     {"US", "USA"},
                                                                      {"US", "USA"}};
   check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
@@ -563,7 +563,7 @@ TEST_F(IncidentsTest, multileg) {
                                    });
   // check incident country code for different legs
   const std::vector<incident_country_code> expected_cc_leg_1 = {{"CA", "CAN"}, {"CA", "CAN"}};
-  const std::vector<incident_country_code> expected_cc_leg_2 = {{"CA", "CAN"}, {"CA", "CAN"}};
+  const std::vector<incident_country_code> expected_cc_leg_2 = {{"US", "USA"}, {"US", "USA"}};
   const std::vector<incident_country_code> expected_cc_leg_3 = {{"US", "USA"}, {"US", "USA"}};
   check_incident_country_code(result.trip().routes(0).legs(0), expected_cc_leg_1);
   check_incident_country_code(result.trip().routes(0).legs(1), expected_cc_leg_2);
@@ -720,7 +720,7 @@ TEST_F(IncidentsTest, multipoint) {
                                    });
   // check incident country code
   const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
-                                                                     {"CA", "CAN"},
+                                                                     {"US", "USA"},
                                                                      {"US", "USA"}};
   check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
@@ -757,7 +757,7 @@ TEST_F(IncidentsTest, point_collisions) {
                                    });
   // check incident country code
   const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"CA", "CAN"},
-                                                                     {"CA", "CAN"}, {"CA", "CAN"},
+                                                                     {"US", "USA"}, {"US", "USA"},
                                                                      {"US", "USA"}, {"US", "USA"}};
   check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
@@ -785,33 +785,6 @@ TEST_F(IncidentsTest, point_shared) {
   check_incident_locations(result, {
                                        {123, 0, 0, 1., 0, 1.},
                                        {456, 0, 1, 1., 1, 1.},
-                                   });
-  // check incident country code
-  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"CA", "CAN"}};
-  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
-}
-
-TEST_F(IncidentsTest, crossing_border) {
-  // mark the edges with incidents
-  std::vector<baldr::GraphId> edge_ids;
-  auto reader = setup_test(map, {"BE", "EH"}, edge_ids);
-  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
-
-  // modify the incident tile to have incidents on this edge
-  reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 123);
-  reader->add(edge_ids[1], createIncidentLocation(edge_ids[1].id(), 0., .5), 456);
-  reader->sort();
-
-  // do the route
-  auto result =
-      gurka::do_action(valhalla::Options::route, map, {"3", "7"}, "auto",
-                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                       graphreader);
-
-  // check its right
-  check_incident_locations(result, {
-                                       {123, 0, 0, .0, 0, 1.},
-                                       {456, 0, 1, 0., 1, 1.},
                                    });
   // check incident country code
   const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"US", "USA"}};
