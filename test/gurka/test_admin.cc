@@ -10,7 +10,7 @@ using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.data_processing.use_admin_db", "false"}};
 
-class Admin : public ::testing::Test {
+class AdminTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -39,13 +39,13 @@ protected:
     map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_admin", build_config);
   }
 };
-gurka::map Admin::map = {};
+gurka::map AdminTest::map = {};
 Api api;
 rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(Admin, Iso) {
+TEST_F(AdminTest, Iso) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
@@ -59,7 +59,7 @@ TEST_F(Admin, Iso) {
   EXPECT_FALSE(leg.node(1).edge().drive_on_right());
 }
 
-TEST_F(Admin, test_admin_response) {
+TEST_F(AdminTest, test_admin_response) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 

@@ -22,6 +22,7 @@
 #include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "proto/trip.pb.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
@@ -294,6 +295,35 @@ void expect_path(const valhalla::Api& result,
 
 } // namespace raw
 } // namespace assert
+
+/*
+ * A description of incident coverage on a gurka-edge
+ *
+ * The `name` would be something like "AB" where "A" and "B" are nodes in a gurka map.
+ * The offsets describe incident coverage on that edge.
+ *
+ * For use in `GurkaEdge` and `setup_graph_with_incidents`
+ */
+struct GurkaEdge {
+  std::string name;
+  float start_offset;
+  float end_offset;
+};
+
+/* A mocked incident, for use with `setup_graph_with_incidents`
+ */
+struct IncidentArgs {
+  std::vector<GurkaEdge> edges;
+  uint64_t incident_id;
+  std::string incident_description;
+};
+
+/* Adds mocked incidents to the special graph-reader returned from this function
+ *
+ * For live examples, look in test/gurka/test_route_incidents.cc
+ */
+std::shared_ptr<test::IncidentsReader>
+setup_graph_with_incidents(const gurka::map& map, const std::vector<IncidentArgs>& incidents);
 
 } // namespace gurka
 } // namespace valhalla

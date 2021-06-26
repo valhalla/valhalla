@@ -10,7 +10,7 @@ using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.data_processing.use_admin_db", "true"}};
 
-class NodeType : public ::testing::Test {
+class NodeTypeTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -20,14 +20,14 @@ protected:
     const std::string ascii_map = R"(
                           A
                           |
-                          |     
+                          |
                           B----E
                           |
                           |
                           C
                           |
                           |
-                          D----F   
+                          D----F
   )";
 
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
@@ -43,13 +43,13 @@ protected:
     map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_type", build_config);
   }
 };
-gurka::map NodeType::map = {};
+gurka::map NodeTypeTest::map = {};
 Api api;
 rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(NodeType, Toll) {
+TEST_F(NodeTypeTest, Toll) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -61,7 +61,7 @@ TEST_F(NodeType, Toll) {
   EXPECT_EQ(leg.node(3).type(), TripLeg::Node::Type::TripLeg_Node_Type_kTollGantry); // AF
 }
 
-TEST_F(NodeType, test_toll_response) {
+TEST_F(NodeTypeTest, test_toll_response) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
                           std::to_string(map.nodes["E"].lng()) + R"(,"lat":)" +
@@ -94,7 +94,7 @@ TEST_F(NodeType, test_toll_response) {
   }
 }
 
-TEST_F(NodeType, test_toll_response2) {
+TEST_F(NodeTypeTest, test_toll_response2) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["C"].lat()) + R"(},{"lon":)" +
                           std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +

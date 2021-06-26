@@ -8,7 +8,7 @@
 
 using namespace valhalla;
 
-class Use : public ::testing::Test {
+class UseTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -50,11 +50,11 @@ protected:
                             {{"mjolnir.data_processing.use_rest_area", "true"}});
   }
 };
-gurka::map Use::map = {};
+gurka::map UseTest::map = {};
 
 /*************************************************************/
 
-TEST_F(Use, EdgeUse) {
+TEST_F(UseTest, EdgeUse) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
@@ -69,7 +69,7 @@ TEST_F(Use, EdgeUse) {
   EXPECT_EQ(leg.node(3).edge().use(), TripLeg::Use::TripLeg_Use_kServiceAreaUse); // EF
 }
 
-TEST_F(Use, test_passing_rest_area) {
+TEST_F(UseTest, test_passing_rest_area) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -97,7 +97,7 @@ TEST_F(Use, test_passing_rest_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
 }
 
-TEST_F(Use, test_entering_rest_area) {
+TEST_F(UseTest, test_entering_rest_area) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -136,7 +136,7 @@ TEST_F(Use, test_entering_rest_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
 }
 
-TEST_F(Use, test_passing_service_area) {
+TEST_F(UseTest, test_passing_service_area) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -164,7 +164,7 @@ TEST_F(Use, test_passing_service_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
 }
 
-TEST_F(Use, test_entering_service_area) {
+TEST_F(UseTest, test_entering_service_area) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 

@@ -94,4 +94,67 @@ using EdgesCustomize = std::function<void(const GraphId&, DirectedEdge&)>;
 void customize_edges(const boost::property_tree::ptree& config, const EdgesCustomize& setter_cb);
 #endif
 
+// provides us an easy way to mock having incident tiles, each test can override the tile in question
+// a bit more work is needed if we want to do it for more than one tile at a time
+struct IncidentsReader : public valhalla::baldr::GraphReader {
+  IncidentsReader(const boost::property_tree::ptree& pt) : valhalla::baldr::GraphReader(pt) {
+    tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
+    enable_incidents_ = true;
+  }
+  virtual std::shared_ptr<const valhalla::IncidentsTile>
+  GetIncidentTile(const valhalla::baldr::GraphId& tile_id) const override {
+    auto i = incidents.find(tile_id.Tile_Base());
+    if (i == incidents.cend())
+      return {};
+    return std::shared_ptr<valhalla::IncidentsTile>(&i->second, [](valhalla::IncidentsTile*) {});
+  }
+  void add_incident(const valhalla::baldr::GraphId& id,
+                    valhalla::IncidentsTile::Location&& _incident_location,
+                    uint64_t incident_id,
+                    const std::string& incident_description = "") {
+
+    // Grab the incidents-tile we need to add to
+    valhalla::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
+
+    // See if we have this incident metadata already
+    int metadata_index =
+        std::find_if(incidents_tile.metadata().begin(), incidents_tile.metadata().end(),
+                     [incident_id](const valhalla::IncidentsTile::Metadata& m) {
+                       return incident_id == m.id();
+                     }) -
+        incidents_tile.metadata().begin();
+
+    // We're not yet tracking this incident, so add it new
+    if (metadata_index == incidents_tile.metadata_size()) {
+      auto* metadata = incidents_tile.mutable_metadata()->Add();
+      metadata->set_id(incident_id);
+      metadata->set_description(incident_description);
+    }
+
+    // Finally, add the relation from edge to the incident metadata
+    auto* locations = incidents_tile.mutable_locations()->Add();
+    locations->Swap(&_incident_location);
+    locations->set_metadata_index(metadata_index);
+  }
+  void sort_incidents() {
+    for (auto& kv : incidents) {
+      std::sort(kv.second.mutable_locations()->begin(), kv.second.mutable_locations()->end(),
+                [](const valhalla::IncidentsTile::Location& a,
+                   const valhalla::IncidentsTile::Location& b) {
+                  if (a.edge_index() == b.edge_index()) {
+                    if (a.start_offset() == b.start_offset()) {
+                      if (a.end_offset() == b.end_offset()) {
+                        return a.metadata_index() < b.metadata_index();
+                      }
+                      return a.end_offset() < b.end_offset();
+                    }
+                    return a.start_offset() < b.start_offset();
+                  }
+                  return a.edge_index() < b.edge_index();
+                });
+    }
+  }
+  mutable std::unordered_map<valhalla::baldr::GraphId, valhalla::IncidentsTile> incidents;
+};
+
 } // namespace test
