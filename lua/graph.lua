@@ -1950,7 +1950,7 @@ function rels_proc (kv, nokeys)
        restrict = restrict_type
      end
 
-     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"]
+     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"] then
 
        if restrict ~= nil then
 
