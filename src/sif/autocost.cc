@@ -67,7 +67,7 @@ constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
-constexpr float kDefaultAutoWidth = 1.4f;  // Meters (55.1181 inches)
+constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
