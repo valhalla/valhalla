@@ -682,10 +682,8 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
-                                    edgeinfo.encoded_shape(),
-                                    edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedNames(),
-                                    edgeinfo.GetTaggedNames(true),
+                                    edgeinfo.encoded_shape(), edgeinfo.GetNames(),
+                                    edgeinfo.GetTaggedNames(), edgeinfo.GetTaggedNames(true),
                                     edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
