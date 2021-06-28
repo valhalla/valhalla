@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-// OSM Pronunciation.  IPA/X-Sampa/Katakana phonems/pronunciations
+// OSM Pronunciation.  IPA/X-Sampa/Katakana/Jeita phonems/pronunciations
 struct OSMPronunciation {
 
   /**
@@ -765,6 +765,246 @@ struct OSMPronunciation {
     return junction_ref_pronunciation_katakana_index_;
   }
 
+  /**
+   * Sets the index for the ref jeita pronunciation
+   * @param  idx  Index for the reference jeita pronunciation.
+   */
+  void set_ref_pronunciation_jeita_index(const uint32_t idx) {
+    ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the ref jeita pronunciation index.
+   * @return  Returns the index for the ref jeita pronunciation.
+   */
+  uint32_t ref_pronunciation_jeita_index() const {
+    return ref_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for int ret jeita pronunciation
+   * @param  idx  Index for the international reference jeita pronunciation.
+   */
+  void set_int_ref_pronunciation_jeita_index(const uint32_t idx) {
+    int_ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the int ref jeita pronunciation index.
+   * @return  Returns the index for the int ref jeita pronunciation.
+   */
+  uint32_t int_ref_pronunciation_jeita_index() const {
+    return int_ref_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for name jeita pronunciation
+   * @param  idx  Index for the name jeita pronunciation.
+   */
+  void set_name_pronunciation_jeita_index(const uint32_t idx) {
+    name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the name jeita pronunciation index.
+   * @return  Returns the index for the name jeita pronunciation.
+   */
+  uint32_t name_pronunciation_jeita_index() const {
+    return name_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for name:en jeita pronunciation
+   * @param  idx  Index for the English name jeita pronunciation.
+   */
+  void set_name_en_pronunciation_jeita_index(const uint32_t idx) {
+    name_en_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the name:en jeita pronunciation index.
+   * @return  Returns the index for the English name jeita pronunciation.
+   */
+  uint32_t name_en_pronunciation_jeita_index() const {
+    return name_en_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for alt name jeita pronunciation
+   * @param  idx  Index for the alt name jeita pronunciation.
+   */
+  void set_alt_name_pronunciation_jeita_index(const uint32_t idx) {
+    alt_name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the alt name jeita pronunciation index.
+   * @return  Returns the index for the alt name jeita pronunciation.
+   */
+  uint32_t alt_name_pronunciation_jeita_index() const {
+    return alt_name_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for official name jeita pronunciation
+   * @param  idx  Index for the official name jeita pronunciation.
+   */
+  void set_official_name_pronunciation_jeita_index(const uint32_t idx) {
+    official_name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the official name jeita pronunciation index.
+   * @return  Returns the index for the official name jeita pronunciation.
+   */
+  uint32_t official_name_pronunciation_jeita_index() const {
+    return official_name_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for tunnel name jeita pronunciation
+   * @param  idx  Index for the tunnel name jeita pronunciation.
+   */
+  void set_tunnel_name_pronunciation_jeita_index(const uint32_t idx) {
+    tunnel_name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel name jeita pronunciation index.
+   * @return  Returns the index for the tunnel name jeita pronunciation.
+   */
+  uint32_t tunnel_name_pronunciation_jeita_index() const {
+    return tunnel_name_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination jeita pronunciation.
+   * @param  idx  Index for the destination jeita pronunciation.
+   */
+  void set_destination_pronunciation_jeita_index(const uint32_t idx) {
+    destination_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the get_destination jeita pronunciation index.
+   * @return  Returns the index for the destination jeita pronunciation.
+   */
+  uint32_t destination_pronunciation_jeita_index() const {
+    return destination_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination in forward direction jeita pronunciation.
+   * @param  idx  Index for the destination jeita pronunciation.
+   */
+  void set_destination_forward_pronunciation_jeita_index(const uint32_t idx) {
+    destination_forward_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the forward direction jeita pronunciation index.
+   * @return  Returns the index for the forward direction jeita pronunciation.
+   */
+  uint32_t destination_forward_pronunciation_jeita_index() const {
+    return destination_forward_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination in backward direction jeita pronunciation.
+   * @param  idx  Index for the backward direction jeita pronunciation.
+   */
+  void set_destination_backward_pronunciation_jeita_index(const uint32_t idx) {
+    destination_backward_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the backward direction jeita pronunciation index.
+   * @return  Returns the index for the backward direction jeita pronunciation.
+   */
+  uint32_t destination_backward_pronunciation_jeita_index() const {
+    return destination_backward_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination ref jeita pronunciation.
+   * @param  idx  Index for the destination ref jeita pronunciation.
+   */
+  void set_destination_ref_pronunciation_jeita_index(const uint32_t idx) {
+    destination_ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the destination ref jeita pronunciation index.
+   * @return  Returns the index for the destination ref jeita pronunciation.
+   */
+  uint32_t destination_ref_pronunciation_jeita_index() const {
+    return destination_ref_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination ref to jeita pronunciation.
+   * @param  idx  Index for the destination ref to jeita pronunciation.
+   */
+  void set_destination_ref_to_pronunciation_jeita_index(const uint32_t idx) {
+    destination_ref_to_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the destination ref to jeita pronunciation index.
+   * @return  Returns the index for the destination ref to jeita pronunciation.
+   */
+  uint32_t destination_ref_to_pronunciation_jeita_index() const {
+    return destination_ref_to_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination street jeita pronunciation.
+   * @param  idx  Index for the destination street jeita pronunciation.
+   */
+  void set_destination_street_pronunciation_jeita_index(const uint32_t idx) {
+    destination_street_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the destination_street jeita pronunciation index.
+   * @return  Returns the index for the destination street jeita pronunciation.
+   */
+  uint32_t destination_street_pronunciation_jeita_index() const {
+    return destination_street_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for destination street to jeita pronunciation.
+   * @param  idx  Index for the destination street to jeita pronunciation.
+   */
+  void set_destination_street_to_pronunciation_jeita_index(const uint32_t idx) {
+    destination_street_to_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the destination street to jeita pronunciation index.
+   * @return  Returns the index for the destination street to jeita pronunciation.
+   */
+  uint32_t destination_street_to_pronunciation_jeita_index() const {
+    return destination_street_to_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for junction ref jeita pronunciation.
+   * @param  idx  Index for the junction ref jeita pronunciation.
+   */
+  void set_junction_ref_pronunciation_jeita_index(const uint32_t idx) {
+    junction_ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the junction ref jeita pronunciation index.
+   * @return  Returns the jeita pronunciation index for the junction ref.
+   */
+  uint32_t junction_ref_pronunciation_jeita_index() const {
+    return junction_ref_pronunciation_jeita_index_;
+  }
+
   // OSM way Id
   uint64_t osmwayid_;
 
@@ -831,7 +1071,26 @@ struct OSMPronunciation {
   uint32_t destination_street_to_pronunciation_katakana_index_;
   uint32_t junction_ref_pronunciation_katakana_index_;
 
-  uint32_t spare_; // we have 51 indexes above so added this spare for word alignment
+  // name and ref jeita pronunciations
+  uint32_t ref_pronunciation_jeita_index_;
+  uint32_t int_ref_pronunciation_jeita_index_;
+  uint32_t name_pronunciation_jeita_index_;
+  uint32_t name_en_pronunciation_jeita_index_;
+  uint32_t alt_name_pronunciation_jeita_index_;
+  uint32_t official_name_pronunciation_jeita_index_;
+  uint32_t tunnel_name_pronunciation_jeita_index_;
+  uint32_t direction_pronunciation_jeita_index_;
+  uint32_t int_direction_pronunciation_jeita_index_;
+
+  // Sign Destination jeita pronunciations
+  uint32_t destination_pronunciation_jeita_index_;
+  uint32_t destination_forward_pronunciation_jeita_index_;
+  uint32_t destination_backward_pronunciation_jeita_index_;
+  uint32_t destination_ref_pronunciation_jeita_index_;
+  uint32_t destination_ref_to_pronunciation_jeita_index_;
+  uint32_t destination_street_pronunciation_jeita_index_;
+  uint32_t destination_street_to_pronunciation_jeita_index_;
+  uint32_t junction_ref_pronunciation_jeita_index_;
 };
 
 } // namespace mjolnir
