@@ -137,13 +137,14 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
                                                 std::vector<midgard::PointLL> targets,
                                                 std::string costing) {
+  std::cout << "Number of overPoints: " << sources.size() << "\n";
+  std::cout << "Number of underPoints: " << targets.size() << "\n";
   Api request;
   // Update request with source and target, also costing
   std::string jsonMatrixRequest = "{\"sources\":" + locationsToJson(sources) +
                                   ", \"targets\":" + locationsToJson(targets) + ",\"costing\":\"" +
                                   costing + "\"}";
   ParseApi(jsonMatrixRequest, Options::sources_to_targets, request);
-  std::cout << "matrix result:\n" << matrix(request);
   return matrix(request);
 }
 
@@ -243,8 +244,10 @@ void thor_worker_t::chinese_postman(Api& request) {
         underPoints.push_back(l);
       }
     }
+
     std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
-    std::cout << "matrix output:\n" << matrixOutput;
+    std::cout << "\nmatrix output:\n" << matrixOutput;
+    return;
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
