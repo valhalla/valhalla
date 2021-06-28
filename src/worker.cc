@@ -938,6 +938,15 @@ void from_json(rapidjson::Document& doc, Options& options) {
   else
     parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
 
+  // Get the matrix_loctions option and set if sources or targets size is one
+  // (option is only supported with one to many or many to one matrix requests)
+  auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
+  if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
+    options.set_matrix_locations(*matrix_locations);
+  } else {
+    options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
+  }
+
   // get the avoid polygons in there
   auto rings_req =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
