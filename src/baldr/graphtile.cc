@@ -47,6 +47,16 @@ std::string GenerateTmpSuffix() {
   return ss.str();
 }
 
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -654,7 +664,6 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   return directededge(nodeinfo->edge_index());
 }
 
-
 // Convenience method to get the names for an edge
 std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge) const {
   return edgeinfo(edge).GetNames();
@@ -734,15 +743,11 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
     if (signs_[found].text_offset() < textlist_size_) {
 
       std::string text = (textlist_ + signs_[found].text_offset());
-      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kVerbal) {
-        size_t s = text.size() + 1;
-        text = std::string(textlist_ + signs_[found].text_offset(), std::stoi(text) + s);
-        text = text.substr(s);
-      }
-
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
-      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
+      if (((signs_[found].type() == Sign::Type::kJunctionName ||
+            signs_[found].type() == Sign::Type::kVerbal) &&
+           signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
                            signs_[found].tagged(), false, 0, 0, text);
@@ -760,7 +765,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
 // directed edge index.
 std::vector<SignInfo> GraphTile::GetSigns(
     const uint32_t idx,
-    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+    std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
     bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
@@ -797,30 +802,23 @@ std::vector<SignInfo> GraphTile::GetSigns(
 
       std::string text = (textlist_ + signs_[found].text_offset());
       if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kVerbal) {
-        size_t s = text.size() + 1;
-        text = std::string(textlist_ + signs_[found].text_offset(), std::stoi(text) + s);
-        text = text.substr(s);
 
-        text += '\0';
-        const char* p = text.c_str();
+        auto verbal_tokens = split(text, '#');
         // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
         // key  type value
         uint8_t index = 0;
-        std::string key, type, value;
-        while (*p) {
+        std::string key, type;
+        for (const auto v : verbal_tokens) {
           if (index == 0) { // key
-            key = std::string(p);
-            p += key.size() + 1;
+            key = v;
             index++;
           } else if (index == 1) { // type
-            type = std::string(p);
-            p += type.size() + 1;
+            type = v;
             index++;
           } else { // value
+            key_type_value_pairs.emplace(
+                std::make_pair(std::stoi(key), std::make_pair(std::stoi(type), v)));
             index = 0;
-            value = std::string(p);
-            p += value.size() + 1;
-            key_type_value_pairs[std::stoi(key)] = {std::stoi(type), value};
           }
         }
         continue;
@@ -828,7 +826,9 @@ std::vector<SignInfo> GraphTile::GetSigns(
 
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
-      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
+      if (((signs_[found].type() == Sign::Type::kJunctionName ||
+            signs_[found].type() == Sign::Type::kVerbal) &&
+           signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
                            signs_[found].tagged(), false, 0, 0, text);

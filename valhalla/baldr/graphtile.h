@@ -414,7 +414,7 @@ public:
    */
   std::vector<SignInfo>
   GetSigns(const uint32_t idx,
-           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+           std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
            bool signs_on_node = false) const;
 
   /**
