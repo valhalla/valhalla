@@ -507,15 +507,23 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    auto names_and_types = edgeinfo.GetNamesAndTypes();
+    std::vector<uint8_t> types;
+    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
+    uint8_t count = 0;
     for (const auto& name_and_type : names_and_types) {
+      if (types.at(count) != 0) {
+        count++;
+        continue;
+      }
+      count++;
+
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
       trip_edge_name->set_value(name_and_type.first);
       trip_edge_name->set_is_route_number(name_and_type.second);
     }
 
-    std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
+    std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     for (const auto& pronunciation : pronunciations) {
       std::cout << static_cast<int>(pronunciation.first) << " "
@@ -542,7 +550,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
-    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
 
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
 
