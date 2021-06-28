@@ -6,6 +6,7 @@
 #include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
+#include "thor/Hungarian.h"
 #include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -247,6 +248,19 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
     std::cout << "\nmatrix output:\n" << matrixOutput;
+
+    vector<vector<double>> costMatrix = {{82, 83, 69, 92},
+                                         {77, 37, 49, 92},
+                                         {11, 69, 5, 86},
+                                         {8, 9, 98, 23}};
+    HungarianAlgorithm HungAlgo;
+    vector<int> assignment;
+    double cost = HungAlgo.Solve(costMatrix, assignment);
+
+    std::cout << "\n";
+    for (unsigned int x = 0; x < costMatrix.size(); x++)
+      std::cout << x << "," << assignment[x] << "\t";
+    std::cout << "\n";
     return;
   }
   // Start build path here
