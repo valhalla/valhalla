@@ -130,6 +130,7 @@ enum VerbalType {
   kPlainText = 0;
   kIpa = 1;
   kXSampa = 2;
+  kJeita = 3;
 }
 
 message StreetName {
