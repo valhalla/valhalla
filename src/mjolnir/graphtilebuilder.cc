@@ -196,9 +196,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     while (ni.name_offset_ != text_list_offset_) {
       std::string unused_string(textlist_ + text_list_offset_);
       textlistbuilder_.push_back(unused_string);
+
       text_offset_map_.emplace(unused_string, text_list_offset_);
       text_list_offset_ += unused_string.length() + 1;
-      // LOG_WARN("Unused text string: " + unused_string);
+
+      LOG_WARN("Unused text string: " + unused_string);
     }
     std::string str(textlist_ + ni.name_offset_);
     textlistbuilder_.push_back(str);
@@ -508,8 +510,9 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
       if (sign.has_phoneme()) {
         uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
         for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
-          std::string text = std::to_string(i) + '\0' + pronunciations[x];
-          uint32_t offset = AddName(std::to_string(text.size()) + '\0' + text);
+          std::stringstream ss;
+          ss << std::to_string(i) << '#' << pronunciations[x];
+          uint32_t offset = AddName(ss.str());
           signs_builder_.emplace_back(idx, Sign::Type::kVerbal, false, true, offset);
         }
       }
@@ -524,12 +527,7 @@ void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>&
   for (const auto& sign : signs) {
     if (!(sign.text().empty())) {
       uint32_t offset = 0;
-      if (sign.is_tagged() && sign.type() == Sign::Type::kVerbal) {
-        std::string text = sign.text();
-        offset = AddName(std::to_string(text.size()) + '\0' + text);
-      } else
-        offset = AddName(sign.text());
-
+      offset = AddName(sign.text());
       signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
     }
   }
@@ -641,12 +639,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          ss << '\0' << pronunciation;
+          if (ss.str().size())
+            ss << "#";
+          ss << pronunciation;
         }
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) +
-                            std::to_string(ss.str().size()) + ss.str())};
+        NameInfo ni{
+            AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) + ss.str())};
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);
@@ -780,12 +780,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          ss << '\0' << pronunciation;
+          if (ss.str().size())
+            ss << "#";
+          ss << pronunciation;
         }
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) +
-                            std::to_string(ss.str().size()) + ss.str())};
+        NameInfo ni{
+            AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) + ss.str())};
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);
