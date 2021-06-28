@@ -1938,7 +1938,7 @@ function rels_proc (kv, nokeys)
   if (kv["type"] == "route" or kv["type"] == "restriction") then
 
      local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])] or
-                      restriction[restriction_prefix(kv["restriction:probable"])] or restriction[restriction_prefix(kv["restriction:motor_vehicle:probable"])] --hack until data is fixed.
+                      restriction[restriction_prefix(kv["restriction:probable"])]
 
      local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
                            restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
@@ -1950,12 +1950,12 @@ function rels_proc (kv, nokeys)
        restrict = restrict_type
      end
 
-     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"] or kv["restriction:motor_vehicle:probable"] then--hack until data is fixed.
+     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"]
 
        if restrict ~= nil then
 
          kv["restriction:conditional"] = restriction_suffix(kv["restriction:conditional"])
-         kv["restriction:probable"] = restriction_suffix(kv["restriction:motor_vehicle:probable"])
+         kv["restriction:probable"] = restriction_suffix(kv["restriction:probable"])
 
          kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
          kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
