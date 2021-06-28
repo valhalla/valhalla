@@ -24,6 +24,16 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -108,32 +118,24 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
             if (!only_pronunciations)
               continue;
 
-            name = name.substr(1); // actual size remains
-            size_t s = name.size() + 1;
-            name = std::string(names_list_ + ni->name_offset_, std::stoi(name) + s);
-            name = name.substr(s + 1);
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the type...actual data remains
 
-            name += '\0';
-            const char* p = name.c_str();
+            auto verbal_tokens = split(name, '#');
             // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
             // key  type value
             uint8_t index = 0;
-            std::string key, type, value;
-            while (*p) {
+            std::string key, type;
+            for (const auto v : verbal_tokens) {
               if (index == 0) { // key
-                key = std::string(p);
-                p += key.size() + 1;
+                key = v;
                 index++;
               } else if (index == 1) { // type
-                type = std::string(p);
-                p += type.size() + 1;
+                type = v;
                 index++;
               } else { // value
+                names.push_back(key + '#' + type + '#' + v);
                 index = 0;
-                value = std::string(p);
-                p += value.size() + 1;
-                name = key + '\0' + type + '\0' + value;
-                names.push_back(name);
               }
             }
           } else if (!only_pronunciations) {
@@ -153,18 +155,38 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
 }
 
 // Get a list of names
-std::vector<std::pair<std::string, bool>> EdgeInfo::GetNamesAndTypes() const {
+std::vector<std::pair<std::string, bool>>
+EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_names) const {
   // Get each name
   std::vector<std::pair<std::string, bool>> name_type_pairs;
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    // Skip any tagged names
-    if (ni->tagged_) {
+    // Skip any tagged names (FUTURE code may make use of them)
+    if (ni->tagged_ && !include_tagged_names) {
       continue;
     }
-    if (ni->name_offset_ < names_list_length_) {
+    if (ni->tagged_) {
+      if (ni->name_offset_ < names_list_length_) {
+        std::string name = names_list_ + ni->name_offset_;
+        if (name.size() > 1) {
+          uint8_t num = 0;
+          try {
+            num = std::stoi(name.substr(0, 1));
+            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kVerbal) {
+              name_type_pairs.push_back({name.substr(1), false});
+              types.push_back(num);
+            }
+
+          } catch (const std::invalid_argument& arg) {
+            LOG_DEBUG("invalid_argument thrown for name: " + name);
+          }
+        }
+      } else
+        throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+    } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
+      types.push_back(0);
     } else {
       throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     }
@@ -202,8 +224,9 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
   return name_type_pairs;
 }
 
-std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
+std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>>
+EdgeInfo::GetPronunciationsMap() const {
+  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
   key_type_value_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
@@ -212,37 +235,30 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
 
     if (ni->name_offset_ < names_list_length_) {
       std::string name = names_list_ + ni->name_offset_;
-      if (name.size() > 1) {
+      if (name.length() > 1) {
         uint8_t num = 0;
         try {
           num = std::stoi(name.substr(0, 1));
           if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kVerbal) {
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the type...actual data remains
 
-            name = name.substr(1); // actual size remains
-            size_t s = name.size() + 1;
-            name = std::string(names_list_ + ni->name_offset_, std::stoi(name) + s);
-            name = name.substr(s + 1);
-
-            name += '\0';
-            const char* p = name.c_str();
+            auto verbal_tokens = split(name, '#');
             // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
             // key  type value
             uint8_t index = 0;
-            std::string key, type, value;
-            while (*p) {
+            std::string key, type;
+            for (const auto v : verbal_tokens) {
               if (index == 0) { // key
-                key = std::string(p);
-                p += key.size() + 1;
+                key = v;
                 index++;
               } else if (index == 1) { // type
-                type = std::string(p);
-                p += type.size() + 1;
+                type = v;
                 index++;
               } else { // value
+                key_type_value_pairs.emplace(
+                    std::make_pair(std::stoi(key), std::make_pair(std::stoi(type), v)));
                 index = 0;
-                value = std::string(p);
-                p += value.size() + 1;
-                key_type_value_pairs[std::stoi(key)] = {std::stoi(type), value};
               }
             }
           }

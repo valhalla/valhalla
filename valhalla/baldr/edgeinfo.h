@@ -151,12 +151,15 @@ public:
    * @return   Returns a list (vector) of tagged names.
    */
   std::vector<std::string> GetTaggedNames(bool only_pronunciations = false) const;
+
   /**
-   * Convenience method to get the names and route number flags for an edge.  Does not include tagged
-   * names
+   * Convenience method to get the names and route number flags for an edge.
+   * @param  include_tagged_names  Bool indicating whether or not to return the tagged names too
+   *
    * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes() const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
+                                                             bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get the names and the tagged type for an edge.
@@ -164,7 +167,12 @@ public:
    */
   std::vector<std::pair<std::string, uint8_t>> GetTaggedNamesAndTypes() const;
 
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  /**
+   * Convenience method to get a pronunciation map for an edge.
+   * @return   Returns a unordered_multimap of type/name pairs with a key that references the name
+   * index from GetNamesAndTypes
+   */
+  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
 
   /**
    * Convenience method to get the types for the names.
