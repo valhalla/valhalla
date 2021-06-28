@@ -11,12 +11,50 @@ using namespace valhalla::baldr;
 
 namespace {
 
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
+void TestKeyTypeValue(std::string pronunciation,
+                      uint32_t expected_key,
+                      VerbalType expected_type,
+                      std::string expected_value) {
+
+  auto verbal_tokens = split(pronunciation, '#');
+  // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+  // key  type value
+  uint8_t index = 0;
+  std::string key, type;
+  for (const auto v : verbal_tokens) {
+    if (index == 0) { // key
+      key = v;
+      index++;
+    } else if (index == 1) { // type
+      type = v;
+      index++;
+    } else { // value
+      index = 0;
+      EXPECT_EQ(std::stoi(key), expected_key);
+      EXPECT_EQ(static_cast<VerbalType>(std::stoi(type)), expected_type);
+      EXPECT_EQ(v, expected_value);
+    }
+  }
+}
+
 TEST(Names, NamesTest) {
 
   OSMWay w1{1234};
   OSMWay w2{1234};
   OSMWay w3{1234};
 
+  OSMPronunciation pronunciation{};
+  std::vector<std::string> pronunciations;
   UniqueNames name_offset_map;
   std::string ref = "I 79 North";
 
@@ -27,42 +65,93 @@ TEST(Names, NamesTest) {
   w2.set_ref_index(name_offset_map.index("PA 43"));
   w3.set_ref_index(name_offset_map.index("PA 272"));
 
+  pronunciation.set_name_pronunciation_ipa_index(name_offset_map.index("test name ipa"));
+  pronunciation.set_name_pronunciation_x_sampa_index(name_offset_map.index("test name sampa"));
+  pronunciation.set_name_pronunciation_katakana_index(name_offset_map.index("test name katakana"));
+  pronunciation.set_name_pronunciation_jeita_index(name_offset_map.index("test name jeita"));
+  pronunciation.set_ref_pronunciation_ipa_index(name_offset_map.index("test ref ipa"));
+  pronunciation.set_ref_pronunciation_x_sampa_index(name_offset_map.index("test ref sampa"));
+  pronunciation.set_ref_pronunciation_katakana_index(name_offset_map.index("test ref katakana"));
+  pronunciation.set_ref_pronunciation_jeita_index(name_offset_map.index("test ref jeita"));
+
   w1.set_road_class(RoadClass::kMotorway);
   w2.set_road_class(RoadClass::kTrunk);
   w3.set_road_class(RoadClass::kPrimary);
 
   uint16_t types;
-  std::vector<std::string> w1_names = w1.GetNames(ref, name_offset_map, types);
+  std::vector<std::string> w1_names;
+  w1.GetNames(ref, name_offset_map, pronunciation, types, w1_names, pronunciations);
 
   // if road class = kTrunk or kMotorway, then ref comes first.  ref from relation overrides
   // ref from name_offset_map
   EXPECT_EQ(w1_names.at(0), "I 79 North");
   EXPECT_EQ(w1_names.at(1), "William Flynn Highway");
 
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "test ref ipa");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "test ref katakana");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "test ref jeita");
+  TestKeyTypeValue(pronunciations.at(4), 1, VerbalType::kIpa, "test name ipa");
+  TestKeyTypeValue(pronunciations.at(5), 1, VerbalType::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(6), 1, VerbalType::kPlainText, "test name katakana");
+  TestKeyTypeValue(pronunciations.at(7), 1, VerbalType::kJeita, "test name jeita");
+
   EXPECT_EQ(types, 1) << "relation ref failed.  ref not in correct position.";
 
-  std::vector<std::string> w2_names = w2.GetNames("", name_offset_map, types);
+  std::vector<std::string> w2_names;
+  pronunciations.clear();
+  w2.GetNames("", name_offset_map, pronunciation, types, w2_names, pronunciations);
 
   // if road class = kTrunk or kMotorway, then ref comes first.  use ref from name_offset_map
   EXPECT_EQ(w2_names.at(0), "PA 43");
   EXPECT_EQ(w2_names.at(1), "Mon/Fayette Expressway");
 
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "test ref ipa");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "test ref katakana");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "test ref jeita");
+  TestKeyTypeValue(pronunciations.at(4), 1, VerbalType::kIpa, "test name ipa");
+  TestKeyTypeValue(pronunciations.at(5), 1, VerbalType::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(6), 1, VerbalType::kPlainText, "test name katakana");
+  TestKeyTypeValue(pronunciations.at(7), 1, VerbalType::kJeita, "test name jeita");
+
   EXPECT_EQ(types, 1) << "ref_map failed.  ref not in correct position.";
 
-  std::vector<std::string> w3_names = w3.GetNames("", name_offset_map, types);
+  std::vector<std::string> w3_names;
+  pronunciations.clear();
+  w3.GetNames("", name_offset_map, pronunciation, types, w3_names, pronunciations);
 
   // if Road class < kTrunk, then name first then ref using ref from name_offset_map
   EXPECT_EQ(w3_names.at(0), "Lancaster Pike") << "Road class < kTrunk test failed.";
   EXPECT_EQ(w3_names.at(1), "PA 272") << "Road class < kTrunk test failed.";
 
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "test name ipa");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "test name katakana");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "test name jeita");
+  TestKeyTypeValue(pronunciations.at(4), 1, VerbalType::kIpa, "test ref ipa");
+  TestKeyTypeValue(pronunciations.at(5), 1, VerbalType::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(6), 1, VerbalType::kPlainText, "test ref katakana");
+  TestKeyTypeValue(pronunciations.at(7), 1, VerbalType::kJeita, "test ref jeita");
+
   EXPECT_EQ(types, 2) << "Road class < kTrunk test failed.  ref not in correct position.";
 
   w3_names.clear();
-  w3_names = w3.GetNames("PA 555", name_offset_map, types);
+  pronunciations.clear();
+  w3.GetNames("PA 555", name_offset_map, pronunciation, types, w3_names, pronunciations);
 
   // if Road class < kTrunk, then name first then ref using ref from relations
   EXPECT_EQ(w3_names.at(0), "Lancaster Pike") << "ref from relations";
   EXPECT_EQ(w3_names.at(1), "PA 555") << "ref from relations";
+
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "test name ipa");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "test name katakana");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "test name jeita");
+  TestKeyTypeValue(pronunciations.at(4), 1, VerbalType::kIpa, "test ref ipa");
+  TestKeyTypeValue(pronunciations.at(5), 1, VerbalType::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(6), 1, VerbalType::kPlainText, "test ref katakana");
+  TestKeyTypeValue(pronunciations.at(7), 1, VerbalType::kJeita, "test ref jeita");
 
   EXPECT_EQ(types, 2)
       << "Road class < kTrunk test failed(ref from relations).  ref not in correct position.";
@@ -71,22 +160,66 @@ TEST(Names, NamesTest) {
   w3.set_official_name_index(name_offset_map.index("LP"));
   w3.set_name_en_index(name_offset_map.index("LancP"));
 
+  pronunciation.set_alt_name_pronunciation_ipa_index(name_offset_map.index("test alt name ipa"));
+  pronunciation.set_alt_name_pronunciation_x_sampa_index(
+      name_offset_map.index("test alt name sampa"));
+  pronunciation.set_alt_name_pronunciation_katakana_index(
+      name_offset_map.index("test alt name katakana"));
+  pronunciation.set_alt_name_pronunciation_jeita_index(name_offset_map.index("test alt name jeita"));
+  pronunciation.set_official_name_pronunciation_ipa_index(
+      name_offset_map.index("test official name ipa"));
+  pronunciation.set_official_name_pronunciation_x_sampa_index(
+      name_offset_map.index("test official name sampa"));
+  pronunciation.set_official_name_pronunciation_katakana_index(
+      name_offset_map.index("test official name katakana"));
+  pronunciation.set_official_name_pronunciation_jeita_index(
+      name_offset_map.index("test official name jeita"));
+  pronunciation.set_name_en_pronunciation_ipa_index(name_offset_map.index("test name en ipa"));
+  pronunciation.set_name_en_pronunciation_x_sampa_index(name_offset_map.index("test name en sampa"));
+  pronunciation.set_name_en_pronunciation_katakana_index(
+      name_offset_map.index("test name en katakana"));
+  pronunciation.set_name_en_pronunciation_jeita_index(name_offset_map.index("test name en jeita"));
+
   w3_names.clear();
-  w3_names = w3.GetNames("", name_offset_map, types);
+  pronunciations.clear();
+  w3.GetNames("", name_offset_map, pronunciation, types, w3_names, pronunciations);
 
   EXPECT_EQ(types, 2) << "all other names test failed.  ref not in correct position.";
 
   // all other names should be last.
-
   EXPECT_EQ(w3_names.at(2), "Lanc Pike") << "Alt name failed.";
   EXPECT_EQ(w3_names.at(3), "LP") << "official name failed.";
   EXPECT_EQ(w3_names.at(4), "LancP") << "name en failed.";
+
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "test name ipa");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "test name katakana");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "test name jeita");
+  TestKeyTypeValue(pronunciations.at(4), 1, VerbalType::kIpa, "test ref ipa");
+  TestKeyTypeValue(pronunciations.at(5), 1, VerbalType::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(6), 1, VerbalType::kPlainText, "test ref katakana");
+  TestKeyTypeValue(pronunciations.at(7), 1, VerbalType::kJeita, "test ref jeita");
+  TestKeyTypeValue(pronunciations.at(8), 2, VerbalType::kIpa, "test alt name ipa");
+  TestKeyTypeValue(pronunciations.at(9), 2, VerbalType::kXSampa, "test alt name sampa");
+  TestKeyTypeValue(pronunciations.at(10), 2, VerbalType::kPlainText, "test alt name katakana");
+  TestKeyTypeValue(pronunciations.at(11), 2, VerbalType::kJeita, "test alt name jeita");
+  TestKeyTypeValue(pronunciations.at(12), 3, VerbalType::kIpa, "test official name ipa");
+  TestKeyTypeValue(pronunciations.at(13), 3, VerbalType::kXSampa, "test official name sampa");
+  TestKeyTypeValue(pronunciations.at(14), 3, VerbalType::kPlainText, "test official name katakana");
+  TestKeyTypeValue(pronunciations.at(15), 3, VerbalType::kJeita, "test official name jeita");
+  TestKeyTypeValue(pronunciations.at(16), 4, VerbalType::kIpa, "test name en ipa");
+  TestKeyTypeValue(pronunciations.at(17), 4, VerbalType::kXSampa, "test name en sampa");
+  TestKeyTypeValue(pronunciations.at(18), 4, VerbalType::kPlainText, "test name en katakana");
+  TestKeyTypeValue(pronunciations.at(19), 4, VerbalType::kJeita, "test name en jeita");
 }
 
 TEST(Names, TaggedNamesTest) {
 
   OSMWay w1{1234};
   OSMWay w2{1234};
+
+  OSMPronunciation pronunciation1{}, pronunciation2{};
+  std::vector<std::string> pronunciations;
 
   UniqueNames name_offset_map;
 
@@ -95,11 +228,40 @@ TEST(Names, TaggedNamesTest) {
   w1.set_road_class(RoadClass::kMotorway);
   w2.set_road_class(RoadClass::kMotorway);
 
-  std::vector<std::string> w1_tagged_names = w1.GetTaggedNames(name_offset_map);
-  EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
+  pronunciation1.set_tunnel_name_pronunciation_ipa_index(name_offset_map.index("tɛd ˈwɪljəmz ˈtʌnl"));
+  pronunciation1.set_tunnel_name_pronunciation_x_sampa_index(
+      name_offset_map.index("tEd wIly@mz t@n@l"));
+  pronunciation1.set_tunnel_name_pronunciation_katakana_index(
+      name_offset_map.index("テッド ウィリャムズ タネル"));
+  pronunciation1.set_tunnel_name_pronunciation_jeita_index(
+      name_offset_map.index("チバダ'イガ&ク% セーモンマ'エ."));
 
-  std::vector<std::string> w2_tagged_names = w2.GetTaggedNames(name_offset_map);
-  EXPECT_EQ(w2_tagged_names.at(0), "1Fort McHenry Tunnel");
+  pronunciation2.set_tunnel_name_pronunciation_ipa_index(name_offset_map.index("fɔːt McHenry ˈtʌnl"));
+  pronunciation2.set_tunnel_name_pronunciation_x_sampa_index(
+      name_offset_map.index("fOrt m@kEnri t@n@l"));
+  pronunciation2.set_tunnel_name_pronunciation_katakana_index(
+      name_offset_map.index("フォート ムケンリー タネル"));
+  pronunciation2.set_tunnel_name_pronunciation_jeita_index(
+      name_offset_map.index("チバダ'イガ&ク% セーモンマ'エ."));
+
+  std::vector<std::string> w1_tagged_names;
+  w1.GetTaggedNames(name_offset_map, pronunciation1, 0, w1_tagged_names, pronunciations);
+  EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
+  TestKeyTypeValue(pronunciations.at(0), 0, VerbalType::kIpa, "tɛd ˈwɪljəmz ˈtʌnl");
+  TestKeyTypeValue(pronunciations.at(1), 0, VerbalType::kXSampa, "tEd wIly@mz t@n@l");
+  TestKeyTypeValue(pronunciations.at(2), 0, VerbalType::kPlainText, "テッド ウィリャムズ タネル");
+  TestKeyTypeValue(pronunciations.at(3), 0, VerbalType::kJeita, "チバダ'イガ&ク% セーモンマ'エ.");
+
+  pronunciations.clear();
+  std::vector<std::string> w2_tagged_names;
+  w2_tagged_names.emplace_back("test name"); // testing pronunciation index
+
+  w2.GetTaggedNames(name_offset_map, pronunciation2, 0, w2_tagged_names, pronunciations);
+  EXPECT_EQ(w2_tagged_names.at(1), "1Fort McHenry Tunnel");
+  TestKeyTypeValue(pronunciations.at(0), 1, VerbalType::kIpa, "fɔːt McHenry ˈtʌnl");
+  TestKeyTypeValue(pronunciations.at(1), 1, VerbalType::kXSampa, "fOrt m@kEnri t@n@l");
+  TestKeyTypeValue(pronunciations.at(2), 1, VerbalType::kPlainText, "フォート ムケンリー タネル");
+  TestKeyTypeValue(pronunciations.at(3), 1, VerbalType::kJeita, "チバダ'イガ&ク% セーモンマ'エ.");
 }
 
 } // namespace

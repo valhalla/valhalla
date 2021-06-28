@@ -96,10 +96,11 @@ void make_tile() {
     bool added;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
-                                                 0, 0,
-                                                 120, // speed limit in kph
-                                                 shape, {std::to_string(localedgeidx)}, {}, 0, added);
+    uint32_t edge_info_offset =
+        tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
+                         0, 0,
+                         120, // speed limit in kph
+                         shape, {std::to_string(localedgeidx)}, {}, {}, 0, added);
     // assert(added);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(edge_builder);
