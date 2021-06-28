@@ -82,6 +82,7 @@ std::string build_local_req(rapidjson::Document& doc,
 class ChinesePostmanTest : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map chinese_postman_map;
+  static gurka::map complex_chinese_postman_map;
 
   //    A------B---<--C--->--G
   //    |      |      |      |
@@ -91,6 +92,7 @@ protected:
   //    D------E------F--<---H
 
   static void SetUpTestSuite() {
+    // Setup chinese_postman_map
     const std::string ascii_map = R"(
         A------B------C------G
         |      |      |      |
@@ -126,10 +128,54 @@ protected:
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
                                             {{"service_limits.max_avoid_polygons_length", "1000"}});
+
+    // Setup complex_chinese_postman_map
+    // B----<---A--->----F
+    //  \       | \     /|
+    //   \      |  ^   v |
+    //    \     v   \ /  |
+    //     v    |    E   v
+    //      \   |     \  |
+    //       \  |      ^ |
+    //        \ |       \|
+    //          C---->---D
+
+    const std::string complex_ascii_map = R"(
+        B--------A--------F
+         \       | \     /|
+          \      |  \   / |
+           \     |   \ /  |
+            \    |    E   |
+             \   |     \  |
+              \  |      \ |
+               \ |       \|
+                 C---->---D
+    )";
+    const gurka::ways complex_ways = {{"AB", {{"highway", "residential"}, {"name", "AB"}}},
+                                      {"AC", {{"highway", "residential"}, {"name", "AC"}}},
+                                      {"AF", {{"highway", "residential"}, {"name", "AF"}}},
+
+                                      {"BC", {{"highway", "residential"}, {"name", "BC"}}},
+
+                                      {"CD", {{"highway", "residential"}, {"name", "CD"}}},
+
+                                      {"DE", {{"highway", "residential"}, {"name", "DE"}}},
+
+                                      {"EA", {{"highway", "residential"}, {"name", "EA"}}},
+
+                                      {"FD", {{"highway", "residential"}, {"name", "FD"}}},
+                                      {"FE", {{"highway", "residential"}, {"name", "FE"}}}};
+    const auto complex_layout = gurka::detail::map_to_coordinates(complex_ascii_map, 10);
+    // Add low length limit for avoid_polygons so it throws an error
+    complex_chinese_postman_map =
+        gurka::buildtiles(complex_layout, complex_ways, {}, {},
+                          "test/data/gurka_complex_chinese_postman",
+                          {{"service_limits.max_avoid_polygons_length", "1000"}});
   }
 };
 
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
+gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_a = chinese_postman_map.nodes.at("A");
