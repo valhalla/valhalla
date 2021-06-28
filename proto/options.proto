@@ -221,4 +221,8 @@ message Options {
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
+  optional uint32 matrix_locations = 48;                                  // Number of matrix locations found that will trigger an early exit from
+                                                                          // a one to many or many to one time distance matrix. Does not affect
+                                                                          // sources_to_targets when either sources or targets has more than 1 location
+                                                                          // or when CostMatrix is the selected matrix mode.
 }
