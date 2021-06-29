@@ -149,9 +149,9 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
   return matrix(request);
 }
 
-std::vector<GraphId>
+std::vector<baldr::GraphId>
 computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing) {
-  std::vector<GraphId> edge_ids;
+  std::vector<baldr::GraphId> edge_ids;
   return edge_ids;
 }
 

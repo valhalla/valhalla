@@ -102,7 +102,7 @@ protected:
                                    std::vector<midgard::PointLL> targets,
                                    std::string costing);
 
-  std::vector<GraphId>
+  std::vector<baldr::GraphId>
   computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
 
   void build_route(

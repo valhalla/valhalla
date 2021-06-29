@@ -364,7 +364,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::assert::raw::expect_path(route2, {"HF", "FC", "CG", "GH"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -408,6 +408,52 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
 
   gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
+  auto node_a = complex_chinese_postman_map.nodes.at("A");
+  auto node_b = complex_chinese_postman_map.nodes.at("B");
+  auto node_c = complex_chinese_postman_map.nodes.at("C");
+  auto node_d = complex_chinese_postman_map.nodes.at("D");
+  auto node_e = complex_chinese_postman_map.nodes.at("E");
+  auto node_f = complex_chinese_postman_map.nodes.at("F");
+
+  auto a_b = node_a.lng() - node_b.lng();
+
+  // create a chinese polygon covering all nodes
+  // c4-----------------------c1
+  // |   B----<---A--->----F   |
+  // |    \       | \     /|   |
+  // |     \      |  ^   v |   |
+  // |      \     v   \ /  |   |
+  // |       v    |    E   v   |
+  // |        \   |     \  |   |
+  // |         \  |      ^ |   |
+  // |          \ |       \|   |
+  // |            C---->---D   |
+  // c3------------------------c2
+
+  auto ratio = 0.2;
+  auto buffer = ratio * a_b;
+  ring_bg_t chinese_ring{{node_f.lng() + buffer, node_f.lat() + buffer},
+                         {node_d.lng() + buffer, node_d.lat() - buffer},
+                         {node_b.lng() - buffer, node_c.lat() - buffer},
+                         {node_b.lng() - buffer, node_b.lat() + buffer},
+                         {node_f.lng() + buffer, node_f.lat() + buffer}};
+
+  std::vector<ring_bg_t> avoid_rings;
+
+  // build request manually for now
+  auto lls = {complex_chinese_postman_map.nodes["B"], complex_chinese_postman_map.nodes["B"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
+  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
+
+  gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
