@@ -1127,8 +1127,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     };
 
     const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
-      path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
-                        label.transition_cost(), recovered_inner_edges.count(label.edgeid()));
+      path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
+                        label.restriction_idx(), label.transition_cost(),
+                        recovered_inner_edges.count(label.edgeid()));
     };
 
     float source_pct;
