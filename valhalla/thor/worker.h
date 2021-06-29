@@ -102,6 +102,9 @@ protected:
                                    std::vector<midgard::PointLL> targets,
                                    std::string costing);
 
+  std::vector<GraphId>
+  computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
+
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
           paths,

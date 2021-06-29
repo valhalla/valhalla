@@ -149,6 +149,12 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
   return matrix(request);
 }
 
+std::vector<GraphId>
+computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing) {
+  std::vector<GraphId> edge_ids;
+  return edge_ids;
+}
+
 void thor_worker_t::chinese_postman(Api& request) {
 
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
@@ -245,23 +251,30 @@ void thor_worker_t::chinese_postman(Api& request) {
         underPoints.push_back(l);
       }
     }
+    if (underPoints.size() == 1 && overPoints.size() == 1) {
+      // Matrix API does not cover this, we only need to route path, no need the distance.
+      std::cout << "Under points and over points are only 1\n";
+      return;
 
-    std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
-    std::cout << "\nmatrix output:\n" << matrixOutput;
+    } else {
+      std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
+      std::cout << "\nmatrix output:\n" << matrixOutput;
 
-    vector<vector<double>> costMatrix = {{82, 83, 69, 92},
-                                         {77, 37, 49, 92},
-                                         {11, 69, 5, 86},
-                                         {8, 9, 98, 23}};
-    HungarianAlgorithm HungAlgo;
-    vector<int> assignment;
-    double cost = HungAlgo.Solve(costMatrix, assignment);
+      // Sample usage of Hungarian algorithm
+      vector<vector<double>> costMatrix = {{82, 83, 69, 92},
+                                           {77, 37, 49, 92},
+                                           {11, 69, 5, 86},
+                                           {8, 9, 98, 23}};
+      HungarianAlgorithm HungAlgo;
+      vector<int> assignment;
+      double cost = HungAlgo.Solve(costMatrix, assignment);
 
-    std::cout << "\n";
-    for (unsigned int x = 0; x < costMatrix.size(); x++)
-      std::cout << x << "," << assignment[x] << "\t";
-    std::cout << "\n";
-    return;
+      std::cout << "\n";
+      for (unsigned int x = 0; x < costMatrix.size(); x++)
+        std::cout << x << "," << assignment[x] << "\t";
+      std::cout << "\n";
+      return;
+    }
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
