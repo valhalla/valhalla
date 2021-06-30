@@ -225,8 +225,8 @@ Centroid::FormPaths(const ExpansionType& expansion_type,
       auto path_edge_id = expansion_type == ExpansionType::reverse
                               ? reader.GetOpposingEdgeId(label.edgeid(), tile)
                               : label.edgeid();
-      path.emplace_back(label.mode(), label.cost(), path_edge_id, 0, label.restriction_idx(),
-                        label.transition_cost());
+      path.emplace_back(label.mode(), label.cost(), path_edge_id, 0, label.path_distance(),
+                        label.restriction_idx(), label.transition_cost());
     }
 
     // reverse the path since we recovered it starting at the beginning
