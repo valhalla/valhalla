@@ -47,6 +47,99 @@ int get_number(const std::string& tag, const std::string& value) { // NOLINT
   return num;
 }
 
+// This class helps to set "culdesac" labels to loop roads correctly.
+// How does it work?
+// First needs to add loop roads (that are candidates to be a "culdesac" roads) using add_candidate
+// method. After that, needs to call clarify_and_fix. It clarifies types of roads and marks roads as
+// "culdesac" correctly. This call requires sets of OSMWayNode and OSMWay. clarify_and_fix must to
+// call after finishing collecting these sets.
+class culdesac_processor {
+public:
+  // Adds a loop road as a candidate to be a "culdesac" road.
+  void add_candidate(uint64_t osm_way_id,
+                     size_t osm_way_index,
+                     const std::vector<uint64_t>& osm_node_ids) {
+    loops_meta_.emplace(osm_way_id, loop_meta(osm_way_index));
+    for (auto osm_node_id : osm_node_ids)
+      node_to_loop_way_.emplace(osm_node_id, osm_way_id);
+  }
+
+  // Clarifies types of loop roads and saves fixed ways.
+  void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    osm_way_node_seq.flush();
+    osm_way_seq.flush();
+
+    size_t number_of_nodes = 0;
+    size_t count_node = 0;
+    OSMWay osm_way;
+    for (const auto& osm_way_node : osm_way_node_seq) {
+      // Reads a new way only after its nodes are read.
+      if (number_of_nodes == count_node) {
+        osm_way = *osm_way_seq[osm_way_node.way_index];
+        number_of_nodes = osm_way.node_count();
+        count_node = 0;
+      }
+
+      const auto node_to_loop_way_range = node_to_loop_way_.equal_range(osm_way_node.node.osmid_);
+      for (auto it = node_to_loop_way_range.first; it != node_to_loop_way_range.second; ++it) {
+        if (osm_way.way_id() != it->second && osm_way.use() == Use::kRoad) {
+          loops_meta_.at(it->second).add_id_of_intersection(osm_way_node.node.osmid_);
+        }
+      }
+
+      ++count_node;
+    }
+
+    fix(osm_way_seq);
+  }
+
+private:
+  // loop_meta is a helper class that stores loop info.
+  class loop_meta {
+  public:
+    explicit loop_meta(size_t way_index) : way_index_(way_index) {
+    }
+
+    size_t get_way_index() const {
+      return way_index_;
+    }
+
+    bool is_culdesac() const {
+      return node_ids_of_intersections_.size() <= 1;
+    }
+
+    void add_id_of_intersection(uint64_t node_id) {
+      node_ids_of_intersections_.insert(node_id);
+    }
+
+  private:
+    size_t way_index_;
+    // Stores nodes that are intersections of loop road loop and adjacent roads.
+    std::unordered_set<uint64_t> node_ids_of_intersections_;
+  };
+
+  // Sets "culdesac" labels to loop roads and saves ways.
+  void fix(sequence<OSMWay>& osm_way_seq) {
+    size_t number_of_culdesac = 0;
+    for (const auto& loop_way_id_to_meta : loops_meta_) {
+      const auto& meta = loop_way_id_to_meta.second;
+      if (meta.is_culdesac()) {
+        auto way_it = osm_way_seq.at(meta.get_way_index());
+        auto way = *way_it;
+        way.set_use(Use::kCuldesac);
+        way_it = way;
+        ++number_of_culdesac;
+      }
+    }
+
+    LOG_INFO("Added " + std::to_string(number_of_culdesac) + " culdesac roundabouts from " +
+             std::to_string(loops_meta_.size()) + " candidates.");
+  }
+
+  std::unordered_multimap<uint64_t, uint64_t> node_to_loop_way_;
+  std::unordered_map<uint64_t, loop_meta> loops_meta_;
+};
+
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
 public:
@@ -1443,6 +1536,8 @@ public:
         n.set_access(std::stoi(tag.second));
       } else if (tag.first == "tagged_access") {
         n.set_tagged_access(std::stoi(tag.second));
+      } else if (tag.first == "private") {
+        n.set_private_access(tag.second == "true");
       }
 
       /* TODO: payment type.
@@ -1972,7 +2067,8 @@ public:
     // Infer cul-de-sac if a road edge is a loop and is low classification.
     if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
-      way_.set_use(Use::kCuldesac);
+      // Adds a loop road as a candidate to be a "culdesac" road.
+      culdesac_processor_.add_candidate(way_.way_id(), ways_->size(), nodes);
     }
 
     if (has_user_tags_) {
@@ -2769,6 +2865,9 @@ public:
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 
+  // used to set "culdesac" labels to loop roads correctly
+  culdesac_processor culdesac_processor_;
+
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_results_;
   Tags empty_way_results_;
@@ -2824,6 +2923,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
+
+  // Clarifies types of loop roads and saves fixed ways.
+  callback.culdesac_processor_.clarify_and_fix(*callback.way_nodes_, *callback.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");

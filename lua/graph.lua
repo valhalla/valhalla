@@ -93,20 +93,26 @@ access = {
 ["restricted"] = "true",
 ["allowed"] = "true",
 ["emergency"] = "false",
-["psv"] = "false"
+["psv"] = "false",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 private = {
 ["private"] = "true",
 ["destination"] = "true",
 ["customers"] = "true",
-["delivery"] = "true"
+["delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 no_thru_traffic = {
 ["destination"] = "true",
 ["customers"] = "true",
-["delivery"] = "true"
+["delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 sidewalk = {
@@ -149,7 +155,9 @@ motor_vehicle = {
 ["official"] = "false",
 ["public"] = "true",
 ["restricted"] = "true",
-["allowed"] = "true"
+["allowed"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 moped = {
@@ -162,7 +170,9 @@ moped = {
 ["dismount"] = "true",
 ["no"] = "false",
 ["unknown"] = "false",
-["agricultural"] = "false"
+["agricultural"] = "false",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 foot = {
@@ -185,7 +195,9 @@ foot = {
 ["sidewalk"] = "true",
 ["allowed"] = "true",
 ["passable"] = "true",
-["footway"] = "true"
+["footway"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 wheelchair = {
@@ -203,7 +215,9 @@ wheelchair = {
 ["partial"] = "false",
 ["bad"] = "false",
 ["half"] = "false",
-["assisted"] = "true"
+["assisted"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 bus = {
@@ -256,7 +270,9 @@ truck = {
 ["agricultural;forestry"] = "false",
 ["official"] = "false",
 ["forestry"] = "false",
-["destination;delivery"] = "true"
+["destination;delivery"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 hazmat = {
@@ -298,7 +314,9 @@ bicycle = {
 ["none"] = "false",
 ["allowed"] = "true",
 ["private"] = "true",
-["official"] = "true"
+["official"] = "true",
+["permit"] = "true",
+["residents"] = "true"
 }
 
 cycleway = {
@@ -401,7 +419,9 @@ motor_vehicle_node = {
 ["official"] = 0,
 ["public"] = 1,
 ["restricted"] = 1,
-["allowed"] = 1
+["allowed"] = 1,
+["permit"] = 1,
+["residents"] = 1
 }
 
 bicycle_node = {
@@ -421,7 +441,9 @@ bicycle_node = {
 ["none"] = 0,
 ["allowed"] = 4,
 ["private"] = 4,
-["official"] = 4
+["official"] = 4,
+["permit"] = 4,
+["residents"] = 4
 }
 
 foot_node = {
@@ -444,7 +466,9 @@ foot_node = {
 ["sidewalk"] = 2,
 ["allowed"] = 2,
 ["passable"] = 2,
-["footway"] = 2
+["footway"] = 2,
+["permit"] = 2,
+["residents"] = 2
 }
 
 wheelchair_node = {
@@ -462,7 +486,9 @@ wheelchair_node = {
 ["partial"] = 0,
 ["bad"] = 0,
 ["half"] = 0,
-["assisted"] = 256
+["assisted"] = 256,
+["permit"] = 256,
+["residents"] = 256
 }
 
 moped_node = {
@@ -475,7 +501,9 @@ moped_node = {
 ["dismount"] = 512,
 ["no"] = 0,
 ["unknown"] = 0,
-["agricultural"] = 0
+["agricultural"] = 0,
+["permit"] = 512,
+["residents"] = 512
 }
 
 motor_cycle_node = {
@@ -535,7 +563,9 @@ truck_node = {
 ["agricultural;forestry"] = 0,
 ["official"] = 0,
 ["forestry"] = 0,
-["destination;delivery"] = 8
+["destination;delivery"] = 8,
+["permit"] = 8,
+["residents"] = 8
 }
 
 psv_bus_node = {
@@ -1817,6 +1847,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
+  --if access=private use allowed modes, but consider private_access tag as true.
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
@@ -1850,13 +1881,15 @@ function nodes_proc (kv, nokeys)
   end
 
   --check for gates, bollards, and sump_busters
-  local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate"
+  local gate = kv["barrier"] == "gate" or kv["barrier"] == "yes" or
+    kv["barrier"] == "lift_gate" or kv["barrier"] == "swing_gate"
   local bollard = false
   local sump_buster = false
 
   if gate == false then
     --if there was a bollard cars can't get through it
-    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or kv["bollard"] == "removable" or false
+    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or
+      kv["barrier"] == "jersey_barrier" or kv["bollard"] == "removable" or false
 
     --if sump_buster then no access for auto, hov, and taxi unless a tag exists.
     sump_buster = kv["barrier"] == "sump_buster" or false
@@ -1867,8 +1900,8 @@ function nodes_proc (kv, nokeys)
       bollard = false
     end
 
-    --bollard = true shuts off access unless the tag exists.
-    if bollard == true then
+    --bollard = true shuts off access when access is not originally specified.
+    if bollard == true and initial_access == nil then
       auto = auto_tag or 0
       truck = truck_tag or 0
       bus = bus_tag or 0
@@ -1988,6 +2021,8 @@ function nodes_proc (kv, nokeys)
        kv["junction"] = "named"
     end
   end
+
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)

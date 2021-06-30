@@ -62,13 +62,15 @@ TEST_F(InstructionsObviousManeuver, IgnoreSimpleNameChange) {
 
   // Verify single maneuver prior to the right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Drive east on Middletown Road.", "",
+                                                            "Drive east on Middletown Road.",
+                                                            "Drive east.", "",
                                                             "Drive east on Middletown Road.",
                                                             "Continue for 6 kilometers.");
 
   // Verify right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "Turn right onto Main Street.",
+                                                            "Turn right.",
                                                             "Turn right onto Main Street.",
                                                             "Turn right onto Main Street.",
                                                             "Continue for 4 kilometers.");
@@ -86,13 +88,15 @@ TEST_F(InstructionsObviousManeuver, IgnoreOpposingSameNameIntersectingEdge) {
 
   // Verify single maneuver prior to the right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Drive east on Vine Street.", "",
+                                                            "Drive east on Vine Street.",
+                                                            "Drive east.", "",
                                                             "Drive east on Vine Street.",
                                                             "Continue for 11 kilometers.");
 
   // Verify right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "Turn right onto Main Street.",
+                                                            "Turn right.",
                                                             "Turn right onto Main Street.",
                                                             "Turn right onto Main Street.",
                                                             "Continue for 4 kilometers.");
@@ -110,13 +114,15 @@ TEST_F(InstructionsObviousManeuver, IgnoreSameNameIntersectingEdge) {
 
   // Verify start maneuver prior to the turn maneuver
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Drive east on Hanover Street.", "",
+                                                            "Drive east on Hanover Street.",
+                                                            "Drive east.", "",
                                                             "Drive east on Hanover Street.",
                                                             "Continue for 9 kilometers.");
 
   // Verify right turn
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "Turn right onto 1st Avenue.",
+                                                            "Turn right.",
                                                             "Turn right onto 1st Avenue.",
                                                             "Turn right onto 1st Avenue.",
                                                             "Continue for 4 kilometers.");
@@ -134,13 +140,13 @@ TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRam
 
   // Verify start maneuver prior to the continune maneuver
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Drive east on US 322.", "",
-                                                            "Drive east on US 322.",
+                                                            "Drive east on US 322.", "Drive east.",
+                                                            "", "Drive east on US 322.",
                                                             "Continue for 3 kilometers.");
 
   // Verify continue because of same name intersecting edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
-                                                            "Keep left to take US 422.",
+                                                            "Keep left to take US 422.", "",
                                                             "Keep left to take US 422.",
                                                             "Keep left to take US 422.",
                                                             "Continue for 6 kilometers.");

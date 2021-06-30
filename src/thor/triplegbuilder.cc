@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
@@ -92,6 +93,15 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+// Helper function to get the iso country code from an edge using its endnode
+inline std::string country_code_from_edge(const graph_tile_ptr& tile,
+                                          const valhalla::baldr::DirectedEdge& de) {
+  if (!tile) {
+    return std::string();
+  }
+  return tile->admininfo(tile->node(de.endnode())->admin_index()).country_iso();
+}
+
 /**
  * Used to add or update incidents attached to the provided leg. We could do something more exotic to
  * avoid linear scan, like keeping a separate lookup outside of the pbf
@@ -102,7 +112,9 @@ void AssignAdmins(const AttributesController& controller,
 void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
-                    uint32_t index) {
+                    uint32_t index,
+                    const graph_tile_ptr& tile,
+                    const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
@@ -119,6 +131,16 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     // Get the full incident metadata from the incident-tile
     const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
+
+    // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
+    std::string country_code_iso_2 = country_code_from_edge(tile, de);
+    if (!country_code_iso_2.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
+    }
+    std::string country_code_iso_3 = valhalla::baldr::get_iso_3166_1_alpha3(country_code_iso_2);
+    if (!country_code_iso_3.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha3(country_code_iso_3.c_str());
+    }
 
     new_incident->set_begin_shape_index(index);
     new_incident->set_end_shape_index(index);
@@ -243,7 +265,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
         continue;
       }
 
@@ -362,7 +384,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i);
+        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
       }
     }
 
@@ -562,10 +584,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
 
     if (!edge_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : edge_signs) {
         switch (sign.type()) {
-          case Sign::Type::kExitNumber: {
+          case valhalla::baldr::Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
               auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
               trip_sign_exit_number->set_text(sign.text());
@@ -573,7 +595,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitBranch: {
+          case valhalla::baldr::Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
               auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
               trip_sign_exit_onto_street->set_text(sign.text());
@@ -581,7 +603,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitToward: {
+          case valhalla::baldr::Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
               auto* trip_sign_exit_toward_location =
                   trip_sign->mutable_exit_toward_locations()->Add();
@@ -590,7 +612,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kExitName: {
+          case valhalla::baldr::Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
               auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
               trip_sign_exit_name->set_text(sign.text());
@@ -598,7 +620,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideBranch: {
+          case valhalla::baldr::Sign::Type::kGuideBranch: {
             if (controller.attributes.at(kEdgeSignGuideBranch)) {
               auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
               trip_sign_guide_onto_street->set_text(sign.text());
@@ -606,7 +628,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuideToward: {
+          case valhalla::baldr::Sign::Type::kGuideToward: {
             if (controller.attributes.at(kEdgeSignGuideToward)) {
               auto* trip_sign_guide_toward_location =
                   trip_sign->mutable_guide_toward_locations()->Add();
@@ -615,7 +637,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewJunction: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
             if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
               auto* trip_sign_guidance_view_junction =
                   trip_sign->mutable_guidance_view_junctions()->Add();
@@ -624,7 +646,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewSignboard: {
+          case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
             if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
               auto* trip_sign_guidance_view_signboard =
                   trip_sign->mutable_guidance_view_signboards()->Add();
@@ -644,10 +666,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
-      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
-          case Sign::Type::kJunctionName: {
+          case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
               auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
               trip_sign_junction_name->set_text(sign.text());

@@ -135,8 +135,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Process avoid locations
-  auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-  if (avoid_locations.size() == 0) {
+  auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
+  if (exclude_locations.size() == 0) {
     LOG_INFO("No avoid locations");
   }
 
@@ -181,8 +181,8 @@ int main(int argc, char* argv[]) {
 
   // Find avoid locations
   std::vector<sif::AvoidEdge> avoid_edges;
-  const auto avoids = Search(avoid_locations, reader, cost);
-  for (const auto& loc : avoid_locations) {
+  const auto avoids = Search(exclude_locations, reader, cost);
+  for (const auto& loc : exclude_locations) {
     for (auto& e : avoids.at(loc).edges) {
       avoid_edges.push_back({e.id, e.percent_along});
     }

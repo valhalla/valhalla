@@ -69,7 +69,8 @@ message IncidentsTile {
 
     // IncidentMetadata id
     uint64 id = 128;
-    // Country code
+    // Country code (2 & 3 char codes)
     string iso_3166_1_alpha2 = 129;
+    string iso_3166_1_alpha3 = 130;
   }
 }

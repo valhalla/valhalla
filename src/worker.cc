@@ -376,8 +376,8 @@ void parse_locations(const rapidjson::Document& doc,
     locations = options.mutable_sources();
   } else if (node == "targets") {
     locations = options.mutable_targets();
-  } else if (node == "avoid_locations") {
-    locations = options.mutable_avoid_locations();
+  } else if (node == "exclude_locations" || node == "avoid_locations") {
+    locations = options.mutable_exclude_locations();
   } else {
     return;
   }
@@ -932,12 +932,18 @@ void from_json(rapidjson::Document& doc, Options& options) {
   parse_locations(doc, options, "targets", 132, ignore_closures);
 
   // get the avoids in there
-  parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+  // TODO: remove "avoid_locations/polygons" after some while
+  if (doc.HasMember("avoid_locations"))
+    parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+  else
+    parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
 
   // get the avoid polygons in there
-  auto rings_req = rapidjson::get_child_optional(doc, "/avoid_polygons");
+  auto rings_req =
+      rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
+                                                                         : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_avoid_polygons();
+    auto* rings_pbf = options.mutable_exclude_polygons();
     try {
       for (const auto& req_poly : rings_req->GetArray()) {
         auto* ring = rings_pbf->Add();
@@ -1199,49 +1205,6 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
-  return result;
-}
-
-worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
-                               http_request_info_t& request_info,
-                               const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
-  if (request.options().has_jsonp()) {
-    stream << request.options().jsonp() << '(';
-  }
-  stream << *array;
-  if (request.options().has_jsonp()) {
-    stream << ')';
-  }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
-                                                                         : worker::JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t
-to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
-  if (request.options().has_jsonp()) {
-    stream << request.options().jsonp() << '(';
-  }
-  stream << *map;
-  if (request.options().has_jsonp()) {
-    stream << ')';
-  }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
-                                                                         : worker::JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
   return result;
 }
 

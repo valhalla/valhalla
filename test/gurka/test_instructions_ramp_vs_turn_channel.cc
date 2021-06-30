@@ -120,6 +120,7 @@ TEST_F(InstructionsRightLinkThenTurnExample1, RightLinkTurnLeft) {
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Bear right toward N26/Mechelen.",
+                                                            "Bear right toward N26, Mechelen.",
                                                             "Bear right toward N26.",
                                                             "Bear right toward N26, Mechelen.",
                                                             "Continue for 300 meters.");
@@ -127,7 +128,7 @@ TEST_F(InstructionsRightLinkThenTurnExample1, RightLinkTurnLeft) {
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                             "Turn left onto Nieuwe Mechelsesteenweg/N26.",
-                                            "Turn left onto Nieuwe Mechelsesteenweg.",
+                                            "Turn left.", "Turn left onto Nieuwe Mechelsesteenweg.",
                                             "Turn left onto Nieuwe Mechelsesteenweg, N26.",
                                             "Continue for 200 meters.");
 }
@@ -145,12 +146,14 @@ TEST_F(InstructionsRightLinkThenTurnExample1, RightLinkTurnRightInMiddleOfLink) 
 
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear right toward N26/Mechelen.", "Bear right toward N26.",
+      result, maneuver_index, "Bear right toward N26/Mechelen.",
+      "Bear right toward N26, Mechelen. Then Turn right onto Mechelsevest.", "Bear right toward N26.",
       "Bear right toward N26, Mechelen. Then Turn right onto Mechelsevest.",
       "Continue for 90 meters.");
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Turn right onto Mechelsevest.", "Turn right onto Mechelsevest.",
+      result, ++maneuver_index, "Turn right onto Mechelsevest.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto Mechelsevest.",
       "Turn right onto Mechelsevest. Then You will arrive at your destination.",
       "Continue for 60 meters.");
 }
@@ -254,6 +257,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn1stRight) {
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward New York Avenue.",
+      "Bear right toward New York Avenue. Then Turn right onto M Street Northeast.",
       "Bear right toward New York Avenue.",
       "Bear right toward New York Avenue. Then Turn right onto M Street Northeast.",
       "Continue for 80 meters.");
@@ -261,7 +265,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn1stRight) {
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto M Street Northeast.",
-      "Turn right onto M Street Northeast.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto M Street Northeast.",
       "Turn right onto M Street Northeast. Then You will arrive at your destination.",
       "Continue for 60 meters.");
 }
@@ -280,6 +284,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn2ndRight) {
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward New York Avenue.",
+      "Bear right toward New York Avenue. Then Turn right onto Patterson Street Northeast.",
       "Bear right toward New York Avenue.",
       "Bear right toward New York Avenue. Then Turn right onto Patterson Street Northeast.",
       "Continue for 100 meters.");
@@ -287,6 +292,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn2ndRight) {
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto Patterson Street Northeast.",
+      "Turn right. Then You will arrive at your destination.",
       "Turn right onto Patterson Street Northeast.",
       "Turn right onto Patterson Street Northeast. Then You will arrive at your destination.",
       "Continue for 60 meters.");
@@ -306,6 +312,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn3rdRight) {
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward New York Avenue.",
+      "Bear right toward New York Avenue. Then Turn right onto N Street Northeast.",
       "Bear right toward New York Avenue.",
       "Bear right toward New York Avenue. Then Turn right onto N Street Northeast.",
       "Continue for 200 meters.");
@@ -313,7 +320,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn3rdRight) {
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto N Street Northeast.",
-      "Turn right onto N Street Northeast.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto N Street Northeast.",
       "Turn right onto N Street Northeast. Then You will arrive at your destination.",
       "Continue for 60 meters.");
 }
@@ -332,13 +339,14 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn4thRight) {
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward New York Avenue.",
+      "Bear right toward New York Avenue. Then Turn right onto US 50.",
       "Bear right toward New York Avenue.",
       "Bear right toward New York Avenue. Then Turn right onto US 50.", "Continue for 200 meters.");
 
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto US 50/US 1 Alternate/New York Avenue Northeast.",
-      "Turn right onto US 50.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto US 50.",
       "Turn right onto US 50, US 1 Alternate. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -441,14 +449,16 @@ TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnRight) {
 
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.",
+      "Bear right toward N2, Centrum. Then Turn right onto Brusselsesteenweg.",
+      "Bear right toward N2.",
       "Bear right toward N2, Centrum. Then Turn right onto Brusselsesteenweg.",
       "Continue for 100 meters.");
 
   // Verify the turn right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn right onto Brusselsesteenweg/N2.",
-      "Turn right onto Brusselsesteenweg.",
+      "Turn right. Then You will arrive at your destination.", "Turn right onto Brusselsesteenweg.",
       "Turn right onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -466,14 +476,16 @@ TEST_F(InstructionsRightLinkThenTurnExample3, RightLinkTurnLeft) {
 
   // Verify the bear right instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.", "Bear right toward N2.",
+      result, maneuver_index, "Bear right toward N2/Centrum/Brussel.",
+      "Bear right toward N2, Centrum. Then Turn left onto Brusselsesteenweg.",
+      "Bear right toward N2.",
       "Bear right toward N2, Centrum. Then Turn left onto Brusselsesteenweg.",
       "Continue for 100 meters.");
 
   // Verify the turn left instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index, "Turn left onto Brusselsesteenweg/N2.",
-      "Turn left onto Brusselsesteenweg.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Brusselsesteenweg.",
       "Turn left onto Brusselsesteenweg, N2. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }

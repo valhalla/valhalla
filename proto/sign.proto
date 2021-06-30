@@ -1,0 +1,21 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message TripSignElement {
+  optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
+  optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
+  optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
+}
+
+message TripSign {
+  repeated TripSignElement exit_numbers = 1;            // The list of exit numbers, example: 67B
+  repeated TripSignElement exit_onto_streets = 2;       // The list of exit branch street names, examples: I 95 North or Baltimore-Washington Parkway
+  repeated TripSignElement exit_toward_locations = 3;   // The list of exit toward locations, examples: New York or I 395 South
+  repeated TripSignElement exit_names = 4;              // The list of exit names - not used much in US, example: Gettysburg Pike
+  repeated TripSignElement guide_onto_streets = 5;      // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
+  repeated TripSignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
+  repeated TripSignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
+  repeated TripSignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
+  repeated TripSignElement guidance_view_signboards = 9; // The list of guidance view signboards, examples: SI_721701166;1 or SI_721701166;2
+}

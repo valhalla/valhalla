@@ -404,7 +404,7 @@ void PopulateEdge(TripLeg_Edge* edge,
   edge->set_bridge(bridge);
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
-  TripLeg_Sign* sign = edge->mutable_sign();
+  valhalla::TripSign* sign = edge->mutable_sign();
   for (const auto& exit_number : exit_numbers) {
     auto* edge_exit_number = sign->add_exit_numbers();
     edge_exit_number->set_text(exit_number.first);
@@ -477,6 +477,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool fork = false,
                       bool begin_intersecting_edge_name_consistency = false,
                       bool intersecting_forward_edge = false,
+                      const std::string& verbal_succinct_transition_instruction = "",
                       const std::string& verbal_transition_alert_instruction = "",
                       const std::string& verbal_pre_transition_instruction = "",
                       const std::string& verbal_post_transition_instruction = "",
@@ -554,6 +555,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_fork(fork);
   maneuver.set_begin_intersecting_edge_name_consistency(begin_intersecting_edge_name_consistency);
   maneuver.set_intersecting_forward_edge(intersecting_forward_edge);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);

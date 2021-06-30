@@ -45,7 +45,8 @@ struct OSMNode {
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
   uint32_t tagged_access_ : 1; // Was access originally tagged?
-  uint32_t spare1_ : 4;
+  uint64_t private_access_ : 1;
+  uint32_t spare1_ : 3;
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
@@ -507,6 +508,22 @@ struct OSMNode {
    */
   bool tagged_access() const {
     return tagged_access_;
+  }
+
+  /**
+   * Sets the private_access flag.
+   * @param  private_access bool.
+   */
+  void set_private_access(const bool private_access) {
+    private_access_ = private_access;
+  }
+
+  /**
+   * Get the private_access flag.
+   * @return  Returns private_access flag.
+   */
+  bool private_access() const {
+    return private_access_;
   }
 };
 

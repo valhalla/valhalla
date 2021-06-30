@@ -938,7 +938,7 @@ AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx)
 }
 
 // Gets a non-const sign from existing tile data.
-Sign& GraphTileBuilder::sign(const size_t idx) {
+valhalla::baldr::Sign& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount()) {
     return signs_[idx];
   }
@@ -946,7 +946,7 @@ Sign& GraphTileBuilder::sign(const size_t idx) {
 }
 
 // Gets a sign builder at the specified index.
-Sign& GraphTileBuilder::sign_builder(const size_t idx) {
+valhalla::baldr::Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   if (idx < header_->signcount()) {
     return signs_builder_[idx];
   }

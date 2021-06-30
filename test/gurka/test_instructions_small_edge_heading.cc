@@ -58,7 +58,8 @@ TEST_F(InstructionsSmallEdgeHeading, LeftTurn) {
   // Verify left turn
   // NOTE: old code had "Keep straight to take Boltív köz."
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left onto Boltív köz.", "Turn left onto Boltív köz.",
+      result, maneuver_index, "Turn left onto Boltív köz.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto Boltív köz.",
       "Turn left onto Boltív köz. Then You will arrive at your destination.",
       "Continue for less than 10 meters.");
 }

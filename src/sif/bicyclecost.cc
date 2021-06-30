@@ -26,7 +26,7 @@ namespace {
 
 // Base transition costs
 constexpr float kDefaultAlleyPenalty = 60.0f; // Seconds
-constexpr float kDefaultGatePenalty = 600.0f; // Seconds
+constexpr float kDefaultGatePenalty = 300.0f; // Seconds
 constexpr float kDefaultBssCost = 120.0f;     // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 
