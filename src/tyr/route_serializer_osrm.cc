@@ -1508,7 +1508,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       output_leg->emplace("annotation", serialize_annotations(path_leg));
     }
 
-    // silent/via waypoints
+    // Add via waypoints to the leg
     output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
 
     // Add incidents to the leg
