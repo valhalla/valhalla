@@ -48,6 +48,13 @@ TEST(Standalone, Maxwidth) {
   }
 
   for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                         {{"/costing_options/" + costing + "/width", "1.9"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
     EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
                                   {{"/costing_options/" + costing + "/width", "2.1"}}),
                  valhalla_exception_t);
@@ -94,6 +101,13 @@ TEST(Standalone, Maxheight) {
   for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
                                          {{"/costing_options/" + costing + "/height", "1.8"}});
+    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+    gurka::assert::raw::expect_path(result, {"AB", "BI"});
+  }
+
+  for (const auto& costing : kSupportedCostingTypes) {
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
+                                         {{"/costing_options/" + costing + "/height", "1.9"}});
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
     gurka::assert::raw::expect_path(result, {"AB", "BI"});
   }
