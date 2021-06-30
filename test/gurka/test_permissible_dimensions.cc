@@ -35,14 +35,14 @@ TEST(Standalone, Maxwidth) {
 
   for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
-                                   {{"/costing_options/" + costing + "/width", "2.0"}});
+                                         {{"/costing_options/" + costing + "/width", "2.0"}});
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
   }
 
   for (const auto& costing : kSupportedCostingTypes) {
     const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, costing,
-                                   {{"/costing_options/" + costing + "/width", "1.8"}});
+                                         {{"/costing_options/" + costing + "/width", "1.8"}});
     ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
     gurka::assert::raw::expect_path(result, {"AB", "BI"});
   }
