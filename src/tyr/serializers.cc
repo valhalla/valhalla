@@ -179,6 +179,9 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   return waypoint;
 }
 
+/*
+ * This function serializes the via_waypoints object on the leg.
+ */
 valhalla::baldr::json::MapPtr via_waypoint(const valhalla::Location& location,
                                            const uint64_t geometry_idx) {
 
@@ -234,6 +237,11 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   return waypoints;
 }
 
+/*
+ * This function takes any waypoints (excluding origin and destination) and walks the shape
+ * for a match.  When a match is found, we store the geometry index.
+ * We use the valhalla midgard `equal` function to check for equality based on precision.
+ */
 json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointLL>& shape) {
   // Create a vector of indexes based on the number of locations.
   auto locs = *options.mutable_locations();
