@@ -75,7 +75,7 @@ public:
   void setupDFSEulerCycle();
   std::map<int, std::vector<int>> getAdjacencyList();
   void dfsEulerCycle(int startNodeIndex);
-  float getEdgeCost(int i, int j);
+  CPEdge* getCPEdge(int i, int j);
 };
 
 } // namespace thor

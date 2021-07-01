@@ -319,7 +319,12 @@ void thor_worker_t::chinese_postman(Api& request) {
         if (i == j) {
           distanceMatrix[i][j] = 0;
         } else {
-          distanceMatrix[i][j] = G.getEdgeCost(i, j);
+          auto* cp_edge = G.getCPEdge(i, j);
+          if (cp_edge) {
+            distanceMatrix[i][j] = cp_edge->cost.cost;
+          } else {
+            distanceMatrix[i][j] = valhalla::thor::NOT_CONNECTED;
+          }
         }
       }
     }
