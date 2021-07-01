@@ -223,6 +223,20 @@ PathMatrix computeFloydWarshallCustom(DistanceMatrix& dm) {
   }
 }
 
+double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
+  Cost cost{};
+  // fetch the graph objects
+  graph_tile_ptr tile;
+  const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
+  // uint8_t flow_sources;
+  // // Update the time information even if time is invariant to account for timezones
+  // const auto seconds_offset = invariant ? 0.f : cost.secs;
+  // const auto offset_time =
+  //       node ? time_info.forward(seconds_offset, static_cast<int>(node->timezone())) : time_info;
+  // cost = costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources); // * edge_pct;
+  return edge->length();
+}
+
 std::vector<baldr::GraphId>
 computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing) {
   std::vector<baldr::GraphId> edge_ids;
@@ -321,7 +335,7 @@ void thor_worker_t::chinese_postman(Api& request) {
         } else {
           auto* cp_edge = G.getCPEdge(i, j);
           if (cp_edge) {
-            distanceMatrix[i][j] = cp_edge->cost.cost;
+            distanceMatrix[i][j] = getEdgeCost(*reader, cp_edge->graph_id);
           } else {
             distanceMatrix[i][j] = valhalla::thor::NOT_CONNECTED;
           }
