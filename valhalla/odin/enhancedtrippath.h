@@ -495,6 +495,14 @@ public:
     return mutable_intersecting_edge_->use();
   }
 
+  bool has_sign() const {
+    return mutable_intersecting_edge_->has_sign();
+  }
+
+  const ::valhalla::TripSign& sign() const {
+    return mutable_intersecting_edge_->sign();
+  }
+
   ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
   }
