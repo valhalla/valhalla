@@ -3,6 +3,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/multi_array.hpp>
+#include <boost/multi_array/subarray.hpp>
 
 #include "midgard/util.h"
 #include "sif/costconstants.h"
@@ -21,6 +22,18 @@ namespace thor {
 
 typedef boost::multi_array<double, 2> DistanceMatrix;
 typedef DistanceMatrix::index DistanceMatrixIndex;
+
+typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
+typedef PathMatrix::index PathMatrixIndex;
+
+void printDistanceMatrix(DistanceMatrix dm) {
+  for (int i = 0; i < dm.shape()[0]; i++) {
+    for (int j = 0; j < dm.shape()[1]; j++) {
+      std::cout << dm[i][j] << ", ";
+    }
+    std::cout << "\n";
+  }
+}
 
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
@@ -153,7 +166,29 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
   return matrix(request);
 }
 
-void computeFloydWarshallCustom() {
+void computeFloydWarshallCustom(DistanceMatrix& dm) {
+  if (dm.shape()[0] == dm.shape()[1]) {
+    for (int k = 0; k < dm.shape()[0]; k++) {
+      for (int i = 0; i < dm.shape()[0]; i++) {
+        for (int j = 0; j < dm.shape()[0]; j++) {
+          if (i == j || j == k || k == i) {
+            continue;
+          }
+          bool is_connected = (dm[i][k] != valhalla::thor::NOT_CONNECTED &&
+                               dm[k][j] != valhalla::thor::NOT_CONNECTED);
+          if (!is_connected) {
+            continue;
+          } else {
+            double alt_distance = dm[i][k] + dm[k][j];
+            if (alt_distance < dm[i][j] && is_connected) {
+              dm[i][j] = alt_distance;
+              // Update path matrix here.
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 std::vector<baldr::GraphId>
@@ -256,12 +291,10 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     // print
-    for (int i = 0; i < G.numVertices(); i++) {
-      for (int j = 0; j < G.numVertices(); j++) {
-        std::cout << distanceMatrix[i][j] << ", ";
-      }
-      std::cout << "\n";
-    }
+    printDistanceMatrix(distanceMatrix);
+    computeFloydWarshallCustom(distanceMatrix);
+    std::cout << "Result\n";
+    printDistanceMatrix(distanceMatrix);
 
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming

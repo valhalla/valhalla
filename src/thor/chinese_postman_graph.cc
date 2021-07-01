@@ -172,7 +172,7 @@ float ChinesePostmanGraph::getEdgeCost(int i, int j) {
   if (e.second) {
     return this->G[e.first].cost.cost;
   } else {
-    return 9999; // Not connected directly
+    return valhalla::thor::NOT_CONNECTED; // Not connected directly
   }
 }
 

@@ -16,6 +16,8 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
+constexpr double NOT_CONNECTED{9999.0};
+
 struct CPVertex {
   std::string vertex_id;
   GraphId graph_id;
