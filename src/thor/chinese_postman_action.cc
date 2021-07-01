@@ -35,6 +35,19 @@ void printDistanceMatrix(DistanceMatrix dm) {
   }
 }
 
+void printPathMatrix(PathMatrix pm) {
+  for (int i = 0; i < pm.shape()[0]; i++) {
+    for (int j = 0; j < pm.shape()[1]; j++) {
+      std::cout << "Path " << i << ", " << j << " : ";
+      for (auto& it : pm[i][j]) {
+        // Print the values
+        cout << it << ", ";
+      }
+      std::cout << "\n";
+    }
+  }
+}
+
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
@@ -166,8 +179,21 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
   return matrix(request);
 }
 
-void computeFloydWarshallCustom(DistanceMatrix& dm) {
+PathMatrix computeFloydWarshallCustom(DistanceMatrix& dm) {
   if (dm.shape()[0] == dm.shape()[1]) {
+    // create path matrix
+    PathMatrix pm(boost::extents[dm.shape()[0]][dm.shape()[0]]);
+    // populate the path matrix
+    for (int i = 0; i < pm.shape()[0]; i++) {
+      for (int j = 0; j < pm.shape()[0]; j++) {
+        if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
+          pm[i][j] = std::vector<int>{};
+        } else {
+          pm[i][j] = std::vector<int>{i};
+        }
+      }
+    }
+
     for (int k = 0; k < dm.shape()[0]; k++) {
       for (int i = 0; i < dm.shape()[0]; i++) {
         for (int j = 0; j < dm.shape()[0]; j++) {
@@ -183,11 +209,17 @@ void computeFloydWarshallCustom(DistanceMatrix& dm) {
             if (alt_distance < dm[i][j] && is_connected) {
               dm[i][j] = alt_distance;
               // Update path matrix here.
+              std::vector<int> new_path;
+              new_path.reserve(pm[i][k].size() + pm[k][j].size());
+              new_path.insert(new_path.end(), pm[i][k].begin(), pm[i][k].end());
+              new_path.insert(new_path.end(), pm[k][j].begin(), pm[k][j].end());
+              pm[i][j] = new_path;
             }
           }
         }
       }
     }
+    return pm;
   }
 }
 
@@ -279,8 +311,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
   } else {
-    DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
+    std::cout << "Non Ideal graph" << std::endl;
 
+    DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
       for (int j = 0; j < G.numVertices(); j++) {
         if (i == j) {
@@ -292,26 +325,27 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
     // print
     printDistanceMatrix(distanceMatrix);
-    computeFloydWarshallCustom(distanceMatrix);
+    PathMatrix pm = computeFloydWarshallCustom(distanceMatrix);
     std::cout << "Result\n";
     printDistanceMatrix(distanceMatrix);
+    // Print Path Matrix
+    printPathMatrix(pm);
 
-    std::cout << "Non Ideal graph" << std::endl;
-    std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
-    std::vector<midgard::PointLL> underPoints;
-    std::vector<midgard::PointLL> locations;
-    for (auto const& v : G.getUnbalancedVertices()) {
-      auto l = getPointLL(GraphId(v.first));
-      std::cout << "location (" << v.first << "): " << l.lng() << ", " << l.lat() << std::endl;
-      locations.push_back(l);
-      if (v.second > 0) {
-        overPoints.push_back(l);
-      } else if (v.second < 0) {
-        underPoints.push_back(l);
-      }
-    }
-    std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
-    std::cout << "\nmatrix output:\n" << matrixOutput;
+    // std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
+    // std::vector<midgard::PointLL> underPoints;
+    // std::vector<midgard::PointLL> locations;
+    // for (auto const& v : G.getUnbalancedVertices()) {
+    //   auto l = getPointLL(GraphId(v.first));
+    //   std::cout << "location (" << v.first << "): " << l.lng() << ", " << l.lat() << std::endl;
+    //   locations.push_back(l);
+    //   if (v.second > 0) {
+    //     overPoints.push_back(l);
+    //   } else if (v.second < 0) {
+    //     underPoints.push_back(l);
+    //   }
+    // }
+    // std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
+    // std::cout << "\nmatrix output:\n" << matrixOutput;
 
     // Sample usage of Hungarian algorithm
     vector<vector<double>> costMatrix = {{82, 83, 69, 92},
