@@ -223,6 +223,17 @@ PathMatrix computeFloydWarshallCustom(DistanceMatrix& dm) {
   }
 }
 
+bool isStronglyConnectedGraph(DistanceMatrix& dm) {
+  for (int i = 0; i < dm.shape()[0]; i++) {
+    for (int j = 0; j < dm.shape()[0]; j++) {
+      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   Cost cost{};
   // fetch the graph objects
@@ -349,6 +360,13 @@ void thor_worker_t::chinese_postman(Api& request) {
     printDistanceMatrix(distanceMatrix);
     // Print Path Matrix
     printPathMatrix(pm);
+
+    // Check if the graph is not strongly connected
+    if (!isStronglyConnectedGraph(distanceMatrix)) {
+      throw valhalla_exception_t(450);
+    }
+
+    // Do matching here
 
     // std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
     // std::vector<midgard::PointLL> underPoints;
