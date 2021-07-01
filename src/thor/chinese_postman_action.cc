@@ -2,6 +2,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
+#include <boost/multi_array.hpp>
 
 #include "midgard/util.h"
 #include "sif/costconstants.h"
@@ -17,6 +18,9 @@ using namespace valhalla::sif;
 
 namespace valhalla {
 namespace thor {
+
+typedef boost::multi_array<double, 2> DistanceMatrix;
+typedef DistanceMatrix::index DistanceMatrixIndex;
 
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
@@ -149,6 +153,9 @@ std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> so
   return matrix(request);
 }
 
+void computeFloydWarshallCustom() {
+}
+
 std::vector<baldr::GraphId>
 computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing) {
   std::vector<baldr::GraphId> edge_ids;
@@ -237,6 +244,25 @@ void thor_worker_t::chinese_postman(Api& request) {
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);
     std::cout << "Ideal graph" << std::endl;
   } else {
+    DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
+
+    for (int i = 0; i < G.numVertices(); i++) {
+      for (int j = 0; j < G.numVertices(); j++) {
+        if (i == j) {
+          distanceMatrix[i][j] = 0;
+        } else {
+          distanceMatrix[i][j] = G.getEdgeCost(i, j);
+        }
+      }
+    }
+    // print
+    for (int i = 0; i < G.numVertices(); i++) {
+      for (int j = 0; j < G.numVertices(); j++) {
+        std::cout << distanceMatrix[i][j] << ", ";
+      }
+      std::cout << "\n";
+    }
+
     std::cout << "Non Ideal graph" << std::endl;
     std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
     std::vector<midgard::PointLL> underPoints;

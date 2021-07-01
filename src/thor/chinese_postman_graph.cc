@@ -167,5 +167,14 @@ void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
   this->reversedEulerPath.push_back(startNodeIndex);
 }
 
+float ChinesePostmanGraph::getEdgeCost(int i, int j) {
+  auto e = boost::edge(i, j, this->G);
+  if (e.second) {
+    return this->G[e.first].cost.cost;
+  } else {
+    return 9999; // Not connected directly
+  }
+}
+
 } // namespace thor
 } // namespace valhalla
