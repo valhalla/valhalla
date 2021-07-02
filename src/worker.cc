@@ -1,17 +1,24 @@
 #include <iostream>
 #include <sstream>
+#include <typeinfo>
 #include <unordered_map>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/location.h"
+#include "loki/worker.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "odin/worker.h"
 #include "proto_conversions.h"
 #include "sif/costfactory.h"
+#include "thor/worker.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cpp-statsd-client/StatsdClient.hpp>
 
 using namespace valhalla;
 #ifdef HAVE_HTTP
@@ -19,279 +26,115 @@ using namespace prime_server;
 #endif
 
 namespace {
-// Credits: http://werkzeug.pocoo.org/
-const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES{
-    // 1xx
-    {100, "Continue"},
-    {101, "Switching Protocols"},
-    {102, "Processing"},
 
-    // 2xx
-    {200, "OK"},
-    {201, "Created"},
-    {202, "Accepted"},
-    {203, "Non Authoritative Information"},
-    {204, "No Content"},
-    {205, "Reset Content"},
-    {206, "Partial Content"},
-    {207, "Multi Status"},
-    {226, "IM Used"}, // see RFC 322
+// clang-format off
+constexpr const char* HTTP_400 = "Bad Request";
+constexpr const char* HTTP_404 = "Not Found";
+constexpr const char* HTTP_405 = "Method Not Allowed";
+constexpr const char* HTTP_500 = "Internal Server Error";
+constexpr const char* HTTP_501 = "Not Implemented";
+constexpr const char* HTTP_503 = "Service Unavailable";
+constexpr const char* OSRM_INVALID_URL = R"({"code":"InvalidUrl","message":"URL string is invalid."})";
+constexpr const char* OSRM_INVALID_SERVICE = R"({"code":"InvalidService","message":"Service name is invalid."})";
+constexpr const char* OSRM_INVALID_OPTIONS = R"({"code":"InvalidOptions","message":"Options are invalid."})";
+constexpr const char* OSRM_INVALID_VALUE = R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})";
+constexpr const char* OSRM_NO_ROUTE = R"({"code":"NoRoute","message":"Impossible route between points"})";
+constexpr const char* OSRM_NO_SEGMENT = R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})";
+constexpr const char* OSRM_SHUTDOWN = R"({"code":"ServiceUnavailable","message":"The service is shutting down."})";
+constexpr const char* OSRM_SERVER_ERROR = R"({"code":"InvalidUrl","message":"Failed to serialize route."})";
+constexpr const char* OSRM_DISTANCE_EXCEEDED = R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})";
+constexpr const char* OSRM_PERIMETER_EXCEEDED = R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})";
+constexpr const char* OSRM_BREAKAGE_EXCEEDED = R"({"code":"BreakageDistanceExceeded","message":"All coordinates are too far away from each other"})";
 
-    // 3xx
-    {300, "Multiple Choices"},
-    {301, "Moved Permanently"},
-    {302, "Found"},
-    {303, "See Other"},
-    {304, "Not Modified"},
-    {305, "Use Proxy"},
-    {307, "Temporary Redirect"},
-
-    // 4xx
-    {400, "Bad Request"},
-    {401, "Unauthorized"},
-    {402, "Payment Required"}, // unuse
-    {403, "Forbidden"},
-    {404, "Not Found"},
-    {405, "Method Not Allowed"},
-    {406, "Not Acceptable"},
-    {407, "Proxy Authentication Required"},
-    {408, "Request Timeout"},
-    {409, "Conflict"},
-    {410, "Gone"},
-    {411, "Length Required"},
-    {412, "Precondition Failed"},
-    {413, "Request Entity Too Large"},
-    {414, "Request URI Too Long"},
-    {415, "Unsupported Media Type"},
-    {416, "Requested Range Not Satisfiable"},
-    {417, "Expectation Failed"},
-    {418, "I\'m a teapot"}, // see RFC 232
-    {422, "Unprocessable Entity"},
-    {423, "Locked"},
-    {424, "Failed Dependency"},
-    {426, "Upgrade Required"},
-    {428, "Precondition Required"}, // see RFC 658
-    {429, "Too Many Requests"},
-    {431, "Request Header Fields Too Large"},
-    {449, "Retry With"}, // proprietary MS extension
-
-    // 5xx
-    {500, "Internal Server Error"},
-    {501, "Not Implemented"},
-    {502, "Bad Gateway"},
-    {503, "Service Unavailable"},
-    {504, "Gateway Timeout"},
-    {505, "HTTP Version Not Supported"},
-    {507, "Insufficient Storage"},
-    {510, "Not Extended"},
+using ve = valhalla_exception_t;
+const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
+    {100, {100, "Failed to parse json request", 400, HTTP_400, OSRM_INVALID_URL, "json_parse_failed"}},
+    {101, {101, "Try a POST or GET request instead", 405, HTTP_405, OSRM_INVALID_URL, "wrong_http_method"}},
+    {102, {102, "The service is shutting down", 503, HTTP_503, OSRM_SHUTDOWN, "shutting_down"}},
+    {106, {106, "Try any of", 404, HTTP_404, OSRM_INVALID_SERVICE, "wrong_action"}},
+    {107, {107, "Not Implemented", 501, HTTP_501, OSRM_INVALID_SERVICE, "empty_action"}},
+    {110, {110, "Insufficiently specified required parameter 'locations'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "locations_parse_failed"}},
+    {111, {111, "Insufficiently specified required parameter 'time'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "time_parse_failed"}},
+    {112, {112, "Insufficiently specified required parameter 'locations' or 'sources & targets'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "matrix_locations_parse_failed"}},
+    {113, {113, "Insufficiently specified required parameter 'contours'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "contours_parse_failed"}},
+    {114, {114, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
+    {120, {120, "Insufficient number of locations provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_locations"}},
+    {121, {121, "Insufficient number of sources provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_sources"}},
+    {122, {122, "Insufficient number of targets provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_targets"}},
+    {123, {123, "Insufficient shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_shape"}},
+    {124, {124, "No edge/node costing provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "costing_required"}},
+    {125, {125, "No costing method found", 400, HTTP_400, OSRM_INVALID_OPTIONS, "wrong_costing"}},
+    {126, {126, "No shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_required"}},
+    {127, {127, "Recostings require both name and costing parameters", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {130, {130, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, "location_parse_failed"}},
+    {131, {131, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, "source_parse_failed"}},
+    {132, {132, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, "target_parse_failed"}},
+    {133, {133, "Failed to parse avoid", 400, HTTP_400, OSRM_INVALID_VALUE, "avoid_parse_failed"}},
+    {134, {134, "Failed to parse shape", 400, HTTP_400, OSRM_INVALID_VALUE, "shape_parse_failed"}},
+    {135, {135, "Failed to parse trace", 400, HTTP_400, OSRM_INVALID_VALUE, "trace_parse_failed"}},
+    {136, {136, "durations size not compatible with trace size", 400, HTTP_400, OSRM_INVALID_VALUE, "trace_duration_mismatch"}},
+    {137, {137, "Failed to parse polygon", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
+    {140, {140, "Action does not support multimodal costing", 400, HTTP_400, OSRM_INVALID_VALUE, "no_multimodal"}},
+    {141, {141, "Arrive by for multimodal not implemented yet", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_multimodal"}},
+    {142, {142, "Arrive by not implemented for isochrones", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_isochrones"}},
+    {143, {143, "ignore_closures in costing and exclude_closures in search_filter cannot both be specified", 400, HTTP_400, OSRM_INVALID_VALUE, "closures_conflict"}},
+    {150, {150, "Exceeded max locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_locations"}},
+    {151, {151, "Exceeded max time", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_time"}},
+    {152, {152, "Exceeded max contours", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_contours"}},
+    {153, {153, "Too many shape points", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_shape"}},
+    {154, {154, "Path distance exceeds the max distance limit", 400, HTTP_400, OSRM_DISTANCE_EXCEEDED, "too_large_distance"}},
+    {155, {155, "Outside the valid walking distance at the beginning or end of a multimodal route", 400, HTTP_400, OSRM_INVALID_URL, "too_large_first_last_walking_distance"}},
+    {156, {156, "Outside the valid walking distance between stops of a multimodal route", 400, HTTP_400, OSRM_INVALID_URL, "too_large_in_between_walking_distance"}},
+    {157, {157, "Exceeded max avoid locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_avoids"}},
+    {158, {158, "Input trace option is out of bounds", 400, HTTP_400, OSRM_INVALID_VALUE, "trace_option_invalid"}},
+    {159, {159, "use_timestamps set with no timestamps present", 400, HTTP_400, OSRM_INVALID_VALUE, "missing_timestamps"}},
+    {160, {160, "Date and time required for origin for date_type of depart at", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_depart_date"}},
+    {161, {161, "Date and time required for destination for date_type of arrive by", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_arrive_date"}},
+    {162, {162, "Date and time is invalid.  Format is YYYY-MM-DDTHH:MM", 400, HTTP_400, OSRM_INVALID_VALUE, "date_parse_failed"}},
+    {163, {163, "Invalid date_type", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_date_type"}},
+    {164, {164, "Invalid shape format", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_shape_format"}},
+    {165, {165, "Date and time required for destination for date_type of invariant", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_invariant_date"}},
+    {167, {167, "Exceeded maximum circumference for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
+    {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
+    {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
+    {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {199, {199, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
+    {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
+    {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
+    {202, {202, "Could not build directions for TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "directions_building_failed"}},
+    {203, {203, "The service is shutting down", 503, HTTP_503, OSRM_SHUTDOWN, "shutting_down"}},
+    {210, {210, "Trip path does not have any nodes", 400, HTTP_400, OSRM_INVALID_URL, "no_nodes"}},
+    {211, {211, "Trip path has only one node", 400, HTTP_400, OSRM_INVALID_URL, "one_node"}},
+    {212, {212, "Trip must have at least 2 locations", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_locations"}},
+    {213, {213, "Error - No shape or invalid node count", 400, HTTP_400, OSRM_INVALID_URL, "shape_parse_failed"}},
+    {220, {220, "Turn degree out of range for cardinal direction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_turn_degree"}},
+    {230, {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_turn"}},
+    {231, {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_two"}},
+    {232, {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_three"}},
+    {299, {299, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
+    {312, {312, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, ""}},
+    {313, {313, "'resample_distance' must be >= ", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {314, {314, "Too many shape points", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {400, {400, "Unknown action", 400, HTTP_400, OSRM_INVALID_SERVICE, ""}},
+    {401, {401, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_SERVER_ERROR, ""}},
+    {402, {402, "The service is shutting down", 503, HTTP_503, OSRM_SHUTDOWN, ""}},
+    {420, {420, "Failed to parse correlated location", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {421, {421, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {422, {422, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {423, {423, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {424, {424, "Failed to parse shape", 400, HTTP_400, OSRM_INVALID_VALUE, ""}},
+    {430, {430, "Exceeded max iterations in CostMatrix::SourceToTarget", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {440, {440, "Cannot reach destination - too far from a transit stop", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {441, {441, "Location is unreachable", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {442, {442, "No path could be found for input", 400, HTTP_400, OSRM_NO_ROUTE, ""}},
+    {443, {443, "Exact route match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, ""}},
+    {444, {444, "Map Match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, ""}},
+    {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, ""}},
+    {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, ""}},
 };
 
-// from valhalla error code to http status code
-const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
-    {100, 400}, {101, 405}, {102, 503}, {106, 404}, {107, 501},
-
-    {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
-
-    {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
-
-    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400}, {137, 400},
-
-    {140, 400}, {141, 501}, {142, 501}, {143, 400},
-
-    {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
-    {158, 400}, {159, 400},
-
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400}, {167, 400},
-
-    {170, 400}, {171, 400}, {172, 400},
-
-    {199, 400},
-
-    {200, 500}, {201, 500}, {202, 500}, {203, 503},
-
-    {210, 400}, {211, 400}, {212, 400}, {213, 400},
-
-    {220, 400},
-
-    {230, 400}, {231, 400}, {232, 400},
-
-    {299, 400},
-
-    {304, 404}, {305, 501},
-
-    {310, 400}, {311, 400}, {312, 400}, {313, 400}, {314, 400},
-
-    {399, 400},
-
-    {400, 400}, {401, 500}, {402, 503},
-
-    {420, 400}, {421, 400}, {422, 400}, {423, 400}, {424, 400},
-
-    {430, 400},
-
-    {440, 400}, {441, 400}, {442, 400}, {443, 400}, {444, 400}, {445, 400},
-
-    {499, 400},
-
-    {500, 500}, {501, 500}, {502, 400},
-
-    {599, 400},
-};
-
-const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
-    // loki project 1xx
-    {100, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {101, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {102, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
-    {106, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {107, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {110, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {111, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {112, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {113, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {114, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-
-    {120, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {121, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {122, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {123, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {124, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {125, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {126, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {127, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-
-    {130,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {131,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {132,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {133,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {134,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {135,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {136,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {137,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-
-    {140,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {141,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {142,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {143,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-
-    {150,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {151,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {152,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {153,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    // OSRM has no equivalent message for this case so we return our own
-    {154, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
-    {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {157,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {158,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {159,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-
-    {160, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {161, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {162,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {163,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {164,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {167,
-     R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})"},
-
-    {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
-    {171,
-     R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
-    {172,
-     R"({"code":"BreakageDistanceExceeded","message":"All coordinates are too far away from each other"})"},
-
-    {199, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    // odin project 2xx
-    {200, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {201, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {202, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {203, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
-
-    {210, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {211, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {212, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {213, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {220, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {230, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {231, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {232, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {299, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    // skadi project 3xx
-    {304, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {305, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-
-    {310, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {311, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {312, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {313, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {314,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-
-    {399, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    // thor project 4xx
-    {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
-    {402, R"({"code":"ServiceUnavailable","message":"The service is shutting down."})"},
-
-    {420,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {421,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {422,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {423,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {424,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-
-    {430, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {440, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {441, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {442, R"({"code":"NoRoute","message":"Impossible route between points"})"},
-    {443,
-     R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
-    {444,
-     R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
-    {445, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {499, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    // tyr project 5xx
-    {500, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {501, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {502, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-
-    {599, R"({"code":"InvalidUrl","message":"URL string is invalid."})"}};
+// clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
@@ -1087,15 +930,14 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
 namespace valhalla {
 
-valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
-    : std::runtime_error(""), code(code), extra(extra) {
-  auto code_iter = error_codes.find(code);
-  message = (code_iter == error_codes.cend() ? "" : code_iter->second);
-  message += (extra ? ":" + *extra : "");
-  auto http_code_iter = ERROR_TO_STATUS.find(code);
-  http_code = (http_code_iter == ERROR_TO_STATUS.cend() ? 0 : http_code_iter->second);
-  auto http_message_iter = HTTP_STATUS_CODES.find(http_code);
-  http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
+valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& extra)
+    : std::runtime_error("") {
+  auto code_itr = error_codes.find(code);
+  if (code_itr != error_codes.cend()) {
+    *this = code_itr->second;
+  }
+  if (!extra.empty())
+    message += ":" + extra;
 }
 
 void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
@@ -1105,18 +947,14 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, *api.mutable_options());
 }
 
-std::string jsonify_error(const valhalla_exception_t& exception, const Api& request) {
+std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   // get the http status
   std::stringstream body;
 
   // overwrite with osrm error response
   if (request.options().format() == Options::osrm) {
-    auto found = OSRM_ERRORS_CODES.find(exception.code);
-    if (found == OSRM_ERRORS_CODES.cend()) {
-      found = OSRM_ERRORS_CODES.find(199);
-    }
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
-         << (request.options().has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "")
+         << exception.osrm_error << (request.options().has_jsonp() ? ")" : "");
   } // valhalla error response
   else {
     // build up the json map
@@ -1128,6 +966,23 @@ std::string jsonify_error(const valhalla_exception_t& exception, const Api& requ
     body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
          << (request.options().has_jsonp() ? ")" : "");
   }
+
+  // write a few stats about the error
+  auto worker = exception.code < 200 || (exception.code >= 300 && exception.code < 400)
+                    ? ".loki."
+                    : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
+  auto action = Options_Action_Enum_Name(request.options().action());
+
+  auto* err_stat = request.mutable_info()->mutable_statistics()->Add();
+  err_stat->set_key(action + worker + exception.statsd_key);
+  err_stat->set_value(1);
+  err_stat->set_type(count);
+
+  auto* stat = request.mutable_info()->mutable_statistics()->Add();
+  stat->set_key(action + worker + "http_" + std::to_string(exception.http_code));
+  stat->set_value(1);
+  stat->set_type(count);
+
   return body.str();
 }
 
@@ -1196,7 +1051,7 @@ const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filen
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
-                                 const Api& request) {
+                                 Api& request) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message,
                            jsonify_error(exception, request),
@@ -1241,12 +1096,80 @@ worker_t::result_t to_response(const std::string& data,
 
 #endif
 
-service_worker_t::service_worker_t() : interrupt(nullptr) {
+// TODO: when we want to use this in mjolnir too we can move this into a private header
+// this is a wrapper of a third party lib that provides a client for statsd integration
+// since metrics are important both for on- and offline processing we keep the impl here
+// running services can use it and also data ETL that lives in mjolnir can use it
+struct statsd_client_t : public Statsd::StatsdClient {
+  statsd_client_t(const boost::property_tree::ptree& conf)
+      : Statsd::StatsdClient(conf.get<std::string>("statsd.host", ""),
+                             conf.get<int>("statsd.port", 8125),
+                             conf.get<std::string>("statsd.prefix", ""),
+                             conf.get<uint64_t>("statsd.batch_size", 500),
+                             0) {
+    auto added_tags = conf.get_child_optional("statsd.tags");
+    if (added_tags) {
+      for (const auto& tag : *added_tags) {
+        tags.push_back(tag.second.data());
+      }
+    }
+  }
+  std::vector<std::string> tags;
+};
+
+service_worker_t::service_worker_t(const boost::property_tree::ptree& config)
+    : interrupt(nullptr), statsd_client(new statsd_client_t(config)) {
 }
 service_worker_t::~service_worker_t() {
 }
 void service_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
   interrupt = interrupt_function;
+}
+void service_worker_t::cleanup() {
+  // sends metrics to statsd server over udp
+  statsd_client->flush();
+}
+void service_worker_t::enqueue_statistics(Api& api) const {
+  if (!api.has_info() || api.info().statistics().empty())
+    return;
+  for (const auto& stat : api.info().statistics()) {
+    float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
+    switch (stat.type()) {
+      case count:
+        statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,
+                             statsd_client->tags);
+        break;
+      case gauge:
+        statsd_client->gauge(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                             statsd_client->tags);
+        break;
+      case timing:
+        statsd_client->timing(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                              statsd_client->tags);
+        break;
+      case set:
+        statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                           statsd_client->tags);
+        break;
+    }
+  }
+}
+midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
+  // we copy the captures that could go out of scope
+  auto start = std::chrono::steady_clock::now();
+  return midgard::Finally<std::function<void()>>([this, &api, start]() {
+    auto elapsed = std::chrono::steady_clock::now() - start;
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
+                      ? ".loki."
+                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
+    auto action = Options_Action_Enum_Name(api.options().action());
+
+    auto* stat = api.mutable_info()->mutable_statistics()->Add();
+    stat->set_key(action + worker + "latency_ms");
+    stat->set_value(e);
+    stat->set_type(timing);
+  });
 }
 
 } // namespace valhalla

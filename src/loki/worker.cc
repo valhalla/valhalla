@@ -149,7 +149,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : config(config), reader(graph_reader),
+    : service_worker_t(config), config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"), graph_reader)
                            : nullptr),
@@ -245,6 +245,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 }
 
 void loki_worker_t::cleanup() {
+  service_worker_t::cleanup();
   if (reader->OverCommitted()) {
     reader->Trim();
   }
@@ -261,10 +262,11 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
 
-  // grab the request info
+  // grab the request info and make sure to record any metrics before we are done
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Loki Request " + std::to_string(info.id));
   Api request;
+  prime_server::worker_t::result_t result{true, {}, ""};
   try {
     // request parsing
     auto http_request =
@@ -275,17 +277,11 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 
     // check there is a valid action
     if (!options.has_action() || actions.find(options.action()) == actions.cend()) {
-      return jsonify_error({106, action_str}, info, request);
+      throw valhalla_exception_t{106, action_str};
     }
 
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
-
-    prime_server::worker_t::result_t result{
-        true,
-        {},
-        "",
-    };
     // do request specific processing
     switch (options.action()) {
       case Options::route:
@@ -323,16 +319,22 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet
-        return jsonify_error({107}, info, request);
+        throw valhalla_exception_t{107};
     }
-    return result;
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    return jsonify_error(e, info, request);
+    result = jsonify_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    return jsonify_error({199, std::string(e.what())}, info, request);
+    result = jsonify_error({199, std::string(e.what())}, info, request);
   }
+
+  // keep track of the metrics
+  if (!result.intermediate)
+    enqueue_statistics(request);
+
+  // keep track of the metrics if the request is going back to the client
+  return result;
 }
 
 void run_service(const boost::property_tree::ptree& config) {

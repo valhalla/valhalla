@@ -76,9 +76,6 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeDirections(Api& request) {
-  // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "tyr::serializeDirections");
-
   // serialize them
   switch (request.options().format()) {
     case Options_Format_osrm:

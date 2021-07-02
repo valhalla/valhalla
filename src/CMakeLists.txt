@@ -150,6 +150,9 @@ function(valhalla_module)
 endfunction()
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
+#option(BUILD_TESTS "Build tests" OFF)
+SET(BUILD_TESTS OFF CACHE BOOL "ignore test targets" FORCE)
+add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/third_party/cpp-statsd-client)
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
@@ -222,6 +225,7 @@ target_include_directories(valhalla
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
@@ -231,7 +235,8 @@ target_link_libraries(valhalla
     ${libvalhalla_link_libraries}
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-    Threads::Threads)
+    Threads::Threads
+    cpp-statsd-client)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"

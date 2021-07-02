@@ -68,7 +68,7 @@ namespace thor {
  */
 void thor_worker_t::trace_route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::trace_route");
+  auto _ = measure_scope_time(request);
 
   // Parse request
   parse_locations(request);

@@ -53,8 +53,7 @@ std::string serialize_to_pbf(Api& request) {
   std::string buf;
   if (!request.SerializeToString(&buf)) {
     LOG_ERROR("Failed serializing to pbf in Thor::Worker");
-    throw valhalla_exception_t{401, boost::optional<std::string>(
-                                        "Failed serializing to pbf in Thor::Worker")};
+    throw valhalla_exception_t{401, "Failed serializing to pbf in Thor::Worker"};
   }
   return buf;
 };
@@ -67,11 +66,11 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian), bidir_astar(config.get_child("thor")),
-      bss_astar(config.get_child("thor")), multi_modal_astar(config.get_child("thor")),
-      timedep_forward(config.get_child("thor")), timedep_reverse(config.get_child("thor")),
-      isochrone_gen(config.get_child("thor")), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{} {
+    : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
+      bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
+      multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
+      timedep_reverse(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
+      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -113,24 +112,23 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
 
-  // get request info
+  // get request info and make sure to record any metrics before we are done
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Thor Request " + std::to_string(info.id));
   Api request;
+  prime_server::worker_t::result_t result{true, {}, {}};
   try {
     // crack open the original request
     bool success = request.ParseFromArray(job.front().data(), job.front().size());
     if (!success) {
       LOG_ERROR("Failed parsing pbf in Thor::Worker");
-      throw valhalla_exception_t{401,
-                                 boost::optional<std::string>("Failed parsing pbf in Thor::Worker")};
+      throw valhalla_exception_t{401, "Failed parsing pbf in Thor::Worker"};
     }
     const auto& options = request.options();
 
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true, {}, {}};
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:
@@ -174,14 +172,20 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }
-    return result;
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    return jsonify_error(e, info, request);
+    result = jsonify_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    return jsonify_error({499, std::string(e.what())}, info, request);
+    result = jsonify_error({499, std::string(e.what())}, info, request);
   }
+
+  // keep track of the metrics if the request is going back to the client
+  if (!result.intermediate)
+    enqueue_statistics(request);
+
+  // let the worker forward the result downstream or back to the client
+  return result;
 }
 
 void run_service(const boost::property_tree::ptree& config) {
@@ -331,6 +335,7 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
 }
 
 void thor_worker_t::cleanup() {
+  service_worker_t::cleanup();
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();

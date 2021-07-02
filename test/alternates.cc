@@ -34,8 +34,7 @@ struct route_tester {
     loki_worker.route(request);
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
-    odin_worker.narrate(request);
-    response_json = tyr::serializeDirections(request);
+    response_json = odin_worker.narrate(request);
     return request;
   }
   std::shared_ptr<GraphReader> reader;
