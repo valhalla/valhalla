@@ -367,34 +367,41 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     // Do matching here
+    std::vector<baldr::GraphId> overNodes;
+    std::vector<baldr::GraphId> underNodes;
+    for (auto const& v : G.getUnbalancedVertices()) {
+      for (int i = 0; i < abs(v.second); i++) {
+        if (v.second > 0) {
+          overNodes.push_back(GraphId(v.first));
+        } else {
+          underNodes.push_back(GraphId(v.first));
+        }
+      }
+    }
+    std::cout << "Over and under nodes\n";
+    std::cout << "Over node size: " << overNodes.size() << "\n";
+    std::cout << "Under node size: " << underNodes.size() << "\n";
 
-    // std::vector<midgard::PointLL> overPoints; // Node that has too many incoming
-    // std::vector<midgard::PointLL> underPoints;
-    // std::vector<midgard::PointLL> locations;
-    // for (auto const& v : G.getUnbalancedVertices()) {
-    //   auto l = getPointLL(GraphId(v.first));
-    //   std::cout << "location (" << v.first << "): " << l.lng() << ", " << l.lat() << std::endl;
-    //   locations.push_back(l);
-    //   if (v.second > 0) {
-    //     overPoints.push_back(l);
-    //   } else if (v.second < 0) {
-    //     underPoints.push_back(l);
-    //   }
-    // }
-    // std::string matrixOutput = computeFloydWarshall(overPoints, underPoints, costing);
-    // std::cout << "\nmatrix output:\n" << matrixOutput;
+    // Populating matrix for pairing
+    std::vector<std::vector<double>> pairingMatrix;
+    for (int i = 0; i < overNodes.size(); i++) {
+      pairingMatrix.push_back(std::vector<double>{});
+      for (int j = 0; j < underNodes.size(); j++) {
+        int overNodeIndex = G.getVertexIndex(overNodes[i]);
+        int underNodeIndex = G.getVertexIndex(underNodes[j]);
+        double distance = distanceMatrix[overNodeIndex][underNodeIndex];
+        std::cout << overNodeIndex << ", " << underNodeIndex << ": " << distance << "\n";
+        pairingMatrix[i].push_back(distance);
+      }
+    }
 
-    // Sample usage of Hungarian algorithm
-    vector<vector<double>> costMatrix = {{82, 83, 69, 92},
-                                         {77, 37, 49, 92},
-                                         {11, 69, 5, 86},
-                                         {8, 9, 98, 23}};
-    HungarianAlgorithm HungAlgo;
+    // Calling hungarian algorithm
+    HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
-    double cost = HungAlgo.Solve(costMatrix, assignment);
+    double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
 
     std::cout << "\n";
-    for (unsigned int x = 0; x < costMatrix.size(); x++)
+    for (unsigned int x = 0; x < pairingMatrix.size(); x++)
       std::cout << x << "," << assignment[x] << "\t";
     std::cout << "\n";
     return;

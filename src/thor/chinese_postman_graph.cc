@@ -64,6 +64,14 @@ int ChinesePostmanGraph::getVertexIndex(CPVertex cpvertex) {
   return -1;
 }
 
+int ChinesePostmanGraph::getVertexIndex(GraphId graph_id) {
+  for (int i = 0; i < boost::num_vertices(this->G); i++)
+    if (this->G[i].graph_id == graph_id) {
+      return i;
+    }
+  return -1;
+}
+
 void ChinesePostmanGraph::addVertex(CPVertex cpvertex) {
   if (!this->isVertexExist(cpvertex)) {
     Vertex v = boost::add_vertex(cpvertex, this->G);

@@ -66,6 +66,7 @@ public:
   void addVertex(CPVertex cpvertex);
   VertexItr findVertex(CPVertex cpvertex);
   int getVertexIndex(CPVertex cpvertex);
+  int getVertexIndex(GraphId graphID);
   bool isVertexExist(CPVertex cpvertex);
   int numVertices();
   int numEdges();
