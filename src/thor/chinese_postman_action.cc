@@ -48,6 +48,17 @@ void printPathMatrix(PathMatrix pm) {
   }
 }
 
+std::vector<std::pair<int, int>> getNodePairs(PathMatrix pm, int startIndex, int endIndex) {
+  std::vector<std::pair<int, int>> nodePairs;
+  auto path = pm[startIndex][endIndex];
+  for (int i = 0; i < path.size() - 1; i++) {
+    nodePairs.push_back(make_pair(path[i], path[i + 1]));
+  }
+  // Add the last edge
+  nodePairs.push_back(make_pair(path.back(), endIndex));
+  return nodePairs;
+}
+
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
@@ -399,11 +410,27 @@ void thor_worker_t::chinese_postman(Api& request) {
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
+    std::vector<std::pair<int, int>> extraEdges;
+    std::cout << "\n";
+    std::vector<std::pair<int, int>> extraPairs;
+    for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
+      std::cout << x << "," << assignment[x] << "\t";
+      // Get node's index for tha pair
+      int overNodeIndex = G.getVertexIndex(overNodes[x]);
+      int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
+      // Expand the path between the paired nodes, using the path matrix
+      auto nodePairs = getNodePairs(pm, overNodeIndex, underNodeIndex);
+      // Concat with main vector
+      extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
+    }
+    // Print all extra pairs
+    std::cout << "Extra pairs\n";
+    for (auto p : extraPairs) {
+      std::cout << p.first << " -> " << p.second << "\n";
+    }
 
     std::cout << "\n";
-    for (unsigned int x = 0; x < pairingMatrix.size(); x++)
-      std::cout << x << "," << assignment[x] << "\t";
-    std::cout << "\n";
+
     return;
   }
   // Start build path here
