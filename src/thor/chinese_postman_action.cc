@@ -429,9 +429,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       std::cout << p.first << " -> " << p.second << "\n";
     }
 
-    std::cout << "\n";
-
-    return;
+    edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;

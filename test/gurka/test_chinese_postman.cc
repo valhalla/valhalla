@@ -453,7 +453,9 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
   auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
   auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
 
-  gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
+  auto route = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
+  gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
+                                          "EA", "AF", "FD", "DE", "EA", "AB"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));

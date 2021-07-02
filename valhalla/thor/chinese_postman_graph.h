@@ -33,6 +33,8 @@ struct CPEdge {
   }
 };
 
+typedef std::vector<std::pair<int, int>> ExtraPaths;
+
 // Define the graph with the vertex as a mytuple and the vertices container as a vector
 using CPGraph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, CPEdge>;
 using Vertex = boost::graph_traits<CPGraph>::vertex_descriptor;              // Define Vertex
@@ -72,9 +74,10 @@ public:
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
   std::map<std::string, int> getUnbalancedVertices();
-  std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex);
-  void setupDFSEulerCycle();
-  std::map<int, std::vector<int>> getAdjacencyList();
+  std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex,
+                                              ExtraPaths extraPaths = ExtraPaths());
+  void setupDFSEulerCycle(ExtraPaths extraPaths = ExtraPaths());
+  std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
   void dfsEulerCycle(int startNodeIndex);
   CPEdge* getCPEdge(int i, int j);
 };

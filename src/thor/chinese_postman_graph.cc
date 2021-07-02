@@ -108,11 +108,12 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   return unbalaced_vertices;
 }
 
-std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex) {
+std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
+                                                                 ExtraPaths extraPaths) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
   int edgeVisited = 0;
 
-  this->setupDFSEulerCycle();
+  this->setupDFSEulerCycle(extraPaths);
   this->dfsEulerCycle(startNodeIndex);
 
   std::cout << "Expanded adjancency list: " << std::endl;
@@ -142,17 +143,18 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
   return eulerPathEdgeGraphIDs;
 }
 
-void ChinesePostmanGraph::setupDFSEulerCycle() {
+void ChinesePostmanGraph::setupDFSEulerCycle(ExtraPaths extraPaths) {
   this->reversedEulerPath.clear();
   this->outEdges.clear();
   // populate out edges
-  this->expandedAdjacencyList = this->getAdjacencyList();
+  this->expandedAdjacencyList = this->getAdjacencyList(extraPaths);
+
   for (const auto& x : this->expandedAdjacencyList) {
     this->outEdges[x.first] = x.second.size();
   }
 }
 
-std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList() {
+std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList(ExtraPaths extraPaths) {
   std::map<int, std::vector<int>> adjacency_list;
   boost::graph_traits<CPGraph>::edge_iterator ei, ei_end;
   for (boost::tie(ei, ei_end) = boost::edges(this->G); ei != ei_end; ++ei) {
@@ -161,6 +163,10 @@ std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList() {
       adjacency_list[boost::source(*ei, this->G)] = target_vertices;
     }
     adjacency_list[boost::source(*ei, this->G)].push_back(boost::target(*ei, this->G));
+  }
+  // Add extra paths
+  for (auto ep : extraPaths) {
+    adjacency_list[ep.first].push_back(ep.second);
   }
   return adjacency_list;
 }
