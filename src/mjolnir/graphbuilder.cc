@@ -1311,16 +1311,16 @@ void GraphBuilder::AddPronunciations(const std::vector<std::string> ipa_tokens,
                                      bool add_jeita) {
 
   if (add_ipa)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(VerbalType::kIpa)) + '#' +
+    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kIpa)) + '#' +
                                 ipa_tokens[index]);
   if (add_x_sampa)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(VerbalType::kXSampa)) + '#' +
+    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXSampa)) + '#' +
                                 x_sampa_tokens[index]);
   if (add_katakana)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(VerbalType::kPlainText)) + '#' +
+    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXKatakana)) + '#' +
                                 katakana_tokens[index]);
   if (add_jeita)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(VerbalType::kJeita)) + '#' +
+    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXJeita)) + '#' +
                                 jeita_tokens[index]);
 }
 

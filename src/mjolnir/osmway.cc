@@ -100,7 +100,7 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
                                const uint32_t pronunciation_index,
                                const size_t name_tokens_size,
                                const size_t key,
-                               const baldr::VerbalType verbal_type) const {
+                               const baldr::PronunciationAlphabet verbal_type) const {
 
   size_t k = key;
   std::vector<std::string> pronunciation_tokens;
@@ -151,15 +151,15 @@ void OSMWay::GetNames(const std::string& ref,
 
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
-                      tokens.size(), key, VerbalType::kIpa);
+                      tokens.size(), key, PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.ref_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.ref_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_jeita_index(),
-                      tokens.size(), key, VerbalType::kJeita);
+                      tokens.size(), key, PronunciationAlphabet::kXJeita);
   }
 
   // TODO int_ref
@@ -175,15 +175,15 @@ void OSMWay::GetNames(const std::string& ref,
 
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_ipa_index(),
-                      tokens.size(), key, VerbalType::kIpa);
+                      tokens.size(), key, PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_jeita_index(),
-                      tokens.size(), key, VerbalType::kJeita);
+                      tokens.size(), key, PronunciationAlphabet::kXJeita);
   }
 
   // Process non limited access refs
@@ -206,15 +206,15 @@ void OSMWay::GetNames(const std::string& ref,
 
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
-                      tokens.size(), key, VerbalType::kIpa);
+                      tokens.size(), key, PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.ref_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.ref_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_jeita_index(),
-                      tokens.size(), key, VerbalType::kJeita);
+                      tokens.size(), key, PronunciationAlphabet::kXJeita);
   }
 
   // Process alt_name
@@ -229,16 +229,16 @@ void OSMWay::GetNames(const std::string& ref,
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.alt_name_pronunciation_ipa_index(), tokens.size(), key,
-                      VerbalType::kIpa);
+                      PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.alt_name_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.alt_name_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.alt_name_pronunciation_jeita_index(), tokens.size(), key,
-                      VerbalType::kJeita);
+                      PronunciationAlphabet::kXJeita);
   }
   // Process official_name
   if (official_name_index_ != 0 && official_name_index_ != name_index_ &&
@@ -253,16 +253,16 @@ void OSMWay::GetNames(const std::string& ref,
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.official_name_pronunciation_ipa_index(), tokens.size(), key,
-                      VerbalType::kIpa);
+                      PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.official_name_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.official_name_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.official_name_pronunciation_jeita_index(), tokens.size(), key,
-                      VerbalType::kJeita);
+                      PronunciationAlphabet::kXJeita);
   }
   // Process name_en_
   // TODO: process country specific names
@@ -278,16 +278,16 @@ void OSMWay::GetNames(const std::string& ref,
     size_t key = names.size() - tokens.size();
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_en_pronunciation_ipa_index(), tokens.size(), key,
-                      VerbalType::kIpa);
+                      PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_en_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_en_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.name_en_pronunciation_jeita_index(), tokens.size(), key,
-                      VerbalType::kJeita);
+                      PronunciationAlphabet::kXJeita);
   }
 }
 
@@ -309,16 +309,16 @@ void OSMWay::GetTaggedNames(const UniqueNames& name_offset_map,
     size_t key = (names_size + names.size()) - tokens.size();
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.tunnel_name_pronunciation_ipa_index(), tokens.size(), key,
-                      VerbalType::kIpa);
+                      PronunciationAlphabet::kIpa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.tunnel_name_pronunciation_x_sampa_index(), tokens.size(), key,
-                      VerbalType::kXSampa);
+                      PronunciationAlphabet::kXSampa);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.tunnel_name_pronunciation_katakana_index(), tokens.size(), key,
-                      VerbalType::kPlainText);
+                      PronunciationAlphabet::kXKatakana);
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.tunnel_name_pronunciation_jeita_index(), tokens.size(), key,
-                      VerbalType::kJeita);
+                      PronunciationAlphabet::kXJeita);
   }
 }
 

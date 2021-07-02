@@ -1801,28 +1801,28 @@ public:
         ProcessDirection(true);
 
       if (!ref_pronunciation_.empty())
-        ProcessDirectionPronunciation(VerbalType::kIpa, false);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, false);
 
       if (!int_ref_pronunciation_.empty())
-        ProcessDirectionPronunciation(VerbalType::kIpa, true);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, true);
 
       if (!ref_pronunciation_katakana_.empty())
-        ProcessDirectionPronunciation(VerbalType::kPlainText, false);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, false);
 
       if (!int_ref_pronunciation_katakana_.empty())
-        ProcessDirectionPronunciation(VerbalType::kPlainText, true);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, true);
 
       if (!ref_pronunciation_x_sampa_.empty())
-        ProcessDirectionPronunciation(VerbalType::kXSampa, false);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXSampa, false);
 
       if (!int_ref_pronunciation_x_sampa_.empty())
-        ProcessDirectionPronunciation(VerbalType::kXSampa, true);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXSampa, true);
 
       if (!ref_pronunciation_jeita_.empty())
-        ProcessDirectionPronunciation(VerbalType::kJeita, false);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, false);
 
       if (!int_ref_pronunciation_jeita_.empty())
-        ProcessDirectionPronunciation(VerbalType::kJeita, true);
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, true);
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
@@ -2574,43 +2574,43 @@ public:
     }
   }
 
-  void ProcessDirectionPronunciation(const VerbalType type, bool int_ref) {
+  void ProcessDirectionPronunciation(const PronunciationAlphabet type, bool int_ref) {
 
     std::string ref_pronunciation, direction_pronunciation;
     if (int_ref) {
       switch (type) {
-        case VerbalType::kIpa:
+        case PronunciationAlphabet::kIpa:
           ref_pronunciation = int_ref_pronunciation_;
           direction_pronunciation = int_direction_pronunciation_;
           break;
-        case VerbalType::kPlainText:
+        case PronunciationAlphabet::kXKatakana:
           ref_pronunciation = int_ref_pronunciation_katakana_;
           direction_pronunciation = int_direction_pronunciation_katakana_;
           break;
-        case VerbalType::kXSampa:
+        case PronunciationAlphabet::kXSampa:
           ref_pronunciation = int_ref_pronunciation_x_sampa_;
           direction_pronunciation = int_direction_pronunciation_x_sampa_;
           break;
-        case VerbalType::kJeita:
+        case PronunciationAlphabet::kXJeita:
           ref_pronunciation = int_ref_pronunciation_jeita_;
           direction_pronunciation = int_direction_pronunciation_jeita_;
           break;
       }
     } else {
       switch (type) {
-        case VerbalType::kIpa:
+        case PronunciationAlphabet::kIpa:
           ref_pronunciation = ref_pronunciation_;
           direction_pronunciation = direction_pronunciation_;
           break;
-        case VerbalType::kPlainText:
+        case PronunciationAlphabet::kXKatakana:
           ref_pronunciation = ref_pronunciation_katakana_;
           direction_pronunciation = direction_pronunciation_katakana_;
           break;
-        case VerbalType::kXSampa:
+        case PronunciationAlphabet::kXSampa:
           ref_pronunciation = ref_pronunciation_x_sampa_;
           direction_pronunciation = direction_pronunciation_x_sampa_;
           break;
-        case VerbalType::kJeita:
+        case PronunciationAlphabet::kXJeita:
           ref_pronunciation = ref_pronunciation_jeita_;
           direction_pronunciation = direction_pronunciation_jeita_;
           break;
@@ -2641,41 +2641,41 @@ public:
   }
 
   void
-  UpdateRefPronunciation(const std::string ref_pronunciation, const VerbalType type, bool int_ref) {
+  UpdateRefPronunciation(const std::string ref_pronunciation, const PronunciationAlphabet type, bool int_ref) {
     if (int_ref) {
       switch (type) {
-        case VerbalType::kIpa:
+        case PronunciationAlphabet::kIpa:
           osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kPlainText:
+        case PronunciationAlphabet::kXKatakana:
           osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kXSampa:
+        case PronunciationAlphabet::kXSampa:
           osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kJeita:
+        case PronunciationAlphabet::kXJeita:
           osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
       }
     } else {
       switch (type) {
-        case VerbalType::kIpa:
+        case PronunciationAlphabet::kIpa:
           osm_pronunciation_.set_ref_pronunciation_ipa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kPlainText:
+        case PronunciationAlphabet::kXKatakana:
           osm_pronunciation_.set_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kXSampa:
+        case PronunciationAlphabet::kXSampa:
           osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case VerbalType::kJeita:
+        case PronunciationAlphabet::kXJeita:
           osm_pronunciation_.set_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
@@ -2685,33 +2685,33 @@ public:
 
   void MergeRefPronunciations() {
 
-    for (uint8_t type = static_cast<uint8_t>(VerbalType::kPlainText);
-         type != static_cast<uint8_t>(VerbalType::kJeita) + 1; ++type) {
+    for (uint8_t type = static_cast<uint8_t>(PronunciationAlphabet::kXKatakana);
+         type != static_cast<uint8_t>(PronunciationAlphabet::kXJeita) + 1; ++type) {
       // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
       // don't add dups.
 
       uint32_t index = 0;
       std::string tmp;
-      switch (static_cast<VerbalType>(type)) {
-        case VerbalType::kIpa:
+      switch (static_cast<PronunciationAlphabet>(type)) {
+        case PronunciationAlphabet::kIpa:
           index = osm_pronunciation_.int_ref_pronunciation_ipa_index();
           tmp =
               (index ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_ipa_index())
                      : "");
           break;
-        case VerbalType::kPlainText:
+        case PronunciationAlphabet::kXKatakana:
           index = osm_pronunciation_.int_ref_pronunciation_katakana_index();
           tmp = (index ? osmdata_.name_offset_map.name(
                              osm_pronunciation_.ref_pronunciation_katakana_index())
                        : "");
           break;
-        case VerbalType::kXSampa:
+        case PronunciationAlphabet::kXSampa:
           index = osm_pronunciation_.int_ref_pronunciation_x_sampa_index();
           tmp = (index ? osmdata_.name_offset_map.name(
                              osm_pronunciation_.ref_pronunciation_x_sampa_index())
                        : "");
           break;
-        case VerbalType::kJeita:
+        case PronunciationAlphabet::kXJeita:
           index = osm_pronunciation_.int_ref_pronunciation_jeita_index();
           tmp =
               (index
@@ -2741,15 +2741,15 @@ public:
           bFound = false;
         }
 
-        switch (static_cast<VerbalType>(type)) {
-          case VerbalType::kIpa:
+        switch (static_cast<PronunciationAlphabet>(type)) {
+          case PronunciationAlphabet::kIpa:
             if (!tmp.empty()) {
               osm_pronunciation_.set_ref_pronunciation_ipa_index(osmdata_.name_offset_map.index(tmp));
             }
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_ipa_index(0);
             break;
-          case VerbalType::kPlainText:
+          case PronunciationAlphabet::kXKatakana:
             if (!tmp.empty()) {
               osm_pronunciation_.set_ref_pronunciation_katakana_index(
                   osmdata_.name_offset_map.index(tmp));
@@ -2757,7 +2757,7 @@ public:
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_katakana_index(0);
             break;
-          case VerbalType::kXSampa:
+          case PronunciationAlphabet::kXSampa:
             if (!tmp.empty()) {
               osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
                   osmdata_.name_offset_map.index(tmp));
@@ -2765,7 +2765,7 @@ public:
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(0);
             break;
-          case VerbalType::kJeita:
+          case PronunciationAlphabet::kXJeita:
             if (!tmp.empty()) {
               osm_pronunciation_.set_ref_pronunciation_jeita_index(
                   osmdata_.name_offset_map.index(tmp));

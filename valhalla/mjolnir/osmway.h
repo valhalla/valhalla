@@ -1600,7 +1600,7 @@ struct OSMWay {
                          const uint32_t pronunciation_index,
                          const size_t name_tokens_size,
                          const size_t key,
-                         const baldr::VerbalType verbal_type) const;
+                         const baldr::PronunciationAlphabet verbal_type) const;
 
   /**
    * Get the names for the edge info based on the road class.

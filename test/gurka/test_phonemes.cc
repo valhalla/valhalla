@@ -226,19 +226,19 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "named junction:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "named junction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "named junction:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "named junction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "named junction:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "named junction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "named junction:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "named junction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -259,19 +259,19 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "node ref:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "node ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "node ref:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "node ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "node ref:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "node ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "node ref:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "node ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -298,126 +298,126 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second ==
                  "int_ref:pronunciation int_direction:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first,
                   "int_ref int_direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second ==
                  "int_ref:pronunciation:x-sampa int_direction:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first,
                   "int_ref int_direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second ==
                  "int_ref:pronunciation:katakana int_direction:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first,
                   "int_ref int_direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second ==
                  "int_ref:pronunciation:jeita int_direction:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first,
                   "int_ref int_direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "ref:pronunciation direction:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second ==
                  "ref:pronunciation:x-sampa direction:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second ==
                  "ref:pronunciation:katakana direction:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second ==
                  "ref:pronunciation:jeita direction:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref direction");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "alt_name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "alt_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "alt_name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "alt_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "alt_name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "alt_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "alt_name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "alt_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "official_name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "official_name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "official_name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "official_name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "name:en:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "name:en:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "name:en:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "name:en:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -437,99 +437,99 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "destination:forward:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:forward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:forward:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:forward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:forward:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:forward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:forward:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:forward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:street:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -546,99 +546,99 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "destination:backward:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:backward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:backward:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:backward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:backward:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:backward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:backward:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:backward");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:street:to:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:ref:to:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref:to");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:ref:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "destination:street:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:street:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination:street");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "junction:ref:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "junction:ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -655,19 +655,19 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "destination:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -691,19 +691,19 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if ((pronunciation.second).second == "destination:pronunciation") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "destination:pronunciation:x-sampa") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "destination:pronunciation:katakana") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "destination:pronunciation:jeita") {
         EXPECT_EQ(signs.at(static_cast<int>(pronunciation.first)).text(), "destination");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
@@ -783,99 +783,99 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
       if ((pronunciation.second).second == "name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "AB");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "tunnel:name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "tunnel:name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "int_ref:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "int_ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "int_ref:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "int_ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "int_ref:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "int_ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "int_ref:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "int_ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "ref:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "ref:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "ref:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "ref:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "ref");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "official_name:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "official_name:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "official_name:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "official_name:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "official_name");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else if ((pronunciation.second).second == "name:en:pronunciation") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kIpa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else if ((pronunciation.second).second == "name:en:pronunciation:x-sampa") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kXSampa));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
       } else if ((pronunciation.second).second == "name:en:pronunciation:katakana") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kPlainText));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else if ((pronunciation.second).second == "name:en:pronunciation:jeita") {
         EXPECT_EQ(names_and_types.at(static_cast<int>(pronunciation.first)).first, "name:en");
         EXPECT_EQ(static_cast<int>((pronunciation.second).first),
-                  static_cast<int>(baldr::VerbalType::kJeita));
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         EXPECT_EQ((pronunciation.second).second, "Extra key.  This should not happen.");
     }
