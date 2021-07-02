@@ -17,19 +17,24 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize_metres = 100;
     const std::string ascii_map = R"(
-    A-B-C-D-E
-        |
-        1
-        F---2G
-        |
-        |	
-        H---3I
+    A----B----C----D----1E
+              |
+              |
+              F----2G
+              |
+              |
+              H----3I
+              |
+              |
+              J----K----L
     )";
 
     const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
                               {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
                               {"CF", {{"highway", "primary"}}}, {"FH", {{"highway", "primary"}}},
-                              {"FG", {{"highway", "primary"}}}, {"HI", {{"highway", "primary"}}}};
+                              {"FG", {{"highway", "primary"}}}, {"HI", {{"highway", "primary"}}},
+                              {"HJ", {{"highway", "primary"}}}, {"JK", {{"highway", "primary"}}},
+                              {"KL", {{"highway", "primary"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
@@ -40,16 +45,19 @@ gurka::map ViaWaypoints::map = {};
 Api api;
 rapidjson::Document d;
 
+// Request:
+// /route?json={"locations":[{"lon":5.1079374,"lat":52.0887174,"type":"break"},{"lon":5.109734024089489,"lat":52.087819087955299,"type":"via"},{"lon":5.111530648178978,"lat":52.0887174,"type":"break"}],"format":"osrm","costing":"auto","costing_options":{"auto":{"speed_types":["freeflow","constrained","predicted"]}},"verbose":true,"shape_match":"map_snap"}
 /*************************************************************/
 
 TEST_F(ViaWaypoints, test_via_waypoints_response1) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "E"}, "auto",
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "L"}, "auto",
                                  {{"/locations/0/type", "break_through"},
                                   {"/locations/1/type", "through"},
                                   {"/locations/2/type", "break_through"}});
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FG", "FG", "CF", "CD", "DE"});
+  gurka::assert::raw::expect_path(result,
+                                  {"AB", "BC", "CD", "DE", "DE", "CD", "CF", "FH", "HJ", "JK", "KL"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
@@ -61,18 +69,23 @@ TEST_F(ViaWaypoints, test_via_waypoints_response1) {
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
+
+  auto via_waypoint1 = leg["via_waypoints"].GetArray();
+  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
+  EXPECT_EQ(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 0.00);
 }
 
 TEST_F(ViaWaypoints, test_via_waypoints_response2) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "E"}, "auto",
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "L"}, "auto",
                                  {{"/locations/0/type", "break_through"},
                                   {"/locations/1/type", "through"},
                                   {"/locations/2/type", "through"},
                                   {"/locations/3/type", "break_through"}});
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FG", "FG", "FH", "HI", "HI", "FH", "CF",
-                                           "CD", "DE"});
+  gurka::assert::raw::expect_path(result,
+                                  {"AB", "BC", "CF", "FG", "FG", "FH", "HI", "HI", "HJ", "JK", "KL"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
@@ -85,8 +98,18 @@ TEST_F(ViaWaypoints, test_via_waypoints_response2) {
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
 
+  auto via_waypoint1 = leg["via_waypoints"].GetArray();
+  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
+  EXPECT_EQ(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 0.095);
+
   EXPECT_TRUE(leg.HasMember("via_waypoints"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
+
+  auto via_waypoint2 = leg["via_waypoints"].GetArray();
+  EXPECT_EQ(via_waypoint2[1]["waypoint_index"].GetInt(), 2);
+  EXPECT_EQ(via_waypoint2[1]["geometry_index"].GetInt(), 7);
+  EXPECT_EQ(via_waypoint2[1]["distance_from_leg_start"].GetDouble(), 0.00);
 }
