@@ -201,15 +201,20 @@ TEST(Names, NamesTest) {
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test ref jeita");
   TestKeyTypeValue(pronunciations.at(8), 2, PronunciationAlphabet::kIpa, "test alt name ipa");
   TestKeyTypeValue(pronunciations.at(9), 2, PronunciationAlphabet::kXSampa, "test alt name sampa");
-  TestKeyTypeValue(pronunciations.at(10), 2, PronunciationAlphabet::kXKatakana, "test alt name katakana");
+  TestKeyTypeValue(pronunciations.at(10), 2, PronunciationAlphabet::kXKatakana,
+                   "test alt name katakana");
   TestKeyTypeValue(pronunciations.at(11), 2, PronunciationAlphabet::kXJeita, "test alt name jeita");
   TestKeyTypeValue(pronunciations.at(12), 3, PronunciationAlphabet::kIpa, "test official name ipa");
-  TestKeyTypeValue(pronunciations.at(13), 3, PronunciationAlphabet::kXSampa, "test official name sampa");
-  TestKeyTypeValue(pronunciations.at(14), 3, PronunciationAlphabet::kXKatakana, "test official name katakana");
-  TestKeyTypeValue(pronunciations.at(15), 3, PronunciationAlphabet::kXJeita, "test official name jeita");
+  TestKeyTypeValue(pronunciations.at(13), 3, PronunciationAlphabet::kXSampa,
+                   "test official name sampa");
+  TestKeyTypeValue(pronunciations.at(14), 3, PronunciationAlphabet::kXKatakana,
+                   "test official name katakana");
+  TestKeyTypeValue(pronunciations.at(15), 3, PronunciationAlphabet::kXJeita,
+                   "test official name jeita");
   TestKeyTypeValue(pronunciations.at(16), 4, PronunciationAlphabet::kIpa, "test name en ipa");
   TestKeyTypeValue(pronunciations.at(17), 4, PronunciationAlphabet::kXSampa, "test name en sampa");
-  TestKeyTypeValue(pronunciations.at(18), 4, PronunciationAlphabet::kXKatakana, "test name en katakana");
+  TestKeyTypeValue(pronunciations.at(18), 4, PronunciationAlphabet::kXKatakana,
+                   "test name en katakana");
   TestKeyTypeValue(pronunciations.at(19), 4, PronunciationAlphabet::kXJeita, "test name en jeita");
 }
 
@@ -249,8 +254,10 @@ TEST(Names, TaggedNamesTest) {
   EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "tɛd ˈwɪljəmz ˈtʌnl");
   TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "tEd wIly@mz t@n@l");
-  TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "テッド ウィリャムズ タネル");
-  TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "チバダ'イガ&ク% セーモンマ'エ.");
+  TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana,
+                   "テッド ウィリャムズ タネル");
+  TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita,
+                   "チバダ'イガ&ク% セーモンマ'エ.");
 
   pronunciations.clear();
   std::vector<std::string> w2_tagged_names;
@@ -260,8 +267,10 @@ TEST(Names, TaggedNamesTest) {
   EXPECT_EQ(w2_tagged_names.at(1), "1Fort McHenry Tunnel");
   TestKeyTypeValue(pronunciations.at(0), 1, PronunciationAlphabet::kIpa, "fɔːt McHenry ˈtʌnl");
   TestKeyTypeValue(pronunciations.at(1), 1, PronunciationAlphabet::kXSampa, "fOrt m@kEnri t@n@l");
-  TestKeyTypeValue(pronunciations.at(2), 1, PronunciationAlphabet::kXKatakana, "フォート ムケンリー タネル");
-  TestKeyTypeValue(pronunciations.at(3), 1, PronunciationAlphabet::kXJeita, "チバダ'イガ&ク% セーモンマ'エ.");
+  TestKeyTypeValue(pronunciations.at(2), 1, PronunciationAlphabet::kXKatakana,
+                   "フォート ムケンリー タネル");
+  TestKeyTypeValue(pronunciations.at(3), 1, PronunciationAlphabet::kXJeita,
+                   "チバダ'イガ&ク% セーモンマ'エ.");
 }
 
 } // namespace
