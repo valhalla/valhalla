@@ -49,13 +49,14 @@ std::string thor_worker_t::matrix(Api& request) {
   auto timedistancematrix = [&]() {
     thor::TimeDistanceMatrix matrix;
     return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                 max_matrix_distance.find(costing)->second);
+                                 max_matrix_distance.find(costing)->second,
+                                 options.matrix_locations());
   };
   if (costing == "bikeshare") {
     thor::TimeDistanceBSSMatrix matrix;
     time_distances =
         matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                              max_matrix_distance.find(costing)->second);
+                              max_matrix_distance.find(costing)->second, options.matrix_locations());
     return tyr::serializeMatrix(request, time_distances, distance_scale);
   }
   switch (source_to_target_algorithm) {

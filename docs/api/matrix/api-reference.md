@@ -31,6 +31,7 @@ For example, while at your office, you want to know the times and distances to w
 {"sources":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713},{"lat":40.752522,"lon":-73.985015},{"lat":40.750117,"lon":-73.983704},{"lat":40.750552,"lon":-73.993519}],"targets":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713},{"lat":40.752522,"lon":-73.985015},{"lat":40.750117,"lon":-73.983704},{"lat":40.750552,"lon":-73.993519}],"costing":"pedestrian"}&id=ManyToMany_NYC_work_dinner
 ```
 
+For one-to-many or many-to-one requests there is an option to specify the minimum number of locations that satisfy the request. The `matrix_locations` parameters defaults to all locations. However, when specified, this option allows a partial result to be returned. This is basically equivalent to "find the closest/best `matrix_locations` locations out of the full location set".
 There is an option to name your matrix request.  You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
 
 ### Source and target parameters

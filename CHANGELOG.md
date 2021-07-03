@@ -31,6 +31,7 @@
    * CHORE: Updates googletest to release-1.11.0 [#3166](https://github.com/valhalla/valhalla/pull/3166)
    * CHORE: Enables -Wall on sif sources [#3178](https://github.com/valhalla/valhalla/pull/3178)
    * ADDED: Allow going through accessible `barrier=bollard` and penalize routing through it, when the access is private [#3175](https://github.com/valhalla/valhalla/pull/3175)
+   * ADDED: Options to generate partial results for time distance matrix when there is one source (one to many) or one target (many to one). [#3181](https://github.com/valhalla/valhalla/pull/3181)
 
    * ADDED: Add country code to incident metadata [#3169](https://github.com/valhalla/valhalla/pull/3169)
    * CHANGED: Use distance instead of time to check limited sharing criteria [#3183](https://github.com/valhalla/valhalla/pull/3183)
