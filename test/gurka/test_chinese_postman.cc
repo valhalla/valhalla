@@ -177,7 +177,7 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -246,7 +246,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
   gurka::assert::raw::expect_path(route2, {"ED", "DE", "EB", "BA", "AB", "BE"});
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -306,7 +306,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
   };
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -364,7 +364,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::assert::raw::expect_path(route2, {"HF", "FC", "CG", "GH"});
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   auto node_a = chinese_postman_map.nodes.at("A");
   auto node_b = chinese_postman_map.nodes.at("B");
   auto node_c = chinese_postman_map.nodes.at("C");
@@ -456,6 +456,20 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
   auto route = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
   gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
                                           "EA", "AF", "FD", "DE", "EA", "AB"});
+
+  // build request manually for now
+  auto lls2 = {complex_chinese_postman_map.nodes["C"], complex_chinese_postman_map.nodes["C"]};
+
+  rapidjson::Document doc2;
+  doc2.SetObject();
+  auto& allocator2 = doc2.GetAllocator();
+  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
+  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
+  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
+
+  auto route2 = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req2);
+  gurka::assert::raw::expect_path(route2, {"CD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE",
+                                           "EA", "AF", "FD", "DE", "EA", "AC"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
