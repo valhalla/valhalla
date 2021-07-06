@@ -364,7 +364,7 @@ enum class TaggedName : uint8_t { // must start at 1 due to nulls
   kPronunciation = 3
 };
 
-enum class PronunciationAlphabet : uint8_t { kIpa = 0, kXSampa = 1, kXJeita = 2, kXKatakana = 3 };
+enum class PronunciationAlphabet : uint8_t { kIpa = 0, kXKatakana = 1, kXJeita = 2, kXSampa = 3 };
 
 // Speed type
 enum class SpeedType : uint8_t {
