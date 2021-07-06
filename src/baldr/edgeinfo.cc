@@ -266,10 +266,70 @@ EdgeInfo::GetPronunciationsMultiMap() const {
           LOG_DEBUG("invalid_argument thrown for name: " + name);
         }
       } else {
-        throw std::runtime_error("GetTaggedNames: Tagged name with no text");
+        throw std::runtime_error("GetPronunciationsMultiMap: Tagged name with no text");
       }
     } else {
-      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+      throw std::runtime_error("GetPronunciationsMultiMap: offset exceeds size of text list");
+    }
+  }
+
+  return key_type_value_pairs;
+}
+
+std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>
+EdgeInfo::GetPronunciationsMap() const {
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
+  key_type_value_pairs.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      std::string name = names_list_ + ni->name_offset_;
+      if (name.length() > 1) {
+        uint8_t num = 0;
+        try {
+          num = std::stoi(name.substr(0, 1));
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the type...actual data remains
+
+            auto verbal_tokens = split(name, '#');
+            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+            // key  type value
+            uint8_t index = 0, key, type;
+            for (const auto v : verbal_tokens) {
+              if (index == 0) { // key
+                key = std::stoi(v);
+                index++;
+              } else if (index == 1) { // type
+                type = std::stoi(v);
+                index++;
+              } else { // value
+                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter = key_type_value_pairs.find(key);
+
+                if ( iter == key_type_value_pairs.end() )
+                  key_type_value_pairs.emplace(
+                     std::make_pair(key, std::make_pair(type, v)));
+                else {
+                  if ((iter->second).first <= type) {
+                    key_type_value_pairs.emplace(
+                       std::make_pair(key, std::make_pair(type, v)));
+                  }
+                }
+                index = 0;
+              }
+            }
+          }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        }
+      } else {
+        throw std::runtime_error("GetPronunciationsMap: Tagged name with no text");
+      }
+    } else {
+      throw std::runtime_error("GetPronunciationsMap: offset exceeds size of text list");
     }
   }
 

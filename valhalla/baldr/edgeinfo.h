@@ -175,6 +175,13 @@ public:
   std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMultiMap() const;
 
   /**
+   * Convenience method to get a pronunciation map for an edge.
+   * @return   Returns a unordered_map of type/name pairs with a key that references the name
+   * index from GetNamesAndTypes
+   */
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+
+  /**
    * Convenience method to get the types for the names.
    * @return   Returns types - If a bit is set, it is a route number.
    */
