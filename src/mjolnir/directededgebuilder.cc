@@ -21,6 +21,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const RoadClass rc,
                                          const uint32_t localidx,
                                          const bool signal,
+                                         const bool stop_sign,
+                                         const bool yield_sign,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
                                          const bool reclass_ferry)
@@ -68,6 +70,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);
+  set_stop_sign(stop_sign);
+  set_yield_sign(yield_sign);
 
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
