@@ -172,7 +172,7 @@ public:
    * @return   Returns a unordered_multimap of type/name pairs with a key that references the name
    * index from GetNamesAndTypes
    */
-  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMultiMap() const;
 
   /**
    * Convenience method to get the types for the names.

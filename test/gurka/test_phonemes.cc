@@ -287,7 +287,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
 
     std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
-        edgeinfo.GetPronunciationsMap();
+        edgeinfo.GetPronunciationsMultiMap();
     for (const auto& pronunciation : pronunciations) {
 
       // std::cout << static_cast<int>(pronunciation.first) << " "
@@ -772,7 +772,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
     //  }
 
     std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
-        edgeinfo.GetPronunciationsMap();
+        edgeinfo.GetPronunciationsMultiMap();
     for (const auto& pronunciation : pronunciations) {
 
       // std::cout << static_cast<int>(pronunciation.first) << " "

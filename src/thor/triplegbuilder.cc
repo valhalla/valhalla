@@ -822,10 +822,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
       trip_edge_name->set_value(name_and_type.first);
       trip_edge_name->set_is_route_number(name_and_type.second);
+      // TODO
     }
 
     std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
-        edgeinfo.GetPronunciationsMap();
+        edgeinfo.GetPronunciationsMulitMap();
     for (const auto& pronunciation : pronunciations) {
       std::cout << static_cast<int>(pronunciation.first) << " "
                 << static_cast<int>((pronunciation.second).first) << " "

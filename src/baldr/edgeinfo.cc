@@ -225,7 +225,7 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
 }
 
 std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>>
-EdgeInfo::GetPronunciationsMap() const {
+EdgeInfo::GetPronunciationsMultiMap() const {
   std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
   key_type_value_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
