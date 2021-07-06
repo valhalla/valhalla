@@ -826,7 +826,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
 
     std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
-        edgeinfo.GetPronunciationsMulitMap();
+        edgeinfo.GetPronunciationsMultiMap();
     for (const auto& pronunciation : pronunciations) {
       std::cout << static_cast<int>(pronunciation.first) << " "
                 << static_cast<int>((pronunciation.second).first) << " "
