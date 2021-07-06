@@ -2,8 +2,10 @@
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/loki/polygon_search.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/worker.h>
 
@@ -23,6 +25,7 @@ namespace {
 // register a few boost.geometry types
 using line_bg_t = bg::model::linestring<vm::PointLL>;
 using ring_bg_t = std::vector<vm::PointLL>;
+using namespace vb::json;
 
 // map of tile for map of bin ids & their ring ids
 // TODO: simplify the logic behind this a little
@@ -47,6 +50,40 @@ double GetRingLength(const ring_bg_t& ring) {
   auto length = bg::length(line, Haversine());
   return length;
 }
+
+#ifdef LOGGING_LEVEL_TRACE
+// serializes an edge to geojson
+std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::GraphReader& reader) {
+  auto features = array({});
+  for (const auto& edge_id : edge_ids) {
+    auto tile = reader.GetGraphTile(edge_id);
+    auto edge = tile->directededge(edge_id);
+    auto shape = tile->edgeinfo(edge).shape();
+    if (!edge->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+
+    auto coords = array({});
+    for (const auto& p : shape) {
+      coords->emplace_back(array({fixed_t{p.lng(), 6}, fixed_t{p.lat(), 6}}));
+    }
+    features->emplace_back(
+        map({{"type", std::string("Feature")},
+             {"properties",
+              map({{"shortcut", edge->is_shortcut() ? std::string("True") : std::string("False")},
+                   {"edge_id", edge_id.value}})},
+             {"geometry", map({{"type", std::string("LineString")}, {"coordinates", coords}})}}));
+  }
+
+  auto collection =
+      vb::json::map({{"type", std::string("FeatureCollection")}, {"features", features}});
+
+  std::stringstream ss;
+  ss << *collection;
+
+  return ss.str();
+}
+#endif // LOGGING_LEVEL_TRACE
 } // namespace
 
 namespace valhalla {
@@ -121,9 +158,11 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
         auto edge_info = tile->edgeinfo(edge);
+        // vector<PointLL> is reserved for bg as ring, need to cast to linestring
+        line_bg_t edge_line{edge_info.shape().begin(), edge_info.shape().end()};
         bool intersects = false;
         for (const auto& ring_loc : bin.second) {
-          intersects = bg::intersects(rings_bg[ring_loc], edge_info.shape());
+          intersects = bg::intersects(rings_bg[ring_loc], edge_line);
           if (intersects) {
             break;
           }
@@ -136,6 +175,13 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
       }
     }
   }
+
+// log the GeoJSON of avoided edges
+#ifdef LOGGING_LEVEL_TRACE
+  if (!avoid_edge_ids.empty()) {
+    LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
+  }
+#endif
 
   return avoid_edge_ids;
 }
