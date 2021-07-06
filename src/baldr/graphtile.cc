@@ -746,7 +746,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
       if (((signs_[found].type() == Sign::Type::kJunctionName ||
-            signs_[found].type() == Sign::Type::kVerbal) &&
+            signs_[found].type() == Sign::Type::kPronunciation) &&
            signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
@@ -801,7 +801,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
     if (signs_[found].text_offset() < textlist_size_) {
 
       std::string text = (textlist_ + signs_[found].text_offset());
-      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kVerbal) {
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
 
         auto verbal_tokens = split(text, '#');
         // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
@@ -827,7 +827,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
       if (((signs_[found].type() == Sign::Type::kJunctionName ||
-            signs_[found].type() == Sign::Type::kVerbal) &&
+            signs_[found].type() == Sign::Type::kPronunciation) &&
            signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),

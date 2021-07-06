@@ -513,7 +513,7 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
           std::stringstream ss;
           ss << std::to_string(i) << '#' << pronunciations[x];
           uint32_t offset = AddName(ss.str());
-          signs_builder_.emplace_back(idx, Sign::Type::kVerbal, false, true, offset);
+          signs_builder_.emplace_back(idx, Sign::Type::kPronunciation, false, true, offset);
         }
       }
     }
