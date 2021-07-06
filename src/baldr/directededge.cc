@@ -214,6 +214,18 @@ void DirectedEdge::set_traffic_signal(const bool signal) {
   traffic_signal_ = signal;
 }
 
+// Sets the flag indicating a stop sign is present at the end of
+// this edge.
+void DirectedEdge::set_stop_sign(const bool sign) {
+  stop_sign_ = sign;
+}
+
+// Sets the flag indicating a yield sign is present at the end of
+// this edge.
+void DirectedEdge::set_yield_sign(const bool sign) {
+  yield_sign_ = sign;
+}
+
 // Set the forward flag. Tells if this directed edge is stored forward
 // in edgeinfo (true) or reverse (false).
 void DirectedEdge::set_forward(const bool forward) {
