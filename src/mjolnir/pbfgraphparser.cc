@@ -995,10 +995,20 @@ public:
         ++osmdata_.node_name_count;
       } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals");
+        n.set_stop_sign(tag.second == "stop");
+        n.set_yield_sign(tag.second == "give_way");
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true");
       } else if (tag.first == "backward_signal") {
         n.set_backward_signal(tag.second == "true");
+      } else if (tag.first == "forward_stop") {
+        n.set_forward_stop(tag.second == "true");
+      } else if (tag.first == "backward_stop") {
+        n.set_backward_stop(tag.second == "true");
+      } else if (tag.first == "forward_yield") {
+        n.set_forward_yield(tag.second == "true");
+      } else if (tag.first == "backward_yield") {
+        n.set_backward_yield(tag.second == "true");
       } else if (use_urban_tag_ && tag.first == "urban") {
         n.set_urban(tag.second == "true");
       } else if (tag.first == "exit_to" && is_highway_junction && hasTag) {
