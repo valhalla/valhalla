@@ -1993,6 +1993,22 @@ function nodes_proc (kv, nokeys)
     end
   end
 
+  if kv["highway"] == "stop" and kv["direction"] == "forward" then
+    kv["forward_stop"] = "true"
+  end
+
+  if kv["highway"] == "stop" and kv["direction"] == "backward" then
+    kv["backward_stop"] = "true"
+  end
+
+  if kv["highway"] == "give_way" and kv["direction"] == "forward" then
+    kv["forward_yield"] = "true"
+  end
+
+  if kv["highway"] == "give_way" and kv["direction"] == "backward" then
+    kv["backward_yield"] = "true"
+  end
+
   if kv["public_transport"] == nil and kv["name"] then
     if kv["highway"] == "traffic_signals" then
        if kv["junction"] ~= "yes" then
