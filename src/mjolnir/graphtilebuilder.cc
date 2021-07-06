@@ -645,8 +645,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         }
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{
-            AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) + ss.str())};
+        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kPronunciation)) +
+                            ss.str())};
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);
@@ -786,8 +786,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         }
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{
-            AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kVerbal)) + ss.str())};
+        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kPronunciation)) +
+                            ss.str())};
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);

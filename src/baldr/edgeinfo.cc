@@ -114,7 +114,7 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
         uint8_t num = 0;
         try {
           num = std::stoi(name.substr(0, 1));
-          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kVerbal) {
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
             if (!only_pronunciations)
               continue;
 
@@ -173,7 +173,7 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_name
           uint8_t num = 0;
           try {
             num = std::stoi(name.substr(0, 1));
-            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kVerbal) {
+            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation) {
               name_type_pairs.push_back({name.substr(1), false});
               types.push_back(num);
             }
@@ -209,7 +209,7 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
           uint8_t num = 0;
           try {
             num = std::stoi(name.substr(0, 1));
-            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kVerbal)
+            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation)
               name_type_pairs.push_back({name.substr(1), num});
 
           } catch (const std::invalid_argument& arg) {
@@ -239,7 +239,7 @@ EdgeInfo::GetPronunciationsMap() const {
         uint8_t num = 0;
         try {
           num = std::stoi(name.substr(0, 1));
-          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kVerbal) {
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
             size_t location = name.length() + 1; // start from here
             name = name.substr(1);               // remove the type...actual data remains
 

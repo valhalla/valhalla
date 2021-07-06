@@ -361,7 +361,7 @@ inline std::string to_string(Use u) {
 enum class TaggedName : uint8_t { // must start at 1 due to nulls
   kTunnel = 1,
   kBridge = 2,
-  kVerbal = 3
+  kPronunciation = 3
 };
 
 enum class PronunciationAlphabet : uint8_t { kIpa = 0, kXSampa = 1, kXJeita = 2, kXKatakana = 3 };
