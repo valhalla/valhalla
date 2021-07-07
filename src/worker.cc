@@ -972,7 +972,7 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   auto worker = exception.code < 200 || (exception.code >= 300 && exception.code < 400)
                     ? ".loki."
                     : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
-  auto action = Options_Action_Enum_Name(request.options().action());
+  const auto& action = Options_Action_Enum_Name(request.options().action());
 
   auto* err_stat = request.mutable_info()->mutable_statistics()->Add();
   err_stat->set_key(action + worker + exception.statsd_key);
@@ -1163,7 +1163,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
                       ? ".loki."
                       : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
-    auto action = Options_Action_Enum_Name(api.options().action());
+    const auto& action = Options_Action_Enum_Name(api.options().action());
 
     statsd_client->count(action + worker + "ok", 1, 1.f, statsd_client->tags);
   }
