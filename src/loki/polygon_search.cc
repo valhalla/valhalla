@@ -14,11 +14,7 @@ namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vl = valhalla::loki;
 
-BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
-                                 double,
-                                 bg::cs::geographic<bg::degree>,
-                                 first,
-                                 second)
+BOOST_GEOMETRY_REGISTER_POINT_2D(vm::PointLL, double, bg::cs::geographic<bg::degree>, first, second)
 BOOST_GEOMETRY_REGISTER_RING(std::vector<vm::PointLL>)
 
 namespace {
@@ -41,14 +37,8 @@ ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
+  bg::correct(new_ring);
   return new_ring;
-}
-
-double GetRingLength(const ring_bg_t& ring) {
-  // bg doesn't (yet) support length of ring geoms
-  line_bg_t line{ring.begin(), ring.end()};
-  auto length = bg::length(line, Haversine());
-  return length;
 }
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -101,7 +91,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
   for (const auto& ring_pbf : rings_pbf) {
     rings_bg.push_back(PBFToRing(ring_pbf));
     const ring_bg_t ring_bg = rings_bg.back();
-    rings_length += GetRingLength(ring_bg);
+    rings_length += bg::perimeter(ring_bg);
   }
   if (rings_length > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
@@ -158,11 +148,10 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
         auto edge_info = tile->edgeinfo(edge);
-        // vector<PointLL> is reserved for bg as ring, need to cast to linestring
-        line_bg_t edge_line{edge_info.shape().begin(), edge_info.shape().end()};
         bool intersects = false;
         for (const auto& ring_loc : bin.second) {
-          intersects = bg::intersects(rings_bg[ring_loc], edge_line);
+          intersects = bg::intersects(rings_bg[ring_loc],
+                                      line_bg_t(edge_info.shape().begin(), edge_info.shape().end()));
           if (intersects) {
             break;
           }
