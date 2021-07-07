@@ -330,7 +330,7 @@ void add_date_to_locations(Options& options,
 }
 
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
-// PBF objects of the sort "repeated LatLng". Open rings will be closed.
+// PBF objects of the sort "repeated LatLng". Open rings will be closed during search operation.
 template <typename ring_pbf_t>
 void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
   for (const auto& coords : coord_array.GetArray()) {
@@ -348,14 +348,6 @@ void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
     auto* ll = ring->add_coords();
     ll->set_lng(lon);
     ll->set_lat(lat);
-  }
-
-  bool is_open = (ring->coords().begin()->lat() != ring->coords().rbegin()->lat() ||
-                  ring->coords().begin()->lng() != ring->coords().rbegin()->lng());
-
-  // close open rings
-  if (!ring->coords().empty() && is_open) {
-    ring->add_coords()->CopyFrom(*ring->coords().begin());
   }
 }
 
