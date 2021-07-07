@@ -150,8 +150,7 @@ function(valhalla_module)
 endfunction()
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
-#option(BUILD_TESTS "Build tests" OFF)
-SET(BUILD_TESTS OFF CACHE BOOL "ignore test targets" FORCE)
+SET(CPP_STATSD_STANDALONE OFF CACHE BOOL "ignore test targets" FORCE)
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/third_party/cpp-statsd-client)
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
