@@ -37,6 +37,7 @@ ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
+  // fixes windedness & closes open rings
   bg::correct(new_ring);
   return new_ring;
 }
@@ -91,7 +92,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
   for (const auto& ring_pbf : rings_pbf) {
     rings_bg.push_back(PBFToRing(ring_pbf));
     const ring_bg_t ring_bg = rings_bg.back();
-    rings_length += bg::perimeter(ring_bg);
+    rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
