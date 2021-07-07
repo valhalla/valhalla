@@ -196,7 +196,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
           elapsed.secs = shape.Get(index).time() - shape.Get(0).time();
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
+        path_infos.emplace_back(mode, elapsed, edge_id, 0, 0.f, -1, transition_cost);
 
         InternalTurn turn = nodeinfo
                                 ? costing->TurnType(prev_edge_label.opp_local_idx(), nodeinfo, de)
@@ -401,7 +401,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           elapsed.secs = options.shape(index).time() - options.shape(0).time();
 
         // Add begin edge
-        path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
+        path_infos.emplace_back(mode, elapsed, graphid, 0, 0.f, -1);
 
         InternalTurn turn =
             nodeinfo ? mode_costing[static_cast<int>(mode)]->TurnType(prev_edge_label.opp_local_idx(),
@@ -468,7 +468,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
           // Add end edge
-          path_infos.emplace_back(mode, elapsed, end_edge_graphid, 0, -1, transition_cost);
+          path_infos.emplace_back(mode, elapsed, end_edge_graphid, 0, 0.f, -1, transition_cost);
           return true;
         } else {
           // Did not find an edge that correlates with the trace, return false.
@@ -491,7 +491,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
         // Add end edge
-        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, -1);
+        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
         return true;
       }
     }

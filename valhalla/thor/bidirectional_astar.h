@@ -240,6 +240,11 @@ protected:
                                               const valhalla::Location& dest,
                                               const baldr::TimeInfo& time_info,
                                               const bool invariant);
+
+  /**
+   * Modify default (optimized for unidirectional search) hierarchy limits.
+   */
+  void ModifyHierarchyLimits();
 };
 
 // This function checks if the path formed by the two expanding trees
