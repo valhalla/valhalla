@@ -968,6 +968,7 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   }
 
   // write a few stats about the error
+  request.mutable_info()->set_error(true);
   auto worker = exception.code < 200 || (exception.code >= 300 && exception.code < 400)
                     ? ".loki."
                     : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
@@ -1130,8 +1131,11 @@ void service_worker_t::cleanup() {
   statsd_client->flush();
 }
 void service_worker_t::enqueue_statistics(Api& api) const {
+  // nothing to do without stats
   if (!api.has_info() || api.info().statistics().empty())
     return;
+
+  // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
     float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
     switch (stat.type()) {
@@ -1152,6 +1156,16 @@ void service_worker_t::enqueue_statistics(Api& api) const {
                            statsd_client->tags);
         break;
     }
+  }
+
+  // before we are done with the request, if this was not an error we log it was ok
+  if (api.info().has_error() && api.info().error()) {
+    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
+                      ? ".loki."
+                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
+    auto action = Options_Action_Enum_Name(api.options().action());
+
+    statsd_client->count(action + worker + "ok", 1, 1.f, statsd_client->tags);
   }
 }
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
