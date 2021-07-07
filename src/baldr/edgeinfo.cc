@@ -119,7 +119,7 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
               continue;
 
             size_t location = name.length() + 1; // start from here
-            name = name.substr(1);               // remove the type...actual data remains
+            name = name.substr(1);               // remove the tagged name type...actual data remains
 
             auto verbal_tokens = split(name, '#');
             // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
@@ -276,10 +276,9 @@ EdgeInfo::GetPronunciationsMultiMap() const {
   return key_type_value_pairs;
 }
 
-std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>
-EdgeInfo::GetPronunciationsMap() const {
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
-  key_type_value_pairs.reserve(name_count());
+std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> index_pronunciation_map;
+  index_pronunciation_map.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
     if (!ni->tagged_)
@@ -293,32 +292,33 @@ EdgeInfo::GetPronunciationsMap() const {
           num = std::stoi(name.substr(0, 1));
           if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
             size_t location = name.length() + 1; // start from here
-            name = name.substr(1);               // remove the type...actual data remains
+            name = name.substr(1);               // remove the tagged name type...actual data remains
 
-            auto verbal_tokens = split(name, '#');
-            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
-            // key  type value
-            uint8_t index = 0, key, type;
-            for (const auto v : verbal_tokens) {
-              if (index == 0) { // key
-                key = std::stoi(v);
-                index++;
-              } else if (index == 1) { // type
-                type = std::stoi(v);
-                index++;
+            auto pronunciation_tokens = split(name, '#');
+            // index # alphabet # pronunciation
+            // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
+            uint8_t token_index = 0, index, pronunciation_alphabet;
+            for (const auto token : pronunciation_tokens) {
+              if (token_index == 0) { // index
+                index = std::stoi(token);
+                token_index++;
+              } else if (token_index == 1) { // pronunciation_alphabet
+                pronunciation_alphabet = std::stoi(token);
+                token_index++;
               } else { // value
-                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter = key_type_value_pairs.find(key);
+                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+                    index_pronunciation_map.find(index);
 
-                if ( iter == key_type_value_pairs.end() )
-                  key_type_value_pairs.emplace(
-                     std::make_pair(key, std::make_pair(type, v)));
+                if (iter == index_pronunciation_map.end())
+                  index_pronunciation_map.emplace(
+                      std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
                 else {
-                  if ((iter->second).first <= type) {
-                    key_type_value_pairs.emplace(
-                       std::make_pair(key, std::make_pair(type, v)));
+                  if (pronunciation_alphabet > (iter->second).first) {
+                    index_pronunciation_map.emplace(
+                        std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
                   }
                 }
-                index = 0;
+                token_index = 0;
               }
             }
           }
@@ -333,7 +333,7 @@ EdgeInfo::GetPronunciationsMap() const {
     }
   }
 
-  return key_type_value_pairs;
+  return index_pronunciation_map;
 }
 
 // Get the types.  Are these names route numbers or not?
