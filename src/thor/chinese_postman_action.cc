@@ -26,28 +26,6 @@ typedef DistanceMatrix::index DistanceMatrixIndex;
 typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
 typedef PathMatrix::index PathMatrixIndex;
 
-void printDistanceMatrix(DistanceMatrix dm) {
-  for (int i = 0; i < dm.shape()[0]; i++) {
-    for (int j = 0; j < dm.shape()[1]; j++) {
-      std::cout << dm[i][j] << ", ";
-    }
-    std::cout << "\n";
-  }
-}
-
-void printPathMatrix(PathMatrix pm) {
-  for (int i = 0; i < pm.shape()[0]; i++) {
-    for (int j = 0; j < pm.shape()[1]; j++) {
-      std::cout << "Path " << i << ", " << j << " : ";
-      for (auto& it : pm[i][j]) {
-        // Print the values
-        cout << it << ", ";
-      }
-      std::cout << "\n";
-    }
-  }
-}
-
 std::vector<std::pair<int, int>> getNodePairs(PathMatrix pm, int startIndex, int endIndex) {
   std::vector<std::pair<int, int>> nodePairs;
   auto path = pm[startIndex][endIndex];
@@ -87,7 +65,6 @@ std::string locationsToJson(std::vector<midgard::PointLL> locations) {
   std::string json = "[";
   bool extraCharacter = false;
   for (const auto& location : locations) {
-    // std::cout << kv.first << " has value " << kv.second << std::endl;
     json += pointLLToJson(location) + ", ";
     extraCharacter = true;
   }
@@ -127,11 +104,6 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
                                 std::vector<GraphId> path_edges,
                                 const std::shared_ptr<sif::DynamicCost>& costing_) {
   // Build a vector of path info
-  for (auto edge_id : path_edges) {
-    std::cout << edge_id << ", ";
-  }
-  std::cout << std::endl;
-
   // once we recovered the whole path we should construct list of PathInfo objects
   // set of edges recovered from shortcuts (excluding shortcut's start edges)
   std::unordered_set<GraphId> recovered_inner_edges;
@@ -169,18 +141,12 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
     LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
   }
 
-  for (auto p : path) {
-    std::cout << p.edgeid << ", " << p.elapsed_cost.cost << ", " << p.transition_cost.cost
-              << std::endl;
-  }
   return path;
 }
 
 std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
                                                 std::vector<midgard::PointLL> targets,
                                                 std::string costing) {
-  std::cout << "Number of overPoints: " << sources.size() << "\n";
-  std::cout << "Number of underPoints: " << targets.size() << "\n";
   Api request;
   // Update request with source and target, also costing
   std::string jsonMatrixRequest = "{\"sources\":" + locationsToJson(sources) +
@@ -285,7 +251,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Only for auto for now
   const auto& costing_ = mode_costing[Costing::auto_];
 
-  std::cout << "thor_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
 
@@ -336,19 +301,12 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   if (!originNodeFound) {
     throw std::logic_error("Could not find candidate edge for the origin location");
-  } else {
-    std::cout << "Origin node is found: " << originVertex.graph_id << std::endl;
   }
-  std::cout << "Num of vertices: " << G.numVertices() << std::endl;
-  std::cout << "Num of edges: " << G.numEdges() << std::endl;
 
   std::vector<GraphId> edgeGraphIds;
   if (G.getUnbalancedVertices().size() == 0) {
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);
-    std::cout << "Ideal graph" << std::endl;
   } else {
-    std::cout << "Non Ideal graph" << std::endl;
-
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
       for (int j = 0; j < G.numVertices(); j++) {
@@ -365,12 +323,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     // print
-    printDistanceMatrix(distanceMatrix);
     PathMatrix pm = computeFloydWarshallCustom(distanceMatrix);
-    std::cout << "Result\n";
-    printDistanceMatrix(distanceMatrix);
-    // Print Path Matrix
-    printPathMatrix(pm);
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
@@ -389,9 +342,6 @@ void thor_worker_t::chinese_postman(Api& request) {
         }
       }
     }
-    std::cout << "Over and under nodes\n";
-    std::cout << "Over node size: " << overNodes.size() << "\n";
-    std::cout << "Under node size: " << underNodes.size() << "\n";
 
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
@@ -401,7 +351,6 @@ void thor_worker_t::chinese_postman(Api& request) {
         int overNodeIndex = G.getVertexIndex(overNodes[i]);
         int underNodeIndex = G.getVertexIndex(underNodes[j]);
         double distance = distanceMatrix[overNodeIndex][underNodeIndex];
-        std::cout << overNodeIndex << ", " << underNodeIndex << ": " << distance << "\n";
         pairingMatrix[i].push_back(distance);
       }
     }
@@ -411,22 +360,15 @@ void thor_worker_t::chinese_postman(Api& request) {
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
     std::vector<std::pair<int, int>> extraEdges;
-    std::cout << "\n";
     std::vector<std::pair<int, int>> extraPairs;
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
-      std::cout << x << "," << assignment[x] << "\t";
-      // Get node's index for tha pair
+      // Get node's index for that pair
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
       // Expand the path between the paired nodes, using the path matrix
       auto nodePairs = getNodePairs(pm, overNodeIndex, underNodeIndex);
       // Concat with main vector
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
-    }
-    // Print all extra pairs
-    std::cout << "Extra pairs\n";
-    for (auto p : extraPairs) {
-      std::cout << p.first << " -> " << p.second << "\n";
     }
 
     edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);

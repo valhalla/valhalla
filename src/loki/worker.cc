@@ -65,7 +65,6 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 }
 
 void loki_worker_t::parse_costing(Api& api, bool allow_none) {
-  std::cout << "Calling loki_worker_t::parse_costing" << std::endl;
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
   if (!options.has_costing() || (!allow_none && options.costing() == Costing::none_)) {
@@ -144,7 +143,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   if (options.has_chinese_polygon()) {
-    std::cout << "options.has_chinese_polygon" << std::endl;
     const auto chinese_edges =
         edges_in_ring(options.chinese_polygon(), *reader, costing, max_avoid_polygons_length);
 

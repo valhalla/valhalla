@@ -151,7 +151,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     }
   }
 
-  std::cout << "edges_in_rings avoid_edge_ids size " << avoid_edge_ids.size() << std::endl;
   return avoid_edge_ids;
 }
 
@@ -199,7 +198,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
       // tile will be mutated most likely in the loop
       reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
       for (const auto& edge_id : tile->GetBin(bin.first)) {
-        // std::cout << "edge_id" << std::endl;
         if (cp_edge_ids.count(edge_id) != 0) {
           continue;
         }
@@ -229,7 +227,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
       }
     }
   }
-  std::cout << "edges_in_ring cp_edge_ids size " << cp_edge_ids.size() << std::endl;
   return cp_edge_ids;
 }
 

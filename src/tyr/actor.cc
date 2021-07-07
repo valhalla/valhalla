@@ -336,7 +336,6 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
 std::string actor_t::chinese_postman(const std::string& request_str,
                                      const std::function<void()>* interrupt,
                                      Api* api) {
-  std::cout << "Calling CP" << std::endl;
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request

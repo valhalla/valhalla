@@ -11,7 +11,6 @@ namespace valhalla {
 namespace loki {
 
 void loki_worker_t::init_chinese_postman(Api& request) {
-  std::cout << "Calling init_chinese_postman" << std::endl;
   auto& options = *request.mutable_options();
 
   // strip off unused information
@@ -26,7 +25,6 @@ void loki_worker_t::init_chinese_postman(Api& request) {
   parse_costing(request);
 }
 void loki_worker_t::chinese_postman(Api& request) {
-  std::cout << "Calling loki_worker_t::chinese_postman" << std::endl;
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "loki_worker_t::chinese_postman");
 

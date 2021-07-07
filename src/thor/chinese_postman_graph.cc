@@ -13,30 +13,6 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
-void printStack(std::stack<int> s) {
-  if (s.empty()) {
-    return;
-  }
-  int x = s.top();
-
-  s.pop();
-
-  printStack(s);
-
-  std::cout << x << ", ";
-
-  s.push(x);
-}
-
-void printAdjacencyList(std::map<int, std::vector<int>> adjacency_list) {
-  for (const auto& x : adjacency_list) {
-    std::cout << x.first << ": ";
-    for (const auto& y : x.second)
-      std::cout << y << ", ";
-    std::cout << std::endl;
-  }
-}
-
 ChinesePostmanGraph::ChinesePostmanGraph(/* args */) {
 }
 
@@ -116,16 +92,12 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
   this->setupDFSEulerCycle(extraPaths);
   this->dfsEulerCycle(startNodeIndex);
 
-  std::cout << "Expanded adjancency list: " << std::endl;
-  printAdjacencyList(this->expandedAdjacencyList);
-
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
   for (auto const& v : this->outEdges) {
     if (v.second != 0) {
       throw valhalla_exception_t(450);
     }
   }
-  std::cout << "Euler path (node IDs): ";
   std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
@@ -135,11 +107,6 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
     auto e = boost::edge(*it, *(it + 1), G);
     eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
   }
-  std::cout << "\n";
-  for (auto v : eulerPathVertices) {
-    std::cout << v.graph_id << ", ";
-  }
-  std::cout << std::endl;
   return eulerPathEdgeGraphIDs;
 }
 
