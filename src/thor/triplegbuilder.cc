@@ -869,6 +869,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
 
+    // TODO - debug output for testing - remove in the future
     for (const auto& pronunciation : pronunciations) {
       std::cout << static_cast<int>(pronunciation.first) << " "
                 << static_cast<int>((pronunciation.second).first) << " "

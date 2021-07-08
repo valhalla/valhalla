@@ -405,6 +405,7 @@ public:
   std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
 
   /**
+   * TODO: Remove after updating the tests
    * Convenience method to get the signs for an edge given the directed
    * edge index.
    * @param  idx  Directed edge or node index. Used to lookup list of signs.
@@ -415,6 +416,19 @@ public:
   std::vector<SignInfo>
   GetSigns(const uint32_t idx,
            std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+           bool signs_on_node = false) const;
+
+  /**
+   * Convenience method to get the signs for an edge given the directed
+   * edge index.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<SignInfo>
+  GetSigns(const uint32_t idx,
+           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
            bool signs_on_node = false) const;
 
   /**
