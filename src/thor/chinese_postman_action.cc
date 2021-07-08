@@ -117,8 +117,9 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
   };
 
   const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
-    path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
-                      label.transition_cost(), recovered_inner_edges.count(label.edgeid()));
+    path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
+                      label.restriction_idx(), label.transition_cost(),
+                      recovered_inner_edges.count(label.edgeid()));
   };
 
   float source_pct;
@@ -261,7 +262,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto* co = options.mutable_costing_options(options.costing());
   std::list<std::string> avoid_edge_ids;
 
-  for (auto& avoid_edge : co->avoid_edges()) {
+  for (auto& avoid_edge : co->exclude_edges()) {
     avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
   }
 

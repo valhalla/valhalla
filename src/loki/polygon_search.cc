@@ -80,6 +80,12 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
 
   return ss.str();
 }
+#endif // LOGGING_LEVEL_TRACE
+} // namespace
+
+namespace valhalla {
+namespace loki {
+
 // This custon within is created because using the boost::within for edge_info
 // shape will give different result depending on the order of the point.
 bool IsWithin(vb::EdgeInfo edge_info, polygon_type polygon) {
@@ -89,11 +95,6 @@ bool IsWithin(vb::EdgeInfo edge_info, polygon_type polygon) {
   linestring_t edge_line{p1, p2};
   return bg::within(edge_line, polygon);
 }
-#endif // LOGGING_LEVEL_TRACE
-} // namespace
-
-namespace valhalla {
-namespace loki {
 
 std::unordered_set<vb::GraphId>
 edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings_pbf,
@@ -198,7 +199,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
                                               float max_length) {
   // convert to bg object and check length restriction
   const ring_bg_t ring_bg = PBFToRing(ring_pbf);
-  if (GetRingLength(ring_bg) > max_length) {
+  if (bg::perimeter(ring_bg, Haversine()) > max_length) {
     throw valhalla_exception_t(167, std::to_string(max_length));
   }
   polygon_type polygon;
@@ -254,7 +255,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
              !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
-        bool is_within = IsWithin(tile->edgeinfo(edge->edgeinfo_offset()), polygon);
+        bool is_within = IsWithin(tile->edgeinfo(edge), polygon);
         if (is_within) {
           cp_edge_ids.emplace(edge_id);
           cp_edge_ids.emplace(

@@ -144,7 +144,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   if (options.has_chinese_polygon()) {
     const auto chinese_edges =
-        edges_in_ring(options.chinese_polygon(), *reader, costing, max_avoid_polygons_length);
+        edges_in_ring(options.chinese_polygon(), *reader, costing, max_exclude_polygons_length);
 
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : chinese_edges) {
