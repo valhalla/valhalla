@@ -1169,7 +1169,7 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
                       ? ".loki."
                       : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
-    auto action = Options_Action_Enum_Name(api.options().action());
+    const auto& action = Options_Action_Enum_Name(api.options().action());
 
     auto* stat = api.mutable_info()->mutable_statistics()->Add();
     stat->set_key(action + worker + "latency_ms");
