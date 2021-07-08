@@ -123,7 +123,8 @@ void run_service(const boost::property_tree::ptree& config) {
                                 interrupt_endpoint,
                                 std::bind(&odin_worker_t::work, std::ref(odin_worker),
                                           std::placeholders::_1, std::placeholders::_2,
-                                          std::placeholders::_3));
+                                          std::placeholders::_3),
+                                std::bind(&odin_worker_t::cleanup, std::ref(odin_worker)));
   worker.work();
 
   // TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

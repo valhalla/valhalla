@@ -1100,6 +1100,10 @@ struct statsd_client_t : public Statsd::StatsdClient {
                              conf.get<std::string>("statsd.prefix", ""),
                              conf.get<uint64_t>("statsd.batch_size", 500),
                              0) {
+    auto host = conf.get<std::string>("statsd.host", "");
+    if (!errorMessage().empty() && !host.empty()) {
+      LOG_ERROR(errorMessage());
+    }
     auto added_tags = conf.get_child_optional("statsd.tags");
     if (added_tags) {
       for (const auto& tag : *added_tags) {
@@ -1151,7 +1155,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   }
 
   // before we are done with the request, if this was not an error we log it was ok
-  if (api.info().has_error() && !api.info().error()) {
+  if (!api.info().error()) {
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
                       ? ".loki."
                       : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");

@@ -271,7 +271,7 @@ config = {
     'max_alternates': 2,
     'max_exclude_polygons_length': 10000
   },
-  'metrics': {
+  'statsd': {
     'host': optional(str),
     'port': 8125,
     'prefix': 'valhalla',
@@ -542,7 +542,7 @@ help_text = {
     'max_alternates': 'Maximum number of alternate routes to allow in a request',
     'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters'
   },
-  'metrics': {
+  'statsd': {
     'host': 'The statsd host address',
     'port': 'The statsd port',
     'prefix': 'The statsd prefix to use for each metric',
