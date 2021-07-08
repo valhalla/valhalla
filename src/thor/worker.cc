@@ -184,7 +184,6 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   if (!result.intermediate)
     enqueue_statistics(request);
 
-  // let the worker forward the result downstream or back to the client
   return result;
 }
 

@@ -1151,13 +1151,14 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   }
 
   // before we are done with the request, if this was not an error we log it was ok
-  if (api.info().has_error() && api.info().error()) {
+  if (api.info().has_error() && !api.info().error()) {
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
                       ? ".loki."
                       : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
     statsd_client->count(action + worker + "ok", 1, 1.f, statsd_client->tags);
+    statsd_client->count(action + worker + "http_200", 1, 1.f, statsd_client->tags);
   }
 }
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
