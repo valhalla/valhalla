@@ -140,8 +140,8 @@ jobs:
           keys:
             - ccache-release-macos-{{ .Branch }}
             - ccache-release-macos
-      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
-      - run: brew install --build-from-source ./prime_server.rb
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure
+      - run: make -j4 && make install && cd ..
       - run: mkdir -p build
       - run: cd build && cmake ..
       - run: make -C build -j4
