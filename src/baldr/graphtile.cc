@@ -707,9 +707,9 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
   }
 }
 
-// Convenience method to get the signs for an edge given the
+// Convenience method to process the signs for an edge given the
 // directed edge index.
-std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
+std::vector<SignInfo> GraphTile::ProcessSigns(const uint32_t idx, bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {

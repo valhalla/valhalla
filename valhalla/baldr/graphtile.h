@@ -402,7 +402,7 @@ public:
    *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+  std::vector<SignInfo> ProcessSigns(const uint32_t idx, bool signs_on_node = false) const;
 
   /**
    * TODO: Remove after updating the tests

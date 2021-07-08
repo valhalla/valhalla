@@ -637,7 +637,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
         // Get signs from the base directed edge
         if (directededge->sign()) {
-          std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
+          std::vector<SignInfo> signs = tile->ProcessSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
           }
@@ -706,7 +706,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Get named signs from the base node
       if (nodeinfo.named_intersection()) {
 
-        std::vector<SignInfo> signs = tile->GetSigns(n, true);
+        std::vector<SignInfo> signs = tile->ProcessSigns(n, true);
         if (signs.size() == 0) {
           LOG_ERROR("Base node should have signs, but none found");
         }

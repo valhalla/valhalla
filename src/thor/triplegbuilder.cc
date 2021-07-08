@@ -662,7 +662,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
       GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
       valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
       size_t edge_idx = intersecting_de - t2->directededge(0);
-      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx);
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx, pronunciations);
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -865,8 +866,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
-    std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
-
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
 
     // TODO - debug output for testing - remove in the future
@@ -886,7 +886,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs
-    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, pronunciations, true);
     if (!node_signs.empty()) {
       valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
