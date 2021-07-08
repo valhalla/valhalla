@@ -25,16 +25,6 @@ namespace sif {
 namespace {
 
 // Base transition costs
-// TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
-constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
-constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
-constexpr float kDefaultGateCost = 30.0f;                // Seconds
-constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
-constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
-constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 // Note: all roads of class "Service, other" are already penalized with low_class_penalty, so for
 // generic service roads these penalties will add up
 constexpr float kDefaultServicePenalty = 0.0f; // Seconds
@@ -74,38 +64,7 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
-// How much to avoid generic service roads.
-constexpr float kDefaultServiceFactor = 1.0f;
-
-constexpr float kMinFactor = 0.1f;
-constexpr float kMaxFactor = 100000.0f;
-
-// Weighting factor based on road class. These apply penalties to lower class
-// roads.
-constexpr float kRoadClassFactor[] = {
-    0.0f,  // Motorway
-    0.05f, // Trunk
-    0.1f,  // Primary
-    0.25f, // Secondary
-    0.35f, // Tertiary
-    0.5f,  // Unclassified
-    0.75f, // Residential
-    0.1f   // Service, other
-};
-
 // Valid ranges and defaults
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
-                                                               kMaxPenalty};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxPenalty};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxPenalty};
-constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
-                                                            kMaxPenalty};
-constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty,
-                                                               kMaxPenalty};
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0, kDefaultLowClassPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kTruckWeightRange{0, kDefaultTruckWeight, 100.0f};
 constexpr ranged_default_t<float> kTruckAxleLoadRange{0, kDefaultTruckAxleLoad, 40.0f};
@@ -113,10 +72,19 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
-constexpr ranged_default_t<float> kUseLivingStreetsRange{0.f, kDefaultUseLivingStreets, 1.0f};
-constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kServiceFactorRange{kMinFactor, kDefaultServiceFactor, kMaxFactor};
+
+BaseCostingOptionsConfig GetBaseCostOptsConfig() {
+  BaseCostingOptionsConfig cfg{};
+  // override defaults
+  cfg.disable_ferry_ = true;
+  cfg.disable_rail_ferry_ = true;
+  cfg.service_penalty_.def = kDefaultServicePenalty;
+  cfg.use_tracks_.def = kDefaultUseTracks;
+  cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  return cfg;
+}
+
+const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 } // namespace
 
@@ -155,6 +123,7 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
+   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -164,6 +133,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
@@ -407,6 +377,7 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
 
 // Check if access is allowed on the specified edge.
 inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
+                               const bool is_dest,
                                const EdgeLabel& pred,
                                const graph_tile_ptr& tile,
                                const baldr::GraphId& edgeid,
@@ -422,8 +393,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
-                                           restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -445,7 +416,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 
@@ -649,55 +620,10 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
-    // TODO: farm more common stuff out to parent class
     ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
+    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
 
     // If specified, parse json and set pbf values
-
-    // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
-
-    // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
-
-    // gate_cost
-    pbf_costing_options->set_gate_cost(
-        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
-                           .get_value_or(kDefaultGateCost)));
-
-    // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
-
-    // toll_booth_cost
-    pbf_costing_options->set_toll_booth_cost(
-        kTollBoothCostRange(rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
-                                .get_value_or(kDefaultTollBoothCost)));
-
-    // toll_booth_penalty
-    pbf_costing_options->set_toll_booth_penalty(kTollBoothPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_penalty")
-            .get_value_or(kDefaultTollBoothPenalty)));
-
-    // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
-
-    // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
-
-    // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
 
     // low_class_penalty
     pbf_costing_options->set_low_class_penalty(kLowClassPenaltyRange(
@@ -737,36 +663,10 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
-    // use_tracks
-    pbf_costing_options->set_use_tracks(
-        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
-                            .get_value_or(kDefaultUseTracks)));
-    // use_living_street
-    pbf_costing_options->set_use_living_streets(kUseLivingStreetsRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/use_living_streets")
-            .get_value_or(kDefaultUseLivingStreets)));
-
-    // service_penalty
-    pbf_costing_options->set_service_penalty(
-        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
-                                 .get_value_or(kDefaultServicePenalty)));
-
-    // service_factor
-    pbf_costing_options->set_service_factor(
-        kServiceFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/service_factor")
-                                .get_value_or(kDefaultServiceFactor)));
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_gate_cost(kDefaultGateCost);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
-    pbf_costing_options->set_toll_booth_penalty(kDefaultTollBoothPenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
+    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
+
     pbf_costing_options->set_low_class_penalty(kDefaultLowClassPenalty);
     pbf_costing_options->set_hazmat(false);
     pbf_costing_options->set_weight(kDefaultTruckWeight);
@@ -775,13 +675,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_width(kDefaultTruckWidth);
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
-    pbf_costing_options->set_use_living_streets(kDefaultUseLivingStreets);
-    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
-    pbf_costing_options->set_service_factor(kDefaultServiceFactor);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-    pbf_costing_options->set_closure_factor(kDefaultClosureFactor);
   }
 }
 
@@ -837,77 +732,82 @@ TEST(TruckCost, testTruckCostParams) {
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
   std::shared_ptr<TestTruckCost> ctorTester;
 
+  const auto& defaults = kBaseCostOptsConfig;
+
   // maneuver_penalty_
-  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.maneuver_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("maneuver_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->maneuver_penalty_,
-                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
+                test::IsBetween(defaults.maneuver_penalty_.min, defaults.maneuver_penalty_.max));
   }
 
   // alley_penalty_
-  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.alley_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("alley_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->alley_penalty_,
-                test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
+                test::IsBetween(defaults.alley_penalty_.min, defaults.alley_penalty_.max));
   }
 
   // destination_only_penalty_
-  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.dest_only_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->destination_only_penalty_,
-                test::IsBetween(kDestinationOnlyPenaltyRange.min, kDestinationOnlyPenaltyRange.max));
+                test::IsBetween(defaults.dest_only_penalty_.min, defaults.dest_only_penalty_.max));
   }
 
   // gate_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kGateCostRange));
+  distributor.reset(make_distributor_from_range(defaults.gate_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_cost", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->gate_cost_.secs, test::IsBetween(kGateCostRange.min, kGateCostRange.max));
+    EXPECT_THAT(ctorTester->gate_cost_.secs,
+                test::IsBetween(defaults.gate_cost_.min, defaults.gate_cost_.max));
   }
 
   // gate_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.gate_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->gate_cost_.cost,
-                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
+                test::IsBetween(defaults.gate_penalty_.min, defaults.gate_penalty_.max));
   }
 
   // tollbooth_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kTollBoothCostRange));
+  distributor.reset(make_distributor_from_range(defaults.toll_booth_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_cost", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->toll_booth_cost_.secs,
-                test::IsBetween(kTollBoothCostRange.min, kTollBoothCostRange.max));
+                test::IsBetween(defaults.toll_booth_cost_.min, defaults.toll_booth_cost_.max));
   }
 
   // tollbooth_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.toll_booth_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->toll_booth_cost_.cost,
-                test::IsBetween(kTollBoothPenaltyRange.min,
-                                kTollBoothPenaltyRange.max + kDefaultTollBoothCost));
+                test::IsBetween(defaults.toll_booth_penalty_.min,
+                                defaults.toll_booth_penalty_.max + defaults.toll_booth_cost_.def));
   }
 
   // country_crossing_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  distributor.reset(make_distributor_from_range(defaults.country_crossing_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_cost", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->country_crossing_cost_.secs,
-                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
+                test::IsBetween(defaults.country_crossing_cost_.min,
+                                defaults.country_crossing_cost_.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.country_crossing_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
-                test::IsBetween(kCountryCrossingPenaltyRange.min,
-                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
+                test::IsBetween(defaults.country_crossing_penalty_.min,
+                                defaults.country_crossing_penalty_.max +
+                                    defaults.country_crossing_cost_.def));
   }
 
   // Ferry transition cost and ferry use not yet supported
@@ -921,19 +821,19 @@ TEST(TruckCost, testTruckCostParams) {
   }
 
   // service_penalty_
-  distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  distributor.reset(make_distributor_from_range(defaults.service_penalty_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("service_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->service_penalty_,
-                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
+                test::IsBetween(defaults.service_penalty_.min, defaults.service_penalty_.max));
   }
 
   // service_factor_
-  distributor.reset(make_distributor_from_range(kServiceFactorRange));
+  distributor.reset(make_distributor_from_range(defaults.service_factor_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("service_factor", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->service_factor_,
-                test::IsBetween(kServiceFactorRange.min, kServiceFactorRange.max));
+                test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
   }
 
   // weight_

@@ -4,6 +4,27 @@
 #       https://developercommunity.visualstudio.com/content/problem/294872/yaml-build-ignores-fetchdepth.html
 # TODO: Once CMake 3.13 is available replace -H with -S option
 #
+
+# No wildcards allowed for file patterns...
+# skip draft PR's, skip all commits except for PRs to master
+trigger: none
+pr:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+      - CHANGELOG.md
+      - bench/
+      - docker/
+      - docs/
+      - run_route_scripts/
+      - test/
+      - .circleci/
+      - .github/
+  drafts: false
+
 jobs:
   - job: VS2019
     displayName: 'Windows 2019 | VS2019'
@@ -35,11 +56,11 @@ jobs:
       - task: Cache@2
         displayName: "Cache build"
         inputs:
-          key: '"msvc-v16.9.0" | build | "$(Build.SourceBranch)"'
+          key: '"msvc-v16.10.0" | build | "$(Build.SourceBranch)"'
           path: "$(BUILD_DIR)"
           restoreKeys: |
-            "msvc-v16.9.0" | build | "$(Build.SourceBranch)"
-            "msvc-v16.9.0" | build
+            "msvc-v16.10.0" | build | "$(Build.SourceBranch)"
+            "msvc-v16.10.0" | build
           cacheHitVar: BUILD_CACHE_RESTORED
 
       - task: UsePythonVersion@0

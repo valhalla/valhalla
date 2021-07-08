@@ -31,21 +31,25 @@ TimeDistanceMatrix::TimeDistanceMatrix()
     : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
+// Compute a cost threshold in seconds based on average speed for the travel mode.
+// Use a conservative speed estimate (in MPH) for each travel mode.
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
-  float cost_threshold;
+  float average_speed_mph;
   switch (mode_) {
     case TravelMode::kBicycle:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdBicycleDivisor;
+      average_speed_mph = 10.0f;
       break;
     case TravelMode::kPedestrian:
     case TravelMode::kPublicTransit:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
+      average_speed_mph = 2.0f;
       break;
     case TravelMode::kDrive:
     default:
-      cost_threshold = max_matrix_distance / kTimeDistCostThresholdAutoDivisor;
+      average_speed_mph = 35.0f;
   }
-  return cost_threshold;
+
+  // Convert max_matrix_distance to seconds based on the average speed
+  return max_matrix_distance / (average_speed_mph * kMPHtoMetersPerSec);
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -94,8 +98,9 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = -1;
+    const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
+        !costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }

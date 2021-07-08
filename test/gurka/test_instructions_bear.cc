@@ -55,6 +55,7 @@ TEST_F(InstructionsBear, KeepRightBranchToward) {
   // Verify the keep right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Bear right onto Larkin Street.",
+                                                            "Bear right.",
                                                             "Bear right onto Larkin Street.",
                                                             "Bear right onto Larkin Street.",
                                                             "Continue for 5 kilometers.");
@@ -74,6 +75,7 @@ TEST_F(InstructionsBear, KeepLeftBranchToward) {
   // Verify the keep left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Bear left onto Hayes Street.",
+                                                            "Bear left.",
                                                             "Bear left onto Hayes Street.",
                                                             "Bear left onto Hayes Street.",
                                                             "Continue for 5 kilometers.");

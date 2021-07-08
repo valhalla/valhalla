@@ -94,7 +94,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t nodecount = currentnodes.size();
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
-  uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -229,7 +228,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   nodecount = currentnodes.size();
   tilebuilder_transit.nodes().clear();
   currentedges = tilebuilder_transit.directededges();
-  edgecount = currentedges.size();
   tilebuilder_transit.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -360,10 +358,11 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid()) + ": added " +
            std::to_string(connedges) + " connection edges, " + std::to_string(nodecount) +
-           " nodes. time = " + std::to_string(msecs) + " ms");
+           " nodes. time = " +
+           std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) +
+           " ms");
 }
 
 // Fallback to find connection edges from the transit stop to an OSM edge.
@@ -380,7 +379,6 @@ void FindOSMConnection(const PointLL& stop_ll,
   // We do this because the associated way could have been deleted from the
   // OSM data, but we may have not updated the stops yet in TransitLand.
   double mindist = 10000000.0;
-  uint32_t edgelength = 0;
   double rm = kMetersPerKm; // one km
   double mr2 = rm * rm;
 
@@ -437,7 +435,6 @@ void FindOSMConnection(const PointLL& stop_ll,
             mindist = std::get<1>(this_closest);
             closest = this_closest;
             closest_shape = this_shape;
-            edgelength = directededge->length();
           }
         }
       }
@@ -520,7 +517,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::list<PointLL> shape;
-    for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
+    for (int i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
     shape.push_back(std::get<0>(closest));
@@ -563,6 +560,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
               " Start Node Tile: " + std::to_string(startnode.tileid()) +
               " End Node Tile: " + std::to_string(endnode.tileid()));
   }
+  UNUSED(stop_name);
 }
 
 // We make sure to lock on reading and writing since tiles are now being

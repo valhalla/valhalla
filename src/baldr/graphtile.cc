@@ -96,7 +96,8 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
     return nullptr;
   }
 
-  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)));
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)))};
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -121,8 +122,9 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
     file.seekg(0, std::ios::beg);
     file.read(data.data(), filesize);
     file.close();
-    return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)),
-                         std::move(traffic_memory));
+    return graph_tile_ptr{new GraphTile(graphid,
+                                        std::make_unique<const VectorGraphMemory>(std::move(data)),
+                                        std::move(traffic_memory))};
   }
 
   // Try to load a gzipped tile
@@ -142,13 +144,14 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 }
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid, std::vector<char>&& memory) {
-  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)));
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)))};
 }
 
 graph_tile_ptr GraphTile::Create(const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& memory,
                                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  return new GraphTile(graphid, std::move(memory), std::move(traffic_memory));
+  return graph_tile_ptr{new GraphTile(graphid, std::move(memory), std::move(traffic_memory))};
 }
 
 // the right c-tor for GraphTile
@@ -230,7 +233,8 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return DecompressTile(graphid, result.bytes_);
   }
 
-  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)));
+  return graph_tile_ptr{
+      new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)))};
 }
 
 GraphTile::~GraphTile() = default;
@@ -609,13 +613,8 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
   return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
-// Get a pointer to edge info.
-EdgeInfo GraphTile::edgeinfo(const size_t offset) const {
-  return EdgeInfo(edgeinfo_ + offset, textlist_, textlist_size_);
-}
-
 EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
-  return edgeinfo(edge->edgeinfo_offset());
+  return EdgeInfo(edgeinfo_ + edge->edgeinfo_offset(), textlist_, textlist_size_);
 }
 
 // Get the complex restrictions in the forward or reverse order based on
@@ -655,17 +654,12 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   return directededge(nodeinfo->edge_index());
 }
 
-// Convenience method to get the names for an edge given the offset to the
-// edge info
-std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset,
-                                             bool only_tagged_names) const {
-  return edgeinfo(edgeinfo_offset).GetNames(only_tagged_names);
+std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge, bool only_tagged_names) const {
+  return edgeinfo(edge).GetNames(only_tagged_names);
 }
 
-// Convenience method to get the types for the names given the offset to the
-// edge info
-uint16_t GraphTile::GetTypes(const uint32_t edgeinfo_offset) const {
-  return edgeinfo(edgeinfo_offset).GetTypes();
+uint16_t GraphTile::GetTypes(const DirectedEdge* edge) const {
+  return edgeinfo(edge).GetTypes();
 }
 
 // Get the admininfo at the specified index.

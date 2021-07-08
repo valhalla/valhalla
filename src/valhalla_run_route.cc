@@ -30,8 +30,8 @@
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
-#include "thor/timedep.h"
 #include "thor/triplegbuilder.h"
+#include "thor/unidirectional_astar.h"
 #include "worker.h"
 
 #include "proto/api.pb.h"
@@ -427,6 +427,14 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
       }
     }
 
+    // Verbal succinct transition instruction
+    if (maneuver.has_verbal_succinct_transition_instruction()) {
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
+                                       maneuver.verbal_succinct_transition_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
+    }
+
     // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
@@ -662,11 +670,10 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  TimeDepForward astar;
-  BidirectionalAStar bd;
-  MultiModalPathAlgorithm mm;
-  TimeDepForward timedep_forward;
-  TimeDepReverse timedep_reverse;
+  BidirectionalAStar bd(pt.get_child("thor"));
+  MultiModalPathAlgorithm mm(pt.get_child("thor"));
+  TimeDepForward timedep_forward(pt.get_child("thor"));
+  TimeDepReverse timedep_reverse(pt.get_child("thor"));
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);
@@ -697,14 +704,13 @@ int main(int argc, char* argv[]) {
           for (auto& edge2 : dest.path_edges()) {
             if (edge1.graph_id() == edge2.graph_id() ||
                 reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
-              pathalgorithm = &astar;
+              pathalgorithm = &timedep_forward;
             }
           }
         }
       }
     }
-    bool using_astar = (pathalgorithm == &astar || pathalgorithm == &timedep_forward ||
-                        pathalgorithm == &timedep_reverse);
+    bool using_astar = (pathalgorithm == &timedep_forward || pathalgorithm == &timedep_reverse);
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path

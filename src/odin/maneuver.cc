@@ -135,7 +135,7 @@ Maneuver::Maneuver()
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false) {
+      pedestrian_crossing_(false), has_long_street_name_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -170,23 +170,25 @@ bool Maneuver::IsMergeType() const {
 }
 
 bool Maneuver::IsLeftType() const {
-  return ((type_ == DirectionsLeg_Maneuver_Type_kUturnLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kSharpLeft ||
+  return ((type_ == DirectionsLeg_Maneuver_Type_kSlightLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kSlightLeft ||
-           type_ == DirectionsLeg_Maneuver_Type_kExitLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kSharpLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kUturnLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kRampLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kExitLeft ||
+           type_ == DirectionsLeg_Maneuver_Type_kStayLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft ||
            type_ == DirectionsLeg_Maneuver_Type_kMergeLeft));
 }
 
 bool Maneuver::IsRightType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kSlightRight ||
-           type_ == DirectionsLeg_Maneuver_Type_kExitRight ||
-           type_ == DirectionsLeg_Maneuver_Type_kRampRight ||
            type_ == DirectionsLeg_Maneuver_Type_kRight ||
            type_ == DirectionsLeg_Maneuver_Type_kSharpRight ||
            type_ == DirectionsLeg_Maneuver_Type_kUturnRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kRampRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kExitRight ||
+           type_ == DirectionsLeg_Maneuver_Type_kStayRight ||
            type_ == DirectionsLeg_Maneuver_Type_kDestinationRight ||
            type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
@@ -569,6 +571,24 @@ bool Maneuver::intersecting_forward_edge() const {
 
 void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
   intersecting_forward_edge_ = intersecting_forward_edge;
+}
+
+const std::string& Maneuver::verbal_succinct_transition_instruction() const {
+  return verbal_succinct_transition_instruction_;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    const std::string& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = verbal_succinct_transition_instruction;
+}
+
+void Maneuver::set_verbal_succinct_transition_instruction(
+    std::string&& verbal_succinct_transition_instruction) {
+  verbal_succinct_transition_instruction_ = std::move(verbal_succinct_transition_instruction);
+}
+
+bool Maneuver::HasVerbalSuccinctTransitionInstruction() const {
+  return (!verbal_succinct_transition_instruction_.empty());
 }
 
 const std::string& Maneuver::verbal_transition_alert_instruction() const {
@@ -1090,6 +1110,15 @@ void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type
   bss_maneuver_type_ = type;
 }
 
+bool Maneuver::has_long_street_name() const {
+
+  return has_long_street_name_;
+}
+
+void Maneuver::set_long_street_name(bool has_long_street_name) {
+  has_long_street_name_ = has_long_street_name;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -1188,6 +1217,9 @@ std::string Maneuver::ToString() const {
   man_str += " | intersecting_forward_edge=";
   man_str += std::to_string(intersecting_forward_edge_);
 
+  man_str += " | verbal_succinct_transition_instruction=";
+  man_str += verbal_succinct_transition_instruction_;
+
   man_str += " | verbal_transition_alert_instruction=";
   man_str += verbal_transition_alert_instruction_;
 
@@ -1260,6 +1292,9 @@ std::string Maneuver::ToString() const {
   man_str += " | bus=";
   man_str += std::to_string(bus_);
 
+  man_str += " | has_long_street_name=";
+  man_str += std::to_string(has_long_street_name_);
+
   // TODO travel types
 
   man_str += " | transit_connection=";
@@ -1277,7 +1312,7 @@ std::string Maneuver::ToString() const {
   for (const auto& guidance_view : guidance_views_) {
     man_str += "[";
     man_str += " data_id=" + guidance_view.data_id();
-    man_str += " type=" + guidance_view.type();
+    man_str += " type=" + std::to_string(guidance_view.type());
     man_str += " base_id=" + guidance_view.base_id();
     man_str += " overlay_ids=";
     for (const auto& overlay_id : guidance_view.overlay_ids()) {
@@ -1411,6 +1446,11 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_shape_index_);
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_succinct_transition_instruction_;
+  man_str += "\"";
 
   man_str += delim;
   man_str += "\"";

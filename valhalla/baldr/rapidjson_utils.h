@@ -20,6 +20,8 @@
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))
 // Because we now throw exceptions, we need to turn of RAPIDJSON_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
+// Enbale std::string overloads
+#define RAPIDJSON_HAS_STDSTRING 1
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -237,15 +239,34 @@ inline std::string serialize(const rapidjson::Document& doc) {
   return buffer.GetString();
 }
 
+inline Document read_json(std::ifstream& stream) {
+  Document d;
+  IStreamWrapper wrapper(stream);
+  d.ParseStream(wrapper);
+  if (d.HasParseError())
+    throw std::runtime_error("Could not parse json, error at offset: " +
+                             std::to_string(d.GetErrorOffset()));
+  if (!d.IsObject() && !d.IsArray())
+    throw std::runtime_error("Json is not an object or array");
+  return d;
+}
+
+inline Document read_json(const std::string& filename, const std::locale& loc = std::locale()) {
+  std::ifstream stream(filename);
+  if (!stream)
+    throw std::runtime_error("Cannot open file " + filename);
+  stream.imbue(loc);
+  return rapidjson::read_json(stream);
+}
+
 /**
  * A convenience class to the writer stringbuffer rapidjson pattern. This takes whatever
  * data you want and serializes it directly to a json string rather than keeping it organized
  * as json in an in memory object. If you are familiar with XML parsing/writing this is analogous
  * to a SAX style writer/generator for json, as opposed to DOM (object model in memory) style
  *
- * The rapidjson write is pretty completely but its quite verbose for common operations like
- * adding a key value pair. Because of that we've writting a small wrapper here to make its
- * use less verbose
+ * Rapidjson's write is pretty complete but its quite verbose for common operations like
+ * adding a key value pair. Because of that we have a small wrapper here to make it less verbose
  */
 class writer_wrapper_t {
 protected:

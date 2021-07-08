@@ -190,8 +190,8 @@ TEST_F(SearchFilter, ExcludeRamp) {
 namespace {
 inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
   live_speed->breakpoint1 = 255;
-  live_speed->overall_speed = speed >> 1;
-  live_speed->speed1 = speed >> 1;
+  live_speed->overall_encoded_speed = speed >> 1;
+  live_speed->encoded_speed1 = speed >> 1;
 }
 
 void close_dir_edge(baldr::GraphReader& reader,
@@ -1057,7 +1057,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
                                     {"/date_time/value", "current"},
                                     {costing_speed_type, "current"}},
                                    reader);
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE", "EF", "FG", "GH"});
   }
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
@@ -1076,7 +1076,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
          std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE", "EF", "FG", "GH"});
   }
   // Close an interdmediate edge. Route should avoid it while not ignoring the
   // consecutive closures at destination
@@ -1096,7 +1096,7 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
          std::to_string(closure_map.nodes.at("H").lng()) % costing % costing % date_type)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, closure_map, req, reader);
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DIJE", "EF", "FG", "GH"});
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DIJE", "EF", "FG", "GH"});
   }
 
   // TODO: Ensure this test work with timedep fwd (date_type = "0")

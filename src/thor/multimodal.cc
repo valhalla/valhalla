@@ -351,9 +351,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
+      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
         continue;
       }
       // check if excluded.
@@ -429,8 +430,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               restriction_idx)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, is_dest, pred, tile,
+                                                               edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -724,8 +725,9 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     uint8_t restriction_idx = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
+        !costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
       continue;
     }
 
@@ -844,7 +846,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const MMEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), edgelabel.tripid(),
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+                      edgelabel.path_distance(), edgelabel.restriction_idx(),
+                      edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

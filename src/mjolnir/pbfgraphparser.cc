@@ -32,9 +32,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Absurd classification.
-constexpr uint32_t kAbsurdRoadClass = 777777;
-
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
 int get_number(const std::string& tag, const std::string& value) { // NOLINT
@@ -49,6 +46,99 @@ int get_number(const std::string& tag, const std::string& value) { // NOLINT
   return num;
 }
 
+// This class helps to set "culdesac" labels to loop roads correctly.
+// How does it work?
+// First needs to add loop roads (that are candidates to be a "culdesac" roads) using add_candidate
+// method. After that, needs to call clarify_and_fix. It clarifies types of roads and marks roads as
+// "culdesac" correctly. This call requires sets of OSMWayNode and OSMWay. clarify_and_fix must to
+// call after finishing collecting these sets.
+class culdesac_processor {
+public:
+  // Adds a loop road as a candidate to be a "culdesac" road.
+  void add_candidate(uint64_t osm_way_id,
+                     size_t osm_way_index,
+                     const std::vector<uint64_t>& osm_node_ids) {
+    loops_meta_.emplace(osm_way_id, loop_meta(osm_way_index));
+    for (auto osm_node_id : osm_node_ids)
+      node_to_loop_way_.emplace(osm_node_id, osm_way_id);
+  }
+
+  // Clarifies types of loop roads and saves fixed ways.
+  void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    osm_way_node_seq.flush();
+    osm_way_seq.flush();
+
+    size_t number_of_nodes = 0;
+    size_t count_node = 0;
+    OSMWay osm_way;
+    for (const auto& osm_way_node : osm_way_node_seq) {
+      // Reads a new way only after its nodes are read.
+      if (number_of_nodes == count_node) {
+        osm_way = *osm_way_seq[osm_way_node.way_index];
+        number_of_nodes = osm_way.node_count();
+        count_node = 0;
+      }
+
+      const auto node_to_loop_way_range = node_to_loop_way_.equal_range(osm_way_node.node.osmid_);
+      for (auto it = node_to_loop_way_range.first; it != node_to_loop_way_range.second; ++it) {
+        if (osm_way.way_id() != it->second && osm_way.use() == Use::kRoad) {
+          loops_meta_.at(it->second).add_id_of_intersection(osm_way_node.node.osmid_);
+        }
+      }
+
+      ++count_node;
+    }
+
+    fix(osm_way_seq);
+  }
+
+private:
+  // loop_meta is a helper class that stores loop info.
+  class loop_meta {
+  public:
+    explicit loop_meta(size_t way_index) : way_index_(way_index) {
+    }
+
+    size_t get_way_index() const {
+      return way_index_;
+    }
+
+    bool is_culdesac() const {
+      return node_ids_of_intersections_.size() <= 1;
+    }
+
+    void add_id_of_intersection(uint64_t node_id) {
+      node_ids_of_intersections_.insert(node_id);
+    }
+
+  private:
+    size_t way_index_;
+    // Stores nodes that are intersections of loop road loop and adjacent roads.
+    std::unordered_set<uint64_t> node_ids_of_intersections_;
+  };
+
+  // Sets "culdesac" labels to loop roads and saves ways.
+  void fix(sequence<OSMWay>& osm_way_seq) {
+    size_t number_of_culdesac = 0;
+    for (const auto& loop_way_id_to_meta : loops_meta_) {
+      const auto& meta = loop_way_id_to_meta.second;
+      if (meta.is_culdesac()) {
+        auto way_it = osm_way_seq.at(meta.get_way_index());
+        auto way = *way_it;
+        way.set_use(Use::kCuldesac);
+        way_it = way;
+        ++number_of_culdesac;
+      }
+    }
+
+    LOG_INFO("Added " + std::to_string(number_of_culdesac) + " culdesac roundabouts from " +
+             std::to_string(loops_meta_.size()) + " candidates.");
+  }
+
+  std::unordered_multimap<uint64_t, uint64_t> node_to_loop_way_;
+  std::unordered_map<uint64_t, loop_meta> loops_meta_;
+};
+
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
 public:
@@ -58,7 +148,7 @@ public:
   }
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : osmdata_(osmdata), lua_(get_lua(pt)) {
+      : lua_(get_lua(pt)), osmdata_(osmdata) {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -211,6 +301,9 @@ public:
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
+    tag_handlers_["pedestrian_forward"] = [this]() {
+      way_.set_pedestrian_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["auto_backward"] = [this]() {
       way_.set_auto_backward(tag_.second == "true" ? true : false);
     };
@@ -238,8 +331,8 @@ public:
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["pedestrian"] = [this]() {
-      way_.set_pedestrian(tag_.second == "true" ? true : false);
+    tag_handlers_["pedestrian_backward"] = [this]() {
+      way_.set_pedestrian_backward(tag_.second == "true" ? true : false);
     };
     tag_handlers_["private"] = [this]() {
       // Make sure we do not unset this flag if set previously
@@ -455,7 +548,7 @@ public:
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_value(std::stof(tag_.second) * 100);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -463,7 +556,7 @@ public:
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_value(std::stof(tag_.second) * 100);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -947,6 +1040,10 @@ public:
         n.set_type(NodeType::kSumpBuster);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (tag.first == "tagged_access") {
+        n.set_tagged_access(std::stoi(tag.second));
+      } else if (tag.first == "private") {
+        n.set_private_access(tag.second == "true");
       }
 
       /* TODO: payment type.
@@ -1102,10 +1199,6 @@ public:
       has_surface_ = false;
     }
 
-    const auto& highway_junction = results.find("highway");
-    bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
-
     way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
@@ -1137,9 +1230,10 @@ public:
         AccessType type = AccessType::kTimedDenied;
         if (tmp == "no") {
           type = AccessType::kTimedDenied;
-        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated" ||
-                   tmp == "destination") {
+        } else if (tmp == "yes" || tmp == "private" || tmp == "delivery" || tmp == "designated") {
           type = AccessType::kTimedAllowed;
+        } else if (tmp == "destination") {
+          type = AccessType::kDestinationAllowed;
         }
 
         if (tokens.size() == 2 && tmp.size()) {
@@ -1484,7 +1578,8 @@ public:
     // Infer cul-de-sac if a road edge is a loop and is low classification.
     if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
-      way_.set_use(Use::kCuldesac);
+      // Adds a loop road as a candidate to be a "culdesac" road.
+      culdesac_processor_.add_candidate(way_.way_id(), ways_->size(), nodes);
     }
 
     if (has_user_tags_) {
@@ -1558,7 +1653,7 @@ public:
                   tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
                   tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
                   tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
-                  tag.first == "restriction:emergency") &&
+                  tag.first == "restriction:emergency" || tag.first == "restriction:foot") &&
                  !tag.second.empty()) {
         isRestriction = true;
         if (tag.first != "restriction") {
@@ -1579,6 +1674,10 @@ public:
           modes |= kTruckAccess;
         } else if (tag.first == "restriction:emergency") {
           modes |= kEmergencyAccess;
+        } else if (tag.first == "restriction:psv") {
+          modes |= (kTaxiAccess | kBusAccess);
+        } else if (tag.first == "restriction:foot") {
+          modes |= (kPedestrianAccess | kWheelchairAccess);
         }
 
         RestrictionType type = (RestrictionType)std::stoi(tag.second);
@@ -1808,6 +1907,8 @@ public:
               modes = modes & ~kTruckAccess;
             } else if (t == "emergency") {
               modes = modes & ~kEmergencyAccess;
+            } else if (t == "foot") {
+              modes = modes & ~(kPedestrianAccess | kWheelchairAccess);
             }
           }
         }
@@ -1828,13 +1929,15 @@ public:
             // simple restriction, but is a timed restriction
             // change to complex and set date and time info
             if (condition.empty()) {
-              condition = day_start + "-";
-              condition += day_end;
+              if (!day_start.empty() && !day_end.empty()) {
+                condition = day_start + '-' + day_end;
+              }
               // do we have multiple times entered?
               if (!has_multiple_times) {
                 // no we do not...add the hours to the condition
-                condition += " " + hour_start + "-";
-                condition += hour_end;
+                if (!hour_start.empty() && !hour_end.empty()) {
+                  condition += ' ' + hour_start + '-' + hour_end;
+                }
               }
               // yes multiple times
               // 06:00;17:00
@@ -2007,6 +2110,9 @@ public:
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 
+  // used to set "culdesac" labels to loop roads correctly
+  culdesac_processor culdesac_processor_;
+
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_results_;
   Tags empty_way_results_;
@@ -2026,9 +2132,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
@@ -2061,6 +2167,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                           callback);
   }
 
+  // Clarifies types of loop roads and saves fixed ways.
+  callback.culdesac_processor_.clarify_and_fix(*callback.way_nodes_, *callback.ways_);
+
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
   callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -2087,9 +2196,9 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
@@ -2156,9 +2265,9 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  //  unsigned int threads =
+  //      std::max(static_cast<unsigned int>(1),
+  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);

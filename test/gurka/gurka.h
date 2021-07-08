@@ -257,6 +257,8 @@ void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
  * @param result the result of a /route or /match request
  * @param maneuver_index the specified maneuver index to inspect
  * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_succinct_transition_instruction the expected verbal succinct transition
+ *                                                     instruction
  * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
  *                                                     instruction
  * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
@@ -266,6 +268,7 @@ void expect_instructions_at_maneuver_index(
     const valhalla::Api& result,
     int maneuver_index,
     const std::string& expected_text_instruction,
+    const std::string& expected_verbal_succinct_transition_instruction,
     const std::string& expected_verbal_transition_alert_instruction,
     const std::string& expected_verbal_pre_transition_instruction,
     const std::string& expected_verbal_post_transition_instruction);
@@ -283,8 +286,11 @@ void expect_eta(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param expected_names the names of the edges the path should traverse in order
+ * @param message the message prints if a test is failed
  */
-void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names);
+void expect_path(const valhalla::Api& result,
+                 const std::vector<std::string>& expected_names,
+                 const std::string& message = "");
 
 } // namespace raw
 } // namespace assert

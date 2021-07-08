@@ -84,12 +84,12 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
-  if (options.avoid_polygons_size()) {
+  if (options.exclude_polygons_size()) {
     const auto edges =
-        edges_in_rings(options.avoid_polygons(), *reader, costing, max_avoid_polygons_length);
+        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : edges) {
-      auto* avoid = co->add_avoid_edges();
+      auto* avoid = co->add_exclude_edges();
       avoid->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
       avoid->set_percent_along(0);
@@ -97,14 +97,14 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
-  if (options.avoid_locations_size()) {
+  if (options.exclude_locations_size()) {
     // See if we have avoids and take care of them
-    if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
-      throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    if (static_cast<size_t>(options.exclude_locations_size()) > max_exclude_locations) {
+      throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
-      auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, costing);
+      auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
+      auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
       auto* co = options.mutable_costing_options(options.costing());
       for (const auto& result : results) {
@@ -115,7 +115,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = co->add_avoid_edges();
+            auto* avoid = co->add_exclude_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -128,7 +128,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid_shortcut = co->add_avoid_edges();
+                auto* avoid_shortcut = co->add_exclude_edges();
                 avoid_shortcut->set_id(shortcut);
                 avoid_shortcut->set_percent_along(0);
               }
@@ -138,7 +138,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       }
     } // swallow all failures on optional avoids
     catch (...) {
-      LOG_WARN("Failed to find avoid_locations");
+      LOG_WARN("Failed to find exclude_locations");
     }
   }
 
@@ -164,7 +164,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
-                           ? new connectivity_map_t(config.get_child("mjolnir"))
+                           ? new connectivity_map_t(config.get_child("mjolnir"), graph_reader)
                            : nullptr),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_contour_min(config.get<size_t>("service_limits.isochrone.max_time_contour")),
@@ -194,9 +194,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
-    if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
+    if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
         kv.first == "skadi") {
       continue;
     }
@@ -236,8 +236,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_transit_walking_dis =
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
-  max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
-  max_avoid_polygons_length = config.get<float>("service_limits.max_avoid_polygons_length");
+  max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
+  max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

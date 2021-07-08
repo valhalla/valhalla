@@ -71,7 +71,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {164, "Invalid shape format"},
     {165, "Date and time required for destination for date_type of invariant"},
     {166, "Exceeded max distance"},
-    {167, "Exceeded maximum circumference for avoid_polygons"},
+    {167, "Exceeded maximum circumference for exclude_polygons"},
 
     {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
     {171, "No suitable edges near location"},
@@ -182,12 +182,6 @@ std::string jsonify_error(const valhalla_exception_t& exception, const Api& opti
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                                prime_server::http_request_info_t& request_info,
                                                const Api& options);
-prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
-prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
-                                             prime_server::http_request_info_t& request_info,
-                                             const Api& options);
 namespace worker {
 using content_type = prime_server::headers_t::value_type;
 const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};

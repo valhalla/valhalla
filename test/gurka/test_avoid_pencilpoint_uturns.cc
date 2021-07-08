@@ -52,6 +52,7 @@ TEST(Standalone, AvoidPencilPointUturns) {
       // Verify the left uturn instructions
       gurka::assert::raw::expect_instructions_at_maneuver_index(
           result, maneuver_index, "Make a left U-turn to stay on Silverbrook Road.",
+          "Make a left U-turn. Then You will arrive at your destination.",
           "Make a left U-turn to stay on Silverbrook Road.",
           "Make a left U-turn to stay on Silverbrook Road. Then You will arrive at your destination.",
           "Continue for 50 meters.");
@@ -68,6 +69,7 @@ TEST(Standalone, AvoidPencilPointUturns) {
       gurka::assert::raw::
           expect_instructions_at_maneuver_index(result, maneuver_index,
                                                 "Make a sharp left to stay on Silverbrook Road.",
+                                                "Make a sharp left.",
                                                 "Make a sharp left to stay on Silverbrook Road.",
                                                 "Make a sharp left to stay on Silverbrook Road.",
                                                 "Continue for 50 meters.");
@@ -83,7 +85,8 @@ TEST(Standalone, AvoidPencilPointUturns) {
 
       // Verify the avoiding the pencil point uturn and turn around via 4th instructions
       gurka::assert::raw::expect_instructions_at_maneuver_index(
-          result, maneuver_index, "Turn right onto 4th Street.", "Turn right onto 4th Street.",
+          result, maneuver_index, "Turn right onto 4th Street.",
+          "Turn right. Then Turn left onto Silverbrook Road.", "Turn right onto 4th Street.",
           "Turn right onto 4th Street. Then Turn left onto Silverbrook Road.",
           "Continue for 70 meters.");
     }

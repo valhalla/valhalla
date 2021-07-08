@@ -18,8 +18,9 @@ constexpr float kMaxDistance = std::numeric_limits<float>::max();
 // destination.
 constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 
-// Default distances within which expansion is always allowed
-// (per level). Used only for A*.
+// Default distances within which expansion is always allowed (per level). It's optimized
+// for unidirectional search and can be modified by the path algorithm in case of
+// bidirectional search.
 constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
                                                  0.0f,         0.0f,      0.0f,    0.0f};
 } // namespace

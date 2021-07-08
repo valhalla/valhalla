@@ -2,6 +2,7 @@ syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 import public "tripcommon.proto";
+import public "sign.proto";
 
 message DirectionsLeg {
 
@@ -140,64 +141,49 @@ message DirectionsLeg {
       kMergeLeft = 38;
     }
 
-    message SignElement {
-      optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
-      optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
-      optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
-    }
-
-    message Sign {
-      repeated SignElement exit_numbers = 1;            // The list of exit numbers, example: 67B
-      repeated SignElement exit_onto_streets = 2;       // The list of exit branch street names, examples: I 95 North or Baltimore-Washington Parkway
-      repeated SignElement exit_toward_locations = 3;   // The list of exit toward locations, examples: New York or I 395 South
-      repeated SignElement exit_names = 4;              // The list of exit names - not used much in US, example: Gettysburg Pike
-      repeated SignElement guide_onto_streets = 5;      // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
-      repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
-      repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
-    }
-
     enum BssManeuverType{
       kNoneAction = 1;
       kRentBikeAtBikeShare = 2;
       kReturnBikeAtBikeShare = 3;
     }
 
-    optional Type type = 1;                                  // Maneuver type
-    optional string text_instruction = 2;                    // text instruction
-    repeated StreetName street_name = 3;                     // street names
-    optional float length = 4;                               // kilometers or miles based on units
-    optional double time = 5;                                // seconds
-    optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
-    optional uint32 begin_heading = 7;                       // 0-360
-    optional uint32 begin_shape_index = 8;                   // inclusive index
-    optional uint32 end_shape_index = 9;                     // inclusive index
-    optional bool portions_toll = 10;                        // has portions toll
-    optional bool portions_unpaved = 11;                     // has portions unpaved
-    optional string verbal_transition_alert_instruction = 12;// verbal transition alert instruction
-    optional string verbal_pre_transition_instruction = 13;  // verbal pre-transition instruction
-    optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
-    repeated StreetName begin_street_name = 15;              // begin street names
-    optional Sign sign = 16;                                 // associated sign information, for example: exit number
-    optional uint32 roundabout_exit_count = 17;              // which spoke to exit roundabout after entering
-    optional string depart_instruction = 18;                 // depart instruction - used with transit
-    optional string verbal_depart_instruction = 19;          // verbal depart instruction - used with transit
-    optional string arrive_instruction = 20;                 // arrive instruction - used with transit
-    optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
-    optional TransitInfo transit_info = 22;                  // transit attributes including a list of transit stops
-    optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
-    optional TravelMode travel_mode = 24;                    // travel mode
+    optional Type type = 1;                                      // Maneuver type
+    optional string text_instruction = 2;                        // text instruction
+    repeated StreetName street_name = 3;                         // street names
+    optional float length = 4;                                   // kilometers or miles based on units
+    optional double time = 5;                                    // seconds
+    optional CardinalDirection begin_cardinal_direction = 6;     // CardinalDirection
+    optional uint32 begin_heading = 7;                           // 0-360
+    optional uint32 begin_shape_index = 8;                       // inclusive index
+    optional uint32 end_shape_index = 9;                         // inclusive index
+    optional bool portions_toll = 10;                            // has portions toll
+    optional bool portions_unpaved = 11;                         // has portions unpaved
+    optional string verbal_transition_alert_instruction = 12;    // verbal transition alert instruction
+    optional string verbal_pre_transition_instruction = 13;      // verbal pre-transition instruction
+    optional string verbal_post_transition_instruction = 14;     // verbal post-transition instruction
+    repeated StreetName begin_street_name = 15;                  // begin street names
+    optional TripSign sign = 16;                                 // associated sign information, for example: exit number
+    optional uint32 roundabout_exit_count = 17;                  // which spoke to exit roundabout after entering
+    optional string depart_instruction = 18;                     // depart instruction - used with transit
+    optional string verbal_depart_instruction = 19;              // verbal depart instruction - used with transit
+    optional string arrive_instruction = 20;                     // arrive instruction - used with transit
+    optional string verbal_arrive_instruction = 21;              // verbal arrive instruction - used with transit
+    optional TransitInfo transit_info = 22;                      // transit attributes including a list of transit stops
+    optional bool verbal_multi_cue = 23;                         // verbal multi-cue flag
+    optional TravelMode travel_mode = 24;                        // travel mode
     optional VehicleType vehicle_type = 25;
     optional PedestrianType pedestrian_type = 26;
     optional BicycleType bicycle_type = 27;
     optional TransitType transit_type = 28;
-    optional uint32 begin_path_index = 29;                   // Index in TripPath for first node of maneuver
-    optional uint32 end_path_index = 30;                     // Index in TripPath for last node of maneuver
-    optional bool to_stay_on = 31;                           // True if same name as previous maneuver
-    repeated StreetName roundabout_exit_street_names = 32;   // Outbound street names from roundabout
-    optional uint32 turn_degree = 33;                        // Turn degree of maneuver
-    optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
-    repeated GuidanceView guidance_views = 35;               // List of guidance views
+    optional uint32 begin_path_index = 29;                       // Index in TripPath for first node of maneuver
+    optional uint32 end_path_index = 30;                         // Index in TripPath for last node of maneuver
+    optional bool to_stay_on = 31;                               // True if same name as previous maneuver
+    repeated StreetName roundabout_exit_street_names = 32;       // Outbound street names from roundabout
+    optional uint32 turn_degree = 33;                            // Turn degree of maneuver
+    optional bool has_time_restrictions = 34;                    // Whether edge has any time restrictions or not
+    repeated GuidanceView guidance_views = 35;                   // List of guidance views
     optional BssManeuverType bss_maneuver_type = 36;
+    optional string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
   }
 
   optional uint64 trip_id = 1;

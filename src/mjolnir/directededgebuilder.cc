@@ -53,8 +53,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
   // the destination only attribution
   set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic()))
+  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
+  }
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
@@ -133,14 +134,24 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.taxi_forward() && !forward) || (way.taxi_backward() && forward)) {
     reverse_access |= kTaxiAccess;
   }
-  if (way.pedestrian()) {
+  if ((way.pedestrian_forward() && forward) || (way.pedestrian_backward() && !forward)) {
     forward_access |= kPedestrianAccess;
+  }
+  if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps &&
-      ((way.wheelchair_tag() && way.wheelchair()) || (!way.wheelchair_tag() && way.pedestrian()))) {
-    forward_access |= kWheelchairAccess;
-    reverse_access |= kWheelchairAccess;
+  if (way.use() != Use::kSteps) {
+    if (way.wheelchair_tag() && way.wheelchair()) {
+      forward_access |= kWheelchairAccess;
+      reverse_access |= kWheelchairAccess;
+    } else if (!way.wheelchair_tag()) {
+      if ((way.pedestrian_forward() && forward) || (way.pedestrian_backward() && !forward)) {
+        forward_access |= kWheelchairAccess;
+      }
+      if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
+        reverse_access |= kWheelchairAccess;
+      }
+    }
   }
 
   // Set access modes

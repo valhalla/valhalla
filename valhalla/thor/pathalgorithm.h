@@ -21,6 +21,8 @@ namespace thor {
 constexpr uint32_t kBucketCount = 20000;
 constexpr size_t kInterruptIterationsInterval = 5000;
 
+enum class ExpansionType { forward = 0, reverse = 1, multimodal = 2 };
+
 /**
  * Pure virtual class defining the interface for PathAlgorithm - the algorithm
  * to create shortest path.

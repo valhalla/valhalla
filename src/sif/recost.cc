@@ -96,9 +96,10 @@ void recost_forward(baldr::GraphReader& reader,
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
     // evaluate time restrictions
+    const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
-        (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
-                          time_restrictions_TODO) &&
+        (!costing.Allowed(edge, !next_id.Is_Valid(), label, tile, edge_id, localtime,
+                          offset_time.timezone_index, time_restrictions_TODO) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }
@@ -110,7 +111,6 @@ void recost_forward(baldr::GraphReader& reader,
       source_pct = -1;
     }
 
-    const auto next_id = edge_cb();
     if (!next_id.Is_Valid()) {
       edge_pct -= 1.f - target_pct;
       // just to keep compatibility with the logic that handled trivial path in bidiastar

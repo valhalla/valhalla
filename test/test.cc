@@ -308,8 +308,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance_contour": 200
         },
         "max_alternates": 2,
-        "max_avoid_locations": 50,
-        "max_avoid_polygons_length": 10000,
+        "max_exclude_locations": 50,
+        "max_exclude_polygons_length": 10000,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
@@ -555,6 +555,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
   }
 }
 
+#ifdef DATA_TOOLS
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb) {
   // loop over all tiles in the tileset
@@ -599,5 +600,6 @@ void customize_edges(const boost::property_tree::ptree& config, const EdgesCusto
     tile.Update(nodes, edges);
   }
 }
+#endif
 
 } // namespace test
