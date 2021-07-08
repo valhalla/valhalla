@@ -15,12 +15,14 @@
    * FIXED: Use distance threshold in hierarchy limits for bidirectional astar to expand more important lower level roads [#3156](https://github.com/valhalla/valhalla/pull/3156)
    * FIXED: Fixed incorrect dead-end roundabout labels. [#3129](https://github.com/valhalla/valhalla/pull/3129)
    * FIXED: googletest wasn't really updated in #3166 [#3187](https://github.com/valhalla/valhalla/pull/3187)
+   * FIXED: avoid_polygons intersected edges as polygons instead of linestrings [#3194]((https://github.com/valhalla/valhalla/pull/3194)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
    * CHANGED: Unified Sign/SignElement into sign.proto [#3146](https://github.com/valhalla/valhalla/pull/3146)
    * ADDED: New verbal succinct transition instruction to maneuver & narrativebuilder. Currently this instruction will be used in place of a very long street name to avoid repetition of long names [#2844](https://github.com/valhalla/valhalla/pull/2844)
    * ADDED: Added oneway support for pedestrian access and foot restrictions [#3123](https://github.com/valhalla/valhalla/pull/3123)
+   * ADDED: Exposing rest-area names in passive maneuvers [#3172](https://github.com/valhalla/valhalla/pull/3172)
    * CHORE: Updates robin-hood-hashing third-party library
    * ADDED: Support `barrier=yes|swing_gate|jersey_barrier` tags [#3154](https://github.com/valhalla/valhalla/pull/3154)
    * ADDED: Maintain `access=permit|residents` tags as private [#3149](https://github.com/valhalla/valhalla/pull/3149)
@@ -30,10 +32,10 @@
    * CHORE: Updates googletest to release-1.11.0 [#3166](https://github.com/valhalla/valhalla/pull/3166)
    * CHORE: Enables -Wall on sif sources [#3178](https://github.com/valhalla/valhalla/pull/3178)
    * ADDED: Allow going through accessible `barrier=bollard` and penalize routing through it, when the access is private [#3175](https://github.com/valhalla/valhalla/pull/3175)
-
    * ADDED: Add country code to incident metadata [#3169](https://github.com/valhalla/valhalla/pull/3169)
    * CHANGED: Use distance instead of time to check limited sharing criteria [#3183](https://github.com/valhalla/valhalla/pull/3183)
    * ADDED: Introduced a new via_waypoints array on the leg in the osrm route serializer that describes where a particular waypoint from the root-level array matches to the route. [#3189](https://github.com/valhalla/valhalla/pull/3189)
+   * ADDED: Added vehicle width and height as an option for auto (and derived: taxi, bus, hov) profile (https://github.com/valhalla/valhalla/pull/3179) 
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**

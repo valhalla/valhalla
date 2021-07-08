@@ -1063,6 +1063,9 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> service_penalty_;
   ranged_default_t<float> service_factor_;
 
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
+
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
 
