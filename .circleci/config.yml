@@ -12,6 +12,7 @@ commands:
     steps:
       - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
 
 jobs:
   build-docker-images:
@@ -140,8 +141,6 @@ jobs:
           keys:
             - ccache-release-macos-{{ .Branch }}
             - ccache-release-macos
-      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure
-      - run: make -j4 && make install && cd ..
       - run: mkdir -p build
       - run: cd build && cmake ..
       - run: make -C build -j4
