@@ -965,16 +965,12 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
                     ? ".loki."
                     : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
   const auto& action = Options_Action_Enum_Name(request.options().action());
+  auto level = 500 <= exception.http_code && exception.http_code < 600 ? ".err" : ".warn";
 
   auto* err_stat = request.mutable_info()->mutable_statistics()->Add();
-  err_stat->set_key(action + worker + exception.statsd_key);
+  err_stat->set_key(action + level + worker + exception.statsd_key);
   err_stat->set_value(1);
   err_stat->set_type(count);
-
-  auto* stat = request.mutable_info()->mutable_statistics()->Add();
-  stat->set_key(action + worker + "http_" + std::to_string(exception.http_code));
-  stat->set_value(1);
-  stat->set_type(count);
 
   return body.str();
 }
@@ -1134,6 +1130,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
     float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
+
     switch (stat.type()) {
       case count:
         statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,
@@ -1157,12 +1154,11 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   // before we are done with the request, if this was not an error we log it was ok
   if (!api.info().error()) {
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki."
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
+                      ? ".loki"
+                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
-    statsd_client->count(action + worker + "ok", 1, 1.f, statsd_client->tags);
-    statsd_client->count(action + worker + "http_200", 1, 1.f, statsd_client->tags);
+    statsd_client->count(action + ".info" + worker + ".ok", 1, 1.f, statsd_client->tags);
   }
 }
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
@@ -1172,12 +1168,12 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
     auto elapsed = std::chrono::steady_clock::now() - start;
     auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
     auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki."
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor." : ".odin.");
+                      ? ".loki"
+                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
     auto* stat = api.mutable_info()->mutable_statistics()->Add();
-    stat->set_key(action + worker + "latency_ms");
+    stat->set_key(action + ".info" + worker + ".latency_ms");
     stat->set_value(e);
     stat->set_type(timing);
   });
