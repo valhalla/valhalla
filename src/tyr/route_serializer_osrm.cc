@@ -405,7 +405,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_shape_index(index);
+    locs.Mutable(index)->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;

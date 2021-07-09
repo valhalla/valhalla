@@ -23,7 +23,7 @@ protected:
               F----2G
               |
               |
-              H----3I
+              H--------3I
               |
               |
               J----K----L
@@ -73,7 +73,7 @@ TEST_F(ViaWaypoints, test_via_waypoints_response1) {
   auto via_waypoint1 = leg["via_waypoints"].GetArray();
   EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
-  EXPECT_EQ(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 0.00);
+  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 1228.88, 0.02);
 }
 
 TEST_F(ViaWaypoints, test_via_waypoints_response2) {
@@ -101,7 +101,7 @@ TEST_F(ViaWaypoints, test_via_waypoints_response2) {
   auto via_waypoint1 = leg["via_waypoints"].GetArray();
   EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
-  EXPECT_EQ(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 0.095);
+  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 969.299, 0.02);
 
   EXPECT_TRUE(leg.HasMember("via_waypoints"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
@@ -111,5 +111,5 @@ TEST_F(ViaWaypoints, test_via_waypoints_response2) {
   auto via_waypoint2 = leg["via_waypoints"].GetArray();
   EXPECT_EQ(via_waypoint2[1]["waypoint_index"].GetInt(), 2);
   EXPECT_EQ(via_waypoint2[1]["geometry_index"].GetInt(), 7);
-  EXPECT_EQ(via_waypoint2[1]["distance_from_leg_start"].GetDouble(), 0.00);
+  EXPECT_NEAR(via_waypoint2[1]["distance_from_leg_start"].GetDouble(), 1312.69, 0.02);
 }

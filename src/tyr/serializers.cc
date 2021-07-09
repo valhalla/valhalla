@@ -157,13 +157,12 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    uint32_t waypoint_index = location.shape_index();
-    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+    if (location.waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
       waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
     } else {
-      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
     }
     waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
@@ -173,7 +172,7 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
   }
 
   return waypoint;
@@ -182,21 +181,17 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 /*
  * This function serializes the via_waypoints object on the leg.
  */
-valhalla::baldr::json::MapPtr serialize_via_waypoint(const valhalla::Location& location,
+valhalla::baldr::json::MapPtr serialize_via_waypoint(const valhalla::Location& origin,
+                                                     const valhalla::Location& location,
                                                      const uint64_t geometry_idx) {
 
   // Create a via waypoint to add to the array
   auto via_waypoint = json::map({});
-  // clarification:: shape_index actually means waypoint index here.
-  auto waypoint_index = location.shape_index();
-  // Add distance in meters from the input location to the nearest
-  // point on the road used in the route
-  // TODO: since distance was normalized in thor - need to recalculate here
-  //       in the future we shall have store separately from score
-  via_waypoint
-      ->emplace("distance_from_leg_start",
-                json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
-  via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+  // Add distance in meters from the input location to the silent waypoint
+  via_waypoint->emplace("distance_from_leg_start",
+                        json::fixed_t{to_ll(origin.ll()).Distance(to_ll(location.path_edges(0).ll())),
+                                      3});
+  via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
   via_waypoint->emplace("geometry_index", geometry_idx);
 
   return via_waypoint;
@@ -250,10 +245,12 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
     if (location_index == 0 || location_index == (locs.size() - 1)) {
       continue;
     }
+
+    const valhalla::Location origin = locs.Get(0);
     // Only create via_waypoints object if the locations are via or through types
     if (locs.Get(location_index).type() == valhalla::Location::kVia ||
         locs.Get(location_index).type() == valhalla::Location::kThrough) {
-      locs.Mutable(location_index)->set_shape_index(location_index);
+      locs.Mutable(location_index)->set_waypoint_index(location_index);
       int geometry_idx = 0;
 
       for (const auto& ll : shape) {
@@ -269,8 +266,9 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
                                                  locs.Get(location_index).path_edges(0).ll().lat()),
                                              static_cast<double>(ll.second), .001);
         if (lng_equality && lat_equality) {
+
           via_waypoints->emplace_back(
-              osrm::serialize_via_waypoint(locs.Get(location_index), geometry_idx - 1));
+              osrm::serialize_via_waypoint(origin, locs.Get(location_index), geometry_idx - 1));
           break;
         }
       }
