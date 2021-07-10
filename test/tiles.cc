@@ -1,6 +1,8 @@
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
+#include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "midgard/polyline2.h"
 #include "midgard/util.h"
 
 #include <random>
@@ -262,7 +264,7 @@ TEST(Tiles, test_intersect_linestring) {
   assert_answer(t, {{1, 2}, {2, 4}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
   assert_answer(t, {{2, 4}, {1, 2}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
 
-  // some real locations on earth (without polar coordinates accounted for)
+  // some real locations on earth
   Tiles<PointLL> ll(AABB2<PointLL>{-180, -90, 180, 90}, .25, 5);
   std::vector<PointLL> shape{{9.5499754, 47.250248}, {9.55031681, 47.2501144}};
   auto intersection = ll.Intersect(shape);
@@ -275,6 +277,37 @@ TEST(Tiles, test_intersect_linestring) {
   for (const auto& i : intersection)
     count += i.second.size();
   EXPECT_LE(count, 2) << "Unexpected number of intersections for this shape";
+
+  std::vector<std::string> shapes{
+      R"({wvueB{knms@GdU)",
+      R"(}~etdBcnwfk@dE}YnS_oA|OwaAjAwIGudBEuD_Ey^wHwk@]mVxFss@eTu}G_Iuk@}@mZt@mW\sNcLueAN{PvXseBrFq\)",
+      R"({d{gbBwdpsZ]s~AG}bAFqhAd@goA\_pAUq`B)",
+      R"(eibz`Bc_ysVFse@)",
+      R"(uhbz`BziwcnEUgyl@)",
+      R"(m{~s`B_qbfOu@rDiBxDqCbK]tH?dOd@v\t@x`@l@tZe@dU?bc@Lxh@NrTt@h[\nWN`WmAbTiB`V]vOyClTuDzT)",
+      R"(_qwg`Bkf}qQgN}g@kAkLiCs`@gCm_@_@wHEcHr@qKbBwK`CqM)",
+      R"(cqsa~Aym}kSbBqH|c@ikBd@oH?aEm@eDaC}FwCiG}D}FkGeIyWeVwCgCcAqB}@uD{@gMe@wT_@_UN{I)",
+      R"(swk{yAm{vp\fIiKtJ}[bU}_AbW{{AdEyXl@cNGagAqBut@wD_t@{F}{@wCmy@aCca@mEyYcFyQ)",
+      R"(o_}tyAfwu_iC{FqaDkQgaBiCgaBlEed@rLiWhu@cp@pHk`@t@ce@kLumAav@skDkQ?{P|_@eTlgAaShXuThBipA_s@ag@mJw\aRyRia@uEoSOkqDcKi_Bz_@y_AeE}Tst@qq@kFaSm@mJnNia@L}i@{Jsd@{Vyk@cj@_J_JwNk[wfEyV{k@afAijAcL_^iC_Tf@ce@dYaaEqB}_@)",
+      R"(wqkdxA_cbeeAG|E)",
+      R"(q_lgxAkorvq@ud@|}@}@lEEfCLpCd@`CdKnNrPhW|~@|tAv\zg@)",
+      R"(qbjvpAjpjlcDwDcG{AuEUuEFwMGya@O{~@e@orA]mT)",
+      R"(ehtwkAznrdgELxhB^|@z@z@~eBkAnDm@`CM)",
+      R"(uvwijArilewCiCaHmEqGsLl@yLz@}IiBiMOaSfDsPbFkFjBmEtEkB~HFxzE)",
+      R"(c}kweA~|lpNNnAu@`GgDfG{AdEe@fC{@dAkAZsAA}@cAqBeEwHkQuEmHyBsDe@mD)",
+      R"(u`sidA`nzecF]m@W{AMkBF_S)",
+      R"({{at_Ajmkj`F]o|@O{_@?O?aRNekCz@eFbBiBbFkAly@}@jL??g`BlJen@r@m@d~@cz@)",
+      R"(syhxt@kqlv~CyByCkD}IyBkBkD]uD]aA{ANkAdB]nDz@dE\~CMjD{AtBiCt@uDfAuEdAwDTsFlBqG~FuE|GeE`KeEpEeF~C_IzCoHfGaHtGeFbGaGlGsGzCqGrAoI\_IbBaHFqHpBsPt@sQWiL]mJQsF`BuEhCgDfCkBdFqGfFcFnLyMxDmJ~DuErE{K`FaHnC]jEm@jCiBfBwCr@aHl@eFrAgDxB]tCNhDLxCkA`EcGdCgDrCwC)",
+      R"(kchiYyi`x~DPkk@)",
+      R"(r`egLc~vakEf@]d@m@n@gCf@iCFiBIgDQwD?{A@?FM~@_@xA]|A]p@O~CgCnDcG^]h@m@hC}@`A{@^m@DkAUkBkAqGOiCHwCpEmUhCiL\m@^m@^]nDkB`CgCjDeEhCyCpAkAn@{ATyBCyBK{AE{@B]Hm@fAiCD{@A}@aBwNo@oHGmJ)",
+      R"(tcyyTunevjAbc@dhAJpg@zB`GKdd@dIzz@q@vH}IvIaBnXrEv]yE`l@oGpv@)",
+      R"(_n_gnAlrqwuDFyLl@_}@VuwA?sf@Wk}At@qzAe@enALk_@t@afAm@emBl@ocDGg~Cd@e~D]wsDUsxATieOkAojGFse@r@snA?_i@)",
+  };
+  for (const auto& shape : shapes) {
+    auto decoded = decode<std::vector<PointLL>>(shape);
+    auto intersected = ll.Intersect(decoded);
+    ASSERT_LE(intersected.size(), 3) << " too many level 2 tiles intersected by " << shape;
+  }
 }
 
 TEST(Tiles, test_random_linestring) {
