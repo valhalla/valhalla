@@ -17,20 +17,20 @@ namespace {
 // at each step it decides to either move in the x or y direction based on which pixels midpoint
 // forms a smaller triangle with the line. to avoid edge cases we allow set_pixel to make the
 // the loop bail if we leave the valid drawing region
-void bresenham_line(float x0,
-                    float y0,
-                    float x1,
-                    float y1,
+void bresenham_line(double x0,
+                    double y0,
+                    double x1,
+                    double y1,
                     const std::function<bool(int32_t, int32_t)>& set_pixel) {
   // this one for sure
   bool outside = set_pixel(std::floor(x0), std::floor(y0));
   // steps in the proper direction and constants for shoelace formula
-  float sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
-  float sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
+  double sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
+  double sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
   // keep going until we make it to the ending pixel
   while (std::floor(x) != std::floor(x1) || std::floor(y) != std::floor(y1)) {
-    float tx = std::abs(dx * (y - y0) - dy * ((x + sx) - x0));
-    float ty = std::abs(dx * ((y + sy) - y0) - dy * (x - x0));
+    double tx = std::abs(dx * (y - y0) - dy * ((x + sx) - x0));
+    double ty = std::abs(dx * ((y + sy) - y0) - dy * (x - x0));
     // less error moving in the x
     if (tx < ty) {
       x += sx;
