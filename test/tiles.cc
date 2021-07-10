@@ -2,7 +2,6 @@
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/util.h"
 
 #include <random>
