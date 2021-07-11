@@ -351,6 +351,15 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   return true;
 }
 
+std::string ExpansionType_Enum_Name(Options::ExpansionType et) {
+  static const std::string empty;
+  static const std::unordered_map<Options::ExpansionType, std::string>
+      types{{Options::ExpansionType::Options_ExpansionType_expand_route, "route"},
+            {Options::ExpansionType::Options_ExpansionType_expand_isochrone, "isochrone"}};
+  auto i = types.find(et);
+  return i == types.cend() ? empty : i->second;
+}
+
 const std::unordered_map<int, std::string> vehicle_to_string{
     {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
     {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},

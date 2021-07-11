@@ -124,8 +124,8 @@ public:
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
    *                             on a given edge
    */
-  using expansion_callback_t =
-      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, float, bool)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

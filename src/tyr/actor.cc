@@ -267,7 +267,12 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   Api request;
   ParseApi(request_str, Options::expansion, request);
   // check the request and locate the locations in the graph
-  pimpl->loki_worker.route(request);
+  if (request.options().expansion_type() ==
+      ExpansionType_Enum_Name(Options::ExpansionType::Options_ExpansionType_expand_route)) {
+    pimpl->loki_worker.route(request);
+  } else {
+    pimpl->loki_worker.isochrones(request);
+  }
   // route between the locations in the graph to find the best path
   auto json = pimpl->thor_worker.expansion(request);
   // if they want you do to do the cleanup automatically
