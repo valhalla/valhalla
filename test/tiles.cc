@@ -277,6 +277,16 @@ TEST(Tiles, test_intersect_linestring) {
     count += i.second.size();
   EXPECT_LE(count, 2) << "Unexpected number of intersections for this shape";
 
+  // the following short shapes all end up going to rasterization because they are on the boundary of
+  // subdivisions. when the rasterization algorithm was using single precision floats these shapes
+  // would cause a tie breaker scenario in which it would only rasterize the y direction. the thing is
+  // it was the precision that caused the tie breaker in the first place. switching to double fixes
+  // this because if you make the line long enough to cross more than 2 adjacent bins, it gets
+  // resampled along the geodesic, and when you do this resampling and you do it all in double it
+  // properly projects to the curve which then is never along a perfectly horizontal trajectory
+  // except for at the equator but the resampling also spaces the points out such that they are never
+  // far apart enough to ever do the rasterization step, its all just neighbor pixels and we have a
+  // shortcut for those
   std::vector<std::string> shapes{
       R"({wvueB{knms@GdU)",
       R"(}~etdBcnwfk@dE}YnS_oA|OwaAjAwIGudBEuD_Ey^wHwk@]mVxFss@eTu}G_Iuk@}@mZt@mW\sNcLueAN{PvXseBrFq\)",
@@ -305,8 +315,19 @@ TEST(Tiles, test_intersect_linestring) {
   for (const auto& shape : shapes) {
     auto decoded = decode<std::vector<PointLL>>(shape);
     auto intersected = ll.Intersect(decoded);
-    ASSERT_LE(intersected.size(), 3) << " too many level 2 tiles intersected by " << shape;
+    ASSERT_LE(intersected.size(), 3) << "Too many level 2 tiles intersected by " << shape;
   }
+
+  // horizontal over 3 subdivisions (bins) so that its forced to do bresenham rasterization. also,
+  // note that we do this one in the plane to avoid resampling (adding points along the line) which is
+  // done in the spherical algorithm to account for the curvature of the geodescic. we dont want that
+  // to happen because inserting extra points reverts the test case to a simple sequence of
+  // neighboring bins which takes away our ability to test this a regression in which perfectly
+  // horizontal rasterization marked way too many subdivisions
+  Tiles<Point2> planar(AABB2<Point2>{-180, -90, 180, 90}, .25, 5);
+  auto rasterized = planar.Intersect(std::vector<Point2>{{0.04, 0}, {0.11, 0}});
+  ASSERT_EQ(rasterized.size(), 1) << "One tile should be intersected";
+  ASSERT_EQ(rasterized.begin()->second.size(), 3) << "Three subtiles (bins) should be intersected";
 }
 
 TEST(Tiles, test_random_linestring) {
