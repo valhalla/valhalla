@@ -32,10 +32,9 @@ void bresenham_line(double x0,
     double tx = std::abs(dx * (y - y0) - dy * ((x + sx) - x0));
     double ty = std::abs(dx * ((y + sy) - y0) - dy * (x - x0));
     // less error moving in the x
-    if (tx < ty) {
+    if (tx < ty || (tx == ty && y0 == y1)) {
       x += sx;
-    }
-    // less error moving in the y
+    } // less error moving in the y
     else {
       y += sy;
     }
