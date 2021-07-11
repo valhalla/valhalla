@@ -200,7 +200,7 @@ message TripLeg {
     optional bool internal_intersection = 16;
     optional bool drive_on_right = 17 [default = true];
     optional Surface surface = 18;
-    optional Sign sign = 19;
+    optional TripSign sign = 19;
     optional TravelMode travel_mode = 20;
     optional VehicleType vehicle_type = 21;
     optional PedestrianType pedestrian_type = 22;
@@ -250,6 +250,7 @@ message TripLeg {
     optional Use use = 7;
     optional RoadClass road_class = 8;
     optional uint32 lane_count = 9;
+    optional TripSign sign = 10;
   }
 
   message Cost {

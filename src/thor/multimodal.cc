@@ -846,7 +846,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const MMEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), edgelabel.tripid(),
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+                      edgelabel.path_distance(), edgelabel.restriction_idx(),
+                      edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

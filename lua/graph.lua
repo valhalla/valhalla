@@ -1698,25 +1698,6 @@ function filter_tags_generic(kv)
     kv["truck_route"] = "true"
   end
 
-  if (kv["maxwidth"]) then
-    local width = tonumber(kv["maxwidth"])
-    if (width and width <= 1.9) then
-      kv["auto_forward"] = "false"
-      kv["truck_forward"] = "false"
-      kv["bus_forward"] = "false"
-      kv["taxi_forward"] = "false"
-      kv["emergency_forward"] = "false"
-      kv["hov_forward"] = "false"
-
-      kv["auto_backward"] = "false"
-      kv["truck_backward"] = "false"
-      kv["bus_backward"] = "false"
-      kv["taxi_backward"] = "false"
-      kv["emergency_backward"] = "false"
-      kv["hov_backward"] = "false"
-    end
-  end
-
   local nref = kv["ncn_ref"]
   local rref = kv["rcn_ref"]
   local lref = kv["lcn_ref"]
@@ -1847,6 +1828,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
+  --if access=private use allowed modes, but consider private_access tag as true.
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
@@ -1899,8 +1881,8 @@ function nodes_proc (kv, nokeys)
       bollard = false
     end
 
-    --bollard = true shuts off access unless the tag exists.
-    if bollard == true then
+    --bollard = true shuts off access when access is not originally specified.
+    if bollard == true and initial_access == nil then
       auto = auto_tag or 0
       truck = truck_tag or 0
       bus = bus_tag or 0
@@ -2021,9 +2003,7 @@ function nodes_proc (kv, nokeys)
     end
   end
 
-  if private[kv["access"]] == "true" then
-    kv["private"] = "true"
-  end
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)

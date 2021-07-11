@@ -340,7 +340,8 @@ std::vector<PathInfo> UnidirectionalAStar<ExpansionType::forward>::FormPath(cons
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+                      edgelabel.path_distance(), edgelabel.restriction_idx(),
+                      edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -383,8 +384,8 @@ std::vector<PathInfo> UnidirectionalAStar<ExpansionType::reverse>::FormPath(cons
     cost -= edgelabel.transition_cost();
     cost += previous_transition_cost;
 
-    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
-                      previous_transition_cost);
+    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.path_distance(),
+                      edgelabel.restriction_idx(), previous_transition_cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
