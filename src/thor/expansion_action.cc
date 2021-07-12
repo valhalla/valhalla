@@ -4,9 +4,11 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "midgard/polyline2.h"
 #include "midgard/util.h"
 
 using namespace rapidjson;
+using namespace valhalla::midgard;
 
 namespace {
 void FillDom(Document& dom, bool is_route_expansion) {
@@ -32,9 +34,11 @@ std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
   measure_scope_time(request, "thor_worker_t::expansion");
 
-  bool is_route_expansion =
-      request.options().expansion_type() ==
-      ExpansionType_Enum_Name(Options::ExpansionType::Options_ExpansionType_expand_route);
+  bool is_route_expansion = request.options().expansion_type() ==
+                            Options::ExpansionType::Options_ExpansionType_expand_route;
+
+  // default generalization to ~ zoom level 15, minor impact anyways
+  float gen_factor = request.options().has_generalize() ? request.options().generalize() : 21.4f;
 
   // default the expansion geojson so its easy to add to as we go
   Document dom;
@@ -43,11 +47,10 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
-  auto track_expansion = [&dom,
-                          &is_route_expansion](baldr::GraphReader& reader, baldr::GraphId edgeid,
-                                               const char* algorithm = nullptr,
-                                               const char* status = nullptr, const float duration = 0,
-                                               const float distance = 0, bool full_shape = true) {
+  auto track_expansion = [&dom, &is_route_expansion,
+                          &gen_factor](baldr::GraphReader& reader, baldr::GraphId edgeid,
+                                       const char* algorithm = nullptr, const char* status = nullptr,
+                                       const float duration = 0, const float distance = 0) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
@@ -59,23 +62,22 @@ std::string thor_worker_t::expansion(Api& request) {
     auto shape = tile->edgeinfo(edge).shape();
     if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
-    if (!full_shape && shape.size() > 2)
-      shape.erase(shape.begin() + 1, shape.end() - 1);
+    Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
 
     // make the geom
     auto& a = dom.GetAllocator();
-    auto* coords = Pointer("/features/0/geometry/coordinates").Get(dom);
-    coords->GetArray().PushBack(Value(kArrayType), a);
-    auto& linestring = (*coords)[coords->Size() - 1];
-    for (const auto& p : shape) {
-      linestring.GetArray().PushBack(Value(kArrayType), a);
-      auto point = linestring[linestring.Size() - 1].GetArray();
-      point.PushBack(p.first, a);
-      point.PushBack(p.second, a);
-    }
+    auto* coords = GetValueByPointer(dom, "/features/0/geometry/coordinates");
 
-    // make the properties
+    // make the properties and coords
     if (is_route_expansion) {
+      coords->GetArray().PushBack(Value(kArrayType), a);
+      auto& linestring = (*coords)[coords->Size() - 1];
+      for (const auto& p : shape) {
+        linestring.GetArray().PushBack(Value(kArrayType), a);
+        auto point = linestring[linestring.Size() - 1].GetArray();
+        point.PushBack(p.first, a);
+        point.PushBack(p.second, a);
+      }
       SetValueByPointer(dom, "/properties/algorithm", algorithm);
       GetValueByPointer(dom, "/features/0/properties/edge_ids")
           ->GetArray()
@@ -85,6 +87,7 @@ std::string thor_worker_t::expansion(Api& request) {
           .PushBack(Value{}.SetString(status, a), a);
 
     } else {
+      coords->GetArray().PushBack(Value{}.SetString(encode<std::vector<PointLL>>(shape, 1e5), a), a);
       GetValueByPointer(dom, "/features/0/properties/durations")
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);

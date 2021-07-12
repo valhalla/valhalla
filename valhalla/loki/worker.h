@@ -44,7 +44,6 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
   void status(Api& request) const;
-  void expansion(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 

@@ -365,7 +365,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     if (expansion_callback_) {
       expansion_callback_(graphreader, pred.edgeid(), nullptr, nullptr, pred.cost().secs,
-                          pred.path_distance(), true);
+                          pred.path_distance());
     }
 
     // Check if we should stop

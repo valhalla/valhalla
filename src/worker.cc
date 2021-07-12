@@ -959,6 +959,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_resample_distance(*resample_distance);
   }
 
+  // expansion type
+  auto expansion_type = rapidjson::get_optional<std::string>(doc, "/expansion_type");
+  if (expansion_type) {
+    if (*expansion_type == "route") {
+      options.set_expansion_type(Options::ExpansionType::Options_ExpansionType_expand_route);
+    } else {
+      options.set_expansion_type(Options::ExpansionType::Options_ExpansionType_expand_isochrone);
+    }
+  }
+
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 
