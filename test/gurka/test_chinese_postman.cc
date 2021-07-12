@@ -182,7 +182,7 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   // create a chinese polygon (prwu) and avoid polygon (ijml)
 
   ring_bg_t chinese_ring{chinese_postman_map.nodes.at("p"), chinese_postman_map.nodes.at("r"),
@@ -221,7 +221,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
   gurka::assert::raw::expect_path(route2, {"DE", "EB", "BA", "AB", "BE", "ED"});
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   // create a chinese polygon (prwu) and avoid polygon (iknl)
   // the exclude polygon is dividing the map into two, that makes it not connected.
 
@@ -252,7 +252,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
   };
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
   // create a chinese polygon (rtyw)
 
   ring_bg_t chinese_ring{chinese_postman_map.nodes.at("r"), chinese_postman_map.nodes.at("t"),
@@ -287,7 +287,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::assert::raw::expect_path(route2, {"GH", "HF", "FC", "CG"});
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
 
   ring_bg_t chinese_ring{chinese_postman_map.nodes.at("q"), chinese_postman_map.nodes.at("s"),
@@ -295,9 +295,9 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
 
   std::vector<ring_bg_t> avoid_rings;
 
-  // build request manually for now (only works for C and E)
-  // B and F got this error: Could not find candidate edge used for destination label
-  auto lls = {chinese_postman_map.nodes["C"], chinese_postman_map.nodes["C"]};
+  // build request manually for now (only works for C and B)
+  // E and F got this error: Could not find candidate edge used for destination label
+  auto lls = {chinese_postman_map.nodes["B"], chinese_postman_map.nodes["B"]};
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -307,7 +307,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
 
   auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"CB", "BE", "EF", "FE", "EB", "BE", "EF", "FC"});
+  gurka::assert::raw::expect_path(route, {"BE", "EF", "FE", "EB", "BE", "EF", "FC", "CB"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {

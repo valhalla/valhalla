@@ -86,14 +86,17 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
   throw std::logic_error("Could not find candidate edge for the location");
 }
 
-bool is_starting_node(const valhalla::Location& location, const GraphId& edge_id) {
+// Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
+// ordered by the best.
+int get_starting_node_candidate(const valhalla::Location& location, const GraphId& edge_id) {
+  int i = 0;
   for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id) {
-      return true;
-    } else {
-      return false;
+      return i;
     }
+    i++;
   }
+  return i;
 }
 
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
@@ -267,7 +270,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
   }
 
-  bool originNodeFound = false;
+  int currentOriginNodeIndex = originLocation.path_edges().size() + 1;
   CPVertex originVertex;
 
   // Add chinese edges to internal set
@@ -284,13 +287,10 @@ void thor_worker_t::chinese_postman(Api& request) {
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
-    if (!originNodeFound) {
-      if (is_starting_node(originLocation, GraphId(edge.id()))) {
-        originVertex = start_vertex;
-        originNodeFound = true;
-      }
-    } else {
-      is_starting_node(originLocation, GraphId(edge.id()));
+    int candidateOriginNodeIndex = get_starting_node_candidate(originLocation, GraphId(edge.id()));
+    if (candidateOriginNodeIndex < currentOriginNodeIndex) {
+      originVertex = start_vertex;
+      currentOriginNodeIndex = candidateOriginNodeIndex;
     }
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);
@@ -302,8 +302,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
-
-  if (!originNodeFound) {
+  // If the origin node index is more than the path_edge size, that means that there is no suitable
+  // node for the origin location.
+  if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
     throw std::logic_error("Could not find candidate edge for the origin location");
   }
 
