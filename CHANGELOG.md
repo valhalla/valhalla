@@ -16,6 +16,7 @@
    * FIXED: Fixed incorrect dead-end roundabout labels. [#3129](https://github.com/valhalla/valhalla/pull/3129)
    * FIXED: googletest wasn't really updated in #3166 [#3187](https://github.com/valhalla/valhalla/pull/3187)
    * FIXED: avoid_polygons intersected edges as polygons instead of linestrings [#3194]((https://github.com/valhalla/valhalla/pull/3194)
+   * FIXED: Fix improper iterator usage in ManeuversBuilder [#3205](https://github.com/valhalla/valhalla/pull/3205)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
