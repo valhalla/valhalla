@@ -1,5 +1,0 @@
--j '{"locations":[{"lat":51.213679,"lon":6.753806,"street":"Hammer Straße"},{"lat":51.213329,"lon":6.750501,"street":"Franziusstraße"}],"costing":"auto","units":"miles"}'
--j '{"locations":[{"lat":52.160050,"lon":4.523619,"street":"Vronkenlaan"},{"lat":52.160930,"lon":4.522060,"street":"Lijnbaan"}],"costing":"auto","units":"miles"}'
--j '{"locations":[{"lat":52.161307,"lon":4.520548,"street":"Van der Marckstraat"},{"lat":52.161824,"lon":4.519126,"street":"Pinksterbloem"}],"costing":"auto","units":"miles"}'
--j '{"locations":[{"lat":51.816785,"lon":5.851100,"street":"Heidevenstraat"},{"lat":51.815453,"lon":5.850510,"street":"Heidebloemstraat"}],"costing":"auto","units":"miles"}'
--j '{"locations":[{"lat":52.266442,"lon":7.859123,"street":"Laggenbecker Straße"},{"lat":52.266962,"lon":7.858814,"street":"Laggenbecker Straße"}],"costing":"auto","units":"miles"}'

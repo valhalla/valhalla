@@ -1698,25 +1698,6 @@ function filter_tags_generic(kv)
     kv["truck_route"] = "true"
   end
 
-  if (kv["maxwidth"]) then
-    local width = tonumber(kv["maxwidth"])
-    if (width and width <= 1.9) then
-      kv["auto_forward"] = "false"
-      kv["truck_forward"] = "false"
-      kv["bus_forward"] = "false"
-      kv["taxi_forward"] = "false"
-      kv["emergency_forward"] = "false"
-      kv["hov_forward"] = "false"
-
-      kv["auto_backward"] = "false"
-      kv["truck_backward"] = "false"
-      kv["bus_backward"] = "false"
-      kv["taxi_backward"] = "false"
-      kv["emergency_backward"] = "false"
-      kv["hov_backward"] = "false"
-    end
-  end
-
   local nref = kv["ncn_ref"]
   local rref = kv["rcn_ref"]
   local lref = kv["lcn_ref"]
