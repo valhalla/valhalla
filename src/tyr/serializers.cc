@@ -90,22 +90,27 @@ std::string serializeStatus(const Api& request) {
 
   rapidjson::Document status_doc;
   status_doc.SetObject();
-  rapidjson::Document::AllocatorType& alloc = status_doc.GetAllocator();
+  auto& alloc = status_doc.GetAllocator();
 
-  // set the easy stuff
   status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
-  status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()), alloc);
-  status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
-                       alloc);
-  status_doc.AddMember("has_timezones", rapidjson::Value().SetBool(request.status().has_timezones()),
-                       alloc);
-  status_doc.AddMember("has_live_traffic",
-                       rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+  if (request.status().has_has_tiles())
+    status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
+                         alloc);
+  if (request.status().has_has_admins())
+    status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                         alloc);
+  if (request.status().has_has_timezones())
+    status_doc.AddMember("has_timezones",
+                         rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
+  if (request.status().has_has_live_traffic())
+    status_doc.AddMember("has_live_traffic",
+                         rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
 
-  // add the bbox document from the connectivity_map
   rapidjson::Document bbox_doc;
-  bbox_doc.Parse(request.status().bbox());
-  status_doc.AddMember("bbox", bbox_doc, alloc);
+  if (request.status().has_bbox()) {
+    bbox_doc.Parse(request.status().bbox());
+    rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
+  }
 
   // add the entire config and remove sensible paths
   rapidjson::Document config_doc;

@@ -78,6 +78,7 @@ auto const config_str = write_config(config);
 
 const std::vector<http_request_t> valhalla_requests{
     http_request_t(GET, "/status"),
+    http_request_t(GET, R"(/status?json={"verbose": true})"),
     http_request_t(OPTIONS, "/route"),
     http_request_t(HEAD, "/route"),
     http_request_t(PUT, "/route"),
@@ -156,6 +157,7 @@ const std::vector<http_request_t> valhalla_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
+    {200, R"({"version":")" VALHALLA_VERSION R"(","config":)" + config_str + "}"},
     {200,
      R"({"version":")" VALHALLA_VERSION
      R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"config":)" +
@@ -343,10 +345,7 @@ const std::vector<http_request_t> osrm_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
-    {200,
-     R"({"version":")" VALHALLA_VERSION
-     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"config":)" +
-         config_str + "}"},
+    {200, R"({"version":")" VALHALLA_VERSION R"(","config":)" + config_str + "}"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
