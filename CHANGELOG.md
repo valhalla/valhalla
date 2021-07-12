@@ -15,6 +15,9 @@
    * FIXED: Use distance threshold in hierarchy limits for bidirectional astar to expand more important lower level roads [#3156](https://github.com/valhalla/valhalla/pull/3156)
    * FIXED: Fixed incorrect dead-end roundabout labels. [#3129](https://github.com/valhalla/valhalla/pull/3129)
    * FIXED: googletest wasn't really updated in #3166 [#3187](https://github.com/valhalla/valhalla/pull/3187)
+   * FIXED: Minor fix of benchmark code [#3190](https://github.com/valhalla/valhalla/pull/3190)
+   * FIXED: avoid_polygons intersected edges as polygons instead of linestrings [#3194]((https://github.com/valhalla/valhalla/pull/3194)
+   * FIXED: when binning horizontal edge shapes using single precision floats (converted from not double precision floats) allowed for the possiblity of marking many many tiles no where near the shape [#3204](https://github.com/valhalla/valhalla/pull/3204) 
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
