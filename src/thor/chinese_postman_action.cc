@@ -90,9 +90,10 @@ bool is_starting_node(const valhalla::Location& location, const GraphId& edge_id
   for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id) {
       return true;
+    } else {
+      return false;
     }
   }
-  return false;
 }
 
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
@@ -288,6 +289,8 @@ void thor_worker_t::chinese_postman(Api& request) {
         originVertex = start_vertex;
         originNodeFound = true;
       }
+    } else {
+      is_starting_node(originLocation, GraphId(edge.id()));
     }
     G.addVertex(start_vertex);
     CPVertex end_vertex = CPVertex(end_node);

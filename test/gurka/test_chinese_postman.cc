@@ -143,30 +143,33 @@ protected:
     //          C---->---D
 
     const std::string complex_ascii_map = R"(
-        B--------A--------F
-         \       | \     /|
-          \      |  \   / |
-           \     |   \ /  |
-            \    |    E   |
-             \   |     \  |
-              \  |      \ |
-               \ |       \|
-                 C---->---D
+            p--------------------------q
+            |    B--------A--------F   |
+            |     \       | \     /|   |
+            |      \      |  \   / |   |
+            |       \     |   \ /  |   |
+            |        \    |    E   |   |
+            |         \   |     \  |   |
+            |          \  |      \ |   |
+            |           \ |       \|   |
+            |             C--------D   |
+            r--------------------------s
     )";
-    const gurka::ways complex_ways = {{"AB", {{"highway", "residential"}, {"name", "AB"}}},
-                                      {"AC", {{"highway", "residential"}, {"name", "AC"}}},
-                                      {"AF", {{"highway", "residential"}, {"name", "AF"}}},
+    const gurka::ways complex_ways =
+        {{"AB", {{"highway", "residential"}, {"name", "AB"}, {"oneway", "yes"}}},
+         {"AC", {{"highway", "residential"}, {"name", "AC"}, {"oneway", "yes"}}},
+         {"AF", {{"highway", "residential"}, {"name", "AF"}, {"oneway", "yes"}}},
 
-                                      {"BC", {{"highway", "residential"}, {"name", "BC"}}},
+         {"BC", {{"highway", "residential"}, {"name", "BC"}, {"oneway", "yes"}}},
 
-                                      {"CD", {{"highway", "residential"}, {"name", "CD"}}},
+         {"CD", {{"highway", "residential"}, {"name", "CD"}, {"oneway", "yes"}}},
 
-                                      {"DE", {{"highway", "residential"}, {"name", "DE"}}},
+         {"DE", {{"highway", "residential"}, {"name", "DE"}, {"oneway", "yes"}}},
 
-                                      {"EA", {{"highway", "residential"}, {"name", "EA"}}},
+         {"EA", {{"highway", "residential"}, {"name", "EA"}, {"oneway", "yes"}}},
 
-                                      {"FD", {{"highway", "residential"}, {"name", "FD"}}},
-                                      {"FE", {{"highway", "residential"}, {"name", "FE"}}}};
+         {"FD", {{"highway", "residential"}, {"name", "FD"}, {"oneway", "yes"}}},
+         {"FE", {{"highway", "residential"}, {"name", "FE"}, {"oneway", "yes"}}}};
     const auto complex_layout = gurka::detail::map_to_coordinates(complex_ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     complex_chinese_postman_map =
@@ -284,7 +287,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::assert::raw::expect_path(route2, {"GH", "HF", "FC", "CG"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
 
   ring_bg_t chinese_ring{chinese_postman_map.nodes.at("q"), chinese_postman_map.nodes.at("s"),
@@ -307,36 +310,11 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   gurka::assert::raw::expect_path(route, {"CB", "BE", "EF", "FE", "EB", "BE", "EF", "FC"});
 }
 
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodesComplex) {
-  auto node_a = complex_chinese_postman_map.nodes.at("A");
-  auto node_b = complex_chinese_postman_map.nodes.at("B");
-  auto node_c = complex_chinese_postman_map.nodes.at("C");
-  auto node_d = complex_chinese_postman_map.nodes.at("D");
-  auto node_e = complex_chinese_postman_map.nodes.at("E");
-  auto node_f = complex_chinese_postman_map.nodes.at("F");
-
-  auto a_b = node_a.lng() - node_b.lng();
-
-  // create a chinese polygon covering all nodes
-  // c4-----------------------c1
-  // |   B----<---A--->----F   |
-  // |    \       | \     /|   |
-  // |     \      |  ^   v |   |
-  // |      \     v   \ /  |   |
-  // |       v    |    E   v   |
-  // |        \   |     \  |   |
-  // |         \  |      ^ |   |
-  // |          \ |       \|   |
-  // |            C---->---D   |
-  // c3------------------------c2
-
-  auto ratio = 0.2;
-  auto buffer = ratio * a_b;
-  ring_bg_t chinese_ring{{node_f.lng() + buffer, node_f.lat() + buffer},
-                         {node_d.lng() + buffer, node_d.lat() - buffer},
-                         {node_b.lng() - buffer, node_c.lat() - buffer},
-                         {node_b.lng() - buffer, node_b.lat() + buffer},
-                         {node_f.lng() + buffer, node_f.lat() + buffer}};
+TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
+  ring_bg_t chinese_ring{complex_chinese_postman_map.nodes.at("p"),
+                         complex_chinese_postman_map.nodes.at("q"),
+                         complex_chinese_postman_map.nodes.at("s"),
+                         complex_chinese_postman_map.nodes.at("r")};
 
   std::vector<ring_bg_t> avoid_rings;
 
@@ -351,8 +329,8 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodesComplex) {
   auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
 
   auto route = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
-                                          "EA", "AF", "FD", "DE", "EA", "AB"});
+  gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AC", "CD",
+                                          "DE", "EA", "AF", "FE", "EA", "AB"});
 
   // build request manually for now
   auto lls2 = {complex_chinese_postman_map.nodes["C"], complex_chinese_postman_map.nodes["C"]};
@@ -365,8 +343,8 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodesComplex) {
   auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
 
   auto route2 = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req2);
-  gurka::assert::raw::expect_path(route2, {"CD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE",
-                                           "EA", "AF", "FD", "DE", "EA", "AC"});
+  gurka::assert::raw::expect_path(route2, {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AC", "CD", "DE",
+                                           "EA", "AF", "FE", "EA", "AB", "BC"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
