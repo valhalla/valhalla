@@ -51,7 +51,7 @@ TEST(Actor, Basic) {
 
   actor.status("");
   actor.cleanup();
-  auto status_json = actor.status("");
+  auto status_json = actor.status(R"({"verbose":true})");
   actor.cleanup();
   auto status = test::json_to_pt(status_json);
   ASSERT_NE(status_json.find("Polygon"), std::string::npos);
