@@ -181,16 +181,13 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 /*
  * This function serializes the via_waypoints object on the leg.
  */
-valhalla::baldr::json::MapPtr serialize_via_waypoint(const valhalla::Location& origin,
-                                                     const valhalla::Location& location,
-                                                     const uint64_t geometry_idx) {
-
+valhalla::baldr::json::MapPtr serialize_via_waypoint(const valhalla::Location& location,
+                                                     const uint64_t geometry_idx,
+                                                     double distance_from_leg_start) {
   // Create a via waypoint to add to the array
   auto via_waypoint = json::map({});
   // Add distance in meters from the input location to the silent waypoint
-  via_waypoint->emplace("distance_from_leg_start",
-                        json::fixed_t{to_ll(origin.ll()).Distance(to_ll(location.path_edges(0).ll())),
-                                      3});
+  via_waypoint->emplace("distance_from_leg_start", json::fixed_t{distance_from_leg_start, 3});
   via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
   via_waypoint->emplace("geometry_index", geometry_idx);
 
@@ -246,15 +243,16 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
       continue;
     }
 
-    const valhalla::Location origin = locs.Get(0);
     // Only create via_waypoints object if the locations are via or through types
     if (locs.Get(location_index).type() == valhalla::Location::kVia ||
         locs.Get(location_index).type() == valhalla::Location::kThrough) {
       locs.Mutable(location_index)->set_waypoint_index(location_index);
-      int geometry_idx = 0;
 
+      double distance_from_leg_start = 0;
+      uint32_t geometry_idx = 0;
       for (const auto& ll : shape) {
         geometry_idx++;
+        PointLL next_ll = shape[geometry_idx];
 
         // comparing lat/lng equality with an epsilon for approximation
         bool lng_equality =
@@ -265,10 +263,13 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
             valhalla::midgard::equal<double>(static_cast<double>(
                                                  locs.Get(location_index).path_edges(0).ll().lat()),
                                              static_cast<double>(ll.second), .001);
-        if (lng_equality && lat_equality) {
+        // accumalates the distances between current ll and next ll
+        distance_from_leg_start += ll.Distance(next_ll);
 
-          via_waypoints->emplace_back(
-              osrm::serialize_via_waypoint(origin, locs.Get(location_index), geometry_idx - 1));
+        if (lng_equality && lat_equality) {
+          via_waypoints->emplace_back(osrm::serialize_via_waypoint(locs.Get(location_index),
+                                                                   geometry_idx - 1,
+                                                                   distance_from_leg_start));
           break;
         }
       }
