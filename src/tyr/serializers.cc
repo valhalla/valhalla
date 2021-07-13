@@ -233,44 +233,38 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
   // Create a vector of indexes based on the number of locations.
   auto locs = *options.mutable_locations();
   uint32_t i = 0;
-  std::vector<uint32_t> location_indexes;
-  for (const auto& loc : locs) {
-    location_indexes.push_back(i++);
-  }
   auto via_waypoints = json::array({});
-  for (const auto& location_index : location_indexes) {
-    if (location_index == 0 || location_index == (locs.size() - 1)) {
-      continue;
-    }
 
+  // only loop thru the locations that are not origin or destinations
+  for (size_t loc_i = 1; loc_i < locs.size(); loc_i++) {
+    uint32_t geometry_idx = 0;
     // Only create via_waypoints object if the locations are via or through types
-    if (locs.Get(location_index).type() == valhalla::Location::kVia ||
-        locs.Get(location_index).type() == valhalla::Location::kThrough) {
-      locs.Mutable(location_index)->set_waypoint_index(location_index);
+    if (locs.Get(loc_i).type() == valhalla::Location::kVia ||
+        locs.Get(loc_i).type() == valhalla::Location::kThrough) {
+      locs.Mutable(loc_i)->set_waypoint_index(loc_i);
 
       double distance_from_leg_start = 0;
-      uint32_t geometry_idx = 0;
       for (const auto& ll : shape) {
-        geometry_idx++;
-        PointLL next_ll = shape[geometry_idx];
-
-        // comparing lat/lng equality with an epsilon for approximation
-        bool lng_equality =
-            valhalla::midgard::equal<double>(static_cast<double>(
-                                                 locs.Get(location_index).path_edges(0).ll().lng()),
-                                             static_cast<double>(ll.first), .001);
-        bool lat_equality =
-            valhalla::midgard::equal<double>(static_cast<double>(
-                                                 locs.Get(location_index).path_edges(0).ll().lat()),
-                                             static_cast<double>(ll.second), .001);
-        // accumalates the distances between current ll and next ll
-        distance_from_leg_start += ll.Distance(next_ll);
-
-        if (lng_equality && lat_equality) {
-          via_waypoints->emplace_back(osrm::serialize_via_waypoint(locs.Get(location_index),
-                                                                   geometry_idx - 1,
-                                                                   distance_from_leg_start));
-          break;
+        if (geometry_idx < shape.size()) {
+          geometry_idx++;
+          PointLL next_ll = shape[geometry_idx];
+          // comparing lat/lng equality with an epsilon for approximation
+          bool lng_equality =
+              valhalla::midgard::equal<double>(static_cast<double>(
+                                                   locs.Get(loc_i).path_edges(0).ll().lng()),
+                                               static_cast<double>(ll.first), .001);
+          bool lat_equality =
+              valhalla::midgard::equal<double>(static_cast<double>(
+                                                   locs.Get(loc_i).path_edges(0).ll().lat()),
+                                               static_cast<double>(ll.second), .001);
+          // accumalates the distances between current ll and next ll
+          distance_from_leg_start += ll.Distance(next_ll);
+          if (lng_equality && lat_equality) {
+            via_waypoints->emplace_back(osrm::serialize_via_waypoint(locs.Get(loc_i),
+                                                                     geometry_idx - 1,
+                                                                     distance_from_leg_start));
+            break;
+          }
         }
       }
     }
