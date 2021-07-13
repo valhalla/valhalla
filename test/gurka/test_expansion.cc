@@ -12,8 +12,8 @@ protected:
     constexpr double gridsize = 10;
 
     const std::string ascii_map = R"(
-            B  F--G
-            |  |  |
+            B   F--G
+            |   |  |
           E--A--C--H
             |
             D
