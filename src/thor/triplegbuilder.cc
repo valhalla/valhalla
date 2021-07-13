@@ -579,7 +579,7 @@ void AddSignInfo(const AttributesController& controller,
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
                              valhalla::baldr::GraphReader& graphreader,
-                             graph_tile_ptr& graphtile,
+                             const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
@@ -659,10 +659,15 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
-      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
-      size_t edge_idx = intersecting_de - t2->directededge(0);
-      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx);
+      // To retrieve the sign information from the intersecting_de I need
+      // to access the graph-tile for the "begin node" of the intersecting_de.
+      // GraphReader::GetGraphTile(DirectedEdge *) returns the graph-tile for
+      // the "end node". Hence, I need to obtain the opposing-directed-edge
+      // and then ask for it's graph tile. (Sigh)
+      GraphId opp_intersecting_de = graphtile->GetOpposingEdgeId(intersecting_de);
+      graph_tile_ptr opp_tile = graphreader.GetGraphTile(opp_intersecting_de);
+      size_t edge_idx = intersecting_de - opp_tile->directededge(0);
+      std::vector<SignInfo> edge_signs = opp_tile->GetSigns(edge_idx);
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -684,7 +689,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr& start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
