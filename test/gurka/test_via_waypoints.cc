@@ -71,9 +71,10 @@ TEST_F(ViaWaypoints, test_via_waypoints_response1) {
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
 
   auto via_waypoint1 = leg["via_waypoints"].GetArray();
+  ASSERT_EQ(via_waypoint1.Size(), 1);
   EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 1228.88, 0.02);
+  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 1659.029, 0.02);
 }
 
 TEST_F(ViaWaypoints, test_via_waypoints_response2) {
@@ -97,19 +98,16 @@ TEST_F(ViaWaypoints, test_via_waypoints_response2) {
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
   EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 4);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 969.299, 0.02);
-
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
   EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
 
-  auto via_waypoint2 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint2[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint2[1]["geometry_index"].GetInt(), 7);
-  EXPECT_NEAR(via_waypoint2[1]["distance_from_leg_start"].GetDouble(), 1312.69, 0.02);
+  auto via_waypoint = leg["via_waypoints"].GetArray();
+  ASSERT_EQ(via_waypoint.Size(), 2);
+  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 4);
+  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 1651.830, 0.02);
+  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
+  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 7);
+  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 3180.987, 0.02);
 }
