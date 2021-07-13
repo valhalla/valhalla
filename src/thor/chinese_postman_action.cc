@@ -126,17 +126,17 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
                       recovered_inner_edges.count(label.edgeid()));
   };
 
-  float source_pct;
-  try {
-    source_pct = find_percent_along(origin, path_edges.front());
-  } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
+  float source_pct = 1;
+  // try {
+  //   source_pct = find_percent_along(origin, path_edges.front());
+  // } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
 
-  float target_pct;
-  try {
-    target_pct = find_percent_along(dest, path_edges.back());
-  } catch (...) {
-    throw std::logic_error("Could not find candidate edge used for destination label");
-  }
+  float target_pct = 1;
+  // try {
+  //   target_pct = find_percent_along(dest, path_edges.back());
+  // } catch (...) {
+  //   throw std::logic_error("Could not find candidate edge used for destination label");
+  // }
 
   // recost edges in final path; ignore access restrictions
   try {
@@ -277,9 +277,10 @@ void thor_worker_t::chinese_postman(Api& request) {
   for (auto& edge : co->chinese_edges()) {
     // skip the edge if it's not allowed (reverse one way)
     const DirectedEdge* directed_edge = reader->directededge(baldr::GraphId(edge.id()));
-    if (!directed_edge->forward()) {
-      continue;
-    }
+    // if (!directed_edge->forward()) {
+    //   std::cout << "skipped because no forward\n";
+    //   continue;
+    // }
     bool found = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
                             std::to_string(GraphId(edge.id()))) != avoid_edge_ids.end());
     if (found)
@@ -305,9 +306,9 @@ void thor_worker_t::chinese_postman(Api& request) {
   // If the origin node index is more than the path_edge size, that means that there is no suitable
   // node for the origin location.
   if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
+    std::cout << "path_edges: " << originLocation.path_edges().size();
     throw std::logic_error("Could not find candidate edge for the origin location");
   }
-
   std::vector<GraphId> edgeGraphIds;
   if (G.getUnbalancedVertices().size() == 0) {
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);

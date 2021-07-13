@@ -187,7 +187,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
   }
 #endif
-
+  std::cout << "num avoid_edge_ids: " << avoid_edge_ids.size() << "\n";
   return avoid_edge_ids;
 }
 
@@ -257,13 +257,18 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
         }
         bool is_within = IsWithin(tile->edgeinfo(edge), polygon);
         if (is_within) {
-          cp_edge_ids.emplace(edge_id);
+          const baldr::DirectedEdge* directed_edge = reader.directededge(baldr::GraphId(edge_id));
+          if (directed_edge->forward()) {
+            cp_edge_ids.emplace(edge_id);
+          }
+          // Add the opposite edge if a two way.
           cp_edge_ids.emplace(
               opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
         }
       }
     }
   }
+  std::cout << "num cp_edge_ids: " << cp_edge_ids.size() << "\n";
   return cp_edge_ids;
 }
 
