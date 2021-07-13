@@ -161,7 +161,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                        std::string* json = nullptr);
+                        std::string& json = *std::unique_ptr<std::string>(new std::string()));
 
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
@@ -169,7 +169,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options = {},
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                        std::string* json = nullptr,
+                        std::string& json = *std::unique_ptr<std::string>(new std::string()),
                         const std::string& stop_type = "break");
 
 /* Returns the raw_result formatted as a JSON document in the given format.

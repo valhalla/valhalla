@@ -576,7 +576,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json) {
+                        std::string& json) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
@@ -611,8 +611,8 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       throw std::logic_error("Unsupported action");
       break;
   }
-  if (json) {
-    *json = json_str;
+  if (!json.empty()) {
+    json = std::move(json_str);
   }
   return api;
 }
@@ -623,7 +623,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json,
+                        std::string& json,
                         const std::string& stop_type) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));

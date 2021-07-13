@@ -71,7 +71,7 @@ public:
    *                             on a given edge
    */
   using expansion_callback_t = std::function<
-      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, float)>;
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, float, float)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

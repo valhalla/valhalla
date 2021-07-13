@@ -52,6 +52,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {142, "Arrive by not implemented for isochrones"},
     {143,
      "ignore_closures in costing and exclude_closures in search_filter cannot both be specified"},
+    {144, "Action does not support expansion"},
 
     {150, "Exceeded max locations"},
     {151, "Exceeded max time"},

@@ -363,17 +363,17 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
       }
     }
 
-    if (expansion_callback_) {
-      expansion_callback_(graphreader, pred.edgeid(), nullptr, nullptr, pred.cost().secs,
-                          pred.path_distance());
-    }
-
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, expansion_direction);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in expansion_direction.
       ExpandInner<expansion_direction>(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
                                        false, time_infos.front());
+    }
+
+    if (expansion_callback_) {
+      expansion_callback_(graphreader, pred.edgeid(), nullptr, nullptr, pred.cost().secs,
+                          pred.path_distance(), pred.cost().cost);
     }
   }
 }

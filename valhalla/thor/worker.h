@@ -58,7 +58,7 @@ public:
   void route(Api& request);
   std::string matrix(Api& request);
   void optimized_route(Api& request);
-  std::string isochrones(Api& request);
+  std::string isochrones(Api& request, bool only_expand = false);
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);

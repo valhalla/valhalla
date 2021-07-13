@@ -11,18 +11,19 @@ using namespace rapidjson;
 using namespace valhalla::midgard;
 
 namespace {
-void FillDom(Document& dom, bool is_route_expansion) {
+void FillDom(Document& dom, valhalla::Options::Action action) {
   SetValueByPointer(dom, "/type", "FeatureCollection");
   SetValueByPointer(dom, "/features/0/type", "Feature");
   SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
-  if (is_route_expansion) {
+  if (action == valhalla::Options::route) {
     SetValueByPointer(dom, "/properties/algorithm", "none");
     SetValueByPointer(dom, "/features/0/properties/edge_ids", Value(kArrayType));
     SetValueByPointer(dom, "/features/0/properties/statuses", Value(kArrayType));
   } else {
     SetValueByPointer(dom, "/features/0/properties/durations", Value(kArrayType));
     SetValueByPointer(dom, "/features/0/properties/distances", Value(kArrayType));
+    SetValueByPointer(dom, "/features/0/properties/costs", Value(kArrayType));
   }
 }
 } // namespace
@@ -34,24 +35,26 @@ std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
   measure_scope_time(request, "thor_worker_t::expansion");
 
-  bool is_route_expansion = request.options().expansion_type() ==
-                            Options::ExpansionType::Options_ExpansionType_expand_route;
-
-  // default generalization to ~ zoom level 15, minor impact anyways
-  float gen_factor = request.options().has_generalize() ? request.options().generalize() : 21.4f;
+  auto options = request.options();
+  auto exp_action = options.expansion_action();
+  // default generalization to ~ zoom level 15
+  float gen_factor = options.has_generalize() ? options.generalize() : 21.4f;
 
   // default the expansion geojson so its easy to add to as we go
   Document dom;
   dom.SetObject();
-  FillDom(dom, is_route_expansion);
+  FillDom(dom, exp_action);
+
+  std::cout << std::setw(6) << "Name" << std::setw(10) << "dir" << std::setw(8) << "dur"
+            << std::setw(8) << "dist" << std::setw(8) << "cost" << std::endl;
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
-  auto track_expansion = [&dom, &is_route_expansion,
+  auto track_expansion = [&dom, &exp_action,
                           &gen_factor](baldr::GraphReader& reader, baldr::GraphId edgeid,
                                        const char* algorithm = nullptr, const char* status = nullptr,
-                                       const float duration = 0, const float distance = 0) {
-    // full shape might be overkill but meh, its trace
+                                       const float duration = 0, const float distance = 0,
+                                       const float cost = 0) {
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
       LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
@@ -60,6 +63,12 @@ std::string thor_worker_t::expansion(Api& request) {
     }
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge).shape();
+
+    // TODO: remove debug stuff
+    std::cout << std::setprecision(4) << std::setw(6) << tile->edgeinfo(edge).GetNames()[0]
+              << std::setw(10) << (edge->forward() ? ": forward" : ": reverse") << std::setw(8)
+              << duration << std::setw(8) << distance << std::setw(8) << cost << std::endl;
+
     if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
     Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
@@ -67,17 +76,17 @@ std::string thor_worker_t::expansion(Api& request) {
     // make the geom
     auto& a = dom.GetAllocator();
     auto* coords = GetValueByPointer(dom, "/features/0/geometry/coordinates");
+    coords->GetArray().PushBack(Value(kArrayType), a);
+    auto& linestring = (*coords)[coords->Size() - 1];
+    for (const auto& p : shape) {
+      linestring.GetArray().PushBack(Value(kArrayType), a);
+      auto point = linestring[linestring.Size() - 1].GetArray();
+      point.PushBack(p.first, a);
+      point.PushBack(p.second, a);
+    }
 
-    // make the properties and coords
-    if (is_route_expansion) {
-      coords->GetArray().PushBack(Value(kArrayType), a);
-      auto& linestring = (*coords)[coords->Size() - 1];
-      for (const auto& p : shape) {
-        linestring.GetArray().PushBack(Value(kArrayType), a);
-        auto point = linestring[linestring.Size() - 1].GetArray();
-        point.PushBack(p.first, a);
-        point.PushBack(p.second, a);
-      }
+    // make the properties
+    if (exp_action == Options::route) {
       SetValueByPointer(dom, "/properties/algorithm", algorithm);
       GetValueByPointer(dom, "/features/0/properties/edge_ids")
           ->GetArray()
@@ -87,17 +96,19 @@ std::string thor_worker_t::expansion(Api& request) {
           .PushBack(Value{}.SetString(status, a), a);
 
     } else {
-      coords->GetArray().PushBack(Value{}.SetString(encode<std::vector<PointLL>>(shape, 1e5), a), a);
       GetValueByPointer(dom, "/features/0/properties/durations")
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);
       GetValueByPointer(dom, "/features/0/properties/distances")
           ->GetArray()
           .PushBack(Value{}.SetInt(distance), a);
+      GetValueByPointer(dom, "/features/0/properties/costs")
+          ->GetArray()
+          .PushBack(Value{}.SetInt(cost), a);
     }
   };
 
-  if (is_route_expansion) {
+  if (exp_action == Options::route) {
     // tell all the algorithms how to track expansion
     for (auto* alg : std::vector<PathAlgorithm*>{
              &multi_modal_astar,
@@ -129,7 +140,7 @@ std::string thor_worker_t::expansion(Api& request) {
     }
   } else {
     isochrone_gen.set_track_expansion(track_expansion);
-    isochrones(request);
+    isochrones(request, true);
     isochrone_gen.set_track_expansion(nullptr);
   }
 

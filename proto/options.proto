@@ -174,11 +174,6 @@ message Options {
     repeated LatLng coords = 1;
   }
 
-  enum ExpansionType {
-    expand_route = 0;
-    expand_isochrone = 1;
-  }
-
   optional Units units = 1;                                               // kilometers or miles
   optional string language = 2 [default = "en-US"];                       // Based on IETF BCP 47 language tag string
   optional DirectionsType directions_type = 3 [default = instructions];   // Enable/disable narrative production
@@ -226,5 +221,5 @@ message Options {
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  optional ExpansionType expansion_type = 48;                                    // Track expansion for route or isochrone
+  optional Action expansion_action = 48;                                  // Meta action for /expansion endpoint
 }
