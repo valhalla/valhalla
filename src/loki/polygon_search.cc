@@ -257,13 +257,14 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
         }
         bool is_within = IsWithin(tile->edgeinfo(edge), polygon);
         if (is_within) {
-          const baldr::DirectedEdge* directed_edge = reader.directededge(baldr::GraphId(edge_id));
-          if (directed_edge->forward()) {
+          if (costing->IsAccessible(edge)) {
             cp_edge_ids.emplace(edge_id);
           }
           // Add the opposite edge if a two way.
-          cp_edge_ids.emplace(
-              opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+          opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+          if (costing->IsAccessible(opp_edge)) {
+            cp_edge_ids.emplace(opp_id);
+          }
         }
       }
     }
