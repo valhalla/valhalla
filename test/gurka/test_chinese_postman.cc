@@ -49,6 +49,31 @@ rapidjson::Value get_chinese_polygon(ring_bg_t ring, rapidjson::MemoryPoolAlloca
   return ring_j;
 }
 
+std::unordered_set<valhalla::baldr::GraphId> get_edges(gurka::map map, std::string nodes) {
+  valhalla::Options options;
+  options.set_costing(valhalla::Costing::auto_);
+  auto* co = options.add_costing_options();
+  co->set_costing(valhalla::Costing::auto_);
+
+  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  GraphReader reader(map.config.get_child("mjolnir"));
+
+  // create the chinese postman polygon
+  auto* ring = options.mutable_chinese_polygon();
+  std::list<valhalla::midgard::PointLL> coords;
+  for (auto& c : nodes) {
+    coords.push_back(map.nodes[std::string(1, c)]);
+  }
+
+  for (const auto& coord : coords) {
+    auto* ll = ring->add_coords();
+    ll->set_lat(coord.lat());
+    ll->set_lng(coord.lng());
+  }
+
+  return vl::edges_in_ring(*ring, reader, costing, 10000);
+}
+
 // common method can't deal with arrays of floats
 std::string build_local_req(rapidjson::Document& doc,
                             rapidjson::MemoryPoolAllocator<>& allocator,
@@ -104,29 +129,19 @@ protected:
     u---------v-------w------x-----y
     )";
     // AB_2 means AB road is a two way road.
-    const gurka::ways ways = {
-        {"AB", {{"highway", "residential"}, {"name", "AB_2"}}},
-        // {"BA", {{"highway", "residential"}, {"name", "BA"}}},
-
-        {"AD", {{"highway", "residential"}, {"name", "AD_2"}}},
-        // {"DA", {{"highway", "residential"}, {"name", "DA"}}},
-
-        {"CB", {{"highway", "residential"}, {"name", "CB"}, {"oneway", "yes"}}},
-
-        {"BE", {{"highway", "residential"}, {"name", "BE_2"}}},
-        // {"EB", {{"highway", "residential"}, {"name", "EB"}}},
-
-        {"DE", {{"highway", "residential"}, {"name", "DE_2"}}},
-        // {"ED", {{"highway", "residential"}, {"name", "ED"}}},
-
-        {"EF", {{"highway", "residential"}, {"name", "EF_2"}}},
-        // {"FE", {{"highway", "residential"}, {"name", "FE"}}},
-
-        {"FC", {{"highway", "residential"}, {"name", "FC"}, {"oneway", "yes"}}},
-        {"CG", {{"highway", "residential"}, {"name", "CG"}, {"oneway", "yes"}}},
-        {"GH", {{"highway", "residential"}, {"name", "GH"}, {"oneway", "yes"}}},
-        {"HF", {{"highway", "residential"}, {"name", "HF"}, {"oneway", "yes"}}},
-    };
+    const gurka::ways ways = {// two ways
+                              {"AB", {{"highway", "residential"}, {"name", "AB_2"}}},
+                              {"AD", {{"highway", "residential"}, {"name", "AD_2"}}},
+                              {"BE", {{"highway", "residential"}, {"name", "BE_2"}}},
+                              {"DE", {{"highway", "residential"}, {"name", "DE_2"}}},
+                              {"EF", {{"highway", "residential"}, {"name", "EF_2"}}},
+                              // one way
+                              {"CB", {{"highway", "residential"}, {"name", "CB"}, {"oneway", "yes"}}},
+                              {"FC", {{"highway", "residential"}, {"name", "FC"}, {"oneway", "yes"}}},
+                              {"CG", {{"highway", "residential"}, {"name", "CG"}, {"oneway", "yes"}}},
+                              {"GH", {{"highway", "residential"}, {"name", "GH"}, {"oneway", "yes"}}},
+                              {"HF",
+                               {{"highway", "residential"}, {"name", "HF"}, {"oneway", "yes"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
@@ -183,11 +198,21 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
+TEST_F(ChinesePostmanTest, TestExtractChinesePostmanEdges) {
+  ASSERT_EQ(get_edges(chinese_postman_map, "styx").size(), 1); // a one-way
+  ASSERT_EQ(get_edges(chinese_postman_map, "rsxw").size(), 1); // a one-way
+  ASSERT_EQ(get_edges(chinese_postman_map, "rtyw").size(), 4); // 4 one-ways
+  ASSERT_EQ(get_edges(chinese_postman_map, "pqvu").size(), 2); // a two-ways
+  ASSERT_EQ(get_edges(chinese_postman_map, "prwu").size(), 8); // 4 two-ways
+  ASSERT_EQ(get_edges(chinese_postman_map, "qsxv").size(), 6); // 2 two-ways and two one way
+  ASSERT_EQ(get_edges(chinese_postman_map, "ptyu").size(), 15);
+}
+
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
   // create a chinese polygon (prwu) and avoid polygon (ijml)
 
-  ring_bg_t chinese_ring{chinese_postman_map.nodes.at("p"), chinese_postman_map.nodes.at("r"),
-                         chinese_postman_map.nodes.at("w"), chinese_postman_map.nodes.at("u")};
+  ring_bg_t chinese_ring{chinese_postman_map.nodes.at("p"), chinese_postman_map.nodes.at("q"),
+                         chinese_postman_map.nodes.at("v"), chinese_postman_map.nodes.at("u")};
 
   ring_bg_t avoid_ring{chinese_postman_map.nodes.at("i"), chinese_postman_map.nodes.at("j"),
                        chinese_postman_map.nodes.at("m"), chinese_postman_map.nodes.at("l")};
@@ -295,7 +320,7 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   gurka::assert::raw::expect_path(route2, {"GH", "HF", "FC", "CG"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
 
   ring_bg_t chinese_ring{chinese_postman_map.nodes.at("q"), chinese_postman_map.nodes.at("s"),

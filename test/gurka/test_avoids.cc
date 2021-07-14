@@ -84,6 +84,7 @@ std::string build_local_req(rapidjson::Document& doc,
 class AvoidTest : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map avoid_map;
+  static gurka::map one_way_avoid_map;
 
   static void SetUpTestSuite() {
     // several polygons and one location to avoid to reference in the tests
@@ -108,10 +109,36 @@ protected:
     // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
                                   {{"service_limits.max_exclude_polygons_length", "1000"}});
+
+    // several polygons and one location to avoid to reference in the tests
+    const std::string one_way_ascii_map = R"(
+                                     A---x--B
+                                     |      |
+                                   h---i  l---m
+                                   | | |  | | |
+                                   k---j  o---n
+                                     |      |   p-q
+                                     C------D---|-|---E---F
+                                                s-r
+                                     )";
+
+    const gurka::ways one_way_ways =
+        {{"AB", {{"highway", "tertiary"}, {"name", "High"}, {"oneway", "yes"}}},
+         {"CD", {{"highway", "tertiary"}, {"name", "Low"}, {"oneway", "yes"}}},
+         {"AC", {{"highway", "tertiary"}, {"name", "1st"}, {"oneway", "yes"}}},
+         {"BD", {{"highway", "tertiary"}, {"name", "2nd"}, {"oneway", "yes"}}},
+         {"DE", {{"highway", "tertiary"}, {"name", "2nd"}, {"oneway", "yes"}}},
+         {"EF", {{"highway", "tertiary"}, {"name", "2nd"}, {"oneway", "yes"}}}};
+    const auto one_way_layout = gurka::detail::map_to_coordinates(one_way_ascii_map, 10);
+    // Add low length limit for exclude_polygons so it throws an error
+    one_way_avoid_map =
+        gurka::buildtiles(one_way_layout, one_way_ways, {}, {}, "test/data/gurka_avoids_one_way",
+                          {{"service_limits.max_exclude_polygons_length", "1000"}});
   }
 };
 
 gurka::map AvoidTest::avoid_map = {};
+gurka::map AvoidTest::one_way_avoid_map = {};
 
 TEST_F(AvoidTest, TestMaxPolygonPerimeter) {
   // Add a polygon with longer perimeter than the limit
@@ -212,6 +239,39 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
 
   // 2 shortcuts + 2 edges
   ASSERT_EQ(avoid_edges.size(), 4);
+  ASSERT_EQ(found_shortcuts, 2);
+}
+
+TEST_F(AvoidTest, TestAvoidShortcutsTruckOneWay) {
+  valhalla::Options options;
+  options.set_costing(valhalla::Costing::truck);
+  auto* co = options.add_costing_options();
+  co->set_costing(valhalla::Costing::truck);
+
+  // create the polygon intersecting a shortcut
+  auto* rings = options.mutable_exclude_polygons();
+  auto* ring = rings->Add();
+  for (const auto& coord : {one_way_avoid_map.nodes["p"], one_way_avoid_map.nodes["q"],
+                            one_way_avoid_map.nodes["r"], one_way_avoid_map.nodes["s"]}) {
+    auto* ll = ring->add_coords();
+    ll->set_lat(coord.lat());
+    ll->set_lng(coord.lng());
+  }
+
+  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  GraphReader reader(one_way_avoid_map.config.get_child("mjolnir"));
+
+  // should return the shortcut edge ID as well
+  size_t found_shortcuts = 0;
+  auto avoid_edges = vl::edges_in_rings(*rings, reader, costing, 10000);
+  for (const auto& edge_id : avoid_edges) {
+    if (reader.GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
+      found_shortcuts++;
+    }
+  }
+
+  // 2 shortcuts + 2 edges
+  ASSERT_EQ(avoid_edges.size(), 2);
   ASSERT_EQ(found_shortcuts, 2);
 }
 
