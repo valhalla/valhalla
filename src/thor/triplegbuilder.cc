@@ -578,8 +578,7 @@ void AddSignInfo(const AttributesController& controller,
  *                         on the local hierarchy.
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
-                             valhalla::baldr::GraphReader& graphreader,
-                             graph_tile_ptr& graphtile,
+                             const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
@@ -659,11 +658,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
-      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
-      size_t edge_idx = intersecting_de - t2->directededge(0);
-      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
-      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx, pronunciations);
+      std::vector<SignInfo> edge_signs =
+          graphtile->GetSigns(intersecting_de - graphtile->directededge(0), pronunciations);
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -685,7 +681,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr& start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
@@ -732,7 +728,7 @@ void AddIntersectingEdges(const AttributesController& controller,
     }
 
     // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+    AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
                             intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
   }
 
@@ -756,7 +752,7 @@ void AddIntersectingEdges(const AttributesController& controller,
           continue;
         }
 
-        AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+        AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2);
       }
@@ -848,6 +844,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                 << names_and_types.at(static_cast<int>(pronunciation.first)).first << std::endl;
     }
   }
+
   // Add tagged names to the edge if requested
   if (controller.attributes.at(kEdgeTaggedNames)) {
     auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
