@@ -689,6 +689,8 @@ SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edg
   };
 
   SlipLaneInput res;
+  // link_edges store link sequence in reverse order
+  // so first link edge is actually the last in the list
   Edge first_link_edge = *data.edges[link_edges.back()];
   res.first_node = first_link_edge.attributes.driveableforward ? first_link_edge.sourcenode_
                                                                : first_link_edge.targetnode_;
@@ -723,6 +725,11 @@ bool IsTurnChannel(Data& data, const std::vector<uint32_t>& link_edges) {
     uint64_t way_id = (*data.ways[(*data.edges[link_edges[0]]).wayindex_]).way_id();
     LOG_DEBUG("Link edges with way_id=" + std::to_string(way_id));
 #endif
+
+    // in most cases slip lane and its detour fit right triangle with ~90 degree angle at the
+    // intersection so traverse_threshold=total_length(i.e slip lane length) is enough for such cases:
+    // hypotenuse(slip lane) length is always greater than leg length
+    // but we need greater threshold for the intersections with sharp angles
     return IsSlipLane(data, input, 2 * total_length);
   }
   return false;

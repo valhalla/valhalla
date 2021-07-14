@@ -485,20 +485,21 @@ TEST(RampsTCs, SlipLane) {
   const std::string ascii_map = R"(
                 Z
                 |
-           W____C____D___E____N
-                |        /
-                |      ^
-                B     /
-                |   F
-                | /
-                A
-                |
+  K__M_____W____C____D___E____N
+      \         |        /
+        \__Y    |      ^
+            \   B     /
+            |   |   F
+            |   | /
+             \  A
+              \ |
                 X
     )";
 
   const gurka::ways ways = {{"XABCZ", {{"highway", "primary"}, {"name", "M1"}}},
-                            {"WCDEN", {{"highway", "primary"}, {"name", "M2"}}},
-                            {"AFE", {{"highway", "primary_link"}, {"oneway", "yes"}}}};
+                            {"KMWCDEN", {{"highway", "primary"}, {"name", "M2"}}},
+                            {"AFE", {{"highway", "primary_link"}, {"oneway", "yes"}}},
+                            {"XYM", {{"highway", "primary_link"}, {"oneway", "yes"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
 
@@ -506,7 +507,14 @@ TEST(RampsTCs, SlipLane) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, test_dir);
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  auto edge = gurka::findEdgeByNodes(reader, layout, "A", "E");
-  const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
-  ASSERT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "A", "E");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "X", "M");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
 }
