@@ -28,6 +28,8 @@ namespace valhalla {
 namespace odin {
 
 odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) : service_worker_t(config) {
+  // signal that the worker started successfully
+  started();
 }
 
 odin_worker_t::~odin_worker_t() {

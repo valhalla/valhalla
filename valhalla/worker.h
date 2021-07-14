@@ -129,6 +129,11 @@ protected:
    */
   midgard::Finally<std::function<void()>> measure_scope_time(Api& api) const;
 
+  /**
+   * Signals the start of the worker, sends statsd message if so configured
+   */
+  void started();
+
   const std::function<void()>* interrupt;
   std::unique_ptr<statsd_client_t> statsd_client;
 };

@@ -101,6 +101,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+
+  // signal that the worker started successfully
+  started();
 }
 
 thor_worker_t::~thor_worker_t() {

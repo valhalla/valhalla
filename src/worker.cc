@@ -965,7 +965,7 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
                     ? ".loki."
                     : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
   const auto& action = Options_Action_Enum_Name(request.options().action());
-  auto level = 500 <= exception.http_code && exception.http_code < 600 ? ".err" : ".warn";
+  auto level = 500 <= exception.http_code && exception.http_code < 600 ? ".error" : ".warn";
 
   auto* err_stat = request.mutable_info()->mutable_statistics()->Add();
   err_stat->set_key(action + level + worker + exception.statsd_key);
@@ -1177,6 +1177,13 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
     stat->set_value(e);
     stat->set_type(timing);
   });
+}
+
+void service_worker_t::started() {
+  std::string worker = typeid(*this) == typeid(loki::loki_worker_t)
+                           ? "loki"
+                           : (typeid(*this) == typeid(thor::thor_worker_t) ? "thor" : "odin");
+  statsd_client->count("none.info." + worker + ".worker_started", 1, 1.f, statsd_client->tags);
 }
 
 } // namespace valhalla
