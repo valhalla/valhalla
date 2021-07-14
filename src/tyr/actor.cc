@@ -267,8 +267,7 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   Api request;
   ParseApi(request_str, Options::expansion, request);
   // check the request and locate the locations in the graph
-  if (request.options().has_expansion_action() &&
-      request.options().expansion_action() == Options::route) {
+  if (request.options().expansion_action() == Options::route) {
     pimpl->loki_worker.route(request);
   } else {
     pimpl->loki_worker.isochrones(request);

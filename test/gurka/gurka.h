@@ -97,6 +97,22 @@ void build_pbf(const nodelayout& node_locations,
  * @return list of edge names
  */
 std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
+
+/**
+ * build a valhalla json request body
+ *
+ * @param location_type  locations or shape
+ * @param waypoints      sequence of pointlls representing the locations
+ * @param costing        which costing name to use, defaults to auto
+ * @param options        overrides parts of the request, supports rapidjson pointer semantics
+ * @param stop_type      break, through, via, break_through
+ * @return json string
+ */
+std::string build_valhalla_request(const std::string& location_type,
+                                   const std::vector<midgard::PointLL>& waypoints,
+                                   const std::string& costing = "auto",
+                                   const std::unordered_map<std::string, std::string>& options = {},
+                                   const std::string& stop_type = "break");
 } // namespace detail
 
 /**
@@ -161,7 +177,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                        std::string& json = *std::unique_ptr<std::string>(new std::string()));
+                        std::string* json = nullptr);
 
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
@@ -169,7 +185,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options = {},
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                        std::string& json = *std::unique_ptr<std::string>(new std::string()),
+                        std::string* json = nullptr,
                         const std::string& stop_type = "break");
 
 /* Returns the raw_result formatted as a JSON document in the given format.

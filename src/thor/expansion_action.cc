@@ -45,9 +45,6 @@ std::string thor_worker_t::expansion(Api& request) {
   dom.SetObject();
   FillDom(dom, exp_action);
 
-  std::cout << std::setw(6) << "Name" << std::setw(10) << "dir" << std::setw(8) << "dur"
-            << std::setw(8) << "dist" << std::setw(8) << "cost" << std::endl;
-
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
   auto track_expansion = [&dom, &exp_action,
@@ -63,11 +60,6 @@ std::string thor_worker_t::expansion(Api& request) {
     }
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge).shape();
-
-    // TODO: remove debug stuff
-    std::cout << std::setprecision(4) << std::setw(6) << tile->edgeinfo(edge).GetNames()[0]
-              << std::setw(10) << (edge->forward() ? ": forward" : ": reverse") << std::setw(8)
-              << duration << std::setw(8) << distance << std::setw(8) << cost << std::endl;
 
     if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
@@ -118,25 +110,25 @@ std::string thor_worker_t::expansion(Api& request) {
              &bss_astar,
          }) {
       alg->set_track_expansion(track_expansion);
+    }
 
-      // track the expansion
-      try {
-        route(request);
-      } catch (...) {
-        // we swallow exceptions because we actually want to see what the heck the expansion did
-        // anyway
-      }
+    // track the expansion
+    try {
+      route(request);
+    } catch (...) {
+      // we swallow exceptions because we actually want to see what the heck the expansion did
+      // anyway
+    }
 
-      // tell all the algorithms to stop tracking the expansion
-      for (auto* alg : std::vector<PathAlgorithm*>{
-               &multi_modal_astar,
-               &timedep_forward,
-               &timedep_reverse,
-               &bidir_astar,
-               &bss_astar,
-           }) {
-        alg->set_track_expansion(nullptr);
-      }
+    // tell all the algorithms to stop tracking the expansion
+    for (auto* alg : std::vector<PathAlgorithm*>{
+             &multi_modal_astar,
+             &timedep_forward,
+             &timedep_reverse,
+             &bidir_astar,
+             &bss_astar,
+         }) {
+      alg->set_track_expansion(nullptr);
     }
   } else {
     isochrone_gen.set_track_expansion(track_expansion);

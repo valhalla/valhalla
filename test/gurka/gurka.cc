@@ -52,21 +52,11 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
-/**
- * build a valhalla json request body
- *
- * @param location_type  locations or shape
- * @param waypoints      sequence of pointlls representing the locations
- * @param costing        which costing name to use, defaults to auto
- * @param options        overrides parts of the request, supports rapidjson pointer semantics
- * @param stop_type      break, through, via, break_through
- * @return json string
- */
 std::string build_valhalla_request(const std::string& location_type,
                                    const std::vector<midgard::PointLL>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break") {
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type) {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -576,7 +566,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string& json) {
+                        std::string* json) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
@@ -601,18 +591,16 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       break;
     case valhalla::Options::expansion:
       json_str = actor.expansion(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
       break;
     case valhalla::Options::isochrone:
       json_str = actor.isochrone(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
       break;
     default:
       throw std::logic_error("Unsupported action");
       break;
   }
-  if (!json.empty()) {
-    json = std::move(json_str);
+  if (json) {
+    *json = json_str;
   }
   return api;
 }
@@ -623,7 +611,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string& json,
+                        std::string* json,
                         const std::string& stop_type) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
