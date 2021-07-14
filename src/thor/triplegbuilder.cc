@@ -659,15 +659,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      // To retrieve the sign information from the intersecting_de I need
-      // to access the graph-tile for the "begin node" of the intersecting_de.
-      // GraphReader::GetGraphTile(DirectedEdge *) returns the graph-tile for
-      // the "end node". Hence, I need to obtain the opposing-directed-edge
-      // and then ask for it's graph tile. (Sigh)
-      GraphId opp_intersecting_de = graphtile->GetOpposingEdgeId(intersecting_de);
-      graph_tile_ptr opp_tile = graphreader.GetGraphTile(opp_intersecting_de);
-      size_t edge_idx = intersecting_de - opp_tile->directededge(0);
-      std::vector<SignInfo> edge_signs = opp_tile->GetSigns(edge_idx);
+      std::vector<SignInfo> edge_signs =
+          graphtile->GetSigns(intersecting_de - graphtile->directededge(0));
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -760,7 +753,7 @@ void AddIntersectingEdges(const AttributesController& controller,
           continue;
         }
 
-        AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+        AddTripIntersectingEdge(controller, graphreader, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2);
       }
