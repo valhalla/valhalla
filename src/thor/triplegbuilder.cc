@@ -578,7 +578,6 @@ void AddSignInfo(const AttributesController& controller,
  *                         on the local hierarchy.
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
-                             valhalla::baldr::GraphReader& graphreader,
                              const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
@@ -729,7 +728,7 @@ void AddIntersectingEdges(const AttributesController& controller,
     }
 
     // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+    AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
                             intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
   }
 
@@ -753,7 +752,7 @@ void AddIntersectingEdges(const AttributesController& controller,
           continue;
         }
 
-        AddTripIntersectingEdge(controller, graphreader, endtile, directededge, prev_de,
+        AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2);
       }
