@@ -658,6 +658,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
       std::vector<SignInfo> edge_signs =
           graphtile->GetSigns(intersecting_de - graphtile->directededge(0), pronunciations);
       if (!edge_signs.empty()) {
