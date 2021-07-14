@@ -107,6 +107,7 @@ if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
 ```
+Continue by following instructions in "Building from Source - Linux/MacOS - shared part" section.
 
 ### Building from Source - MacOS
 
@@ -143,6 +144,9 @@ brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
 ```
 
+Continue by following instructions in "Building from Source - Linux/MacOS - shared part" section.
+
+### Building from Source - Linux/MacOS - shared part
 Now, clone the Valhalla repository
 
 ```bash
