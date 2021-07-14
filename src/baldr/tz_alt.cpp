@@ -3481,7 +3481,7 @@ init_tzdb()
                 }
                 else
                 {
-                    std::cerr << line << '\n';
+                    ;
                 }
             }
         }
@@ -4105,7 +4105,7 @@ init_tzdb_strings()
                 }
                 else
                 {
-                    std::cerr << line << '\n';
+                    ;
                 }
             }
         }
