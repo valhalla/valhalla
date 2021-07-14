@@ -6,7 +6,7 @@ using namespace valhalla;
 
 class ExpansionTest : public ::testing::Test {
 protected:
-  static gurka::map test_map;
+  static gurka::map expansion_map;
 
   static void SetUpTestSuite() {
     constexpr double gridsize = 10;
@@ -26,21 +26,21 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    test_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
+    expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
   }
 };
 
-gurka::map ExpansionTest::test_map = {};
+gurka::map ExpansionTest::expansion_map = {};
 
 TEST_F(ExpansionTest, IsochroneSuccess) {
   // test Dijkstra expansion
-  const auto& center_node = test_map.nodes["A"];
+  const auto& center_node = expansion_map.nodes["A"];
   // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
   const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
                           R"(,"lon":)" + std::to_string(center_node.lng()) +
                           R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
   std::string res;
-  auto api = gurka::do_action(Options::expansion, test_map, req, nullptr, &res);
+  auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
@@ -57,12 +57,12 @@ TEST_F(ExpansionTest, RoutingSuccess) {
   const std::unordered_map<std::string, std::string> options = {{"/action", "route"}};
   std::vector<midgard::PointLL> lls;
   for (const auto& node_name : {"E", "H"}) {
-    lls.push_back(test_map.nodes.at(node_name));
+    lls.push_back(expansion_map.nodes.at(node_name));
   }
   const auto req =
       gurka::detail::build_valhalla_request(std::string("locations"), lls, "auto", options);
   std::string res;
-  auto api = gurka::do_action(Options::expansion, test_map, req, nullptr, &res);
+  auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
@@ -72,14 +72,14 @@ TEST_F(ExpansionTest, RoutingSuccess) {
 }
 
 TEST_F(ExpansionTest, UnsupportedActionFailure) {
-  const auto& center_node = test_map.nodes["A"];
+  const auto& center_node = expansion_map.nodes["A"];
   const std::string req = R"({"action":"locate","locations":[{"lat":)" +
                           std::to_string(center_node.lat()) + R"(,"lon":)" +
                           std::to_string(center_node.lng()) +
                           R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
 
   try {
-    auto api = gurka::do_action(Options::expansion, test_map, req);
+    auto api = gurka::do_action(Options::expansion, expansion_map, req);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 144); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
