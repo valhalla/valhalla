@@ -458,6 +458,13 @@ public:
   virtual bool DoesTileExist(const GraphId& graphid) const;
 
   /**
+   * Test if traffic tiles exist.   *
+   */
+  bool HasLiveTraffic() {
+    return !tile_extract_->traffic_tiles.empty();
+  }
+
+  /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
