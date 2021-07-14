@@ -26,7 +26,7 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
+    expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/expansion");
   }
 };
 
