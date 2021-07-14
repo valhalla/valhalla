@@ -1,0 +1,39 @@
+name: linux
+on: push
+
+jobs:
+  
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: format
+        run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+
+
+  linux_debug_64:
+    needs: lint
+    name: linux debug tidy
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: linux_debug_64-${{ github.ref }}-${{ github.run_number }}
+          restore-keys: |
+            linux_debug_64-${{ github.ref }}-
+            linux_debug_64-
+
+      - name: build
+        uses: docker://valhalla/valhalla:build-latest
+        with:
+          args: .github/workflows/linux-ci.sh
