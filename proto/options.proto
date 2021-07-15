@@ -222,4 +222,5 @@ message Options {
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   optional Action expansion_action = 48;                                  // Meta action for /expansion endpoint
+  optional bool skip_opposites = 49;                                  // Whether to return opposite edges encountered during expansion
 }

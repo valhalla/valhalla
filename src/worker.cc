@@ -973,6 +973,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
   options.set_expansion_action(exp_action);
 
+  // should the expansion track opposites?
+  auto exp_skip_opps = rapidjson::get_optional<bool>(doc, "/skip_opposites");
+  if (exp_skip_opps)
+    options.set_skip_opposites(*exp_skip_opps);
+
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 

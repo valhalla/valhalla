@@ -10,17 +10,27 @@ The expansion service wraps the `route` and `isochrone` services and returns a G
 
 Since this service wraps other services, the request format mostly follows the ones of the [route](../turn-by-turn/api-reference.md#inputs-of-a-route) and [isochrone](../isochrone/api-reference.md#inputs-of-the-isochrone-service). Additionally, it accepts the following parameters:
 
-| Parameter | Description                           |
-| :--------- | :------------------------------------ |
-| `action`   | The service whose expansion should be tracked. One of `route` or `isochrone`.  | 
+| Parameter          | Description                           |
+| :---------         | :------------------------------------ |
+| `action`           | The service whose expansion should be tracked. One of `route` or `isochrone`.  | 
+| `skip_opposites`   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. | 
 
 ## Outputs of the Expansion service
 
-In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each part of the multi geometry representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes.
+In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each LineString representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where of course the indices are correlating, i.e. the 3rd element in a `properties` array will correspond to the 3rd LineString in the MultiLineString geometry.
 
-An example response is:
+| Property   | Description                           |
+| :--------- | :------------------------------------ |
+| `distances`   | JSON array of the accumulated distance in meters for each edge in order of graph traversal. | 
+| `durations`   | JSON array of the accumulated duration in seconds for each edge in order of graph traversal. | 
+| `costs`   | JSON array of the accumulated edge cost for each edge in order of graph traversal. | 
+| `edge_ids`   | JSON array of the internal edge IDs for each edge in order of graph traversal. | 
+| `statuses`   | JSON array of the edge states at the  for each edge in order of graph traversal. | 
+
+An example response for `"action": "isochrone"` is:
 
 ```
+{"properties":{"algorithm":"unidirectional_dijkstra"},"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"MultiLineString","coordinates":[[[0.00027,-0.00017],[0.00027,0.0]],[[0.00027,-0.00017],[0.00027,-0.00035]],[[0.00027,-0.00035],[0.00027,-0.00017]],[[0.00027,0.0],[0.00027,-0.00017]],[[0.00027,-0.00017],[0.00053,-0.00017]],[[0.00027,-0.00017],[0.0,-0.00017]],[[0.0,-0.00017],[0.00027,-0.00017]],[[0.00053,-0.00017],[0.0008,-0.00017]],[[0.0008,-0.00017],[0.00053,-0.00017]],[[0.00053,-0.00017],[0.00027,-0.00017]],[[0.00053,-0.00017],[0.0008,0.0]]]},"properties":{"distances":[20,20,40,40,30,30,60,60,90,120,80],"durations":[0,0,29,29,1,1,30,2,31,33,5],"costs":[0,0,1,1,1,1,2,2,3,4,11]}}]}
 ```
 
 ## Data credits

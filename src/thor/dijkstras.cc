@@ -372,6 +372,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     }
 
     if (expansion_callback_) {
+      // "algorithm" arg defaults already to dijkstra
       expansion_callback_(graphreader, pred.edgeid(), nullptr, nullptr, pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }

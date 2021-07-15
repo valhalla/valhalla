@@ -11,21 +11,23 @@ using namespace rapidjson;
 using namespace valhalla::midgard;
 
 namespace {
-void FillDom(Document& dom, valhalla::Options::Action action) {
-  SetValueByPointer(dom, "/type", "FeatureCollection");
-  SetValueByPointer(dom, "/features/0/type", "Feature");
-  SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
-  SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
-  if (action == valhalla::Options::route) {
-    SetValueByPointer(dom, "/properties/algorithm", "none");
-    SetValueByPointer(dom, "/features/0/properties/edge_ids", Value(kArrayType));
-    SetValueByPointer(dom, "/features/0/properties/statuses", Value(kArrayType));
-  } else {
-    SetValueByPointer(dom, "/features/0/properties/durations", Value(kArrayType));
-    SetValueByPointer(dom, "/features/0/properties/distances", Value(kArrayType));
-    SetValueByPointer(dom, "/features/0/properties/costs", Value(kArrayType));
-  }
-}
+// these need to represent array types
+enum PropType {
+  kEdgeId,
+  kStatus,
+  kDist,
+  kTime,
+  kCost,
+  // insert new keys before this
+  LAST
+};
+
+static std::unordered_map<PropType, const char*> kPropPaths =
+    {{PropType::kEdgeId, "/features/0/properties/edge_ids"},
+     {PropType::kStatus, "/features/0/properties/statuses"},
+     {PropType::kDist, "/features/0/properties/distances"},
+     {PropType::kTime, "/features/0/properties/durations"},
+     {PropType::kCost, "/features/0/properties/costs"}};
 } // namespace
 
 namespace valhalla {
@@ -35,23 +37,35 @@ std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
   measure_scope_time(request, "thor_worker_t::expansion");
 
+  // get the request params
   auto options = request.options();
   auto exp_action = options.expansion_action();
+  bool skip_opps = options.skip_opposites();
+  std::unordered_set<baldr::GraphId> opp_edges;
+
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize() ? options.generalize() : 21.4f;
 
   // default the expansion geojson so its easy to add to as we go
   Document dom;
   dom.SetObject();
-  FillDom(dom, exp_action);
+  // set algorithm to Dijkstra, will be overwritten by other algos
+  SetValueByPointer(dom, "/properties/algorithm", "unidirectional_dijkstra");
+  SetValueByPointer(dom, "/type", "FeatureCollection");
+  SetValueByPointer(dom, "/features/0/type", "Feature");
+  SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
+  SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
+  for (int prop = PropType::kEdgeId; prop != LAST; prop++) {
+    rapidjson::Pointer(kPropPaths[static_cast<PropType>(prop)]).Set(dom, Value(kArrayType));
+  }
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
-  auto track_expansion = [&dom, &exp_action,
-                          &gen_factor](baldr::GraphReader& reader, baldr::GraphId edgeid,
-                                       const char* algorithm = nullptr, const char* status = nullptr,
-                                       const float duration = 0, const float distance = 0,
-                                       const float cost = 0) {
+  auto track_expansion = [&dom, &exp_action, &opp_edges, &gen_factor,
+                          &skip_opps](baldr::GraphReader& reader, baldr::GraphId edgeid,
+                                      const char* algorithm = nullptr, const char* status = nullptr,
+                                      const float duration = 0, const u_int32_t distance = 0,
+                                      const float cost = 0) {
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
       LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
@@ -59,7 +73,18 @@ std::string thor_worker_t::expansion(Api& request) {
       return;
     }
     const auto* edge = tile->directededge(edgeid);
+    // unfortunately we have to call this before checking if we can skip
+    // else the tile could change underneath us when we get the opposing
     auto shape = tile->edgeinfo(edge).shape();
+
+    // if requested, skip this edge in case its opposite edge has been added
+    // before (i.e. lower cost) else add this edge's id to the lookup container
+    if (skip_opps) {
+      auto opp_edgeid = reader.GetOpposingEdgeId(edgeid, tile);
+      if (opp_edgeid && opp_edges.count(opp_edgeid))
+        return;
+      opp_edges.insert(edgeid);
+    }
 
     if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
@@ -78,26 +103,32 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (exp_action == Options::route) {
+    if (algorithm) {
       SetValueByPointer(dom, "/properties/algorithm", algorithm);
-      GetValueByPointer(dom, "/features/0/properties/edge_ids")
-          ->GetArray()
-          .PushBack(static_cast<uint64_t>(edgeid), a);
-      GetValueByPointer(dom, "/features/0/properties/statuses")
-          ->GetArray()
-          .PushBack(Value{}.SetString(status, a), a);
-
-    } else {
-      GetValueByPointer(dom, "/features/0/properties/durations")
+    }
+    if (duration)
+      Pointer(kPropPaths[PropType::kTime])
+          .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);
-      GetValueByPointer(dom, "/features/0/properties/distances")
+    if (distance)
+      Pointer(kPropPaths[PropType::kDist]).Get(dom)->GetArray().PushBack(Value{}.SetInt(distance), a);
+    if (cost)
+      Pointer(kPropPaths[PropType::kCost])
+          .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(distance), a);
-      GetValueByPointer(dom, "/features/0/properties/costs")
+          .PushBack(Value{}.SetInt(static_cast<u_int64_t>(cost)), a);
+    if (status)
+      Pointer(kPropPaths[PropType::kStatus])
+          .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(cost), a);
-    }
+          .PushBack(Value{}.SetString(status, a), a);
+    // edgeid will be populated either way, but isochrones don't want it
+    if (exp_action == Options_Action_route)
+      Pointer(kPropPaths[PropType::kEdgeId])
+          .Get(dom)
+          ->GetArray()
+          .PushBack(static_cast<uint64_t>(edgeid), a);
   };
 
   if (exp_action == Options::route) {
@@ -134,6 +165,14 @@ std::string thor_worker_t::expansion(Api& request) {
     isochrone_gen.set_track_expansion(track_expansion);
     isochrones(request, true);
     isochrone_gen.set_track_expansion(nullptr);
+  }
+
+  // remove the arrays which weren't used
+  for (int prop = PropType::kEdgeId; prop != LAST; prop++) {
+    const auto& member = kPropPaths[static_cast<PropType>(prop)];
+    if (!Pointer(member).Get(dom)->GetArray().Size()) {
+      Pointer(member).Erase(dom);
+    }
   }
 
   // serialize it
