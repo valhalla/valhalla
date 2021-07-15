@@ -27,23 +27,25 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree&) {
+odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) : service_worker_t(config) {
+  // signal that the worker started successfully
+  started();
 }
 
 odin_worker_t::~odin_worker_t() {
 }
 
-void odin_worker_t::cleanup() {
-}
-
-void odin_worker_t::narrate(Api& request) const {
+std::string odin_worker_t::narrate(Api& request) const {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "odin_worker_t::narrate");
+  auto _ = measure_scope_time(request);
 
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request);
   } catch (...) { throw valhalla_exception_t{202}; }
+
+  // serialize those to the proper format
+  return tyr::serializeDirections(request);
 }
 
 void odin_worker_t::status(Api&) const {
@@ -65,6 +67,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Odin Request " + std::to_string(info.id));
   Api request;
+  prime_server::worker_t::result_t result{false, {}, {}};
   try {
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
@@ -73,8 +76,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
     bool success = request.ParseFromArray(job.front().data(), job.front().size());
     if (!success) {
       LOG_ERROR("Failed parsing pbf in Odin::Worker");
-      throw valhalla_exception_t{200,
-                                 boost::optional<std::string>("Failed parsing pbf in Odin::Worker")};
+      throw valhalla_exception_t{200, "Failed parsing pbf in Odin::Worker"};
     }
 
     // its either a simple status request or its a route to narrate
@@ -82,20 +84,27 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::status: {
         status(request);
         auto response = tyr::serializeStatus(request);
-        return to_response(response, info, request);
+        result = to_response(response, info, request);
+        break;
       }
       default: {
         // narrate them and serialize them along
-        narrate(request);
-        auto response = tyr::serializeDirections(request);
+        auto response = narrate(request);
         const bool as_gpx = request.options().format() == Options::gpx;
-        return to_response(response, info, request, as_gpx ? worker::GPX_MIME : worker::JSON_MIME,
-                           as_gpx);
+        result = to_response(response, info, request, as_gpx ? worker::GPX_MIME : worker::JSON_MIME,
+                             as_gpx);
+        break;
       }
     }
   } catch (const std::exception& e) {
-    return jsonify_error({299, std::string(e.what())}, info, request);
+    result = jsonify_error({299, std::string(e.what())}, info, request);
   }
+
+  // keep track of the metrics if the request is going back to the client (this should be the case)
+  if (!result.intermediate)
+    enqueue_statistics(request);
+
+  return result;
 }
 
 void run_service(const boost::property_tree::ptree& config) {
@@ -111,11 +120,13 @@ void run_service(const boost::property_tree::ptree& config) {
 
   // listen for requests
   zmq::context_t context;
+  odin_worker_t odin_worker(config);
   prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint,
                                 interrupt_endpoint,
-                                std::bind(&odin_worker_t::work, odin_worker_t(config),
+                                std::bind(&odin_worker_t::work, std::ref(odin_worker),
                                           std::placeholders::_1, std::placeholders::_2,
-                                          std::placeholders::_3));
+                                          std::placeholders::_3),
+                                std::bind(&odin_worker_t::cleanup, std::ref(odin_worker)));
   worker.work();
 
   // TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

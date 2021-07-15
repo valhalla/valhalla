@@ -564,6 +564,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
+        assert(next_man != maneuvers.end());
         ++next_man;
       }
 
@@ -2940,6 +2941,7 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
     // on to the next maneuver...
     prev_man = curr_man;
     curr_man = next_man;
+    assert(next_man != maneuvers.end());
     ++next_man;
   }
 }
@@ -3255,7 +3257,9 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
     // on to the next maneuver...
     prev_man = curr_man;
     curr_man = next_man;
-    ++next_man;
+    if (next_man != maneuvers.end()) {
+      ++next_man;
+    }
   }
 }
 
@@ -3631,6 +3635,7 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
     }
     // on to the next maneuver...
     curr_man = next_man;
+    assert(next_man != maneuvers.end());
     ++next_man;
   }
 }

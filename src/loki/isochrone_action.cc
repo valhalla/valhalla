@@ -61,7 +61,7 @@ void loki_worker_t::init_isochrones(Api& request) {
 }
 void loki_worker_t::isochrones(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::isochrones");
+  auto _ = measure_scope_time(request);
 
   init_isochrones(request);
   auto& options = *request.mutable_options();
