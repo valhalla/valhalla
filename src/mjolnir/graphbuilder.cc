@@ -265,10 +265,12 @@ void ConstructEdges(const std::string& ways_file,
         edge.attributes.backward_signal = way_node.node.backward_signal();
       } else if (way_node.node.stop_sign()) {
         edge.attributes.stop_sign = true;
+        edge.attributes.direction = way_node.node.direction();
         edge.attributes.forward_stop = way_node.node.forward_stop();
         edge.attributes.backward_stop = way_node.node.backward_stop();
       } else if (way_node.node.yield_sign()) {
         edge.attributes.yield_sign = true;
+        edge.attributes.direction = way_node.node.direction();
         edge.attributes.forward_yield = way_node.node.forward_yield();
         edge.attributes.backward_yield = way_node.node.backward_yield();
       }
@@ -598,40 +600,31 @@ void BuildTileSet(const std::string& ways_file,
             stats.simplerestrictions++;
           }
 
-          // traffic signal exists at an intersection node
-          // OR
           // traffic signal exists at a non-intersection node
           // forward signal must exist if forward direction and vice versa.
           // if forward and backward signal flags are not set then only set for oneways.
           bool has_signal =
-              (!forward && node.traffic_signal()) ||
               ((edge.attributes.traffic_signal) &&
                ((forward && edge.attributes.forward_signal) ||
                 (!forward && edge.attributes.backward_signal) ||
                 (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal)));
 
-          // stop sign exists at an intersection node
-          // OR
           // stop sign exists at a non-intersection node
           // forward stop must exist if forward direction and vice versa.
           // if forward and backward stop flags are not set then only set for oneways.
           bool has_stop =
-              (!forward && node.stop_sign()) ||
               ((edge.attributes.stop_sign) &&
-               ((forward && edge.attributes.forward_stop) ||
-                (!forward && edge.attributes.backward_stop) ||
+               ((forward && (edge.attributes.direction ? edge.attributes.forward_stop : true)) ||
+                (!forward && (edge.attributes.direction ? edge.attributes.backward_stop : true)) ||
                 (w.oneway() && !edge.attributes.forward_stop && !edge.attributes.backward_stop)));
 
-          // yield sign exists at an intersection node
-          // OR
           // yield sign exists at a non-intersection node
           // forward yield must exist if forward direction and vice versa.
           // if forward and backward yield flags are not set then only set for oneways.
           bool has_yield =
-              (!forward && node.yield_sign()) ||
               ((edge.attributes.yield_sign) &&
-               ((forward && edge.attributes.forward_yield) ||
-                (!forward && edge.attributes.backward_yield) ||
+               ((forward && (edge.attributes.direction ? edge.attributes.forward_yield : true)) ||
+                (!forward && (edge.attributes.direction ? edge.attributes.backward_yield : true)) ||
                 (w.oneway() && !edge.attributes.forward_yield && !edge.attributes.backward_yield)));
 
           auto bike = osmdata.bike_relations.equal_range(w.way_id());
@@ -759,8 +752,9 @@ void BuildTileSet(const std::string& ways_file,
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, has_stop, has_yield, restrictions, bike_network,
-                                 edge.attributes.reclass_ferry);
+                                 n, has_signal, has_stop, has_yield,
+                                 ((has_stop || has_yield) ? node.minor() : false), restrictions,
+                                 bike_network, edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
@@ -997,6 +991,23 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set admin index
         graphtile.nodes().back().set_admin_index(admin_index);
+
+        if ((node.stop_sign() && !node.yield_sign()) || (!node.stop_sign() && node.yield_sign())) {
+
+          // temporarily set the transition index so that we know if we have a stop or yield sign
+          // will be processed and removed in the enhancer
+          uint8_t stop_yield_info = 0;
+          if (node.minor())
+            stop_yield_info |= kMinor;
+
+          if (node.stop_sign())
+            stop_yield_info |= kStopSign;
+
+          if (node.yield_sign())
+            stop_yield_info |= kYieldSign;
+
+          graphtile.nodes().back().set_transition_index(stop_yield_info);
+        }
 
         if (admin_index != 0 && node.named_intersection() && allow_intersection_names[admin_index]) {
           std::vector<std::string> node_names;
