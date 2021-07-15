@@ -131,6 +131,8 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {440, 400}, {441, 400}, {442, 400}, {443, 400}, {444, 400}, {445, 400},
 
+    {450, 400},
+
     {499, 400},
 
     {500, 500}, {501, 500}, {502, 400},
@@ -283,6 +285,9 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {444,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
     {445, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+    {450,
+     R"({"code":"NoRoute","message":"Impossible to find chinese postman route on not strongly connected segment."})"},
 
     {499, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 
