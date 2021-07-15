@@ -45,6 +45,7 @@ struct Edge {
     uint64_t yield_sign : 1;
     uint64_t forward_yield : 1;
     uint64_t backward_yield : 1;
+    uint64_t direction : 1;
     uint64_t link : 1;
     uint64_t reclass_link : 1;
     uint64_t has_names : 1;
@@ -59,7 +60,7 @@ struct Edge {
     uint64_t turn_channel : 1;  // Link edge should be a turn channel
     uint64_t way_begin : 1;     // True if first edge of way
     uint64_t way_end : 1;       // True if last edge of way
-    uint64_t spare : 24;
+    uint64_t spare : 23;
   };
   EdgeAttributes attributes;
 
