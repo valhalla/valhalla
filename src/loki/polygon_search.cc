@@ -187,7 +187,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
   }
 #endif
-  std::cout << "num avoid_edge_ids: " << avoid_edge_ids.size() << "\n";
   return avoid_edge_ids;
 }
 
@@ -269,7 +268,6 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
       }
     }
   }
-  std::cout << "num cp_edge_ids: " << cp_edge_ids.size() << "\n";
   return cp_edge_ids;
 }
 
