@@ -157,7 +157,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  measure_scope_time(request, "thor_worker_t::expansion");
+  measure_scope_time(request);
 
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
@@ -245,6 +245,9 @@ std::string thor_worker_t::expansion(Api& request) {
 }
 
 void thor_worker_t::centroid(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
@@ -278,7 +281,7 @@ void thor_worker_t::centroid(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::route");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   parse_filter_attributes(request);
