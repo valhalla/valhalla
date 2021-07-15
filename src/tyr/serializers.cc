@@ -228,6 +228,8 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
  * This function takes any waypoints (excluding origin and destination) and walks the shape
  * for a match.  When a match is found, we store the geometry index.
  * We use the valhalla midgard `equal` function to check for equality based on precision.
+ * NOTE: Find vias this way using shape geometry is phase 1/temporary.  Will be doing this
+ * next in the algorithm.
  */
 json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointLL>& shape) {
   // Create a vector of indexes based on the number of locations.
@@ -244,21 +246,22 @@ json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointL
       locs.Mutable(loc_i)->set_waypoint_index(loc_i);
 
       double distance_from_leg_start = 0;
-      for (const auto& ll : shape) {
+      for (const auto& curr_ll : shape) {
         if (geometry_idx < shape.size() - 1) {
           geometry_idx++;
           PointLL next_ll = shape[geometry_idx];
+          const auto& location_ll = locs.Get(loc_i).path_edges(0).ll();
+
           // comparing lat/lng equality with an epsilon for approximation
           bool lng_equality =
-              valhalla::midgard::equal<double>(static_cast<double>(
-                                                   locs.Get(loc_i).path_edges(0).ll().lng()),
-                                               static_cast<double>(ll.first), .001);
+              valhalla::midgard::equal<double>(static_cast<double>(location_ll.lng()),
+                                               static_cast<double>(curr_ll.first), .001);
           bool lat_equality =
-              valhalla::midgard::equal<double>(static_cast<double>(
-                                                   locs.Get(loc_i).path_edges(0).ll().lat()),
-                                               static_cast<double>(ll.second), .001);
+              valhalla::midgard::equal<double>(static_cast<double>(location_ll.lat()),
+                                               static_cast<double>(curr_ll.second), .001);
           // accumalates the distances between current ll and next ll
-          distance_from_leg_start += ll.Distance(next_ll);
+          distance_from_leg_start += curr_ll.Distance(next_ll);
+
           if (lng_equality && lat_equality) {
             via_waypoints->emplace_back(osrm::serialize_via_waypoint(locs.Get(loc_i),
                                                                      geometry_idx - 1,
