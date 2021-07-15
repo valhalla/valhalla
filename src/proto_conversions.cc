@@ -351,6 +351,20 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   return true;
 }
 
+bool Options_ExpansionProps_Enum_Parse(const std::string& prop, Options::ExpansionProps* a) {
+  static const std::unordered_map<std::string, Options::ExpansionProps>
+      actions{{"costs", Options_ExpansionProps_costs},
+              {"durations", Options_ExpansionProps_durations},
+              {"distances", Options_ExpansionProps_distances},
+              {"statuses", Options_ExpansionProps_statuses},
+              {"edge_ids", Options::ExpansionProps::Options_ExpansionProps_costs}};
+  auto i = actions.find(prop);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::unordered_map<int, std::string> vehicle_to_string{
     {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
     {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},

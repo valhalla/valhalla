@@ -11,23 +11,13 @@ using namespace rapidjson;
 using namespace valhalla::midgard;
 
 namespace {
-// these need to represent array types
-enum PropType {
-  kEdgeId,
-  kStatus,
-  kDist,
-  kTime,
-  kCost,
-  // insert new keys before this
-  LAST
-};
-
-static std::unordered_map<PropType, const char*> kPropPaths =
-    {{PropType::kEdgeId, "/features/0/properties/edge_ids"},
-     {PropType::kStatus, "/features/0/properties/statuses"},
-     {PropType::kDist, "/features/0/properties/distances"},
-     {PropType::kTime, "/features/0/properties/durations"},
-     {PropType::kCost, "/features/0/properties/costs"}};
+using namespace valhalla;
+static std::unordered_map<Options::ExpansionProps, const char*> kPropPaths =
+    {{Options_ExpansionProps_edge_ids, "/features/0/properties/edge_ids"},
+     {Options_ExpansionProps_statuses, "/features/0/properties/statuses"},
+     {Options_ExpansionProps_distances, "/features/0/properties/distances"},
+     {Options_ExpansionProps_durations, "/features/0/properties/durations"},
+     {Options_ExpansionProps_costs, "/features/0/properties/costs"}};
 } // namespace
 
 namespace valhalla {
@@ -41,10 +31,11 @@ std::string thor_worker_t::expansion(Api& request) {
   auto options = request.options();
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
+  auto exp_props = options.expansion_props();
   std::unordered_set<baldr::GraphId> opp_edges;
 
   // default generalization to ~ zoom level 15
-  float gen_factor = options.has_generalize() ? options.generalize() : 21.4f;
+  float gen_factor = options.has_generalize() ? options.generalize() : 10.f;
 
   // default the expansion geojson so its easy to add to as we go
   Document dom;
@@ -55,14 +46,16 @@ std::string thor_worker_t::expansion(Api& request) {
   SetValueByPointer(dom, "/features/0/type", "Feature");
   SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
-  for (int prop = PropType::kEdgeId; prop != LAST; prop++) {
-    rapidjson::Pointer(kPropPaths[static_cast<PropType>(prop)]).Set(dom, Value(kArrayType));
+  for (const auto& prop : exp_props) {
+    // protobuf will give int for enum fields, need to cast
+    rapidjson::Pointer(kPropPaths[static_cast<Options_ExpansionProps>(prop)])
+        .Set(dom, Value(kArrayType));
   }
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
-  auto track_expansion = [&dom, &exp_action, &opp_edges, &gen_factor,
-                          &skip_opps](baldr::GraphReader& reader, baldr::GraphId edgeid,
+  auto track_expansion = [&dom, &exp_action, &opp_edges, &gen_factor, &skip_opps,
+                          &exp_props](baldr::GraphReader& reader, baldr::GraphId edgeid,
                                       const char* algorithm = nullptr, const char* status = nullptr,
                                       const float duration = 0, const u_int32_t distance = 0,
                                       const float cost = 0) {
@@ -103,29 +96,29 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (algorithm) {
-      SetValueByPointer(dom, "/properties/algorithm", algorithm);
-    }
-    if (duration)
-      Pointer(kPropPaths[PropType::kTime])
+    SetValueByPointer(dom, "/properties/algorithm", algorithm);
+    if (exp_props.Get(Options_ExpansionProps_durations))
+      Pointer(kPropPaths[Options_ExpansionProps_durations])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);
-    if (distance)
-      Pointer(kPropPaths[PropType::kDist]).Get(dom)->GetArray().PushBack(Value{}.SetInt(distance), a);
-    if (cost)
-      Pointer(kPropPaths[PropType::kCost])
+    if (exp_props.Get(Options_ExpansionProps_distances))
+      Pointer(kPropPaths[Options_ExpansionProps_distances])
+          .Get(dom)
+          ->GetArray()
+          .PushBack(Value{}.SetInt(distance), a);
+    if (exp_props.Get(Options_ExpansionProps_costs))
+      Pointer(kPropPaths[Options_ExpansionProps_costs])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(cost)), a);
-    if (status)
-      Pointer(kPropPaths[PropType::kStatus])
+    if (exp_props.Get(Options_ExpansionProps_statuses))
+      Pointer(kPropPaths[Options_ExpansionProps_statuses])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetString(status, a), a);
-    // edgeid will be populated either way, but isochrones don't want it
-    if (exp_action == Options_Action_route)
-      Pointer(kPropPaths[PropType::kEdgeId])
+    if (exp_props.Get(Options_ExpansionProps_edge_ids))
+      Pointer(kPropPaths[Options_ExpansionProps_edge_ids])
           .Get(dom)
           ->GetArray()
           .PushBack(static_cast<uint64_t>(edgeid), a);
@@ -163,13 +156,13 @@ std::string thor_worker_t::expansion(Api& request) {
     }
   } else {
     isochrone_gen.set_track_expansion(track_expansion);
-    isochrones(request, true);
+    isochrones(request);
     isochrone_gen.set_track_expansion(nullptr);
   }
 
   // remove the arrays which weren't used
-  for (int prop = PropType::kEdgeId; prop != LAST; prop++) {
-    const auto& member = kPropPaths[static_cast<PropType>(prop)];
+  for (const auto& prop : exp_props) {
+    const auto& member = kPropPaths[static_cast<Options_ExpansionProps>(prop)];
     if (!Pointer(member).Get(dom)->GetArray().Size()) {
       Pointer(member).Erase(dom);
     }

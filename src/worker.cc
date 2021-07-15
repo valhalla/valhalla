@@ -90,7 +90,7 @@ const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES{
 const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {100, 400}, {101, 405}, {102, 503}, {106, 404}, {107, 501},
 
-    {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
+    {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400}, {115, 400},
 
     {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
 
@@ -102,6 +102,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {158, 400}, {159, 400},
 
     {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400}, {167, 400},
+    {168, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -150,6 +151,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {112, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {113, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {114, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {115, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
 
     {120, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {121, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -218,6 +220,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {167,
      R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})"},
+    {168,
+     R"({"code":"InvalidValue","message":"Invalid expansion property type(s)."})}
 
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
@@ -970,8 +974,40 @@ void from_json(rapidjson::Document& doc, Options& options) {
         !std::count(valid_types.begin(), valid_types.end(), exp_action)) {
       throw valhalla_exception_t(144, *exp_action_str);
     }
+    options.set_expansion_action(exp_action);
+  } else if (options.action() == Options_Action_expansion) {
+    throw valhalla_exception_t(168);
   }
-  options.set_expansion_action(exp_action);
+
+  // expansion response properties
+  auto exp_props_req = rapidjson::get_child_optional(doc, "/expansion_props");
+  auto* exp_props_pbf = options.mutable_expansion_props();
+  Options::ExpansionProps exp_prop;
+  if (exp_props_req && exp_props_req->IsArray()) {
+    auto* exp_props_pbf = options.mutable_expansion_props();
+    for (const auto& prop : exp_props_req->GetArray()) {
+      if (!valhalla::Options_ExpansionProps_Enum_Parse(std::string(prop.GetString()), exp_prop)) {
+        throw valhalla_exception_t(115, std::string(prop.GetString()));
+      }
+      exp_props_pbf->Add(exp_prop);
+    }
+  }
+  // default to at least return durations & distances
+  if (!exp_props_pbf->size()) {
+    for (const auto& prop : {Options_ExpansionProps_durations, Options_ExpansionProps_distances}) {
+      exp_props_pbf->Add(prop);
+    }
+  }
+
+  if (rings_req) {
+    auto* rings_pbf = options.mutable_exclude_polygons();
+    try {
+      for (const auto& req_poly : rings_req->GetArray()) {
+        auto* ring = rings_pbf->Add();
+        parse_ring(ring, req_poly);
+      }
+    } catch (...) { throw valhalla_exception_t{137}; }
+  }
 
   // should the expansion track opposites?
   auto exp_skip_opps = rapidjson::get_optional<bool>(doc, "/skip_opposites");

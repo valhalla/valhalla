@@ -4,7 +4,7 @@
 
 using namespace valhalla;
 
-class ExpansionTest : public ::testing::Test {
+class ExpansionTest : public ::testing::TestWithParam<std::vector<std::string>> {
 protected:
   static gurka::map expansion_map;
 
@@ -30,14 +30,25 @@ protected:
     expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/expansion");
   }
 
+  std::string build_prop_string(const std::vector<std::string> props) {
+    std::stringstream req_props;
+    req_props << "[";
+    for (const auto& prop : props) {
+      req_props << R"(")" + prop + R"(")";
+    }
+    req_props << "]";
+
+    return R"("expansion_props":)" + req_props.str();
+  }
+
   void
   check_props(const rapidjson::Value& doc, unsigned exp_feats, const std::vector<std::string> props) {
 
     auto feat = doc["features"][0].GetObject();
     ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("MultiLineString"));
-    ASSERT_EQ(feat["geometry"]["coordinates"].GetArray().Size(), exp_feats);
 
     auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
+    ASSERT_EQ(coords_size, exp_feats);
     for (const auto& prop : props) {
       ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
     }
@@ -49,7 +60,49 @@ gurka::map ExpansionTest::expansion_map = {};
 TEST_F(ExpansionTest, Isochrone) {
   // test Dijkstra expansion
   const auto& center_node = expansion_map.nodes["A"];
+  const std::vector<std::string> props = {"distances", "durations", "costs"};
+  const auto props_str = build_prop_string(props);
+
   // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
+  const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
+                          R"(,"lon":)" + std::to_string(center_node.lng()) +
+                          R"(}],"costing":"auto","contours":[{"distance":0.05}],)" + props_str +
+                          R"(})";
+  std::string res;
+  auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
+
+  rapidjson::Document res_doc;
+  res_doc.Parse(res.c_str());
+
+  // 11 because there's a one-way
+  check_props(res_doc, 11, props);
+}
+
+TEST_F(ExpansionTest, IsochroneNoOpposites) {
+  // test Dijkstra expansion and skip collecting more expensive opposite edges
+  const auto& center_node = expansion_map.nodes["A"];
+  const std::vector<std::string> props = {"distances", "statuses", "edge_ids"};
+  const auto props_str = build_prop_string(props);
+
+  // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
+  const std::string req =
+      R"({"skip_opposites":true,"locations":[{"lat":)" + std::to_string(center_node.lat()) +
+      R"(,"lon":)" + std::to_string(center_node.lng()) +
+      R"(}],"costing":"auto","contours":[{"distance":0.05}],)" + props_str + R"(})";
+  std::string res;
+  auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
+
+  rapidjson::Document res_doc;
+  res_doc.Parse(res.c_str());
+
+  check_props(res_doc, 6, props);
+}
+
+TEST_P(ExpansionTest, IsochroneDefaultProps) {
+  // test Dijkstra expansion with varying properties in the request
+  const auto& center_node = expansion_map.nodes["A"];
+  const std::vector<std::string> default_props = {"durations", "distances"};
+
   const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
                           R"(,"lon":)" + std::to_string(center_node.lng()) +
                           R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
@@ -59,29 +112,51 @@ TEST_F(ExpansionTest, Isochrone) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  // 11 because there's a one-way
-  check_props(res_doc, 11, {"distances", "durations", "costs"});
+  const auto& feat = res_doc["features"][0];
+
+  for (const auto& res_prop : default_props) {
+    ASSERT_TRUE(feat["properties"].HasMember(res_prop));
+  }
+
+  check_props(res_doc, 11, default_props);
 }
 
-TEST_F(ExpansionTest, IsochroneNoOpposites) {
-  // test Dijkstra expansion and skip collecting more expensive opposite edges
+TEST_P(ExpansionTest, IsochroneVaryingProps) {
+  // test Dijkstra expansion with varying properties in the request
   const auto& center_node = expansion_map.nodes["A"];
-  // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
-  const std::string req = R"({"skip_opposites":true,"locations":[{"lat":)" +
-                          std::to_string(center_node.lat()) + R"(,"lon":)" +
-                          std::to_string(center_node.lng()) +
-                          R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
+
+  auto props_string = build_prop_string(GetParam());
+
+  const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
+                          R"(,"lon":)" + std::to_string(center_node.lng()) +
+                          R"(}],"costing":"auto","contours":[{"distance":0.05}],)" +
+                          (props_string.size() ? props_string : "") + R"(})";
   std::string res;
   auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  check_props(res_doc, 6, {"distances", "durations", "costs"});
+  const auto& feat = res_doc["features"][0];
+
+  ASSERT_EQ(feat["properties"].GetArray().Size(), GetParam().size());
+  for (const auto& res_prop : GetParam()) {
+    ASSERT_TRUE(feat["properties"].HasMember(res_prop));
+  }
+
+  check_props(res_doc, 11, GetParam());
 }
+
+INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
+                         ExpansionTest,
+                         ::testing::Values(std::vector<std::string>{"statuses"},
+                                           std::vector<std::string>{"distances", "durations"},
+                                           std::vector<std::string>{"edge_ids", "costs"},
+                                           std::vector<std::string>{}));
 
 TEST_F(ExpansionTest, Routing) {
   // test AStar expansion
+
   const std::unordered_map<std::string, std::string> options = {{"/action", "route"}};
   std::vector<midgard::PointLL> lls;
   for (const auto& node_name : {"E", "H"}) {
@@ -95,7 +170,7 @@ TEST_F(ExpansionTest, Routing) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  check_props(res_doc, 23, {"statuses", "edge_ids"});
+  check_props(res_doc, 23, {"duratons", "distances"});
 }
 
 TEST_F(ExpansionTest, RoutingNoOpposites) {
@@ -114,7 +189,7 @@ TEST_F(ExpansionTest, RoutingNoOpposites) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  check_props(res_doc, 23, {"statuses", "edge_ids"});
+  check_props(res_doc, 23, {"duratons", "distances"});
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
