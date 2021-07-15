@@ -246,7 +246,7 @@ TEST_F(ChinesePostmanTest, TestExtractChinesePostmanEdges) {
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
-
+  // create a chinese polygon (prwu)
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "A", "A",
                {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "B", "B",
@@ -256,29 +256,9 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   // create a chinese polygon (prwu) and avoid polygon (iknl)
   // the exclude polygon is dividing the map into two, that makes it not connected.
-
-  ring_bg_t chinese_ring{chinese_postman_map.nodes.at("p"), chinese_postman_map.nodes.at("r"),
-                         chinese_postman_map.nodes.at("w"), chinese_postman_map.nodes.at("u")};
-
-  ring_bg_t avoid_ring{chinese_postman_map.nodes.at("i"), chinese_postman_map.nodes.at("k"),
-                       chinese_postman_map.nodes.at("n"), chinese_postman_map.nodes.at("l")};
-
-  std::vector<ring_bg_t> avoid_rings;
-  avoid_rings.push_back(avoid_ring);
-
-  // build request manually for now
-  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["A"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
-
   // make sure the right exception is thrown
   try {
-    gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
+    test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "A", "A", {});
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 450); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -286,110 +266,26 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
   // create a chinese polygon (rtyw)
-
-  ring_bg_t chinese_ring{chinese_postman_map.nodes.at("r"), chinese_postman_map.nodes.at("t"),
-                         chinese_postman_map.nodes.at("y"), chinese_postman_map.nodes.at("w")};
-
-  std::vector<ring_bg_t> avoid_rings;
-
-  // build request manually for now
-  auto lls = {chinese_postman_map.nodes["C"], chinese_postman_map.nodes["C"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
-
-  auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"CG", "GH", "HF", "FC"});
-
-  // // build request manually for now
-  auto lls2 = {chinese_postman_map.nodes["G"], chinese_postman_map.nodes["G"]};
-
-  rapidjson::Document doc2;
-  doc2.SetObject();
-  auto& allocator2 = doc2.GetAllocator();
-  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
-  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
-  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
-
-  auto route2 = gurka::do_action(Options::chinese_postman, chinese_postman_map, req2);
-  gurka::assert::raw::expect_path(route2, {"GH", "HF", "FC", "CG"});
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "C", {"CG", "GH", "HF", "FC"});
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "G", {"GH", "HF", "FC", "CG"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
-
-  ring_bg_t chinese_ring{chinese_postman_map.nodes.at("q"), chinese_postman_map.nodes.at("s"),
-                         chinese_postman_map.nodes.at("x"), chinese_postman_map.nodes.at("v")};
-
-  std::vector<ring_bg_t> avoid_rings;
-
-  // build request manually for now
-  auto lls = {chinese_postman_map.nodes["B"], chinese_postman_map.nodes["B"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
-
-  auto route = gurka::do_action(Options::chinese_postman, chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route,
-                                  {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
-
-  auto lls2 = {chinese_postman_map.nodes["F"], chinese_postman_map.nodes["F"]};
-
-  rapidjson::Document doc2;
-  doc2.SetObject();
-  auto& allocator2 = doc2.GetAllocator();
-  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
-  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
-  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
-
-  auto route2 = gurka::do_action(Options::chinese_postman, chinese_postman_map, req2);
-  gurka::assert::raw::expect_path(route2,
-                                  {"FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2"});
+  test_request(chinese_postman_map, GetParam(), "qsxv", "", "B", "B",
+               {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
+  test_request(chinese_postman_map, GetParam(), "qsxv", "", "F", "F",
+               {"FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
-  ring_bg_t chinese_ring{complex_chinese_postman_map.nodes.at("p"),
-                         complex_chinese_postman_map.nodes.at("q"),
-                         complex_chinese_postman_map.nodes.at("s"),
-                         complex_chinese_postman_map.nodes.at("r")};
-
-  std::vector<ring_bg_t> avoid_rings;
-
-  // build request manually for now
-  auto lls = {complex_chinese_postman_map.nodes["B"], complex_chinese_postman_map.nodes["B"]};
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, avoid_polygons);
-
-  auto route = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req);
-  gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE",
-                                          "EA", "AC", "CD", "DE", "EA", "AB"});
-
-  // build request manually for now
-  auto lls2 = {complex_chinese_postman_map.nodes["C"], complex_chinese_postman_map.nodes["C"]};
-
-  rapidjson::Document doc2;
-  doc2.SetObject();
-  auto& allocator2 = doc2.GetAllocator();
-  auto chinese_polygon2 = get_chinese_polygon(chinese_ring, allocator2);
-  auto avoid_polygons2 = get_avoid_polys(avoid_rings, allocator2);
-  auto req2 = build_local_req(doc2, allocator2, lls2, GetParam(), chinese_polygon2, avoid_polygons2);
-
-  auto route2 = gurka::do_action(Options::chinese_postman, complex_chinese_postman_map, req2);
-  gurka::assert::raw::expect_path(route2, {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA",
-                                           "AB", "BC", "CD", "DE", "EA", "AC"});
+  // create a chinese polygon (pqsr)
+  test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "B",
+               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
+                "EA", "AB"});
+  test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "C", "C",
+               {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE",
+                "EA", "AC"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
