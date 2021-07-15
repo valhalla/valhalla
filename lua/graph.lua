@@ -1993,20 +1993,30 @@ function nodes_proc (kv, nokeys)
     end
   end
 
-  if kv["highway"] == "stop" and kv["direction"] == "forward" then
-    kv["forward_stop"] = "true"
+  if kv["highway"] == "stop" then
+    if kv["direction"] == "both" then
+      kv["forward_stop"] = "true"
+      kv["backward_stop"] = "true"
+    elseif kv["direction"] == "forward" then
+      kv["forward_stop"] = "true"
+    elseif kv["direction"] == "backward" or kv["direction"] == "reverse" then
+      kv["backward_stop"] = "true"
+    elseif kv["direction"] ~= nil and kv["stop"] == nil then
+      kv["highway"] = nil
+    end
   end
 
-  if kv["highway"] == "stop" and kv["direction"] == "backward" then
-    kv["backward_stop"] = "true"
-  end
-
-  if kv["highway"] == "give_way" and kv["direction"] == "forward" then
-    kv["forward_yield"] = "true"
-  end
-
-  if kv["highway"] == "give_way" and kv["direction"] == "backward" then
-    kv["backward_yield"] = "true"
+  if kv["highway"] == "give_way" then
+    if kv["direction"] == "both" then
+      kv["forward_yield"] = "true"
+      kv["backward_yield"] = "true"
+    elseif kv["direction"] == "forward" then
+      kv["forward_yield"] = "true"
+    elseif kv["direction"] == "backward" or kv["direction"] == "reverse" then
+      kv["backward_yield"] = "true"
+    elseif kv["direction"] ~= nil and kv["give_way"] == nil then
+      kv["highway"] = nil
+    end
   end
 
   if kv["public_transport"] == nil and kv["name"] then
