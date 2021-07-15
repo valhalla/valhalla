@@ -44,7 +44,7 @@ namespace thor {
  */
 std::string thor_worker_t::trace_attributes(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::trace_attributes");
+  auto _ = measure_scope_time(request);
 
   // Parse request
   parse_locations(request);
