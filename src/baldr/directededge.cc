@@ -590,6 +590,8 @@ json::MapPtr DirectedEdge::json() const {
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},
       {"not_thru", static_cast<bool>(not_thru_)},
+      {"stop_sign", static_cast<bool>(stop_sign_)},
+      {"yield_sign", static_cast<bool>(yield_sign_)},
       {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
       {"bike_network", static_cast<bool>(bike_network_)},
       {"truck_route", static_cast<bool>(truck_route_)},
