@@ -96,7 +96,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400}, {137, 400},
 
-    {140, 400}, {141, 501}, {142, 501}, {143, 400},
+    {140, 400}, {141, 501}, {142, 501}, {143, 400}, {144, 400},
 
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
@@ -184,6 +184,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {142,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {143,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {144,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {150,
@@ -958,6 +960,23 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (resample_distance) {
     options.set_resample_distance(*resample_distance);
   }
+
+  // expansion action, default to isochrone
+  auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
+  Options::Action exp_action = Options::isochrone;
+  if (exp_action_str) {
+    static const std::vector<Options::Action> valid_types{Options::route, Options::isochrone};
+    if (!Options_Action_Enum_Parse(*exp_action_str, &exp_action) ||
+        !std::count(valid_types.begin(), valid_types.end(), exp_action)) {
+      throw valhalla_exception_t(144, *exp_action_str);
+    }
+  }
+  options.set_expansion_action(exp_action);
+
+  // should the expansion track opposites?
+  auto exp_skip_opps = rapidjson::get_optional<bool>(doc, "/skip_opposites");
+  if (exp_skip_opps)
+    options.set_skip_opposites(*exp_skip_opps);
 
   // get the contours in there
   parse_contours(doc, options.mutable_contours());

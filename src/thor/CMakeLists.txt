@@ -8,6 +8,7 @@ set(sources
   centroid.cc
   costmatrix.cc
   dijkstras.cc
+  expansion_action.cc
   isochrone_action.cc
   isochrone.cc
   map_matcher.cc

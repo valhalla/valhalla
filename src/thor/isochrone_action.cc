@@ -8,7 +8,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
-std::string thor_worker_t::isochrones(Api& request) {
+std::string thor_worker_t::isochrones(Api& request, bool only_expand) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
 
@@ -36,6 +36,10 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto expansion_type = costing == "multimodal" || costing == "transit" ? ExpansionType::multimodal
                                                                         : ExpansionType::forward;
   auto grid = isochrone_gen.Expand(expansion_type, request, *reader, mode_costing, mode);
+
+  // e.g. in case of /expansion request
+  if (only_expand)
+    return "";
 
   // we have parallel vectors of contour properties and the actual geojson features
   // this method sorts the contour specifications by metric (time or distance) and then by value
