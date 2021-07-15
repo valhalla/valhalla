@@ -484,84 +484,97 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
+// Populate the specified sign element with the specified sign attributes including pronunciation
+// attributes if they exist
+void PopulateSignElement(
+    uint32_t sign_index,
+    const SignInfo& sign,
+    const std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& pronunciations,
+    valhalla::TripSignElement* sign_element) {
+  sign_element->set_text(sign.text());
+  sign_element->set_is_route_number(sign.is_route_num());
+
+  // Assign pronunciation alphabet and value if they exist
+  std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+      pronunciations.find(sign_index);
+  if (iter != pronunciations.end()) {
+    auto* pronunciation = sign_element->mutable_pronunciation();
+    pronunciation->set_alphabet(GetTripPronunciationAlphabet(
+        static_cast<valhalla::baldr::PronunciationAlphabet>((iter->second).first)));
+    pronunciation->set_value((iter->second).second);
+  }
+}
+
 // Walk the edge_signs, add sign information onto the trip_sign, honoring which to
 // add per the attributes-controller.
 void AddSignInfo(const AttributesController& controller,
                  const std::vector<SignInfo>& edge_signs,
+                 const std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& pronunciations,
                  valhalla::TripSign* trip_sign) {
 
   if (!edge_signs.empty()) {
+    uint32_t sign_index = 0;
     for (const auto& sign : edge_signs) {
       switch (sign.type()) {
         case valhalla::baldr::Sign::Type::kExitNumber: {
           if (controller.attributes.at(kEdgeSignExitNumber)) {
-            auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
-            trip_sign_exit_number->set_text(sign.text());
-            trip_sign_exit_number->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_numbers()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitBranch: {
           if (controller.attributes.at(kEdgeSignExitBranch)) {
-            auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
-            trip_sign_exit_onto_street->set_text(sign.text());
-            trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitToward: {
           if (controller.attributes.at(kEdgeSignExitToward)) {
-            auto* trip_sign_exit_toward_location = trip_sign->mutable_exit_toward_locations()->Add();
-            trip_sign_exit_toward_location->set_text(sign.text());
-            trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitName: {
           if (controller.attributes.at(kEdgeSignExitName)) {
-            auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
-            trip_sign_exit_name->set_text(sign.text());
-            trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_names()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideBranch: {
           if (controller.attributes.at(kEdgeSignGuideBranch)) {
-            auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
-            trip_sign_guide_onto_street->set_text(sign.text());
-            trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guide_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideToward: {
           if (controller.attributes.at(kEdgeSignGuideToward)) {
-            auto* trip_sign_guide_toward_location =
-                trip_sign->mutable_guide_toward_locations()->Add();
-            trip_sign_guide_toward_location->set_text(sign.text());
-            trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guide_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
           if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
-            auto* trip_sign_guidance_view_junction =
-                trip_sign->mutable_guidance_view_junctions()->Add();
-            trip_sign_guidance_view_junction->set_text(sign.text());
-            trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guidance_view_junctions()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
           if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
-            auto* trip_sign_guidance_view_signboard =
-                trip_sign->mutable_guidance_view_signboards()->Add();
-            trip_sign_guidance_view_signboard->set_text(sign.text());
-            trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guidance_view_signboards()->Add());
           }
           break;
         }
         default: { break; }
       }
+      ++sign_index;
     }
   }
 }
@@ -663,7 +676,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
           graphtile->GetSigns(intersecting_de - graphtile->directededge(0), pronunciations);
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
-        AddSignInfo(controller, edge_signs, sign);
+        AddSignInfo(controller, edge_signs, pronunciations, sign);
       }
     }
   }
@@ -877,7 +890,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
     if (!edge_signs.empty()) {
       valhalla::TripSign* sign = trip_edge->mutable_sign();
-      AddSignInfo(controller, edge_signs, sign);
+      AddSignInfo(controller, edge_signs, pronunciations, sign);
     }
   }
 
@@ -888,19 +901,20 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, pronunciations, true);
     if (!node_signs.empty()) {
       valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
+      uint32_t sign_index = 0;
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
           case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
-              auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
-              trip_sign_junction_name->set_text(sign.text());
-              trip_sign_junction_name->set_is_route_number(sign.is_route_num());
+              PopulateSignElement(sign_index, sign, pronunciations,
+                                  trip_sign->mutable_junction_names()->Add());
             }
             break;
           }
           default:
             break;
         }
+        ++sign_index;
       }
     }
   }
