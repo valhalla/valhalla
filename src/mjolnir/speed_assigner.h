@@ -264,7 +264,7 @@ public:
       uint32_t speed = directededge.speed();
       Use use = directededge.use();
       if (use == Use::kTurnChannel && infer_turn_channels) {
-        speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
+//        speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
       } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
         // If no tagged speed set ramp speed to slightly lower than speed
         // for roads of this classification
