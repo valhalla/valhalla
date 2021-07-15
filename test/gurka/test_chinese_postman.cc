@@ -102,37 +102,38 @@ std::string build_local_req(rapidjson::Document& doc,
   return sb.GetString();
 }
 
-ring_bg_t create_ring_from_string(gurka::map map, std::string chinese_polygon) {
+ring_bg_t create_ring_from_string(gurka::map map, const std::string& polygon_string) {
   ring_bg_t ring{};
-  for (auto& c : chinese_polygon) {
+  for (auto& c : polygon_string) {
     ring.push_back(map.nodes[std::string(1, c)]);
   }
   return ring;
 }
 
-void test_request(gurka::map map,
+void test_request(const gurka::map& map,
                   const std::string& costing,
-                  std::string chinese_polygon_string,
-                  std::string exclude_polygon_string,
-                  std::string start_node,
-                  std::string end_node,
+                  const std::string& chinese_polygon_string,
+                  const std::string& exclude_polygon_string,
+                  const std::string& start_node,
+                  const std::string& end_node,
                   const std::vector<std::string>& expected_names) {
 
   ring_bg_t chinese_ring = create_ring_from_string(map, chinese_polygon_string);
-  ring_bg_t avoid_ring = create_ring_from_string(map, exclude_polygon_string);
+  // exclude ring can have more than one, but for now, use one only
+  ring_bg_t exclude_ring = create_ring_from_string(map, exclude_polygon_string);
 
-  std::vector<ring_bg_t> avoid_rings;
-  avoid_rings.push_back(avoid_ring);
+  std::vector<ring_bg_t> exclude_rings;
+  exclude_rings.push_back(exclude_ring);
 
   // build request manually for now
-  auto lls = {map.nodes[start_node], map.nodes[end_node]};
+  auto lls = {map.nodes.at(start_node), map.nodes.at(end_node)};
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto avoid_polygons = get_avoid_polys(avoid_rings, allocator);
-  auto req = build_local_req(doc, allocator, lls, costing, chinese_polygon, avoid_polygons);
+  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, costing, chinese_polygon, exclude_polygons);
 
   auto route = gurka::do_action(Options::chinese_postman, map, req);
   gurka::assert::raw::expect_path(route, expected_names);
