@@ -30,6 +30,7 @@ public:
    * @param  signal         Traffic signal
    * @param  stop_sign      Stop sign
    * @param  yield_sign     Yield sign
+   * @param  minor          Does the stop or yield only apply to minor roads?
    * @param  restrictions   Mask of simple turn restrictions at the end node
    *                        of this directed edge.
    * @param  bike_network   Mask of bike_networks from relations.
@@ -48,6 +49,7 @@ public:
                       const bool signal,
                       const bool stop_sign,
                       const bool yield_sign,
+                      const bool minor,
                       const uint32_t restrictions,
                       const uint32_t bike_network,
                       const bool reclass_ferry);
