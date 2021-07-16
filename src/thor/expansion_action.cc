@@ -12,12 +12,13 @@ using namespace valhalla::midgard;
 
 namespace {
 using namespace valhalla;
-static std::unordered_map<Options::ExpansionProps, const char*> kPropPaths =
+static std::unordered_map<const Options::ExpansionProps, const char*> kPropPaths =
     {{Options_ExpansionProps_edge_ids, "/features/0/properties/edge_ids"},
      {Options_ExpansionProps_statuses, "/features/0/properties/statuses"},
      {Options_ExpansionProps_distances, "/features/0/properties/distances"},
      {Options_ExpansionProps_durations, "/features/0/properties/durations"},
      {Options_ExpansionProps_costs, "/features/0/properties/costs"}};
+
 } // namespace
 
 namespace valhalla {
@@ -31,8 +32,9 @@ std::string thor_worker_t::expansion(Api& request) {
   auto options = request.options();
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
-  auto exp_props = options.expansion_props();
+  auto exp_props_pbf = options.expansion_props();
   std::unordered_set<baldr::GraphId> opp_edges;
+  std::unordered_set<Options::ExpansionProps> exp_props_set;
 
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize() ? options.generalize() : 10.f;
@@ -46,19 +48,20 @@ std::string thor_worker_t::expansion(Api& request) {
   SetValueByPointer(dom, "/features/0/type", "Feature");
   SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
-  for (const auto& prop : exp_props) {
-    // protobuf will give int for enum fields, need to cast
+  SetValueByPointer(dom, "/features/0/properties", Value(kArrayType));
+  for (const auto& prop : exp_props_pbf) {
     rapidjson::Pointer(kPropPaths[static_cast<Options_ExpansionProps>(prop)])
         .Set(dom, Value(kArrayType));
+    exp_props_set.insert(static_cast<Options_ExpansionProps>(prop));
   }
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
   auto track_expansion = [&dom, &exp_action, &opp_edges, &gen_factor, &skip_opps,
-                          &exp_props](baldr::GraphReader& reader, baldr::GraphId edgeid,
-                                      const char* algorithm = nullptr, const char* status = nullptr,
-                                      const float duration = 0, const u_int32_t distance = 0,
-                                      const float cost = 0) {
+                          &exp_props_set](baldr::GraphReader& reader, baldr::GraphId edgeid,
+                                          const char* algorithm = nullptr,
+                                          const char* status = nullptr, const float duration = 0,
+                                          const u_int32_t distance = 0, const float cost = 0) {
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
       LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
@@ -95,33 +98,42 @@ std::string thor_worker_t::expansion(Api& request) {
       point.PushBack(p.second, a);
     }
 
+    // no properties asked for, don't collect any
+    if (!exp_props_set.size()) {
+      return;
+    }
+
     // make the properties
-    SetValueByPointer(dom, "/properties/algorithm", algorithm);
-    if (exp_props.Get(Options_ExpansionProps_durations))
+    if (algorithm)
+      SetValueByPointer(dom, "/properties/algorithm", algorithm);
+    if (exp_props_set.count(Options_ExpansionProps_durations)) {
       Pointer(kPropPaths[Options_ExpansionProps_durations])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);
-    if (exp_props.Get(Options_ExpansionProps_distances))
+    }
+    if (exp_props_set.count(Options_ExpansionProps_distances)) {
       Pointer(kPropPaths[Options_ExpansionProps_distances])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(distance), a);
-    if (exp_props.Get(Options_ExpansionProps_costs))
+    }
+    if (exp_props_set.count(Options_ExpansionProps_costs)) {
       Pointer(kPropPaths[Options_ExpansionProps_costs])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<u_int64_t>(cost)), a);
-    if (exp_props.Get(Options_ExpansionProps_statuses))
+    }
+    if (exp_props_set.count(Options_ExpansionProps_statuses))
       Pointer(kPropPaths[Options_ExpansionProps_statuses])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetString(status, a), a);
-    if (exp_props.Get(Options_ExpansionProps_edge_ids))
+    if (exp_props_set.count(Options_ExpansionProps_edge_ids))
       Pointer(kPropPaths[Options_ExpansionProps_edge_ids])
           .Get(dom)
           ->GetArray()
-          .PushBack(static_cast<uint64_t>(edgeid), a);
+          .PushBack(Value{}.SetInt(static_cast<uint64_t>(edgeid)), a);
   };
 
   if (exp_action == Options::route) {
@@ -161,8 +173,8 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // remove the arrays which weren't used
-  for (const auto& prop : exp_props) {
-    const auto& member = kPropPaths[static_cast<Options_ExpansionProps>(prop)];
+  for (const auto& prop : exp_props_set) {
+    const auto& member = kPropPaths[prop];
     if (!Pointer(member).Get(dom)->GetArray().Size()) {
       Pointer(member).Erase(dom);
     }

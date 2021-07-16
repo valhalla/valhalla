@@ -178,8 +178,8 @@ message Options {
     costs = 0;
     durations = 1;
     distances = 2;
-    statuses = 4;
-    edge_ids = 5;
+    statuses = 3;
+    edge_ids = 4;
   }
 
   optional Units units = 1;                                               // kilometers or miles
@@ -231,5 +231,5 @@ message Options {
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   optional Action expansion_action = 48;                                  // Meta action for /expansion endpoint
   optional bool skip_opposites = 49;                                      // Whether to return opposite edges encountered during expansion
-  repeated ExpansionProps expansion_props = 50;                                   // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+  repeated ExpansionProps expansion_props = 50;                           // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
 }

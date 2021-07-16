@@ -28,7 +28,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {112, "Insufficiently specified required parameter 'locations' or 'sources & targets'"},
     {113, "Insufficiently specified required parameter 'contours'"},
     {114, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'"},
-    {115, "Insufficiently specified required parameter 'expansion_props'"},
+    {115, "Insufficiently specified required parameter 'action'"},
 
     {120, "Insufficient number of locations provided"},
     {121, "Insufficient number of sources provided"},
@@ -74,7 +74,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
     {165, "Date and time required for destination for date_type of invariant"},
     {166, "Exceeded max distance"},
     {167, "Exceeded maximum circumference for exclude_polygons"},
-    {168, "Invalid expansion property type(s)"},
+    {168, "Invalid expansion property type"},
 
     {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
     {171, "No suitable edges near location"},

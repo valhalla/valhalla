@@ -969,14 +969,12 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
   Options::Action exp_action = Options::isochrone;
   if (exp_action_str) {
-    static const std::vector<Options::Action> valid_types{Options::route, Options::isochrone};
-    if (!Options_Action_Enum_Parse(*exp_action_str, &exp_action) ||
-        !std::count(valid_types.begin(), valid_types.end(), exp_action)) {
+    if (!Options_Action_Enum_Parse(*exp_action_str, &exp_action)) {
       throw valhalla_exception_t(144, *exp_action_str);
     }
     options.set_expansion_action(exp_action);
   } else if (options.action() == Options_Action_expansion) {
-    throw valhalla_exception_t(168);
+    throw valhalla_exception_t(115, std::string("action"));
   }
 
   // expansion response properties
@@ -984,18 +982,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto* exp_props_pbf = options.mutable_expansion_props();
   Options::ExpansionProps exp_prop;
   if (exp_props_req && exp_props_req->IsArray()) {
-    auto* exp_props_pbf = options.mutable_expansion_props();
     for (const auto& prop : exp_props_req->GetArray()) {
-      if (!valhalla::Options_ExpansionProps_Enum_Parse(std::string(prop.GetString()), exp_prop)) {
-        throw valhalla_exception_t(115, std::string(prop.GetString()));
+      if (!valhalla::Options_ExpansionProps_Enum_Parse(std::string(prop.GetString()), &exp_prop)) {
+        throw valhalla_exception_t(168, std::string(prop.GetString()));
       }
       exp_props_pbf->Add(exp_prop);
-    }
-  }
-  // default to at least return durations & distances
-  if (!exp_props_pbf->size()) {
-    for (const auto& prop : {Options_ExpansionProps_durations, Options_ExpansionProps_distances}) {
-      exp_props_pbf->Add(prop);
     }
   }
 

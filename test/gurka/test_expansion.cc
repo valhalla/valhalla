@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
 
@@ -30,11 +31,15 @@ protected:
     expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/expansion");
   }
 
+  // turn a vector string into a verbatim JSON array
   std::string build_prop_string(const std::vector<std::string> props) {
     std::stringstream req_props;
     req_props << "[";
-    for (const auto& prop : props) {
-      req_props << R"(")" + prop + R"(")";
+    for (int i = 0; i < props.size(); i++) {
+      req_props << "\"" + props[i] + "\"";
+      if (i < props.size() - 1) {
+        req_props << ",";
+      }
     }
     req_props << "]";
 
@@ -57,6 +62,7 @@ protected:
 
 gurka::map ExpansionTest::expansion_map = {};
 
+/*
 TEST_F(ExpansionTest, Isochrone) {
   // test Dijkstra expansion
   const auto& center_node = expansion_map.nodes["A"];
@@ -64,8 +70,8 @@ TEST_F(ExpansionTest, Isochrone) {
   const auto props_str = build_prop_string(props);
 
   // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
-  const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
-                          R"(,"lon":)" + std::to_string(center_node.lng()) +
+  const std::string req = R"({"action":"isochrone","locations":[{"lat":)" +
+std::to_string(center_node.lat()) + R"(,"lon":)" + std::to_string(center_node.lng()) +
                           R"(}],"costing":"auto","contours":[{"distance":0.05}],)" + props_str +
                           R"(})";
   std::string res;
@@ -77,7 +83,6 @@ TEST_F(ExpansionTest, Isochrone) {
   // 11 because there's a one-way
   check_props(res_doc, 11, props);
 }
-
 TEST_F(ExpansionTest, IsochroneNoOpposites) {
   // test Dijkstra expansion and skip collecting more expensive opposite edges
   const auto& center_node = expansion_map.nodes["A"];
@@ -86,39 +91,18 @@ TEST_F(ExpansionTest, IsochroneNoOpposites) {
 
   // remember there's no way to get less than 10 km or mins expansion (buffer in isochrones)
   const std::string req =
-      R"({"skip_opposites":true,"locations":[{"lat":)" + std::to_string(center_node.lat()) +
-      R"(,"lon":)" + std::to_string(center_node.lng()) +
+      R"({"action":"isochrone","skip_opposites":true,"locations":[{"lat":)" +
+std::to_string(center_node.lat()) + R"(,"lon":)" + std::to_string(center_node.lng()) +
       R"(}],"costing":"auto","contours":[{"distance":0.05}],)" + props_str + R"(})";
   std::string res;
   auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
+
+  std::cout << res << std::endl;
 
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
   check_props(res_doc, 6, props);
-}
-
-TEST_P(ExpansionTest, IsochroneDefaultProps) {
-  // test Dijkstra expansion with varying properties in the request
-  const auto& center_node = expansion_map.nodes["A"];
-  const std::vector<std::string> default_props = {"durations", "distances"};
-
-  const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
-                          R"(,"lon":)" + std::to_string(center_node.lng()) +
-                          R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
-  std::string res;
-  auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
-
-  rapidjson::Document res_doc;
-  res_doc.Parse(res.c_str());
-
-  const auto& feat = res_doc["features"][0];
-
-  for (const auto& res_prop : default_props) {
-    ASSERT_TRUE(feat["properties"].HasMember(res_prop));
-  }
-
-  check_props(res_doc, 11, default_props);
 }
 
 TEST_P(ExpansionTest, IsochroneVaryingProps) {
@@ -127,8 +111,8 @@ TEST_P(ExpansionTest, IsochroneVaryingProps) {
 
   auto props_string = build_prop_string(GetParam());
 
-  const std::string req = R"({"locations":[{"lat":)" + std::to_string(center_node.lat()) +
-                          R"(,"lon":)" + std::to_string(center_node.lng()) +
+  const std::string req = R"({"action":"isochrone","locations":[{"lat":)" +
+std::to_string(center_node.lat()) + R"(,"lon":)" + std::to_string(center_node.lng()) +
                           R"(}],"costing":"auto","contours":[{"distance":0.05}],)" +
                           (props_string.size() ? props_string : "") + R"(})";
   std::string res;
@@ -154,10 +138,12 @@ INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                                            std::vector<std::string>{"edge_ids", "costs"},
                                            std::vector<std::string>{}));
 
+*/
 TEST_F(ExpansionTest, Routing) {
   // test AStar expansion
-
-  const std::unordered_map<std::string, std::string> options = {{"/action", "route"}};
+  const std::unordered_map<std::string, std::string> options = {{"/action", "route"},
+                                                                {"/expansion_props",
+                                                                 "distances,statuses"}};
   std::vector<midgard::PointLL> lls;
   for (const auto& node_name : {"E", "H"}) {
     lls.push_back(expansion_map.nodes.at(node_name));
@@ -170,9 +156,10 @@ TEST_F(ExpansionTest, Routing) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  check_props(res_doc, 23, {"duratons", "distances"});
+  check_props(res_doc, 23, {"distances", "statuses"});
 }
 
+/*
 TEST_F(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion
   const std::unordered_map<std::string, std::string> options = {{"/action", "route"},
@@ -205,3 +192,32 @@ TEST_F(ExpansionTest, UnsupportedAction) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
+
+TEST_F(ExpansionTest, UnsupportedPropType) {
+  const auto& center_node = expansion_map.nodes["A"];
+  const std::string req = R"({"action":"isochrone","locations":[{"lat":)" +
+                          std::to_string(center_node.lat()) + R"(,"lon":)" +
+                          std::to_string(center_node.lng()) +
+                          R"(}],"costing":"auto","contours":[{"distance":0.05}],"expansion_props":["valhalla"]})";
+
+  try {
+    auto api = gurka::do_action(Options::expansion, expansion_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 168); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_F(ExpansionTest, NoAction) {
+  const auto& center_node = expansion_map.nodes["A"];
+  const std::string req = R"({"locations":[{"lat":)" +
+                          std::to_string(center_node.lat()) + R"(,"lon":)" +
+                          std::to_string(center_node.lng()) +
+                          R"(}],"costing":"auto","contours":[{"distance":0.05}]})";
+
+  try {
+    auto api = gurka::do_action(Options::expansion, expansion_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 115); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+*/
