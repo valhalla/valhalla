@@ -999,16 +999,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  if (rings_req) {
-    auto* rings_pbf = options.mutable_exclude_polygons();
-    try {
-      for (const auto& req_poly : rings_req->GetArray()) {
-        auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly);
-      }
-    } catch (...) { throw valhalla_exception_t{137}; }
-  }
-
   // should the expansion track opposites?
   auto exp_skip_opps = rapidjson::get_optional<bool>(doc, "/skip_opposites");
   if (exp_skip_opps)

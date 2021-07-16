@@ -6,6 +6,8 @@ The expansion service wraps the `route` and `isochrone` services and returns a G
 
 **Note**, for even moderately long routes or isochrones the `/expansion` action can produce gigantic GeoJSON responses of 100s of MB.
 
+![Isochrones for travel times by walking in Lancaster, PA](../images/expansion_dijkstra.png)
+
 ## Inputs of the Expansion service
 
 Since this service wraps other services, the request format mostly follows the ones of the [route](../turn-by-turn/api-reference.md#inputs-of-a-route) and [isochrone](../isochrone/api-reference.md#inputs-of-the-isochrone-service). Additionally, it accepts the following parameters:
@@ -14,6 +16,7 @@ Since this service wraps other services, the request format mostly follows the o
 | :---------         | :------------------------------------ |
 | `action`           | The service whose expansion should be tracked. One of `route` or `isochrone`.  | 
 | `skip_opposites`   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. | 
+| `expansion_props`   | A list of the GeoJSON property keys you'd like to have in the response as JSON array of strings. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses" | 
 
 ## Outputs of the Expansion service
 
