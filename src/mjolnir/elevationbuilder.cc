@@ -40,7 +40,7 @@ constexpr double kMinimumInterval = 10.0f;
 void add_elevation(const boost::property_tree::ptree& pt,
                    std::deque<GraphId>& tilequeue,
                    std::mutex& lock,
-                   const std::unique_ptr<const valhalla::skadi::sample>& sample,
+                   const std::unique_ptr<valhalla::skadi::sample>& sample,
                    std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
@@ -174,7 +174,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Crack open some elevation data if its there. Return if it is not.
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
-  std::unique_ptr<const skadi::sample> sample;
+  std::unique_ptr<skadi::sample> sample;
   if (elevation && filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
   } else {
@@ -211,7 +211,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(add_elevation, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::cref(sample), std::ref(results.back())));
+                                 std::ref(sample), std::ref(results.back())));
   }
 
   // Wait for threads to finish
