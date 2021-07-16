@@ -45,38 +45,6 @@ midgard::PointLL thor_worker_t::getPointLL(baldr::GraphId node) {
   graph_tile_ptr tile = reader->GetGraphTile(node);
   return ni_start->latlng(tile->header()->base_ll());
 }
-std::string pointLLToJson(const midgard::PointLL l) {
-  // To be something like this {"lat":40.739735,"lon":-73.979713}
-  std::string json = "{";
-  json += "\"lat\":";
-  json += std::to_string(l.lat());
-
-  json += ",\"lon\":";
-  json += std::to_string(l.lng());
-
-  json += "}";
-
-  return json;
-}
-
-std::string locationsToJson(std::vector<midgard::PointLL> locations) {
-  // To be something like this [{"lat":40.744014,"lon":-73.990508},
-  // {"lat":40.739735,"lon":-73.979713}]
-  std::string json = "[";
-  bool extraCharacter = false;
-  for (const auto& location : locations) {
-    json += pointLLToJson(location) + ", ";
-    extraCharacter = true;
-  }
-  // remove last two character ", "
-  if (extraCharacter) {
-    json.pop_back();
-    json.pop_back();
-  }
-
-  json += "]";
-  return json;
-}
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.path_edges()) {
@@ -143,25 +111,13 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
     sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct, time_info,
                         invariant, true);
   } catch (const std::exception& e) {
-    LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
+    LOG_ERROR(std::string("Chinese Postman failed to recost final path: ") + e.what());
   }
 
   return path;
 }
 
-std::string thor_worker_t::computeFloydWarshall(std::vector<midgard::PointLL> sources,
-                                                std::vector<midgard::PointLL> targets,
-                                                std::string costing) {
-  Api request;
-  // Update request with source and target, also costing
-  std::string jsonMatrixRequest = "{\"sources\":" + locationsToJson(sources) +
-                                  ", \"targets\":" + locationsToJson(targets) + ",\"costing\":\"" +
-                                  costing + "\"}";
-  ParseApi(jsonMatrixRequest, Options::sources_to_targets, request);
-  return matrix(request);
-}
-
-PathMatrix computeFloydWarshallCustom(DistanceMatrix& dm) {
+PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
   if (dm.shape()[0] == dm.shape()[1]) {
     // create path matrix
     PathMatrix pm(boost::extents[dm.shape()[0]][dm.shape()[0]]);
@@ -221,6 +177,7 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   // fetch the graph objects
   graph_tile_ptr tile;
   const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
+  // Notes: Use edge length for now
   // uint8_t flow_sources;
   // // Update the time information even if time is invariant to account for timezones
   // const auto seconds_offset = invariant ? 0.f : cost.secs;
@@ -230,13 +187,9 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   return edge->length();
 }
 
-std::vector<baldr::GraphId>
-computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing) {
-  std::vector<baldr::GraphId> edge_ids;
-  return edge_ids;
-}
-
 void thor_worker_t::chinese_postman(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
 
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
@@ -255,9 +208,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   ChinesePostmanGraph G;
   // Only for auto for now
   const auto& costing_ = mode_costing[Costing::auto_];
-
-  // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
 
   parse_locations(request);
   auto costing = parse_costing(request);
@@ -293,6 +243,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     // The cost of an edge is not relevant for the graph since we need to visit all the edges.
     // For a simplicity, I put Cost(1, 1) for it.
     // The cost is only considered when matching the unbalanced nodes.
+    // TODO: probably remove this since we use edge length as the heuristic
     Cost cost(1, 1);
     CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
     G.addEdge(start_vertex, end_vertex, cpEdge);
@@ -300,7 +251,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   // If the origin node index is more than the path_edge size, that means that there is no suitable
   // node for the origin location.
   if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
-    std::cout << "path_edges: " << originLocation.path_edges().size();
     throw std::logic_error("Could not find candidate edge for the origin location");
   }
   std::vector<GraphId> edgeGraphIds;
@@ -322,8 +272,8 @@ void thor_worker_t::chinese_postman(Api& request) {
         }
       }
     }
-    // print
-    PathMatrix pm = computeFloydWarshallCustom(distanceMatrix);
+
+    PathMatrix pm = computeFloydWarshall(distanceMatrix);
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
