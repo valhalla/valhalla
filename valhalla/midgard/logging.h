@@ -1,8 +1,13 @@
 #ifndef VALHALLA_MIDGARD_LOGGING_H_
 #define VALHALLA_MIDGARD_LOGGING_H_
 
-#if defined(_WIN32) && defined(ERROR)
+#if defined(_WIN32)
+#pragma push_macro("DEBUG")
+#undef DEBUG
+#pragma push_macro("ERROR")
 #undef ERROR
+#pragma push_macro("TRACE")
+#undef TRACE
 #endif
 
 #if defined(__MINGW32__) && !defined(NOGDI)
@@ -183,5 +188,11 @@ void Configure(const LoggingConfig& config);
 
 } // namespace midgard
 } // namespace valhalla
+
+#if defined(_WIN32)
+#pragma pop_macro("DEBUG")
+#pragma pop_macro("ERROR")
+#pragma pop_macro("TRACE")
+#endif
 
 #endif
