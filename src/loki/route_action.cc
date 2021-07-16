@@ -57,7 +57,7 @@ void loki_worker_t::init_route(Api& request) {
 
 void loki_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::route");
+  auto _ = measure_scope_time(request);
 
   init_route(request);
   auto& options = *request.mutable_options();

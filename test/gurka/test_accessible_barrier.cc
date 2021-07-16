@@ -116,6 +116,81 @@ TEST_F(MultipleBarriers, BothClosed) {
   }
 }
 
+TEST_F(MultipleBarriers, BothPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "gate"}, {"access", "private"}}},
+      {"2", {{"barrier", "gate"}, {"access", "private"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_both_private");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, ShortestPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "gate"}, {"access", "private"}}},
+      {"2", {{"barrier", "gate"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_one_private");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BollardPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_one_private");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BollardPrivateMotorVehicle) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"motor_vehicle", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_private_motor_vehicle");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BollardPrivateAndNoInfo) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"motor_vehicle", "private"}}},
+      {"2", {{"barrier", "bollard"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_private_no_info");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, BollardBothPrivate) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "private"}}},
+      {"2", {{"barrier", "bollard"}, {"access", "private"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_both_private");
+  check_auto_path(map, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, BollardNoAccessInformation) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "bollard"}, {"access", "no"}}},
+      {"2", {{"barrier", "bollard"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_no_access_info");
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
 class AccessibleBarriers : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -124,21 +199,23 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-             B-1--C
-            /      \
-           /        \
-          /          \
-         /            \
-        A----------2---D
-         \            /
-          F------3---E
+        B-----1---C
+        |          \
+        |           \
+        M-----2------N
+        |             \
+        A-----3--------D
+        |             /
+        F-----4------E
     )";
 
     const gurka::ways ways = {
         {"AB", {{"highway", "primary"}}}, {"B1C", {{"highway", "primary"}}},
-        {"CD", {{"highway", "primary"}}}, {"A2D", {{"highway", "primary"}}},
-        {"AF", {{"highway", "primary"}}}, {"F3", {{"highway", "primary"}}},
-        {"3E", {{"highway", "primary"}}}, {"ED", {{"highway", "primary"}}},
+        {"CD", {{"highway", "primary"}}}, {"AM", {{"highway", "primary"}}},
+        {"M2", {{"highway", "primary"}}}, {"2N", {{"highway", "primary"}}},
+        {"ND", {{"highway", "primary"}}}, {"A3D", {{"highway", "primary"}}},
+        {"AF", {{"highway", "primary"}}}, {"F4", {{"highway", "primary"}}},
+        {"4E", {{"highway", "primary"}}}, {"ED", {{"highway", "primary"}}},
     };
 
     const gurka::nodes nodes = {
@@ -146,8 +223,10 @@ protected:
         {"1", {{"barrier", "gate"}, {"access", "yes"}}},
         // access is not specified, huge penalty is added.
         {"2", {{"barrier", "gate"}}},
+        // access is private. Penalty is added because of privateness.
+        {"3", {{"barrier", "gate"}, {"access", "private"}}},
         // gate is opened for bicycle only.
-        {"3", {{"barrier", "lift_gate"}, {"access", "no"}, {"bicycle", "yes"}}},
+        {"4", {{"barrier", "lift_gate"}, {"access", "no"}, {"bicycle", "yes"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -166,5 +245,11 @@ TEST_F(AccessibleBarriers, Auto) {
 TEST_F(AccessibleBarriers, Bicycle) {
   const std::string cost = "bicycle";
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, cost);
-  gurka::assert::raw::expect_path(result, {"AF", "F3", "3E", "ED"});
+  gurka::assert::raw::expect_path(result, {"AF", "F4", "4E", "ED"});
+}
+
+TEST_F(AccessibleBarriers, Pedestrian) {
+  const std::string cost = "pedestrian";
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, cost);
+  gurka::assert::raw::expect_path(result, {"AM", "M2", "2N", "ND"});
 }

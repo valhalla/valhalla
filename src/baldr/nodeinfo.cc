@@ -76,13 +76,15 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const uint32_t access,
                    const NodeType type,
                    const bool traffic_signal,
-                   const bool tagged_access) {
+                   const bool tagged_access,
+                   const bool private_access) {
   memset(this, 0, sizeof(NodeInfo));
   set_latlng(tile_corner, ll);
   set_access(access);
   set_type(type);
   set_traffic_signal(traffic_signal);
   set_tagged_access(tagged_access);
+  set_private_access(private_access);
 }
 
 // Sets the latitude and longitude.
@@ -261,6 +263,7 @@ json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
       {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
       {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"mode_change", static_cast<bool>(mode_change_)},
+      {"private_access", static_cast<bool>(private_access_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
       {"transition count", static_cast<uint64_t>(transition_count_)},

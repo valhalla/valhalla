@@ -37,3 +37,6 @@
 -j '{"locations":[{"lat":39.863617,"lon":-77.056808,"type":"break","name":"US 30"},{"lat":39.863068,"lon":-77.055328,"type":"break","name":"Hanover Street"}],"costing":"auto","directions_options":{"units":"miles"},"roundabout_exits":false}'
 -j '{"locations":[{"lat":39.863586,"lon":-77.056931,"type":"break","name":"US 30"},{"lat":39.864128,"lon":-77.054909,"type":"break","name":"US 30"}],"costing":"auto","directions_options":{"units":"miles"},"roundabout_exits":false}'
 -j '{"locations":[{"lat":39.863609,"lon":-77.056839,"type":"break","name":"US 30"},{"lat":39.864521,"lon":-77.056129,"type":"break","name":"Carlisle Street"}],"costing":"auto","directions_options":{"units":"miles"},"roundabout_exits":false}'
+-j '{"locations":[{"lat":52.49320864676537,"lon":13.283115567165481},{"lat":52.49001551878894,"lon":13.278549627926935}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":52.66154485765182,"lon":13.525886893414196},{"lat":52.65950990731102,"lon":13.52230186729605}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":52.72156624359474,"lon":13.630090367899896},{"lat":52.720045826902094,"lon":13.635677087811928}],"costing":"auto","units":"miles"}'

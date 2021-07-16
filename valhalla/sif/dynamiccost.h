@@ -855,6 +855,7 @@ protected:
   // Transition costs
   sif::Cost country_crossing_cost_;
   sif::Cost gate_cost_;
+  sif::Cost private_access_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
   sif::Cost bike_share_cost_;
@@ -903,6 +904,8 @@ protected:
                               costing_options.country_crossing_cost()};
     gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
                   costing_options.gate_cost()};
+    private_access_cost_ = {costing_options.gate_cost() + costing_options.private_access_penalty(),
+                            costing_options.gate_cost()};
 
     bike_share_cost_ = {costing_options.bike_share_cost() + costing_options.bike_share_penalty(),
                         costing_options.bike_share_cost()};
@@ -993,6 +996,9 @@ protected:
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
     c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ *
+         (node->type() == baldr::NodeType::kGate || node->type() == baldr::NodeType::kBollard) *
+         node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
@@ -1038,6 +1044,7 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> alley_penalty_;
   ranged_default_t<float> gate_cost_;
   ranged_default_t<float> gate_penalty_;
+  ranged_default_t<float> private_access_penalty_;
   ranged_default_t<float> country_crossing_cost_;
   ranged_default_t<float> country_crossing_penalty_;
 
@@ -1055,6 +1062,9 @@ struct BaseCostingOptionsConfig {
 
   ranged_default_t<float> service_penalty_;
   ranged_default_t<float> service_factor_;
+
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
 
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;

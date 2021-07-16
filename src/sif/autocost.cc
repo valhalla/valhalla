@@ -65,11 +65,17 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
+// Default auto attributes
+constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
+constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
+constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
+constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -195,6 +201,11 @@ public:
                               uint8_t& restriction_idx) const override;
 
   /**
+   * Callback for Allowed doing mode  specific restriction checks
+   */
+  virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
+
+  /**
    * Only transit costings are valid for this method call, hence we throw
    * @param edge
    * @param departure
@@ -300,6 +311,10 @@ public:
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
 
+  // Vehicle attributes (used for special restrictions and costing)
+  float height_; // Vehicle height in meters
+  float width_;  // Vehicle width in meters
+
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -359,6 +374,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  // Get the vehicle attributes
+  height_ = costing_options.height();
+  width_ = costing_options.width();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -420,6 +439,20 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
+}
+
+bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  switch (restriction.type()) {
+    case AccessType::kMaxHeight:
+      return height_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxWidth:
+      return width_ <= static_cast<float>(restriction.value() * 0.01);
+    default:
+      return true;
+  };
+
+  // Unreachable line
+  return true;
 }
 
 // Get the cost to traverse the edge in seconds
@@ -649,6 +682,16 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
                               .get_value_or(kDefaultUseDistance)));
 
+    // height
+    pbf_costing_options->set_height(
+        kAutoHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
+                             .get_value_or(kDefaultAutoHeight)));
+
+    // width
+    pbf_costing_options->set_width(
+        kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
+                            .get_value_or(kDefaultAutoWidth)));
+
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults
@@ -659,6 +702,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
+    pbf_costing_options->set_height(kDefaultAutoHeight);
+    pbf_costing_options->set_width(kDefaultAutoWidth);
   }
 }
 
@@ -1168,10 +1213,12 @@ public:
   using AutoCost::ferry_transition_cost_;
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
+  using AutoCost::height_;
   using AutoCost::maneuver_penalty_;
   using AutoCost::service_factor_;
   using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
+  using AutoCost::width_;
 };
 
 template <class T>
@@ -1316,6 +1363,20 @@ TEST(AutoCost, testAutoCostParams) {
     tester = make_autocost_from_json("service_factor", distributor(generator));
     EXPECT_THAT(tester->service_factor_,
                 test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
+  }
+
+  // height_
+  distributor = make_distributor_from_range(defaults.height_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("height", distributor(generator));
+    EXPECT_THAT(tester->height_, test::IsBetween(defaults.height_.min, defaults.height_.max));
+  }
+
+  // width_
+  distributor = make_distributor_from_range(defaults.width_);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("width", distributor(generator));
+    EXPECT_THAT(tester->width_, test::IsBetween(defaults.width_.min, defaults.width_.max));
   }
 
   // flow_mask_
