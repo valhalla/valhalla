@@ -423,9 +423,10 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
 
-      // Get names and types - they apply over all edges of the shortcut
+      // Get names - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
-      auto tagged_names = edgeinfo.GetNames(true);
+      auto tagged_names = edgeinfo.GetTaggedNames();
+      auto pronunciations = edgeinfo.GetTaggedNames(true);
       auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
@@ -490,8 +491,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_names, types, forward,
-                                  diff_names);
+                                  edgeinfo.speed_limit(), shape, names, tagged_names, pronunciations,
+                                  types, forward, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -636,7 +637,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
         // Get signs from the base directed edge
         if (directededge->sign()) {
-          std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
+          std::vector<SignInfo> signs = tile->ProcessSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
           }
@@ -682,7 +683,8 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
-                                    edgeinfo.GetNames(true), edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTaggedNames(), edgeinfo.GetTaggedNames(true),
+                                    edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Set the superseded mask - this is the shortcut mask that supersedes this edge
@@ -704,7 +706,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Get named signs from the base node
       if (nodeinfo.named_intersection()) {
 
-        std::vector<SignInfo> signs = tile->GetSigns(n, true);
+        std::vector<SignInfo> signs = tile->ProcessSigns(n, true);
         if (signs.size() == 0) {
           LOG_ERROR("Base node should have signs, but none found");
         }

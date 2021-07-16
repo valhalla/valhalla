@@ -24,6 +24,16 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -70,15 +80,15 @@ NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
 }
 
 // Get a list of names
-std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
+std::vector<std::string> EdgeInfo::GetNames() const {
   // Get each name
   std::vector<std::string> names;
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    if ((only_tagged_names && !ni->tagged_) || (!only_tagged_names && ni->tagged_)) {
+    if (ni->tagged_)
       continue;
-    }
+
     if (ni->name_offset_ < names_list_length_) {
       names.push_back(names_list_ + ni->name_offset_);
     } else {
@@ -88,9 +98,65 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
   return names;
 }
 
+// Get a list of tagged names
+std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) const {
+  // Get each name
+  std::vector<std::string> names;
+  names.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      std::string name = names_list_ + ni->name_offset_;
+      if (name.size() > 1) {
+        uint8_t num = 0;
+        try {
+          num = std::stoi(name.substr(0, 1));
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+            if (!only_pronunciations)
+              continue;
+
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the tagged name type...actual data remains
+
+            auto verbal_tokens = split(name, '#');
+            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+            // key  type value
+            uint8_t index = 0;
+            std::string key, type;
+            for (const auto v : verbal_tokens) {
+              if (index == 0) { // key
+                key = v;
+                index++;
+              } else if (index == 1) { // type
+                type = v;
+                index++;
+              } else { // value
+                names.push_back(key + '#' + type + '#' + v);
+                index = 0;
+              }
+            }
+          } else if (!only_pronunciations) {
+            names.push_back(names_list_ + ni->name_offset_);
+          }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        }
+      } else {
+        throw std::runtime_error("GetTaggedNames: Tagged name with no text");
+      }
+    } else {
+      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+    }
+  }
+  return names;
+}
+
 // Get a list of names
 std::vector<std::pair<std::string, bool>>
-EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
+EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_names) const {
   // Get each name
   std::vector<std::pair<std::string, bool>> name_type_pairs;
   name_type_pairs.reserve(name_count());
@@ -104,8 +170,14 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
         if (name.size() > 1) {
+          uint8_t num = 0;
           try {
-            name_type_pairs.push_back({name.substr(1), false});
+            num = std::stoi(name.substr(0, 1));
+            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation) {
+              name_type_pairs.push_back({name.substr(1), false});
+              types.push_back(num);
+            }
+
           } catch (const std::invalid_argument& arg) {
             LOG_DEBUG("invalid_argument thrown for name: " + name);
           }
@@ -114,6 +186,7 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
+      types.push_back(0);
     } else {
       throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     }
@@ -136,7 +209,8 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
           uint8_t num = 0;
           try {
             num = std::stoi(name.substr(0, 1));
-            name_type_pairs.push_back({name.substr(1), num});
+            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation)
+              name_type_pairs.push_back({name.substr(1), num});
 
           } catch (const std::invalid_argument& arg) {
             LOG_DEBUG("invalid_argument thrown for name: " + name);
@@ -148,6 +222,118 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
     }
   }
   return name_type_pairs;
+}
+
+std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>>
+EdgeInfo::GetPronunciationsMultiMap() const {
+  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
+  key_type_value_pairs.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      std::string name = names_list_ + ni->name_offset_;
+      if (name.length() > 1) {
+        uint8_t num = 0;
+        try {
+          num = std::stoi(name.substr(0, 1));
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the type...actual data remains
+
+            auto verbal_tokens = split(name, '#');
+            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+            // key  type value
+            uint8_t index = 0;
+            std::string key, type;
+            for (const auto v : verbal_tokens) {
+              if (index == 0) { // key
+                key = v;
+                index++;
+              } else if (index == 1) { // type
+                type = v;
+                index++;
+              } else { // value
+                key_type_value_pairs.emplace(
+                    std::make_pair(std::stoi(key), std::make_pair(std::stoi(type), v)));
+                index = 0;
+              }
+            }
+          }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        }
+      } else {
+        throw std::runtime_error("GetPronunciationsMultiMap: Tagged name with no text");
+      }
+    } else {
+      throw std::runtime_error("GetPronunciationsMultiMap: offset exceeds size of text list");
+    }
+  }
+
+  return key_type_value_pairs;
+}
+
+std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> index_pronunciation_map;
+  index_pronunciation_map.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      std::string name = names_list_ + ni->name_offset_;
+      if (name.length() > 1) {
+        uint8_t num = 0;
+        try {
+          num = std::stoi(name.substr(0, 1));
+          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+            size_t location = name.length() + 1; // start from here
+            name = name.substr(1);               // remove the tagged name type...actual data remains
+
+            auto pronunciation_tokens = split(name, '#');
+            // index # alphabet # pronunciation
+            // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
+            uint8_t token_index = 0, index, pronunciation_alphabet;
+            for (const auto token : pronunciation_tokens) {
+              if (token_index == 0) { // index
+                index = std::stoi(token);
+                token_index++;
+              } else if (token_index == 1) { // pronunciation_alphabet
+                pronunciation_alphabet = std::stoi(token);
+                token_index++;
+              } else { // value
+                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+                    index_pronunciation_map.find(index);
+
+                if (iter == index_pronunciation_map.end())
+                  index_pronunciation_map.emplace(
+                      std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
+                else {
+                  if (pronunciation_alphabet > (iter->second).first) {
+                    index_pronunciation_map.emplace(
+                        std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
+                  }
+                }
+                token_index = 0;
+              }
+            }
+          }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        }
+      } else {
+        throw std::runtime_error("GetPronunciationsMap: Tagged name with no text");
+      }
+    } else {
+      throw std::runtime_error("GetPronunciationsMap: offset exceeds size of text list");
+    }
+  }
+
+  return index_pronunciation_map;
 }
 
 // Get the types.  Are these names route numbers or not?

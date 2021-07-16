@@ -47,6 +47,16 @@ std::string GenerateTmpSuffix() {
   return ss.str();
 }
 
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -654,8 +664,16 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   return directededge(nodeinfo->edge_index());
 }
 
-std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge, bool only_tagged_names) const {
-  return edgeinfo(edge).GetNames(only_tagged_names);
+// Convenience method to get the names for an edge
+std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge) const {
+  return edgeinfo(edge).GetNames();
+}
+
+// Convenience method to get the tagged names for an edge given the offset to the
+// edge info
+std::vector<std::string> GraphTile::GetTaggedNames(const DirectedEdge* edge,
+                                                   bool only_pronunciations) const {
+  return edgeinfo(edge).GetTaggedNames(only_pronunciations);
 }
 
 uint16_t GraphTile::GetTypes(const DirectedEdge* edge) const {
@@ -689,9 +707,9 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
   }
 }
 
-// Convenience method to get the signs for an edge given the
+// Convenience method to process the signs for an edge given the
 // directed edge index.
-std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
+std::vector<SignInfo> GraphTile::ProcessSigns(const uint32_t idx, bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
@@ -723,8 +741,87 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   // Add signs
   for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
-      // Skip tagged text strings (Future code is needed to handle tagged strings)
-      if (signs_[found].tagged()) {
+
+      std::string text = (textlist_ + signs_[found].text_offset());
+      // only add named signs when asking for signs at the node and
+      // only add edge signs when asking for signs at the edges.
+      if (((signs_[found].type() == Sign::Type::kJunctionName ||
+            signs_[found].type() == Sign::Type::kPronunciation) &&
+           signs_on_node) ||
+          (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
+        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+                           signs_[found].tagged(), false, 0, 0, text);
+    } else {
+      throw std::runtime_error("GetSigns: offset exceeds size of text list");
+    }
+  }
+  if (signs.size() == 0) {
+    LOG_ERROR("No signs found for idx = " + std::to_string(idx));
+  }
+  return signs;
+}
+
+// TODO: Remove after updating the tests
+// Convenience method to get the signs for an edge given the
+// directed edge index.
+std::vector<SignInfo> GraphTile::GetSigns(
+    const uint32_t idx,
+    std::unordered_multimap<uint32_t, std::pair<uint8_t, std::string>>& key_type_value_pairs,
+    bool signs_on_node) const {
+  uint32_t count = header_->signcount();
+  std::vector<SignInfo> signs;
+  if (count == 0) {
+    return signs;
+  }
+  key_type_value_pairs.reserve(count);
+
+  // Signs are sorted by edge index.
+  // Binary search to find a sign with matching edge index.
+  int32_t low = 0;
+  int32_t high = count - 1;
+  int32_t mid;
+  int32_t found = count;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    const auto& sign = signs_[mid];
+    // matching edge index
+    if (idx == sign.index()) {
+      found = mid;
+      high = mid - 1;
+    } // need a smaller index
+    else if (idx < sign.index()) {
+      high = mid - 1;
+    } // need a bigger index
+    else {
+      low = mid + 1;
+    }
+  }
+
+  // Add signs
+  for (; found < count && signs_[found].index() == idx; ++found) {
+    if (signs_[found].text_offset() < textlist_size_) {
+
+      std::string text = (textlist_ + signs_[found].text_offset());
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
+
+        auto verbal_tokens = split(text, '#');
+        // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
+        // key  type value
+        uint8_t index = 0;
+        std::string key, type;
+        for (const auto v : verbal_tokens) {
+          if (index == 0) { // key
+            key = v;
+            index++;
+          } else if (index == 1) { // type
+            type = v;
+            index++;
+          } else { // value
+            key_type_value_pairs.emplace(
+                std::make_pair(std::stoi(key), std::make_pair(std::stoi(type), v)));
+            index = 0;
+          }
+        }
         continue;
       }
 
@@ -733,7 +830,97 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
       if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
-                           (textlist_ + signs_[found].text_offset()));
+                           signs_[found].tagged(), false, 0, 0, text);
+    } else {
+      throw std::runtime_error("GetSigns: offset exceeds size of text list");
+    }
+  }
+  if (signs.size() == 0) {
+    LOG_ERROR("No signs found for idx = " + std::to_string(idx));
+  }
+  return signs;
+}
+
+// Convenience method to get the signs for an edge given the
+// directed edge index.
+std::vector<SignInfo> GraphTile::GetSigns(
+    const uint32_t idx,
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
+    bool signs_on_node) const {
+  uint32_t count = header_->signcount();
+  std::vector<SignInfo> signs;
+  if (count == 0) {
+    return signs;
+  }
+  index_pronunciation_map.reserve(count);
+
+  // Signs are sorted by edge index.
+  // Binary search to find a sign with matching edge index.
+  int32_t low = 0;
+  int32_t high = count - 1;
+  int32_t mid;
+  int32_t found = count;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    const auto& sign = signs_[mid];
+    // matching edge index
+    if (idx == sign.index()) {
+      found = mid;
+      high = mid - 1;
+    } // need a smaller index
+    else if (idx < sign.index()) {
+      high = mid - 1;
+    } // need a bigger index
+    else {
+      low = mid + 1;
+    }
+  }
+
+  // Add signs
+  for (; found < count && signs_[found].index() == idx; ++found) {
+    if (signs_[found].text_offset() < textlist_size_) {
+
+      std::string text = (textlist_ + signs_[found].text_offset());
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
+
+        auto pronunciation_tokens = split(text, '#');
+        // index # alphabet # pronunciation
+        // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
+        uint8_t token_index = 0;
+        uint32_t index;
+        uint8_t pronunciation_alphabet;
+        for (const auto token : pronunciation_tokens) {
+          if (token_index == 0) { // index
+            index = std::stoi(token);
+            token_index++;
+          } else if (token_index == 1) { // pronunciation_alphabet
+            pronunciation_alphabet = std::stoi(token);
+            token_index++;
+          } else { // value
+            std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+                index_pronunciation_map.find(index);
+
+            if (iter == index_pronunciation_map.end())
+              index_pronunciation_map.emplace(
+                  std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
+            else {
+              if (pronunciation_alphabet > (iter->second).first) {
+                index_pronunciation_map.emplace(
+                    std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
+              }
+            }
+            token_index = 0;
+          }
+        }
+        continue;
+      }
+
+      // only add named signs when asking for signs at the node and
+      // only add edge signs when asking for signs at the edges.
+      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
+          (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
+        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+                           signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }

@@ -55,6 +55,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
@@ -62,7 +63,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   auto osmdata =
       PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
-                                ways_file, way_nodes_file, access_file);
+                                ways_file, way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
@@ -220,13 +221,14 @@ void RemovableBollards(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
@@ -262,13 +264,15 @@ void Exits(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                           {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
-                                           ways_file, way_nodes_file, access_file);
+  auto osmdata =
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"}, ways_file,
+                                way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
@@ -312,13 +316,15 @@ void Baltimore(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                           {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"},
-                                           ways_file, way_nodes_file, access_file);
+  auto osmdata =
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"}, ways_file,
+                                way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"},
@@ -438,13 +444,14 @@ void Bike(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"},
@@ -533,13 +540,14 @@ void Bus(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"}, from_restriction_file,
@@ -614,13 +622,14 @@ void BicycleTrafficSignals(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"}, from_restriction_file,
@@ -717,13 +726,14 @@ TEST(GraphParser, TestImportBssNode) {
   std::string nodes_file = "test_nodes.bin";
   std::string edges_file = "test_edges.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
@@ -740,7 +750,7 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
 
   BssBuilder::Build(conf, bss_nodes_file);
 

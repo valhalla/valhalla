@@ -48,6 +48,16 @@ struct OSMNode {
   uint64_t private_access_ : 1;
   uint32_t spare1_ : 3;
 
+  // pronunciations
+  uint32_t name_pronunciation_ipa_index_;
+  uint32_t name_pronunciation_x_sampa_index_;
+  uint32_t name_pronunciation_katakana_index_;
+  uint32_t name_pronunciation_jeita_index_;
+  uint32_t ref_pronunciation_ipa_index_;
+  uint32_t ref_pronunciation_x_sampa_index_;
+  uint32_t ref_pronunciation_katakana_index_;
+  uint32_t ref_pronunciation_jeita_index_;
+
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
   uint32_t lat7_;
@@ -300,6 +310,134 @@ struct OSMNode {
    */
   bool urban() const {
     return urban_;
+  }
+
+  /**
+   * Sets the index for the ref ipa pronunciation
+   * @param  idx  Index for the reference ipa pronunciation.
+   */
+  void set_ref_pronunciation_ipa_index(const uint32_t idx) {
+    ref_pronunciation_ipa_index_ = idx;
+  }
+
+  /**
+   * Get the ref ipa pronunciation index.
+   * @return  Returns the index for the ref ipa pronunciation.
+   */
+  uint32_t ref_pronunciation_ipa_index() const {
+    return ref_pronunciation_ipa_index_;
+  }
+
+  /**
+   * Sets the index for the ref x-sampa pronunciation
+   * @param  idx  Index for the reference x-sampa pronunciation.
+   */
+  void set_ref_pronunciation_x_sampa_index(const uint32_t idx) {
+    ref_pronunciation_x_sampa_index_ = idx;
+  }
+
+  /**
+   * Get the ref x-sampa pronunciation index.
+   * @return  Returns the index for the ref x-sampa pronunciation.
+   */
+  uint32_t ref_pronunciation_x_sampa_index() const {
+    return ref_pronunciation_x_sampa_index_;
+  }
+
+  /**
+   * Sets the index for the ref katakana pronunciation
+   * @param  idx  Index for the reference katakana pronunciation.
+   */
+  void set_ref_pronunciation_katakana_index(const uint32_t idx) {
+    ref_pronunciation_katakana_index_ = idx;
+  }
+
+  /**
+   * Get the ref katakana pronunciation index.
+   * @return  Returns the index for the ref katakana pronunciation.
+   */
+  uint32_t ref_pronunciation_katakana_index() const {
+    return ref_pronunciation_katakana_index_;
+  }
+
+  /**
+   * Sets the index for the ref jeita pronunciation
+   * @param  idx  Index for the reference jeita pronunciation.
+   */
+  void set_ref_pronunciation_jeita_index(const uint32_t idx) {
+    ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the ref jeita pronunciation index.
+   * @return  Returns the index for the ref jeita pronunciation.
+   */
+  uint32_t ref_pronunciation_jeita_index() const {
+    return ref_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for name ipa pronunciation
+   * @param  idx  Index for the name ipa pronunciation.
+   */
+  void set_name_pronunciation_ipa_index(const uint32_t idx) {
+    name_pronunciation_ipa_index_ = idx;
+  }
+
+  /**
+   * Get the name ipa pronunciation index.
+   * @return  Returns the index for the name ipa pronunciation.
+   */
+  uint32_t name_pronunciation_ipa_index() const {
+    return name_pronunciation_ipa_index_;
+  }
+
+  /**
+   * Sets the index for name x-sampa pronunciation
+   * @param  idx  Index for the name x-sampa pronunciation.
+   */
+  void set_name_pronunciation_x_sampa_index(const uint32_t idx) {
+    name_pronunciation_x_sampa_index_ = idx;
+  }
+
+  /**
+   * Get the name x-sampa pronunciation index.
+   * @return  Returns the index for the name x-sampa pronunciation.
+   */
+  uint32_t name_pronunciation_x_sampa_index() const {
+    return name_pronunciation_x_sampa_index_;
+  }
+
+  /**
+   * Sets the index for name katakana pronunciation
+   * @param  idx  Index for the name katakana pronunciation.
+   */
+  void set_name_pronunciation_katakana_index(const uint32_t idx) {
+    name_pronunciation_katakana_index_ = idx;
+  }
+
+  /**
+   * Get the name katakana pronunciation index.
+   * @return  Returns the index for the name katakana pronunciation.
+   */
+  uint32_t name_pronunciation_katakana_index() const {
+    return name_pronunciation_katakana_index_;
+  }
+
+  /**
+   * Sets the index for name jeita pronunciation
+   * @param  idx  Index for the name jeita pronunciation.
+   */
+  void set_name_pronunciation_jeita_index(const uint32_t idx) {
+    name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the name jeita pronunciation index.
+   * @return  Returns the index for the name jeita pronunciation.
+   */
+  uint32_t name_pronunciation_jeita_index() const {
+    return name_pronunciation_jeita_index_;
   }
 
   /**
