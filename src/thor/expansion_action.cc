@@ -26,7 +26,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  measure_scope_time(request, "thor_worker_t::expansion");
+  measure_scope_time(request);
 
   // get the request params
   auto options = request.options();
@@ -170,14 +170,6 @@ std::string thor_worker_t::expansion(Api& request) {
     isochrone_gen.set_track_expansion(track_expansion);
     isochrones(request);
     isochrone_gen.set_track_expansion(nullptr);
-  }
-
-  // remove the arrays which weren't used
-  for (const auto& prop : exp_props_set) {
-    const auto& member = kPropPaths[prop];
-    if (!Pointer(member).Get(dom)->GetArray().Size()) {
-      Pointer(member).Erase(dom);
-    }
   }
 
   // serialize it
