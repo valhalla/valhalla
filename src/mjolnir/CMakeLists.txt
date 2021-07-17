@@ -24,7 +24,6 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-  admin.cc
   adminbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc
@@ -47,6 +46,7 @@ set(sources
   util.cc)
 
 set (sources_with_warnings
+  admin.cc
   bssbuilder.cc
   dataquality.cc
   elevationbuilder.cc

@@ -86,7 +86,7 @@ void loki_worker_t::init_matrix(Api& request) {
 
 void loki_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::matrix");
+  auto _ = measure_scope_time(request);
 
   init_matrix(request);
   auto& options = *request.mutable_options();
