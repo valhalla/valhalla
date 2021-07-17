@@ -6,7 +6,7 @@ The expansion service wraps the `route` and `isochrone` services and returns a G
 
 **Note**, for even moderately long routes or isochrones the `/expansion` action can produce gigantic GeoJSON responses of 100s of MB.
 
-![Isochrones for travel times by walking in Lancaster, PA](../images/expansion_dijkstra.png)
+![A 11 km isochrone expansion result in Vienna, Austria](../images/expansion_dijkstra.png)
 
 ## Inputs of the Expansion service
 
@@ -16,19 +16,29 @@ Since this service wraps other services, the request format mostly follows the o
 | :---------         | :------------------------------------ |
 | `action`           | The service whose expansion should be tracked. One of `route` or `isochrone`.  | 
 | `skip_opposites`   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. | 
-| `expansion_props`   | A list of the GeoJSON property keys you'd like to have in the response as JSON array of strings. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses" | 
+| `expansion_props`   | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses". **Note**, that each additional property will increase the output size by ~ 25%. |
 
-## Outputs of the Expansion service
-
-In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each LineString representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where of course the indices are correlating, i.e. the 3rd element in a `properties` array will correspond to the 3rd LineString in the MultiLineString geometry.
+The `expansion_props` choices are as follows:
 
 | Property   | Description                           |
 | :--------- | :------------------------------------ |
-| `distances`   | JSON array of the accumulated distance in meters for each edge in order of graph traversal. | 
-| `durations`   | JSON array of the accumulated duration in seconds for each edge in order of graph traversal. | 
-| `costs`   | JSON array of the accumulated edge cost for each edge in order of graph traversal. | 
-| `edge_ids`   | JSON array of the internal edge IDs for each edge in order of graph traversal. | 
-| `statuses`   | JSON array of the edge states at the  for each edge in order of graph traversal. | 
+| `distances`   | Returns the accumulated distance in meters for each edge in order of graph traversal. | 
+| `durations`   | Returns the accumulated duration in seconds for each edge in order of graph traversal. | 
+| `costs`       | Returns the accumulated cost for each edge in order of graph traversal. | 
+| `edge_ids`   | Returns the internal edge IDs for each edge in order of graph traversal. Mostly interesting for debugging. | 
+| `statuses`   | Returns the edge states for each edge in order of graph traversal. Mostly interesting for debugging. Can be one of "r" (reached), "s" (settled), "c" (connected). |
+
+An example request is:
+
+```
+{"expansion_props":["distances", "durations", "costs"],"contours":[{"time":1.0}],"locations":[{"lon":0.00026949361342338066,"lat":-0.00017966240895360996}],"costing":"auto","action":"isochrone"}
+```
+
+## Outputs of the Expansion service
+
+In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each `LineString` representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where the indices are correlating to the `coordinates` array, i.e. the 3rd element in a `properties` array will correspond to the 3rd LineString in the MultiLineString geometry.
+
+The output will contain the `properties` which were specified in the `expansion_props` request array.
 
 An example response for `"action": "isochrone"` is:
 

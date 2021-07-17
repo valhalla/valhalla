@@ -969,7 +969,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
   Options::Action exp_action = Options::isochrone;
   if (exp_action_str) {
-    if (!Options_Action_Enum_Parse(*exp_action_str, &exp_action)) {
+    if (!Options_ExpansionAction_Enum_Parse(*exp_action_str, &exp_action)) {
       throw valhalla_exception_t(144, *exp_action_str);
     }
     options.set_expansion_action(exp_action);

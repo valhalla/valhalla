@@ -105,7 +105,6 @@ std::string build_valhalla_request(const std::string& location_type,
 
   rapidjson::Value co(rapidjson::kObjectType);
   if (!custom_speed_types) {
-    rapidjson::Value dt(rapidjson::kObjectType);
     rapidjson::Value speed_types(rapidjson::kArrayType);
     speed_types.PushBack("freeflow", allocator);
     speed_types.PushBack("constrained", allocator);

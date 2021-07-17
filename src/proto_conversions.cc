@@ -122,6 +122,17 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
+bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action> actions{{"route", Options::route},
+                                                                        {"isochrone",
+                                                                         Options::isochrone}};
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
