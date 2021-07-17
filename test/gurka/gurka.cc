@@ -76,24 +76,6 @@ std::string build_valhalla_request(const std::string& location_type,
   doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  // check and build the expansion_props array if present
-  auto exp_value = options.find("/expansion_props");
-  if (exp_value != options.end()) {
-    rapidjson::Value props_arr(rapidjson::kArrayType);
-    std::vector<std::string> props;
-    std::stringstream ss(exp_value->second);
-    while (ss.good()) {
-      std::string substr;
-      std::getline(ss, substr, ',');
-      props.push_back(substr);
-    }
-    for (const auto& prop : props) {
-      rapidjson::Value s(prop.c_str(), allocator);
-      props_arr.PushBack(s, allocator);
-    }
-    doc.AddMember("expansion_props", props_arr, allocator);
-  }
-
   // check if we are overriding speed types etc
   bool custom_speed_types = false;
   for (const auto& option : options) {
