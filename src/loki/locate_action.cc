@@ -18,7 +18,7 @@ void loki_worker_t::init_locate(Api& request) {
 
 std::string loki_worker_t::locate(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::locate");
+  auto _ = measure_scope_time(request);
 
   // correlate the various locations to the underlying graph
   init_locate(request);

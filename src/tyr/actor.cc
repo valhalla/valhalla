@@ -62,10 +62,8 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   pimpl->loki_worker.route(request);
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.route(request);
-  // get some directions back from them
-  pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  // get some directions back from them and serialize
+  auto bytes = pimpl->odin_worker.narrate(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -131,10 +129,8 @@ std::string actor_t::optimized_route(const std::string& request_str,
   pimpl->loki_worker.matrix(request);
   // compute compute all pairs and then the shortest path through them all
   pimpl->thor_worker.optimized_route(request);
-  // get some directions back from them
-  pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  // get some directions back from them and serialize
+  auto bytes = pimpl->odin_worker.narrate(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -181,9 +177,7 @@ std::string actor_t::trace_route(const std::string& request_str,
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.trace_route(request);
   // get some directions back from them
-  pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  auto bytes = pimpl->odin_worker.narrate(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -296,10 +290,8 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
   pimpl->loki_worker.route(request);
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.centroid(request);
-  // get some directions back from them
-  pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  // get some directions back from them and serialize
+  auto bytes = pimpl->odin_worker.narrate(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
