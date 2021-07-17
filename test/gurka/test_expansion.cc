@@ -40,6 +40,7 @@ protected:
                               bool skip_opps,
                               const std::vector<std::string> props) {
     std::vector<midgard::PointLL> lls;
+    lls.reserve(waypoints.size());
     for (const auto& p : waypoints) {
       lls.push_back(expansion_map.nodes.at(p));
     }

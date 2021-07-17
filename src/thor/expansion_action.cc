@@ -57,11 +57,11 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
-  auto track_expansion = [&dom, &exp_action, &opp_edges, &gen_factor, &skip_opps,
+  auto track_expansion = [&dom, &opp_edges, &gen_factor, &skip_opps,
                           &exp_props_set](baldr::GraphReader& reader, baldr::GraphId edgeid,
                                           const char* algorithm = nullptr,
-                                          const char* status = nullptr, const float duration = 0,
-                                          const u_int32_t distance = 0, const float cost = 0) {
+                                          const char* status = nullptr, const float duration = 0.f,
+                                          const uint32_t distance = 0, const float cost = 0.f) {
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
       LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +

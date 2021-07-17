@@ -510,6 +510,10 @@ TEST(LokiService, test_actions_whitelist) {
   for (auto action = Options::Action_MIN; action < Options::Action_ARRAYSIZE;
        action = static_cast<Options::Action>(static_cast<int>(action) + 1)) {
 
+    // the json parser would throw a "insufficiently specidfied 'action'" (115) error for /expansion
+    if (action == Options_Action_expansion)
+      continue;
+
     auto wrong_action = static_cast<Options::Action>(static_cast<int>(action) +
                                                      (action == Options::Action_MAX ? -1 : 1));
     auto cfg = make_config({Options_Action_Enum_Name(wrong_action)});
@@ -521,6 +525,7 @@ TEST(LokiService, test_actions_whitelist) {
     auto result = worker.work({msg}, reinterpret_cast<void*>(&info), []() {});
 
     // failed to find that action in the whitelist
+    auto front = result.messages.front();
     EXPECT_TRUE(result.messages.front().find("Try any") != std::string::npos);
 
     http_request_t request1(method_t::GET, "/" + Options_Action_Enum_Name(wrong_action));

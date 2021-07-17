@@ -807,7 +807,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // expansion action, default to isochrone
   auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
-  Options::Action exp_action = Options::isochrone;
+  Options::Action exp_action;
   if (exp_action_str) {
     if (!Options_ExpansionAction_Enum_Parse(*exp_action_str, &exp_action)) {
       throw valhalla_exception_t(144, *exp_action_str);
