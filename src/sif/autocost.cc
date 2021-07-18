@@ -54,6 +54,9 @@ constexpr float kTaxiFactor = 0.85f;
 // Do not avoid alleys by default
 constexpr float kDefaultAlleyFactor = 1.0f;
 
+// How much to favor turn channels
+constexpr float kTurnChannelFactor = 0.6f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -501,6 +504,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
     case Use::kServiceRoad:
       factor *= service_factor_;
+      break;
+    case Use::kTurnChannel:
+      factor *= kTurnChannelFactor;
       break;
     default:
       break;
