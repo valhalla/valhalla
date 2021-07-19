@@ -7,6 +7,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/worker.h>
 
 namespace bg = boost::geometry;
@@ -39,8 +40,11 @@ void correct_ring(ring_bg_t& ring) {
   if (!ring.empty() && is_open) {
     ring.push_back(ring[0]);
   }
-  // TODO: fix winding if the supplied ring is counter-clockwise
-  // can't use bg::correct due to incompatibility with old boost versions
+
+  // reverse ring if counter-clockwise
+  if (vm::polygon_area(ring) > 0) {
+    std::reverse(ring.begin(), ring.end());
+  }
 }
 
 ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
