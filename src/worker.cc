@@ -173,7 +173,7 @@ void add_date_to_locations(Options& options,
 }
 
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
-// PBF objects of the sort "repeated LatLng". Open rings will be closed.
+// PBF objects of the sort "repeated LatLng". Invalid rings will be corrected during search operation.
 template <typename ring_pbf_t>
 void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
   for (const auto& coords : coord_array.GetArray()) {
