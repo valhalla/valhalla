@@ -2354,7 +2354,9 @@ TEST(ParseRequest, test_use_living_streets) {
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_UseLivingStreets);
   costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_UseLivingStreets);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_use_living_streets_parsing(costing, default_value, default_value);
     test_use_living_streets_parsing(costing, 0.2f, 0.2f);
     test_use_living_streets_parsing(costing, 0.6f, 0.6f);
@@ -2373,7 +2375,9 @@ TEST(ParseRequest, test_service_penalty) {
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServicePenalty);
   costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_ServicePenalty);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_service_penalty_parsing(costing, default_value, default_value);
     test_service_penalty_parsing(costing, 0.2f, 0.2f);
     test_service_penalty_parsing(costing, 600.f, 600.f);
@@ -2391,7 +2395,9 @@ TEST(ParseRequest, test_service_factor) {
   costing_with_defaults.emplace_back(Costing::motorcycle, kDefaultMotorcycle_ServiceFactor);
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServiceFactor);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_service_factor_parsing(costing, default_value, default_value);
     test_service_factor_parsing(costing, 0.5f, 0.5f);
     test_service_factor_parsing(costing, 10.f, 10.f);
@@ -2455,7 +2461,9 @@ TEST(ParseRequest, test_use_tracks) {
     costing_with_defaults.emplace_back(costing, kDefaultTruck_UseTracks);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_UseTracks);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_use_tracks_parsing(costing, default_value, default_value);
     test_use_tracks_parsing(costing, 0.2f, 0.2f);
     test_use_tracks_parsing(costing, 0.6f, 0.6f);
