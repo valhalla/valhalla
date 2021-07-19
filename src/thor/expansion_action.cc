@@ -32,9 +32,8 @@ std::string thor_worker_t::expansion(Api& request) {
   auto options = request.options();
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
-  auto exp_props_pbf = options.expansion_props();
   std::unordered_set<baldr::GraphId> opp_edges;
-  std::unordered_set<Options::ExpansionProps> exp_props_set;
+  std::unordered_set<Options::ExpansionProps> exp_props;
 
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize() ? options.generalize() : 10.f;
@@ -49,19 +48,19 @@ std::string thor_worker_t::expansion(Api& request) {
   SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
   SetValueByPointer(dom, "/features/0/properties", Value(kArrayType));
-  for (const auto& prop : exp_props_pbf) {
+  for (const auto& prop : options.expansion_props()) {
     rapidjson::Pointer(kPropPaths[static_cast<Options_ExpansionProps>(prop)])
         .Set(dom, Value(kArrayType));
-    exp_props_set.insert(static_cast<Options_ExpansionProps>(prop));
+    exp_props.insert(static_cast<Options_ExpansionProps>(prop));
   }
 
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
   auto track_expansion = [&dom, &opp_edges, &gen_factor, &skip_opps,
-                          &exp_props_set](baldr::GraphReader& reader, baldr::GraphId edgeid,
-                                          const char* algorithm = nullptr,
-                                          const char* status = nullptr, const float duration = 0.f,
-                                          const uint32_t distance = 0, const float cost = 0.f) {
+                          &exp_props](baldr::GraphReader& reader, baldr::GraphId edgeid,
+                                      const char* algorithm = nullptr, const char* status = nullptr,
+                                      const float duration = 0.f, const uint32_t distance = 0,
+                                      const float cost = 0.f) {
     auto tile = reader.GetGraphTile(edgeid);
     if (tile == nullptr) {
       LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
@@ -99,37 +98,37 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // no properties asked for, don't collect any
-    if (!exp_props_set.size()) {
+    if (!exp_props.size()) {
       return;
     }
 
     // make the properties
     if (algorithm)
       SetValueByPointer(dom, "/properties/algorithm", algorithm);
-    if (exp_props_set.count(Options_ExpansionProps_durations)) {
+    if (exp_props.count(Options_ExpansionProps_durations)) {
       Pointer(kPropPaths[Options_ExpansionProps_durations])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(static_cast<u_int64_t>(duration)), a);
+          .PushBack(Value{}.SetInt(static_cast<uint64_t>(duration)), a);
     }
-    if (exp_props_set.count(Options_ExpansionProps_distances)) {
+    if (exp_props.count(Options_ExpansionProps_distances)) {
       Pointer(kPropPaths[Options_ExpansionProps_distances])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(distance), a);
     }
-    if (exp_props_set.count(Options_ExpansionProps_costs)) {
+    if (exp_props.count(Options_ExpansionProps_costs)) {
       Pointer(kPropPaths[Options_ExpansionProps_costs])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(static_cast<u_int64_t>(cost)), a);
+          .PushBack(Value{}.SetInt(static_cast<uint64_t>(cost)), a);
     }
-    if (exp_props_set.count(Options_ExpansionProps_statuses))
+    if (exp_props.count(Options_ExpansionProps_statuses))
       Pointer(kPropPaths[Options_ExpansionProps_statuses])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetString(status, a), a);
-    if (exp_props_set.count(Options_ExpansionProps_edge_ids))
+    if (exp_props.count(Options_ExpansionProps_edge_ids))
       Pointer(kPropPaths[Options_ExpansionProps_edge_ids])
           .Get(dom)
           ->GetArray()

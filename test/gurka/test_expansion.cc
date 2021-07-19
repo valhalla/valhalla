@@ -130,7 +130,7 @@ TEST_P(ExpansionTest, Routing) {
 }
 
 TEST_P(ExpansionTest, RoutingNoOpposites) {
-  // test AStar expansion and no properties in the output
+  // test AStar expansion and no opposite edges
   check_result("route", {"E", "H"}, true, 16);
 }
 
