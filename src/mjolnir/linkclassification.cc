@@ -656,7 +656,7 @@ bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
                                            *intersection_node));
   }
 
-  return intersection_node.has_value();
+  return intersection_node.is_initialized();
 }
 
 SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edges) {
