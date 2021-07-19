@@ -288,4 +288,20 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
                 "EA", "AC"});
 }
 
+TEST_P(ChinesePostmanTest, TestChinesePostmanOriginOutside) {
+  // create a chinese polygon (qsxv)
+  try {
+    test_request(chinese_postman_map, GetParam(), "qsxv", "", "A", "A",
+                 {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 451); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+  try {
+    test_request(chinese_postman_map, GetParam(), "qsxv", "", "q", "q",
+                 {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 451); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));

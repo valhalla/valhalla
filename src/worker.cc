@@ -131,7 +131,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {440, 400}, {441, 400}, {442, 400}, {443, 400}, {444, 400}, {445, 400},
 
-    {450, 400},
+    {450, 400}, {451, 400},
 
     {499, 400},
 
@@ -288,6 +288,9 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
     {450,
      R"({"code":"NoRoute","message":"Impossible to find chinese postman route on not strongly connected segment."})"},
+
+    {451,
+     R"({"code":"NoRoute","message":"No segment inside the chinese postman polygon matched with the origin location."})"},
 
     {499, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 

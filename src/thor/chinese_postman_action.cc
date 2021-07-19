@@ -97,13 +97,15 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
   float source_pct = 0;
   try {
     source_pct = find_percent_along(origin, path_edges.front());
-  } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
+  } catch (...) {
+    throw std::logic_error("CP - Could not find candidate edge used for origin label");
+  }
 
   float target_pct = 0;
   try {
     target_pct = find_percent_along(dest, path_edges.back());
   } catch (...) {
-    throw std::logic_error("Could not find candidate edge used for destination label");
+    throw std::logic_error("CP - Could not find candidate edge used for destination label");
   }
 
   // recost edges in final path; ignore access restrictions
@@ -251,7 +253,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   // If the origin node index is more than the path_edge size, that means that there is no suitable
   // node for the origin location.
   if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
-    throw std::logic_error("Could not find candidate edge for the origin location");
+    throw valhalla_exception_t(451);
   }
   std::vector<GraphId> edgeGraphIds;
   if (G.getUnbalancedVertices().size() == 0) {
