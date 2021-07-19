@@ -32,13 +32,23 @@ static const auto Haversine = [] {
   return bg::strategy::distance::haversine<float>(vm::kRadEarthMeters);
 };
 
+void correct_ring(ring_bg_t& ring) {
+  // close open rings
+  bool is_open =
+      (ring.begin()->lat() != ring.rbegin()->lat() || ring.begin()->lng() != ring.rbegin()->lng());
+  if (!ring.empty() && is_open) {
+    ring.push_back(ring[0]);
+  }
+  // TODO: fix winding if the supplied ring is counter-clockwise
+  // can't use bg::correct due to incompatibility with old boost versions
+}
+
 ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   ring_bg_t new_ring;
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
-  // fixes windedness & closes open rings
-  bg::correct(new_ring);
+  correct_ring(new_ring);
   return new_ring;
 }
 
