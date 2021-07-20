@@ -224,58 +224,6 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
   return name_type_pairs;
 }
 
-std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>>
-EdgeInfo::GetPronunciationsMultiMap() const {
-  std::unordered_multimap<uint8_t, std::pair<uint8_t, std::string>> key_type_value_pairs;
-  key_type_value_pairs.reserve(name_count());
-  const NameInfo* ni = name_info_list_;
-  for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    if (!ni->tagged_)
-      continue;
-
-    if (ni->name_offset_ < names_list_length_) {
-      std::string name = names_list_ + ni->name_offset_;
-      if (name.length() > 1) {
-        uint8_t num = 0;
-        try {
-          num = std::stoi(name.substr(0, 1));
-          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
-            size_t location = name.length() + 1; // start from here
-            name = name.substr(1);               // remove the type...actual data remains
-
-            auto verbal_tokens = split(name, '#');
-            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
-            // key  type value
-            uint8_t index = 0;
-            std::string key, type;
-            for (const auto v : verbal_tokens) {
-              if (index == 0) { // key
-                key = v;
-                index++;
-              } else if (index == 1) { // type
-                type = v;
-                index++;
-              } else { // value
-                key_type_value_pairs.emplace(
-                    std::make_pair(std::stoi(key), std::make_pair(std::stoi(type), v)));
-                index = 0;
-              }
-            }
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
-        }
-      } else {
-        throw std::runtime_error("GetPronunciationsMultiMap: Tagged name with no text");
-      }
-    } else {
-      throw std::runtime_error("GetPronunciationsMultiMap: offset exceeds size of text list");
-    }
-  }
-
-  return key_type_value_pairs;
-}
-
 std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
   std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> index_pronunciation_map;
   index_pronunciation_map.reserve(name_count());
@@ -306,7 +254,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
                 pronunciation_alphabet = std::stoi(token);
                 token_index++;
               } else { // value
-                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
                     index_pronunciation_map.find(index);
 
                 if (iter == index_pronunciation_map.end())
@@ -314,8 +262,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
                       std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
                 else {
                   if (pronunciation_alphabet > (iter->second).first) {
-                    index_pronunciation_map.emplace(
-                        std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
+                    iter->second = std::make_pair(pronunciation_alphabet, token);
                   }
                 }
                 token_index = 0;
