@@ -1,4 +1,9 @@
-## Release Date: 2021-??-?? Valhalla 3.1.3
+## Release Date: 2021-??-?? Valhalla 3.1.4
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
    * REMOVED: Unused overloads of `to_response` function [#3167](https://github.com/valhalla/valhalla/pull/3167)
 
