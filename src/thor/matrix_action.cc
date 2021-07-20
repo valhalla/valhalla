@@ -26,7 +26,7 @@ constexpr uint32_t kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::matrix");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   auto costing = parse_costing(request);

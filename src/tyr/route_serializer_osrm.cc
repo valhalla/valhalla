@@ -197,6 +197,8 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
+std::string guide_destinations(const valhalla::TripSign& sign);
+
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
   // Compute total distance and duration
@@ -403,7 +405,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_shape_index(index);
+    locs.Mutable(index)->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
@@ -501,6 +503,15 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
+          if (intersecting_edge->has_sign()) {
+            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+            // I've looked at the results from guide_destinations(), destinations(), and
+            // exit_destinations(). exit_destinations() doe not contain rest-area names.
+            // guide_destinations() and destinations() return the same string value for
+            // the rest area name. So I've decided to use guide_destinations().
+            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
+            rest_stop->emplace("name", guide_destinations_str);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
@@ -1279,6 +1290,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   // Iterate through the legs in DirectionsLeg and TripLeg
   int leg_index = 0;
   auto leg = legs.begin();
+
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
@@ -1506,6 +1518,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     if (path_leg.has_shape_attributes()) {
       output_leg->emplace("annotation", serialize_annotations(path_leg));
     }
+
+    // Add via waypoints to the leg
+    output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);

@@ -210,6 +210,8 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
     }
   }
 
+  // 2 shortcuts + 2 edges
+  ASSERT_EQ(avoid_edges.size(), 4);
   ASSERT_EQ(found_shortcuts, 2);
 }
 
