@@ -2687,7 +2687,7 @@ public:
   void MergeRefPronunciations() {
 
     for (uint8_t type = static_cast<uint8_t>(PronunciationAlphabet::kXKatakana);
-         type != static_cast<uint8_t>(PronunciationAlphabet::kXJeita) + 1; ++type) {
+         type != static_cast<uint8_t>(PronunciationAlphabet::kXSampa) + 1; ++type) {
       // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
       // don't add dups.
 
