@@ -72,8 +72,8 @@ public:
   }
 
   /**
-   * Does this sign record indicate a route number or the guidance view type.
-   * @return  Returns true if the sign record is a route number or if this is a
+   * Does this sign record indicate a route number, phoneme for a node, or the guidance view type
+   * @return  Returns true if the sign record is a route number, phoneme for a node, or if this is a
    * guidance view sign returning true indicates that we are a base image and false
    * if we are a overlay image
    */
