@@ -792,7 +792,6 @@ void BuildTileSet(const std::string& ways_file,
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
                fork || has_guide)) {
 
-            std::stable_sort(signs.begin(), signs.end());
             graphtile.AddSigns(idx, signs, pronunciations);
             directededge.set_sign(true);
           }
@@ -1493,6 +1492,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
 
   // Guide or Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
+
     has_toward = true;
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_to_index()));
@@ -1512,7 +1512,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     for (size_t i = 0; i < toward_refs.size(); ++i) {
       if (tc || (!ramp && !fork)) {
         if (add_ipa || add_x_sampa || add_katakana || add_jeita) {
-          exit_list.emplace_back(Sign::Type::kGuideToward, true, false, false, pronunciations.size(),
+          exit_list.emplace_back(Sign::Type::kGuideToward, true, false, true, pronunciations.size(),
                                  (int(add_ipa) + int(add_x_sampa) + int(add_katakana) +
                                   int(add_jeita)),
                                  toward_refs[i]);
