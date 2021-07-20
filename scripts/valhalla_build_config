@@ -264,12 +264,19 @@ config = {
       'max_distance': 200000.0,
       'max_locations': 5
     },
-    'max_avoid_locations': 50,
+    'max_exclude_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
     'max_timedep_distance': 500000,
     'max_alternates': 2,
-    'max_avoid_polygons_length': 10000
+    'max_exclude_polygons_length': 10000
+  },
+  'statsd': {
+    'host': optional(str),
+    'port': 8125,
+    'prefix': 'valhalla',
+    'batch_size': optional(int),
+    'tags': optional(list)
   }
 }
 
@@ -528,12 +535,19 @@ help_text = {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',
       'max_locations': 'Maximum number of input locations, 127 is a hard limit and cannot be increased in config'
     },
-    'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
+    'max_exclude_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
     'max_alternates': 'Maximum number of alternate routes to allow in a request',
-    'max_avoid_polygons_length': 'Maximum total perimeter of all avoid_polygons in meters'
+    'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters'
+  },
+  'statsd': {
+    'host': 'The statsd host address',
+    'port': 'The statsd port',
+    'prefix': 'The statsd prefix to use for each metric',
+    'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
+    'tags': 'List of tags to include with each metric'
   }
 }
 

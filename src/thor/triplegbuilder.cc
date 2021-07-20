@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
@@ -92,6 +93,15 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+// Helper function to get the iso country code from an edge using its endnode
+inline std::string country_code_from_edge(const graph_tile_ptr& tile,
+                                          const valhalla::baldr::DirectedEdge& de) {
+  if (!tile) {
+    return std::string();
+  }
+  return tile->admininfo(tile->node(de.endnode())->admin_index()).country_iso();
+}
+
 /**
  * Used to add or update incidents attached to the provided leg. We could do something more exotic to
  * avoid linear scan, like keeping a separate lookup outside of the pbf
@@ -102,7 +112,9 @@ void AssignAdmins(const AttributesController& controller,
 void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
-                    uint32_t index) {
+                    uint32_t index,
+                    const graph_tile_ptr& tile,
+                    const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
@@ -119,6 +131,16 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     // Get the full incident metadata from the incident-tile
     const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
+
+    // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
+    std::string country_code_iso_2 = country_code_from_edge(tile, de);
+    if (!country_code_iso_2.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
+    }
+    std::string country_code_iso_3 = valhalla::baldr::get_iso_3166_1_alpha3(country_code_iso_2);
+    if (!country_code_iso_3.empty()) {
+      new_incident->mutable_metadata()->set_iso_3166_1_alpha3(country_code_iso_3.c_str());
+    }
 
     new_incident->set_begin_shape_index(index);
     new_incident->set_end_shape_index(index);
@@ -243,7 +265,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
         continue;
       }
 
@@ -362,7 +384,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i);
+        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
       }
     }
 
@@ -462,6 +484,282 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
+// Walk the edge_signs, add sign information onto the trip_sign, honoring which to
+// add per the attributes-controller.
+void AddSignInfo(const AttributesController& controller,
+                 const std::vector<SignInfo>& edge_signs,
+                 valhalla::TripSign* trip_sign) {
+
+  if (!edge_signs.empty()) {
+    for (const auto& sign : edge_signs) {
+      switch (sign.type()) {
+        case valhalla::baldr::Sign::Type::kExitNumber: {
+          if (controller.attributes.at(kEdgeSignExitNumber)) {
+            auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
+            trip_sign_exit_number->set_text(sign.text());
+            trip_sign_exit_number->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kExitBranch: {
+          if (controller.attributes.at(kEdgeSignExitBranch)) {
+            auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+            trip_sign_exit_onto_street->set_text(sign.text());
+            trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kExitToward: {
+          if (controller.attributes.at(kEdgeSignExitToward)) {
+            auto* trip_sign_exit_toward_location = trip_sign->mutable_exit_toward_locations()->Add();
+            trip_sign_exit_toward_location->set_text(sign.text());
+            trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kExitName: {
+          if (controller.attributes.at(kEdgeSignExitName)) {
+            auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
+            trip_sign_exit_name->set_text(sign.text());
+            trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kGuideBranch: {
+          if (controller.attributes.at(kEdgeSignGuideBranch)) {
+            auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
+            trip_sign_guide_onto_street->set_text(sign.text());
+            trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kGuideToward: {
+          if (controller.attributes.at(kEdgeSignGuideToward)) {
+            auto* trip_sign_guide_toward_location =
+                trip_sign->mutable_guide_toward_locations()->Add();
+            trip_sign_guide_toward_location->set_text(sign.text());
+            trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
+          if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+            auto* trip_sign_guidance_view_junction =
+                trip_sign->mutable_guidance_view_junctions()->Add();
+            trip_sign_guidance_view_junction->set_text(sign.text());
+            trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
+          if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
+            auto* trip_sign_guidance_view_signboard =
+                trip_sign->mutable_guidance_view_signboards()->Add();
+            trip_sign_guidance_view_signboard->set_text(sign.text());
+            trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
+          }
+          break;
+        }
+        default: { break; }
+      }
+    }
+  }
+}
+
+/**
+ * Add trip intersecting edge.
+ * @param  controller   Controller to determine which attributes to set.
+ * @param  directededge Directed edge on the path.
+ * @param  prev_de  Previous directed edge on the path.
+ * @param  local_edge_index  Index of the local intersecting path edge at intersection.
+ * @param  nodeinfo  Node information of the intersection.
+ * @param  trip_node  Trip node that will store the intersecting edge information.
+ * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
+ *                         on the local hierarchy.
+ */
+void AddTripIntersectingEdge(const AttributesController& controller,
+                             const graph_tile_ptr& graphtile,
+                             const DirectedEdge* directededge,
+                             const DirectedEdge* prev_de,
+                             uint32_t local_edge_index,
+                             const NodeInfo* nodeinfo,
+                             TripLeg_Node* trip_node,
+                             const DirectedEdge* intersecting_de) {
+  TripLeg_IntersectingEdge* intersecting_edge = trip_node->add_intersecting_edge();
+
+  // Set the heading for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeBeginHeading)) {
+    intersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
+  }
+
+  Traversability traversability = Traversability::kNone;
+  // Determine walkability
+  if (intersecting_de->forwardaccess() & kPedestrianAccess) {
+    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
+                         ? Traversability::kBoth
+                         : Traversability::kForward;
+  } else {
+    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
+                         ? Traversability::kBackward
+                         : Traversability::kNone;
+  }
+  // Set the walkability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeWalkability)) {
+    intersecting_edge->set_walkability(GetTripLegTraversability(traversability));
+  }
+
+  traversability = Traversability::kNone;
+  // Determine cyclability
+  if (intersecting_de->forwardaccess() & kBicycleAccess) {
+    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBoth
+                                                                         : Traversability::kForward;
+  } else {
+    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBackward
+                                                                         : Traversability::kNone;
+  }
+  // Set the cyclability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeCyclability)) {
+    intersecting_edge->set_cyclability(GetTripLegTraversability(traversability));
+  }
+
+  // Set the driveability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeDriveability)) {
+    intersecting_edge->set_driveability(
+        GetTripLegTraversability(nodeinfo->local_driveability(local_edge_index)));
+  }
+
+  // Set the previous/intersecting edge name consistency if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
+    bool name_consistency =
+        (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
+    intersecting_edge->set_prev_name_consistency(name_consistency);
+  }
+
+  // Set the current/intersecting edge name consistency if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
+    intersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
+  }
+
+  // Set the use for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeUse)) {
+    intersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
+  }
+
+  // Set the road class for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
+    intersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
+  }
+
+  // Set the lane count for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeLaneCount)) {
+    intersecting_edge->set_lane_count(intersecting_de->lanecount());
+  }
+
+  // Set the sign info for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
+    if (intersecting_de->sign()) {
+      std::vector<SignInfo> edge_signs =
+          graphtile->GetSigns(intersecting_de - graphtile->directededge(0));
+      if (!edge_signs.empty()) {
+        valhalla::TripSign* sign = intersecting_edge->mutable_sign();
+        AddSignInfo(controller, edge_signs, sign);
+      }
+    }
+  }
+}
+
+/**
+ * Adds the intersecting edges in the graph at the current node. Skips edges which are on the path
+ * as well as those which are duplicates due to shortcut edges.
+ * @param controller               tells us what info we should add about the intersecting edges
+ * @param start_tile               the tile which contains the node
+ * @param node                     the node at which we are copying intersecting edges
+ * @param directededge             the current edge leaving the current node in the path
+ * @param prev_de                  the previous edge in the path
+ * @param prior_opp_local_index    opposing edge local index of previous edge in the path
+ * @param graphreader              graph reader for graph access
+ * @param trip_node                pbf node in the pbf structure we are building
+ */
+void AddIntersectingEdges(const AttributesController& controller,
+                          const graph_tile_ptr& start_tile,
+                          const NodeInfo* node,
+                          const DirectedEdge* directededge,
+                          const DirectedEdge* prev_de,
+                          uint32_t prior_opp_local_index,
+                          GraphReader& graphreader,
+                          valhalla::TripLeg::Node* trip_node) {
+  /* Add connected edges from the start node. Do this after the first trip
+     edge is added
+
+     Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
+     Each letter represents the edge info.
+     So at node 2, we will store the edge info for D and we will store the
+     intersecting edge info for B, C, E, F, and G.  We need to make sure
+     that we don't store the edge info from A and D again.
+
+         (X)    (3)   (X)
+           \\   ||   //
+          C \\ D|| E//
+             \\ || //
+          B   \\||//   F
+     (X)======= (2) ======(X)
+                ||\\
+              A || \\ G
+                ||  \\
+                (1)  (X)
+  */
+
+  // prepare for some edges
+  trip_node->mutable_intersecting_edge()->Reserve(node->local_edge_count());
+
+  // Iterate through edges on this level to find any intersecting edges
+  // Follow any upwards or downward transitions
+  const DirectedEdge* intersecting_edge = start_tile->directededge(node->edge_index());
+  for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, intersecting_edge++) {
+
+    // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
+    // the current edge in the path AND the superceded edge of the current edge in the path
+    // if the current edge in the path is a shortcut
+    if (intersecting_edge->is_shortcut() ||
+        intersecting_edge->localedgeidx() == prior_opp_local_index ||
+        intersecting_edge->localedgeidx() == directededge->localedgeidx() ||
+        (directededge->is_shortcut() && directededge->shortcut() & intersecting_edge->superseded())) {
+      continue;
+    }
+
+    // Add intersecting edges on the same hierarchy level and not on the path
+    AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
+                            intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
+  }
+
+  // Add intersecting edges on different levels (follow NodeTransitions)
+  if (node->transition_count() > 0) {
+    const NodeTransition* trans = start_tile->transition(node->transition_index());
+    for (uint32_t i = 0; i < node->transition_count(); ++i, ++trans) {
+      // Get the end node tile and its directed edges
+      GraphId endnode = trans->endnode();
+      graph_tile_ptr endtile = graphreader.GetGraphTile(endnode);
+      if (endtile == nullptr) {
+        continue;
+      }
+      const NodeInfo* nodeinfo2 = endtile->node(endnode);
+      const DirectedEdge* intersecting_edge2 = endtile->directededge(nodeinfo2->edge_index());
+      for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, intersecting_edge2++) {
+        // Skip shortcut edges and edges on the path
+        if (intersecting_edge2->is_shortcut() ||
+            intersecting_edge2->localedgeidx() == prior_opp_local_index ||
+            intersecting_edge2->localedgeidx() == directededge->localedgeidx()) {
+          continue;
+        }
+
+        AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
+                                intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
+                                intersecting_edge2);
+      }
+    }
+  }
+}
+
 /**
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
@@ -536,80 +834,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
     if (!edge_signs.empty()) {
-      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
-      for (const auto& sign : edge_signs) {
-        switch (sign.type()) {
-          case valhalla::baldr::Sign::Type::kExitNumber: {
-            if (controller.attributes.at(kEdgeSignExitNumber)) {
-              auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
-              trip_sign_exit_number->set_text(sign.text());
-              trip_sign_exit_number->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kExitBranch: {
-            if (controller.attributes.at(kEdgeSignExitBranch)) {
-              auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
-              trip_sign_exit_onto_street->set_text(sign.text());
-              trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kExitToward: {
-            if (controller.attributes.at(kEdgeSignExitToward)) {
-              auto* trip_sign_exit_toward_location =
-                  trip_sign->mutable_exit_toward_locations()->Add();
-              trip_sign_exit_toward_location->set_text(sign.text());
-              trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kExitName: {
-            if (controller.attributes.at(kEdgeSignExitName)) {
-              auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
-              trip_sign_exit_name->set_text(sign.text());
-              trip_sign_exit_name->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kGuideBranch: {
-            if (controller.attributes.at(kEdgeSignGuideBranch)) {
-              auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
-              trip_sign_guide_onto_street->set_text(sign.text());
-              trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kGuideToward: {
-            if (controller.attributes.at(kEdgeSignGuideToward)) {
-              auto* trip_sign_guide_toward_location =
-                  trip_sign->mutable_guide_toward_locations()->Add();
-              trip_sign_guide_toward_location->set_text(sign.text());
-              trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
-            if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
-              auto* trip_sign_guidance_view_junction =
-                  trip_sign->mutable_guidance_view_junctions()->Add();
-              trip_sign_guidance_view_junction->set_text(sign.text());
-              trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
-            if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
-              auto* trip_sign_guidance_view_signboard =
-                  trip_sign->mutable_guidance_view_signboards()->Add();
-              trip_sign_guidance_view_signboard->set_text(sign.text());
-              trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
-            }
-            break;
-          }
-          default: { break; }
-        }
-      }
+      valhalla::TripSign* sign = trip_edge->mutable_sign();
+      AddSignInfo(controller, edge_signs, sign);
     }
   }
 
@@ -618,7 +844,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
-      valhalla::Sign* trip_sign = trip_edge->mutable_sign();
+      valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
           case valhalla::baldr::Sign::Type::kJunctionName: {

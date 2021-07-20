@@ -96,7 +96,9 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | Automobile options | Description |
 | :-------------------------- | :----------- |
 | `maneuver_penalty` | A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds. |
-| `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
+| `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
+| `gate_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road. The default gate penalty is 300 seconds. |
+| `private_access_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. The default private access penalty is 450 seconds. |
 | `toll_booth_cost` | A cost applied when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
 | `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
 | `ferry_cost` | A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes). |
@@ -113,14 +115,18 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck`, `hov` & `taxi`.
-###### Truck-specific costing options
+###### Other costing options
+The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck` costing methods.
 
-In addition to the above, the following options are available for `truck` costing.
+| Vehicle Options | Description |
+| :-------------------------- | :----------- |
+| `height` | The height of the vehicle (in meters). |
+| `width` | The width of the vehicle (in meters). |
+
+The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the truck (in meters). |
-| `width` | The width of the truck (in meters). |
 | `length` | The length of the truck (in meters). |
 | `weight` | The weight of the truck (in metric tons). |
 | `axle_load` | The axle load of the truck (in metric tons). |
@@ -292,8 +298,8 @@ Directions options should be specified at the top level of the JSON, and usage o
 
 | Options | Description |
 | :------------------ | :----------- |
-| `avoid_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
-| `avoid_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `avoid_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
+| `exclude_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
+| `exclude_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `exclude_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
 | `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><ul><b>NOTE: This option is not supported for Valhalla's matrix service.</b><ul> |
 | `out_format` | Output format. If no `out_format` is specified, JSON is returned. Future work includes PBF (protocol buffer) support. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
@@ -332,7 +338,7 @@ The summary JSON object includes:
 
 A `trip` contains one or more `legs`. For *n* number of `break` locations, there are *n-1* legs. `Through` locations do not create separate legs.
 
-Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](/decoding.md).
+Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](/docs/decoding.md).
 
 Each maneuver includes:
 

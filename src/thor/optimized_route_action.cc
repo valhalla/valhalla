@@ -19,7 +19,7 @@ namespace thor {
 
 void thor_worker_t::optimized_route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::optimized_route");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   parse_filter_attributes(request);

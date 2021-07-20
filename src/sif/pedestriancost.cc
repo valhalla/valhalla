@@ -24,10 +24,11 @@ namespace {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
-constexpr float kDefaultGatePenalty = 10.0f;   // Seconds
-constexpr float kDefaultBssCost = 120.0f;      // Seconds
-constexpr float kDefaultBssPenalty = 0.0f;     // Seconds
-constexpr float kDefaultServicePenalty = 0.0f; // Seconds
+constexpr float kDefaultGatePenalty = 10.0f;           // Seconds
+constexpr float kDefaultPrivateAccessPenalty = 600.0f; // Seconds
+constexpr float kDefaultBssCost = 120.0f;              // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;             // Seconds
+constexpr float kDefaultServicePenalty = 0.0f;         // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -139,6 +140,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
   cfg.gate_penalty_.def = kDefaultGatePenalty;
+  cfg.private_access_penalty_.def = kDefaultPrivateAccessPenalty;
   cfg.disable_toll_booth_ = true;
   cfg.disable_rail_ferry_ = true;
   cfg.service_penalty_.def = kDefaultServicePenalty;
@@ -456,7 +458,8 @@ public:
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
-    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ * (node->type() == baldr::NodeType::kGate) * node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += ferry_transition_cost_ *
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
