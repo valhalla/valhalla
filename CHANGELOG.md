@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.4
 * **Removed**
 * **Bug Fix**
+   * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
 
