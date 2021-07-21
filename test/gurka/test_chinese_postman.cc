@@ -304,4 +304,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOriginOutside) {
   };
 }
 
+TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraphDifferentOriginDestination) {
+  // create a chinese polygon (rtyw)
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "G", {"CG", "GH", "HF", "FC", "CG"});
+  // test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "F", {"GH", "HF", "FC", "CG"});
+}
+
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
