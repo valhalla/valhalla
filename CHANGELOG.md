@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
