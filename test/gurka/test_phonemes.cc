@@ -508,10 +508,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       ++sign_index;
     }
 
-    //ipa wins for the name.
-    //x-sampa wins for the alt_name
-    //jeita wins for official_name
-    //katakana wins for name:en
+    // ipa wins for the name.
+    // x-sampa wins for the alt_name
+    // jeita wins for official_name
+    // katakana wins for name:en
     {
       auto edgeinfo = tile->edgeinfo(BC_edge);
       std::vector<uint8_t> types;
@@ -557,7 +557,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       }
     }
 
-    //more signs.  should all be ipa
+    // more signs.  should all be ipa
     node_id = DE_edge->endnode();
     graph_reader.GetGraphTile(node_id);
     node_info = tile->node(node_id);
@@ -590,7 +590,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       ++sign_index;
     }
 
-    //more signs.  should all be ipa
+    // more signs.  should all be ipa
     node_id = ED_edge->endnode();
     graph_reader.GetGraphTile(node_id);
     node_info = tile->node(node_id);
