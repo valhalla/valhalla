@@ -10,19 +10,15 @@
 using namespace rapidjson;
 using namespace valhalla::midgard;
 
-namespace {
-using namespace valhalla;
+namespace valhalla {
+namespace thor {
+
 static std::unordered_map<const Options::ExpansionProps, const char*> kPropPaths =
     {{Options_ExpansionProps_edge_ids, "/features/0/properties/edge_ids"},
      {Options_ExpansionProps_statuses, "/features/0/properties/statuses"},
      {Options_ExpansionProps_distances, "/features/0/properties/distances"},
      {Options_ExpansionProps_durations, "/features/0/properties/durations"},
      {Options_ExpansionProps_costs, "/features/0/properties/costs"}};
-
-} // namespace
-
-namespace valhalla {
-namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
