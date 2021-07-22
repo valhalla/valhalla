@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import json
 import pprint
+from distutils.util import strtobool
 
 class optional:
   def __init__(self, t=None):
@@ -555,17 +556,6 @@ help_text = {
 def comma_separated_list(arg):
   return arg.split(',')
 
-def parse_bool(arg):
-  if arg.lower() in ('yes', 'true', 't', 'y', '1'):
-    return True
-  elif arg.lower() in ('no', 'false', 'f', 'n', '0'):
-    return False
-  else:
-    raise argparse.ArgumentTypeError('Boolean value expected.')
-
-def parse_list(arg):
-  return eval(arg)   
-
 #returns a list of leaves of the tree, `\0` separated, stops at non dicts
 #while doing so it also adds arguments to the parser
 def add_leaf_args(path, tree, leaves, parser):
@@ -580,12 +570,17 @@ def add_leaf_args(path, tree, leaves, parser):
     h = help_text
     for k in keys:
       h = h[k]
-    t = comma_separated_list if type(tree) == type([]) else (type(tree) if type(tree) != type(optional()) else tree.type)
+
+    # its either required and is the right type or optional and has a type to use
+    # lists are supported as comma separated and bools support a bunch of conventions
+    # the rest of the primatives (strings and numbers) parse automatically
+    t = type(tree) if type(tree) != type(optional()) else tree.type
+    if t == type([]):
+      t = lambda arg: arg.split(',')
+    elif t == type(bool()):
+      t = lambda arg: bool(strtobool(arg))     
+    
     arg = '--' + path.replace('_', '-').replace('\0', '-')
-    if t == type(bool()):
-      t = parse_bool
-    elif t == type(list()):
-      t = parse_list
     parser.add_argument(arg, type = t, help=h, default=tree)
 
     leaves.append(path)
