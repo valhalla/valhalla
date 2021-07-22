@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
@@ -52,7 +53,6 @@
    * ADDED: Introduced a new via_waypoints array on the leg in the osrm route serializer that describes where a particular waypoint from the root-level array matches to the route. [#3189](https://github.com/valhalla/valhalla/pull/3189)
    * ADDED: Added vehicle width and height as an option for auto (and derived: taxi, bus, hov) profile (https://github.com/valhalla/valhalla/pull/3179)
    * ADDED: Support for statsd integration for basic error and requests metrics [#3191](https://github.com/valhalla/valhalla/pull/3191)
-   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-05-26 Valhalla 3.1.2
 * **Removed**

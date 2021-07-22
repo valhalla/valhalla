@@ -1,10 +1,10 @@
 # Expansion service API reference
 
-Routing algorithms find the best path by _expanding_ their search from start nodes/edges across the routing network until the destination is reached (unidirectional) or both search branches met (bidirectional).
+Routing algorithms find the best path by _expanding_ their search from start nodes/edges across the routing network until the destination is reached (unidirectional) or both search branches meet (bidirectional).
 
-The expansion service wraps the `route` and `isochrone` services and returns a GeoJSON with all network edges (way segments) the underlying routing algorithm visited during the expansion with relevant properties for each edge (`duration`, `distance` and `cost`). If a `route` request is tracked the response will also contain a `algorithm` member. The algorithms used are unidirectional & bidirectional A* (`route`) and unidirectional Dijkstra (`isochrone`).
+The expansion service wraps the `route` and `isochrone` services and returns a GeoJSON with all network edges (way segments) the underlying routing algorithm visited during the expansion with relevant properties for each edge (e.g. `duration` & `distance`). A top-level `algorithm` propertry informs about the used algorithm: unidirectional & bidirectional A* (for `route`) and unidirectional Dijkstra (for `isochrone`).
 
-**Note**, for even moderately long routes or isochrones the `/expansion` action can produce gigantic GeoJSON responses of 100s of MB.
+**Note**, for even moderately long routes or isochrones the `/expansion` action can produce gigantic GeoJSON responses of 10s of MB.
 
 ![A 11 km isochrone expansion result in Vienna, Austria](../images/expansion_dijkstra.png)
 
@@ -14,9 +14,9 @@ Since this service wraps other services, the request format mostly follows the o
 
 | Parameter          | Description                           |
 | :---------         | :------------------------------------ |
-| `action`           | The service whose expansion should be tracked. One of `route` or `isochrone`.  | 
-| `skip_opposites`   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. | 
-| `expansion_props`   | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses". **Note**, that each additional property will increase the output size by ~ 25%. |
+| `action` (required)          | The service whose expansion should be tracked. Currently one of `route` or `isochrone`. | 
+| `skip_opposites` (optional)   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
+| `expansion_props` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses". **Note**, that each additional property will increase the output size by minimum ~ 25%. By default an empty `properties` object is returned. |
 
 The `expansion_props` choices are as follows:
 
@@ -36,9 +36,9 @@ An example request is:
 
 ## Outputs of the Expansion service
 
-In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each `LineString` representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where the indices are correlating to the `coordinates` array, i.e. the 3rd element in a `properties` array will correspond to the 3rd LineString in the MultiLineString geometry.
+In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each `LineString` representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where the indices are correlating to the `coordinates` array, i.e. the 3rd element in a `properties` array will correspond to the 3rd `LineString` in the `MultiLineString` geometry.
 
-The output will contain the `properties` which were specified in the `expansion_props` request array.
+The output will only contain the `properties` which were specified in the `expansion_props` request array. If the parameter was omitted in the request, the output will contain an empty `properties` object.
 
 An example response for `"action": "isochrone"` is:
 
