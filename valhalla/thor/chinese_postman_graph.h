@@ -73,6 +73,7 @@ public:
   int numVertices();
   int numEdges();
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
+  // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVertices();
   std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex,
                                               ExtraPaths extraPaths = ExtraPaths());
@@ -80,6 +81,7 @@ public:
   std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
   void dfsEulerCycle(int startNodeIndex);
   CPEdge* getCPEdge(int i, int j);
+  bool isIdealGraph(CPVertex start_vertex, CPVertex end_vertex);
 };
 
 } // namespace thor

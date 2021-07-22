@@ -56,7 +56,7 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
 
 // Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
 // ordered by the best.
-int get_starting_node_candidate(const valhalla::Location& location, const GraphId& edge_id) {
+int get_node_candidate_index(const valhalla::Location& location, const GraphId& edge_id) {
   int i = 0;
   for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id) {
@@ -198,14 +198,18 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto correlated = request.options().locations();
   auto it = correlated.begin();
   auto origin = &it;
+  valhalla::Location originLocation = **origin;
+
   it++;
   auto destination = &it;
-
-  valhalla::Location originLocation = **origin;
   valhalla::Location destinationLocation = **destination;
 
   midgard::PointLL originPoint = to_ll(originLocation);
   midgard::PointLL destinationPoint = to_ll(destinationLocation);
+
+  std::cout << "originPoint: " << originPoint.first << ", " << originPoint.second << "\n";
+  std::cout << "destinationPoint: " << destinationPoint.first << ", " << destinationPoint.second
+            << "\n";
 
   ChinesePostmanGraph G;
   // Only for auto for now
@@ -224,24 +228,47 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   int currentOriginNodeIndex = originLocation.path_edges().size() + 1;
   CPVertex originVertex;
+  int candidateOriginNodeIndex;
+
+  int currentDestinationNodeIndex = destinationLocation.path_edges().size() + 1;
+  CPVertex destinationVertex;
+  int candidateDestinationNodeIndex;
 
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
+    // Exclude the edge if the edge is in avoid_edges
     bool excluded = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
                                std::to_string(GraphId(edge.id()))) != avoid_edge_ids.end());
     if (excluded)
       continue;
+
+    // Find the vertex for the origin location
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
-    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
-    int candidateOriginNodeIndex = get_starting_node_candidate(originLocation, GraphId(edge.id()));
+    candidateOriginNodeIndex = get_node_candidate_index(originLocation, GraphId(edge.id()));
     if (candidateOriginNodeIndex < currentOriginNodeIndex) {
       originVertex = start_vertex;
       currentOriginNodeIndex = candidateOriginNodeIndex;
     }
     G.addVertex(start_vertex);
+
+    // Find the vertex for the destination
+    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex end_vertex = CPVertex(end_node);
+    candidateDestinationNodeIndex = get_node_candidate_index(destinationLocation, GraphId(edge.id()));
+    if (candidateDestinationNodeIndex < currentDestinationNodeIndex) {
+      // Check this part of the code
+      if (destinationPoint == originPoint) {
+        std::cout << "destinationPoint == originPoint\n";
+        destinationVertex = start_vertex;
+      } else {
+        std::cout << "destinationPoint != originPoint\n";
+        destinationVertex = end_vertex;
+      }
+      currentDestinationNodeIndex = candidateDestinationNodeIndex;
+    }
     G.addVertex(end_vertex);
+
     // The cost of an edge is not relevant for the graph since we need to visit all the edges.
     // For a simplicity, I put Cost(1, 1) for it.
     // The cost is only considered when matching the unbalanced nodes.
@@ -250,15 +277,24 @@ void thor_worker_t::chinese_postman(Api& request) {
     CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
-  // If the origin node index is more than the path_edge size, that means that there is no suitable
-  // node for the origin location.
+  // If the node index is more than the path_edge size, that means that there is no suitable
+  // node for the origin or destination location.
   if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
     throw valhalla_exception_t(451);
   }
+  if (currentDestinationNodeIndex >= destinationLocation.path_edges().size()) {
+    throw valhalla_exception_t(451);
+  }
+
+  // Solving the Chinese Postman
   std::vector<GraphId> edgeGraphIds;
-  if (G.getUnbalancedVertices().size() == 0) {
+
+  // Check if the graph is ideal or not
+  if (G.isIdealGraph(originVertex, destinationVertex)) {
+    std::cout << "Ideal Graph\n";
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);
   } else {
+    std::cout << "Not Ideal Graph\n";
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
       for (int j = 0; j < G.numVertices(); j++) {

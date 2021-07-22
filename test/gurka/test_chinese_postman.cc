@@ -235,7 +235,7 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
-TEST_F(ChinesePostmanTest, TestExtractChinesePostmanEdges) {
+TEST_F(ChinesePostmanTest, TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "styx").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rsxw").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rtyw").size(), 4);  // 4 one-ways
@@ -304,10 +304,19 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOriginOutside) {
   };
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraphDifferentOriginDestination) {
-  // create a chinese polygon (rtyw)
-  test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "G", {"CG", "GH", "HF", "FC", "CG"});
-  // test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "F", {"GH", "HF", "FC", "CG"});
+TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
+  // A very simple example, only a one-way road is possible, ideal graph
+  test_request(chinese_postman_map, GetParam(), "styx", "", "G", "H", {"GH"});
+
+  // A little more complex example, only a two-way road is possible, non-ideal graph
+  // test_request(chinese_postman_map, GetParam(), "pqvu", "", "A", "D", {"AD_2", "AD_2", "AD_2"});
+
+  // A little more complex example, 4 two-way roads are possible, non-ideal graph
+  // test_request(chinese_postman_map, GetParam(), "prwu", "", "A", "D", {"AD_2", "AD_2", "AD_2"});
+
+  // test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "G", {"CG", "GH", "HF", "FC",
+  // "CG"}); test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "F", {"GH", "HF", "FC",
+  // "CG"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));

@@ -157,5 +157,27 @@ CPEdge* ChinesePostmanGraph::getCPEdge(int i, int j) {
   }
 }
 
+bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_vertex) {
+  auto unbalancedVertices = this->getUnbalancedVertices();
+  std::cout << "Start graph id: " << start_vertex.graph_id
+            << ", end graph id: " << end_vertex.graph_id << "\n";
+  if (start_vertex.graph_id == end_vertex.graph_id) {
+    std::cout << "start vertex and end vertex is the same\n";
+    return unbalancedVertices.size() == 0;
+  } else {
+    std::cout << "start vertex and end vertex is NOT the same\n";
+    auto unbalancedVertices = this->getUnbalancedVertices();
+    for (auto i : unbalancedVertices) {
+      std::cout << i.first << ": " << i.second << "\n";
+    }
+    if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
+        unbalancedVertices[end_vertex.vertex_id] == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
 } // namespace thor
 } // namespace valhalla
