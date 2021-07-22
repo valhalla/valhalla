@@ -14,10 +14,10 @@ namespace valhalla {
 namespace thor {
 
 // indices correspond to Options::ExpansionProps enum
-constexpr char* kPropPaths[5] = {"/features/0/properties/costs", "/features/0/properties/durations",
-                                 "/features/0/properties/distances",
-                                 "/features/0/properties/statuses",
-                                 "/features/0/properties/edge_ids"};
+const std::string kPropPaths[5] = {"/features/0/properties/costs", "/features/0/properties/durations",
+                                   "/features/0/properties/distances",
+                                   "/features/0/properties/statuses",
+                                   "/features/0/properties/edge_ids"};
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
