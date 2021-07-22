@@ -1,4 +1,10 @@
-## Release Date: 2021-??-?? Valhalla 3.1.3
+## Release Date: 2021-??-?? Valhalla 3.1.4
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
+
+## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
    * REMOVED: Unused overloads of `to_response` function [#3167](https://github.com/valhalla/valhalla/pull/3167)
 
@@ -21,6 +27,9 @@
    * FIXED: Fix improper iterator usage in ManeuversBuilder [#3205](https://github.com/valhalla/valhalla/pull/3205)
    * FIXED: Modified approach for retrieving signs from a directed edge #3166 [#3208](https://github.com/valhalla/valhalla/pull/3208)
    * FIXED: Improve turn channel classification: detect slip lanes [#3196](https://github.com/valhalla/valhalla/pull/3196)
+   * FIXED: Compatibility with older boost::optional versions [#3219](https://github.com/valhalla/valhalla/pull/3219)
+   * FIXED: Older boost.geometry versions don't have correct() for geographic rings [#3218](https://github.com/valhalla/valhalla/pull/3218)
+   * FIXED: Use default road speed for bicycle costing so traffic does not reduce penalty on high speed roads. [#3143](https://github.com/valhalla/valhalla/pull/3143)
 
 * **Enhancement**
    * CHANGED: Refactor base costing options parsing to handle more common stuff in a one place [#3125](https://github.com/valhalla/valhalla/pull/3125)
