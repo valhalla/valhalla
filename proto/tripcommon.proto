@@ -131,7 +131,7 @@ message Pronunciation {
     kIpa = 0;
     kXKatakana = 1;
     kXJeita = 2;
-    kXSampa = 3;
+    kNtSampa = 3;
   }
   optional Alphabet alphabet = 1 [default = kIpa];
   optional string value = 2;

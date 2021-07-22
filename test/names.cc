@@ -66,11 +66,11 @@ TEST(Names, NamesTest) {
   w3.set_ref_index(name_offset_map.index("PA 272"));
 
   pronunciation.set_name_pronunciation_ipa_index(name_offset_map.index("test name ipa"));
-  pronunciation.set_name_pronunciation_x_sampa_index(name_offset_map.index("test name sampa"));
+  pronunciation.set_name_pronunciation_nt_sampa_index(name_offset_map.index("test name sampa"));
   pronunciation.set_name_pronunciation_katakana_index(name_offset_map.index("test name katakana"));
   pronunciation.set_name_pronunciation_jeita_index(name_offset_map.index("test name jeita"));
   pronunciation.set_ref_pronunciation_ipa_index(name_offset_map.index("test ref ipa"));
-  pronunciation.set_ref_pronunciation_x_sampa_index(name_offset_map.index("test ref sampa"));
+  pronunciation.set_ref_pronunciation_nt_sampa_index(name_offset_map.index("test ref sampa"));
   pronunciation.set_ref_pronunciation_katakana_index(name_offset_map.index("test ref katakana"));
   pronunciation.set_ref_pronunciation_jeita_index(name_offset_map.index("test ref jeita"));
 
@@ -88,11 +88,11 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w1_names.at(1), "William Flynn Highway");
 
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "test ref ipa");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "test ref sampa");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "test ref katakana");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "test ref jeita");
   TestKeyTypeValue(pronunciations.at(4), 1, PronunciationAlphabet::kIpa, "test name ipa");
-  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kNtSampa, "test name sampa");
   TestKeyTypeValue(pronunciations.at(6), 1, PronunciationAlphabet::kXKatakana, "test name katakana");
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test name jeita");
 
@@ -107,11 +107,11 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w2_names.at(1), "Mon/Fayette Expressway");
 
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "test ref ipa");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "test ref sampa");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "test ref katakana");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "test ref jeita");
   TestKeyTypeValue(pronunciations.at(4), 1, PronunciationAlphabet::kIpa, "test name ipa");
-  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kNtSampa, "test name sampa");
   TestKeyTypeValue(pronunciations.at(6), 1, PronunciationAlphabet::kXKatakana, "test name katakana");
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test name jeita");
 
@@ -126,11 +126,11 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w3_names.at(1), "PA 272") << "Road class < kTrunk test failed.";
 
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "test name ipa");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "test name sampa");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "test name katakana");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "test name jeita");
   TestKeyTypeValue(pronunciations.at(4), 1, PronunciationAlphabet::kIpa, "test ref ipa");
-  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kNtSampa, "test ref sampa");
   TestKeyTypeValue(pronunciations.at(6), 1, PronunciationAlphabet::kXKatakana, "test ref katakana");
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test ref jeita");
 
@@ -145,11 +145,11 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w3_names.at(1), "PA 555") << "ref from relations";
 
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "test name ipa");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "test name sampa");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "test name katakana");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "test name jeita");
   TestKeyTypeValue(pronunciations.at(4), 1, PronunciationAlphabet::kIpa, "test ref ipa");
-  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kNtSampa, "test ref sampa");
   TestKeyTypeValue(pronunciations.at(6), 1, PronunciationAlphabet::kXKatakana, "test ref katakana");
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test ref jeita");
 
@@ -161,21 +161,21 @@ TEST(Names, NamesTest) {
   w3.set_name_en_index(name_offset_map.index("LancP"));
 
   pronunciation.set_alt_name_pronunciation_ipa_index(name_offset_map.index("test alt name ipa"));
-  pronunciation.set_alt_name_pronunciation_x_sampa_index(
+  pronunciation.set_alt_name_pronunciation_nt_sampa_index(
       name_offset_map.index("test alt name sampa"));
   pronunciation.set_alt_name_pronunciation_katakana_index(
       name_offset_map.index("test alt name katakana"));
   pronunciation.set_alt_name_pronunciation_jeita_index(name_offset_map.index("test alt name jeita"));
   pronunciation.set_official_name_pronunciation_ipa_index(
       name_offset_map.index("test official name ipa"));
-  pronunciation.set_official_name_pronunciation_x_sampa_index(
+  pronunciation.set_official_name_pronunciation_nt_sampa_index(
       name_offset_map.index("test official name sampa"));
   pronunciation.set_official_name_pronunciation_katakana_index(
       name_offset_map.index("test official name katakana"));
   pronunciation.set_official_name_pronunciation_jeita_index(
       name_offset_map.index("test official name jeita"));
   pronunciation.set_name_en_pronunciation_ipa_index(name_offset_map.index("test name en ipa"));
-  pronunciation.set_name_en_pronunciation_x_sampa_index(name_offset_map.index("test name en sampa"));
+  pronunciation.set_name_en_pronunciation_nt_sampa_index(name_offset_map.index("test name en sampa"));
   pronunciation.set_name_en_pronunciation_katakana_index(
       name_offset_map.index("test name en katakana"));
   pronunciation.set_name_en_pronunciation_jeita_index(name_offset_map.index("test name en jeita"));
@@ -192,27 +192,27 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w3_names.at(4), "LancP") << "name en failed.";
 
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "test name ipa");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "test name sampa");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "test name sampa");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana, "test name katakana");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita, "test name jeita");
   TestKeyTypeValue(pronunciations.at(4), 1, PronunciationAlphabet::kIpa, "test ref ipa");
-  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kXSampa, "test ref sampa");
+  TestKeyTypeValue(pronunciations.at(5), 1, PronunciationAlphabet::kNtSampa, "test ref sampa");
   TestKeyTypeValue(pronunciations.at(6), 1, PronunciationAlphabet::kXKatakana, "test ref katakana");
   TestKeyTypeValue(pronunciations.at(7), 1, PronunciationAlphabet::kXJeita, "test ref jeita");
   TestKeyTypeValue(pronunciations.at(8), 2, PronunciationAlphabet::kIpa, "test alt name ipa");
-  TestKeyTypeValue(pronunciations.at(9), 2, PronunciationAlphabet::kXSampa, "test alt name sampa");
+  TestKeyTypeValue(pronunciations.at(9), 2, PronunciationAlphabet::kNtSampa, "test alt name sampa");
   TestKeyTypeValue(pronunciations.at(10), 2, PronunciationAlphabet::kXKatakana,
                    "test alt name katakana");
   TestKeyTypeValue(pronunciations.at(11), 2, PronunciationAlphabet::kXJeita, "test alt name jeita");
   TestKeyTypeValue(pronunciations.at(12), 3, PronunciationAlphabet::kIpa, "test official name ipa");
-  TestKeyTypeValue(pronunciations.at(13), 3, PronunciationAlphabet::kXSampa,
+  TestKeyTypeValue(pronunciations.at(13), 3, PronunciationAlphabet::kNtSampa,
                    "test official name sampa");
   TestKeyTypeValue(pronunciations.at(14), 3, PronunciationAlphabet::kXKatakana,
                    "test official name katakana");
   TestKeyTypeValue(pronunciations.at(15), 3, PronunciationAlphabet::kXJeita,
                    "test official name jeita");
   TestKeyTypeValue(pronunciations.at(16), 4, PronunciationAlphabet::kIpa, "test name en ipa");
-  TestKeyTypeValue(pronunciations.at(17), 4, PronunciationAlphabet::kXSampa, "test name en sampa");
+  TestKeyTypeValue(pronunciations.at(17), 4, PronunciationAlphabet::kNtSampa, "test name en sampa");
   TestKeyTypeValue(pronunciations.at(18), 4, PronunciationAlphabet::kXKatakana,
                    "test name en katakana");
   TestKeyTypeValue(pronunciations.at(19), 4, PronunciationAlphabet::kXJeita, "test name en jeita");
@@ -234,7 +234,7 @@ TEST(Names, TaggedNamesTest) {
   w2.set_road_class(RoadClass::kMotorway);
 
   pronunciation1.set_tunnel_name_pronunciation_ipa_index(name_offset_map.index("tɛd ˈwɪljəmz ˈtʌnl"));
-  pronunciation1.set_tunnel_name_pronunciation_x_sampa_index(
+  pronunciation1.set_tunnel_name_pronunciation_nt_sampa_index(
       name_offset_map.index("tEd wIly@mz t@n@l"));
   pronunciation1.set_tunnel_name_pronunciation_katakana_index(
       name_offset_map.index("テッド ウィリャムズ タネル"));
@@ -242,7 +242,7 @@ TEST(Names, TaggedNamesTest) {
       name_offset_map.index("チバダ'イガ&ク% セーモンマ'エ."));
 
   pronunciation2.set_tunnel_name_pronunciation_ipa_index(name_offset_map.index("fɔːt McHenry ˈtʌnl"));
-  pronunciation2.set_tunnel_name_pronunciation_x_sampa_index(
+  pronunciation2.set_tunnel_name_pronunciation_nt_sampa_index(
       name_offset_map.index("fOrt m@kEnri t@n@l"));
   pronunciation2.set_tunnel_name_pronunciation_katakana_index(
       name_offset_map.index("フォート ムケンリー タネル"));
@@ -253,7 +253,7 @@ TEST(Names, TaggedNamesTest) {
   w1.GetTaggedNames(name_offset_map, pronunciation1, 0, w1_tagged_names, pronunciations);
   EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
   TestKeyTypeValue(pronunciations.at(0), 0, PronunciationAlphabet::kIpa, "tɛd ˈwɪljəmz ˈtʌnl");
-  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kXSampa, "tEd wIly@mz t@n@l");
+  TestKeyTypeValue(pronunciations.at(1), 0, PronunciationAlphabet::kNtSampa, "tEd wIly@mz t@n@l");
   TestKeyTypeValue(pronunciations.at(2), 0, PronunciationAlphabet::kXKatakana,
                    "テッド ウィリャムズ タネル");
   TestKeyTypeValue(pronunciations.at(3), 0, PronunciationAlphabet::kXJeita,
@@ -266,7 +266,7 @@ TEST(Names, TaggedNamesTest) {
   w2.GetTaggedNames(name_offset_map, pronunciation2, 0, w2_tagged_names, pronunciations);
   EXPECT_EQ(w2_tagged_names.at(1), "1Fort McHenry Tunnel");
   TestKeyTypeValue(pronunciations.at(0), 1, PronunciationAlphabet::kIpa, "fɔːt McHenry ˈtʌnl");
-  TestKeyTypeValue(pronunciations.at(1), 1, PronunciationAlphabet::kXSampa, "fOrt m@kEnri t@n@l");
+  TestKeyTypeValue(pronunciations.at(1), 1, PronunciationAlphabet::kNtSampa, "fOrt m@kEnri t@n@l");
   TestKeyTypeValue(pronunciations.at(2), 1, PronunciationAlphabet::kXKatakana,
                    "フォート ムケンリー タネル");
   TestKeyTypeValue(pronunciations.at(3), 1, PronunciationAlphabet::kXJeita,

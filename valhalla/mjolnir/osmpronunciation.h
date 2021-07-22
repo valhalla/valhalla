@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-// OSM Pronunciation.  IPA/X-Sampa/Katakana/Jeita phonems/pronunciations
+// OSM Pronunciation.  IPA/Nt-sampa/Katakana/Jeita phonems/pronunciations
 struct OSMPronunciation {
 
   /**
@@ -286,243 +286,243 @@ struct OSMPronunciation {
   }
 
   /**
-   * Sets the index for the ref x-sampa pronunciation
-   * @param  idx  Index for the reference x-sampa pronunciation.
+   * Sets the index for the ref nt-sampa pronunciation
+   * @param  idx  Index for the reference nt-sampa pronunciation.
    */
-  void set_ref_pronunciation_x_sampa_index(const uint32_t idx) {
-    ref_pronunciation_x_sampa_index_ = idx;
+  void set_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    ref_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the ref x-sampa pronunciation index.
-   * @return  Returns the index for the ref x-sampa pronunciation.
+   * Get the ref nt-sampa pronunciation index.
+   * @return  Returns the index for the ref nt-sampa pronunciation.
    */
-  uint32_t ref_pronunciation_x_sampa_index() const {
-    return ref_pronunciation_x_sampa_index_;
+  uint32_t ref_pronunciation_nt_sampa_index() const {
+    return ref_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for int ret x-sampa pronunciation
-   * @param  idx  Index for the international reference x-sampa pronunciation.
+   * Sets the index for int ret nt-sampa pronunciation
+   * @param  idx  Index for the international reference nt-sampa pronunciation.
    */
-  void set_int_ref_pronunciation_x_sampa_index(const uint32_t idx) {
-    int_ref_pronunciation_x_sampa_index_ = idx;
+  void set_int_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    int_ref_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the int ref x-sampa pronunciation index.
-   * @return  Returns the index for the int ref x-sampa pronunciation.
+   * Get the int ref nt-sampa pronunciation index.
+   * @return  Returns the index for the int ref nt-sampa pronunciation.
    */
-  uint32_t int_ref_pronunciation_x_sampa_index() const {
-    return int_ref_pronunciation_x_sampa_index_;
+  uint32_t int_ref_pronunciation_nt_sampa_index() const {
+    return int_ref_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for name x-sampa pronunciation
-   * @param  idx  Index for the name x-sampa pronunciation.
+   * Sets the index for name nt-sampa pronunciation
+   * @param  idx  Index for the name nt-sampa pronunciation.
    */
-  void set_name_pronunciation_x_sampa_index(const uint32_t idx) {
-    name_pronunciation_x_sampa_index_ = idx;
+  void set_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    name_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the name x-sampa pronunciation index.
-   * @return  Returns the index for the name x-sampa pronunciation.
+   * Get the name nt-sampa pronunciation index.
+   * @return  Returns the index for the name nt-sampa pronunciation.
    */
-  uint32_t name_pronunciation_x_sampa_index() const {
-    return name_pronunciation_x_sampa_index_;
+  uint32_t name_pronunciation_nt_sampa_index() const {
+    return name_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for name:en x-sampa pronunciation
-   * @param  idx  Index for the English name x-sampa pronunciation.
+   * Sets the index for name:en nt-sampa pronunciation
+   * @param  idx  Index for the English name nt-sampa pronunciation.
    */
-  void set_name_en_pronunciation_x_sampa_index(const uint32_t idx) {
-    name_en_pronunciation_x_sampa_index_ = idx;
+  void set_name_en_pronunciation_nt_sampa_index(const uint32_t idx) {
+    name_en_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the name:en x-sampa pronunciation index.
-   * @return  Returns the index for the English name x-sampa pronunciation.
+   * Get the name:en nt-sampa pronunciation index.
+   * @return  Returns the index for the English name nt-sampa pronunciation.
    */
-  uint32_t name_en_pronunciation_x_sampa_index() const {
-    return name_en_pronunciation_x_sampa_index_;
+  uint32_t name_en_pronunciation_nt_sampa_index() const {
+    return name_en_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for alt name x-sampa pronunciation
-   * @param  idx  Index for the alt name x-sampa pronunciation.
+   * Sets the index for alt name nt-sampa pronunciation
+   * @param  idx  Index for the alt name nt-sampa pronunciation.
    */
-  void set_alt_name_pronunciation_x_sampa_index(const uint32_t idx) {
-    alt_name_pronunciation_x_sampa_index_ = idx;
+  void set_alt_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    alt_name_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the alt name x-sampa pronunciation index.
-   * @return  Returns the index for the alt name x-sampa pronunciation.
+   * Get the alt name nt-sampa pronunciation index.
+   * @return  Returns the index for the alt name nt-sampa pronunciation.
    */
-  uint32_t alt_name_pronunciation_x_sampa_index() const {
-    return alt_name_pronunciation_x_sampa_index_;
+  uint32_t alt_name_pronunciation_nt_sampa_index() const {
+    return alt_name_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for official name x-sampa pronunciation
-   * @param  idx  Index for the official name x-sampa pronunciation.
+   * Sets the index for official name nt-sampa pronunciation
+   * @param  idx  Index for the official name nt-sampa pronunciation.
    */
-  void set_official_name_pronunciation_x_sampa_index(const uint32_t idx) {
-    official_name_pronunciation_x_sampa_index_ = idx;
+  void set_official_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    official_name_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the official name x-sampa pronunciation index.
-   * @return  Returns the index for the official name x-sampa pronunciation.
+   * Get the official name nt-sampa pronunciation index.
+   * @return  Returns the index for the official name nt-sampa pronunciation.
    */
-  uint32_t official_name_pronunciation_x_sampa_index() const {
-    return official_name_pronunciation_x_sampa_index_;
+  uint32_t official_name_pronunciation_nt_sampa_index() const {
+    return official_name_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for tunnel name x-sampa pronunciation
-   * @param  idx  Index for the tunnel name x-sampa pronunciation.
+   * Sets the index for tunnel name nt-sampa pronunciation
+   * @param  idx  Index for the tunnel name nt-sampa pronunciation.
    */
-  void set_tunnel_name_pronunciation_x_sampa_index(const uint32_t idx) {
-    tunnel_name_pronunciation_x_sampa_index_ = idx;
+  void set_tunnel_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    tunnel_name_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the tunnel name x-sampa pronunciation index.
-   * @return  Returns the index for the tunnel name x-sampa pronunciation.
+   * Get the tunnel name nt-sampa pronunciation index.
+   * @return  Returns the index for the tunnel name nt-sampa pronunciation.
    */
-  uint32_t tunnel_name_pronunciation_x_sampa_index() const {
-    return tunnel_name_pronunciation_x_sampa_index_;
+  uint32_t tunnel_name_pronunciation_nt_sampa_index() const {
+    return tunnel_name_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination x-sampa pronunciation.
-   * @param  idx  Index for the destination x-sampa pronunciation.
+   * Sets the index for destination nt-sampa pronunciation.
+   * @param  idx  Index for the destination nt-sampa pronunciation.
    */
-  void set_destination_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_pronunciation_x_sampa_index_ = idx;
+  void set_destination_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the get_destination x-sampa pronunciation index.
-   * @return  Returns the index for the destination x-sampa pronunciation.
+   * Get the get_destination nt-sampa pronunciation index.
+   * @return  Returns the index for the destination nt-sampa pronunciation.
    */
-  uint32_t destination_pronunciation_x_sampa_index() const {
-    return destination_pronunciation_x_sampa_index_;
+  uint32_t destination_pronunciation_nt_sampa_index() const {
+    return destination_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination in forward direction x-sampa pronunciation.
-   * @param  idx  Index for the destination x-sampa pronunciation.
+   * Sets the index for destination in forward direction nt-sampa pronunciation.
+   * @param  idx  Index for the destination nt-sampa pronunciation.
    */
-  void set_destination_forward_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_forward_pronunciation_x_sampa_index_ = idx;
+  void set_destination_forward_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_forward_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the forward direction x-sampa pronunciation index.
-   * @return  Returns the index for the forward direction x-sampa pronunciation.
+   * Get the forward direction nt-sampa pronunciation index.
+   * @return  Returns the index for the forward direction nt-sampa pronunciation.
    */
-  uint32_t destination_forward_pronunciation_x_sampa_index() const {
-    return destination_forward_pronunciation_x_sampa_index_;
+  uint32_t destination_forward_pronunciation_nt_sampa_index() const {
+    return destination_forward_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination in backward direction x-sampa pronunciation.
-   * @param  idx  Index for the backward direction x-sampa pronunciation.
+   * Sets the index for destination in backward direction nt-sampa pronunciation.
+   * @param  idx  Index for the backward direction nt-sampa pronunciation.
    */
-  void set_destination_backward_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_backward_pronunciation_x_sampa_index_ = idx;
+  void set_destination_backward_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_backward_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the backward direction x-sampa pronunciation index.
-   * @return  Returns the index for the backward direction x-sampa pronunciation.
+   * Get the backward direction nt-sampa pronunciation index.
+   * @return  Returns the index for the backward direction nt-sampa pronunciation.
    */
-  uint32_t destination_backward_pronunciation_x_sampa_index() const {
-    return destination_backward_pronunciation_x_sampa_index_;
+  uint32_t destination_backward_pronunciation_nt_sampa_index() const {
+    return destination_backward_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination ref x-sampa pronunciation.
-   * @param  idx  Index for the destination ref x-sampa pronunciation.
+   * Sets the index for destination ref nt-sampa pronunciation.
+   * @param  idx  Index for the destination ref nt-sampa pronunciation.
    */
-  void set_destination_ref_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_ref_pronunciation_x_sampa_index_ = idx;
+  void set_destination_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_ref_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the destination ref x-sampa pronunciation index.
-   * @return  Returns the index for the destination ref x-sampa pronunciation.
+   * Get the destination ref nt-sampa pronunciation index.
+   * @return  Returns the index for the destination ref nt-sampa pronunciation.
    */
-  uint32_t destination_ref_pronunciation_x_sampa_index() const {
-    return destination_ref_pronunciation_x_sampa_index_;
+  uint32_t destination_ref_pronunciation_nt_sampa_index() const {
+    return destination_ref_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination ref to x-sampa pronunciation.
-   * @param  idx  Index for the destination ref to x-sampa pronunciation.
+   * Sets the index for destination ref to nt-sampa pronunciation.
+   * @param  idx  Index for the destination ref to nt-sampa pronunciation.
    */
-  void set_destination_ref_to_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_ref_to_pronunciation_x_sampa_index_ = idx;
+  void set_destination_ref_to_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_ref_to_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the destination ref to x-sampa pronunciation index.
-   * @return  Returns the index for the destination ref to x-sampa pronunciation.
+   * Get the destination ref to nt-sampa pronunciation index.
+   * @return  Returns the index for the destination ref to nt-sampa pronunciation.
    */
-  uint32_t destination_ref_to_pronunciation_x_sampa_index() const {
-    return destination_ref_to_pronunciation_x_sampa_index_;
+  uint32_t destination_ref_to_pronunciation_nt_sampa_index() const {
+    return destination_ref_to_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination street x-sampa pronunciation.
-   * @param  idx  Index for the destination street x-sampa pronunciation.
+   * Sets the index for destination street nt-sampa pronunciation.
+   * @param  idx  Index for the destination street nt-sampa pronunciation.
    */
-  void set_destination_street_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_street_pronunciation_x_sampa_index_ = idx;
+  void set_destination_street_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_street_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the destination_street x-sampa pronunciation index.
-   * @return  Returns the index for the destination street x-sampa pronunciation.
+   * Get the destination_street nt-sampa pronunciation index.
+   * @return  Returns the index for the destination street nt-sampa pronunciation.
    */
-  uint32_t destination_street_pronunciation_x_sampa_index() const {
-    return destination_street_pronunciation_x_sampa_index_;
+  uint32_t destination_street_pronunciation_nt_sampa_index() const {
+    return destination_street_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for destination street to x-sampa pronunciation.
-   * @param  idx  Index for the destination street to x-sampa pronunciation.
+   * Sets the index for destination street to nt-sampa pronunciation.
+   * @param  idx  Index for the destination street to nt-sampa pronunciation.
    */
-  void set_destination_street_to_pronunciation_x_sampa_index(const uint32_t idx) {
-    destination_street_to_pronunciation_x_sampa_index_ = idx;
+  void set_destination_street_to_pronunciation_nt_sampa_index(const uint32_t idx) {
+    destination_street_to_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the destination street to x-sampa pronunciation index.
-   * @return  Returns the index for the destination street to x-sampa pronunciation.
+   * Get the destination street to nt-sampa pronunciation index.
+   * @return  Returns the index for the destination street to nt-sampa pronunciation.
    */
-  uint32_t destination_street_to_pronunciation_x_sampa_index() const {
-    return destination_street_to_pronunciation_x_sampa_index_;
+  uint32_t destination_street_to_pronunciation_nt_sampa_index() const {
+    return destination_street_to_pronunciation_nt_sampa_index_;
   }
 
   /**
-   * Sets the index for junction ref x-sampa pronunciation.
-   * @param  idx  Index for the junction ref x-sampa pronunciation.
+   * Sets the index for junction ref nt-sampa pronunciation.
+   * @param  idx  Index for the junction ref nt-sampa pronunciation.
    */
-  void set_junction_ref_pronunciation_x_sampa_index(const uint32_t idx) {
-    junction_ref_pronunciation_x_sampa_index_ = idx;
+  void set_junction_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    junction_ref_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the junction ref x-sampa pronunciation index.
-   * @return  Returns the x-sampa pronunciation index for the junction ref.
+   * Get the junction ref nt-sampa pronunciation index.
+   * @return  Returns the nt-sampa pronunciation index for the junction ref.
    */
-  uint32_t junction_ref_pronunciation_x_sampa_index() const {
-    return junction_ref_pronunciation_x_sampa_index_;
+  uint32_t junction_ref_pronunciation_nt_sampa_index() const {
+    return junction_ref_pronunciation_nt_sampa_index_;
   }
 
   /**
@@ -1029,26 +1029,26 @@ struct OSMPronunciation {
   uint32_t destination_street_to_pronunciation_ipa_index_;
   uint32_t junction_ref_pronunciation_ipa_index_;
 
-  // name and ref x-sampa pronunciations
-  uint32_t ref_pronunciation_x_sampa_index_;
-  uint32_t int_ref_pronunciation_x_sampa_index_;
-  uint32_t name_pronunciation_x_sampa_index_;
-  uint32_t name_en_pronunciation_x_sampa_index_;
-  uint32_t alt_name_pronunciation_x_sampa_index_;
-  uint32_t official_name_pronunciation_x_sampa_index_;
-  uint32_t tunnel_name_pronunciation_x_sampa_index_;
-  uint32_t direction_pronunciation_x_sampa_index_;
-  uint32_t int_direction_pronunciation_x_sampa_index_;
+  // name and ref nt-sampa pronunciations
+  uint32_t ref_pronunciation_nt_sampa_index_;
+  uint32_t int_ref_pronunciation_nt_sampa_index_;
+  uint32_t name_pronunciation_nt_sampa_index_;
+  uint32_t name_en_pronunciation_nt_sampa_index_;
+  uint32_t alt_name_pronunciation_nt_sampa_index_;
+  uint32_t official_name_pronunciation_nt_sampa_index_;
+  uint32_t tunnel_name_pronunciation_nt_sampa_index_;
+  uint32_t direction_pronunciation_nt_sampa_index_;
+  uint32_t int_direction_pronunciation_nt_sampa_index_;
 
-  // Sign Destination x-sampa pronunciations
-  uint32_t destination_pronunciation_x_sampa_index_;
-  uint32_t destination_forward_pronunciation_x_sampa_index_;
-  uint32_t destination_backward_pronunciation_x_sampa_index_;
-  uint32_t destination_ref_pronunciation_x_sampa_index_;
-  uint32_t destination_ref_to_pronunciation_x_sampa_index_;
-  uint32_t destination_street_pronunciation_x_sampa_index_;
-  uint32_t destination_street_to_pronunciation_x_sampa_index_;
-  uint32_t junction_ref_pronunciation_x_sampa_index_;
+  // Sign Destination nt-sampa pronunciations
+  uint32_t destination_pronunciation_nt_sampa_index_;
+  uint32_t destination_forward_pronunciation_nt_sampa_index_;
+  uint32_t destination_backward_pronunciation_nt_sampa_index_;
+  uint32_t destination_ref_pronunciation_nt_sampa_index_;
+  uint32_t destination_ref_to_pronunciation_nt_sampa_index_;
+  uint32_t destination_street_pronunciation_nt_sampa_index_;
+  uint32_t destination_street_to_pronunciation_nt_sampa_index_;
+  uint32_t junction_ref_pronunciation_nt_sampa_index_;
 
   // name and ref katakana pronunciations
   uint32_t ref_pronunciation_katakana_index_;

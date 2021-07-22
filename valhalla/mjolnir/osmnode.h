@@ -50,11 +50,11 @@ struct OSMNode {
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
-  uint32_t name_pronunciation_x_sampa_index_;
+  uint32_t name_pronunciation_nt_sampa_index_;
   uint32_t name_pronunciation_katakana_index_;
   uint32_t name_pronunciation_jeita_index_;
   uint32_t ref_pronunciation_ipa_index_;
-  uint32_t ref_pronunciation_x_sampa_index_;
+  uint32_t ref_pronunciation_nt_sampa_index_;
   uint32_t ref_pronunciation_katakana_index_;
   uint32_t ref_pronunciation_jeita_index_;
 
@@ -329,19 +329,19 @@ struct OSMNode {
   }
 
   /**
-   * Sets the index for the ref x-sampa pronunciation
-   * @param  idx  Index for the reference x-sampa pronunciation.
+   * Sets the index for the ref nt-sampa pronunciation
+   * @param  idx  Index for the reference nt-sampa pronunciation.
    */
-  void set_ref_pronunciation_x_sampa_index(const uint32_t idx) {
-    ref_pronunciation_x_sampa_index_ = idx;
+  void set_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    ref_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the ref x-sampa pronunciation index.
-   * @return  Returns the index for the ref x-sampa pronunciation.
+   * Get the ref nt-sampa pronunciation index.
+   * @return  Returns the index for the ref nt-sampa pronunciation.
    */
-  uint32_t ref_pronunciation_x_sampa_index() const {
-    return ref_pronunciation_x_sampa_index_;
+  uint32_t ref_pronunciation_nt_sampa_index() const {
+    return ref_pronunciation_nt_sampa_index_;
   }
 
   /**
@@ -393,19 +393,19 @@ struct OSMNode {
   }
 
   /**
-   * Sets the index for name x-sampa pronunciation
-   * @param  idx  Index for the name x-sampa pronunciation.
+   * Sets the index for name nt-sampa pronunciation
+   * @param  idx  Index for the name nt-sampa pronunciation.
    */
-  void set_name_pronunciation_x_sampa_index(const uint32_t idx) {
-    name_pronunciation_x_sampa_index_ = idx;
+  void set_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    name_pronunciation_nt_sampa_index_ = idx;
   }
 
   /**
-   * Get the name x-sampa pronunciation index.
-   * @return  Returns the index for the name x-sampa pronunciation.
+   * Get the name nt-sampa pronunciation index.
+   * @return  Returns the index for the name nt-sampa pronunciation.
    */
-  uint32_t name_pronunciation_x_sampa_index() const {
-    return name_pronunciation_x_sampa_index_;
+  uint32_t name_pronunciation_nt_sampa_index() const {
+    return name_pronunciation_nt_sampa_index_;
   }
 
   /**

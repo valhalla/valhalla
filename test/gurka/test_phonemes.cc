@@ -39,15 +39,15 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"official_name:pronunciation", "official_name:pronunciation"},
          {"tunnel:name:pronunciation", "tunnel:name:pronunciation"},
          {"name:en:pronunciation", "name:en:pronunciation"},
-         {"name:pronunciation:x-sampa", "name:pronunciation:x-sampa"},
-         {"ref:pronunciation:x-sampa", "ref:pronunciation:x-sampa"},
-         {"int_ref:pronunciation:x-sampa", "int_ref:pronunciation:x-sampa"},
-         {"direction:pronunciation:x-sampa", "direction:pronunciation:x-sampa"},
-         {"int_direction:pronunciation:x-sampa", "int_direction:pronunciation:x-sampa"},
-         {"alt_name:pronunciation:x-sampa", "alt_name:pronunciation:x-sampa"},
-         {"official_name:pronunciation:x-sampa", "official_name:pronunciation:x-sampa"},
-         {"tunnel:name:pronunciation:x-sampa", "tunnel:name:pronunciation:x-sampa"},
-         {"name:en:pronunciation:x-sampa", "name:en:pronunciation:x-sampa"},
+         {"name:pronunciation:nt-sampa", "name:pronunciation:nt-sampa"},
+         {"ref:pronunciation:nt-sampa", "ref:pronunciation:nt-sampa"},
+         {"int_ref:pronunciation:nt-sampa", "int_ref:pronunciation:nt-sampa"},
+         {"direction:pronunciation:nt-sampa", "direction:pronunciation:nt-sampa"},
+         {"int_direction:pronunciation:nt-sampa", "int_direction:pronunciation:nt-sampa"},
+         {"alt_name:pronunciation:nt-sampa", "alt_name:pronunciation:nt-sampa"},
+         {"official_name:pronunciation:nt-sampa", "official_name:pronunciation:nt-sampa"},
+         {"tunnel:name:pronunciation:nt-sampa", "tunnel:name:pronunciation:nt-sampa"},
+         {"name:en:pronunciation:nt-sampa", "name:en:pronunciation:nt-sampa"},
          {"name:pronunciation:katakana", "name:pronunciation:katakana"},
          {"ref:pronunciation:katakana", "ref:pronunciation:katakana"},
          {"int_ref:pronunciation:katakana", "int_ref:pronunciation:katakana"},
@@ -68,7 +68,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"name:en:pronunciation:jeita", "name:en:pronunciation:jeita"},
          {"destination", "destination"},
          {"destination:pronunciation", "destination:pronunciation"},
-         {"destination:pronunciation:x-sampa", "destination:pronunciation:x-sampa"},
+         {"destination:pronunciation:nt-sampa", "destination:pronunciation:nt-sampa"},
          {"destination:pronunciation:katakana", "destination:pronunciation:katakana"},
          {"destination:pronunciation:jeita", "destination:pronunciation:jeita"}}},
        {"BC",
@@ -78,7 +78,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"official_name", "official_name"},
          {"name:en", "name:en"},
          {"name:pronunciation", "name:pronunciation"},
-         {"alt_name:pronunciation:x-sampa", "alt_name:pronunciation:x-sampa"},
+         {"alt_name:pronunciation:nt-sampa", "alt_name:pronunciation:nt-sampa"},
          {"alt_name:pronunciation:katakana", "alt_name:pronunciation:katakana"},
          {"official_name:pronunciation:katakana", "official_name:pronunciation:katakana"},
          {"official_name:pronunciation:jeita", "official_name:pronunciation:jeita"},
@@ -151,7 +151,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"name", "named junction"},
          {"highway", "motorway_junction"},
          {"name:pronunciation", "named junction:pronunciation"},
-         {"name:pronunciation:x-sampa", "named junction:pronunciation:x-sampa"},
+         {"name:pronunciation:nt-sampa", "named junction:pronunciation:nt-sampa"},
          {"name:pronunciation:katakana", "named junction:pronunciation:katakana"},
          {"name:pronunciation:jeita", "named junction:pronunciation:jeita"}}},
        {"E",
@@ -237,7 +237,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
   EXPECT_NE(EF_edge, nullptr);
   EXPECT_NE(FE_edge, nullptr);
 
-  // Test the named junction on the node.  x-sampa wins
+  // Test the named junction on the node.  nt-sampa wins
   {
     GraphId node_id = AB_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
@@ -254,14 +254,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if (iter == pronunciations.end()) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
-        if ((iter->second).second == "named junction:pronunciation:x-sampa") {
+        if ((iter->second).second == "named junction:pronunciation:nt-sampa") {
           EXPECT_EQ(signs.at(sign_index).text(), "named junction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "destination:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "destination:pronunciation:nt-sampa") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
           EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
       }
@@ -298,7 +298,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     }
   }
 
-  // Test the names.  x-sampa wins.
+  // Test the names.  nt-sampa wins.
   {
 
     GraphId node_id = AB_edge->endnode();
@@ -325,36 +325,36 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
 
-        if ((iter->second).second == "name:pronunciation:x-sampa") {
+        if ((iter->second).second == "name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "AB");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "tunnel:name:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "tunnel:name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
-                   "int_ref:pronunciation:x-sampa int_direction:pronunciation:x-sampa") {
+                   "int_ref:pronunciation:nt-sampa int_direction:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "int_ref int_direction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
-                   "ref:pronunciation:x-sampa direction:pronunciation:x-sampa") {
+                   "ref:pronunciation:nt-sampa direction:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "ref direction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "alt_name:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "alt_name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "official_name:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "official_name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "name:en:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "name:en:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
           EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
       }
@@ -509,7 +509,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     }
 
     // ipa wins for the name.
-    // x-sampa wins for the alt_name
+    // nt-sampa wins for the alt_name
     // jeita wins for official_name
     // katakana wins for name:en
     {
@@ -538,10 +538,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
             EXPECT_EQ(names_and_types.at(name_index).first, "BC");
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kIpa));
-          } else if ((iter->second).second == "alt_name:pronunciation:x-sampa") {
+          } else if ((iter->second).second == "alt_name:pronunciation:nt-sampa") {
             EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
             EXPECT_EQ(static_cast<int>((iter->second).first),
-                      static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                      static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
           } else if ((iter->second).second == "official_name:pronunciation:jeita") {
             EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
             EXPECT_EQ(static_cast<int>((iter->second).first),
@@ -656,7 +656,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
   EXPECT_NE(AB_edge, nullptr);
   EXPECT_NE(BA_edge, nullptr);
 
-  // Test the names.  x-sampa wins.
+  // Test the names.  nt-sampa wins.
   {
 
     GraphId node_id = AB_edge->endnode();
@@ -683,30 +683,30 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
       if (iter == pronunciations.end()) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
-        if ((iter->second).second == "name:pronunciation:x-sampa") {
+        if ((iter->second).second == "name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "AB");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "tunnel:name:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "tunnel:name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "int_ref:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "int_ref:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "int_ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "ref:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "ref:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "official_name:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "official_name:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
-        } else if ((iter->second).second == "name:en:pronunciation:x-sampa") {
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "name:en:pronunciation:nt-sampa") {
           EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
           EXPECT_EQ(static_cast<int>((iter->second).first),
-                    static_cast<int>(baldr::PronunciationAlphabet::kXSampa));
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
           EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
       }

@@ -136,8 +136,8 @@ GetTripPronunciationAlphabet(const valhalla::baldr::PronunciationAlphabet pronun
       return Pronunciation_Alphabet_kXKatakana;
     case baldr::PronunciationAlphabet::kXJeita:
       return Pronunciation_Alphabet_kXJeita;
-    case baldr::PronunciationAlphabet::kXSampa:
-      return Pronunciation_Alphabet_kXSampa;
+    case baldr::PronunciationAlphabet::kNtSampa:
+      return Pronunciation_Alphabet_kNtSampa;
   }
   auto num = static_cast<uint8_t>(pronunciation_alphabet);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +

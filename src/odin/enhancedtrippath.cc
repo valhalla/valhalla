@@ -30,7 +30,7 @@ const std::string& Pronunciation_Alphabet_Name(int v) {
   static const std::unordered_map<int, std::string> values{{0, "kIpa"},
                                                            {1, "kXKatakana"},
                                                            {2, "kXJeita"},
-                                                           {3, "kXSampa"}};
+                                                           {3, "kNtSampa"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");

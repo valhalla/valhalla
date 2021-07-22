@@ -514,38 +514,38 @@ public:
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_name_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:en:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["name:en:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_en_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_name_en_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["alt_name:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["alt_name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_alt_name_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_alt_name_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["official_name:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["official_name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_official_name_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_official_name_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["tunnel:name:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["tunnel:name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_tunnel_name_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_tunnel_name_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
@@ -770,24 +770,24 @@ public:
           int_ref_pronunciation_ = tag_.second;
       }
     };
-    tag_handlers_["ref:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
-          osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
+          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
               osmdata_.name_offset_map.index(tag_.second));
         else
-          ref_pronunciation_x_sampa_ = tag_.second;
+          ref_pronunciation_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["int_ref:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["int_ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
-          osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(
+          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
               osmdata_.name_offset_map.index(tag_.second));
         else
-          int_ref_pronunciation_x_sampa_ = tag_.second;
+          int_ref_pronunciation_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["ref:pronunciation:katakana"] = [this]() {
@@ -846,13 +846,13 @@ public:
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_ = tag_.second;
     };
-    tag_handlers_["direction:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["direction:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
-        direction_pronunciation_x_sampa_ = tag_.second;
+        direction_pronunciation_nt_sampa_ = tag_.second;
     };
-    tag_handlers_["int_direction:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["int_direction:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
-        int_direction_pronunciation_x_sampa_ = tag_.second;
+        int_direction_pronunciation_nt_sampa_ = tag_.second;
     };
     tag_handlers_["direction:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
@@ -1151,59 +1151,59 @@ public:
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:forward:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:forward:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_forward_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_forward_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:backward:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:backward:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_backward_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_backward_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_ref_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:to:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:ref:to:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_to_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_ref_to_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:street:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_street_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:to:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["destination:street:to:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_to_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_destination_street_to_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["junction:ref:pronunciation:x-sampa"] = [this]() {
+    tag_handlers_["junction:ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_junction_ref_pronunciation_x_sampa_index(
+        osm_pronunciation_.set_junction_ref_pronunciation_nt_sampa_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
@@ -1494,16 +1494,16 @@ public:
         named_junction = maybe_named_junction;
       } else if (tag.first == "name:pronunciation") {
         n.set_name_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "name:pronunciation:x-sampa") {
-        n.set_name_pronunciation_x_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:nt-sampa") {
+        n.set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "name:pronunciation:katakana") {
         n.set_name_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "name:pronunciation:jeita") {
         n.set_name_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "ref:pronunciation") {
         n.set_ref_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "ref:pronunciation:x-sampa") {
-        n.set_ref_pronunciation_x_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:nt-sampa") {
+        n.set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "ref:pronunciation:katakana") {
         n.set_ref_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "ref:pronunciation:jeita") {
@@ -1812,11 +1812,11 @@ public:
       if (!int_ref_pronunciation_katakana_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, true);
 
-      if (!ref_pronunciation_x_sampa_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXSampa, false);
+      if (!ref_pronunciation_nt_sampa_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, false);
 
-      if (!int_ref_pronunciation_x_sampa_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXSampa, true);
+      if (!int_ref_pronunciation_nt_sampa_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, true);
 
       if (!ref_pronunciation_jeita_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, false);
@@ -2587,9 +2587,9 @@ public:
           ref_pronunciation = int_ref_pronunciation_katakana_;
           direction_pronunciation = int_direction_pronunciation_katakana_;
           break;
-        case PronunciationAlphabet::kXSampa:
-          ref_pronunciation = int_ref_pronunciation_x_sampa_;
-          direction_pronunciation = int_direction_pronunciation_x_sampa_;
+        case PronunciationAlphabet::kNtSampa:
+          ref_pronunciation = int_ref_pronunciation_nt_sampa_;
+          direction_pronunciation = int_direction_pronunciation_nt_sampa_;
           break;
         case PronunciationAlphabet::kXJeita:
           ref_pronunciation = int_ref_pronunciation_jeita_;
@@ -2606,9 +2606,9 @@ public:
           ref_pronunciation = ref_pronunciation_katakana_;
           direction_pronunciation = direction_pronunciation_katakana_;
           break;
-        case PronunciationAlphabet::kXSampa:
-          ref_pronunciation = ref_pronunciation_x_sampa_;
-          direction_pronunciation = direction_pronunciation_x_sampa_;
+        case PronunciationAlphabet::kNtSampa:
+          ref_pronunciation = ref_pronunciation_nt_sampa_;
+          direction_pronunciation = direction_pronunciation_nt_sampa_;
           break;
         case PronunciationAlphabet::kXJeita:
           ref_pronunciation = ref_pronunciation_jeita_;
@@ -2653,8 +2653,8 @@ public:
           osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case PronunciationAlphabet::kXSampa:
-          osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(
+        case PronunciationAlphabet::kNtSampa:
+          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
         case PronunciationAlphabet::kXJeita:
@@ -2672,8 +2672,8 @@ public:
           osm_pronunciation_.set_ref_pronunciation_katakana_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
-        case PronunciationAlphabet::kXSampa:
-          osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
+        case PronunciationAlphabet::kNtSampa:
+          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
         case PronunciationAlphabet::kXJeita:
@@ -2687,7 +2687,7 @@ public:
   void MergeRefPronunciations() {
 
     for (uint8_t type = static_cast<uint8_t>(PronunciationAlphabet::kXKatakana);
-         type != static_cast<uint8_t>(PronunciationAlphabet::kXSampa) + 1; ++type) {
+         type != static_cast<uint8_t>(PronunciationAlphabet::kNtSampa) + 1; ++type) {
       // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
       // don't add dups.
 
@@ -2706,10 +2706,10 @@ public:
                              osm_pronunciation_.ref_pronunciation_katakana_index())
                        : "");
           break;
-        case PronunciationAlphabet::kXSampa:
-          index = osm_pronunciation_.int_ref_pronunciation_x_sampa_index();
+        case PronunciationAlphabet::kNtSampa:
+          index = osm_pronunciation_.int_ref_pronunciation_nt_sampa_index();
           tmp = (index ? osmdata_.name_offset_map.name(
-                             osm_pronunciation_.ref_pronunciation_x_sampa_index())
+                             osm_pronunciation_.ref_pronunciation_nt_sampa_index())
                        : "");
           break;
         case PronunciationAlphabet::kXJeita:
@@ -2758,13 +2758,13 @@ public:
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_katakana_index(0);
             break;
-          case PronunciationAlphabet::kXSampa:
+          case PronunciationAlphabet::kNtSampa:
             if (!tmp.empty()) {
-              osm_pronunciation_.set_ref_pronunciation_x_sampa_index(
+              osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
                   osmdata_.name_offset_map.index(tmp));
             }
             // no matter what, clear out the int_ref.
-            osm_pronunciation_.set_int_ref_pronunciation_x_sampa_index(0);
+            osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(0);
             break;
           case PronunciationAlphabet::kXJeita:
             if (!tmp.empty()) {
@@ -2796,11 +2796,11 @@ public:
   OSMPronunciation osm_pronunciation_;
   bool has_user_tags_ = false, has_pronunciation_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
-  std::string ref_pronunciation_, int_ref_pronunciation_, ref_pronunciation_x_sampa_,
-      int_ref_pronunciation_x_sampa_, ref_pronunciation_katakana_, int_ref_pronunciation_katakana_,
+  std::string ref_pronunciation_, int_ref_pronunciation_, ref_pronunciation_nt_sampa_,
+      int_ref_pronunciation_nt_sampa_, ref_pronunciation_katakana_, int_ref_pronunciation_katakana_,
       ref_pronunciation_jeita_, int_ref_pronunciation_jeita_;
   std::string direction_pronunciation_, int_direction_pronunciation_,
-      direction_pronunciation_x_sampa_, int_direction_pronunciation_x_sampa_,
+      direction_pronunciation_nt_sampa_, int_direction_pronunciation_nt_sampa_,
       direction_pronunciation_katakana_, int_direction_pronunciation_katakana_,
       direction_pronunciation_jeita_, int_direction_pronunciation_jeita_;
   std::string name_, service_, amenity_;

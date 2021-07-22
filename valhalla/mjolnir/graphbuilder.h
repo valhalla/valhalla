@@ -59,23 +59,23 @@ public:
 
   static void GetPronunciationTokens(const OSMData& osmdata,
                                      const uint32_t ipa_index,
-                                     const uint32_t x_sampa_index,
+                                     const uint32_t nt_sampa_index,
                                      const uint32_t katakana_index,
                                      const uint32_t jeita_index,
                                      std::vector<std::string>& ipa_tokens,
-                                     std::vector<std::string>& x_sampa_tokens,
+                                     std::vector<std::string>& nt_sampa_tokens,
                                      std::vector<std::string>& katakana_tokens,
                                      std::vector<std::string>& jeita_tokens,
                                      bool is_node_pronunciation = false);
 
   static void AddPronunciations(const std::vector<std::string> ipa_tokens,
-                                const std::vector<std::string>& x_sampa_tokens,
+                                const std::vector<std::string>& nt_sampa_tokens,
                                 const std::vector<std::string>& katakana_tokens,
                                 const std::vector<std::string>& jeita_tokens,
                                 const size_t index,
                                 std::vector<std::string>& pronunciations,
                                 bool add_ipa,
-                                bool add_x_sampa,
+                                bool add_nt_sampa,
                                 bool add_katakana,
                                 bool add_jeita);
 
