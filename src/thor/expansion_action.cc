@@ -13,12 +13,13 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
-static std::unordered_map<const Options::ExpansionProps, const char*> kPropPaths =
-    {{Options_ExpansionProps_edge_ids, "/features/0/properties/edge_ids"},
-     {Options_ExpansionProps_statuses, "/features/0/properties/statuses"},
-     {Options_ExpansionProps_distances, "/features/0/properties/distances"},
-     {Options_ExpansionProps_durations, "/features/0/properties/durations"},
-     {Options_ExpansionProps_costs, "/features/0/properties/costs"}};
+// indices correspond to Options::ExpansionProps enum
+constexpr char* kPropPaths[] =
+    {"/features/0/properties/costs",
+     "/features/0/properties/durations",
+     "/features/0/properties/distances",
+     "/features/0/properties/statuses",
+     "/features/0/properties/edge_ids"};
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
@@ -45,7 +46,7 @@ std::string thor_worker_t::expansion(Api& request) {
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
   SetValueByPointer(dom, "/features/0/properties", Value(kArrayType));
   for (const auto& prop : options.expansion_props()) {
-    rapidjson::Pointer(kPropPaths[static_cast<Options_ExpansionProps>(prop)])
+    rapidjson::Pointer(kPropPaths[prop])
         .Set(dom, Value(kArrayType));
     exp_props.insert(static_cast<Options_ExpansionProps>(prop));
   }
