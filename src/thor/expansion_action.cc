@@ -14,12 +14,9 @@ namespace valhalla {
 namespace thor {
 
 // indices correspond to Options::ExpansionProps enum
-constexpr char* kPropPaths[] =
-    {"/features/0/properties/costs",
-     "/features/0/properties/durations",
-     "/features/0/properties/distances",
-     "/features/0/properties/statuses",
-     "/features/0/properties/edge_ids"};
+constexpr char* kPropPaths[] = {"/features/0/properties/costs", "/features/0/properties/durations",
+                                "/features/0/properties/distances", "/features/0/properties/statuses",
+                                "/features/0/properties/edge_ids"};
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
@@ -46,8 +43,7 @@ std::string thor_worker_t::expansion(Api& request) {
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
   SetValueByPointer(dom, "/features/0/properties", Value(kArrayType));
   for (const auto& prop : options.expansion_props()) {
-    rapidjson::Pointer(kPropPaths[prop])
-        .Set(dom, Value(kArrayType));
+    rapidjson::Pointer(kPropPaths[prop]).Set(dom, Value(kArrayType));
     exp_props.insert(static_cast<Options_ExpansionProps>(prop));
   }
 
