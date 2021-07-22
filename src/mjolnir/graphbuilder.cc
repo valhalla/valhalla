@@ -1313,8 +1313,9 @@ void GraphBuilder::AddPronunciations(const std::vector<std::string> ipa_tokens,
     pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kIpa)) +
                                 '#' + ipa_tokens[index]);
   if (add_nt_sampa)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kNtSampa)) +
-                                '#' + nt_sampa_tokens[index]);
+    pronunciations.emplace_back(
+        std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kNtSampa)) + '#' +
+        nt_sampa_tokens[index]);
   if (add_katakana)
     pronunciations.emplace_back(
         std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXKatakana)) + '#' +
@@ -1359,7 +1360,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     for (size_t i = 0; i < j_refs.size(); ++i) {
       if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitNumber, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                j_refs[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1386,7 +1388,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     for (size_t i = 0; i < n_refs.size(); ++i) {
       if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitNumber, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                n_refs[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1433,7 +1436,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         has_guide = true;
       } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitBranch, true, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                branch_refs[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1476,7 +1480,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         has_guide = true;
       } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitBranch, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                branch_streets[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1525,7 +1530,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         has_guide = true;
       } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitToward, true, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                toward_refs[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1570,7 +1576,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         has_guide = true;
       } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitToward, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                toward_streets[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1614,8 +1621,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
                        : pronunciation.destination_backward_pronunciation_jeita_index());
 
     std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
-    GetPronunciationTokens(osmdata, ipa_index, nt_sampa_index, katakana_index, jeita_index, ipa_tokens,
-                           nt_sampa_tokens, katakana_tokens, jeita_tokens);
+    GetPronunciationTokens(osmdata, ipa_index, nt_sampa_index, katakana_index, jeita_index,
+                           ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens);
 
     bool add_ipa = (ipa_tokens.size() && toward_names.size() == ipa_tokens.size());
     bool add_nt_sampa = (nt_sampa_tokens.size() && toward_names.size() == nt_sampa_tokens.size());
@@ -1641,7 +1648,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         has_guide = true;
       } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitToward, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                toward_name);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
@@ -1735,7 +1743,8 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     for (size_t i = 0; i < names.size(); ++i) {
       if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
         exit_list.emplace_back(Sign::Type::kExitName, false, false, true, pronunciations.size(),
-                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) + int(add_jeita)),
+                               (int(add_ipa) + int(add_nt_sampa) + int(add_katakana) +
+                                int(add_jeita)),
                                names[i]);
         AddPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
                           pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita);
