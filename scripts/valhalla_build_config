@@ -552,10 +552,6 @@ help_text = {
   }
 }
 
-#used to convert comma separated list of strings into a list
-def comma_separated_list(arg):
-  return arg.split(',')
-
 #returns a list of leaves of the tree, `\0` separated, stops at non dicts
 #while doing so it also adds arguments to the parser
 def add_leaf_args(path, tree, leaves, parser):
