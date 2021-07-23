@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.4
 * **Removed**
 * **Bug Fix**
+   * FIXED: Revert default speed boost for turn channels [#3232](https://github.com/valhalla/valhalla/pull/3232)
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
 
