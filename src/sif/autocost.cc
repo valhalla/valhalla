@@ -506,7 +506,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       factor *= service_factor_;
       break;
     case Use::kTurnChannel:
-      factor *= kTurnChannelFactor;
+      if (flow_sources & kDefaultFlowMask) {
+        // boost only historic & live speeds
+        factor *= kTurnChannelFactor;
+      }
       break;
     default:
       break;
