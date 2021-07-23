@@ -28,6 +28,11 @@ public:
    */
   std::string narrate(Api& request) const;
   void status(Api& request) const;
+
+private:
+  std::string service_name() const override {
+    return "odin";
+  }
 };
 } // namespace odin
 } // namespace valhalla
