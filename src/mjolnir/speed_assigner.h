@@ -13,6 +13,7 @@
 using namespace valhalla::baldr;
 
 // Factors used to adjust speed assignments
+constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
 constexpr float kRoundaboutFactor = 0.5f;
@@ -262,7 +263,9 @@ public:
     if (directededge.link()) {
       uint32_t speed = directededge.speed();
       Use use = directededge.use();
-      if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
+      if (use == Use::kTurnChannel && infer_turn_channels) {
+        speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
+      } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
         // If no tagged speed set ramp speed to slightly lower than speed
         // for roads of this classification
         RoadClass rc = directededge.classification();
