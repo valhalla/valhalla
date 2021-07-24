@@ -51,6 +51,9 @@ public:
     service_worker_t::enqueue_statistics(request);
     service_worker_t::cleanup();
   }
+  std::string service_name() const override {
+    return "test";
+  }
 #ifdef HAVE_HTTP
   virtual prime_server::worker_t::result_t
   work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) {

@@ -115,14 +115,18 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck`, `hov` & `taxi`.
-###### Truck-specific costing options
+###### Other costing options
+The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck` costing methods.
 
-In addition to the above, the following options are available for `truck` costing.
+| Vehicle Options | Description |
+| :-------------------------- | :----------- |
+| `height` | The height of the vehicle (in meters). |
+| `width` | The width of the vehicle (in meters). |
+
+The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the truck (in meters). |
-| `width` | The width of the truck (in meters). |
 | `length` | The length of the truck (in meters). |
 | `weight` | The weight of the truck (in metric tons). |
 | `axle_load` | The axle load of the truck (in metric tons). |
