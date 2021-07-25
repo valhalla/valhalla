@@ -93,8 +93,8 @@ struct simplified_actor_t : public valhalla::tyr::actor_t {
   std::string centroid(const std::string& request_str) {
     return valhalla::tyr::actor_t::centroid(request_str, nullptr, nullptr);
   };
-  std::string status() {
-    return valhalla::tyr::actor_t::status("", nullptr, nullptr);
+  std::string status(const std::string& request_str) {
+    return valhalla::tyr::actor_t::status(request_str, nullptr, nullptr);
   }
 };
 

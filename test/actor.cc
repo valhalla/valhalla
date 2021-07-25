@@ -49,9 +49,10 @@ TEST(Actor, Basic) {
   auto transit = test::json_to_pt(transit_json);
   ASSERT_NE(transit_json.find(std::to_string(false)), std::string::npos);
 
-  actor.status("");
+  auto status_json = actor.status("");
+  ASSERT_NE(status_json.find("version"), std::string::npos);
   actor.cleanup();
-  auto status_json = actor.status(R"({"verbose":true})");
+  status_json = actor.status(R"({"verbose":true})");
   actor.cleanup();
   auto status = test::json_to_pt(status_json);
   ASSERT_NE(status_json.find("Polygon"), std::string::npos);
