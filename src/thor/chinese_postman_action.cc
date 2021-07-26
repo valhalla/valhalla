@@ -360,11 +360,14 @@ void thor_worker_t::chinese_postman(Api& request) {
     std::cout << "Vegeta\n";
     // Handle if the origin or destination nodes are not managed yet
     if (!isSameOriginDestination) {
+      std::cout << "!isSameOriginDestination\n";
       if (!originNodeChecked) {
-        underNodes.push_back(originVertex.graph_id);
+        std::cout << "!originNodeChecked\n";
+        overNodes.push_back(originVertex.graph_id);
       }
       if (!destinationNodeChecked) {
-        overNodes.push_back(destinationVertex.graph_id);
+        std::cout << "!destinationNodeChecked\n";
+        underNodes.push_back(destinationVertex.graph_id);
       }
     }
     std::cout << "Trunks\n";
@@ -384,7 +387,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
-    std::vector<std::pair<int, int>> extraEdges;
     std::vector<std::pair<int, int>> extraPairs;
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
       // Get node's index for that pair
@@ -395,7 +397,11 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Concat with main vector
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
-    std::cout << "Bulma\n";
+    std::cout << "computeIdealEulerCycle\n";
+    std::cout << "originVertex: " << originVertex.graph_id << " -> " << G.getVertexIndex(originVertex)
+              << "\n";
+    std::cout << "destinationVertex: " << destinationVertex.graph_id << " -> "
+              << G.getVertexIndex(destinationVertex) << "\n";
     edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);
   }
   // Start build path here

@@ -84,64 +84,66 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   }
   std::cout << "\n";
   std::cout << "unbalanced vertices: \n";
-  // for(auto uv: unbalaced_vertices){
-  //   std::cout << uv.first << ": " << uv.second << "\n";
-  // }
+  for (auto uv : unbalaced_vertices) {
+    std::cout << uv.first << ": " << uv.second << "\n";
+  }
   return unbalaced_vertices;
 }
 
 std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
                                                                  ExtraPaths extraPaths) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
+  std::cout << "startNodeIndex: " << startNodeIndex << "\n";
   int edgeVisited = 0;
 
   this->setupDFSEulerCycle(extraPaths);
-  std::cout << "Vegeta1\n";
   this->dfsEulerCycle(startNodeIndex);
-  std::cout << "Vegeta2\n";
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
   for (auto const& v : this->outEdges) {
     if (v.second != 0) {
       throw valhalla_exception_t(450);
     }
   }
-  std::cout << "Trunks1\n";
   std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
-  std::cout << "Trunks2\n";
   std::cout << "this->reversedEulerPath: " << this->reversedEulerPath.size() << "\n";
   int i = 0;
-  while (i < (this->reversedEulerPath.size() - 1)) {
-    auto e = boost::edge(this->reversedEulerPath[i], this->reversedEulerPath[i + 1], G);
-    std::cout << this->reversedEulerPath[i] << ": " << e.first << "\n";
-    std::cout << e.first << ": " << e.second << "\n";
-    // eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
-    i++;
-  }
+  // while (i < (this->reversedEulerPath.size() - 1)) {
+  //   auto e = boost::edge(this->reversedEulerPath[i], this->reversedEulerPath[i + 1], G);
+  //   std::cout << this->reversedEulerPath[i] << ": " << e.first << "\n";
+  //   std::cout << e.first << ": " << e.second << "\n";
+  //   // eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
+  //   i++;
+  // }
 
   int k = 0;
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
-    std::cout << "\n" << ++k << "\n";
     if (it + 1 == this->reversedEulerPath.rend()) {
       continue;
     }
     auto e = boost::edge(*it, *(it + 1), G);
-    std::cout << k << " a\n";
-    std::cout << this->G[e.first].graph_id;
+    std::cout << "index: " << ++k << "\n";
+    std::cout << "e.first: " << e.first << "\n";
+    std::cout << "Graph ID: " << this->G[e.first].graph_id << "\n";
     eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
-    std::cout << k << " b\n";
   }
   std::cout << "\nVegeta3\n";
   return eulerPathEdgeGraphIDs;
 }
 
 void ChinesePostmanGraph::setupDFSEulerCycle(ExtraPaths extraPaths) {
+  std::cout << "setupDFSEulerCycle\n";
   this->reversedEulerPath.clear();
   this->outEdges.clear();
   // populate out edges
   this->expandedAdjacencyList = this->getAdjacencyList(extraPaths);
 
   for (const auto& x : this->expandedAdjacencyList) {
+    std::cout << x.first << " : ";
+    for (auto i : x.second) {
+      std::cout << i << ", ";
+    }
+    std::cout << "\n";
     this->outEdges[x.first] = x.second.size();
   }
 }
@@ -164,6 +166,7 @@ std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList(ExtraPaths
 }
 
 void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
+  std::cout << "dfsEulerCycle\n";
   while (this->outEdges[startNodeIndex] != 0) {
     int nextNodeIndex =
         this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
