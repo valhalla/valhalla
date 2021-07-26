@@ -75,12 +75,18 @@ void ChinesePostmanGraph::addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, 
 
 std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   std::map<std::string, int> unbalaced_vertices;
+  std::cout << "All nodes:\n";
   for (auto const& v : this->vertices) {
+    std::cout << v.first << ", ";
     if (this->indegrees[v.first] != this->outdegrees[v.first]) {
       unbalaced_vertices[v.first] = this->indegrees[v.first] - this->outdegrees[v.first];
-      ;
     }
   }
+  std::cout << "\n";
+  std::cout << "unbalanced vertices: \n";
+  // for(auto uv: unbalaced_vertices){
+  //   std::cout << uv.first << ": " << uv.second << "\n";
+  // }
   return unbalaced_vertices;
 }
 
@@ -90,23 +96,42 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
   int edgeVisited = 0;
 
   this->setupDFSEulerCycle(extraPaths);
+  std::cout << "Vegeta1\n";
   this->dfsEulerCycle(startNodeIndex);
-
+  std::cout << "Vegeta2\n";
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
   for (auto const& v : this->outEdges) {
     if (v.second != 0) {
       throw valhalla_exception_t(450);
     }
   }
+  std::cout << "Trunks1\n";
   std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
+  std::cout << "Trunks2\n";
+  std::cout << "this->reversedEulerPath: " << this->reversedEulerPath.size() << "\n";
+  int i = 0;
+  while (i < (this->reversedEulerPath.size() - 1)) {
+    auto e = boost::edge(this->reversedEulerPath[i], this->reversedEulerPath[i + 1], G);
+    std::cout << this->reversedEulerPath[i] << ": " << e.first << "\n";
+    std::cout << e.first << ": " << e.second << "\n";
+    // eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
+    i++;
+  }
+
+  int k = 0;
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
+    std::cout << "\n" << ++k << "\n";
     if (it + 1 == this->reversedEulerPath.rend()) {
       continue;
     }
     auto e = boost::edge(*it, *(it + 1), G);
+    std::cout << k << " a\n";
+    std::cout << this->G[e.first].graph_id;
     eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
+    std::cout << k << " b\n";
   }
+  std::cout << "\nVegeta3\n";
   return eulerPathEdgeGraphIDs;
 }
 
@@ -166,14 +191,20 @@ bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_verte
     return unbalancedVertices.size() == 0;
   } else {
     std::cout << "start vertex and end vertex is NOT the same\n";
-    auto unbalancedVertices = this->getUnbalancedVertices();
     for (auto i : unbalancedVertices) {
       std::cout << i.first << ": " << i.second << "\n";
     }
-    if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
-        unbalancedVertices[end_vertex.vertex_id] == 1) {
-      return true;
+    if (unbalancedVertices.count(start_vertex.vertex_id) &&
+        unbalancedVertices.count(end_vertex.vertex_id)) {
+      std::cout << "come here\n";
+      if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
+          unbalancedVertices[end_vertex.vertex_id] == 1) {
+        std::cout << "come here1\n";
+        return true;
+      }
+      return false;
     } else {
+      std::cout << "come here2\n";
       return false;
     }
   }

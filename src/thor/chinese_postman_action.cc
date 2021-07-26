@@ -56,14 +56,24 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
 
 // Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
 // ordered by the best.
-int get_node_candidate_index(const valhalla::Location& location, const GraphId& edge_id) {
+int get_node_candidate_index(const valhalla::Location& location,
+                             const GraphId& edge_id,
+                             int* percent_along) {
   int i = 0;
   for (const auto& e : location.path_edges()) {
+    std::cout << "path_edges: " << std::to_string(GraphId(e.graph_id())) << ": " << e.percent_along()
+              << "\n";
+  }
+  for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id) {
+      *percent_along = e.percent_along();
+      std::cout << "Index: " << i << ". Selected edge_id: " << std::to_string(GraphId(e.graph_id()))
+                << ": " << e.percent_along() << "\n";
       return i;
     }
     i++;
   }
+  std::cout << "No edge_id selected\n";
   return i;
 }
 
@@ -226,13 +236,15 @@ void thor_worker_t::chinese_postman(Api& request) {
     avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
   }
 
-  int currentOriginNodeIndex = originLocation.path_edges().size() + 1;
+  int currentOriginNodeIndex = originLocation.path_edges().size();
   CPVertex originVertex;
   int candidateOriginNodeIndex;
+  int originPercentAlong;
 
-  int currentDestinationNodeIndex = destinationLocation.path_edges().size() + 1;
+  int currentDestinationNodeIndex = destinationLocation.path_edges().size();
   CPVertex destinationVertex;
   int candidateDestinationNodeIndex;
+  int destinationPercentAlong;
 
   // Add chinese edges to internal set
   for (auto& edge : co->chinese_edges()) {
@@ -242,30 +254,48 @@ void thor_worker_t::chinese_postman(Api& request) {
     if (excluded)
       continue;
 
-    // Find the vertex for the origin location
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
-    candidateOriginNodeIndex = get_node_candidate_index(originLocation, GraphId(edge.id()));
+    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
+    CPVertex end_vertex = CPVertex(end_node);
+
+    std::cout << "\n======================================================\n";
+    std::cout << "Edge: " << std::to_string(GraphId(edge.id())) << "\n";
+    std::cout << "Start node: " << std::to_string(GraphId(start_node)) << "\n";
+    std::cout << "End node: " << std::to_string(GraphId(end_node)) << "\n";
+
+    // Find the vertex for the origin location
+    std::cout << "\nFind node candidate index for origin\n";
+    candidateOriginNodeIndex =
+        get_node_candidate_index(originLocation, GraphId(edge.id()), &originPercentAlong);
     if (candidateOriginNodeIndex < currentOriginNodeIndex) {
-      originVertex = start_vertex;
+      if (originPercentAlong < 0.5) {
+        originVertex = start_vertex;
+      } else {
+        originVertex = end_vertex;
+      }
+
       currentOriginNodeIndex = candidateOriginNodeIndex;
+      std::cout << "Selected start vertex: " << originVertex.vertex_id << "\n";
     }
     G.addVertex(start_vertex);
 
     // Find the vertex for the destination
-    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
-    CPVertex end_vertex = CPVertex(end_node);
-    candidateDestinationNodeIndex = get_node_candidate_index(destinationLocation, GraphId(edge.id()));
+    std::cout << "\nFind node candidate index for destination\n";
+    candidateDestinationNodeIndex =
+        get_node_candidate_index(destinationLocation, GraphId(edge.id()), &destinationPercentAlong);
     if (candidateDestinationNodeIndex < currentDestinationNodeIndex) {
       // Check this part of the code
-      if (destinationPoint == originPoint) {
-        std::cout << "destinationPoint == originPoint\n";
+      if (destinationPercentAlong < 0.5) {
+        // std::cout << "destinationPoint == originPoint\n";
         destinationVertex = start_vertex;
       } else {
         std::cout << "destinationPoint != originPoint\n";
         destinationVertex = end_vertex;
       }
       currentDestinationNodeIndex = candidateDestinationNodeIndex;
+      std::cout << "Selected end vertex: " << destinationVertex.vertex_id << "\n";
+      ;
     }
     G.addVertex(end_vertex);
 
@@ -285,6 +315,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   if (currentDestinationNodeIndex >= destinationLocation.path_edges().size()) {
     throw valhalla_exception_t(451);
   }
+
+  bool isSameOriginDestination = destinationVertex.graph_id == originVertex.graph_id;
 
   // Solving the Chinese Postman
   std::vector<GraphId> edgeGraphIds;
@@ -319,10 +351,28 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     // Do matching here
+
+    // A flag to check whether we already evaluate the origin and destination nodes
+    bool originNodeChecked = false;
+    bool destinationNodeChecked = false;
+
+    // Populate the list of node which has too many incoming and too few incoming
     std::vector<baldr::GraphId> overNodes;
     std::vector<baldr::GraphId> underNodes;
+    std::cout << "Zoro\n";
     for (auto const& v : G.getUnbalancedVertices()) {
-      for (int i = 0; i < abs(v.second); i++) {
+      // Calculate the number of needed edges to make it balanced
+      int extraEdges = 0;
+      if (!isSameOriginDestination && v.first == originVertex.vertex_id) {
+        extraEdges = abs(v.second - 1);
+        originNodeChecked = true;
+      } else if (!isSameOriginDestination && v.first == destinationVertex.vertex_id) {
+        extraEdges = abs(v.second + 1);
+        destinationNodeChecked = true;
+      } else {
+        extraEdges = abs(v.second);
+      }
+      for (int i = 0; i < extraEdges; i++) {
         if (v.second > 0) {
           overNodes.push_back(GraphId(v.first));
         } else {
@@ -330,7 +380,17 @@ void thor_worker_t::chinese_postman(Api& request) {
         }
       }
     }
-
+    std::cout << "Vegeta\n";
+    // Handle if the origin or destination nodes are not managed yet
+    if (!isSameOriginDestination) {
+      if (!originNodeChecked) {
+        underNodes.push_back(originVertex.graph_id);
+      }
+      if (!destinationNodeChecked) {
+        overNodes.push_back(destinationVertex.graph_id);
+      }
+    }
+    std::cout << "Trunks\n";
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
@@ -342,7 +402,7 @@ void thor_worker_t::chinese_postman(Api& request) {
         pairingMatrix[i].push_back(distance);
       }
     }
-
+    std::cout << "Goten\n";
     // Calling hungarian algorithm
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
@@ -358,7 +418,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Concat with main vector
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
-
+    std::cout << "Bulma\n";
     edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);
   }
   // Start build path here
