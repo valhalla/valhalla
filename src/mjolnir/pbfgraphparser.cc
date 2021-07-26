@@ -682,7 +682,7 @@ public:
                  value.find("mud") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
-      } else if (value.find("gravel") != std::string::npos ||
+      } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
                  value.find("pebblestone") != std::string::npos ||
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
