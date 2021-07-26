@@ -46,27 +46,17 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
 
-constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                                 baldr::kMaxSpeedKph};
-
-// Default penalty factor for avoiding closures (increases the cost of an edge as if its being
-// traversed at kMinSpeedKph)
-constexpr float kDefaultClosureFactor = 9.0f;
-// Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
-// penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
-// non-closure end
-constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
-
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
  * the decision should be. By default allowed methods will not disallow start/end/simple
- * restrictions and closures are determined by the costing configuration
+ * restrictions/shortcuts and closures are determined by the costing configuration
  */
 constexpr uint16_t kDisallowNone = 0x0;
 constexpr uint16_t kDisallowStartRestriction = 0x1;
 constexpr uint16_t kDisallowEndRestriction = 0x2;
 constexpr uint16_t kDisallowSimpleRestriction = 0x4;
 constexpr uint16_t kDisallowClosure = 0x8;
+constexpr uint16_t kDisallowShortcut = 0x10;
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -162,6 +152,7 @@ public:
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
    * @param  edge           Pointer to a directed edge.
+   * @param  is_dest        Is a directed edge the destination?
    * @param  pred           Predecessor edge information.
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
@@ -171,6 +162,7 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const bool is_dest,
                        const EdgeLabel& pred,
                        const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
@@ -237,8 +229,9 @@ public:
     bool assumed_restricted =
         ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
-        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
-    return !edge->is_shortcut() && accessible && !assumed_restricted;
+        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
+        ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
+    return accessible && !assumed_restricted;
   }
 
   /**
@@ -500,6 +493,7 @@ public:
 
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
+                                   const bool is_dest,
                                    const graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
@@ -518,7 +512,8 @@ public:
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (access_type == baldr::AccessType::kTimedAllowed ||
-          access_type == baldr::AccessType::kTimedDenied) {
+          access_type == baldr::AccessType::kTimedDenied ||
+          access_type == baldr::AccessType::kDestinationAllowed) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
@@ -538,6 +533,8 @@ public:
             // We are in range at the time we are allowed at this edge
             if (access_type == baldr::AccessType::kTimedAllowed)
               return true;
+            else if (access_type == baldr::AccessType::kDestinationAllowed)
+              return allow_conditional_destination_ || is_dest;
             else
               return false;
           }
@@ -618,7 +615,7 @@ public:
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
-               !edge->edge_to_left(idx) && edge->name_consistency(idx))
+               !edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
@@ -627,7 +624,7 @@ public:
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
       else if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
-               edge->edge_to_left(idx) && edge->name_consistency(idx))
+               edge->edge_to_left(idx) && edge->named() && edge->name_consistency(idx))
         seconds *= kTCUnfavorablePencilPointUturn;
     }
   }
@@ -678,6 +675,12 @@ public:
    * @param  allow  Flag indicating whether transit connections are allowed.
    */
   virtual void SetAllowTransitConnections(const bool allow);
+
+  /**
+   * Sets the flag indicating whether edges with valid restriction conditional=destination are
+   * allowed.
+   */
+  void set_allow_conditional_destination(const bool allow);
 
   /**
    * Set the current travel mode.
@@ -742,9 +745,9 @@ public:
    * This can be used by test programs - alternatively a list of avoid
    * edges will be passed in the property tree for the costing options
    * of a specified type.
-   * @param  avoid_edges  Set of edge Ids to avoid along with the percent along the edge.
+   * @param  exclude_edges  Set of edge Ids to avoid along with the percent along the edge.
    */
-  void AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges);
+  void AddUserAvoidEdges(const std::vector<AvoidEdge>& exclude_edges);
 
   /**
    * Check if the edge is in the user-specified avoid list.
@@ -753,8 +756,8 @@ public:
    *         false otherwise.
    */
   bool IsUserAvoidEdge(const baldr::GraphId& edgeid) const {
-    return (user_avoid_edges_.size() != 0 &&
-            user_avoid_edges_.find(edgeid) != user_avoid_edges_.end());
+    return (user_exclude_edges_.size() != 0 &&
+            user_exclude_edges_.find(edgeid) != user_exclude_edges_.end());
   }
 
   /**
@@ -767,8 +770,8 @@ public:
    *         false otherwise.
    */
   bool AvoidAsOriginEdge(const baldr::GraphId& edgeid, const float percent_along) const {
-    auto avoid = user_avoid_edges_.find(edgeid);
-    return (avoid != user_avoid_edges_.end() && avoid->second >= percent_along);
+    auto avoid = user_exclude_edges_.find(edgeid);
+    return (avoid != user_exclude_edges_.end() && avoid->second >= percent_along);
   }
 
   /**
@@ -781,8 +784,8 @@ public:
    *         false otherwise.
    */
   bool AvoidAsDestinationEdge(const baldr::GraphId& edgeid, const float percent_along) const {
-    auto avoid = user_avoid_edges_.find(edgeid);
-    return (avoid != user_avoid_edges_.end() && avoid->second <= percent_along);
+    auto avoid = user_exclude_edges_.find(edgeid);
+    return (avoid != user_exclude_edges_.end() && avoid->second <= percent_along);
   }
 
   /**
@@ -828,6 +831,8 @@ protected:
   // and bicycle generally allow access (with small penalties).
   bool allow_destination_only_;
 
+  bool allow_conditional_destination_;
+
   // Travel mode
   TravelMode travel_mode_;
 
@@ -838,7 +843,7 @@ protected:
   std::vector<HierarchyLimits> hierarchy_limits_;
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
-  std::unordered_map<baldr::GraphId, float> user_avoid_edges_;
+  std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
@@ -850,6 +855,7 @@ protected:
   // Transition costs
   sif::Cost country_crossing_cost_;
   sif::Cost gate_cost_;
+  sif::Cost private_access_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
   sif::Cost bike_share_cost_;
@@ -898,6 +904,8 @@ protected:
                               costing_options.country_crossing_cost()};
     gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
                   costing_options.gate_cost()};
+    private_access_cost_ = {costing_options.gate_cost() + costing_options.private_access_penalty(),
+                            costing_options.gate_cost()};
 
     bike_share_cost_ = {costing_options.bike_share_cost() + costing_options.bike_share_penalty(),
                         costing_options.bike_share_cost()};
@@ -987,7 +995,10 @@ protected:
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
-    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate) * (!node->tagged_access());
+    c += private_access_cost_ *
+         (node->type() == baldr::NodeType::kGate || node->type() == baldr::NodeType::kBollard) *
+         node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
@@ -1005,8 +1016,13 @@ protected:
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
-    c.cost += service_penalty_ *
-              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad);
+
+    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
+      // Do not penalize internal roads that are marked as service.
+      if (!edge->internal())
+        c.cost += service_penalty_;
+    }
+
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
@@ -1016,12 +1032,73 @@ protected:
 using cost_ptr_t = std::shared_ptr<DynamicCost>;
 using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kMaxTravelMode)>;
 
+/*
+ * Structure that stores default values for costing options that are common for most costing models.
+ * It mostly contains options used in DynamicCost::get_base_costs() method.
+ */
+struct BaseCostingOptionsConfig {
+  BaseCostingOptionsConfig();
+
+  ranged_default_t<float> dest_only_penalty_;
+  ranged_default_t<float> maneuver_penalty_;
+  ranged_default_t<float> alley_penalty_;
+  ranged_default_t<float> gate_cost_;
+  ranged_default_t<float> gate_penalty_;
+  ranged_default_t<float> private_access_penalty_;
+  ranged_default_t<float> country_crossing_cost_;
+  ranged_default_t<float> country_crossing_penalty_;
+
+  bool disable_toll_booth_ = false;
+  ranged_default_t<float> toll_booth_cost_;
+  ranged_default_t<float> toll_booth_penalty_;
+
+  bool disable_ferry_ = false;
+  ranged_default_t<float> ferry_cost_;
+  ranged_default_t<float> use_ferry_;
+
+  bool disable_rail_ferry_ = false;
+  ranged_default_t<float> rail_ferry_cost_;
+  ranged_default_t<float> use_rail_ferry_;
+
+  ranged_default_t<float> service_penalty_;
+  ranged_default_t<float> service_factor_;
+
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
+
+  ranged_default_t<float> use_tracks_;
+  ranged_default_t<float> use_living_streets_;
+
+  ranged_default_t<float> closure_factor_;
+};
+
 /**
  * Parses the cost options from json and stores values in pbf.
  * @param object The json request represented as a DOM tree.
  * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+
+/**
+ * Parses base cost options that are common for most costing models. If you use this function
+ * make sure that different default values were overridden in the config. Also explicitly
+ * disable options that shouldn't be parsed.
+ * @param obj The json request represented as a DOM tree.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ */
+void ParseBaseCostOptions(const rapidjson::Value& obj,
+                          CostingOptions* pbf_costing_options,
+                          const BaseCostingOptionsConfig& base_cfg);
+
+/**
+ * Set default values of base costing options to pbf structure. Skip options that were
+ * explicitly disabled.
+ * @param pbf_costing_options A mutable protocol buffer where default values will be stored.
+ * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ */
+void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
+                               const BaseCostingOptionsConfig& base_cfg);
 
 /**
  * Parses all the costing options for all supported costings

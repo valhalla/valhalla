@@ -134,51 +134,6 @@ inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
     return MIN_ZOOM;
 }
 
-// For transforming ISO 3166-1 country codes from alpha2 to alpha3
-std::unordered_map<std::string, std::string> iso2_to_iso3 =
-    {{"AD", "AND"}, {"AE", "ARE"}, {"AF", "AFG"}, {"AG", "ATG"}, {"AI", "AIA"}, {"AL", "ALB"},
-     {"AM", "ARM"}, {"AO", "AGO"}, {"AQ", "ATA"}, {"AR", "ARG"}, {"AS", "ASM"}, {"AT", "AUT"},
-     {"AU", "AUS"}, {"AW", "ABW"}, {"AX", "ALA"}, {"AZ", "AZE"}, {"BA", "BIH"}, {"BB", "BRB"},
-     {"BD", "BGD"}, {"BE", "BEL"}, {"BF", "BFA"}, {"BG", "BGR"}, {"BH", "BHR"}, {"BI", "BDI"},
-     {"BJ", "BEN"}, {"BL", "BLM"}, {"BM", "BMU"}, {"BN", "BRN"}, {"BO", "BOL"}, {"BQ", "BES"},
-     {"BR", "BRA"}, {"BS", "BHS"}, {"BT", "BTN"}, {"BV", "BVT"}, {"BW", "BWA"}, {"BY", "BLR"},
-     {"BZ", "BLZ"}, {"CA", "CAN"}, {"CC", "CCK"}, {"CD", "COD"}, {"CF", "CAF"}, {"CG", "COG"},
-     {"CH", "CHE"}, {"CI", "CIV"}, {"CK", "COK"}, {"CL", "CHL"}, {"CM", "CMR"}, {"CN", "CHN"},
-     {"CO", "COL"}, {"CR", "CRI"}, {"CU", "CUB"}, {"CV", "CPV"}, {"CW", "CUW"}, {"CX", "CXR"},
-     {"CY", "CYP"}, {"CZ", "CZE"}, {"DE", "DEU"}, {"DJ", "DJI"}, {"DK", "DNK"}, {"DM", "DMA"},
-     {"DO", "DOM"}, {"DZ", "DZA"}, {"EC", "ECU"}, {"EE", "EST"}, {"EG", "EGY"}, {"EH", "ESH"},
-     {"ER", "ERI"}, {"ES", "ESP"}, {"ET", "ETH"}, {"FI", "FIN"}, {"FJ", "FJI"}, {"FK", "FLK"},
-     {"FM", "FSM"}, {"FO", "FRO"}, {"FR", "FRA"}, {"GA", "GAB"}, {"GB", "GBR"}, {"GD", "GRD"},
-     {"GE", "GEO"}, {"GF", "GUF"}, {"GG", "GGY"}, {"GH", "GHA"}, {"GI", "GIB"}, {"GL", "GRL"},
-     {"GM", "GMB"}, {"GN", "GIN"}, {"GP", "GLP"}, {"GQ", "GNQ"}, {"GR", "GRC"}, {"GS", "SGS"},
-     {"GT", "GTM"}, {"GU", "GUM"}, {"GW", "GNB"}, {"GY", "GUY"}, {"HK", "HKG"}, {"HM", "HMD"},
-     {"HN", "HND"}, {"HR", "HRV"}, {"HT", "HTI"}, {"HU", "HUN"}, {"ID", "IDN"}, {"IE", "IRL"},
-     {"IL", "ISR"}, {"IM", "IMN"}, {"IN", "IND"}, {"IO", "IOT"}, {"IQ", "IRQ"}, {"IR", "IRN"},
-     {"IS", "ISL"}, {"IT", "ITA"}, {"JE", "JEY"}, {"JM", "JAM"}, {"JO", "JOR"}, {"JP", "JPN"},
-     {"KE", "KEN"}, {"KG", "KGZ"}, {"KH", "KHM"}, {"KI", "KIR"}, {"KM", "COM"}, {"KN", "KNA"},
-     {"KP", "PRK"}, {"KR", "KOR"}, {"XK", "XKX"}, {"KW", "KWT"}, {"KY", "CYM"}, {"KZ", "KAZ"},
-     {"LA", "LAO"}, {"LB", "LBN"}, {"LC", "LCA"}, {"LI", "LIE"}, {"LK", "LKA"}, {"LR", "LBR"},
-     {"LS", "LSO"}, {"LT", "LTU"}, {"LU", "LUX"}, {"LV", "LVA"}, {"LY", "LBY"}, {"MA", "MAR"},
-     {"MC", "MCO"}, {"MD", "MDA"}, {"ME", "MNE"}, {"MF", "MAF"}, {"MG", "MDG"}, {"MH", "MHL"},
-     {"MK", "MKD"}, {"ML", "MLI"}, {"MM", "MMR"}, {"MN", "MNG"}, {"MO", "MAC"}, {"MP", "MNP"},
-     {"MQ", "MTQ"}, {"MR", "MRT"}, {"MS", "MSR"}, {"MT", "MLT"}, {"MU", "MUS"}, {"MV", "MDV"},
-     {"MW", "MWI"}, {"MX", "MEX"}, {"MY", "MYS"}, {"MZ", "MOZ"}, {"NA", "NAM"}, {"NC", "NCL"},
-     {"NE", "NER"}, {"NF", "NFK"}, {"NG", "NGA"}, {"NI", "NIC"}, {"NL", "NLD"}, {"NO", "NOR"},
-     {"NP", "NPL"}, {"NR", "NRU"}, {"NU", "NIU"}, {"NZ", "NZL"}, {"OM", "OMN"}, {"PA", "PAN"},
-     {"PE", "PER"}, {"PF", "PYF"}, {"PG", "PNG"}, {"PH", "PHL"}, {"PK", "PAK"}, {"PL", "POL"},
-     {"PM", "SPM"}, {"PN", "PCN"}, {"PR", "PRI"}, {"PS", "PSE"}, {"PT", "PRT"}, {"PW", "PLW"},
-     {"PY", "PRY"}, {"QA", "QAT"}, {"RE", "REU"}, {"RO", "ROU"}, {"RS", "SRB"}, {"RU", "RUS"},
-     {"RW", "RWA"}, {"SA", "SAU"}, {"SB", "SLB"}, {"SC", "SYC"}, {"SD", "SDN"}, {"SS", "SSD"},
-     {"SE", "SWE"}, {"SG", "SGP"}, {"SH", "SHN"}, {"SI", "SVN"}, {"SJ", "SJM"}, {"SK", "SVK"},
-     {"SL", "SLE"}, {"SM", "SMR"}, {"SN", "SEN"}, {"SO", "SOM"}, {"SR", "SUR"}, {"ST", "STP"},
-     {"SV", "SLV"}, {"SX", "SXM"}, {"SY", "SYR"}, {"SZ", "SWZ"}, {"TC", "TCA"}, {"TD", "TCD"},
-     {"TF", "ATF"}, {"TG", "TGO"}, {"TH", "THA"}, {"TJ", "TJK"}, {"TK", "TKL"}, {"TL", "TLS"},
-     {"TM", "TKM"}, {"TN", "TUN"}, {"TO", "TON"}, {"TR", "TUR"}, {"TT", "TTO"}, {"TV", "TUV"},
-     {"TW", "TWN"}, {"TZ", "TZA"}, {"UA", "UKR"}, {"UG", "UGA"}, {"UM", "UMI"}, {"US", "USA"},
-     {"UY", "URY"}, {"UZ", "UZB"}, {"VA", "VAT"}, {"VC", "VCT"}, {"VE", "VEN"}, {"VG", "VGB"},
-     {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
-     {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
-
 // Sign style and unit conventions for speed limit signs by country.
 // Most countries use Vienna style and km/h, but the countries below
 // use MUTCD and/or mph conventions.
@@ -242,6 +197,8 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
+std::string guide_destinations(const valhalla::TripSign& sign);
+
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
   // Compute total distance and duration
@@ -269,10 +226,10 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
 
   // Convert distance to meters. Output distance and duration.
   distance = units_to_meters(distance, !imperial);
-  route->emplace("distance", json::fp_t{distance, 3});
-  route->emplace("duration", json::fp_t{duration, 3});
+  route->emplace("distance", json::fixed_t{distance, 3});
+  route->emplace("duration", json::fixed_t{duration, 3});
 
-  route->emplace("weight", json::fp_t{weight, 3});
+  route->emplace("weight", json::fixed_t{weight, 3});
   assert(api.options().costing_options(api.options().costing()).has_name());
   route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
 
@@ -282,8 +239,8 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
       route->emplace("duration_" + recosting_itr->name(), nullptr_t());
       route->emplace("weight_" + recosting_itr->name(), nullptr_t());
     } else {
-      route->emplace("duration_" + recosting_itr->name(), json::fp_t{recost.first, 3});
-      route->emplace("weight_" + recosting_itr->name(), json::fp_t{recost.second, 3});
+      route->emplace("duration_" + recosting_itr->name(), json::fixed_t{recost.first, 3});
+      route->emplace("weight_" + recosting_itr->name(), json::fixed_t{recost.second, 3});
     }
     ++recosting_itr;
   }
@@ -295,8 +252,8 @@ json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto coords = json::array({});
   coords->reserve(shape.size());
   for (const auto& p : shape) {
-    coords->emplace_back(
-        json::array({json::fp_t{p.lng(), DIGITS_PRECISION}, json::fp_t{p.lat(), DIGITS_PRECISION}}));
+    coords->emplace_back(json::array(
+        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
   }
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", std::move(coords));
@@ -381,7 +338,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     duration_array->reserve(trip_leg.shape_attributes().time_size());
     for (const auto& time : trip_leg.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      duration_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+      duration_array->push_back(json::fixed_t{time * kSecPerMillisecond, 3});
     }
     attributes_map->emplace("duration", duration_array);
   }
@@ -391,7 +348,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     distance_array->reserve(trip_leg.shape_attributes().length_size());
     for (const auto& length : trip_leg.shape_attributes().length()) {
       // decimeters (dm) to meters (m)
-      distance_array->push_back(json::fp_t{length * kMeterPerDecimeter, 1});
+      distance_array->push_back(json::fixed_t{length * kMeterPerDecimeter, 1});
     }
     attributes_map->emplace("distance", distance_array);
   }
@@ -401,7 +358,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     speeds_array->reserve(trip_leg.shape_attributes().speed_size());
     for (const auto& speed : trip_leg.shape_attributes().speed()) {
       // dm/s to m/s
-      speeds_array->push_back(json::fp_t{speed * kMeterPerDecimeter, 1});
+      speeds_array->push_back(json::fixed_t{speed * kMeterPerDecimeter, 1});
     }
     attributes_map->emplace("speed", speeds_array);
   }
@@ -448,7 +405,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_shape_index(index);
+    locs.Mutable(index)->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
@@ -495,8 +452,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     auto loc = json::array({});
     size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
     PointLL ll = shape[shape_index];
-    loc->emplace_back(json::fp_t{ll.lng(), 6});
-    loc->emplace_back(json::fp_t{ll.lat(), 6});
+    loc->emplace_back(json::fixed_t{ll.lng(), 6});
+    loc->emplace_back(json::fixed_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
 
@@ -521,17 +478,18 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       intersection->emplace("toll_collection", toll_collection);
 
     if (node->cost().transition_cost().seconds() > 0)
-      intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
+      intersection->emplace("turn_duration",
+                            json::fixed_t{node->cost().transition_cost().seconds(), 3});
     if (node->cost().transition_cost().cost() > 0)
-      intersection->emplace("turn_weight", json::fp_t{node->cost().transition_cost().cost(), 3});
+      intersection->emplace("turn_weight", json::fixed_t{node->cost().transition_cost().cost(), 3});
     auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
     if (next_node) {
       auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
       auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
       if (secs > 0)
-        intersection->emplace("duration", json::fp_t{secs, 3});
+        intersection->emplace("duration", json::fixed_t{secs, 3});
       if (cost > 0)
-        intersection->emplace("weight", json::fp_t{cost, 3});
+        intersection->emplace("weight", json::fixed_t{cost, 3});
     }
 
     // TODO: add recosted durations to the intersection?
@@ -545,6 +503,15 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
+          if (intersecting_edge->has_sign()) {
+            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+            // I've looked at the results from guide_destinations(), destinations(), and
+            // exit_destinations(). exit_destinations() doe not contain rest-area names.
+            // guide_destinations() and destinations() return the same string value for
+            // the rest area name. So I've decided to use guide_destinations().
+            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
+            rest_stop->emplace("name", guide_destinations_str);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
@@ -718,7 +685,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 }
 
 // Add exits (exit numbers) along a step/maneuver.
-std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exits(const valhalla::TripSign& sign) {
   // Iterate through the exit numbers
   std::string exits;
   for (const auto& number : sign.exit_numbers()) {
@@ -786,9 +753,9 @@ void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
-                                      ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
-                                  const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_element_refs(
+    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
     // Only process refs
@@ -807,8 +774,7 @@ std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
-        sign_elements,
+    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
   for (const auto& sign_element : sign_elements) {
@@ -827,9 +793,9 @@ std::string get_sign_element_nonrefs(
 
 // Compile and return the sign elements of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
-                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
-                              const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_elements(
+    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string sign_elements_string;
   for (const auto& sign_element : sign_elements) {
     // If the sign_elements_string is not empty, append specified delimiter
@@ -842,7 +808,7 @@ std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
   return sign_elements_string;
 }
 
-bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+bool exit_destinations_exist(const valhalla::TripSign& sign) {
   if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
       (sign.exit_names_size() > 0)) {
     return true;
@@ -851,7 +817,7 @@ bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) 
 }
 
 // Return the exit destinations
-std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exit_destinations(const valhalla::TripSign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -908,7 +874,7 @@ std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign)
 }
 
 // Return the guide destinations
-std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string guide_destinations(const valhalla::TripSign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -960,7 +926,7 @@ std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign
 //   3. <ref>: <non-ref>
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+std::string destinations(const valhalla::TripSign& sign) {
   if (exit_destinations_exist(sign)) {
     return exit_destinations(sign);
   }
@@ -1090,8 +1056,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   // Set the location
   auto loc = json::array({});
-  loc->emplace_back(json::fp_t{man_ll.lng(), 6});
-  loc->emplace_back(json::fp_t{man_ll.lat(), 6});
+  loc->emplace_back(json::fixed_t{man_ll.lng(), 6});
+  loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
   osrm_man->emplace("location", loc);
 
   // Get incoming and outgoing bearing. For the incoming heading, use the
@@ -1324,6 +1290,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   // Iterate through the legs in DirectionsLeg and TripLeg
   int leg_index = 0;
   auto leg = legs.begin();
+
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
@@ -1379,24 +1346,24 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("distance", json::fp_t{distance, 3});
-      step->emplace("duration", json::fp_t{duration, 3});
+      step->emplace("distance", json::fixed_t{distance, 3});
+      step->emplace("duration", json::fixed_t{duration, 3});
       const auto& end_node = path_leg.node(maneuver.end_path_index());
       const auto& begin_node = path_leg.node(maneuver.begin_path_index());
       auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
-      step->emplace("weight", json::fp_t{weight, 3});
+      step->emplace("weight", json::fixed_t{weight, 3});
       auto recost_itr = options.recostings().begin();
       auto begin_recost_itr = begin_node.recosts().begin();
       for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost()) {
           step->emplace("duration_" + recost_itr->name(),
-                        json::fp_t{end_recost.elapsed_cost().seconds() -
-                                       begin_recost_itr->elapsed_cost().seconds(),
-                                   3});
+                        json::fixed_t{end_recost.elapsed_cost().seconds() -
+                                          begin_recost_itr->elapsed_cost().seconds(),
+                                      3});
           step->emplace("weight_" + recost_itr->name(),
-                        json::fp_t{end_recost.elapsed_cost().cost() -
-                                       begin_recost_itr->elapsed_cost().cost(),
-                                   3});
+                        json::fixed_t{end_recost.elapsed_cost().cost() -
+                                          begin_recost_itr->elapsed_cost().cost(),
+                                      3});
         } else {
           step->emplace("duration_" + recost_itr->name(), nullptr_t());
           step->emplace("weight_" + recost_itr->name(), nullptr_t());
@@ -1509,17 +1476,17 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     double duration = leg->summary().time();
     double distance = units_to_meters(leg->summary().length(), !imperial);
     output_leg->emplace("summary", leg_summaries[leg_index]);
-    output_leg->emplace("distance", json::fp_t{distance, 3});
-    output_leg->emplace("duration", json::fp_t{duration, 3});
+    output_leg->emplace("distance", json::fixed_t{distance, 3});
+    output_leg->emplace("duration", json::fixed_t{duration, 3});
     output_leg->emplace("weight",
-                        json::fp_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
+                        json::fixed_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
     auto recost_itr = options.recostings().begin();
     for (const auto& recost : path_leg.node().rbegin()->recosts()) {
       if (recost.has_elapsed_cost()) {
         output_leg->emplace("duration_" + recost_itr->name(),
-                            json::fp_t{recost.elapsed_cost().seconds(), 3});
+                            json::fixed_t{recost.elapsed_cost().seconds(), 3});
         output_leg->emplace("weight_" + recost_itr->name(),
-                            json::fp_t{recost.elapsed_cost().cost(), 3});
+                            json::fixed_t{recost.elapsed_cost().cost(), 3});
       } else {
         output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
         output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
@@ -1534,9 +1501,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       auto admin_map = json::map({});
       if (admin.has_country_code()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
-        auto country_iso3 = iso2_to_iso3.find(admin.country_code());
-        if (country_iso3 != iso2_to_iso3.end()) {
-          admin_map->emplace("iso_3166_1_alpha3", country_iso3->second);
+        auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
+        if (!country_iso3.empty()) {
+          admin_map->emplace("iso_3166_1_alpha3", country_iso3);
         }
       }
       // TODO: iso_3166_2 state code
@@ -1551,6 +1518,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     if (path_leg.has_shape_attributes()) {
       output_leg->emplace("annotation", serialize_annotations(path_leg));
     }
+
+    // Add via waypoints to the leg
+    output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
@@ -1689,7 +1659,7 @@ std::string serialize(valhalla::Api& api) {
 
     if (options.action() == Options::trace_route) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.
-      route->emplace("confidence", json::fp_t{1, 1});
+      route->emplace("confidence", json::fixed_t{1, 1});
     }
     // Add linear references, if applicable
     route_references(route, api.trip().routes(i), options);
@@ -1761,10 +1731,12 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
     meta.set_num_lanes_blocked(2);
+    meta.set_length(1337);
     meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
     meta.set_iso_3166_1_alpha2("AU");
+    meta.set_iso_3166_1_alpha3("AUS");
     *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
@@ -1784,6 +1756,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "id": "18446744073709551615",
           "type": "weather",
           "iso_3166_1_alpha2": "AU",
+          "iso_3166_1_alpha3": "AUS",
           "creation_time": "2020-08-12T14:17:09Z",
           "start_time": "2020-08-12T14:18:49Z",
           "end_time": "2020-08-12T14:47:09Z",
@@ -1796,6 +1769,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "lanes_blocked": [],
           "num_lanes_blocked": 2,
           "clear_lanes": "many lanes clear",
+          "length": 1337,
           "closed": true,
           "congestion": {
             "value": 33
@@ -1835,6 +1809,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
       meta.set_creation_time(creation_time);
       meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
       meta.set_iso_3166_1_alpha2("SE");
+      meta.set_iso_3166_1_alpha3("SWE");
       *incident->mutable_metadata() = meta;
     }
     {
@@ -1851,6 +1826,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
       meta.set_end_time(creation_time + 1800);
       meta.set_type(valhalla::IncidentsTile::Metadata::ACCIDENT);
       meta.set_iso_3166_1_alpha2("SE");
+      meta.set_iso_3166_1_alpha3("SWE");
       *incident->mutable_metadata() = meta;
     }
 
@@ -1873,6 +1849,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
           "creation_time": "2020-08-12T14:17:09Z",
           "type": "weather",
           "iso_3166_1_alpha2": "SE",
+          "iso_3166_1_alpha3": "SWE",
           "lanes_blocked": [],
           "geometry_index_start": 87,
           "geometry_index_end": 92
@@ -1884,6 +1861,7 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
           "end_time": "2020-08-12T14:46:40Z",
           "type": "accident",
           "iso_3166_1_alpha2": "SE",
+          "iso_3166_1_alpha3": "SWE",
           "lanes_blocked": [],
           "geometry_index_start": 21,
           "geometry_index_end": 104

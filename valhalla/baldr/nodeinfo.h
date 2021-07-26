@@ -47,7 +47,9 @@ public:
            const midgard::PointLL& ll,
            const uint32_t access,
            const baldr::NodeType type,
-           const bool traffic_signal);
+           const bool traffic_signal,
+           const bool tagged_access,
+           const bool private_access);
 
   /**
    * Get the latitude, longitude of the node.
@@ -244,6 +246,38 @@ public:
   void set_drive_on_right(const bool rsd);
 
   /**
+   * Was the access information originally set in the data?
+   * True if any tags like "access", "auto", "truck", "foot", etc were specified.
+   * @return  Returns true if access was specified.
+   */
+  bool tagged_access() const {
+    return tagged_access_;
+  }
+
+  /**
+   * Sets the flag indicating if the access information was specified.
+   * True if any tags like "access", "auto", "truck", "foot", etc were specified.
+   * @param  tagged_access True if any access was set for the node.
+   */
+  void set_tagged_access(const bool tagged_access);
+
+  /**
+   * Is access set as private?
+   * @return  Returns true if node access is private.
+   */
+  bool private_access() const {
+    return private_access_;
+  }
+
+  /**
+   * Sets private_access flag. It is true when access is private for all travel modes.
+   * @param  private_access  True if node access is private.
+   */
+  void set_private_access(const bool private_access) {
+    private_access_ = private_access;
+  }
+
+  /**
    * Is a mode change allowed at this node? The access data tells which
    * modes are allowed at the node. Examples include transit stops, bike
    * share locations, and parking locations.
@@ -411,8 +445,9 @@ protected:
   uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
                                      // (up to kMaxLocalEdgeIndex+1)
   uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
-
-  uint64_t spare2_ : 20;
+  uint64_t tagged_access_ : 1;       // Was access initially tagged?
+  uint64_t private_access_ : 1;      // Is the access private?
+  uint64_t spare2_ : 18;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

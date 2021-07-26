@@ -36,7 +36,7 @@ def make_request(post_body):
   # make request
   try:
     start = time.time()
-    response = session.post(args.url, json=post_body)
+    response = session.post(args.url, json=post_body, headers=args.headers)
     stop = time.time()
     elapsed = stop - start
     response = response.json()
@@ -85,6 +85,7 @@ if __name__ == "__main__":
   parser.add_argument('--output-dir', type=str, help='The directory in which to place the result of each request')
   parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=multiprocessing.cpu_count())
   parser.add_argument('--format', type=str, help='Supports csv, json, raw and null output formats', default='csv')
+  parser.add_argument('--headers', type=str, help='Additional http headers to send with the requests. Follows the http header spec, eg. some-header-name: some-header-value', action='append', nargs='*', default=[])
   parsed_args = parser.parse_args()
 
   # make the output directory
@@ -96,6 +97,9 @@ if __name__ == "__main__":
     shutil.rmtree(parsed_args.output_dir)
   os.mkdir(parsed_args.output_dir)
 
+  # setup http headers
+  parsed_args.headers = { k: v for k, v in [ h.split(': ') for hs in parsed_args.headers for h in hs] }
+  # track progress with a count of finished requests
   response_count = multiprocessing.Value('i', 0)
   # make a worker pool to work on the requests
   work = [body for body in get_post_bodies(parsed_args.test_file)]

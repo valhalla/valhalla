@@ -276,6 +276,245 @@ TEST(RampsTCs, test_tc_infer) {
 
   // Verify that we are marking the internal edge.  If not, there will be a continue instruction
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left onto KJ.", "Turn left onto KJ.",
+      result, maneuver_index, "Turn left onto KJ.",
+      "Turn left. Then You will arrive at your destination.", "Turn left onto KJ.",
       "Turn left onto KJ. Then You will arrive at your destination.", "Continue for 50 meters.");
+}
+
+namespace {
+void check_edge_classification(baldr::GraphReader& graph_reader,
+                               const gurka::nodelayout& nodes,
+                               const std::string& b,
+                               const std::string& e,
+                               baldr::RoadClass rc) {
+  const auto edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, nodes, b, e));
+  EXPECT_EQ(edge->classification(), rc);
+}
+} // namespace
+
+TEST(LinkReclassification, test_use_refs) {
+  // Check that linkreclassification algorithm takes into account 'ref' tag
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+  A------------B-------------C-----------D
+                \     G     /
+                 \    |    K----------L
+     I------------J   |   /
+                   \  |  /
+                    \ | /
+                     \|/
+                      F
+                      |
+                      |
+                      E
+  )";
+
+  const gurka::ways ways = {
+      // motorway road M1
+      {"ABCD", {{"highway", "motorway"}, {"ref", "M1"}}},
+      // trunk road M2
+      {"EFG", {{"highway", "trunk"}, {"ref", "M2"}}},
+      // link from M1 to M2
+      {"BJF", {{"highway", "motorway_link"}, {"ref", "M2"}, {"oneway", "yes"}}},
+      // some tertiary road
+      {"IJ", {{"highway", "tertiary"}}},
+      // link from M2 to M1
+      {"FKC", {{"highway", "motorway_link"}, {"ref", "M2"}, {"oneway", "yes"}}},
+      // some tertiary road
+      {"KL", {{"highway", "tertiary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_use_refs",
+                               {{"mjolnir.reclassify_links", "true"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // check that ramp classification from M1 to M2 wasn't confused by the tertiary road
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "J", "F", baldr::RoadClass::kTrunk);
+
+  // check that ramp classification from M2 to M1 wasn't confused by the tertiary road
+  check_edge_classification(graph_reader, layout, "F", "K", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
+}
+
+TEST(LinkReclassification, test_use_dest_refs) {
+  // Check that linkreclassification algorithm takes into account 'destination:ref' tag
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+  A------------B-------------C-----------D
+                \     G     /
+                 \    |    K----------L
+     I------------J   |   /
+                   \  |  /
+                    \ | /
+                     \|/
+                      F
+                      |
+                      |
+                      E
+  )";
+
+  const gurka::ways ways = {
+      // motorway road M1
+      {"ABCD", {{"highway", "motorway"}, {"ref", "M1"}}},
+      // trunk road M2
+      {"EFG", {{"highway", "trunk"}, {"ref", "M2"}}},
+      // link from M1 to M2
+      {"BJF", {{"highway", "motorway_link"}, {"destination:ref", "M2"}, {"oneway", "yes"}}},
+      // some tertiary road
+      {"IJ", {{"highway", "tertiary"}}},
+      // link from M2 to M1
+      {"FKC", {{"highway", "motorway_link"}, {"destination:ref", "M1"}, {"oneway", "yes"}}},
+      // some tertiary road
+      {"KL", {{"highway", "tertiary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_use_dest_refs",
+                               {{"mjolnir.reclassify_links", "true"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // check that ramp classification from M1 to M2 wasn't confused by the tertiary road
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "J", "F", baldr::RoadClass::kTrunk);
+
+  // check that ramp classification from M2 to M1 wasn't confused by the tertiary road
+  check_edge_classification(graph_reader, layout, "F", "K", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
+}
+
+TEST(LinkReclassification, test_hierarchical_reclass) {
+  // Check that final road classes of links will be higher or equal to the classes of their children
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+  A--------B-------------------------------------C
+            \                             D
+             \                            |
+              G-------------H-------------E
+              |             |             |
+          I---J---K         |             F
+                        L---M---N
+  )";
+
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "motorway"}}},
+      {"DEF", {{"highway", "trunk"}}},
+      {"BGHE", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"GJ", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"HM", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"IJK", {{"highway", "secondary"}}},
+      {"LMN", {{"highway", "tertiary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_hierarchical_reclass",
+                               {{"mjolnir.reclassify_links", "true"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // BG leads to 3 roads, make sure that the best classification was chosen
+  check_edge_classification(graph_reader, layout, "B", "G", baldr::RoadClass::kTrunk);
+  // GJ leads to only one secondary road
+  check_edge_classification(graph_reader, layout, "G", "J", baldr::RoadClass::kSecondary);
+  // GH lead to 2 road, make sure that the best classification was chosen
+  check_edge_classification(graph_reader, layout, "G", "H", baldr::RoadClass::kTrunk);
+  // HM leads to only one tertiary road
+  check_edge_classification(graph_reader, layout, "H", "M", baldr::RoadClass::kTertiary);
+  // HE leads to only one trunk road
+  check_edge_classification(graph_reader, layout, "H", "E", baldr::RoadClass::kTrunk);
+}
+
+TEST(LinkReclassification, test_acyclic_graph) {
+  // Check that all links will be reclassified correctly in case when some nodes have
+  // several inbound links and some nodes have several outbound links (when link graph
+  // is an acyclic graph that is not a tree)
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+                                         A------B-----C
+                                                |         D
+                   G                M           |         |
+                   |               / \          J---------E
+                   |              /   \        /          |
+                   H-----N-------L-----K-------           F
+                   |     |
+                   |   O-P-R
+                   I
+  )";
+
+  const gurka::ways ways = {
+      {"GHI", {{"highway", "motorway"}}},
+      {"ABC", {{"highway", "primary"}}},
+      {"DEF", {{"highway", "secondary"}}},
+      {"OPR", {{"highway", "tertiary"}}},
+
+      {"BJ", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"EJ", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"JK", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"KL", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"KM", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"ML", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"LN", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"NH", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+      {"NP", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_acyclic_graph",
+                               {{"mjolnir.reclassify_links", "true"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "J", "K", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "K", "L", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "K", "M", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "M", "L", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "L", "N", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "N", "H", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "N", "P", baldr::RoadClass::kTertiary);
+  check_edge_classification(graph_reader, layout, "E", "J", baldr::RoadClass::kSecondary);
+}
+
+TEST(RampsTCs, SlipLane) {
+  // slip lane logic applies if link is long enough(> 200m at the moment)
+  // so gridsize should be super small
+  constexpr double gridsize_metres = 100;
+  const std::string ascii_map = R"(
+                Z
+                |
+  K__M_____W____C____D___E____N
+      \         |        /
+        \__Y    |      ^
+            \   B     /
+            |   |   F
+            |   | /
+             \  A
+              \ |
+                X
+    )";
+
+  const gurka::ways ways = {{"XABCZ", {{"highway", "primary"}, {"name", "M1"}}},
+                            {"KMWCDEN", {{"highway", "primary"}, {"name", "M2"}}},
+                            {"AFE", {{"highway", "primary_link"}, {"oneway", "yes"}}},
+                            {"XYM", {{"highway", "primary_link"}, {"oneway", "yes"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+
+  std::string test_dir = "test/data/gurka_ramp_vs_turn_channel_slip_lane";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, test_dir);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "A", "E");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "X", "M");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
 }

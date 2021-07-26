@@ -149,8 +149,10 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
     uint8_t has_time_restrictions = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (current_es->set() == EdgeSet::kPermanent ||
-        !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
+                                  has_time_restrictions) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -532,7 +534,8 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+                      edgelabel.path_distance(), edgelabel.restriction_idx(),
+                      edgelabel.transition_cost());
 
     graph_tile_ptr tile = graphreader.GetGraphTile(edgelabel.edgeid());
     const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());

@@ -92,7 +92,6 @@ function(valhalla_module)
       # However, NOGDI needs to be undefined in logging.h
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
-      RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
@@ -111,7 +110,9 @@ function(valhalla_module)
   # These options do not affect the ABI and should therefore be used whenever possible for
   # predictable numerical results
   # For the x86-64 compiler, these extensions are enabled by default.
-  target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|AMD64|x64|x86|x86_64")
+    target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+  endif()
 
   if(ENABLE_COMPILER_WARNINGS)
     cxx_add_warning_flags(${library})
@@ -149,6 +150,8 @@ function(valhalla_module)
 endfunction()
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
+SET(CPP_STATSD_STANDALONE OFF CACHE BOOL "ignore test targets" FORCE)
+add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/third_party/cpp-statsd-client)
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
@@ -202,9 +205,6 @@ target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
     $<$<BOOL:${MSVC}>:NOMINMAX>
-    RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
-                             # because ${libvalhalla_compile_definitions} must be private.
-                             # To be removed with ${libvalhalla_compile_definitions} below
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
   PRIVATE
@@ -224,6 +224,7 @@ target_include_directories(valhalla
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
@@ -233,13 +234,13 @@ target_link_libraries(valhalla
     ${libvalhalla_link_libraries}
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-    Threads::Threads)
+    Threads::Threads
+    cpp-statsd-client)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
 
-set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 install(TARGETS valhalla
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
@@ -249,7 +250,13 @@ if(BUILD_SHARED_LIBS)
   install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
-else()
+
+  set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    COMPONENT development)
+  
   if(UNIX)
     add_custom_target(${LIBVALHALLA_SO_LINK} ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
@@ -259,10 +266,6 @@ endif()
 
 install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md ${VALHALLA_SOURCE_DIR}/README.md
   DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
-  COMPONENT development)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   COMPONENT development)
 
 install(FILES ${valhalla_hdrs}

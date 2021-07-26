@@ -624,21 +624,23 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
     // and next maneuver is not a straight
     // Activate only specific matching turn lanes
     switch (next_maneuver_type) {
-      case DirectionsLeg_Maneuver_Type_kUturnLeft:
-      case DirectionsLeg_Maneuver_Type_kSharpLeft:
-      case DirectionsLeg_Maneuver_Type_kLeft:
       case DirectionsLeg_Maneuver_Type_kSlightLeft:
-      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kStayLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
-      case DirectionsLeg_Maneuver_Type_kExitRight:
-      case DirectionsLeg_Maneuver_Type_kRampRight:
       case DirectionsLeg_Maneuver_Type_kRight:
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
@@ -1002,8 +1004,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const {
   std::string str;
 
   for (const auto& sign_element : sign_elements) {
@@ -1251,8 +1252,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const {
   std::string str;
   std::string param_list;
 
@@ -1334,6 +1334,9 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   str += " | road_class=";
   str += std::to_string(road_class());
+
+  str += " | lane_count=";
+  str += std::to_string(lane_count());
 
   return str;
 }
@@ -1495,6 +1498,27 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
         GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasRoadForkTraversableIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    bool allow_service_road) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_fork_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->prev_name_consistency() &&
+        (xedge->use() != TripLeg_Use_kRampUse) && (xedge->use() != TripLeg_Use_kTurnChannelUse) &&
+        (xedge->use() != TripLeg_Use_kFerryUse) && (xedge->use() != TripLeg_Use_kRailFerryUse)) {
+      // If service roads are not allowed then skip intersecting service roads
+      if (!allow_service_road && (xedge->road_class() == kServiceOther)) {
+        continue;
+      }
       return true;
     }
   }

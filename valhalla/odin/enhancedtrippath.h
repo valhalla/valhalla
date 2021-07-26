@@ -14,6 +14,7 @@
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/sign.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -256,7 +257,7 @@ public:
     return mutable_edge_->has_sign();
   }
 
-  const ::valhalla::TripLeg_Sign& sign() const {
+  const ::valhalla::TripSign& sign() const {
     return mutable_edge_->sign();
   }
 
@@ -296,7 +297,7 @@ public:
     return mutable_edge_->max_downward_grade();
   }
 
-  int32_t lane_count() const {
+  uint32_t lane_count() const {
     return mutable_edge_->lane_count();
   }
 
@@ -304,7 +305,7 @@ public:
     return mutable_edge_->cycle_lane();
   }
 
-  int32_t bicycle_network() const {
+  uint32_t bicycle_network() const {
     return mutable_edge_->bicycle_network();
   }
 
@@ -312,11 +313,11 @@ public:
     return mutable_edge_->sidewalk();
   }
 
-  int32_t density() const {
+  uint32_t density() const {
     return mutable_edge_->density();
   }
 
-  int32_t speed_limit() const {
+  uint32_t speed_limit() const {
     return mutable_edge_->speed_limit();
   }
 
@@ -447,16 +448,14 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-      const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-      const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 #endif
 };
 
@@ -496,8 +495,20 @@ public:
     return mutable_intersecting_edge_->use();
   }
 
+  bool has_sign() const {
+    return mutable_intersecting_edge_->has_sign();
+  }
+
+  const ::valhalla::TripSign& sign() const {
+    return mutable_intersecting_edge_->sign();
+  }
+
   ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
+  }
+
+  uint32_t lane_count() const {
+    return mutable_intersecting_edge_->lane_count();
   }
 
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
@@ -655,6 +666,10 @@ public:
 
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
+
+  bool HasRoadForkTraversableIntersectingEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode,
+                                              bool allow_service_road);
 
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,

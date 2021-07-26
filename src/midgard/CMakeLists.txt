@@ -6,11 +6,18 @@ set(sources
   polyline2.cc
   obb2.cc
   pointll.cc
+  point_tile_index.cc
   aabb2.cc
   point2.cc
   util.cc
   ellipse.cc
   logging.cc)
+
+if ((UNIX OR APPLE) AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(
+            ${sources}
+            PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra")
+endif()
 
 valhalla_module(NAME midgard
   SOURCES ${sources}

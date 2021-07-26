@@ -157,7 +157,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  measure_scope_time(request, "thor_worker_t::expansion");
+  measure_scope_time(request);
 
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
@@ -175,6 +175,11 @@ std::string thor_worker_t::expansion(Api& request) {
                                 baldr::GraphId edgeid, const char* status, bool full_shape = false) {
     // full shape might be overkill but meh, its trace
     auto tile = reader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
+                std::to_string(edgeid.Tile_Base()));
+      return;
+    }
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge).shape();
     if (!edge->forward())
@@ -240,6 +245,9 @@ std::string thor_worker_t::expansion(Api& request) {
 }
 
 void thor_worker_t::centroid(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
@@ -273,7 +281,7 @@ void thor_worker_t::centroid(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::route");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   parse_filter_attributes(request);
@@ -347,8 +355,10 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // find the proper connection).
   for (auto& edge1 : origin.path_edges()) {
     for (auto& edge2 : destination.path_edges()) {
-      if (edge1.graph_id() == edge2.graph_id() ||
-          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
+      bool same_graph_id = edge1.graph_id() == edge2.graph_id();
+      bool are_connected =
+          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
+      if (same_graph_id || are_connected) {
         return &timedep_forward;
       }
     }
@@ -363,12 +373,14 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
                                                                  const Options& options) {
-  // Find the path. If bidirectional A* disable use of destination only edges on the
-  // first pass. If there is a failure, we allow them on the second pass.
+  // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-  if (path_algorithm == &bidir_astar) {
-    cost->set_allow_destination_only(false);
-  }
+
+  // If bidirectional A* disable use of destination-only edges on the
+  // first pass. If there is a failure, we allow them on the second pass.
+  // Other path algorithms can use destination-only edges on the first pass.
+  cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
+
   cost->set_pass(0);
   auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
 
@@ -399,6 +411,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
+    cost->set_allow_conditional_destination(true);
     path_algorithm->set_not_thru_pruning(false);
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =

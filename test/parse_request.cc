@@ -22,6 +22,7 @@ constexpr float kDefaultAuto_DestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultAuto_AlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultAuto_GateCost = 30.0f;                // Seconds
 constexpr float kDefaultAuto_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultAuto_PrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultAuto_TollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultAuto_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultAuto_FerryCost = 300.0f;              // Seconds
@@ -32,7 +33,7 @@ constexpr float kDefaultAuto_UseHighways = 0.5f;              // Factor between 
 constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseLivingStreets = 0.1f;         // Factor between 0 and 1
-constexpr float kDefaultAuto_ServicePenalty = 15.0f;          // Seconds
+constexpr float kDefaultAuto_ServicePenalty = 75.0f;          // Seconds
 constexpr float kDefaultAuto_ServiceFactor = 1.f;             // Positive factor
 
 // Motor Scooter defaults
@@ -40,6 +41,7 @@ constexpr float kDefaultMotorScooter_ManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultMotorScooter_AlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultMotorScooter_GateCost = 30.0f;                // Seconds
 constexpr float kDefaultMotorScooter_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultMotorScooter_PrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultMotorScooter_FerryCost = 300.0f;              // Seconds
 constexpr float kDefaultMotorScooter_CountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultMotorScooter_CountryCrossingPenalty = 0.0f;   // Seconds
@@ -57,6 +59,7 @@ constexpr float kDefaultMotorcycle_ManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultMotorcycle_AlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultMotorcycle_GateCost = 30.0f;                // Seconds
 constexpr float kDefaultMotorcycle_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultMotorcycle_PrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultMotorcycle_TollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultMotorcycle_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultMotorcycle_FerryCost = 300.0f;              // Seconds
@@ -100,10 +103,10 @@ constexpr float kDefaultPedestrian_ServiceFactor = 1.f;                  // Posi
 
 // Bicycle defaults
 constexpr float kDefaultBicycle_ManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultBicycle_DrivewayPenalty = 300.0f;      // Seconds
 constexpr float kDefaultBicycle_AlleyPenalty = 60.0f;          // Seconds
 constexpr float kDefaultBicycle_GateCost = 30.0f;              // Seconds
-constexpr float kDefaultBicycle_GatePenalty = 600.0f;          // Seconds
+constexpr float kDefaultBicycle_GatePenalty = 300.0f;          // Seconds
+constexpr float kDefaultBicycle_PrivateAccessPenalty = 450.0f; // Seconds
 constexpr float kDefaultBicycle_FerryCost = 300.0f;            // Seconds
 constexpr float kDefaultBicycle_CountryCrossingCost = 600.0f;  // Seconds
 constexpr float kDefaultBicycle_CountryCrossingPenalty = 0.0f; // Seconds
@@ -127,6 +130,7 @@ constexpr float kDefaultTruck_DestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultTruck_AlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultTruck_GateCost = 30.0f;                // Seconds
 constexpr float kDefaultTruck_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultTruck_PrivateAccessPenalty = 450.0f;   // Seconds
 constexpr float kDefaultTruck_TollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTruck_TollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultTruck_CountryCrossingCost = 600.0f;    // Seconds
@@ -475,6 +479,8 @@ void test_default_base_auto_cost_options(const Costing costing, const Options::A
            request.options().costing_options(static_cast<int>(costing)).gate_cost());
   validate("gate_penalty", kDefaultAuto_GatePenalty,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("private_access_penalty", kDefaultAuto_PrivateAccessPenalty,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
   validate("toll_booth_cost", kDefaultAuto_TollBoothCost,
            request.options().costing_options(static_cast<int>(costing)).toll_booth_cost());
   validate("toll_booth_penalty", kDefaultAuto_TollBoothPenalty,
@@ -519,6 +525,8 @@ void test_default_motor_scooter_cost_options(const Costing costing, const Option
            request.options().costing_options(static_cast<int>(costing)).gate_cost());
   validate("gate_penalty", kDefaultMotorScooter_GatePenalty,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("private_access_penalty", kDefaultMotorScooter_PrivateAccessPenalty,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
   validate("alley_penalty", kDefaultMotorScooter_AlleyPenalty,
            request.options().costing_options(static_cast<int>(costing)).alley_penalty());
   validate("country_crossing_cost", kDefaultMotorScooter_CountryCrossingCost,
@@ -559,6 +567,8 @@ void test_default_motorcycle_cost_options(const Costing costing, const Options::
            request.options().costing_options(static_cast<int>(costing)).gate_cost());
   validate("gate_penalty", kDefaultMotorcycle_GatePenalty,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("private_access_penalty", kDefaultMotorcycle_PrivateAccessPenalty,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
   validate("alley_penalty", kDefaultMotorcycle_AlleyPenalty,
            request.options().costing_options(static_cast<int>(costing)).alley_penalty());
   validate("country_crossing_cost", kDefaultMotorcycle_CountryCrossingCost,
@@ -657,6 +667,8 @@ void test_default_bicycle_cost_options(const Costing costing, const Options::Act
            request.options().costing_options(static_cast<int>(costing)).gate_cost());
   validate("gate_penalty", kDefaultBicycle_GatePenalty,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("private_access_penalty", kDefaultBicycle_PrivateAccessPenalty,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
   validate("country_crossing_cost", kDefaultBicycle_CountryCrossingCost,
            request.options().costing_options(static_cast<int>(costing)).country_crossing_cost());
   validate("country_crossing_penalty", kDefaultBicycle_CountryCrossingPenalty,
@@ -698,6 +710,8 @@ void test_default_truck_cost_options(const Costing costing, const Options::Actio
            request.options().costing_options(static_cast<int>(costing)).gate_cost());
   validate("gate_penalty", kDefaultTruck_GatePenalty,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("private_access_penalty", kDefaultTruck_PrivateAccessPenalty,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
   validate("toll_booth_cost", kDefaultTruck_TollBoothCost,
            request.options().costing_options(static_cast<int>(costing)).toll_booth_cost());
   validate("toll_booth_penalty", kDefaultTruck_TollBoothPenalty,
@@ -845,6 +859,22 @@ void test_gate_penalty_parsing(const Costing costing,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   validate(key, expected_value,
            request.options().costing_options(static_cast<int>(costing)).gate_penalty());
+}
+
+void test_private_access_penalty_parsing(const Costing costing,
+                                         const float specified_value,
+                                         const float expected_value,
+                                         const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "private_access_penalty";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options().costing_options(static_cast<int>(costing)).private_access_penalty());
 }
 
 void test_toll_booth_cost_parsing(const Costing costing,
@@ -1988,6 +2018,49 @@ TEST(ParseRequest, test_gate_penalty) {
   test_gate_penalty_parsing(costing, 50000.f, default_value);
 }
 
+TEST(ParseRequest, test_private_access_penalty) {
+  float default_value = kDefaultAuto_PrivateAccessPenalty;
+  for (auto costing : get_base_auto_costing_list()) {
+    test_private_access_penalty_parsing(costing, default_value, default_value);
+    test_private_access_penalty_parsing(costing, 2.f, 2.f);
+    test_private_access_penalty_parsing(costing, 60.f, 60.f);
+    test_private_access_penalty_parsing(costing, -2.f, default_value);
+    test_private_access_penalty_parsing(costing, 500000.f, default_value);
+  }
+
+  Costing costing = Costing::motor_scooter;
+  default_value = kDefaultMotorScooter_PrivateAccessPenalty;
+  test_private_access_penalty_parsing(costing, default_value, default_value);
+  test_private_access_penalty_parsing(costing, 2.f, 2.f);
+  test_private_access_penalty_parsing(costing, 60.f, 60.f);
+  test_private_access_penalty_parsing(costing, -2.f, default_value);
+  test_private_access_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = Costing::motorcycle;
+  default_value = kDefaultMotorcycle_PrivateAccessPenalty;
+  test_private_access_penalty_parsing(costing, default_value, default_value);
+  test_private_access_penalty_parsing(costing, 2.f, 2.f);
+  test_private_access_penalty_parsing(costing, 60.f, 60.f);
+  test_private_access_penalty_parsing(costing, -2.f, default_value);
+  test_private_access_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = Costing::bicycle;
+  default_value = kDefaultBicycle_PrivateAccessPenalty;
+  test_private_access_penalty_parsing(costing, default_value, default_value);
+  test_private_access_penalty_parsing(costing, 15.f, 15.f);
+  test_private_access_penalty_parsing(costing, 60.f, 60.f);
+  test_private_access_penalty_parsing(costing, -2.f, default_value);
+  test_private_access_penalty_parsing(costing, 50000.f, default_value);
+
+  costing = Costing::truck;
+  default_value = kDefaultTruck_PrivateAccessPenalty;
+  test_private_access_penalty_parsing(costing, default_value, default_value);
+  test_private_access_penalty_parsing(costing, 15.f, 15.f);
+  test_private_access_penalty_parsing(costing, 60.f, 60.f);
+  test_private_access_penalty_parsing(costing, -2.f, default_value);
+  test_private_access_penalty_parsing(costing, 50000.f, default_value);
+}
+
 TEST(ParseRequest, test_toll_booth_cost) {
   float default_value = kDefaultAuto_TollBoothCost;
   for (auto costing : get_base_auto_costing_list()) {
@@ -2281,7 +2354,9 @@ TEST(ParseRequest, test_use_living_streets) {
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_UseLivingStreets);
   costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_UseLivingStreets);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_use_living_streets_parsing(costing, default_value, default_value);
     test_use_living_streets_parsing(costing, 0.2f, 0.2f);
     test_use_living_streets_parsing(costing, 0.6f, 0.6f);
@@ -2300,7 +2375,9 @@ TEST(ParseRequest, test_service_penalty) {
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServicePenalty);
   costing_with_defaults.emplace_back(Costing::bicycle, kDefaultBicycle_ServicePenalty);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_service_penalty_parsing(costing, default_value, default_value);
     test_service_penalty_parsing(costing, 0.2f, 0.2f);
     test_service_penalty_parsing(costing, 600.f, 600.f);
@@ -2318,7 +2395,9 @@ TEST(ParseRequest, test_service_factor) {
   costing_with_defaults.emplace_back(Costing::motorcycle, kDefaultMotorcycle_ServiceFactor);
   costing_with_defaults.emplace_back(Costing::pedestrian, kDefaultPedestrian_ServiceFactor);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_service_factor_parsing(costing, default_value, default_value);
     test_service_factor_parsing(costing, 0.5f, 0.5f);
     test_service_factor_parsing(costing, 10.f, 10.f);
@@ -2382,7 +2461,9 @@ TEST(ParseRequest, test_use_tracks) {
     costing_with_defaults.emplace_back(costing, kDefaultTruck_UseTracks);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_UseTracks);
 
-  for (const auto& [costing, default_value] : costing_with_defaults) {
+  for (const auto& p : costing_with_defaults) {
+    const auto& costing = p.first;
+    const auto& default_value = p.second;
     test_use_tracks_parsing(costing, default_value, default_value);
     test_use_tracks_parsing(costing, 0.2f, 0.2f);
     test_use_tracks_parsing(costing, 0.6f, 0.6f);

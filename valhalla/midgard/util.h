@@ -20,6 +20,8 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/util_core.h>
 
+#define UNUSED(x) (void)(x)
+
 namespace valhalla {
 namespace midgard {
 
@@ -627,6 +629,19 @@ struct projector_t {
 };
 
 /**
+ * Use the barycentric technique to test if the point p is inside the triangle formed by (a, b, c).
+ * If p is along the triangle's nodes/edges, this is not considered contained.
+ * Note to user: this is entirely done in 2-D; no effort is made to approximate earth curvature.
+ * @param  a  first triangle point
+ * @param  b  second triangle point
+ * @param  c  third triangle point
+ * @param  p  point to test for containment
+ * @return    true/false if contained.
+ */
+template <typename coord_t>
+bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p);
+
+/**
  * Convert the input units, in either imperial or metric, into meters.
  * @param   units_km_or_mi (kms or miles), to convert to meters
  * @param   true if input units are in metric, false if they're in imperial
@@ -663,20 +678,21 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-template <typename clock_t = std::chrono::steady_clock> struct scoped_timer {
-  using duration_t = typename clock_t::duration;
-  const std::function<void(const duration_t&)> callback;
-  const std::chrono::time_point<clock_t> start;
+template <typename T> struct Finally {
+  T t;
+  explicit Finally(T t) : t(t){};
+  Finally() = delete;
+  Finally(Finally&& f) = default;
+  Finally(const Finally&) = delete;
+  Finally& operator=(const Finally&) = delete;
+  Finally& operator=(Finally&&) = delete;
+  ~Finally() {
+    t();
+  };
+};
 
-  scoped_timer(const std::function<void(const duration_t&)>& finished_callback)
-      : callback(finished_callback), start(clock_t::now()) {
-  }
-  scoped_timer(std::function<void(const duration_t&)>&& finished_callback)
-      : callback(finished_callback), start(clock_t::now()) {
-  }
-  ~scoped_timer() {
-    callback(clock_t::now() - start);
-  }
+template <typename T> Finally<T> make_finally(T t) {
+  return Finally<T>{t};
 };
 
 } // namespace midgard

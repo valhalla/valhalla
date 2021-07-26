@@ -34,7 +34,6 @@ std::string TimeStamp() {
   std::time_t tt = std::chrono::system_clock::to_time_t(tp);
   std::tm gmt{};
   get_gmtime(&tt, &gmt);
-  using sec_t = std::chrono::duration<double>;
   std::chrono::duration<double> fractional_seconds =
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
@@ -108,7 +107,7 @@ bool RegisterLogger(const std::string& name, LoggerCreator function_ptr) {
 }
 
 // logger base class, not pure virtual so you can use as a null logger if you want
-Logger::Logger(const LoggingConfig& config){};
+Logger::Logger(const LoggingConfig& /*config*/){};
 Logger::~Logger(){};
 void Logger::Log(const std::string&, const LogLevel){};
 void Logger::Log(const std::string&, const std::string&){};

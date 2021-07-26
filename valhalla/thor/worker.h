@@ -131,6 +131,11 @@ protected:
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
   Centroid centroid_gen;
+
+private:
+  std::string service_name() const override {
+    return "thor";
+  }
 };
 
 } // namespace thor
