@@ -654,7 +654,8 @@ public:
                  value.find("pavement") != std::string::npos ||
                  value.find("asphalt") != std::string::npos ||
                  value.find("concrete") != std::string::npos ||
-                 value.find("cement") != std::string::npos) {
+                 value.find("cement") != std::string::npos ||
+                 value.find("chipseal") != std::string::npos) {
         way_.set_surface(Surface::kPavedSmooth);
 
       } else if (value.find("tartan") != std::string::npos ||
