@@ -61,19 +61,12 @@ int get_node_candidate_index(const valhalla::Location& location,
                              int* percent_along) {
   int i = 0;
   for (const auto& e : location.path_edges()) {
-    std::cout << "path_edges: " << std::to_string(GraphId(e.graph_id())) << ": " << e.percent_along()
-              << "\n";
-  }
-  for (const auto& e : location.path_edges()) {
     if (e.graph_id() == edge_id) {
       *percent_along = e.percent_along();
-      std::cout << "Index: " << i << ". Selected edge_id: " << std::to_string(GraphId(e.graph_id()))
-                << ": " << e.percent_along() << "\n";
       return i;
     }
     i++;
   }
-  std::cout << "No edge_id selected\n";
   return i;
 }
 
@@ -217,10 +210,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   midgard::PointLL originPoint = to_ll(originLocation);
   midgard::PointLL destinationPoint = to_ll(destinationLocation);
 
-  std::cout << "originPoint: " << originPoint.first << ", " << originPoint.second << "\n";
-  std::cout << "destinationPoint: " << destinationPoint.first << ", " << destinationPoint.second
-            << "\n";
-
   ChinesePostmanGraph G;
   // Only for auto for now
   const auto& costing_ = mode_costing[Costing::auto_];
@@ -259,13 +248,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
     CPVertex end_vertex = CPVertex(end_node);
 
-    std::cout << "\n======================================================\n";
-    std::cout << "Edge: " << std::to_string(GraphId(edge.id())) << "\n";
-    std::cout << "Start node: " << std::to_string(GraphId(start_node)) << "\n";
-    std::cout << "End node: " << std::to_string(GraphId(end_node)) << "\n";
-
     // Find the vertex for the origin location
-    std::cout << "\nFind node candidate index for origin\n";
     candidateOriginNodeIndex =
         get_node_candidate_index(originLocation, GraphId(edge.id()), &originPercentAlong);
     if (candidateOriginNodeIndex < currentOriginNodeIndex) {
@@ -276,26 +259,20 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
 
       currentOriginNodeIndex = candidateOriginNodeIndex;
-      std::cout << "Selected start vertex: " << originVertex.vertex_id << "\n";
     }
     G.addVertex(start_vertex);
 
     // Find the vertex for the destination
-    std::cout << "\nFind node candidate index for destination\n";
     candidateDestinationNodeIndex =
         get_node_candidate_index(destinationLocation, GraphId(edge.id()), &destinationPercentAlong);
     if (candidateDestinationNodeIndex < currentDestinationNodeIndex) {
       // Check this part of the code
       if (destinationPercentAlong < 0.5) {
-        // std::cout << "destinationPoint == originPoint\n";
         destinationVertex = start_vertex;
       } else {
-        std::cout << "destinationPoint != originPoint\n";
         destinationVertex = end_vertex;
       }
       currentDestinationNodeIndex = candidateDestinationNodeIndex;
-      std::cout << "Selected end vertex: " << destinationVertex.vertex_id << "\n";
-      ;
     }
     G.addVertex(end_vertex);
 

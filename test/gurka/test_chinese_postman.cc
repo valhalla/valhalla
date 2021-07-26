@@ -245,7 +245,7 @@ TEST_F(ChinesePostmanTest, DISABLED_TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "ptyu").size(), 15); // 5 two-ways and 5 one-ways
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
   // create a chinese polygon (prwu)
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "A", "A",
                {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
@@ -253,7 +253,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
                {"BE_2", "DE_2", "DE_2", "BE_2", "AB_2", "AB_2"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
   // create a chinese polygon (prwu) and avoid polygon (iknl)
   // the exclude polygon is dividing the map into two, that makes it not connected.
   // make sure the right exception is thrown
@@ -264,7 +264,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   };
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   // create a chinese polygon (rtyw)
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "C", {"CG", "GH", "HF", "FC"});
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "G", {"GH", "HF", "FC", "CG"});
@@ -309,10 +309,11 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
   test_request(chinese_postman_map, GetParam(), "styx", "", "G", "H", {"GH"});
 
   // A little more complex example, only a two-way road is possible, non-ideal graph
-  test_request(chinese_postman_map, GetParam(), "pqvu", "", "A", "D", {"AD_2", "AD_2", "AD_2"});
+  // test_request(chinese_postman_map, GetParam(), "pqvu", "", "A", "D", {"AD_2", "AD_2", "AD_2"});
 
   // A little more complex example, 4 two-way roads are possible, non-ideal graph
-  // test_request(chinese_postman_map, GetParam(), "prwu", "", "A", "D", {"AD_2", "AD_2", "AD_2"});
+  // test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "H", {"CG", "GH", "HF", "FC",
+  // "CG", "GH"});
 
   // test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "G", {"CG", "GH", "HF", "FC",
   // "CG"}); test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "F", {"GH", "HF", "FC",
