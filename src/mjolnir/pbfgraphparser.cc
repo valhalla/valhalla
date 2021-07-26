@@ -653,6 +653,7 @@ public:
       } else if (value.find("paved") != std::string::npos ||
                  value.find("pavement") != std::string::npos ||
                  value.find("asphalt") != std::string::npos ||
+                 // concrete, concrete:lanes, concrete:plates
                  value.find("concrete") != std::string::npos ||
                  value.find("cement") != std::string::npos ||
                  value.find("chipseal") != std::string::npos ||
