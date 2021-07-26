@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: Revert default speed boost for turn channels [#3232](https://github.com/valhalla/valhalla/pull/3232)
+   * FIXED: Use the right tile to get node info [#3235](https://github.com/valhalla/valhalla/pull/3235)
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
 
