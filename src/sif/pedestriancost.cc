@@ -157,7 +157,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
 const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 // Speed adjustment factors based on weighted grade. Comments here show an
-// example of speed changes based on "grade", using a base speed of 3.16 MPH
+// example of speed changes based on "grade", using a base speed of 5 KPH
 // on flat roads. 
 // Tobler seems a bit too "fast" uphill so we use
 // but downhill Tobler seems good https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
