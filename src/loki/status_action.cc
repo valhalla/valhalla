@@ -32,9 +32,9 @@ void loki_worker_t::status(Api& request) const {
       bbox = connectivity_map->to_geojson(2);
     }
     status->set_bbox(bbox);
-    status->set_has_tiles(!tile ? false : true);
-    status->set_has_admins(!tile ? false : tile->header()->admincount() > 0);
-    status->set_has_timezones(!tile ? false : tile->node(0)->timezone() > 0);
+    status->set_has_tiles(tile);
+    status->set_has_admins(tile && tile->header()->admincount() > 0);
+    status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
     status->set_has_live_traffic(reader->HasLiveTraffic());
     status->set_version(VALHALLA_VERSION);
 
