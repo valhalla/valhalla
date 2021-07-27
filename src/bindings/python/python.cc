@@ -127,5 +127,6 @@ PYBIND11_MODULE(python_valhalla, m) {
       .def(
           "Centroid", &simplified_actor_t::centroid,
           "Returns routes from all the input locations to the minimum cost meeting point of those paths.")
-      .def("Status", &simplified_actor_t::status, "Returns details about Valhalla's configuration.");
+      .def("Status", &simplified_actor_t::status,
+           "Returns nothing or optionally details about Valhalla's configuration.");
 }
