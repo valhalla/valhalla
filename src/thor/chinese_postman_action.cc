@@ -99,20 +99,6 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
                       recovered_inner_edges.count(label.edgeid()));
   };
 
-  // float source_pct = 0;
-  // try {
-  //   source_pct = find_percent_along(origin, path_edges.front());
-  // } catch (...) {
-  //   throw std::logic_error("CP - Could not find candidate edge used for origin label");
-  // }
-
-  // float target_pct = 0;
-  // try {
-  //   target_pct = find_percent_along(dest, path_edges.back());
-  // } catch (...) {
-  //   throw std::logic_error("CP - Could not find candidate edge used for destination label");
-  // }
-
   // recost edges in final path; ignore access restrictions
   try {
     sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct, time_info,
