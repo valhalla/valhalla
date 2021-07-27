@@ -77,7 +77,9 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
                                 const baldr::TimeInfo& time_info,
                                 const bool invariant,
                                 std::vector<GraphId> path_edges,
-                                const std::shared_ptr<sif::DynamicCost>& costing_) {
+                                const std::shared_ptr<sif::DynamicCost>& costing_,
+                                float source_pct,
+                                float target_pct) {
   // Build a vector of path info
   // once we recovered the whole path we should construct list of PathInfo objects
   // set of edges recovered from shortcuts (excluding shortcut's start edges)
@@ -97,19 +99,19 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
                       recovered_inner_edges.count(label.edgeid()));
   };
 
-  float source_pct = 0;
-  try {
-    source_pct = find_percent_along(origin, path_edges.front());
-  } catch (...) {
-    throw std::logic_error("CP - Could not find candidate edge used for origin label");
-  }
+  // float source_pct = 0;
+  // try {
+  //   source_pct = find_percent_along(origin, path_edges.front());
+  // } catch (...) {
+  //   throw std::logic_error("CP - Could not find candidate edge used for origin label");
+  // }
 
-  float target_pct = 0;
-  try {
-    target_pct = find_percent_along(dest, path_edges.back());
-  } catch (...) {
-    throw std::logic_error("CP - Could not find candidate edge used for destination label");
-  }
+  // float target_pct = 0;
+  // try {
+  //   target_pct = find_percent_along(dest, path_edges.back());
+  // } catch (...) {
+  //   throw std::logic_error("CP - Could not find candidate edge used for destination label");
+  // }
 
   // recost edges in final path; ignore access restrictions
   try {
@@ -393,8 +395,9 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
-  std::vector<PathInfo> path = buildPath(*reader, options, originLocation, destinationLocation,
-                                         time_info, invariant, edgeGraphIds, costing_);
+  std::vector<PathInfo> path =
+      buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
+                edgeGraphIds, costing_, originPercentAlong, destinationPercentAlong);
 
   std::list<valhalla::Location> throughs; // Empty
   std::vector<std::string> algorithms{"Chinese Postman"};
