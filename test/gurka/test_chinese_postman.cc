@@ -235,7 +235,7 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
-TEST_F(ChinesePostmanTest, DISABLED_TestChinesePostmanEdges) {
+TEST_F(ChinesePostmanTest, TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "styx").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rsxw").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rtyw").size(), 4);  // 4 one-ways
@@ -315,9 +315,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "H",
                {"CG", "GH", "HF", "FC", "CG", "GH"});
 
-  // test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "A",
-  //            {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
-  //             "EA", "AB"});
+  // A more complex example, non-ideal graph
+  test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "D",
+               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD",
+                "DE", "EA", "AC", "CD"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));

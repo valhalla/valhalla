@@ -341,10 +341,10 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Calculate the number of needed edges to make it balanced
       int extraEdges = 0;
       if (!isSameOriginDestination && v.first == originVertex.vertex_id) {
-        extraEdges = abs(v.second - 1);
+        extraEdges = abs(v.second + 1);
         originNodeChecked = true;
       } else if (!isSameOriginDestination && v.first == destinationVertex.vertex_id) {
-        extraEdges = abs(v.second + 1);
+        extraEdges = abs(v.second - 1);
         destinationNodeChecked = true;
       } else {
         extraEdges = abs(v.second);
@@ -358,6 +358,16 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     std::cout << "Vegeta\n";
+    std::cout << "underNodes: \n";
+    for (auto a : underNodes) {
+      std::cout << a << ", ";
+    }
+    std::cout << "\n";
+    std::cout << "overNodes: \n";
+    for (auto a : overNodes) {
+      std::cout << a << ", ";
+    }
+    std::cout << "\n";
     // Handle if the origin or destination nodes are not managed yet
     if (!isSameOriginDestination) {
       std::cout << "!isSameOriginDestination\n";
@@ -371,6 +381,16 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     std::cout << "Trunks\n";
+    std::cout << "underNodes: \n";
+    for (auto a : underNodes) {
+      std::cout << a << ", ";
+    }
+    std::cout << "\n";
+    std::cout << "overNodes: \n";
+    for (auto a : overNodes) {
+      std::cout << a << ", ";
+    }
+    std::cout << "\n";
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
@@ -387,14 +407,33 @@ void thor_worker_t::chinese_postman(Api& request) {
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
+    std::cout << "Goten1\n";
     std::vector<std::pair<int, int>> extraPairs;
+    std::cout << "Goten2\n";
+    std::cout << "cost: " << cost << "\n";
+    std::cout << "assignment.size(): " << assignment.size() << "\n";
+    std::cout << "pairingMatrix.size(): " << pairingMatrix.size() << "\n";
+    for (auto p : pairingMatrix) {
+      for (auto q : p) {
+        std::cout << q << ", ";
+      }
+      std::cout << "\n";
+    }
+    std::cout << "assignment: \n";
+    for (auto p : assignment) {
+      std::cout << p << ", ";
+    }
+    std::cout << "\n";
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
+      std::cout << x << "\n";
       // Get node's index for that pair
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
+      std::cout << "overIndex: " << overNodeIndex << ", underIndex: " << underNodeIndex << "\n";
       // Expand the path between the paired nodes, using the path matrix
       auto nodePairs = getNodePairs(pm, overNodeIndex, underNodeIndex);
       // Concat with main vector
+      std::cout << "Usopp here " << x << "\n";
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     std::cout << "computeIdealEulerCycle\n";
