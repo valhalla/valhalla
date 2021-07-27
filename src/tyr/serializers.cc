@@ -2,7 +2,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
-#include <rapidjson/allocators.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -125,8 +124,7 @@ std::string serializeStatus(const Api& request) {
     status_doc.AddMember("config", config_doc, alloc);
   }
 
-  // if not verbose, return empty string
-  return status_doc.ObjectEmpty() ? "" : rapidjson::to_string(status_doc);
+  return rapidjson::to_string(status_doc);
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {

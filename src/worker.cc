@@ -730,7 +730,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get<bool>(doc, "/verbose", false));
+  options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
   // try the string directly, some strings are keywords so add an underscore
   Costing costing;

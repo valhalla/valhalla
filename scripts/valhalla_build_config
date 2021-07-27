@@ -223,6 +223,9 @@ config = {
       'max_matrix_distance': 0.0,
       'max_matrix_locations': 0
     },
+    'status': {
+      'allow_verbose': False
+    },
     'transit': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -277,8 +280,7 @@ config = {
     'prefix': 'valhalla',
     'batch_size': optional(int),
     'tags': optional(list)
-  },
-  'allow_verbose': False
+  }
 }
 
 help_text = {
@@ -495,6 +497,9 @@ help_text = {
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
+    'status': {
+      'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
+    },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
@@ -549,8 +554,7 @@ help_text = {
     'prefix': 'The statsd prefix to use for each metric',
     'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
     'tags': 'List of tags to include with each metric'
-  },
-  'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
+  }
 }
 
 #used to convert comma separated list of strings into a list
