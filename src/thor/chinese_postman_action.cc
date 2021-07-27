@@ -300,10 +300,8 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
-    std::cout << "Ideal Graph\n";
     edgeGraphIds = G.computeIdealEulerCycle(originVertex);
   } else {
-    std::cout << "Not Ideal Graph\n";
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
       for (int j = 0; j < G.numVertices(); j++) {
@@ -336,7 +334,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     // Populate the list of node which has too many incoming and too few incoming
     std::vector<baldr::GraphId> overNodes;
     std::vector<baldr::GraphId> underNodes;
-    std::cout << "Zoro\n";
     for (auto const& v : G.getUnbalancedVertices()) {
       // Calculate the number of needed edges to make it balanced
       int extraEdges = 0;
@@ -357,40 +354,15 @@ void thor_worker_t::chinese_postman(Api& request) {
         }
       }
     }
-    std::cout << "Vegeta\n";
-    std::cout << "underNodes: \n";
-    for (auto a : underNodes) {
-      std::cout << a << ", ";
-    }
-    std::cout << "\n";
-    std::cout << "overNodes: \n";
-    for (auto a : overNodes) {
-      std::cout << a << ", ";
-    }
-    std::cout << "\n";
     // Handle if the origin or destination nodes are not managed yet
     if (!isSameOriginDestination) {
-      std::cout << "!isSameOriginDestination\n";
       if (!originNodeChecked) {
-        std::cout << "!originNodeChecked\n";
         overNodes.push_back(originVertex.graph_id);
       }
       if (!destinationNodeChecked) {
-        std::cout << "!destinationNodeChecked\n";
         underNodes.push_back(destinationVertex.graph_id);
       }
     }
-    std::cout << "Trunks\n";
-    std::cout << "underNodes: \n";
-    for (auto a : underNodes) {
-      std::cout << a << ", ";
-    }
-    std::cout << "\n";
-    std::cout << "overNodes: \n";
-    for (auto a : overNodes) {
-      std::cout << a << ", ";
-    }
-    std::cout << "\n";
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
@@ -402,45 +374,20 @@ void thor_worker_t::chinese_postman(Api& request) {
         pairingMatrix[i].push_back(distance);
       }
     }
-    std::cout << "Goten\n";
     // Calling hungarian algorithm
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
-    std::cout << "Goten1\n";
     std::vector<std::pair<int, int>> extraPairs;
-    std::cout << "Goten2\n";
-    std::cout << "cost: " << cost << "\n";
-    std::cout << "assignment.size(): " << assignment.size() << "\n";
-    std::cout << "pairingMatrix.size(): " << pairingMatrix.size() << "\n";
-    for (auto p : pairingMatrix) {
-      for (auto q : p) {
-        std::cout << q << ", ";
-      }
-      std::cout << "\n";
-    }
-    std::cout << "assignment: \n";
-    for (auto p : assignment) {
-      std::cout << p << ", ";
-    }
-    std::cout << "\n";
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
-      std::cout << x << "\n";
       // Get node's index for that pair
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
-      std::cout << "overIndex: " << overNodeIndex << ", underIndex: " << underNodeIndex << "\n";
       // Expand the path between the paired nodes, using the path matrix
       auto nodePairs = getNodePairs(pm, overNodeIndex, underNodeIndex);
       // Concat with main vector
-      std::cout << "Usopp here " << x << "\n";
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
-    std::cout << "computeIdealEulerCycle\n";
-    std::cout << "originVertex: " << originVertex.graph_id << " -> " << G.getVertexIndex(originVertex)
-              << "\n";
-    std::cout << "destinationVertex: " << destinationVertex.graph_id << " -> "
-              << G.getVertexIndex(destinationVertex) << "\n";
     edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);
   }
   // Start build path here

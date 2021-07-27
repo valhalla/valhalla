@@ -75,17 +75,10 @@ void ChinesePostmanGraph::addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, 
 
 std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   std::map<std::string, int> unbalaced_vertices;
-  std::cout << "All nodes:\n";
   for (auto const& v : this->vertices) {
-    std::cout << v.first << ", ";
     if (this->indegrees[v.first] != this->outdegrees[v.first]) {
       unbalaced_vertices[v.first] = this->indegrees[v.first] - this->outdegrees[v.first];
     }
-  }
-  std::cout << "\n";
-  std::cout << "unbalanced vertices: \n";
-  for (auto uv : unbalaced_vertices) {
-    std::cout << uv.first << ": " << uv.second << "\n";
   }
   return unbalaced_vertices;
 }
@@ -93,7 +86,6 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
 std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
                                                                  ExtraPaths extraPaths) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
-  std::cout << "startNodeIndex: " << startNodeIndex << "\n";
   int edgeVisited = 0;
 
   this->setupDFSEulerCycle(extraPaths);
@@ -106,44 +98,22 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
   }
   std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
-  std::cout << "this->reversedEulerPath: " << this->reversedEulerPath.size() << "\n";
-  int i = 0;
-  // while (i < (this->reversedEulerPath.size() - 1)) {
-  //   auto e = boost::edge(this->reversedEulerPath[i], this->reversedEulerPath[i + 1], G);
-  //   std::cout << this->reversedEulerPath[i] << ": " << e.first << "\n";
-  //   std::cout << e.first << ": " << e.second << "\n";
-  //   // eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
-  //   i++;
-  // }
-
-  int k = 0;
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
     if (it + 1 == this->reversedEulerPath.rend()) {
       continue;
     }
     auto e = boost::edge(*it, *(it + 1), G);
-    std::cout << "index: " << ++k << "\n";
-    std::cout << "e.first: " << e.first << "\n";
-    std::cout << "Graph ID: " << this->G[e.first].graph_id << "\n";
     eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
   }
-  std::cout << "\nVegeta3\n";
   return eulerPathEdgeGraphIDs;
 }
 
 void ChinesePostmanGraph::setupDFSEulerCycle(ExtraPaths extraPaths) {
-  std::cout << "setupDFSEulerCycle\n";
   this->reversedEulerPath.clear();
   this->outEdges.clear();
   // populate out edges
   this->expandedAdjacencyList = this->getAdjacencyList(extraPaths);
-
   for (const auto& x : this->expandedAdjacencyList) {
-    std::cout << x.first << " : ";
-    for (auto i : x.second) {
-      std::cout << i << ", ";
-    }
-    std::cout << "\n";
     this->outEdges[x.first] = x.second.size();
   }
 }
@@ -166,7 +136,6 @@ std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList(ExtraPaths
 }
 
 void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
-  std::cout << "dfsEulerCycle\n";
   while (this->outEdges[startNodeIndex] != 0) {
     int nextNodeIndex =
         this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
@@ -187,27 +156,17 @@ CPEdge* ChinesePostmanGraph::getCPEdge(int i, int j) {
 
 bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_vertex) {
   auto unbalancedVertices = this->getUnbalancedVertices();
-  std::cout << "Start graph id: " << start_vertex.graph_id
-            << ", end graph id: " << end_vertex.graph_id << "\n";
   if (start_vertex.graph_id == end_vertex.graph_id) {
-    std::cout << "start vertex and end vertex is the same\n";
     return unbalancedVertices.size() == 0;
   } else {
-    std::cout << "start vertex and end vertex is NOT the same\n";
-    for (auto i : unbalancedVertices) {
-      std::cout << i.first << ": " << i.second << "\n";
-    }
     if (unbalancedVertices.count(start_vertex.vertex_id) &&
         unbalancedVertices.count(end_vertex.vertex_id)) {
-      std::cout << "come here\n";
       if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
           unbalancedVertices[end_vertex.vertex_id] == 1) {
-        std::cout << "come here1\n";
         return true;
       }
       return false;
     } else {
-      std::cout << "come here2\n";
       return false;
     }
   }
