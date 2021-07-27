@@ -14,24 +14,24 @@ void loki_worker_t::status(Api& request) const {
   auto* status = request.mutable_status();
 
   // only return more info if explicitly asked for (can be very expensive)
-  if (request.options().verbose() && allow_verbose) {
-    // get _some_ tile
-    static baldr::graph_tile_ptr tile = nullptr;
-    if (!tile) {
-      for (const auto& tile_id : reader->GetTileSet()) {
-        tile = reader->GetGraphTile(tile_id);
-        if (tile->id().level() < baldr::TileHierarchy::GetTransitLevel().level &&
-            tile->header()->nodecount() > 0) {
-          break;
-        }
+  // bail if we wont be getting extra info
+  if (!request.options().verbose() || !allow_verbose)
+    return;
+
+  // get _some_ tile
+  static baldr::graph_tile_ptr tile = nullptr;
+  if (!tile) {
+    for (const auto& tile_id : reader->GetTileSet()) {
+      tile = reader->GetGraphTile(tile_id);
+      if (tile->id().level() < baldr::TileHierarchy::GetTransitLevel().level &&
+          tile->header()->nodecount() > 0) {
+        break;
       }
     }
 
-    static std::string bbox = "";
-    if (bbox == "" && connectivity_map) {
-      bbox = connectivity_map->to_geojson(2);
+    if (connectivity_map) {
+       status->set_bbox(connectivity_map->to_geojson(2));
     }
-    status->set_bbox(bbox);
     status->set_has_tiles(tile);
     status->set_has_admins(tile && tile->header()->admincount() > 0);
     status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
