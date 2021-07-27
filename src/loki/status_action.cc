@@ -5,6 +5,7 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/worker.h"
 #include "proto/status.pb.h"
+#include "config.h"
 
 namespace valhalla {
 namespace loki {
@@ -12,12 +13,8 @@ void loki_worker_t::status(Api& request) const {
 
   auto* status = request.mutable_status();
 
-  std::stringstream ss;
-  boost::property_tree::json_parser::write_json(ss, config);
-  status->set_config(ss.str());
-
   // only return more info if explicitly asked for (can be very expensive)
-  if (request.options().verbose()) {
+  if (request.options().verbose() && allow_verbose) {
     // get _some_ tile
     static baldr::graph_tile_ptr tile = nullptr;
     if (!tile) {
@@ -39,6 +36,11 @@ void loki_worker_t::status(Api& request) const {
     status->set_has_admins(!tile ? false : tile->header()->admincount() > 0);
     status->set_has_timezones(!tile ? false : tile->node(0)->timezone() > 0);
     status->set_has_live_traffic(reader->HasLiveTraffic());
+    status->set_version(VALHALLA_VERSION);
+
+    std::stringstream ss;
+    boost::property_tree::json_parser::write_json(ss, config);
+    status->set_config(ss.str());
   }
 
 #ifdef HAVE_HTTP

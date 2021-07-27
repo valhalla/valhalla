@@ -92,7 +92,8 @@ std::string serializeStatus(const Api& request) {
   status_doc.SetObject();
   auto& alloc = status_doc.GetAllocator();
 
-  status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
+  if (request.status().has_version())
+    status_doc.AddMember("version", rapidjson::Value().SetString(VALHALLA_VERSION), alloc);
   if (request.status().has_has_tiles())
     status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
                          alloc);
@@ -114,15 +115,18 @@ std::string serializeStatus(const Api& request) {
 
   // add the entire config and remove sensible paths
   rapidjson::Document config_doc;
-  config_doc.Parse(request.status().config());
-  for (const auto& path :
-       {"/mjolnir/tile_dir", "/mjolnir/tile_extract", "/mjolnir/admin", "/mjolnir/timezone",
-        "/mjolnir/transit_dir", "/additional_data/elevation"}) {
-    config_doc.RemoveMember(path);
+  if (request.status().has_config()) {
+    config_doc.Parse(request.status().config());
+    for (const auto& path :
+        {"/mjolnir/tile_dir", "/mjolnir/tile_extract", "/mjolnir/admin", "/mjolnir/timezone",
+          "/mjolnir/transit_dir", "/additional_data/elevation"}) {
+      config_doc.RemoveMember(path);
+    }
+    status_doc.AddMember("config", config_doc, alloc);
   }
-  status_doc.AddMember("config", config_doc, alloc);
 
-  return rapidjson::to_string(status_doc);
+  // if not verbose, return empty string
+  return status_doc.ObjectEmpty() ? "" : rapidjson::to_string(status_doc);;
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {

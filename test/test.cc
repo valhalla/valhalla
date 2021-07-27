@@ -380,7 +380,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "proxy": "ipc://%%/thor"
         },
         "source_to_target_algorithm": "select_optimal"
-      }
+      },
+      "allow_verbose": true
     }
   )";
 

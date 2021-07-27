@@ -277,7 +277,8 @@ config = {
     'prefix': 'valhalla',
     'batch_size': optional(int),
     'tags': optional(list)
-  }
+  },
+  'allow_verbose': False
 }
 
 help_text = {
@@ -548,7 +549,8 @@ help_text = {
     'prefix': 'The statsd prefix to use for each metric',
     'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
     'tags': 'List of tags to include with each metric'
-  }
+  },
+  'allow_verbose': 'Allow verbose output for /status and /locate'
 }
 
 #used to convert comma separated list of strings into a list
