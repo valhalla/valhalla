@@ -96,7 +96,7 @@ TEST(Alternates, test_too_long_detour) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2000);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/alternates_long");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/alternates_too_long_detour");
 
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto", {{"/alternates", "1"}});

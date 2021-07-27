@@ -105,24 +105,26 @@ find_diff_segment(const std::vector<PathInfo>& path_1, const std::vector<PathInf
 // Check if the candidate path contains unreasonable long detours comparing to the optimal path.
 bool validate_alternate_by_stretch(const std::vector<PathInfo>& optimal_path,
                                    const std::vector<PathInfo>& candidate_path) {
-  const auto diff_segment = find_diff_segment(optimal_path, candidate_path);
-  const auto& idxs_opt = diff_segment.first;
-  const auto& idxs_alt = diff_segment.second;
+  const auto unique_segments = find_diff_segment(optimal_path, candidate_path);
+  const auto& unique_optimal_segment = unique_segments.first;
+  const auto& unique_candidate_segment = unique_segments.second;
 
-  if (idxs_opt.first == optimal_path.size()) {
+  if (unique_optimal_segment.first == optimal_path.size()) {
     // return true if the paths are equal, otherwise the optimal path is a subpath of the alternative
-    if (idxs_alt.first < candidate_path.size()) {
+    if (unique_candidate_segment.first < candidate_path.size()) {
       LOG_DEBUG("Candidate alternate rejected by local stretch");
       return false;
     }
     return true;
   }
 
-  const auto opt_segment_cost = get_segment_cost(optimal_path, idxs_opt.first, idxs_opt.second);
-  const auto alt_segment_cost = get_segment_cost(candidate_path, idxs_alt.first, idxs_alt.second);
+  const auto optimal_segment_cost =
+      get_segment_cost(optimal_path, unique_optimal_segment.first, unique_optimal_segment.second);
+  const auto candidate_segment_cost = get_segment_cost(candidate_path, unique_candidate_segment.first,
+                                                       unique_candidate_segment.second);
 
   // check if detour is reasonable
-  if (kAtMostLongerDetour * opt_segment_cost.cost < alt_segment_cost.cost) {
+  if (kAtMostLongerDetour * optimal_segment_cost.cost < candidate_segment_cost.cost) {
     LOG_DEBUG("Candidate alternate rejected by local stretch");
     return false;
   }
