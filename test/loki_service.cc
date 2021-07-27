@@ -157,7 +157,7 @@ const std::vector<http_request_t> valhalla_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
-    {200, ""},
+    {200, "{}"},
     {200,
      R"({"version":")" VALHALLA_VERSION
      R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"config":)" +
@@ -345,7 +345,7 @@ const std::vector<http_request_t> osrm_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
-    {200, ""},
+    {200, "{}"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
