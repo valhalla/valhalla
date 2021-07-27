@@ -3,9 +3,9 @@
 #include <sstream>
 
 #include "baldr/tilehierarchy.h"
+#include "config.h"
 #include "loki/worker.h"
 #include "proto/status.pb.h"
-#include "config.h"
 
 namespace valhalla {
 namespace loki {

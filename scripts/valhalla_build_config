@@ -550,7 +550,7 @@ help_text = {
     'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
     'tags': 'List of tags to include with each metric'
   },
-  'allow_verbose': 'Allow verbose output for /status and /locate'
+  'allow_verbose': 'Allow verbose output for the /status endpoint'
 }
 
 #used to convert comma separated list of strings into a list

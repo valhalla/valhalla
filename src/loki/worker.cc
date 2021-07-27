@@ -242,7 +242,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
   max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
-  allow_verbose = config.get<bool>("allow_verbose");
+  allow_verbose = config.get<bool>("allow_verbose", false);
 
   // signal that the worker started successfully
   started();
