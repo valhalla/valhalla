@@ -48,23 +48,25 @@ protected:
 gurka::map UseUnpavedRoadsTest::map = {};
 
 TEST_F(UseUnpavedRoadsTest, UnpavedRoadsInTheMiddle) {
-  //   Without options
+  // Without options
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing);
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing);
     gurka::assert::raw::expect_path(result, {"IJ", "JK", "KL"});
   }
 
   // Use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
-                                   {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
     gurka::assert::raw::expect_path(result, {"IJ", "JK", "KL"});
   }
 
   // Do not use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
-                                   {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"I", "L"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
     gurka::assert::raw::expect_path(result, {"IJ", "JM", "MN", "NK", "KL"});
   }
 }
@@ -73,11 +75,13 @@ TEST_F(UseUnpavedRoadsTest, UnpavedRoadsUnsupported) {
   const std::string start = "E";
   const std::string end = "L";
   for (const auto& costing : std::vector<std::string>{"bicycle", "pedestrian"}) {
-    auto result_0 = gurka::do_action(valhalla::Options::route, map, {start, end}, costing,
-                                     {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
+    const auto result_0 =
+        gurka::do_action(valhalla::Options::route, map, {start, end}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
     EXPECT_EQ(result_0.trip().routes_size(), 1);
-    auto result_1 = gurka::do_action(valhalla::Options::route, map, {start, end}, costing,
-                                     {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
+    const auto result_1 =
+        gurka::do_action(valhalla::Options::route, map, {start, end}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
     EXPECT_EQ(result_1.trip().routes_size(), 1);
     EXPECT_EQ(gurka::detail::get_paths(result_0), gurka::detail::get_paths(result_1));
   }
@@ -89,45 +93,49 @@ TEST_F(UseUnpavedRoadsTest, UnpavedRoadsUnsupported) {
 }
 
 TEST_F(UseUnpavedRoadsTest, UnpavedRoadsInTheBeginning) {
-  //   Without options
+  // Without options
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing);
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing);
     gurka::assert::raw::expect_path(result, {"EF", "FG", "GH"});
   }
 
   // Use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing,
-                                   {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
     gurka::assert::raw::expect_path(result, {"EF", "FG", "GH"});
   }
 
   // Do not use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing,
-                                  {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}}),
-                 valhalla_exception_t);
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"E", "H"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
+    gurka::assert::raw::expect_path(result, {"EF", "FG", "GH"});
   }
 }
 
 TEST_F(UseUnpavedRoadsTest, UnpavedRoadsInTheEnd) {
-  //   Without options
+  // Without options
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing);
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing);
     gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
   }
 
   // Use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
-                                   {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "1"}});
     gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
   }
 
   // Do not use unpaved roads
   for (const auto& costing : kSupportedCostingModels) {
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
-                                  {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}}),
-                 valhalla_exception_t);
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
+                         {{"/costing_options/" + costing + "/use_unpaved_roads", "0"}});
+    gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
   }
 }
