@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -83,10 +84,35 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
-std::string serializeStatus(const Api&) {
-  // TODO: once we decide on what's in the status message we'll fill out the proto message in
-  // loki/thor/odin and we'll serialize it here
-  return "{}";
+std::string serializeStatus(const Api& request) {
+
+  rapidjson::Document status_doc;
+  status_doc.SetObject();
+  auto& alloc = status_doc.GetAllocator();
+
+  if (request.status().has_version())
+    status_doc.AddMember("version", rapidjson::Value().SetString(request.status().version(), alloc),
+                         alloc);
+  if (request.status().has_has_tiles())
+    status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
+                         alloc);
+  if (request.status().has_has_admins())
+    status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                         alloc);
+  if (request.status().has_has_timezones())
+    status_doc.AddMember("has_timezones",
+                         rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
+  if (request.status().has_has_live_traffic())
+    status_doc.AddMember("has_live_traffic",
+                         rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+
+  rapidjson::Document bbox_doc;
+  if (request.status().has_bbox()) {
+    bbox_doc.Parse(request.status().bbox());
+    rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
+  }
+
+  return rapidjson::to_string(status_doc);
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
