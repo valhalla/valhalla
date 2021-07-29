@@ -7,6 +7,20 @@
 #include "loki/worker.h"
 #include "proto/status.pb.h"
 
+namespace {
+auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
+  graph_tile_ptr tile = nullptr;
+  for (const auto& tile_id : reader->GetTileSet()) {
+    tile = reader->GetGraphTile(tile_id);
+    if (tile->id().level() < valhalla::baldr::TileHierarchy::GetTransitLevel().level &&
+        tile->header()->nodecount() > 0) {
+      break;
+    }
+  }
+  return tile;
+}
+} // namespace
+
 namespace valhalla {
 namespace loki {
 void loki_worker_t::status(Api& request) const {
@@ -19,30 +33,17 @@ void loki_worker_t::status(Api& request) const {
     return;
 
   // get _some_ tile
-  static baldr::graph_tile_ptr tile = nullptr;
-  if (!tile) {
-    for (const auto& tile_id : reader->GetTileSet()) {
-      tile = reader->GetGraphTile(tile_id);
-      if (tile->id().level() < baldr::TileHierarchy::GetTransitLevel().level &&
-          tile->header()->nodecount() > 0) {
-        break;
-      }
-    }
+  static baldr::graph_tile_ptr tile = get_graphtile(reader);
 
-    if (connectivity_map) {
-      status->set_bbox(connectivity_map->to_geojson(2));
-    }
-
-    status->set_has_tiles(!!tile);
-    status->set_has_admins(tile && tile->header()->admincount() > 0);
-    status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
-    status->set_has_live_traffic(reader->HasLiveTraffic());
-    status->set_version(VALHALLA_VERSION);
-
-    std::stringstream ss;
-    boost::property_tree::json_parser::write_json(ss, config);
-    status->set_config(ss.str());
+  if (connectivity_map) {
+    status->set_bbox(connectivity_map->to_geojson(2));
   }
+
+  status->set_has_tiles(static_cast<bool>(tile));
+  status->set_has_admins(tile && tile->header()->admincount() > 0);
+  status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
+  status->set_has_live_traffic(reader->HasLiveTraffic());
+  status->set_version(VALHALLA_VERSION);
 
 #ifdef HAVE_HTTP
   // if we are in the process of shutting down we signal that here

@@ -1,8 +1,8 @@
 # Status service API reference
 
-By default the `/status` endpoint will simply return a HTTP status code of 200 without a response text, acting as a health endpoint for the HTTP API. 
+By default the `/status` endpoint will simply return a HTTP status code of 200 with an empty JSON object, acting as a health endpoint for the HTTP API. 
 
-However, if `"verbose": true` is passed as a request parameter it will return additional information about the loaded tileset. **Note** that gathering this additional information can be computationally expensive, hence the `verbose` flag can be disallowed in the configuration JSON (`allow_verbose`, default `false`).
+However, if `"verbose": true` is passed as a request parameter it will return additional information about the loaded tileset. **Note** that gathering this additional information can be computationally expensive, hence the `verbose` flag can be disallowed in the configuration JSON (`service_limits.status.allow_verbose`, default `false`).
 
 ## Outputs of the Status service
 
@@ -16,4 +16,3 @@ If `"verbose": true` is passed as a parameter, the service will output the follo
 | `has_timezones`    | bool   | Whether the current tileset was built using the timezone database. |
 | `has_live_traffic` | bool   | Whether live traffic tiles are currently available. |
 | `bbox`             | object | GeoJSON of the tileset extent. |
-| `config`           | object | The full valhalla.json configuration object with most paths removed. |

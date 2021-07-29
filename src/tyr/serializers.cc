@@ -112,18 +112,6 @@ std::string serializeStatus(const Api& request) {
     rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
   }
 
-  // add the entire config and remove sensible paths
-  rapidjson::Document config_doc;
-  if (request.status().has_config()) {
-    config_doc.Parse(request.status().config());
-    for (const auto& path :
-         {"/mjolnir/tile_dir", "/mjolnir/tile_extract", "/mjolnir/admin", "/mjolnir/timezone",
-          "/mjolnir/transit_dir", "/additional_data/elevation"}) {
-      config_doc.RemoveMember(path);
-    }
-    status_doc.AddMember("config", config_doc, alloc);
-  }
-
   return rapidjson::to_string(status_doc);
 }
 
