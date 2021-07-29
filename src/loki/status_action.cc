@@ -1,7 +1,3 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <iostream>
-#include <sstream>
-
 #include "baldr/tilehierarchy.h"
 #include "config.h"
 #include "loki/worker.h"
@@ -33,7 +29,7 @@ void loki_worker_t::status(Api& request) const {
     return;
 
   // get _some_ tile
-  static baldr::graph_tile_ptr tile = get_graphtile(reader);
+  const static baldr::graph_tile_ptr tile = get_graphtile(reader);
 
   if (connectivity_map) {
     status->set_bbox(connectivity_map->to_geojson(2));
