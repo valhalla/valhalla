@@ -10,6 +10,7 @@
 #include "sif/recost.h"
 #include "thor/Hungarian.h"
 #include "thor/chinese_postman_graph.h"
+#include "thor/costmatrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -152,6 +153,21 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
     }
     return pm;
   }
+}
+
+void computeCostMatrix(DistanceMatrix& dm,
+                       GraphReader& reader,
+                       const sif::mode_costing_t& mode_costing,
+                       const TravelMode mode,
+                       const float max_matrix_distance) {
+  // TODO: Need to populate these two variables
+  google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
+  google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
+
+  CostMatrix costmatrix;
+  std::vector<thor::TimeDistance> td =
+      costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
+                                mode, max_matrix_distance);
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {
@@ -307,6 +323,11 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     PathMatrix pm = computeFloydWarshall(distanceMatrix);
+
+    std::cout << "max_matrix_distance.find(costing)->second: "
+              << max_matrix_distance.find(costing)->second;
+    computeCostMatrix(distanceMatrix, *reader, mode_costing, mode,
+                      max_matrix_distance.find(costing)->second);
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
