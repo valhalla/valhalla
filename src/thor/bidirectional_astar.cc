@@ -1155,6 +1155,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // For the first path just add it for subsequent paths only add if it passes viability tests
     if (paths.empty() || (validate_alternate_by_sharing(shared_edgeids, paths, path, max_sharing) &&
+                          validate_alternate_by_stretch(paths.front(), path) &&
                           validate_alternate_by_local_optimality(path))) {
       paths.emplace_back(std::move(path));
     }
