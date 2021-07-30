@@ -235,7 +235,7 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
-TEST_F(ChinesePostmanTest, TestChinesePostmanEdges) {
+TEST_F(ChinesePostmanTest, DISABLED_TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "styx").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rsxw").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rtyw").size(), 4);  // 4 one-ways
@@ -245,7 +245,7 @@ TEST_F(ChinesePostmanTest, TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "ptyu").size(), 15); // 5 two-ways and 5 one-ways
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanSimple) {
   // create a chinese polygon (prwu)
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "A", "A",
                {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
@@ -253,7 +253,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
                {"BE_2", "DE_2", "DE_2", "BE_2", "AB_2", "AB_2"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
   // create a chinese polygon (prwu) and avoid polygon (iknl)
   // the exclude polygon is dividing the map into two, that makes it not connected.
   // make sure the right exception is thrown
@@ -264,13 +264,13 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
   };
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOneWayIdealGraph) {
   // create a chinese polygon (rtyw)
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "C", {"CG", "GH", "HF", "FC"});
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "G", "G", {"GH", "HF", "FC", "CG"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
   test_request(chinese_postman_map, GetParam(), "qsxv", "", "B", "B",
                {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
@@ -278,7 +278,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
                {"FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanUnbalancedNodesComplex) {
   // create a chinese polygon (pqsr)
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "B",
                {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
@@ -288,7 +288,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
                 "EA", "AC"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOriginOutside) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOriginOutside) {
   // create a chinese polygon (qsxv)
   try {
     test_request(chinese_postman_map, GetParam(), "qsxv", "", "A", "A",
@@ -304,7 +304,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOriginOutside) {
   };
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanDifferentOriginDestination) {
   // A very simple example, only a one-way road is possible, ideal graph
   test_request(chinese_postman_map, GetParam(), "styx", "", "G", "H", {"GH"});
 
@@ -319,6 +319,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "D",
                {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD",
                 "DE", "EA", "AC", "CD"});
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
+  test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
