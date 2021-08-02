@@ -1,12 +1,16 @@
 #include <iostream>
 
+#include "baldr/pronunciation.h"
 #include "baldr/streetname.h"
 
 namespace valhalla {
 namespace baldr {
 
-StreetName::StreetName(const std::string& value, const bool is_route_number)
-    : value_(value), is_route_number_(is_route_number) {
+// Constructor
+StreetName::StreetName(const std::string& value,
+                       const bool is_route_number,
+                       const boost::optional<baldr::Pronunciation>& pronunciation)
+    : value_(value), is_route_number_(is_route_number), pronunciation_(pronunciation) {
 }
 
 StreetName::~StreetName() {
@@ -18,6 +22,10 @@ const std::string& StreetName::value() const {
 
 bool StreetName::is_route_number() const {
   return is_route_number_;
+}
+
+const boost::optional<baldr::Pronunciation>& StreetName::pronunciation() const {
+  return pronunciation_;
 }
 
 bool StreetName::operator==(const StreetName& rhs) const {
