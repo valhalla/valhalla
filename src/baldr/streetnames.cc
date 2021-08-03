@@ -39,6 +39,11 @@ std::string StreetNames::ToString(uint32_t max_count,
     }
     name_string +=
         (verbal_formatter) ? verbal_formatter->Format(street_name->value()) : street_name->value();
+    if (street_name->pronunciation()) {
+      name_string += "(";
+      name_string += street_name->pronunciation().get().value();
+      name_string += ")";
+    }
     ++count;
   }
   return name_string;
