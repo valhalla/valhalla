@@ -368,6 +368,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
     lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
   }
 
+  if (header_->has_osmids_for_nodes()) {
+    osmids_for_nodes_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->osmids_for_nodes_offset());
+  }
+
   // For reference - how to use the end offset to set size of an object (that
   // is not fixed size and count).
   // example_size_ = header_->end_offset() - header_->example_offset();

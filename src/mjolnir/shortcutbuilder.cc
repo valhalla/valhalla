@@ -718,6 +718,9 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
         tilebuilder.AddSigns(tilebuilder.nodes().size(), signs);
       }
       tilebuilder.nodes().emplace_back(std::move(nodeinfo));
+      if (tile->has_osmids_for_nodes()) {
+        tilebuilder.osmids_for_nodes().push_back(tile->osmid_for_node(node_id));
+      }
     }
 
     // Store the new tile

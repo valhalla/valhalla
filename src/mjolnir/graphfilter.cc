@@ -165,6 +165,9 @@ void FilterTiles(GraphReader& reader,
         // Add a node builder to the tile. Update the edge count and edgeindex
         GraphId new_node(nodeid.tileid(), nodeid.level(), tilebuilder.nodes().size());
         tilebuilder.nodes().push_back(*nodeinfo);
+        if (tile->has_osmids_for_nodes()) {
+          tilebuilder.osmids_for_nodes().push_back(tile->osmid_for_node(nodeid));
+        }
         NodeInfo& node = tilebuilder.nodes().back();
         node.set_edge_count(edge_count);
         node.set_edge_index(edge_index);

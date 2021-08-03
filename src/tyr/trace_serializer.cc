@@ -147,6 +147,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (controller(kEdgeTravelMode)) {
         edge_map->emplace("travel_mode", to_string(edge.travel_mode()));
       }
+      if (controller(kEdgeNodeId) && edge.has_osmid_case()) {
+        edge_map->emplace("node_id", static_cast<uint64_t>(edge.osmid()));
+      }
       if (controller(kEdgeVehicleType) && edge.travel_mode() == valhalla::kDrive) {
         edge_map->emplace("vehicle_type", to_string(edge.vehicle_type()));
       }
@@ -336,6 +339,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         if (controller(kNodeTransitionTime)) {
           end_node_map->emplace("transition_time",
                                 json::fixed_t{node.cost().transition_cost().seconds(), 3});
+        }
+        if (controller(kNodeNodeId) && node.has_osmid_case()) {
+          end_node_map->emplace("node_id", static_cast<uint64_t>(node.osmid()));
         }
 
         // TODO transit info at node

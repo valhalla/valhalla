@@ -96,6 +96,14 @@ public:
   }
 
   /**
+   * Gets the current list of OSM ids for node (builders).
+   * @return  Returns a reference to OSM id builders.
+   */
+  std::vector<uint64_t>& osmids_for_nodes() {
+    return osmids_for_nodes_;
+  }
+
+  /**
    * Add a transit departure.
    * @param  departure  Transit departure record.
    */
@@ -307,6 +315,13 @@ public:
                     const std::string& state_iso);
 
   /**
+   * Check whether this tile will contain OSM ids.
+   */
+  bool has_osmids_for_nodes() const {
+    return osmids_for_nodes_.size() != 0;
+  }
+
+  /**
    * Gets a reference to the header builder.
    * @return  Returns a reference to the header builder.
    */
@@ -497,6 +512,9 @@ protected:
   // List of nodes. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<NodeInfo> nodes_builder_;
+
+  // List of OSM ids for the nodes
+  std::vector<uint64_t> osmids_for_nodes_;
 
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.

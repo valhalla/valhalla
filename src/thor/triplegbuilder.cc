@@ -1083,6 +1083,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_way_id(edgeinfo.wayid());
   }
 
+  // Set node id (OSM nod id) if requested
+  if (controller.attributes.at(kEdgeNodeId) && start_tile->has_osmids_for_nodes()) {
+    trip_edge->set_osmid(start_tile->osmid_for_node(start_node_idx));
+  }
+
   // Set weighted grade if requested
   if (controller(kEdgeWeightedGrade)) {
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
@@ -1558,6 +1563,10 @@ void TripLegBuilder::Build(
       trip_node->mutable_cost()->mutable_transition_cost()->set_seconds(
           edge_itr->transition_cost.secs);
       trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
+    }
+
+    if (controller.attributes.at(kNodeNodeId) && start_tile->has_osmids_for_nodes()) {
+      trip_node->set_osmid(start_tile->osmid_for_node(startnode));
     }
 
     // Add multi modal stuff

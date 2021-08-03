@@ -127,6 +127,7 @@ node.intersecting_edge.use
 node.intersecting_edge.road_class
 node.intersecting_edge.lane_count
 node.elapsed_time
+node.node_id
 node.admin_index
 node.type
 node.fork
@@ -235,6 +236,7 @@ Each `end_node` may include:
 | :--------- | :---------- |
 | `intersecting_edges` | List of intersecting edges at this node. See the list of [intersecting edge items](#intersecting-edge-items) for details. |
 | `elapsed_time` | Elapsed time of the path to arrive at this node. |
+| `node_id` | Node identifier of the OpenStreetMap base data. |
 | `admin_index` | Index value in the admin list. |
 | `type` | Node type values: <ul><li>`street_intersection`</li><li>`gate`</li><li>`bollard`</li><li>`toll_booth`</li><li>`multi_use_transit_stop`</li><li>`bike_share`</li><li>`parking`</li><li>`motor_way_junction`</li><li>`border_control`</li></ul> |
 | `fork` | True if this node is a fork. |

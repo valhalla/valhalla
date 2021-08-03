@@ -176,6 +176,10 @@ message TripLeg {
     SacScale sac_scale = 51;
     bool shoulder = 52;
     bool indoor = 53;
+
+    oneof has_osmid {
+      uint64 osmid = 54;
+    }
   }
 
   message IntersectingEdge {
@@ -232,6 +236,10 @@ message TripLeg {
     PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
+
+    oneof has_osmid {
+      uint64 osmid = 15;
+    }
  }
 
   message Admin {

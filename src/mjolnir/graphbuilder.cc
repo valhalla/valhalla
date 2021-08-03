@@ -448,6 +448,8 @@ void BuildTileSet(const std::string& ways_file,
   bool added = false;
   DataQuality stats;
 
+  bool include_osmids_for_nodes = pt.get<bool>("include_osmids_for_nodes", false);
+
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
   std::unordered_map<uint32_t, std::pair<double, uint32_t>> geo_attribute_cache;
@@ -1074,6 +1076,11 @@ void BuildTileSet(const std::string& ways_file,
         }
         // Set drive on right flag
         graphtile.nodes().back().set_drive_on_right(dor);
+
+        // set the osmid for the node
+        if (include_osmids_for_nodes) {
+          graphtile.osmids_for_nodes().push_back(node.osmid_);
+        }
 
         // Set the time zone index
         uint32_t tz_index =

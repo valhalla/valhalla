@@ -182,6 +182,40 @@ public:
   }
 
   /**
+   * Get an OSM id for a node.
+   * @param node The GraphId of the node.
+   * @return  Returns the OSM id for the node.
+   */
+  uint64_t osmid_for_node(const GraphId& node) const {
+    assert(node.Tile_Base() == header_->graphid().Tile_Base());
+    return osmid_for_node(node.id());
+  }
+
+  /**
+   * Get an OSM id.
+   * @param  idx  Index of the node within the current tile.
+   * @return  Returns the OSM id.
+   */
+  uint64_t osmid_for_node(const size_t idx) const {
+    if (idx > header_->nodecount()) {
+      throw std::runtime_error(
+          std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+          " GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
+          "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+          " nodecount= " + std::to_string(header_->nodecount()));
+    }
+    return header_->has_osmids_for_nodes() ? osmids_for_nodes_[idx] : kInvalidNodeId;
+  }
+
+  /**
+   * Does this tile contain OSM ids?
+   * @return Return \c true if this tile contains OSM ids and \c false otherwise.
+   */
+  bool has_osmids_for_nodes() const {
+    return header_->has_osmids_for_nodes();
+  }
+
+  /**
    * Convenience method to get the lat,lon of a node.
    * @param  nodeid  GraphId of the node.
    */
@@ -748,6 +782,9 @@ protected:
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
   Admin* admins_{};
+
+  // OSM ids for nodes
+  uint64_t* osmids_for_nodes_{};
 
   // List of complex_restrictions in the forward direction.
   char* complex_restriction_forward_{};

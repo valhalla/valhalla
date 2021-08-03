@@ -17,7 +17,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+constexpr size_t kEmptySlots = 10;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -230,6 +230,14 @@ public:
       LOG_ERROR("Tile exceeded maximum node count: " + std::to_string(count));
     }
     nodecount_ = count;
+  }
+
+  /**
+   * Does the tile contain OSM ids?
+   * @return \c true if it does and \c false otherwise.
+   */
+  bool has_osmids_for_nodes() const {
+    return osmids_for_nodes_offset_ != 0;
   }
 
   /**
@@ -527,7 +535,7 @@ public:
 
   /**
    * Gets the offset to the lane connectivity data.
-   * @return  Returns the number of bytes to offset to the the lane connectivity data.
+   * @return  Returns the number of bytes to offset to the lane connectivity data.
    */
   uint32_t lane_connectivity_offset() const {
     return lane_connectivity_offset_;
@@ -539,6 +547,22 @@ public:
    */
   void set_lane_connectivity_offset(const uint32_t offset) {
     lane_connectivity_offset_ = offset;
+  }
+
+  /**
+   * Gets the offset to the OSM ids for nodes data.
+   * @return  Returns the number of bytes to offset to the OSM data for nodes.
+   */
+  uint32_t osmids_for_nodes_offset() const {
+    return osmids_for_nodes_offset_;
+  }
+
+  /**
+   * Sets the offset to the OSM ids for nodes data.
+   * @param offset Offset in bytes to the start of the lane OSM ids data for nodes.
+   */
+  void set_osmids_for_nodes_offset(const uint32_t offset) {
+    osmids_for_nodes_offset_ = offset;
   }
 
   /**
@@ -686,6 +710,9 @@ protected:
 
   // GraphTile data size in bytes
   uint32_t tile_size_;
+
+  // Offset to the beggining of the OSM ids for nodes data.
+  uint32_t osmids_for_nodes_offset_;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,

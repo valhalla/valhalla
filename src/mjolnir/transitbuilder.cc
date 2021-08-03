@@ -351,6 +351,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     nb.set_access((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
     nb.set_edge_count(tilebuilder_transit.directededges().size() - edge_index);
     tilebuilder_transit.nodes().emplace_back(std::move(nb));
+    if (tilebuilder_local.has_osmids_for_nodes()) {
+      tilebuilder_transit.osmids_for_nodes().push_back(kInvalidNodeId);
+    }
   }
 
   // Some validation here...
