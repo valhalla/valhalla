@@ -2,8 +2,12 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: Revert default speed boost for turn channels [#3232](https://github.com/valhalla/valhalla/pull/3232)
+   * FIXED: Use the right tile to get country for incident [#3235](https://github.com/valhalla/valhalla/pull/3235)
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
+   * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3236](https://github.com/valhalla/valhalla/pull/3236)
+   * ADDED: Reject alternatives with too long detours [#3238](https://github.com/valhalla/valhalla/pull/3238)
+   * ADDED: Added info to /status endpoint [#3008](https://github.com/valhalla/valhalla/pull/3008)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**

@@ -15,7 +15,13 @@ using namespace valhalla::midgard;
  */
 namespace {
 // Defaults thresholds
+// TODO: global stretch parameter should depend on the optimal route cost/duration.
+// For an optimal route that takes 10min it's okay to have an alternative that takes 15min. But
+// it's unreasonable to propose an alternative that takes 15 hours if the optimal one takes 10 hours.
 float kAtMostLonger = 1.25f; // stretch threshold
+// Alternative route shouldn't contain unreasonable detours. We should skip an alternative
+// if it has a detour longer than 2 x cost of the corresponding path in the optimal route.
+float kAtMostLongerDetour = 2.f;
 float kAtMostShared = 0.75f; // sharing threshold
 // float kAtLeastOptimal = 0.2f; // local optimality threshold
 } // namespace
@@ -56,7 +62,76 @@ void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections)
   connections.erase(new_end, connections.end());
 }
 
-// Limited Sharing. Compare duration of edge segments shared between optimal path and
+// get a cost of a path between indexes 'first' and 'last'
+inline sif::Cost get_segment_cost(const std::vector<PathInfo>& path, size_t first, size_t last) {
+  auto cost = path[last].elapsed_cost - path[first].transition_cost;
+  if (first > 0)
+    cost -= path[first - 1].elapsed_cost;
+  return cost;
+};
+
+// Find a different segment for two routes. By design bidirectional astar returns routes that have
+// only one different segment. Also the first and last edges are the same for each two routes.
+std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>>
+find_diff_segment(const std::vector<PathInfo>& path_1, const std::vector<PathInfo>& path_2) {
+
+  size_t idx_1_first = 0;
+  size_t idx_2_first = 0;
+
+  // find first different edge
+  while (idx_1_first < path_1.size() && idx_2_first < path_2.size() &&
+         path_1[idx_1_first].edgeid == path_2[idx_2_first].edgeid) {
+    ++idx_1_first;
+    ++idx_2_first;
+  }
+  // check corner cases: stop if we didn't find a different edge
+  if (idx_1_first == path_1.size())
+    return {{idx_1_first, idx_1_first}, {idx_2_first, std::max(idx_2_first, path_2.size() - 1)}};
+  else if (idx_2_first == path_2.size())
+    return {{idx_1_first, std::max(idx_1_first, path_1.size() - 1)}, {idx_2_first, idx_2_first}};
+
+  size_t idx_1_last = path_1.size() - 1;
+  size_t idx_2_last = path_2.size() - 1;
+  // find last different edge
+  while (idx_1_last > idx_1_first && idx_2_last > idx_2_first &&
+         path_1[idx_1_last].edgeid == path_2[idx_2_last].edgeid) {
+    --idx_1_last;
+    --idx_2_last;
+  }
+
+  return {{idx_1_first, idx_1_last}, {idx_2_first, idx_2_last}};
+}
+
+// Check if the candidate path contains unreasonable long detours comparing to the optimal path.
+bool validate_alternate_by_stretch(const std::vector<PathInfo>& optimal_path,
+                                   const std::vector<PathInfo>& candidate_path) {
+  const auto unique_segments = find_diff_segment(optimal_path, candidate_path);
+  const auto& unique_optimal_segment = unique_segments.first;
+  const auto& unique_candidate_segment = unique_segments.second;
+
+  if (unique_optimal_segment.first == optimal_path.size()) {
+    // return true if the paths are equal, otherwise the optimal path is a subpath of the alternative
+    if (unique_candidate_segment.first < candidate_path.size()) {
+      LOG_DEBUG("Candidate alternate rejected by local stretch");
+      return false;
+    }
+    return true;
+  }
+
+  const auto optimal_segment_cost =
+      get_segment_cost(optimal_path, unique_optimal_segment.first, unique_optimal_segment.second);
+  const auto candidate_segment_cost = get_segment_cost(candidate_path, unique_candidate_segment.first,
+                                                       unique_candidate_segment.second);
+
+  // check if detour is reasonable
+  if (kAtMostLongerDetour * optimal_segment_cost.cost < candidate_segment_cost.cost) {
+    LOG_DEBUG("Candidate alternate rejected by local stretch");
+    return false;
+  }
+  return true;
+}
+
+// Limited Sharing. Compare length of edge segments shared between optimal path and
 // candidate path. If they share more than kAtMostShared throw out this alternate.
 // Note that you should recover all shortcuts before call this function.
 bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& shared_edgeids,
@@ -95,7 +170,7 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
     // throw this alternate away if it shares more than at_most_shared with any of the chosen paths
     assert(total_length > 0);
     if ((shared_length / total_length) > at_most_shared) {
-      LOG_DEBUG("Candidate alternate rejected");
+      LOG_DEBUG("Candidate alternate rejected by sharing");
       return false;
     }
   }

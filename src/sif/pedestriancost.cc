@@ -157,7 +157,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
 const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 // Speed adjustment factors based on weighted grade. Comments here show an
-// example of speed changes based on "grade", using a base speed of 3.16 MPH
+// example of speed changes based on "grade", using a base speed of 5 KPH
 // on flat roads. 
 // Tobler seems a bit too "fast" uphill so we use
 // but downhill Tobler seems good https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
@@ -599,8 +599,7 @@ PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;
 
   // Populate the grade penalties (based on use_hills factor - value between 0 and 1)
-  float use_hills = costing_options.use_hills();
-  float avoid_hills = (1.0f - use_hills);
+  float avoid_hills = (1.0f - costing_options.use_hills());
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
   }
