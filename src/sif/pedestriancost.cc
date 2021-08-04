@@ -186,16 +186,16 @@ constexpr float kGradeBasedSpeedFactor[] = {
 // edges with the specified grade are weighted. Note that speed also is
 // influenced by grade, so these weights help further avoid hills.
 constexpr float kAvoidHillsStrength[] = {
-    0.2f, // -10%  - Treacherous descent possible
-    0.0f, // -8%   - Steep downhill
-    0.0f, // -6.5% - Good downhill - where is the bottom?
-    0.0f, // -5%   - Picking up speed!
-    0.0f, // -3%   - Modest downhill
+    2.0f, // -10%  - Treacherous descent possible
+    1.0f, // -8%   - Steep downhill
+    0.5f, // -6.5% - Good downhill - where is the bottom?
+    0.2f, // -5%   - Picking up speed!
+    0.1f, // -3%   - Modest downhill
     0.0f, // -1.5% - Smooth slight downhill, ride this all day!
     0.0f, // 0%    - Flat, no avoidance
     0.0f, // 1.5%  - These are called "false flat"
-    0.0f, // 3%    - Slight rise
-    0.2f, // 5%    - Small hill
+    0.1f, // 3%    - Slight rise
+    0.3f, // 5%    - Small hill
     0.4f, // 6.5%  - Starting to feel this...
     0.5f, // 8%    - Moderately steep
     0.7f, // 10%   - Getting tough
