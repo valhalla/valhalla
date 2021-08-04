@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 
 #include "baldr/graphconstants.h"
+#include "baldr/pronunciation.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -1189,7 +1190,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if ((maneuver.street_names().empty() && !maneuver.internal_intersection()) ||
       UsableInternalIntersectionName(maneuver, node_index)) {
     maneuver.set_street_names(
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList()));
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name()));
   }
 
   // Update the internal turn count
@@ -1376,7 +1377,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   if (!curr_edge->IsHighway() && !curr_edge->internal_intersection() &&
       (curr_edge->name_size() > 1)) {
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
     std::unique_ptr<StreetNames> common_base_names =
         curr_edge_names->FindCommonBaseNames(maneuver.street_names());
     if (curr_edge_names->size() > common_base_names->size()) {
@@ -2135,7 +2136,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   /////////////////////////////////////////////////////////////////////////////
   // Determine previous edge names and common base names
   std::unique_ptr<StreetNames> prev_edge_names =
-      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
   std::unique_ptr<StreetNames> common_base_names =
       prev_edge_names->FindCommonBaseNames(maneuver.street_names());
 
@@ -2475,10 +2476,10 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
 
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
 
     // Process common base names
     std::unique_ptr<StreetNames> common_base_names =
@@ -2514,10 +2515,10 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
 
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
 
     // Process common base names
     std::unique_ptr<StreetNames> common_base_names =
