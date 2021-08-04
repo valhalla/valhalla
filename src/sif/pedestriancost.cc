@@ -158,26 +158,27 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 // Speed adjustment factors based on weighted grade. Comments here show an
 // example of speed changes based on "grade", using a base speed of 5 KPH
-// on flat roads. 
+// on flat roads.
 // Tobler seems a bit too "fast" uphill so we use
-// but downhill Tobler seems good https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
+// but downhill Tobler seems good
+// https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
 constexpr float kGradeBasedSpeedFactor[] = {
-    0.67f,  // -10%  - 4.71
-    0.71f,  // -8%   - 4.4
-    0.75f,  // -6.5% - 4.17
+    0.67f, // -10%  - 4.71
+    0.71f, // -8%   - 4.4
+    0.75f, // -6.5% - 4.17
     0.8f,  // -5%   - 3.96
-    0.85f,  // -3%   - 3.69
-    0.90f,  // -1.5% - 3.5
+    0.85f, // -3%   - 3.69
+    0.90f, // -1.5% - 3.5
     1.0f,  // 0%    - 3.16
     1.06f, // 1.5%  - 3.15
     1.12f, // 3%    - 2.99
     1.21f, // 5%    - 2.79
     1.30f, // 6.5%  - 2.65
     1.37f, // 8%    - 2.51
-    1.49f,  // 10%   - 2.34
+    1.49f, // 10%   - 2.34
     1.59f, // 11.5% - 2.22
-    1.69f,  // 13%   - 2.11
-    1.82f   // 15%   - 1.97
+    1.69f, // 13%   - 2.11
+    1.82f  // 15%   - 1.97
 };
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
@@ -682,15 +683,17 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {sec * ferry_factor_, sec};
   }
 
-  float sec =
-      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())] * kGradeBasedSpeedFactor[static_cast<uint8_t>(edge->weighted_grade())];
+  float sec = edge->length() * speedfactor_ *
+              kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())] *
+              kGradeBasedSpeedFactor[static_cast<uint8_t>(edge->weighted_grade())];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
   // TODO - consider using an array of "use factors" to avoid this conditional
-  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] + grade_penalty[edge->weighted_grade()];
+  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] +
+                 grade_penalty[edge->weighted_grade()];
   if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
@@ -878,12 +881,11 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(
         kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
-      
-      
+
     // use_hills
     pbf_costing_options->set_use_hills(
         kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
-                            .get_value_or(kDefaultUseHills)));
+                           .get_value_or(kDefaultUseHills)));
   } else {
     // Set pbf values to defaults
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
