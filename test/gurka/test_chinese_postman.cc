@@ -102,6 +102,59 @@ std::string build_local_req(rapidjson::Document& doc,
   return sb.GetString();
 }
 
+std::string build_local_req_matrix(rapidjson::Document& doc,
+                                   rapidjson::MemoryPoolAllocator<>& allocator,
+                                   const std::vector<midgard::PointLL>& sources,
+                                   const std::vector<midgard::PointLL>& targets,
+                                   const std::string& costing) {
+
+  rapidjson::Value source_locations(rapidjson::kArrayType);
+  for (const auto& source : sources) {
+    rapidjson::Value p(rapidjson::kObjectType);
+    p.AddMember("lon", source.lng(), allocator);
+    p.AddMember("lat", source.lat(), allocator);
+    source_locations.PushBack(p, allocator);
+  }
+
+  rapidjson::Value target_locations(rapidjson::kArrayType);
+  for (const auto& target : targets) {
+    rapidjson::Value p(rapidjson::kObjectType);
+    p.AddMember("lon", target.lng(), allocator);
+    p.AddMember("lat", target.lat(), allocator);
+    target_locations.PushBack(p, allocator);
+  }
+
+  doc.AddMember("sources", source_locations, allocator);
+  doc.AddMember("targets", target_locations, allocator);
+  doc.AddMember("costing", costing, allocator);
+
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+  return sb.GetString();
+}
+
+void test_request_matrix(const gurka::map& map,
+                         const std::string& costing,
+                         const std::string& sources_string,
+                         const std::string& target_string) {
+
+  std::vector<valhalla::midgard::PointLL> sources;
+  for (auto& c : sources_string) {
+    sources.push_back(map.nodes.at(std::string(1, c)));
+  }
+
+  std::vector<valhalla::midgard::PointLL> targets;
+  for (auto& c : target_string) {
+    targets.push_back(map.nodes.at(std::string(1, c)));
+  }
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto req = build_local_req_matrix(doc, allocator, sources, targets, costing);
+  auto matrix_result = gurka::do_action(Options::sources_to_targets, map, req);
+}
 ring_bg_t create_ring_from_string(gurka::map map, const std::string& polygon_string) {
   ring_bg_t ring{};
   for (auto& c : polygon_string) {
@@ -321,8 +374,13 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanDifferentOriginDestination
                 "DE", "EA", "AC", "CD"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOutsidePolygon) {
   test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanMatrix) {
+  // Merely testing that the cost matrix is running properly
+  test_request_matrix(chinese_postman_map, GetParam(), "ABCD", "ABEF");
 }
 
 INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));

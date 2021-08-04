@@ -610,6 +610,10 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       json_str = actor.isochrone(request_json, nullptr, &api);
       std::cout << json_str << std::endl;
       break;
+    case valhalla::Options::sources_to_targets:
+      json_str = actor.matrix(request_json, nullptr, &api);
+      std::cout << json_str << std::endl;
+      break;
     default:
       throw std::logic_error("Unsupported action");
       break;
