@@ -162,22 +162,22 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // Tobler seems a bit too "fast" uphill so we use
 // but downhill Tobler seems good https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
 constexpr float kGradeBasedSpeedFactor[] = {
-    1.49f,  // -10%  - 4.71
-    1.39f,  // -8%   - 4.4
-    1.32f,  // -6.5% - 4.17
-    1.25f,  // -5%   - 3.96
-    1.17f,  // -3%   - 3.69
-    1.11f,  // -1.5% - 3.5
+    0.67f,  // -10%  - 4.71
+    0.71f,  // -8%   - 4.4
+    0.75f,  // -6.5% - 4.17
+    0.8f,  // -5%   - 3.96
+    0.85f,  // -3%   - 3.69
+    0.90f,  // -1.5% - 3.5
     1.0f,  // 0%    - 3.16
-    0.94f, // 1.5%  - 3.15
-    0.89f, // 3%    - 2.99
-    0.82f, // 5%    - 2.79
-    0.77f, // 6.5%  - 2.65
-    0.73f, // 8%    - 2.51
-    0.67f,  // 10%   - 2.34
-    0.63f, // 11.5% - 2.22
-    0.59f,  // 13%   - 2.11
-    0.55f   // 15%   - 1.97
+    1.06f, // 1.5%  - 3.15
+    1.12f, // 3%    - 2.99
+    1.21f, // 5%    - 2.79
+    1.30f, // 6.5%  - 2.65
+    1.37f, // 8%    - 2.51
+    1.49f,  // 10%   - 2.34
+    1.59f, // 11.5% - 2.22
+    1.69f,  // 13%   - 2.11
+    1.82f   // 15%   - 1.97
 };
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
@@ -684,7 +684,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   float sec =
-      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())] / kGradeBasedSpeedFactor[edge->weighted_grade()];
+      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())] * kGradeBasedSpeedFactor[static_cast<uint8_t>(edge->weighted_grade())];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
