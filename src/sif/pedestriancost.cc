@@ -690,9 +690,6 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // Represents how stressful a roadway is without looking at grade or cycle accommodations
-  float roadway_stress = 1.0f;
-
   // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] + grade_penalty[edge->weighted_grade()];
   if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
