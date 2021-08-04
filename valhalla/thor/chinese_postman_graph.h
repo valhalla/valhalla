@@ -3,7 +3,6 @@
 
 #include "midgard/util.h"
 #include "sif/costconstants.h"
-#include "thor/worker.h"
 #include "tyr/serializers.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
@@ -81,6 +80,7 @@ public:
   std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
   void dfsEulerCycle(int startNodeIndex);
   CPEdge* getCPEdge(int i, int j);
+  CPVertex* getCPVertex(int i);
   bool isIdealGraph(CPVertex start_vertex, CPVertex end_vertex);
 };
 

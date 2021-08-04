@@ -145,6 +145,10 @@ void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
   this->reversedEulerPath.push_back(startNodeIndex);
 }
 
+CPVertex* ChinesePostmanGraph::getCPVertex(int i) {
+  return &this->G[i];
+}
+
 CPEdge* ChinesePostmanGraph::getCPEdge(int i, int j) {
   auto e = boost::edge(i, j, this->G);
   if (e.second) {

@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include <boost/multi_array.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/directededge.h>
@@ -22,6 +23,7 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
+#include <valhalla/thor/chinese_postman_graph.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/triplegbuilder.h>
@@ -35,6 +37,8 @@ namespace thor {
 #ifdef HAVE_HTTP
 void run_service(const boost::property_tree::ptree& config);
 #endif
+
+typedef boost::multi_array<double, 2> DistanceMatrix;
 
 class thor_worker_t : public service_worker_t {
 public:
@@ -101,6 +105,13 @@ protected:
 
   std::vector<baldr::GraphId>
   computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
+
+  void computeCostMatrix(ChinesePostmanGraph& G,
+                         DistanceMatrix& dm,
+                         baldr::GraphReader& reader,
+                         const sif::mode_costing_t& mode_costing,
+                         const sif::TravelMode mode,
+                         const float max_matrix_distance);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&

@@ -21,8 +21,7 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-typedef boost::multi_array<double, 2> DistanceMatrix;
-typedef DistanceMatrix::index DistanceMatrixIndex;
+// typedef DistanceMatrix::index DistanceMatrixIndex;
 
 typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
 typedef PathMatrix::index PathMatrixIndex;
@@ -155,19 +154,40 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
   }
 }
 
-void computeCostMatrix(DistanceMatrix& dm,
-                       GraphReader& reader,
-                       const sif::mode_costing_t& mode_costing,
-                       const TravelMode mode,
-                       const float max_matrix_distance) {
+void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
+                                      DistanceMatrix& dm,
+                                      baldr::GraphReader& reader,
+                                      const sif::mode_costing_t& mode_costing,
+                                      const TravelMode mode,
+                                      const float max_matrix_distance) {
   // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
+  int i = 0;
+  while (i < G.numVertices()) {
+    std::cout << i << "\n";
+    CPVertex* cp_vertex = G.getCPVertex(i);
+    GraphId g(cp_vertex->graph_id);
+    auto l = getPointLL(cp_vertex->graph_id);
+    std::cout << l.first << ", " << l.second << "\n";
+    i++;
+    Location loc = Location();
+
+    loc.mutable_ll()->set_lng(l.first);
+    loc.mutable_ll()->set_lat(l.second);
+    source_location_list.Add()->CopyFrom(loc);
+    target_location_list.Add()->CopyFrom(loc);
+  }
+  std::cout << "source_location_list.size()" << source_location_list.size() << "\n";
+  std::cout << "target_location_list.size()" << target_location_list.size() << "\n";
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
                                 mode, max_matrix_distance);
+  for (auto a : td) {
+    std::cout << "dist, time: " << a.dist << ", " << a.time << "\n";
+  }
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {
@@ -326,7 +346,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     std::cout << "max_matrix_distance.find(costing)->second: "
               << max_matrix_distance.find(costing)->second;
-    computeCostMatrix(distanceMatrix, *reader, mode_costing, mode,
+    computeCostMatrix(G, distanceMatrix, *reader, mode_costing, mode,
                       max_matrix_distance.find(costing)->second);
 
     // Check if the graph is not strongly connected
