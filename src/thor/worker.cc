@@ -83,7 +83,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
         kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
-        kv.first == "centroid") {
+        kv.first == "centroid" || kv.first == "status") {
       continue;
     }
 

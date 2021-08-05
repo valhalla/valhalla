@@ -1,0 +1,12 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message Status {
+  optional bool has_tiles = 1;
+  optional bool has_admins = 2;
+  optional bool has_timezones = 3;
+  optional bool has_live_traffic = 4;
+  optional string bbox = 5;
+  optional string version = 6;
+}

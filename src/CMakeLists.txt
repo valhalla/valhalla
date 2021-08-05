@@ -88,8 +88,6 @@ function(valhalla_module)
 
   target_compile_definitions(${library}
     PUBLIC
-      # ERROR macro clashes with windows.h -> NOGDI necessary (e.g. https://github.com/ipkn/crow/issues/87)
-      # However, NOGDI needs to be undefined in logging.h
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
       HAS_REMOTE_API=0
@@ -241,7 +239,6 @@ set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
 
-set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 install(TARGETS valhalla
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
@@ -251,7 +248,13 @@ if(BUILD_SHARED_LIBS)
   install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
-else()
+
+  set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    COMPONENT development)
+  
   if(UNIX)
     add_custom_target(${LIBVALHALLA_SO_LINK} ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
@@ -261,10 +264,6 @@ endif()
 
 install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md ${VALHALLA_SOURCE_DIR}/README.md
   DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
-  COMPONENT development)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   COMPONENT development)
 
 install(FILES ${valhalla_hdrs}

@@ -343,6 +343,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_shape": 750000,
           "min_resample": 10.0
         },
+        "status": {
+          "allow_verbose": true
+        },
         "taxi": {
           "max_distance": 5000000.0,
           "max_locations": 20,
