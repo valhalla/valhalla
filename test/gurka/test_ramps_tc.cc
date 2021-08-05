@@ -477,3 +477,44 @@ TEST(LinkReclassification, test_acyclic_graph) {
   check_edge_classification(graph_reader, layout, "N", "P", baldr::RoadClass::kTertiary);
   check_edge_classification(graph_reader, layout, "E", "J", baldr::RoadClass::kSecondary);
 }
+
+TEST(RampsTCs, SlipLane) {
+  // slip lane logic applies if link is long enough(> 200m at the moment)
+  // so gridsize should be super small
+  constexpr double gridsize_metres = 100;
+  const std::string ascii_map = R"(
+                Z
+                |
+  K__M_____W____C____D___E____N
+      \         |        /
+        \__Y    |      ^
+            \   B     /
+            |   |   F
+            |   | /
+             \  A
+              \ |
+                X
+    )";
+
+  const gurka::ways ways = {{"XABCZ", {{"highway", "primary"}, {"name", "M1"}}},
+                            {"KMWCDEN", {{"highway", "primary"}, {"name", "M2"}}},
+                            {"AFE", {{"highway", "primary_link"}, {"oneway", "yes"}}},
+                            {"XYM", {{"highway", "primary_link"}, {"oneway", "yes"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+
+  std::string test_dir = "test/data/gurka_ramp_vs_turn_channel_slip_lane";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, test_dir);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "A", "E");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
+  {
+    auto edge = gurka::findEdgeByNodes(reader, layout, "X", "M");
+    const baldr::DirectedEdge* directed_edge = std::get<1>(edge);
+    EXPECT_EQ(directed_edge->use(), valhalla::baldr::Use::kTurnChannel);
+  }
+}

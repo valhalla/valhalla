@@ -187,7 +187,7 @@ message Options {
   optional Action action = 8;                                             // Action signifying the request type
   optional bool do_not_track = 9 [default = false];                       // Disable analytics for this request
   optional bool range = 10 [default = false];                             // Used in /height if the range between points should be serialized
-  optional bool verbose = 11 [default = false];                           // Used in /locate request to give back extensive information
+  optional bool verbose = 11 [default = false];                           // Used in /locate & /status request to give back extensive information
   optional Costing costing = 12;                                          // Used to tell what type of costing to use
   repeated CostingOptions costing_options = 13;                           // A list of costing options for each costing model
   repeated Location locations = 14;                                       // Locations for /route /optimized /locate /isochrone

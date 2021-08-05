@@ -113,7 +113,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index,
-                    const graph_tile_ptr& tile,
+                    const graph_tile_ptr& end_node_tile,
                     const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
@@ -133,7 +133,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
-    std::string country_code_iso_2 = country_code_from_edge(tile, de);
+    std::string country_code_iso_2 = country_code_from_edge(end_node_tile, de);
     if (!country_code_iso_2.empty()) {
       new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
     }
@@ -176,6 +176,7 @@ valhalla::TripLeg_Closure* fetch_or_create_closure_annotation(TripLeg& leg) {
  */
 void SetShapeAttributes(const AttributesController& controller,
                         const graph_tile_ptr& tile,
+                        const graph_tile_ptr& end_node_tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
@@ -265,7 +266,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, end_node_tile, *edge);
         continue;
       }
 
@@ -384,7 +385,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
+        UpdateIncident(incidents.tile, leg, incident, i, end_node_tile, *edge);
       }
     }
 
@@ -578,8 +579,7 @@ void AddSignInfo(const AttributesController& controller,
  *                         on the local hierarchy.
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
-                             valhalla::baldr::GraphReader& graphreader,
-                             graph_tile_ptr& graphtile,
+                             const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
@@ -659,10 +659,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
-      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
-      size_t edge_idx = intersecting_de - t2->directededge(0);
-      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx);
+      std::vector<SignInfo> edge_signs =
+          graphtile->GetSigns(intersecting_de - graphtile->directededge(0));
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
         AddSignInfo(controller, edge_signs, sign);
@@ -684,7 +682,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr& start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
@@ -731,7 +729,7 @@ void AddIntersectingEdges(const AttributesController& controller,
     }
 
     // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+    AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
                             intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
   }
 
@@ -755,7 +753,7 @@ void AddIntersectingEdges(const AttributesController& controller,
           continue;
         }
 
-        AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+        AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2);
       }
@@ -1645,8 +1643,10 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
-                       trim_start_pct, trim_end_pct, edge_seconds,
+    graph_tile_ptr end_node_tile = graphtile;
+    graphreader.GetGraphTile(directededge->endnode(), end_node_tile);
+    SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
+                       trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested

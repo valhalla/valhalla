@@ -95,23 +95,6 @@ struct BSSConnection {
   }
 };
 
-template <typename T> struct Finally {
-  T t;
-  explicit Finally(T t) : t(t){};
-  Finally() = delete;
-  Finally(Finally&& f) = default;
-  Finally(const Finally&) = delete;
-  Finally& operator=(const Finally&) = delete;
-  Finally& operator=(Finally&&) = delete;
-  ~Finally() {
-    t();
-  };
-};
-
-template <typename T> Finally<T> make_finally(T t) {
-  return Finally<T>{t};
-};
-
 DirectedEdge make_directed_edge(const GraphId endnode,
                                 const std::vector<PointLL>& shape,
                                 const BSSConnection& conn,
