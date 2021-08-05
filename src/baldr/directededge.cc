@@ -203,6 +203,11 @@ void DirectedEdge::set_bridge(const bool bridge) {
   bridge_ = bridge;
 }
 
+// Sets the hov type.
+void DirectedEdge::set_hov_type(const HOVEdgeType hov_type) {
+  hov_type_ = static_cast<uint32_t>(hov_type);
+}
+
 // Sets the flag indicating the  edge is part of a roundabout.
 void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
@@ -574,6 +579,7 @@ json::MapPtr DirectedEdge::json() const {
       {"destination_only", static_cast<bool>(dest_only_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
+      {"hov_type", to_string(static_cast<HOVEdgeType>(hov_type_))},
       {"round_about", static_cast<bool>(roundabout_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},

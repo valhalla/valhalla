@@ -127,6 +127,9 @@ message CostingOptions {
   optional float service_factor = 69;
   optional float closure_factor = 70;
   optional float private_access_penalty = 71;
+  optional bool use_hot = 72;
+  optional bool use_hov2 = 73;
+  optional bool use_hov3 = 74;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;

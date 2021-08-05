@@ -886,6 +886,12 @@ protected:
 
   // Should we penalize uturns on short internal edges?
   bool penalize_uturns_;
+
+  // HOT/HOV flags
+  bool use_hot_lanes_{false};
+  bool use_hov2_lanes_{false};
+  bool use_hov3_lanes_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1070,6 +1076,10 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_living_streets_;
 
   ranged_default_t<float> closure_factor_;
+
+  bool use_hot_ = false;
+  bool use_hov2_ = false;
+  bool use_hov3_ = false;
 };
 
 /**

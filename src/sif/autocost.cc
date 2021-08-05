@@ -282,6 +282,29 @@ public:
     return static_cast<uint8_t>(type_);
   }
 
+  bool EvaluateHOVAllowed(const baldr::DirectedEdge* edge) const {
+    // A non-hov edge means hov is allowed.
+    valhalla::baldr::HOVEdgeType edge_hov_type = edge->hov_type();
+    if (edge_hov_type == valhalla::baldr::HOVEdgeType::kNotHOV)
+      return true;
+
+    // The edge is either HOV-2 or HOV-3 from this point forward.
+
+    // If use_hov3 is set we can route onto both HOV-2 and HOV-3 edges
+    if (use_hov3_lanes_)
+      return true;
+
+    // If use_hov2 is set we can route onto HOV-2 edges
+    if (use_hov2_lanes_ && (edge_hov_type == valhalla::baldr::HOVEdgeType::kHOV2))
+      return true;
+
+    // If use_hot is set we can route onto HOT edges (HOV and tolled).
+    if (use_hot_lanes_ && edge->toll())
+      return true;
+
+    return false;
+  }
+
   /**
    * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
@@ -292,6 +315,10 @@ public:
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const graph_tile_ptr& tile,
                        uint16_t disallow_mask = kDisallowNone) const override {
+
+    if (!EvaluateHOVAllowed(edge))
+      return false;
+
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
@@ -374,6 +401,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  use_hot_lanes_ = costing_options.use_hot();
+  use_hov2_lanes_ = costing_options.use_hov2();
+  use_hov3_lanes_ = costing_options.use_hov3();
 
   // Get the vehicle attributes
   height_ = costing_options.height();
@@ -692,6 +723,13 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
                             .get_value_or(kDefaultAutoWidth)));
 
+    // HOT/HOV-use
+    pbf_costing_options->set_use_hot(rapidjson::get_optional<bool>(*json_costing_options, "/use_hot")
+                            .get_value_or(false));
+    pbf_costing_options->set_use_hov2(rapidjson::get_optional<bool>(*json_costing_options, "/use_hov2")
+                            .get_value_or(false));
+    pbf_costing_options->set_use_hov3(rapidjson::get_optional<bool>(*json_costing_options, "/use_hov3")
+                            .get_value_or(false));
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults

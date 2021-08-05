@@ -327,6 +327,20 @@ public:
    */
   void set_bridge(const bool bridge);
 
+    /**
+   * Get the hov type (see graphconstants.h).
+   */
+  HOVEdgeType hov_type() const {
+    return static_cast<baldr::HOVEdgeType>(hov_type_);
+  }
+
+  /**
+   * Sets the hov type (see baldr/graphconstants.h)
+   * @param  surface   Surface type.
+   */
+
+  void set_hov_type(const HOVEdgeType hov_type);
+
   /**
    * Is this edge part of a roundabout?
    * @return  Returns true if this edge is part of a roundabout, false if not.
@@ -1121,7 +1135,8 @@ protected:
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
-  uint64_t spare4_ : 9;
+  uint64_t hov_type_ : 2;       // HOV type, see HOVEdgeType
+  uint64_t spare4_ : 7;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

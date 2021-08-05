@@ -372,10 +372,13 @@ separated = {
 
 oneway = {
 ["no"] = "false",
+["false"] = "false",
 ["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
-["1"] = "true"
+["1"] = "true",
+["reversible"] = "false",
+["alternating"] = "false"
 }
 
 bridge = {
@@ -1039,6 +1042,7 @@ function filter_tags_generic(kv)
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
     else
+      -- by returning 1 we will toss this way
       return 1
     end
   end
@@ -1625,7 +1629,6 @@ function filter_tags_generic(kv)
   else
     kv["hov_forward"] = kv["auto_forward"]
     kv["hov_backward"] = kv["auto_backward"]
-
   end
 
   -- hov restrictions
@@ -1645,9 +1648,27 @@ function filter_tags_generic(kv)
     end
 
     if only_hov_allowed then
-      if (kv["auto_tag"] == nil) then
-        kv["auto_forward"] = "false"
-        kv["auto_backward"] = "false"
+      -- If we get here we know the way is a true hov-lane (not mixed). I want to be
+      -- strict with the "hov:minimum" tag: I will only accept the values 2 or 3.
+      -- We want to be strict because routing onto an HOV lane without the correct
+      -- number of occupants is illegal.
+      if (kv["hov:minimum"] == "2") then
+        kv["hov_type"] = "HOV2";
+      elseif (kv["hov:minimum"] == "3") then
+        kv["hov_type"] = "HOV3";
+      end
+
+      -- HOV lanes are sometimes time-conditional and can change direction. We avoid
+      -- these. Also, we expect "hov_type" to be set.
+      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or kv["oneway"] == "false" or
+            kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil or kv["hov_type"] == nil
+
+      if avoid_these_hovs then
+        kv["hov_type"] = nil
+        if (kv["auto_tag"] == nil) then
+          kv["auto_forward"] = "false"
+          kv["auto_backward"] = "false"
+        end
       end
 
       if (kv["truck_tag"] == nil) then

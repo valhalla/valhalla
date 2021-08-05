@@ -129,7 +129,11 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
-      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange} {
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
+      use_hot_{false},
+      use_hov2_{false},
+      use_hov3_{false}
+      {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -444,6 +448,11 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
   // closure_factor
   pbf_costing_options->set_closure_factor(base_cfg.closure_factor_(
       rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
+
+  // HOT/HOV
+  pbf_costing_options->set_use_hot(rapidjson::get<bool>(value, "/use_hot", base_cfg.use_hot_));
+  pbf_costing_options->set_use_hov2(rapidjson::get<bool>(value, "/use_hov2", base_cfg.use_hov2_));
+  pbf_costing_options->set_use_hov3(rapidjson::get<bool>(value, "/use_hov3", base_cfg.use_hov3_));
 }
 
 void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
@@ -479,6 +488,10 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
 
   pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
+
+  pbf_costing_options->set_use_hot(shared_opts.use_hot_);
+  pbf_costing_options->set_use_hov2(shared_opts.use_hov2_);
+  pbf_costing_options->set_use_hov3(shared_opts.use_hov3_);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
