@@ -154,8 +154,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
       pathalgorithm->Clear();
-      const float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
-      cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
+      cost->RelaxHierarchyLimits(using_bd);
       cost->set_allow_destination_only(true);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       data.incPasses();

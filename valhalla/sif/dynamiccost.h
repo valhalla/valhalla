@@ -724,6 +724,11 @@ public:
   void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
 
   /**
+   * Relax hierarchy limits using pre-defined algorithm-cased factors.
+   */
+  void RelaxHierarchyLimits(const bool using_bidirectional);
+
+  /**
    * Checks if we should exclude or not.
    */
   virtual void AddToExcludeList(const graph_tile_ptr& tile);
