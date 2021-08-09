@@ -617,11 +617,31 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       return {};
     }
 
+    // Exhaust hierarchy limits simultaneously in both directions. As soon as forward/reverse
+    // search exhausts limits on the particular level - it should stop and wait until reverse/forward
+    // search exhausts limits on the same hierarchy level. This logic ensures local optimality near
+    // the origin and destination and provides valid conditions for the reach-based pruning.
+    bool force_forward = false;
+    bool force_reverse = false;
+    assert(hierarchy_limits_forward_.size() == hierarchy_limits_forward_.size());
+    for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
+      if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&
+          !hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance())) {
+        force_forward = true;
+        break;
+      } else if (hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance()) &&
+                 !hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance())) {
+        force_reverse = true;
+        break;
+      }
+    }
+
     // Expand from the search direction with lower sort cost
     // Note: If one direction is exhausted, we force search in the remaining
     // direction
     if (!forward_exhausted &&
-        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() || reverse_exhausted)) {
+        ((!force_reverse && (fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) ||
+         force_forward || reverse_exhausted)) {
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
@@ -636,6 +656,24 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
           hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(fwd_pred.distance())) {
         continue;
+      }
+
+      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
+      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
+      if (cost_threshold_ != std::numeric_limits<float>::max() &&
+          fwd_pred.predecessor() != kInvalidLabel) {
+        const auto& fwd_pred_pred = edgelabels_forward_[fwd_pred.predecessor()];
+        const auto pred_tile = graphreader.GetGraphTile(fwd_pred_pred.endnode());
+        if (pred_tile != nullptr) {
+          // Estimate lower bound cost for the shortest path that goes through the current edge.
+          float route_lower_bound =
+              fwd_pred_pred.cost().cost + fwd_pred.transition_cost().cost + rev_pred.sortcost() -
+              astarheuristic_reverse_.Get(pred_tile->get_node_ll(fwd_pred_pred.endnode()));
+          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
+          if (route_lower_bound > cost_threshold_) {
+            continue;
+          }
+        }
       }
 
       // Expand from the end node in forward direction.
@@ -655,6 +693,24 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
           hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(rev_pred.distance())) {
         continue;
+      }
+
+      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
+      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
+      if (cost_threshold_ != std::numeric_limits<float>::max() &&
+          rev_pred.predecessor() != kInvalidLabel) {
+        const auto& rev_pred_pred = edgelabels_reverse_[rev_pred.predecessor()];
+        const auto pred_tile = graphreader.GetGraphTile(rev_pred_pred.endnode());
+        if (pred_tile != nullptr) {
+          // Estimate lower bound cost for the shortest path that goes through the current edge.
+          float route_lower_bound =
+              rev_pred_pred.cost().cost + rev_pred.transition_cost().cost + fwd_pred.sortcost() -
+              astarheuristic_forward_.Get(pred_tile->get_node_ll(rev_pred_pred.endnode()));
+          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
+          if (route_lower_bound > cost_threshold_) {
+            continue;
+          }
+        }
       }
 
       // Get the opposing predecessor directed edge. Need to make sure we get
