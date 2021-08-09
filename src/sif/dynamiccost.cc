@@ -260,7 +260,7 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(factor, expansion_within_factor);
+    hierarchy.Relax(relax_factor, expansion_within_factor);
   }
 }
 
