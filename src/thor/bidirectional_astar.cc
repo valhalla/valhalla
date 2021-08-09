@@ -714,23 +714,22 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = c + kThresholdDelta;
+    } else {
+      cost_threshold_ = (1.f + kAlternativeCostExtend) * c + kThresholdDelta;
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
 
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
-
-  // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
-    float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
-    if (desired_paths_count_ == 1) {
-      cost_threshold_ = sortcost + kThresholdDelta;
-    } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-      iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-    }
-  }
 
   // setting this edge as connected
   if (expansion_callback_) {
@@ -780,23 +779,22 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
   }
 
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = c + kThresholdDelta;
+    } else {
+      cost_threshold_ = (1.f + kAlternativeCostExtend) * c + kThresholdDelta;
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
 
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
-
-  // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
-    float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
-    if (desired_paths_count_ == 1) {
-      cost_threshold_ = sortcost + kThresholdDelta;
-    } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-      iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-    }
-  }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
   if (expansion_callback_) {
