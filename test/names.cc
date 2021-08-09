@@ -24,7 +24,7 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 void TestKeyTypeValue(const std::string& pronunciation,
                       uint32_t expected_key,
                       PronunciationAlphabet expected_type,
-                      std::string expected_value) {
+                      const std::string& expected_value) {
 
   auto verbal_tokens = split(pronunciation, '#');
   // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
