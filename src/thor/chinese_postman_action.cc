@@ -166,11 +166,10 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
 
   int i = 0;
   while (i < G.numVertices()) {
-    std::cout << i << "\n";
     CPVertex* cp_vertex = G.getCPVertex(i);
     GraphId g(cp_vertex->graph_id);
-    auto l = getPointLL(cp_vertex->graph_id);
-    std::cout << l.first << ", " << l.second << "\n";
+    auto l = getPointLL(g);
+    std::cout << i << ": " << l.first << ", " << l.second << "\n";
     i++;
     Location loc = Location();
 
@@ -179,15 +178,18 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
     source_location_list.Add()->CopyFrom(loc);
     target_location_list.Add()->CopyFrom(loc);
   }
-  std::cout << "source_location_list.size()" << source_location_list.size() << "\n";
-  std::cout << "target_location_list.size()" << target_location_list.size() << "\n";
+  // for (auto p: source_location_list){
+  //   std::cout << p.ll().lng() << ", " << p.ll().lat() << "\n";
+  // }
+  // std::cout << "source_location_list.size(): " << source_location_list.size() << "\n";
+  // std::cout << "target_location_list.size(): " << target_location_list.size() << "\n";
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
                                 mode, max_matrix_distance);
-  for (auto a : td) {
-    std::cout << "dist, time: " << a.dist << ", " << a.time << "\n";
-  }
+  // for (auto a : td) {
+  //   std::cout << "dist, time: " << a.dist << ", " << a.time << "\n";
+  // }
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {

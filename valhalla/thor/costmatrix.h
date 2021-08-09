@@ -27,7 +27,7 @@ constexpr float kCostThresholdBicycleDivisor =
     56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
 constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-constexpr float kMaxCost = 99999999.9999f;
+constexpr float kMaxCost = 999999.0f;
 
 // Time and Distance structure
 struct TimeDistance {
