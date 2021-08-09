@@ -68,7 +68,7 @@ public:
                                      std::vector<std::string>& jeita_tokens,
                                      bool is_node_pronunciation = false);
 
-  static void AddPronunciations(const std::vector<std::string> ipa_tokens,
+  static void AddPronunciations(const std::vector<std::string>& ipa_tokens,
                                 const std::vector<std::string>& nt_sampa_tokens,
                                 const std::vector<std::string>& katakana_tokens,
                                 const std::vector<std::string>& jeita_tokens,

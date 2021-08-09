@@ -21,7 +21,7 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
   return tokens;
 }
 
-void TestKeyTypeValue(std::string pronunciation,
+void TestKeyTypeValue(const std::string& pronunciation,
                       uint32_t expected_key,
                       PronunciationAlphabet expected_type,
                       std::string expected_value) {

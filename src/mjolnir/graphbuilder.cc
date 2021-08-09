@@ -1097,7 +1097,7 @@ void BuildLocalTiles(const unsigned int thread_count,
            std::to_string(thread_count) + " threads...");
 
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread>> threads(1);
+  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
 
   // Hold the results (DataQuality/stats) for the threads
   std::vector<std::promise<DataQuality>> results(threads.size());
@@ -1298,7 +1298,7 @@ void GraphBuilder::GetPronunciationTokens(const OSMData& osmdata,
   }
 }
 
-void GraphBuilder::AddPronunciations(const std::vector<std::string> ipa_tokens,
+void GraphBuilder::AddPronunciations(const std::vector<std::string>& ipa_tokens,
                                      const std::vector<std::string>& nt_sampa_tokens,
                                      const std::vector<std::string>& katakana_tokens,
                                      const std::vector<std::string>& jeita_tokens,

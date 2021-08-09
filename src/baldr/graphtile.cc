@@ -818,7 +818,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
           uint8_t token_index = 0;
           uint32_t index;
           uint8_t pronunciation_alphabet;
-          for (const auto token : pronunciation_tokens) {
+          for (const auto& token : pronunciation_tokens) {
             if (token_index == 0) { // index
               index = std::stoi(token);
               token_index++;

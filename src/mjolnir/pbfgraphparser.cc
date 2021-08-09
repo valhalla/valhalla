@@ -2640,7 +2640,7 @@ public:
     }
   }
 
-  void UpdateRefPronunciation(const std::string ref_pronunciation,
+  void UpdateRefPronunciation(const std::string& ref_pronunciation,
                               const PronunciationAlphabet type,
                               bool int_ref) {
     if (int_ref) {

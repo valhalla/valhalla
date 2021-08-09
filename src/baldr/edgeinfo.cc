@@ -126,7 +126,7 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
             // key  type value
             uint8_t index = 0;
             std::string key, type;
-            for (const auto v : verbal_tokens) {
+            for (const auto& v : verbal_tokens) {
               if (index == 0) { // key
                 key = v;
                 index++;
@@ -246,7 +246,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
             // index # alphabet # pronunciation
             // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
             uint8_t token_index = 0, index, pronunciation_alphabet;
-            for (const auto token : pronunciation_tokens) {
+            for (const auto& token : pronunciation_tokens) {
               if (token_index == 0) { // index
                 index = std::stoi(token);
                 token_index++;
