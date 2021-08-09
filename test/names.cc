@@ -31,7 +31,7 @@ void TestKeyTypeValue(const std::string& pronunciation,
   // key  type value
   uint8_t index = 0;
   std::string key, type;
-  for (const auto v : verbal_tokens) {
+  for (const auto& v : verbal_tokens) {
     if (index == 0) { // key
       key = v;
       index++;
