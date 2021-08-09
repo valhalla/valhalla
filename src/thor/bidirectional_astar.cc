@@ -547,9 +547,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Check if the edge on the forward search connects to a settled edge on the
         // reverse search tree. Do not expand further past this edge since it will just
-        // result in other connections.
-        if (edgestatus_reverse_.Get(fwd_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetForwardConnection(graphreader, fwd_pred)) {
+        // result in other connections. Handle special edge case when we encountered the
+        // destination edge that wasn't still pulled out of the queue.
+        const auto opp_status = edgestatus_reverse_.Get(fwd_pred.opp_edgeid());
+        if (opp_status.set() == EdgeSet::kPermanent ||
+            (opp_status.set() == EdgeSet::kTemporary &&
+             edgelabels_reverse_[opp_status.index()].predecessor() == kInvalidLabel)) {
+          if (SetForwardConnection(graphreader, fwd_pred) &&
+              opp_status.set() == EdgeSet::kPermanent) {
             continue;
           }
         }
@@ -592,9 +597,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Check if the edge on the reverse search connects to a settled edge on the
         // forward search tree. Do not expand further past this edge since it will just
-        // result in other connections.
-        if (edgestatus_forward_.Get(rev_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetReverseConnection(graphreader, rev_pred)) {
+        // result in other connections. Handle special edge case when we encountered the
+        // destination edge that wasn't still pulled out of the queue.
+        const auto opp_status = edgestatus_forward_.Get(rev_pred.opp_edgeid());
+        if (opp_status.set() == EdgeSet::kPermanent ||
+            (opp_status.set() == EdgeSet::kTemporary &&
+             edgelabels_forward_[opp_status.index()].predecessor() == kInvalidLabel)) {
+          if (SetReverseConnection(graphreader, rev_pred) &&
+              opp_status.set() == EdgeSet::kPermanent) {
             continue;
           }
         }
