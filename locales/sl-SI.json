@@ -175,7 +175,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -229,7 +229,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -949,7 +949,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "levo",
@@ -984,7 +984,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "relative_directions": [
         "levo",
@@ -1145,9 +1145,7 @@
       },
       "transit_stop_count_labels": {
         "one": "postanek",
-        "other": "postankov",
-        "few": "postanki",
-        "two": "postanka"
+        "other": "postankov"
       },
       "example_phrases": {
         "0": [
@@ -1165,7 +1163,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1497,7 +1495,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1585,7 +1583,7 @@
         "pešpoti",
         "kolesarski stezi",
         "stezi za gorsko kolo",
-       "the crosswalk"
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1689,9 +1687,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "postanek",
-        "other": "postankov",
-        "few": "postanki",
-        "two": "postanka"
+        "other": "postankov"
       },
       "example_phrases": {
         "0": [
@@ -1836,9 +1832,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "postanek",
-        "other": "postankov",
-        "few": "postanki",
-        "two": "postanka"
+        "other": "postankov"
       },
       "example_phrases": {
         "0": [
@@ -1891,9 +1885,7 @@
       ],
       "transit_stop_count_labels": {
         "one": "postanek",
-        "other": "postankov",
-        "few": "postanki",
-        "two": "postanka"
+        "other": "postankov"
       },
       "example_phrases": {
         "0": [

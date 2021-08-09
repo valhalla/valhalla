@@ -181,11 +181,14 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = -1;
+    // is_dest is false, because it is a traversal algorithm in this context, not a path search
+    // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
+    const bool is_dest = false;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       const bool allowed =
-          FORWARD ? costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
-                                      nodeinfo->timezone(), restriction_idx)
+          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid,
+                                      offset_time.local_time, nodeinfo->timezone(), restriction_idx)
                   : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
                                              offset_time.local_time, nodeinfo->timezone(),
                                              restriction_idx);
@@ -194,10 +197,10 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
         continue;
       }
     } else {
-      const bool allowed =
-          FORWARD ? costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)
-                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
-                                             restriction_idx);
+      const bool allowed = FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0,
+                                                       0, restriction_idx)
+                                   : costing_->AllowedReverse(directededge, pred, opp_edge, t2,
+                                                              oppedgeid, 0, 0, restriction_idx);
 
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
@@ -354,7 +357,10 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      opp_pred_edge = graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      if (opp_pred_edge == nullptr) {
+        continue;
+      }
     }
 
     // Check if we should stop
@@ -496,9 +502,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
+    const bool is_dest = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
+      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -575,8 +582,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               restriction_idx)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, false, pred, tile,
+                                                               edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -772,6 +779,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it
@@ -850,15 +860,18 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it
-      graph_tile_ptr opp_tile = nullptr;
-      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      graph_tile_ptr opp_tile = tile;
+      const DirectedEdge* opp_dir_edge = nullptr;
+      auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_dir_edge, opp_tile);
+      if (opp_dir_edge == nullptr) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get the cost
       uint8_t flow_sources;
@@ -890,8 +903,7 @@ void Dijkstras::SetDestinationLocations(
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
-      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id),
-                      multipath_ ? path_id : 0);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }
   }
 }
@@ -925,6 +937,9 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Get the directed edge
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      if (tile == nullptr) {
+        continue;
+      }
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the tile at the end node. Skip if tile not found as we won't be

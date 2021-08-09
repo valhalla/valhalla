@@ -34,3 +34,6 @@
 [submodule "third_party/pybind11"]
 	path = third_party/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "third_party/cpp-statsd-client"]
+	path = third_party/cpp-statsd-client
+	url = https://github.com/vthiery/cpp-statsd-client

@@ -124,24 +124,24 @@ TEST(Maneuversbuilder, TestSetSimpleDirectionalManeuverType) {
   // Sharp right lower bound
   TrySetSimpleDirectionalManeuverType(136, DirectionsLeg_Maneuver_Type_kSharpRight);
   // Sharp right middle
-  TrySetSimpleDirectionalManeuverType(158, DirectionsLeg_Maneuver_Type_kSharpRight);
+  TrySetSimpleDirectionalManeuverType(148, DirectionsLeg_Maneuver_Type_kSharpRight);
   // Sharp right upper bound
-  TrySetSimpleDirectionalManeuverType(169, DirectionsLeg_Maneuver_Type_kSharpRight);
+  TrySetSimpleDirectionalManeuverType(159, DirectionsLeg_Maneuver_Type_kSharpRight);
 
   // Right side of street driving
   // Reverse lower bound
-  TrySetSimpleDirectionalManeuverType(170, DirectionsLeg_Maneuver_Type_kUturnRight);
+  TrySetSimpleDirectionalManeuverType(160, DirectionsLeg_Maneuver_Type_kUturnRight);
   // Reverse middle
   TrySetSimpleDirectionalManeuverType(179, DirectionsLeg_Maneuver_Type_kUturnRight);
   // Reverse middle
   TrySetSimpleDirectionalManeuverType(180, DirectionsLeg_Maneuver_Type_kUturnLeft);
   // Reverse upper bound
-  TrySetSimpleDirectionalManeuverType(190, DirectionsLeg_Maneuver_Type_kUturnLeft);
+  TrySetSimpleDirectionalManeuverType(200, DirectionsLeg_Maneuver_Type_kUturnLeft);
 
   // Sharp left lower bound
-  TrySetSimpleDirectionalManeuverType(191, DirectionsLeg_Maneuver_Type_kSharpLeft);
+  TrySetSimpleDirectionalManeuverType(201, DirectionsLeg_Maneuver_Type_kSharpLeft);
   // Sharp left middle
-  TrySetSimpleDirectionalManeuverType(203, DirectionsLeg_Maneuver_Type_kSharpLeft);
+  TrySetSimpleDirectionalManeuverType(213, DirectionsLeg_Maneuver_Type_kSharpLeft);
   // Sharp left upper bound
   TrySetSimpleDirectionalManeuverType(224, DirectionsLeg_Maneuver_Type_kSharpLeft);
 
@@ -404,7 +404,7 @@ void PopulateEdge(TripLeg_Edge* edge,
   edge->set_bridge(bridge);
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
-  TripLeg_Sign* sign = edge->mutable_sign();
+  valhalla::TripSign* sign = edge->mutable_sign();
   for (const auto& exit_number : exit_numbers) {
     auto* edge_exit_number = sign->add_exit_numbers();
     edge_exit_number->set_text(exit_number.first);
@@ -477,6 +477,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool fork = false,
                       bool begin_intersecting_edge_name_consistency = false,
                       bool intersecting_forward_edge = false,
+                      const std::string& verbal_succinct_transition_instruction = "",
                       const std::string& verbal_transition_alert_instruction = "",
                       const std::string& verbal_pre_transition_instruction = "",
                       const std::string& verbal_post_transition_instruction = "",
@@ -554,6 +555,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_fork(fork);
   maneuver.set_begin_intersecting_edge_name_consistency(begin_intersecting_edge_name_consistency);
   maneuver.set_intersecting_forward_edge(intersecting_forward_edge);
+  maneuver.set_verbal_succinct_transition_instruction(verbal_succinct_transition_instruction);
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
@@ -1562,6 +1564,9 @@ TEST(Maneuversbuilder, TestSimpleRightTurnChannelCombine) {
   PopulateEdge(edge, {{"Perry Hall Boulevard", 0}}, 0.065867, 64.000000,
                valhalla::RoadClass::kSecondary, 188, 188, 11, 14, TripLeg_Traversability_kBoth, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+
+  // node:3 end node
+  node = path.add_node();
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);

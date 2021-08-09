@@ -12,6 +12,10 @@ namespace baldr {
 constexpr size_t kStateIso = 3;
 constexpr size_t kCountryIso = 2;
 
+// Returns the 3-char equivalent of the 2-char country code (iso_3166_1_alpha2) or an empty string
+// if the 2-char code is unknown
+std::string get_iso_3166_1_alpha3(const std::string& iso_3166_1_alpha2);
+
 /**
  * Holds a generic admin with state and country iso and text. Text is stored
  * in the GraphTile text list and the offset is stored within the admin.

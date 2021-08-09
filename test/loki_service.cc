@@ -24,6 +24,7 @@ namespace {
 
 const std::vector<http_request_t> valhalla_requests{
     http_request_t(GET, "/status"),
+    http_request_t(GET, R"(/status?json={"verbose": true})"),
     http_request_t(OPTIONS, "/route"),
     http_request_t(HEAD, "/route"),
     http_request_t(PUT, "/route"),
@@ -88,7 +89,7 @@ const std::vector<http_request_t> valhalla_requests{
         R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}]})"),
     http_request_t(
         GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}]})"),
+        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}]})"),
     http_request_t(
         POST,
         "/trace_attributes",
@@ -103,6 +104,9 @@ const std::vector<http_request_t> valhalla_requests{
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {200, "{}"},
+    {200,
+     R"({"version":")" VALHALLA_VERSION
+     R"(","has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"}})"},
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405,
@@ -272,7 +276,7 @@ const std::vector<http_request_t> osrm_requests{
         R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
     http_request_t(
         GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
+        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
     http_request_t(
         POST,
         "/trace_attributes",
@@ -401,7 +405,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
   auto config = test::make_config(run_dir,
                                   {
                                       {"service_limits.skadi.max_shape", "100"},
-                                      {"service_limits.max_avoid_locations", "0"},
+                                      {"service_limits.max_exclude_locations", "0"},
                                   },
                                   {"loki.actions"});
 

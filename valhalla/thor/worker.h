@@ -24,8 +24,8 @@
 #include <valhalla/thor/centroid.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
-#include <valhalla/thor/timedep.h>
 #include <valhalla/thor/triplegbuilder.h>
+#include <valhalla/thor/unidirectional_astar.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
@@ -131,6 +131,11 @@ protected:
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
   Centroid centroid_gen;
+
+private:
+  std::string service_name() const override {
+    return "thor";
+  }
 };
 
 } // namespace thor

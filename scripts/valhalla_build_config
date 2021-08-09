@@ -40,6 +40,7 @@ config = {
     'global_synchronized_cache': False,
     'max_concurrent_reader_users' : 1,
     'reclassify_links': True,
+    'default_speeds_config': optional(str),
     'data_processing': {
       'infer_internal_intersections': True,
       'infer_turn_channels': True,
@@ -222,6 +223,9 @@ config = {
       'max_matrix_distance': 0.0,
       'max_matrix_locations': 0
     },
+    'status': {
+      'allow_verbose': False
+    },
     'transit': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -263,12 +267,19 @@ config = {
       'max_distance': 200000.0,
       'max_locations': 5
     },
-    'max_avoid_locations': 50,
+    'max_exclude_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
     'max_timedep_distance': 500000,
     'max_alternates': 2,
-    'max_avoid_polygons_length': 10000
+    'max_exclude_polygons_length': 10000
+  },
+  'statsd': {
+    'host': optional(str),
+    'port': 8125,
+    'prefix': 'valhalla',
+    'batch_size': optional(int),
+    'tags': optional(list)
   }
 }
 
@@ -280,7 +291,7 @@ help_text = {
     'lru_mem_cache_hard_control': 'Use hard memory limit control for LRU memory cache (i.e. on every put) - never allow overcommit',
     'use_simple_mem_cache': 'Use memory cache within a simple hash map the clears all tiles when overcommitted',
     'user_agent': 'User-Agent http header to request single tiles',
-    'tile_url': 'Location to read tiles from if they are not found in the tile_dir',
+    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/optional/path/{tilePath}?some=optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
     'tile_url_gz': 'Whether or not to request for compressed tiles',
     'concurrency': 'How many threads to use in the concurrent parts of tile building',
     'tile_dir': 'Location to read/write tiles to/from',
@@ -303,6 +314,7 @@ help_text = {
     'global_synchronized_cache': 'bool indicating whether global_synchronized_cache is used - default to False',
     'max_concurrent_reader_users' : 'number of threads in the threadpool which can be used to fetch tiles over the network via curl',
     'reclassify_links' : 'bool indicating whether or not to reclassify links - reclassifies ramps based on the lowest class connecting road',
+    'default_speeds_config': 'a path indicating the json config file which graph enhancer will use to set the speeds of edges in the graph based on their geographic location (state/country), density (urban/rural), road class, road use (form of way)',
     'data_processing': {
       'infer_internal_intersections': 'bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf',
       'infer_turn_channels': 'bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf',
@@ -485,6 +497,9 @@ help_text = {
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
+    'status': {
+      'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
+    },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
@@ -526,12 +541,19 @@ help_text = {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',
       'max_locations': 'Maximum number of input locations, 127 is a hard limit and cannot be increased in config'
     },
-    'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
+    'max_exclude_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
     'max_alternates': 'Maximum number of alternate routes to allow in a request',
-    'max_avoid_polygons_length': 'Maximum total perimeter of all avoid_polygons in meters'
+    'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters'
+  },
+  'statsd': {
+    'host': 'The statsd host address',
+    'port': 'The statsd port',
+    'prefix': 'The statsd prefix to use for each metric',
+    'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
+    'tags': 'List of tags to include with each metric'
   }
 }
 

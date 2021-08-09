@@ -96,7 +96,9 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | Automobile options | Description |
 | :-------------------------- | :----------- |
 | `maneuver_penalty` | A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds. |
-| `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
+| `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
+| `gate_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road. The default gate penalty is 300 seconds. |
+| `private_access_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. The default private access penalty is 450 seconds. |
 | `toll_booth_cost` | A cost applied when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
 | `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
 | `ferry_cost` | A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes). |
@@ -113,14 +115,18 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck`, `hov` & `taxi`.
-###### Truck-specific costing options
+###### Other costing options
+The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck` costing methods.
 
-In addition to the above, the following options are available for `truck` costing.
+| Vehicle Options | Description |
+| :-------------------------- | :----------- |
+| `height` | The height of the vehicle (in meters). |
+| `width` | The width of the vehicle (in meters). |
+
+The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the truck (in meters). |
-| `width` | The width of the truck (in meters). |
 | `length` | The length of the truck (in meters). |
 | `weight` | The weight of the truck (in metric tons). |
 | `axle_load` | The axle load of the truck (in metric tons). |
@@ -190,6 +196,7 @@ These options are available for pedestrian costing methods.
 | `use_ferry` | This value indicates the willingness to take ferries. This is range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0.5. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
+| `use_hills` | This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
@@ -261,28 +268,39 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `bg-BG` | `bg` | Bulgarian (Bulgaria) |
 | `ca-ES` | `ca` | Catalan (Spain) |
 | `cs-CZ` | `cs` | Czech (Czech Republic) |
+| `da-DK` | `da` | Danish (Denmark) |
 | `de-DE` | `de` | German (Germany) |
 | `el-GR` | `el` | Greek (Greece) |
-| `en-US` | `en` | English (United States) |
+| `en-GB` | `engb` | English (United Kingdom) |
 | `en-US-x-pirate` | `pirate` | English (United States) Pirate |
+| `en-US` | `en` | English (United States) |
 | `es-ES` | `es` | Spanish (Spain) |
 | `et-EE` | `et` | Estonian (Estonia) |
+| `fi-FI` | `fi` | Finnish (Finland) |
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
+| `hu-HU` | `hu` | Hungarian (Hungary) |
 | `it-IT` | `it` | Italian (Italy) |
 | `ja-JP` | `ja` | Japanese (Japan) |
+| `nb-NO` | `nbno` | Bokmal (Norway) |
+| `nl-NL` | `nl` | Dutch (Netherlands) |
+| `pl-PL` | `pl` | Polish (Poland) |
+| `pt-BR` | `ptbr` | Portuguese (Brazil) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
+| `ro-RO` | `ro` | Romanian (Romania) |
 | `ru-RU` | `ru` | Russian (Russia) |
 | `sk-SK` | `sk` | Slovak (Slovakia) |
 | `sl-SI` | `sl` | Slovenian (Slovenia) |
 | `sv-SE` | `sv` | Swedish (Sweden) |
+| `tr-TR` | `tr` | Turkish (Turkey) |
+| `uk-UA` | `uk` | Ukrainian (Ukraine) |
 
 #### Other request options
 
 | Options | Description |
 | :------------------ | :----------- |
-| `avoid_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
-| `avoid_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `avoid_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
+| `exclude_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
+| `exclude_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `exclude_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
 | `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><ul><b>NOTE: This option is not supported for Valhalla's matrix service.</b><ul> |
 | `out_format` | Output format. If no `out_format` is specified, JSON is returned. Future work includes PBF (protocol buffer) support. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
@@ -321,7 +339,7 @@ The summary JSON object includes:
 
 A `trip` contains one or more `legs`. For *n* number of `break` locations, there are *n-1* legs. `Through` locations do not create separate legs.
 
-Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](/decoding.md).
+Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](/docs/decoding.md).
 
 Each maneuver includes:
 

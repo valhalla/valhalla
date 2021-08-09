@@ -65,10 +65,12 @@ message IncidentsTile {
     string long_description = 14;
     string clear_lanes = 15;
     uint64 num_lanes_blocked = 16;
+    uint32 length = 17;  // Length of incident as matched to road graph
 
     // IncidentMetadata id
     uint64 id = 128;
-    // Country code
+    // Country code (2 & 3 char codes)
     string iso_3166_1_alpha2 = 129;
+    string iso_3166_1_alpha3 = 130;
   }
 }

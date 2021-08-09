@@ -74,8 +74,8 @@ protected:
   std::unordered_map<std::string, float> max_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   std::unordered_map<std::string, float> max_matrix_locations;
-  size_t max_avoid_locations;
-  float max_avoid_polygons_length;
+  size_t max_exclude_locations;
+  float max_exclude_polygons_length;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;
@@ -101,6 +101,12 @@ protected:
   size_t max_elevation_shape;
   float min_resample;
   unsigned int max_alternates;
+  bool allow_verbose;
+
+private:
+  std::string service_name() const override {
+    return "loki";
+  }
 };
 } // namespace loki
 } // namespace valhalla

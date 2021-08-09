@@ -59,7 +59,7 @@ json::MapPtr to_properties(uint64_t id, const std::string& color) {
       {"fill", color},
       {"stroke", std::string("white")},
       {"stroke-width", static_cast<uint64_t>(1)},
-      {"fill-opacity", json::fp_t{0.8, 1}},
+      {"fill-opacity", json::fixed_t{0.8, 1}},
       {"id", id},
   });
 }
@@ -72,10 +72,10 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
     for (const auto& coord : ring) {
       // if (outer) {
       ring_coords->emplace_back(
-          json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
+          json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
       /*} else {
         ring_coords->emplace_front(
-            json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
+            json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
       }*/
     }
     coords->emplace_back(ring_coords);
@@ -112,10 +112,14 @@ std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& b
 
 namespace valhalla {
 namespace baldr {
-connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
+connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt,
+                                       const std::shared_ptr<GraphReader>& graph_reader) {
   // See what kind of tiles we are dealing with here by getting a graphreader
-  GraphReader reader(pt);
-  auto tiles = reader.GetTileSet();
+  std::shared_ptr<GraphReader> reader = graph_reader;
+  if (!reader) {
+    reader = std::make_shared<GraphReader>(pt);
+  }
+  auto tiles = reader->GetTileSet();
   transit_level = TileHierarchy::GetTransitLevel().level;
 
   // Quick hack to remove connectivity between known unconnected regions

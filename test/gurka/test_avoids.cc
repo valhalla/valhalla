@@ -3,12 +3,14 @@
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/multi/geometries/register/multi_polygon.hpp>
 #include <gtest/gtest.h>
+#include <valhalla/proto/options.pb.h>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "loki/polygon_search.h"
 #include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "sif/costfactory.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -69,11 +71,7 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  if (type == "avoid_polygons") {
-    rapidjson::SetValueByPointer(doc, "/avoid_polygons", geom_obj);
-  } else {
-    rapidjson::SetValueByPointer(doc, "/avoid_locations", geom_obj);
-  }
+  rapidjson::Pointer(type).Set(doc, geom_obj);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -88,38 +86,47 @@ protected:
   static gurka::map avoid_map;
 
   static void SetUpTestSuite() {
-    const std::string ascii_map = R"(A------B
+    // several polygons and one location to avoid to reference in the tests
+    const std::string ascii_map = R"(
+                                     A---x--B
                                      |      |
-                                     |      |
-                                     D------E)";
-    const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"name", "High"}}},
-                              {"DE", {{"highway", "residential"}, {"name", "Low"}}},
-                              {"AD", {{"highway", "residential"}, {"name", "1st"}}},
-                              {"BE", {{"highway", "residential"}, {"name", "2nd"}}}};
+                                   h---i  l---m
+                                   | | |  | | |
+                                   k---j  o---n
+                                     |      |   p-q
+                                     C------D---|-|---E---F
+                                                s-r
+                                     )";
+
+    const gurka::ways ways = {{"AB", {{"highway", "tertiary"}, {"name", "High"}}},
+                              {"CD", {{"highway", "tertiary"}, {"name", "Low"}}},
+                              {"AC", {{"highway", "tertiary"}, {"name", "1st"}}},
+                              {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
+                              {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
+                              {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    // Add low length limit for avoid_polygons so it throws an error
+    // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
-                                  {{"service_limits.max_avoid_polygons_length", "1000"}});
+                                  {{"service_limits.max_exclude_polygons_length", "1000"}});
   }
 };
 
 gurka::map AvoidTest::avoid_map = {};
 
-TEST_F(AvoidTest, TestConfig) {
+TEST_F(AvoidTest, TestMaxPolygonPerimeter) {
   // Add a polygon with longer perimeter than the limit
   std::vector<ring_bg_t> rings{{{13.38625361, 52.4652558},
                                 {13.38625361, 52.48000128},
                                 {13.4181769, 52.48000128},
                                 {13.4181769, 52.4652558}}};
 
-  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["C"]};
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
-  auto req = build_local_req(doc, allocator, lls, "auto", value, type);
+  auto req = build_local_req(doc, allocator, lls, "auto", value, "/exclude_polygons");
 
   // make sure the right exception is thrown
   try {
@@ -129,37 +136,21 @@ TEST_F(AvoidTest, TestConfig) {
   };
 }
 
-TEST_P(AvoidTest, TestAvoidPolygon) {
-  auto node_a = avoid_map.nodes.at("A");
-  auto node_b = avoid_map.nodes.at("B");
-  auto node_d = avoid_map.nodes.at("D");
-  auto dx = node_b.lng() - node_a.lng();
-  auto dy = node_a.lat() - node_d.lat();
+TEST_P(AvoidTest, TestAvoidPolygonWithDeprecatedParam) {
+  // avoid the first polygon;
+  // use deprecated "avoid_polygons" instead of "exclude_polygons"
 
-  // create a small polygon intersecting AD ("1st") just below node A
-  //      A------B
-  //  x---|---x  |
-  //  |   |   |  |
-  //  x---|---x  |
-  //      |      |
-  //      D------E
-  ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
-                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
-                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
-                 {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
-                 {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}};
-  std::vector<ring_bg_t> rings;
-  rings.push_back(ring);
+  std::vector<ring_bg_t> rings{
+      {avoid_map.nodes["h"], avoid_map.nodes["i"], avoid_map.nodes["j"], avoid_map.nodes["k"]}};
 
   // build request manually for now
-  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["C"]};
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/avoid_polygons");
 
   // will avoid 1st
   auto route = gurka::do_action(Options::route, avoid_map, req);
@@ -167,44 +158,21 @@ TEST_P(AvoidTest, TestAvoidPolygon) {
 }
 
 TEST_P(AvoidTest, TestAvoid2Polygons) {
-  auto node_a = avoid_map.nodes.at("A");
-  auto node_b = avoid_map.nodes.at("B");
-  auto node_e = avoid_map.nodes.at("E");
-  auto dx = std::abs(node_b.lng() - node_a.lng());
-  auto dy = std::abs(node_b.lat() - node_e.lat());
-
   // create 2 small polygons intersecting all connecting roads so it fails to find a path
-  //      A------B
-  //  x---|-x  y-|---y
-  //  |   | |  | |   |
-  //  x---|-x  y-|---y
-  //      |      |
-  //      D------E
-
-  // one clockwise ring
-  std::vector<ring_bg_t> rings;
-  rings.push_back({{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
-                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
-                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
-                   {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
-                   {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}});
-
-  // one counterclockwise ring
-  rings.push_back({{node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.1 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.1 * dy},
-                   {node_b.lng() + 0.1 * dx, node_b.lat() - 0.01 * dy},
-                   {node_b.lng() - 0.1 * dx, node_b.lat() - 0.01 * dy}});
+  // one clockwise ring, one counter-clockwise ring
+  std::vector<ring_bg_t> rings{{avoid_map.nodes["h"], avoid_map.nodes["i"], avoid_map.nodes["j"],
+                                avoid_map.nodes["k"]},
+                               {avoid_map.nodes["o"], avoid_map.nodes["n"], avoid_map.nodes["m"],
+                                avoid_map.nodes["l"]}};
 
   // build request manually for now
-  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["D"]};
+  auto lls = {avoid_map.nodes["A"], avoid_map.nodes["C"]};
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto value = get_avoid_polys(rings, allocator);
-  auto type = "avoid_polygons";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/exclude_polygons");
 
   // make sure the right exception is thrown
   try {
@@ -214,20 +182,42 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   };
 }
 
+TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
+  valhalla::Options options;
+  options.set_costing(valhalla::Costing::truck);
+  auto* co = options.add_costing_options();
+  co->set_costing(valhalla::Costing::truck);
+
+  // create the polygon intersecting a shortcut
+  auto* rings = options.mutable_exclude_polygons();
+  auto* ring = rings->Add();
+  for (const auto& coord :
+       {avoid_map.nodes["p"], avoid_map.nodes["q"], avoid_map.nodes["r"], avoid_map.nodes["s"]}) {
+    auto* ll = ring->add_coords();
+    ll->set_lat(coord.lat());
+    ll->set_lng(coord.lng());
+  }
+
+  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  GraphReader reader(avoid_map.config.get_child("mjolnir"));
+
+  // should return the shortcut edge ID as well
+  size_t found_shortcuts = 0;
+  auto avoid_edges = vl::edges_in_rings(*rings, reader, costing, 10000);
+  for (const auto& edge_id : avoid_edges) {
+    if (reader.GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
+      found_shortcuts++;
+    }
+  }
+
+  // 2 shortcuts + 2 edges
+  ASSERT_EQ(avoid_edges.size(), 4);
+  ASSERT_EQ(found_shortcuts, 2);
+}
+
 TEST_P(AvoidTest, TestAvoidLocation) {
-  auto node_a = avoid_map.nodes.at("A");
-  auto node_b = avoid_map.nodes.at("B");
-  auto dx = std::abs(node_b.lng() - node_a.lng());
-
-  auto lon = node_a.lng() + 0.5 * dx;
-
-  // avoid the "High" road ;)
-  //      A---x--B
-  //      |      |
-  //      |      |
-  //      |      |
-  //      D------E
-  std::vector<vm::PointLL> points{{lon, node_a.lat()}};
+  // avoid the location on "High road"
+  std::vector<vm::PointLL> avoid_locs{avoid_map.nodes["x"]};
 
   // build request manually for now
   auto lls = {avoid_map.nodes["A"], avoid_map.nodes["B"]};
@@ -235,9 +225,8 @@ TEST_P(AvoidTest, TestAvoidLocation) {
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto value = get_avoid_locs(points, allocator);
-  auto type = "avoid_locations";
-  auto req = build_local_req(doc, allocator, lls, GetParam(), value, type);
+  auto value = get_avoid_locs(avoid_locs, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), value, "/exclude_locations");
 
   // will avoid 1st
   auto route = gurka::do_action(Options::route, avoid_map, req);

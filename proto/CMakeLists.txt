@@ -4,11 +4,13 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   directions.proto
   info.proto
   options.proto
+  sign.proto
   tripcommon.proto
   trip.proto
   transit.proto
   transit_fetch.proto
   incidents.proto
+  status.proto
   ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
   ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
 

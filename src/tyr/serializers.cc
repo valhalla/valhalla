@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -83,10 +84,35 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
-std::string serializeStatus(const Api&) {
-  // TODO: once we decide on what's in the status message we'll fill out the proto message in
-  // loki/thor/odin and we'll serialize it here
-  return "{}";
+std::string serializeStatus(const Api& request) {
+
+  rapidjson::Document status_doc;
+  status_doc.SetObject();
+  auto& alloc = status_doc.GetAllocator();
+
+  if (request.status().has_version())
+    status_doc.AddMember("version", rapidjson::Value().SetString(request.status().version(), alloc),
+                         alloc);
+  if (request.status().has_has_tiles())
+    status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
+                         alloc);
+  if (request.status().has_has_admins())
+    status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                         alloc);
+  if (request.status().has_has_timezones())
+    status_doc.AddMember("has_timezones",
+                         rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
+  if (request.status().has_has_live_traffic())
+    status_doc.AddMember("has_live_traffic",
+                         rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+
+  rapidjson::Document bbox_doc;
+  if (request.status().has_bbox()) {
+    bbox_doc.Parse(request.status().bbox());
+    rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
+  }
+
+  return rapidjson::to_string(status_doc);
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
@@ -136,8 +162,8 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
   auto loc = json::array({});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lng(), 6});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lat(), 6});
+  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lng(), 6});
+  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lat(), 6});
   waypoint->emplace("location", loc);
 
   // Add street name.
@@ -151,18 +177,18 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // TODO: since distance was normalized in thor - need to recalculate here
   //       in the future we shall have store separately from score
   waypoint->emplace("distance",
-                    json::fp_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
+                    json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())),
+                                  3});
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    uint32_t waypoint_index = location.shape_index();
-    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+    if (location.waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
       waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
     } else {
-      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
     }
     waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
@@ -172,10 +198,26 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
   }
 
   return waypoint;
+}
+
+/*
+ * This function serializes the via_waypoints object on the leg.
+ */
+valhalla::baldr::json::MapPtr serialize_via_waypoint(const valhalla::Location& location,
+                                                     const uint64_t geometry_idx,
+                                                     double distance_from_leg_start) {
+  // Create a via waypoint to add to the array
+  auto via_waypoint = json::map({});
+  // Add distance in meters from the input location to the silent waypoint
+  via_waypoint->emplace("distance_from_leg_start", json::fixed_t{distance_from_leg_start, 3});
+  via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
+  via_waypoint->emplace("geometry_index", geometry_idx);
+
+  return via_waypoint;
 }
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
@@ -208,6 +250,57 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   return waypoints;
 }
 
+/*
+ * This function takes any waypoints (excluding origin and destination) and walks the shape
+ * for a match.  When a match is found, we store the geometry index.
+ * We use the valhalla midgard `equal` function to check for equality based on precision.
+ * NOTE: Find vias this way using shape geometry is phase 1/temporary.  Will be doing this
+ * next in the algorithm.
+ */
+json::ArrayPtr via_waypoints(valhalla::Options options, const std::vector<PointLL>& shape) {
+  // Create a vector of indexes based on the number of locations.
+  auto locs = *options.mutable_locations();
+  auto via_waypoints = json::array({});
+
+  // only loop thru the locations that are not origin or destinations
+  for (size_t loc_i = 1; loc_i < locs.size(); loc_i++) {
+    uint32_t geometry_idx = 0;
+
+    // Only create via_waypoints object if the locations are via or through types
+    if (locs.Get(loc_i).type() == valhalla::Location::kVia ||
+        locs.Get(loc_i).type() == valhalla::Location::kThrough) {
+      locs.Mutable(loc_i)->set_waypoint_index(loc_i);
+
+      double distance_from_leg_start = 0;
+      for (const auto& curr_ll : shape) {
+        if (geometry_idx < shape.size() - 1) {
+          geometry_idx++;
+          PointLL next_ll = shape[geometry_idx];
+          const auto& location_ll = locs.Get(loc_i).path_edges(0).ll();
+
+          // comparing lat/lng equality with an epsilon for approximation
+          bool lng_equality =
+              valhalla::midgard::equal<double>(static_cast<double>(location_ll.lng()),
+                                               static_cast<double>(curr_ll.first), .001);
+          bool lat_equality =
+              valhalla::midgard::equal<double>(static_cast<double>(location_ll.lat()),
+                                               static_cast<double>(curr_ll.second), .001);
+          // accumalates the distances between current ll and next ll
+          distance_from_leg_start += curr_ll.Distance(next_ll);
+
+          if (lng_equality && lat_equality) {
+            via_waypoints->emplace_back(osrm::serialize_via_waypoint(locs.Get(loc_i),
+                                                                     geometry_idx - 1,
+                                                                     distance_from_leg_start));
+            break;
+          }
+        }
+      }
+    }
+  }
+  return via_waypoints;
+}
+
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
@@ -224,6 +317,10 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
     writer.Key(key_prefix + "iso_3166_1_alpha2");
     writer.String(incident_metadata.iso_3166_1_alpha2());
+  }
+  if (!incident_metadata.iso_3166_1_alpha3().empty()) {
+    writer.Key(key_prefix + "iso_3166_1_alpha3");
+    writer.String(incident_metadata.iso_3166_1_alpha3());
   }
   if (!incident_metadata.description().empty()) {
     writer.Key(key_prefix + "description");
@@ -280,6 +377,11 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   if (!incident_metadata.clear_lanes().empty()) {
     writer.Key(key_prefix + "clear_lanes");
     writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.length() > 0) {
+    writer.Key(key_prefix + "length");
+    writer.Int(incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {
