@@ -1639,7 +1639,7 @@ TEST(BiDiAstar, test_recost_path) {
   vt::BidirectionalAStar astar;
 
   // hack hierarchy limits to allow to go through the shortcut
-  mode_costing[int(travel_mode)]->RelaxHierarchyLimits(0.f, 0.f);
+  mode_costing[int(travel_mode)]->RelaxHierarchyLimits(true);
   const auto path =
       astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
           .front();
