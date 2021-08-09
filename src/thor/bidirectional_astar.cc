@@ -156,20 +156,46 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             uint32_t& shortcuts,
                                             const graph_tile_ptr& tile,
                                             const baldr::TimeInfo& time_info) {
+  // Skip if this is a regular edge superseded by a shortcut.
+  if (shortcuts & meta.edge->superseded()) {
+    return false;
+  }
+
+  graph_tile_ptr t2 = nullptr;
+  baldr::GraphId opp_edge_id;
+  const auto get_opp_edge_data = [&t2, &opp_edge_id, &graphreader, &meta, &tile]() {
+    // Get end node tile, opposing edge Id, and opposing directed edge.
+    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+    if (t2 == nullptr) {
+      return false;
+    }
+
+    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
+    return true;
+  };
+
   constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   auto& hierarchy_limits = FORWARD ? hierarchy_limits_forward_ : hierarchy_limits_reverse_;
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
-  // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
-  // edge superseded by a shortcut.
+  // that level. If using a shortcut, set the shortcuts mask.
   if (meta.edge->is_shortcut()) {
-    if (hierarchy_limits[meta.edge_id.level() + 1].StopExpanding(pred.distance())) {
+    if (!get_opp_edge_data())
+      return false;
+
+    const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;
+    const auto opp_edge_set = opp_edgestatus.Get(opp_edge_id).set();
+    // Synchronize shortcuts for both directions. If this shortcut has been already
+    // encountered on the opposing search we should do the same now: skip or traverse.
+    if ((opp_edge_set != EdgeSet::kSkipped &&
+         hierarchy_limits[meta.edge_id.level() + 1].StopExpanding(pred.distance())) ||
+        opp_edge_set == EdgeSet::kPermanent || opp_edge_set == EdgeSet::kTemporary) {
       shortcuts |= meta.edge->shortcut();
     } else {
+      // Mark this edge as "skipped".
+      *meta.edge_status = {EdgeSet::kSkipped, 0};
       return false;
     }
-  } else if (shortcuts & meta.edge->superseded()) {
-    return false;
   }
 
   // Skip this edge if edge is permanently labeled (best path already found
@@ -179,8 +205,6 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     return true; // This is an edge we _could_ have expanded, so return true
   }
 
-  graph_tile_ptr t2 = nullptr;
-  baldr::GraphId opp_edge_id;
   const baldr::DirectedEdge* opp_edge = nullptr;
 
   if (!FORWARD) {
@@ -191,13 +215,10 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       return false;
     }
 
-    // Get end node tile, opposing edge Id, and opposing directed edge.
-    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
-    if (t2 == nullptr) {
+    if (t2 == nullptr && !get_opp_edge_data()) {
       return false;
     }
 
-    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
     opp_edge = t2->directededge(opp_edge_id);
   }
 
@@ -262,13 +283,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   }
 
   // Get end node tile (skip if tile is not found) and opposing edge Id
-  if (FORWARD) {
-    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
-    if (t2 == nullptr) {
-      return false;
-    }
-    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
-  }
+  if (t2 == nullptr && !get_opp_edge_data())
+    return false;
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
