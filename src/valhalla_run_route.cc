@@ -131,7 +131,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
                                   PathStatistics& data,
                                   bool multi_run,
                                   uint32_t iterations,
-                                  bool using_astar,
                                   bool using_bd,
                                   bool match_test,
                                   const std::string& routetype,
@@ -709,14 +708,13 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    bool using_astar = (pathalgorithm == &timedep_forward || pathalgorithm == &timedep_reverse);
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path
     const valhalla::TripLeg* trip_path = nullptr;
     try {
       trip_path = PathTest(reader, origin, dest, pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar, using_bd, match_test, routetype, request);
+                           iterations, using_bd, match_test, routetype, request);
     } catch (std::runtime_error& rte) { LOG_ERROR("trip_path not found"); }
 
     // If successful get directions
