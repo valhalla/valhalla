@@ -375,17 +375,15 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanDifferentOriginDestination
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
-  test_request(chinese_postman_map, GetParam(), "ptyu", "", "D", "A", {"GH"});
-}
-
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {
-  // Merely testing that the cost matrix is running properly
-
   for (auto& c : "ABCDEFGH") {
     auto x = chinese_postman_map.nodes[std::string(1, c)];
     std::cout << c << ": " << x.lng() << ", " << x.lat() << "\n";
   }
+  test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
+}
 
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {
+  // Merely testing that the cost matrix is running properly
   test_request_matrix(chinese_postman_map, GetParam(), "GHFEDCBA", "GHFEDCBA");
 }
 

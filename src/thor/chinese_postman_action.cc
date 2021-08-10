@@ -203,6 +203,14 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
                                 mode, max_matrix_distance);
+  // Update Distance Matrix
+  for (int i = 0; i < G.numVertices(); i++) {
+    for (int j = 0; j < G.numVertices(); j++) {
+      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
+        dm[i][j] = td[i * source_location_list.size() + j].dist;
+      }
+    }
+  }
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {
@@ -359,8 +367,6 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     PathMatrix pm = computeFloydWarshall(distanceMatrix);
 
-    std::cout << "max_matrix_distance.find(costing)->second: "
-              << max_matrix_distance.find(costing)->second;
     computeCostMatrix(G, distanceMatrix, *reader, mode_costing, costing_, mode,
                       max_matrix_distance.find(costing)->second);
 
