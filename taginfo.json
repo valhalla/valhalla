@@ -2495,6 +2495,20 @@
     },
     {
       "key": "highway",
+      "value": "stop",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
+      "value": "give_way",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
       "value": "trunk",
       "object_types": [
         "way"
@@ -6513,6 +6527,46 @@
         "node"
       ],
       "description": "Traffic signal direction."
+    },
+    {
+      "key": "direction",
+      "value": "forward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "backward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "both",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "stop",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the stop signs at the minor roads."
+    },
+    {
+      "key": "give_way",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the give_way signs at the minor roads."
     },
     {
       "key": "tunnel",
