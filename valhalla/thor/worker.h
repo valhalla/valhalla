@@ -110,6 +110,7 @@ protected:
                          DistanceMatrix& dm,
                          baldr::GraphReader& reader,
                          const sif::mode_costing_t& mode_costing,
+                         const std::shared_ptr<sif::DynamicCost>& costing,
                          const sif::TravelMode mode,
                          const float max_matrix_distance);
 

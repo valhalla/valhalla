@@ -378,7 +378,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
   test_request(chinese_postman_map, GetParam(), "ptyu", "", "D", "A", {"GH"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanMatrix) {
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {
   // Merely testing that the cost matrix is running properly
 
   for (auto& c : "ABCDEFGH") {

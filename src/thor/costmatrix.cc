@@ -93,15 +93,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const sif::mode_costing_t& mode_costing,
     const TravelMode mode,
     const float max_matrix_distance) {
-  std::cout << "max_matrix_distance: " << max_matrix_distance << "\n";
-  std::cout << "Inside SourceTarget - source_location_list:\n";
-  for (auto p : source_location_list) {
-    std::cout << p.ll().lng() << ", " << p.ll().lat() << "\n";
-  }
-  std::cout << "Inside SourceTarget - target_location_list:\n";
-  for (auto p : target_location_list) {
-    std::cout << p.ll().lng() << ", " << p.ll().lat() << "\n";
-  }
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];

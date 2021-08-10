@@ -5,6 +5,7 @@
 #include <boost/multi_array.hpp>
 #include <boost/multi_array/subarray.hpp>
 
+#include "loki/search.h"
 #include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
@@ -158,6 +159,7 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
                                       DistanceMatrix& dm,
                                       baldr::GraphReader& reader,
                                       const sif::mode_costing_t& mode_costing,
+                                      const std::shared_ptr<sif::DynamicCost>& costing,
                                       const TravelMode mode,
                                       const float max_matrix_distance) {
   // TODO: Need to populate these two variables
@@ -178,18 +180,29 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
     source_location_list.Add()->CopyFrom(loc);
     target_location_list.Add()->CopyFrom(loc);
   }
-  // for (auto p: source_location_list){
-  //   std::cout << p.ll().lng() << ", " << p.ll().lat() << "\n";
-  // }
-  // std::cout << "source_location_list.size(): " << source_location_list.size() << "\n";
-  // std::cout << "target_location_list.size(): " << target_location_list.size() << "\n";
+
+  try {
+    auto locations = PathLocation::fromPBF(source_location_list, true);
+    const auto projections = loki::Search(locations, reader, costing);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& correlated = projections.at(locations[i]);
+      PathLocation::toPBF(correlated, source_location_list.Mutable(i), reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+
+  try {
+    auto locations = PathLocation::fromPBF(target_location_list, true);
+    const auto projections = loki::Search(locations, reader, costing);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& correlated = projections.at(locations[i]);
+      PathLocation::toPBF(correlated, target_location_list.Mutable(i), reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
                                 mode, max_matrix_distance);
-  // for (auto a : td) {
-  //   std::cout << "dist, time: " << a.dist << ", " << a.time << "\n";
-  // }
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {
@@ -348,7 +361,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     std::cout << "max_matrix_distance.find(costing)->second: "
               << max_matrix_distance.find(costing)->second;
-    computeCostMatrix(G, distanceMatrix, *reader, mode_costing, mode,
+    computeCostMatrix(G, distanceMatrix, *reader, mode_costing, costing_, mode,
                       max_matrix_distance.find(costing)->second);
 
     // Check if the graph is not strongly connected
