@@ -27,14 +27,21 @@ namespace thor {
 typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
 typedef PathMatrix::index PathMatrixIndex;
 
-std::vector<std::pair<int, int>> getNodePairs(PathMatrix pm, int startIndex, int endIndex) {
+std::vector<std::pair<int, int>> getNodePairs(PathMatrix pathMatrix, int startIndex, int endIndex) {
   std::vector<std::pair<int, int>> nodePairs;
-  auto path = pm[startIndex][endIndex];
-  for (int i = 0; i < path.size() - 1; i++) {
-    nodePairs.push_back(make_pair(path[i], path[i + 1]));
+  auto path = pathMatrix[startIndex][endIndex];
+  if (path.size() == 0) {
+    std::cout << "path size is empty"
+              << "\n";
+    // Find route here
+  } else {
+    for (int i = 0; i < path.size() - 1; i++) {
+      nodePairs.push_back(make_pair(path[i], path[i + 1]));
+    }
+    // Add the last edge
+    nodePairs.push_back(make_pair(path.back(), endIndex));
   }
-  // Add the last edge
-  nodePairs.push_back(make_pair(path.back(), endIndex));
+
   return nodePairs;
 }
 
@@ -114,14 +121,14 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
 PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
   if (dm.shape()[0] == dm.shape()[1]) {
     // create path matrix
-    PathMatrix pm(boost::extents[dm.shape()[0]][dm.shape()[0]]);
+    PathMatrix pathMatrix(boost::extents[dm.shape()[0]][dm.shape()[0]]);
     // populate the path matrix
-    for (int i = 0; i < pm.shape()[0]; i++) {
-      for (int j = 0; j < pm.shape()[0]; j++) {
+    for (int i = 0; i < pathMatrix.shape()[0]; i++) {
+      for (int j = 0; j < pathMatrix.shape()[0]; j++) {
         if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
-          pm[i][j] = std::vector<int>{};
+          pathMatrix[i][j] = std::vector<int>{};
         } else {
-          pm[i][j] = std::vector<int>{i};
+          pathMatrix[i][j] = std::vector<int>{i};
         }
       }
     }
@@ -142,16 +149,16 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
               dm[i][j] = alt_distance;
               // Update path matrix here.
               std::vector<int> new_path;
-              new_path.reserve(pm[i][k].size() + pm[k][j].size());
-              new_path.insert(new_path.end(), pm[i][k].begin(), pm[i][k].end());
-              new_path.insert(new_path.end(), pm[k][j].begin(), pm[k][j].end());
-              pm[i][j] = new_path;
+              new_path.reserve(pathMatrix[i][k].size() + pathMatrix[k][j].size());
+              new_path.insert(new_path.end(), pathMatrix[i][k].begin(), pathMatrix[i][k].end());
+              new_path.insert(new_path.end(), pathMatrix[k][j].begin(), pathMatrix[k][j].end());
+              pathMatrix[i][j] = new_path;
             }
           }
         }
       }
     }
-    return pm;
+    return pathMatrix;
   }
 }
 
@@ -347,7 +354,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
-    edgeGraphIds = G.computeIdealEulerCycle(originVertex);
+    edgeGraphIds = G.computeIdealEulerCycle(originVertex, *reader);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -365,10 +372,36 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
 
-    PathMatrix pm = computeFloydWarshall(distanceMatrix);
+    PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
+    for (int i = 0; i < pathMatrix.size(); i++) {
+      for (int j = 0; j < pathMatrix.size(); j++) {
+        std::cout << "path " << i << ", " << j << ":";
+        for (auto x : pathMatrix[i][j]) {
+          std::cout << x << " -> ";
+        }
+        std::cout << "\n";
+      }
+      std::cout << "\n";
+    }
+
+    std::cout << "Original distance matrix\n";
+    for (int i = 0; i < distanceMatrix.size(); i++) {
+      for (int j = 0; j < distanceMatrix.size(); j++) {
+        std::cout << distanceMatrix[i][j] << ", ";
+      }
+      std::cout << "\n";
+    }
 
     computeCostMatrix(G, distanceMatrix, *reader, mode_costing, costing_, mode,
                       max_matrix_distance.find(costing)->second);
+
+    std::cout << "Updated distance matrix\n";
+    for (int i = 0; i < distanceMatrix.size(); i++) {
+      for (int j = 0; j < distanceMatrix.size(); j++) {
+        std::cout << distanceMatrix[i][j] << ", ";
+      }
+      std::cout << "\n";
+    }
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
@@ -428,17 +461,18 @@ void thor_worker_t::chinese_postman(Api& request) {
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
+    std::cout << "Total cost of hungarian algorithm: " << cost << "\n";
     std::vector<std::pair<int, int>> extraPairs;
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
       // Get node's index for that pair
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
       // Expand the path between the paired nodes, using the path matrix
-      auto nodePairs = getNodePairs(pm, overNodeIndex, underNodeIndex);
+      auto nodePairs = getNodePairs(pathMatrix, overNodeIndex, underNodeIndex);
       // Concat with main vector
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
-    edgeGraphIds = G.computeIdealEulerCycle(originVertex, extraPairs);
+    edgeGraphIds = G.computeIdealEulerCycle(originVertex, *reader, extraPairs);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;

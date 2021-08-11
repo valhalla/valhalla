@@ -13,6 +13,12 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
+midgard::PointLL getPointLL(baldr::GraphId node, GraphReader& reader) {
+  const NodeInfo* ni_start = reader.nodeinfo(node);
+  graph_tile_ptr tile = reader.GetGraphTile(node);
+  return ni_start->latlng(tile->header()->base_ll());
+}
+
 ChinesePostmanGraph::ChinesePostmanGraph(/* args */) {
 }
 
@@ -84,6 +90,7 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
 }
 
 std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
+                                                                 GraphReader& reader,
                                                                  ExtraPaths extraPaths) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
   int edgeVisited = 0;
@@ -103,7 +110,19 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
       continue;
     }
     auto e = boost::edge(*it, *(it + 1), G);
-    eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
+    if (e.second) {
+      std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
+      eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
+    } else {
+      std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
+      auto graph_id_1 = G[*it].graph_id;
+      auto graph_id_2 = G[*(it + 1)].graph_id;
+      auto ll1 = getPointLL(GraphId(graph_id_1), reader);
+      auto ll2 = getPointLL(GraphId(graph_id_2), reader);
+      std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
+      std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
+      // Find the edges for path through outside polygon
+    }
   }
   return eulerPathEdgeGraphIDs;
 }

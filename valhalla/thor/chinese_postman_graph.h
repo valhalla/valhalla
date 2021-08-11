@@ -75,6 +75,7 @@ public:
   // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVertices();
   std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex,
+                                              GraphReader& reader,
                                               ExtraPaths extraPaths = ExtraPaths());
   void setupDFSEulerCycle(ExtraPaths extraPaths = ExtraPaths());
   std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());

@@ -249,17 +249,17 @@ protected:
     //          C---->---D
 
     const std::string complex_ascii_map = R"(
-            p--------------------------q
-            |    B--------A--------F   |
-            |     \       | \     /|   |
-            |      \      |  \   / |   |
-            |       \     |   \ /  |   |
-            |        \    |    E   |   |
-            |         \   |     \  |   |
-            |          \  |      \ |   |
-            |           \ |       \|   |
-            |             C--------D   |
-            r--------------------------s
+            p----------------x----------q
+            |    B--------A--|------F   |
+            |     \       | \|     /|   |
+            |      \      |  |\   / |   |
+            |       \     |  | \ /  |   |
+            |        \    |  |  E   |   |
+            |         \   |  |   \  |   |
+            |          \  |  |    \ |   |
+            |           \ |  |     \|   |
+            |             C--|------D   |
+            r----------------y----------s
     )";
     const gurka::ways complex_ways =
         {{"AB", {{"highway", "residential"}, {"name", "AB"}, {"oneway", "yes"}}},
@@ -379,7 +379,8 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
     auto x = chinese_postman_map.nodes[std::string(1, c)];
     std::cout << c << ": " << x.lng() << ", " << x.lat() << "\n";
   }
-  test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
+  // test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
+  test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E", {"GH"});
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {
