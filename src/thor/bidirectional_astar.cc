@@ -23,8 +23,12 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // cost creates large performance drops - so perhaps some other metric can be found?
 constexpr float kThresholdDelta = 420.0f;
 
-// Relative cost extension to find alternative routes.
-constexpr float kAlternativeCostExtend = 0.1f;
+// Relative cost extension to find alternative routes. It's a multiplier that we apply
+// to the optimal route cost in order to get a new cost threshold. This threshold indicates
+// an upper bound value cost for alternative routes we're looking for. Due to the fact that
+// we can't estimate route cost that goes through some particular edge very precisely, we
+// can find alternatives with costs greater than the threshold.
+constexpr float kAlternativeCostExtend = 1.1f;
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
@@ -824,7 +828,10 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     if (desired_paths_count_ == 1) {
       cost_threshold_ = c + kThresholdDelta;
     } else {
-      cost_threshold_ = (1.f + kAlternativeCostExtend) * c + kThresholdDelta;
+      // For short routes it may be not enough to use just scale to extend the cost threshold.
+      // So, we also add the delta to find more alternatives.
+      // TODO: use different constants to extend the search based on route distance.
+      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
     }
@@ -889,7 +896,10 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     if (desired_paths_count_ == 1) {
       cost_threshold_ = c + kThresholdDelta;
     } else {
-      cost_threshold_ = (1.f + kAlternativeCostExtend) * c + kThresholdDelta;
+      // For short routes it may be not enough to use just scale to extend the cost threshold.
+      // So, we also add the delta to find more alternatives.
+      // TODO: use different constants to extend the search based on route distance.
+      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
     }
