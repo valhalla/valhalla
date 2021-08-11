@@ -122,7 +122,7 @@ The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck
 | :-------------------------- | :----------- |
 | `height` | The height of the vehicle (in meters). |
 | `width` | The width of the vehicle (in meters). |
-| `use_unpaved_roads` | This value indicates the willingness to take unpaved roads. If `use_unpaved_roads` is set to 0, unpaved roads are excluded from the process of generating the route path, otherwise included. |
+| `exclude_unpaved` | This value indicates the willingness to take unpaved roads. If `exclude_unpaved` is set to 1, unpaved roads are excluded from the process of generating the route path, otherwise included. |
 
 The following options are available for `truck` costing.
 

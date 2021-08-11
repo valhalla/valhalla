@@ -130,7 +130,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      use_unpaved_roads_(true) {
+      exclude_unpaved_(false) {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -426,8 +426,8 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
         rapidjson::get<float>(value, "/use_rail_ferry", base_cfg.use_rail_ferry_.def)));
   }
 
-  pbf_costing_options->set_use_unpaved_roads(
-      rapidjson::get<bool>(value, "/use_unpaved_roads", base_cfg.use_unpaved_roads_));
+  pbf_costing_options->set_exclude_unpaved(
+      rapidjson::get<bool>(value, "/exclude_unpaved", base_cfg.exclude_unpaved_));
 
   // service_penalty
   pbf_costing_options->set_service_penalty(base_cfg.service_penalty_(
@@ -483,7 +483,7 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
 
   pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
-  pbf_costing_options->set_use_unpaved_roads(shared_opts.use_unpaved_roads_);
+  pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
