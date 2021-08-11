@@ -58,6 +58,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   cost_diff_ = 0.0f;
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
+  ignore_hierarchy_limits_ = false;
 }
 
 // Destructor
@@ -90,6 +91,7 @@ void BidirectionalAStar::Clear() {
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
+  ignore_hierarchy_limits_ = false;
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -134,6 +136,20 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Support for hierarchy transitions
   hierarchy_limits_forward_ = costing_->GetHierarchyLimits();
   hierarchy_limits_reverse_ = costing_->GetHierarchyLimits();
+  bool ignore_forward_limits =
+      std::all_of(hierarchy_limits_forward_.begin() + 1,
+                  hierarchy_limits_forward_.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions == kUnlimitedTransitions;
+                  });
+  bool ignore_reverse_limits =
+      std::all_of(hierarchy_limits_reverse_.begin() + 1,
+                  hierarchy_limits_reverse_.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions == kUnlimitedTransitions;
+                  });
+  // Set this flag to 'true' if we can expand edges at all hierarchy levels without limits
+  ignore_hierarchy_limits_ = ignore_forward_limits && ignore_reverse_limits;
 }
 
 // Runs in the inner loop of `Expand`, essentially evaluating if
@@ -180,7 +196,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // edges while still expanding on the next level since we can still transition down to
   // that level. If using a shortcut, set the shortcuts mask.
   if (meta.edge->is_shortcut()) {
-    if (!get_opp_edge_data())
+    // Skip shortcuts if hierarchy limits are disabled
+    if (ignore_hierarchy_limits_ || !get_opp_edge_data())
       return false;
 
     const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;
@@ -416,7 +433,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
-      if ((!trans->up() &&
+      if ((!trans->up() && !ignore_hierarchy_limits_ &&
            hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
@@ -508,7 +525,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   SetDestination(graphreader, destination, reverse_time_info);
 
   // Update hierarchy limits
-  ModifyHierarchyLimits();
+  if (!ignore_hierarchy_limits_)
+    ModifyHierarchyLimits();
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -649,16 +667,17 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     // the origin and destination and provides valid conditions for the reach-based pruning.
     bool force_forward = false;
     bool force_reverse = false;
-    assert(hierarchy_limits_forward_.size() == hierarchy_limits_forward_.size());
-    for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
-      if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&
-          !hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance())) {
-        force_forward = true;
-        break;
-      } else if (hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance()) &&
-                 !hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance())) {
-        force_reverse = true;
-        break;
+    if (!ignore_hierarchy_limits_) {
+      for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
+        if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&
+            !hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance())) {
+          force_forward = true;
+          break;
+        } else if (hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance()) &&
+                   !hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance())) {
+          force_reverse = true;
+          break;
+        }
       }
     }
 
@@ -680,7 +699,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
       if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
-          hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(fwd_pred.distance())) {
+          (!ignore_hierarchy_limits_ &&
+           hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(
+               fwd_pred.distance()))) {
         continue;
       }
 
@@ -717,7 +738,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
-          hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(rev_pred.distance())) {
+          (!ignore_hierarchy_limits_ &&
+           hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(
+               rev_pred.distance()))) {
         continue;
       }
 
