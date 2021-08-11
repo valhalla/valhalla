@@ -7,6 +7,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 #include <stack>
+#include <thor/bidirectional_astar.h>
 
 using namespace valhalla::sif;
 using namespace valhalla::baldr;
@@ -77,6 +78,8 @@ public:
   std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex,
                                               GraphReader& reader,
                                               ExtraPaths extraPaths = ExtraPaths());
+  std::vector<GraphId>
+  computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& reader);
   void setupDFSEulerCycle(ExtraPaths extraPaths = ExtraPaths());
   std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
   void dfsEulerCycle(int startNodeIndex);

@@ -6,6 +6,7 @@
 #include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+#include <thor/bidirectional_astar.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -89,6 +90,44 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
   return unbalaced_vertices;
 }
 
+std::vector<GraphId> ChinesePostmanGraph::computeFullRoute(CPVertex cpvertex_start,
+                                                           CPVertex cpvertex_end,
+                                                           GraphReader& reader) {
+  std::vector<GraphId> edge_graph_ids;
+
+  // Check
+  auto ll1 = getPointLL(GraphId(cpvertex_start.graph_id), reader);
+  auto ll2 = getPointLL(GraphId(cpvertex_end.graph_id), reader);
+  std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
+  std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
+  // Setup
+  google::protobuf::RepeatedPtrField<Location> locations_;
+  std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
+                                       GraphId(cpvertex_end.graph_id)};
+  for (const auto& node_id : node_ids) {
+    auto* loc = locations_.Add();
+    auto tile = reader.GetGraphTile(node_id);
+    const auto* node = tile->node(node_id);
+    auto ll = node->latlng(tile->header()->base_ll());
+    auto edge_id = tile->id();
+    edge_id.set_id(node->edge_index());
+    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
+      auto* path_edge = loc->add_path_edges();
+      path_edge->set_distance(0);
+      path_edge->set_begin_node(true);
+      path_edge->set_end_node(false);
+      loc->mutable_ll()->set_lng(ll.first);
+      loc->mutable_ll()->set_lat(ll.second);
+      path_edge->set_graph_id(edge_id);
+      path_edge->mutable_ll()->set_lng(ll.first);
+      path_edge->mutable_ll()->set_lat(ll.second);
+      ++edge_id;
+    }
+  }
+
+  return edge_graph_ids;
+}
+
 std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
                                                                  GraphReader& reader,
                                                                  ExtraPaths extraPaths) {
@@ -103,7 +142,6 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
       throw valhalla_exception_t(450);
     }
   }
-  std::vector<CPVertex> eulerPathVertices;
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
     if (it + 1 == this->reversedEulerPath.rend()) {
@@ -115,13 +153,11 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
       eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
     } else {
       std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
-      auto graph_id_1 = G[*it].graph_id;
-      auto graph_id_2 = G[*(it + 1)].graph_id;
-      auto ll1 = getPointLL(GraphId(graph_id_1), reader);
-      auto ll2 = getPointLL(GraphId(graph_id_2), reader);
-      std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
-      std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
       // Find the edges for path through outside polygon
+      auto fullRoute = computeFullRoute(G[*it], G[*(it + 1)], reader);
+      for (auto edge_graph_id : fullRoute) {
+        eulerPathEdgeGraphIDs.push_back(edge_graph_id);
+      }
     }
   }
   return eulerPathEdgeGraphIDs;

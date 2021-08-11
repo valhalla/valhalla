@@ -14,6 +14,7 @@
 #include "thor/costmatrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+#include <thor/bidirectional_astar.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
