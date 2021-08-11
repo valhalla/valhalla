@@ -157,7 +157,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  measure_scope_time(request, "thor_worker_t::expansion");
+  measure_scope_time(request);
 
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
@@ -245,6 +245,9 @@ std::string thor_worker_t::expansion(Api& request) {
 }
 
 void thor_worker_t::centroid(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
@@ -278,7 +281,7 @@ void thor_worker_t::centroid(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::route");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   parse_filter_attributes(request);
@@ -403,10 +406,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     path_algorithm->Clear();
     cost->set_pass(1);
-    // since bidir does about half the expansion we can do half the relaxation here
-    float relax_factor = path_algorithm == &bidir_astar ? 8.f : 16.f;
-    float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
-    cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+    const bool using_bd = path_algorithm == &bidir_astar;
+    cost->RelaxHierarchyLimits(using_bd);
     cost->set_allow_destination_only(true);
     cost->set_allow_conditional_destination(true);
     path_algorithm->set_not_thru_pruning(false);

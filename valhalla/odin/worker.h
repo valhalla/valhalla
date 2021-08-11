@@ -20,10 +20,19 @@ public:
                                                 void* request_info,
                                                 const std::function<void()>& interupt) override;
 #endif
-  virtual void cleanup() override;
 
-  void narrate(Api& request) const;
+  /**
+   * Creates maneuvers and narrative for the path and serializes the entire response to bytes
+   * @param request   the request with the filled out trip
+   * @return a string of bytes representing the payload, depends on request.options.format
+   */
+  std::string narrate(Api& request) const;
   void status(Api& request) const;
+
+private:
+  std::string service_name() const override {
+    return "odin";
+  }
 };
 } // namespace odin
 } // namespace valhalla
