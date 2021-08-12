@@ -128,9 +128,8 @@ std::vector<GraphId> ChinesePostmanGraph::computeFullRoute(CPVertex cpvertex_sta
   return edge_graph_ids;
 }
 
-std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
-                                                                 GraphReader& reader,
-                                                                 ExtraPaths extraPaths) {
+std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
+                                                             ExtraPaths extraPaths) {
   int startNodeIndex = this->getVertexIndex(start_vertex);
   int edgeVisited = 0;
 
@@ -142,25 +141,7 @@ std::vector<GraphId> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex 
       throw valhalla_exception_t(450);
     }
   }
-  std::vector<GraphId> eulerPathEdgeGraphIDs;
-  for (auto it = this->reversedEulerPath.rbegin(); it != this->reversedEulerPath.rend(); ++it) {
-    if (it + 1 == this->reversedEulerPath.rend()) {
-      continue;
-    }
-    auto e = boost::edge(*it, *(it + 1), G);
-    if (e.second) {
-      std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
-      eulerPathEdgeGraphIDs.push_back(this->G[e.first].graph_id);
-    } else {
-      std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
-      // Find the edges for path through outside polygon
-      auto fullRoute = computeFullRoute(G[*it], G[*(it + 1)], reader);
-      for (auto edge_graph_id : fullRoute) {
-        eulerPathEdgeGraphIDs.push_back(edge_graph_id);
-      }
-    }
-  }
-  return eulerPathEdgeGraphIDs;
+  return this->reversedEulerPath;
 }
 
 void ChinesePostmanGraph::setupDFSEulerCycle(ExtraPaths extraPaths) {

@@ -247,6 +247,30 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   return edge->length();
 }
 
+std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath, ChinesePostmanGraph& G) {
+
+  std::vector<GraphId> eulerPathEdgeGraphIDs;
+  for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
+    if (it + 1 == reversedEulerPath.rend()) {
+      continue;
+    }
+    auto cpEdge = G.getCPEdge(*it, *(it + 1));
+    // auto e = boost::edge(*it, *(it + 1), G);
+    if (cpEdge) {
+      std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
+      eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
+    } else {
+      std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
+      // Find the edges for path through outside polygon
+      // auto fullRoute = computeFullRoute(G[*it], G[*(it + 1)], reader);
+      // for (auto edge_graph_id : fullRoute) {
+      //   eulerPathEdgeGraphIDs.push_back(edge_graph_id);
+      // }
+    }
+  }
+  return eulerPathEdgeGraphIDs;
+}
+
 void thor_worker_t::chinese_postman(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
@@ -355,7 +379,8 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
-    edgeGraphIds = G.computeIdealEulerCycle(originVertex, *reader);
+    auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -473,7 +498,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Concat with main vector
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
-    edgeGraphIds = G.computeIdealEulerCycle(originVertex, *reader, extraPairs);
+    auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;

@@ -75,9 +75,10 @@ public:
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
   // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVertices();
-  std::vector<GraphId> computeIdealEulerCycle(const CPVertex start_vertex,
-                                              GraphReader& reader,
-                                              ExtraPaths extraPaths = ExtraPaths());
+  // Compute euler cycle of the graph. Graph is ideal after added by extraPaths.
+  // It returns a vector of reversed Euler path, or this->reversedEulerPath
+  std::vector<int> computeIdealEulerCycle(const CPVertex start_vertex,
+                                          ExtraPaths extraPaths = ExtraPaths());
   std::vector<GraphId>
   computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& reader);
   void setupDFSEulerCycle(ExtraPaths extraPaths = ExtraPaths());
