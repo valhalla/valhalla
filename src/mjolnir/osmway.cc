@@ -174,7 +174,9 @@ std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_m
 
   std::vector<std::string> names;
 
-  auto encode_tag = [](TaggedName tag) { return std::string(1, static_cast<char>(tag)); };
+  auto encode_tag = [](TaggedName tag) {
+    return std::string(1, static_cast<std::string::value_type>(tag));
+  };
   if (tunnel_name_index_ != 0) {
     // tunnel names
     auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
