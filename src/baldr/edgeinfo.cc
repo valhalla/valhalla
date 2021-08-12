@@ -135,7 +135,7 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
         if (name.size() > 1) {
           uint8_t num = 0;
           try {
-            num = std::stoi(name.substr(0, 1));
+            num = static_cast<uint8_t>(name.substr(0, 1).front());
             name_type_pairs.push_back({name.substr(1), num});
 
           } catch (const std::invalid_argument& arg) {
