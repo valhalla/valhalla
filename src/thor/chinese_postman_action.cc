@@ -253,34 +253,34 @@ computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& re
   std::vector<GraphId> edge_graph_ids;
 
   // Check
-  // auto ll1 = getPointLL(GraphId(cpvertex_start.graph_id), reader);
-  // auto ll2 = getPointLL(GraphId(cpvertex_end.graph_id), reader);
-  // std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
-  // std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
+  auto ll1 = getPointLL(GraphId(cpvertex_start.graph_id), reader);
+  auto ll2 = getPointLL(GraphId(cpvertex_end.graph_id), reader);
+  std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
+  std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
   // // Setup
-  // google::protobuf::RepeatedPtrField<Location> locations_;
-  // std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
-  //                                      GraphId(cpvertex_end.graph_id)};
-  // for (const auto& node_id : node_ids) {
-  //   auto* loc = locations_.Add();
-  //   auto tile = reader.GetGraphTile(node_id);
-  //   const auto* node = tile->node(node_id);
-  //   auto ll = node->latlng(tile->header()->base_ll());
-  //   auto edge_id = tile->id();
-  //   edge_id.set_id(node->edge_index());
-  //   for (const auto& edge : tile->GetDirectedEdges(node_id)) {
-  //     auto* path_edge = loc->add_path_edges();
-  //     path_edge->set_distance(0);
-  //     path_edge->set_begin_node(true);
-  //     path_edge->set_end_node(false);
-  //     loc->mutable_ll()->set_lng(ll.first);
-  //     loc->mutable_ll()->set_lat(ll.second);
-  //     path_edge->set_graph_id(edge_id);
-  //     path_edge->mutable_ll()->set_lng(ll.first);
-  //     path_edge->mutable_ll()->set_lat(ll.second);
-  //     ++edge_id;
-  //   }
-  // }
+  google::protobuf::RepeatedPtrField<Location> locations_;
+  std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
+                                       GraphId(cpvertex_end.graph_id)};
+  for (const auto& node_id : node_ids) {
+    auto* loc = locations_.Add();
+    auto tile = reader.GetGraphTile(node_id);
+    const auto* node = tile->node(node_id);
+    auto ll = node->latlng(tile->header()->base_ll());
+    auto edge_id = tile->id();
+    edge_id.set_id(node->edge_index());
+    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
+      auto* path_edge = loc->add_path_edges();
+      path_edge->set_distance(0);
+      path_edge->set_begin_node(true);
+      path_edge->set_end_node(false);
+      loc->mutable_ll()->set_lng(ll.first);
+      loc->mutable_ll()->set_lat(ll.second);
+      path_edge->set_graph_id(edge_id);
+      path_edge->mutable_ll()->set_lng(ll.first);
+      path_edge->mutable_ll()->set_lat(ll.second);
+      ++edge_id;
+    }
+  }
 
   return edge_graph_ids;
 }
