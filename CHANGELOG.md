@@ -13,6 +13,7 @@
    * ADDED: Added info to /status endpoint [#3008](https://github.com/valhalla/valhalla/pull/3008)
    * ADDED: Added stop and give_way/yield signs to the data and traffic signal fixes [#3251](https://github.com/valhalla/valhalla/pull/3251)
    * ADDED: use_hills for pedestrian costing, which also affects the walking speed [#3234](https://github.com/valhalla/valhalla/pull/3234)
+   * CHANGED: Fixed cost threshold fot bidirectional astar. Implemented reach-based pruning for suboptimal branches [#3257](https://github.com/valhalla/valhalla/pull/3257)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
