@@ -51,14 +51,14 @@ int main(int argc, char** argv) {
 
   // Boebingen, Lessingstraße: way id: 13865735: 0,621568686498,1,621770013090
   auto tgt_edge_id = baldr::GraphId{621568686498};
-  customize_traffic(pt, tgt_edge_id, 2); // original: 30
+  customize_traffic(pt, tgt_edge_id, 30); // original: 30
 
   tgt_edge_id = baldr::GraphId{621770013090};
-  customize_traffic(pt, tgt_edge_id, 2); // original: 30
+  customize_traffic(pt, tgt_edge_id, 30); // original: 30
 
   // STR > Sifi A81: 309175327,1,3802388259096
   tgt_edge_id = baldr::GraphId{3802388259096};
-  customize_traffic(pt, tgt_edge_id, 0); // original: 100
+  customize_traffic(pt, tgt_edge_id, 100); // original: 100
 
   // auto tgt_edge_id = baldr::GraphId{3802388259096};
 
