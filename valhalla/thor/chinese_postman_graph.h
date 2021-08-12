@@ -52,6 +52,7 @@ private:
   /* data */
   CPGraph G;
   std::map<std::string, Vertex> vertices;
+
   // store the indegree and outdegree for each node, updated when an edge is added.
   std::map<std::string, int> indegrees;
   std::map<std::string, int> outdegrees;
@@ -65,27 +66,48 @@ private:
 public:
   ChinesePostmanGraph(/* args */);
   ~ChinesePostmanGraph();
+
   void addVertex(CPVertex cpvertex);
+  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
+
   VertexItr findVertex(CPVertex cpvertex);
   int getVertexIndex(CPVertex cpvertex);
   int getVertexIndex(GraphId graphID);
   bool isVertexExist(CPVertex cpvertex);
+
   int numVertices();
   int numEdges();
-  void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
+
   // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVertices();
+
+  // Helper to get the adjacency list from the graph. It returns a map with
+  // node-index as the key and a vector of node-indexes from that node in the
+  // key as the value
+  std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
+
   // Compute euler cycle of the graph. Graph is ideal after added by extraPaths.
   // It returns a vector of reversed Euler path, or this->reversedEulerPath
   std::vector<int> computeIdealEulerCycle(const CPVertex start_vertex,
                                           ExtraPaths extraPaths = ExtraPaths());
-  std::vector<GraphId>
-  computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& reader);
+
+  // Setup the DFS for computing the Euler cycle
   void setupDFSEulerCycle(ExtraPaths extraPaths = ExtraPaths());
-  std::map<int, std::vector<int>> getAdjacencyList(ExtraPaths extraPaths = ExtraPaths());
+
+  // The DFS part of the Euler cycle computation.
   void dfsEulerCycle(int startNodeIndex);
+
+  // Helper function to get CPedge based on the index of the start vertex and
+  // end vertex
   CPEdge* getCPEdge(int i, int j);
+
+  // Helper function to get CPVertex based on the index of the vertex
   CPVertex* getCPVertex(int i);
+
+  // Check whether the graph is ideal or not, based on the start and end vertex
+  // Graph is ideal if all the nodes are balances for start = end vertex
+  // For start != vertex, all nodes are balances and the start vertex has +1
+  // outdegree, and end vertex has +1 indegree
   bool isIdealGraph(CPVertex start_vertex, CPVertex end_vertex);
 };
 
