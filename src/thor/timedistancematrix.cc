@@ -270,14 +270,19 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
+    uint8_t flow_sources;
+    Cost newcost =
+        pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources);
+
+    InternalTurn internal_turn =
+        costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                        opp_pred_edge, pred.has_measured_speed(),
-                                        pred.internal_turn());
-    uint8_t flow_sources;
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources) +
-                   transition_cost;
+                                        opp_pred_edge,
+                                        static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                        internal_turn);
+    newcost += transition_cost;
+
     uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -298,9 +303,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge));
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), internal_turn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
