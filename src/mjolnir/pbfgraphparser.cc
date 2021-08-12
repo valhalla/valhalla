@@ -907,14 +907,18 @@ public:
       } else if (value.find("paved") != std::string::npos ||
                  value.find("pavement") != std::string::npos ||
                  value.find("asphalt") != std::string::npos ||
+                 // concrete, concrete:lanes, concrete:plates
                  value.find("concrete") != std::string::npos ||
-                 value.find("cement") != std::string::npos) {
+                 value.find("cement") != std::string::npos ||
+                 value.find("chipseal") != std::string::npos ||
+                 value.find("metal") != std::string::npos) {
         way_.set_surface(Surface::kPavedSmooth);
 
       } else if (value.find("tartan") != std::string::npos ||
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
-                 value.find("sett") != std::string::npos) {
+                 value.find("sett") != std::string::npos ||
+                 value.find("grass_paver") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
@@ -933,11 +937,12 @@ public:
                  value.find("mud") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
-      } else if (value.find("gravel") != std::string::npos ||
+      } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
                  value.find("pebblestone") != std::string::npos ||
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
-      } else if (value.find("grass") != std::string::npos) {
+      } else if (value.find("grass") != std::string::npos ||
+                 value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
       } else {

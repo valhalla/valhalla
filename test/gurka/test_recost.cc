@@ -7,6 +7,57 @@ using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
+TEST(recosting, forward_vs_reverse) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse";
+
+  const std::string ascii_map = R"(
+    A---B----C
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "trunk"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    if (e.classification() == baldr::RoadClass::kResidential) {
+      e.set_constrained_flow_speed(40);
+    }
+    return boost::none;
+  });
+
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["C"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    auto rn = reverse.trip().routes(0).legs(0).node().begin();
+    for (const auto& n : forward.trip().routes(0).legs(0).node()) {
+      // if the assert is triggered - probably something is wrong with TransitionCostReverse arguments
+      // in the Unidir-A*
+      EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
+      ++rn;
+    }
+  }
+}
+
 TEST(recosting, same_historical) {
   const std::string ascii_map = R"(A--1--B-2-3-C-----G
                                          |     |     |
