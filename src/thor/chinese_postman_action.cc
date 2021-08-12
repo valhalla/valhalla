@@ -248,8 +248,13 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   return edge->length();
 }
 
-std::vector<GraphId>
-computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& reader) {
+std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
+                                      CPVertex cpvertex_end,
+                                      GraphReader& reader,
+                                      BidirectionalAStar& algorithm,
+                                      const sif::mode_costing_t& mode_costing,
+                                      const TravelMode mode,
+                                      const Options& options) {
   std::vector<GraphId> edge_graph_ids;
 
   // Check
@@ -257,7 +262,7 @@ computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& re
   auto ll2 = getPointLL(GraphId(cpvertex_end.graph_id), reader);
   std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
   std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
-  // // Setup
+  // Setup
   google::protobuf::RepeatedPtrField<Location> locations_;
   std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
                                        GraphId(cpvertex_end.graph_id)};
@@ -282,11 +287,20 @@ computeFullRoute(CPVertex cpvertex_start, CPVertex cpvertex_end, GraphReader& re
     }
   }
 
+  auto x = locations_.begin();
+  auto y = std::next(x);
+  auto paths = algorithm.GetBestPath(*x, *y, reader, mode_costing, mode, options);
+
   return edge_graph_ids;
 }
 
-std::vector<GraphId>
-buildEdgeIds(std::vector<int> reversedEulerPath, ChinesePostmanGraph& G, GraphReader& reader) {
+std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
+                                  ChinesePostmanGraph& G,
+                                  GraphReader& reader,
+                                  BidirectionalAStar& algorithm,
+                                  const sif::mode_costing_t& mode_costing,
+                                  const TravelMode mode,
+                                  const Options& options) {
 
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
@@ -294,7 +308,6 @@ buildEdgeIds(std::vector<int> reversedEulerPath, ChinesePostmanGraph& G, GraphRe
       continue;
     }
     auto cpEdge = G.getCPEdge(*it, *(it + 1));
-    // auto e = boost::edge(*it, *(it + 1), G);
     if (cpEdge) {
       std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
       eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
@@ -302,7 +315,8 @@ buildEdgeIds(std::vector<int> reversedEulerPath, ChinesePostmanGraph& G, GraphRe
       std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
-      auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), reader);
+      auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), reader,
+                                        algorithm, mode_costing, mode, options);
       // for (auto edge_graph_id : fullRoute) {
       //   eulerPathEdgeGraphIDs.push_back(edge_graph_id);
       // }
@@ -420,7 +434,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, *reader);
+    edgeGraphIds =
+        buildEdgeIds(reverseEulerPath, G, *reader, bidir_astar, mode_costing, mode, options);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -539,7 +554,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, *reader);
+    edgeGraphIds =
+        buildEdgeIds(reverseEulerPath, G, *reader, bidir_astar, mode_costing, mode, options);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
