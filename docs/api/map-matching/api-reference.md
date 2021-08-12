@@ -39,11 +39,11 @@ Note that the attributes that are returned are Valhalla routing attributes, not 
 
 ### Costing models and other options
 
-Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 Costing for `multimodal` is not supported for map matching because it would be difficult to get favorable GPS traces.
 
-You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](/turn-by-turn/api-reference.md#directions-options) documentation for examples.
+You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](../turn-by-turn/api-reference.md#directions-options) documentation for examples.
 
 `trace_route` has additional options that allow more flexibility in specifying timestamps (when using encoded polyline input for the trace) and for using timestamps when computing elapsed time along the matched path. These options are:
 
@@ -151,7 +151,7 @@ matched.distance_from_trace_point
 
 ### Outputs of `trace_route`
 
-The outputs of the `trace_route` action are the same as the [outputs of a route](/turn-by-turn/api-reference.md#outputs-of-a-route) action.
+The outputs of the `trace_route` action are the same as the [outputs of a route](../turn-by-turn/api-reference.md#outputs-of-a-route) action.
 
 ### Outputs of `trace_attributes`
 

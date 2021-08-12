@@ -719,9 +719,9 @@ public:
   std::vector<HierarchyLimits>& GetHierarchyLimits();
 
   /**
-   * Relax hierarchy limits.
+   * Relax hierarchy limits using pre-defined algorithm-cased factors.
    */
-  void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
+  void RelaxHierarchyLimits(const bool using_bidirectional);
 
   /**
    * Checks if we should exclude or not.
