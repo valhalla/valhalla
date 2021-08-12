@@ -257,7 +257,7 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
 void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   // since bidirectional A* does about half the expansion we can do half the relaxation here
   const float relax_factor = using_bidirectional ? 8.f : 16.f;
-  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
+  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f; // changed
 
   for (auto& hierarchy : hierarchy_limits_) {
     hierarchy.Relax(relax_factor, expansion_within_factor);

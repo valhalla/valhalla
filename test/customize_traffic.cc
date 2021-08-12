@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
   // STR > Sifi A81: 309175327,1,3802388259096
   tgt_edge_id = baldr::GraphId{3802388259096};
-  customize_traffic(pt, tgt_edge_id, 100); // original: 100
+  customize_traffic(pt, tgt_edge_id, 0); // original: 100
 
   // auto tgt_edge_id = baldr::GraphId{3802388259096};
 
