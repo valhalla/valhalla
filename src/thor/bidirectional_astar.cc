@@ -359,6 +359,10 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+
+    // if (opp_edge_id.value == 621568686498 || opp_edge_id.value == 621770013090) {
+    //   LOG_INFO("way used: " + std::to_string(opp_edge_id.value));
+    // }
     // Mark the predecessor as a deadend to be consistent with how the
     // edgelabels are set when an *actual* deadend (i.e. some dangling OSM geometry)
     // is labelled
@@ -524,6 +528,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // Forward path to this edge can't be improved, so we can settle it right now.
         edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
+        // if (fwd_pred.edgeid().value == 621568686498 || fwd_pred.edgeid().value == 621770013090) {
+        //   LOG_INFO("GetBestPath: " + std::to_string(fwd_pred.edgeid().value));
+        // }
+
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > cost_threshold_) {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
@@ -568,6 +576,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Reverse path to this edge can't be improved, so we can settle it right now.
         edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
+
+        // if (rev_pred.edgeid().value == 621568686498 || rev_pred.edgeid().value == 621770013090) {
+        //   LOG_INFO("GetBestPath: " + std::to_string(rev_pred.edgeid().value));
+        // }
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > cost_threshold_) {
