@@ -101,8 +101,6 @@ protected:
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
-  midgard::PointLL getPointLL(baldr::GraphId node);
-
   std::vector<baldr::GraphId>
   computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
 
