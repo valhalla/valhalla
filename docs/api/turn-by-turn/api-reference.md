@@ -122,7 +122,11 @@ The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck
 | :-------------------------- | :----------- |
 | `height` | The height of the vehicle (in meters). |
 | `width` | The width of the vehicle (in meters). |
-| `exclude_unpaved` | This value indicates the willingness to take unpaved roads. If `exclude_unpaved` is set to 1, unpaved roads are excluded from the process of generating the route path, otherwise included. |
+<<<<<<< HEAD
+| `exclude_unpaved` | This value indicates the willingness to take unpaved roads. If `exclude_unpaved` is set to 1, unpaved roads are excluded from the process of generating the route path, otherwise included. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path. |
+=======
+| `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1, unpaved roads are not allowed to be used in the process of generating the route path, otherwise they are allowed. |
+>>>>>>> 3de0474dc (Update docs/api/turn-by-turn/api-reference.md)
 
 The following options are available for `truck` costing.
 
