@@ -133,11 +133,9 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
         if (name.size() > 1) {
-          uint8_t num = 0;
           try {
-            num = static_cast<uint8_t>(name.substr(0, 1).front());
+            auto num = static_cast<uint8_t>(name[0]);
             name_type_pairs.push_back({name.substr(1), num});
-
           } catch (const std::invalid_argument& arg) {
             LOG_DEBUG("invalid_argument thrown for name: " + name);
           }
