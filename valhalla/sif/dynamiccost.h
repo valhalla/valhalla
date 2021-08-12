@@ -886,6 +886,8 @@ protected:
 
   // Should we penalize uturns on short internal edges?
   bool penalize_uturns_;
+
+  bool exclude_unpaved_{false};
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -967,6 +969,8 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+
+    exclude_unpaved_ = costing_options.exclude_unpaved();
   }
 
   /**
@@ -1070,6 +1074,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_living_streets_;
 
   ranged_default_t<float> closure_factor_;
+
+  bool exclude_unpaved_;
 };
 
 /**
