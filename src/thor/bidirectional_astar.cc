@@ -272,17 +272,26 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     }
   }
 
-  // Get cost. Separate out transition cost.
-  sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
-              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
-                                                pred.internal_turn());
+  // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
-      pred.cost() + transition_cost +
-      (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
-               : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources));
+      pred.cost() + (FORWARD
+                         ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
+                         : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources));
+
+  // Separate out transition cost.
+  InternalTurn internal_turn;
+  sif::Cost transition_cost;
+  if (FORWARD) {
+    transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  } else {
+    internal_turn = costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
+    transition_cost =
+        costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
+                                        static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                        internal_turn);
+  }
+  newcost += transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -345,9 +354,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      sortcost, dist, mode_, transition_cost, thru,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                        opp_pred_edge),
-                                     restriction_idx);
+                                     internal_turn, restriction_idx);
     adjacencylist_reverse_.add(idx);
   }
 
