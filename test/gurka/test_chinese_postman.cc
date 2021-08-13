@@ -102,6 +102,32 @@ std::string build_local_req(rapidjson::Document& doc,
   return sb.GetString();
 }
 
+// common method can't deal with arrays of floats
+std::string build_local_req_route(rapidjson::Document& doc,
+                                  rapidjson::MemoryPoolAllocator<>& allocator,
+                                  const std::vector<midgard::PointLL>& waypoints,
+                                  const std::string& costing,
+                                  const rapidjson::Value& avoid_polygons) {
+
+  rapidjson::Value locations(rapidjson::kArrayType);
+  for (const auto& waypoint : waypoints) {
+    rapidjson::Value p(rapidjson::kObjectType);
+    p.AddMember("lon", waypoint.lng(), allocator);
+    p.AddMember("lat", waypoint.lat(), allocator);
+    locations.PushBack(p, allocator);
+  }
+
+  doc.AddMember("locations", locations, allocator);
+  doc.AddMember("costing", costing, allocator);
+
+  rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+  return sb.GetString();
+}
+
 std::string build_local_req_matrix(rapidjson::Document& doc,
                                    rapidjson::MemoryPoolAllocator<>& allocator,
                                    const std::vector<midgard::PointLL>& sources,
@@ -161,6 +187,32 @@ ring_bg_t create_ring_from_string(gurka::map map, const std::string& polygon_str
     ring.push_back(map.nodes[std::string(1, c)]);
   }
   return ring;
+}
+
+void test_request_route(const gurka::map& map,
+                        const std::string& costing,
+                        const std::string& exclude_polygon_string,
+                        const std::string& start_node,
+                        const std::string& end_node,
+                        const std::vector<std::string>& expected_names) {
+
+  // exclude ring can have more than one, but for now, use one only
+  ring_bg_t exclude_ring = create_ring_from_string(map, exclude_polygon_string);
+
+  std::vector<ring_bg_t> exclude_rings;
+  exclude_rings.push_back(exclude_ring);
+
+  // build request manually for now
+  auto lls = {map.nodes.at(start_node), map.nodes.at(end_node)};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto req = build_local_req_route(doc, allocator, lls, costing, exclude_polygons);
+
+  auto route = gurka::do_action(Options::route, map, req);
+  gurka::assert::raw::expect_path(route, expected_names);
 }
 
 void test_request(const gurka::map& map,
@@ -375,12 +427,16 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanDifferentOriginDestination
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
-  for (auto& c : "ABCDEFGH") {
-    auto x = chinese_postman_map.nodes[std::string(1, c)];
+  for (auto& c : "ABCDEF") {
+    auto x = complex_chinese_postman_map.nodes[std::string(1, c)];
     std::cout << c << ": " << x.lng() << ", " << x.lat() << "\n";
   }
   // test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
   test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E", {"GH"});
+}
+
+TEST_P(ChinesePostmanTest, TestRoute) {
+  test_request_route(complex_chinese_postman_map, GetParam(), "", "E", "D", {"FD"});
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {

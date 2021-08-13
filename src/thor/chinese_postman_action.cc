@@ -257,11 +257,6 @@ std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
                                       const Options& options) {
   std::vector<GraphId> edge_graph_ids;
 
-  // Check
-  auto ll1 = getPointLL(GraphId(cpvertex_start.graph_id), reader);
-  auto ll2 = getPointLL(GraphId(cpvertex_end.graph_id), reader);
-  std::cout << "ll1: " << ll1.first << ", " << ll1.second << "\n";
-  std::cout << "ll2: " << ll2.first << ", " << ll2.second << "\n";
   // Setup
   google::protobuf::RepeatedPtrField<Location> locations_;
   std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
@@ -289,7 +284,10 @@ std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
 
   auto x = locations_.begin();
   auto y = std::next(x);
+  std::cout << "Start location: " << x->ll().lng() << ", " << x->ll().lat() << "\n";
+  std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
   auto paths = algorithm.GetBestPath(*x, *y, reader, mode_costing, mode, options);
+  algorithm.Clear();
   // Only take the first path (there is only one path)
   auto path = paths[0];
   std::cout << "out poly path size: " << path.size() << "\n";
@@ -461,35 +459,35 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
-    for (int i = 0; i < pathMatrix.size(); i++) {
-      for (int j = 0; j < pathMatrix.size(); j++) {
-        std::cout << "path " << i << ", " << j << ":";
-        for (auto x : pathMatrix[i][j]) {
-          std::cout << x << " -> ";
-        }
-        std::cout << "\n";
-      }
-      std::cout << "\n";
-    }
+    // for (int i = 0; i < pathMatrix.size(); i++) {
+    //   for (int j = 0; j < pathMatrix.size(); j++) {
+    //     std::cout << "path " << i << ", " << j << ":";
+    //     for (auto x : pathMatrix[i][j]) {
+    //       std::cout << x << " -> ";
+    //     }
+    //     std::cout << "\n";
+    //   }
+    //   std::cout << "\n";
+    // }
 
-    std::cout << "Original distance matrix\n";
-    for (int i = 0; i < distanceMatrix.size(); i++) {
-      for (int j = 0; j < distanceMatrix.size(); j++) {
-        std::cout << distanceMatrix[i][j] << ", ";
-      }
-      std::cout << "\n";
-    }
+    // std::cout << "Original distance matrix\n";
+    // for (int i = 0; i < distanceMatrix.size(); i++) {
+    //   for (int j = 0; j < distanceMatrix.size(); j++) {
+    //     std::cout << distanceMatrix[i][j] << ", ";
+    //   }
+    //   std::cout << "\n";
+    // }
 
     computeCostMatrix(G, distanceMatrix, *reader, mode_costing, costing_, mode,
                       max_matrix_distance.find(costing)->second);
 
-    std::cout << "Updated distance matrix\n";
-    for (int i = 0; i < distanceMatrix.size(); i++) {
-      for (int j = 0; j < distanceMatrix.size(); j++) {
-        std::cout << distanceMatrix[i][j] << ", ";
-      }
-      std::cout << "\n";
-    }
+    // std::cout << "Updated distance matrix\n";
+    // for (int i = 0; i < distanceMatrix.size(); i++) {
+    //   for (int j = 0; j < distanceMatrix.size(); j++) {
+    //     std::cout << distanceMatrix[i][j] << ", ";
+    //   }
+    //   std::cout << "\n";
+    // }
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
