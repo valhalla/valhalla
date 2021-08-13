@@ -17,7 +17,7 @@ using namespace std::string_literals;
 namespace {
 
 // fake config
-const auto conf = test::make_config("test/data/utrech");
+const auto conf = test::make_config("test/data/utrecht_tiles");
 TEST(ThorWorker, test_tunnel_names) {
   const auto tunnel_conf = test::make_config("test/data/universitatstunnel");
 
