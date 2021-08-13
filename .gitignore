@@ -60,6 +60,9 @@ CMakeLists.txt.user
 .idea
 /.tidytmp
 
+# clangd
+.cache/
+
 # documentation
 site/
 

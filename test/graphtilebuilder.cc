@@ -164,7 +164,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
   for (const auto& tagged_name_and_type : tagged_names_and_types) {
     EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
-    EXPECT_EQ(tagged_name_and_type.second, 1);
+    EXPECT_EQ(static_cast<TaggedName>(tagged_name_and_type.second), TaggedName::kTunnel);
   }
 }
 
