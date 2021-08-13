@@ -290,6 +290,13 @@ std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
   auto x = locations_.begin();
   auto y = std::next(x);
   auto paths = algorithm.GetBestPath(*x, *y, reader, mode_costing, mode, options);
+  // Only take the first path (there is only one path)
+  auto path = paths[0];
+  std::cout << "out poly path size: " << path.size() << "\n";
+  for (auto p : path) {
+    edge_graph_ids.push_back(p.edgeid);
+    std::cout << "edge: " << p.edgeid << "\n";
+  }
 
   return edge_graph_ids;
 }
@@ -317,9 +324,9 @@ std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
       auto a = G.getCPVertex(*it);
       auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), reader,
                                         algorithm, mode_costing, mode, options);
-      // for (auto edge_graph_id : fullRoute) {
-      //   eulerPathEdgeGraphIDs.push_back(edge_graph_id);
-      // }
+      for (auto edge_graph_id : fullRoute) {
+        eulerPathEdgeGraphIDs.push_back(edge_graph_id);
+      }
     }
   }
   return eulerPathEdgeGraphIDs;
