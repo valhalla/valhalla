@@ -1,6 +1,6 @@
 # Map Matching service API reference
 
-With the Mapbox Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
+With Valhalla's Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
 
 You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer).
 
