@@ -1,20 +1,47 @@
 #include "test.h"
 
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "thor/attributes_controller.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
+#include <algorithm>
 #include <thread>
 #include <unistd.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::thor;
+using namespace std::string_literals;
 
 namespace {
 
 // fake config
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config("test/data/utrech");
+TEST(ThorWorker, test_tunnel_names) {
+  const auto tunnel_conf = test::make_config("test/data/universitatstunnel");
+
+  std::string request =
+      R"({"costing":"auto", "format":"osrm", "locations":[
+          {"lat":51.19192,"lon":6.78584},
+          {"lat":51.19369,"lon":6.80041}],
+          "action":"include"})";
+
+  tyr::actor_t actor(tunnel_conf, true);
+
+  auto response = actor.route(request);
+  rapidjson::Document json;
+  json.Parse(response);
+  const auto& j_intersections = json["routes"][0]["legs"][0]["steps"][0]["intersections"].GetArray();
+  ASSERT_GT(j_intersections.Size(), 0);
+  EXPECT_TRUE(
+      std::any_of(j_intersections.Begin(), j_intersections.End(), [](const auto& j_intersection) {
+        if (j_intersection.FindMember("tunnel_name") != j_intersection.MemberEnd()) {
+          return j_intersection["tunnel_name"].GetString() == "Universitätstunnel"s;
+        }
+        return false;
+      }));
+}
 
 TEST(ThorWorker, test_parse_filter_attributes_defaults) {
   tyr::actor_t actor(conf, true);
