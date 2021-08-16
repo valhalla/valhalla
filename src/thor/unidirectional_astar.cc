@@ -234,17 +234,13 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                        ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
                        : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
 
-  InternalTurn internal_turn;
-  sif::Cost transition_cost;
-  if (FORWARD) {
-    transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  } else {
-    internal_turn = costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-    transition_cost =
-        costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge,
-                                        static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                        internal_turn);
-  }
+  sif::Cost transition_cost =
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge,
+                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                                pred.internal_turn());
+
   Cost newcost = pred.cost() + edge_cost;
   newcost += transition_cost;
 
@@ -322,7 +318,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                              mode_, transition_cost,
                              (pred.not_thru_pruning() || !meta.edge->not_thru()),
                              (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), internal_turn,
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge),
                              restriction_idx);
     *meta.edge_status = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
