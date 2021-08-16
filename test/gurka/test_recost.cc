@@ -232,9 +232,9 @@ TEST(recosting, same_historical) {
 
   // TODO: There's a difference in the way a route is costed in reverse vs forward this could be
   // a result of FormPath in timedep_reverse or it could be a result of the difference between
-  // TransitionCost and TransitionCostReverse. When that is resolved we can enable these tests
-  return;
-
+  // upd: the costs are pretty close but still different. Probably the order of float operations can
+  // cause this diff
+  const float kCostThreshold = 0.0001f;
   // set times but different types and make sure the costings are the same
   {
     std::string unambiguous = R"({"lon":)" + std::to_string(map.nodes["8"].lng()) + R"(,"lat":)" +
@@ -253,9 +253,11 @@ TEST(recosting, same_historical) {
     EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
               reverse.trip().routes(0).legs(0).node_size());
     auto rn = reverse.trip().routes(0).legs(0).node().begin();
+
     for (const auto& n : forward.trip().routes(0).legs(0).node()) {
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds());
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds(),
+                  kCostThreshold);
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost(), kCostThreshold);
       EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
       if (n.has_edge()) {
@@ -276,7 +278,8 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(),
+                  kCostThreshold);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
