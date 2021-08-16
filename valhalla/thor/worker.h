@@ -112,6 +112,23 @@ protected:
                          const sif::TravelMode mode,
                          const float max_matrix_distance);
 
+  std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
+                                        CPVertex cpvertex_end,
+                                        GraphReader& reader,
+                                        PathAlgorithm& algorithm,
+                                        const sif::mode_costing_t& mode_costing,
+                                        const TravelMode mode,
+                                        const Options& options,
+                                        const std::string costing);
+  std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
+                                    ChinesePostmanGraph& G,
+                                    GraphReader& reader,
+                                    PathAlgorithm& algorithm,
+                                    const sif::mode_costing_t& mode_costing,
+                                    const TravelMode mode,
+                                    const Options& options,
+                                    const std::string costing);
+
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
           paths,

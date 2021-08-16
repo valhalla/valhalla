@@ -278,6 +278,7 @@ void thor_worker_t::centroid(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
+  std::cout << "route_action::route\n";
   auto _ = measure_scope_time(request, "thor_worker_t::route");
 
   parse_locations(request);
@@ -438,6 +439,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         this->get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
+    std::cout << "algorithm name: " << path_algorithm->name();
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
     // If we are continuing through a location we need to make sure we
@@ -582,6 +584,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         this->get_path_algorithm(costing, *origin, *destination, options);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
+    std::cout << "algorithm name (at): " << path_algorithm->name();
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
     // If we are continuing through a location we need to make sure we

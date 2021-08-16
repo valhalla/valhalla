@@ -248,13 +248,14 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   return edge->length();
 }
 
-std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
-                                      CPVertex cpvertex_end,
-                                      GraphReader& reader,
-                                      BidirectionalAStar& algorithm,
-                                      const sif::mode_costing_t& mode_costing,
-                                      const TravelMode mode,
-                                      const Options& options) {
+std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
+                                                     CPVertex cpvertex_end,
+                                                     GraphReader& reader,
+                                                     PathAlgorithm& algorithm,
+                                                     const sif::mode_costing_t& mode_costing,
+                                                     const TravelMode mode,
+                                                     const Options& options,
+                                                     const std::string costing) {
   std::vector<GraphId> edge_graph_ids;
 
   // Setup
@@ -286,8 +287,10 @@ std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
   auto y = std::next(x);
   std::cout << "Start location: " << x->ll().lng() << ", " << x->ll().lat() << "\n";
   std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
-  auto paths = algorithm.GetBestPath(*x, *y, reader, mode_costing, mode, options);
-  algorithm.Clear();
+  thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *x, *y, options);
+  std::cout << "Chosen path algorithm: " << path_algorithm->name() << "\n";
+  auto paths = path_algorithm->GetBestPath(*x, *y, reader, mode_costing, mode, options);
+  path_algorithm->Clear();
   // Only take the first path (there is only one path)
   auto path = paths[0];
   std::cout << "out poly path size: " << path.size() << "\n";
@@ -299,13 +302,14 @@ std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
   return edge_graph_ids;
 }
 
-std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
-                                  ChinesePostmanGraph& G,
-                                  GraphReader& reader,
-                                  BidirectionalAStar& algorithm,
-                                  const sif::mode_costing_t& mode_costing,
-                                  const TravelMode mode,
-                                  const Options& options) {
+std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerPath,
+                                                 ChinesePostmanGraph& G,
+                                                 GraphReader& reader,
+                                                 PathAlgorithm& algorithm,
+                                                 const sif::mode_costing_t& mode_costing,
+                                                 const TravelMode mode,
+                                                 const Options& options,
+                                                 const std::string costing) {
 
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
@@ -321,7 +325,7 @@ std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
       auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), reader,
-                                        algorithm, mode_costing, mode, options);
+                                        algorithm, mode_costing, mode, options, costing);
       for (auto edge_graph_id : fullRoute) {
         eulerPathEdgeGraphIDs.push_back(edge_graph_id);
       }
@@ -440,7 +444,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   if (G.isIdealGraph(originVertex, destinationVertex)) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
     edgeGraphIds =
-        buildEdgeIds(reverseEulerPath, G, *reader, bidir_astar, mode_costing, mode, options);
+        buildEdgeIds(reverseEulerPath, G, *reader, bss_astar, mode_costing, mode, options, costing);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -560,7 +564,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
     edgeGraphIds =
-        buildEdgeIds(reverseEulerPath, G, *reader, bidir_astar, mode_costing, mode, options);
+        buildEdgeIds(reverseEulerPath, G, *reader, bss_astar, mode_costing, mode, options, costing);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
