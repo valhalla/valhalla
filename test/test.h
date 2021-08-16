@@ -13,7 +13,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#ifndef _MSC_VER
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 
 #include <gmock/gmock.h>

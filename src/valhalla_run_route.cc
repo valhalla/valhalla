@@ -131,7 +131,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
                                   PathStatistics& data,
                                   bool multi_run,
                                   uint32_t iterations,
-                                  bool using_astar,
                                   bool using_bd,
                                   bool match_test,
                                   const std::string& routetype,
@@ -154,8 +153,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
       pathalgorithm->Clear();
-      const float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
-      cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
+      cost->RelaxHierarchyLimits(using_bd);
       cost->set_allow_destination_only(true);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       data.incPasses();
@@ -710,14 +708,13 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    bool using_astar = (pathalgorithm == &timedep_forward || pathalgorithm == &timedep_reverse);
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path
     const valhalla::TripLeg* trip_path = nullptr;
     try {
       trip_path = PathTest(reader, origin, dest, pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar, using_bd, match_test, routetype, request);
+                           iterations, using_bd, match_test, routetype, request);
     } catch (std::runtime_error& rte) { LOG_ERROR("trip_path not found"); }
 
     // If successful get directions

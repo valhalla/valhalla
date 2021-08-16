@@ -127,9 +127,9 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
                                                                         kMaxPenalty},
       service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
-      use_tracks_{0.f, kDefaultUseTracks, 1.f}, use_living_streets_{0.f, kDefaultUseLivingStreets,
-                                                                    1.f},
-      closure_factor_{kClosureFactorRange}, use_hot_{false}, use_hov2_{false}, use_hov3_{false} {
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
+      exclude_unpaved_(false), use_hot_{false}, use_hov2_{false}, use_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -254,9 +254,13 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
 }
 
 // Relax hierarchy limits.
-void DynamicCost::RelaxHierarchyLimits(const float factor, const float expansion_within_factor) {
+void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
+  // since bidirectional A* does about half the expansion we can do half the relaxation here
+  const float relax_factor = using_bidirectional ? 8.f : 16.f;
+  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
+
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(factor, expansion_within_factor);
+    hierarchy.Relax(relax_factor, expansion_within_factor);
   }
 }
 
@@ -425,6 +429,9 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
         rapidjson::get<float>(value, "/use_rail_ferry", base_cfg.use_rail_ferry_.def)));
   }
 
+  pbf_costing_options->set_exclude_unpaved(
+      rapidjson::get<bool>(value, "/exclude_unpaved", base_cfg.exclude_unpaved_));
+
   // service_penalty
   pbf_costing_options->set_service_penalty(base_cfg.service_penalty_(
       rapidjson::get<float>(value, "/service_penalty", base_cfg.service_penalty_.def)));
@@ -484,6 +491,8 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
 
   pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
+
+  pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
 
   pbf_costing_options->set_use_hot(shared_opts.use_hot_);
   pbf_costing_options->set_use_hov2(shared_opts.use_hov2_);

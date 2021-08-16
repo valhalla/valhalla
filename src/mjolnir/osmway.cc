@@ -173,13 +173,15 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
 std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
 
   std::vector<std::string> names;
-  std::vector<std::string> tokens;
 
+  auto encode_tag = [](TaggedName tag) {
+    return std::string(1, static_cast<std::string::value_type>(tag));
+  };
   if (tunnel_name_index_ != 0) {
     // tunnel names
-    tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
+    auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
     for (const auto& t : tokens) {
-      names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
+      names.emplace_back(encode_tag(TaggedName::kTunnel) + t);
     }
   }
 

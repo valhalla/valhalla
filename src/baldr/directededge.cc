@@ -219,6 +219,18 @@ void DirectedEdge::set_traffic_signal(const bool signal) {
   traffic_signal_ = signal;
 }
 
+// Sets the flag indicating a stop sign is present at the end of
+// this edge.
+void DirectedEdge::set_stop_sign(const bool sign) {
+  stop_sign_ = sign;
+}
+
+// Sets the flag indicating a yield sign is present at the end of
+// this edge.
+void DirectedEdge::set_yield_sign(const bool sign) {
+  yield_sign_ = sign;
+}
+
 // Set the forward flag. Tells if this directed edge is stored forward
 // in edgeinfo (true) or reverse (false).
 void DirectedEdge::set_forward(const bool forward) {
@@ -584,6 +596,8 @@ json::MapPtr DirectedEdge::json() const {
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},
       {"not_thru", static_cast<bool>(not_thru_)},
+      {"stop_sign", static_cast<bool>(stop_sign_)},
+      {"yield_sign", static_cast<bool>(yield_sign_)},
       {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
       {"bike_network", static_cast<bool>(bike_network_)},
       {"truck_route", static_cast<bool>(truck_route_)},
