@@ -425,7 +425,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Get names and types - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
-      auto tagged_values = edgeinfo.GetNames(true);
+      auto tagged_values = edgeinfo.GetTaggedValues();
       auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
@@ -682,7 +682,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
-                                    edgeinfo.GetNames(true), edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Set the superseded mask - this is the shortcut mask that supersedes this edge

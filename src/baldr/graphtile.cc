@@ -654,9 +654,8 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   return directededge(nodeinfo->edge_index());
 }
 
-std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge,
-                                             bool only_tagged_values) const {
-  return edgeinfo(edge).GetNames(only_tagged_values);
+std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge) const {
+  return edgeinfo(edge).GetNames();
 }
 
 uint16_t GraphTile::GetTypes(const DirectedEdge* edge) const {

@@ -76,7 +76,7 @@ struct BSSConnection {
      * */
     wayid = edgeinfo.wayid();
     names = edgeinfo.GetNames();
-    tagged_values = edgeinfo.GetNames(true);
+    tagged_values = edgeinfo.GetTaggedValues();
     is_forward_from_waynode = is_forward;
     speed = best.directededge->speed();
     surface = best.directededge->surface();

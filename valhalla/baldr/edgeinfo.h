@@ -138,11 +138,15 @@ public:
 
   /**
    * Convenience method to get the names for an edge
-   * @param  only_tagged_values  Bool indicating whether or not to return only the tagged values
-   *
    * @return   Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(bool only_tagged_values = false) const;
+  std::vector<std::string> GetNames() const;
+
+  /**
+   * Convenience method to get the tagged values for an edge
+   * @return   Returns a list (vector) of tagged values.
+   */
+  std::vector<std::string> GetTaggedValues() const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
@@ -216,6 +220,8 @@ public:
   };
 
 protected:
+  std::vector<std::string> GetTaggedValuesOrNames(bool only_tagged_values) const;
+
   // Fixed size information
   EdgeInfoInner ei_;
 

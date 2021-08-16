@@ -7,6 +7,14 @@ using namespace valhalla::baldr;
 
 namespace {
 
+// should return true for any tags which we should consider "named"
+bool IsNameTag(char ch) {
+  return true;
+  // static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
+  //                                                           TaggedValue::kTunnel};
+  // return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
+}
+
 json::MapPtr bike_network_json(uint8_t mask) {
   return json::map({
       {"national", static_cast<bool>(mask & kNcn)},
@@ -70,7 +78,15 @@ NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
 }
 
 // Get a list of names
-std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_values) const {
+std::vector<std::string> EdgeInfo::GetNames() const {
+  return GetTaggedValuesOrNames(false);
+}
+
+std::vector<std::string> EdgeInfo::GetTaggedValues() const {
+  return GetTaggedValuesOrNames(true);
+}
+
+std::vector<std::string> EdgeInfo::GetTaggedValuesOrNames(bool only_tagged_values) const {
   // Get each name
   std::vector<std::string> names;
   names.reserve(name_count());
@@ -80,7 +96,7 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_values) const {
       continue;
     }
     if (ni->name_offset_ < names_list_length_) {
-      names.push_back(names_list_ + ni->name_offset_);
+      names.emplace_back(names_list_ + ni->name_offset_);
     } else {
       throw std::runtime_error("GetNames: offset exceeds size of text list");
     }
@@ -103,7 +119,7 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1) {
+        if (name.size() > 1 && IsNameTag(name[0])) {
           try {
             name_type_pairs.push_back({name.substr(1), false});
           } catch (const std::invalid_argument& arg) {
