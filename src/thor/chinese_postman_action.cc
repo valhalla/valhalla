@@ -166,10 +166,7 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
 
 void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
                                       DistanceMatrix& dm,
-                                      baldr::GraphReader& reader,
-                                      const sif::mode_costing_t& mode_costing,
                                       const std::shared_ptr<sif::DynamicCost>& costing,
-                                      const TravelMode mode,
                                       const float max_matrix_distance) {
   // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
@@ -179,7 +176,7 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
   while (i < G.numVertices()) {
     CPVertex* cp_vertex = G.getCPVertex(i);
     GraphId g(cp_vertex->graph_id);
-    auto l = getPointLL(g, reader);
+    auto l = getPointLL(g, *reader);
     std::cout << i << ": " << l.first << ", " << l.second << "\n";
     i++;
     Location loc = Location();
@@ -192,25 +189,25 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
 
   try {
     auto locations = PathLocation::fromPBF(source_location_list, true);
-    const auto projections = loki::Search(locations, reader, costing);
+    const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, source_location_list.Mutable(i), reader);
+      PathLocation::toPBF(correlated, source_location_list.Mutable(i), *reader);
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   try {
     auto locations = PathLocation::fromPBF(target_location_list, true);
-    const auto projections = loki::Search(locations, reader, costing);
+    const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, target_location_list.Mutable(i), reader);
+      PathLocation::toPBF(correlated, target_location_list.Mutable(i), *reader);
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(source_location_list, target_location_list, reader, mode_costing,
+      costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
                                 mode, max_matrix_distance);
   // Update Distance Matrix
   for (int i = 0; i < G.numVertices(); i++) {
@@ -250,10 +247,6 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
 
 std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
                                                      CPVertex cpvertex_end,
-                                                     GraphReader& reader,
-                                                     PathAlgorithm& algorithm,
-                                                     const sif::mode_costing_t& mode_costing,
-                                                     const TravelMode mode,
                                                      const Options& options,
                                                      const std::string costing) {
   std::vector<GraphId> edge_graph_ids;
@@ -264,7 +257,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
                                        GraphId(cpvertex_end.graph_id)};
   for (const auto& node_id : node_ids) {
     auto* loc = locations_.Add();
-    auto tile = reader.GetGraphTile(node_id);
+    auto tile = reader->GetGraphTile(node_id);
     const auto* node = tile->node(node_id);
     auto ll = node->latlng(tile->header()->base_ll());
     auto edge_id = tile->id();
@@ -289,7 +282,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
   std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
   thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *x, *y, options);
   std::cout << "Chosen path algorithm: " << path_algorithm->name() << "\n";
-  auto paths = path_algorithm->GetBestPath(*x, *y, reader, mode_costing, mode, options);
+  auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
   path_algorithm->Clear();
   // Only take the first path (there is only one path)
   auto path = paths[0];
@@ -304,10 +297,6 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 
 std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerPath,
                                                  ChinesePostmanGraph& G,
-                                                 GraphReader& reader,
-                                                 PathAlgorithm& algorithm,
-                                                 const sif::mode_costing_t& mode_costing,
-                                                 const TravelMode mode,
                                                  const Options& options,
                                                  const std::string costing) {
 
@@ -324,8 +313,8 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
       std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
-      auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), reader,
-                                        algorithm, mode_costing, mode, options, costing);
+      auto fullRoute =
+          computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options, costing);
       for (auto edge_graph_id : fullRoute) {
         eulerPathEdgeGraphIDs.push_back(edge_graph_id);
       }
@@ -443,8 +432,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
-    edgeGraphIds =
-        buildEdgeIds(reverseEulerPath, G, *reader, bss_astar, mode_costing, mode, options, costing);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -482,8 +470,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     //   std::cout << "\n";
     // }
 
-    computeCostMatrix(G, distanceMatrix, *reader, mode_costing, costing_, mode,
-                      max_matrix_distance.find(costing)->second);
+    computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing)->second);
 
     // std::cout << "Updated distance matrix\n";
     // for (int i = 0; i < distanceMatrix.size(); i++) {
@@ -563,8 +550,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
-    edgeGraphIds =
-        buildEdgeIds(reverseEulerPath, G, *reader, bss_astar, mode_costing, mode, options, costing);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;

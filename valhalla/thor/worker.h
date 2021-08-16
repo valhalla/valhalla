@@ -106,26 +106,15 @@ protected:
 
   void computeCostMatrix(ChinesePostmanGraph& G,
                          DistanceMatrix& dm,
-                         baldr::GraphReader& reader,
-                         const sif::mode_costing_t& mode_costing,
                          const std::shared_ptr<sif::DynamicCost>& costing,
-                         const sif::TravelMode mode,
                          const float max_matrix_distance);
 
   std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
                                         CPVertex cpvertex_end,
-                                        GraphReader& reader,
-                                        PathAlgorithm& algorithm,
-                                        const sif::mode_costing_t& mode_costing,
-                                        const TravelMode mode,
                                         const Options& options,
                                         const std::string costing);
   std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
                                     ChinesePostmanGraph& G,
-                                    GraphReader& reader,
-                                    PathAlgorithm& algorithm,
-                                    const sif::mode_costing_t& mode_costing,
-                                    const TravelMode mode,
                                     const Options& options,
                                     const std::string costing);
 

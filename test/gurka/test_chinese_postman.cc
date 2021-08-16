@@ -432,7 +432,8 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
     std::cout << c << ": " << x.lng() << ", " << x.lat() << "\n";
   }
   // test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
-  test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E", {"GH"});
+  test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E",
+               {"FE", "EA", "AC", "CD", "DE"});
 }
 
 TEST_P(ChinesePostmanTest, TestRoute) {
