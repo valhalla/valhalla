@@ -17,6 +17,7 @@
    * ADDED: use_hills for pedestrian costing, which also affects the walking speed [#3234](https://github.com/valhalla/valhalla/pull/3234)
    * CHANGED: Fixed cost threshold fot bidirectional astar. Implemented reach-based pruning for suboptimal branches [#3257](https://github.com/valhalla/valhalla/pull/3257)
    * ADDED: Added `exclude_unpaved` request parameter [#3240](https://github.com/valhalla/valhalla/pull/3240)
+   * ADDED: Added support for routing onto HOV/HOT lanes via request parameters `use_hot`, `use_hov2`, and `use_hov3` [#3273](https://github.com/valhalla/valhalla/pull/3273)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
