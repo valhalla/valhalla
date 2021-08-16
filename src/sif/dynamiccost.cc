@@ -126,8 +126,9 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
       use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
                                                                         kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
-      use_tracks_{0.f, kDefaultUseTracks, 1.f},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
+                                                                                  kDefaultUseTracks,
+                                                                                  1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
       exclude_unpaved_(false), use_hot_{false}, use_hov2_{false}, use_hov3_{false} {
 }
