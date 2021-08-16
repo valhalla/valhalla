@@ -132,6 +132,96 @@ const std::string req_hov = R"({
 )";
 
 //=======================================================================================
+class HOV2Test : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static std::shared_ptr<baldr::GraphReader> reader;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 10;
+
+    const std::string ascii_map = R"(
+      A---------------------------B---------------------------C
+             1                                         2
+      D---------------------------E---------------------------F
+    )";
+    const gurka::ways ways =
+      {
+      {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
+      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOVExpress2"}, {"hov", "designated"}, {"hov:minimum", "3"}}}
+      };
+
+    const gurka::nodes nodes;
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/HOV2", {});
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  }
+};
+
+std::shared_ptr<baldr::GraphReader> HOV2Test::reader;
+gurka::map HOV2Test::map = {};
+
+//------------------------------------------------------------------
+TEST_F(HOV2Test, default_avoids_hov2) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       ""
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+}
+
+//------------------------------------------------------------------
+TEST_F(HOV2Test, hov2_true_avoids_hov3) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       use_hov2_true
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+}
+
+//------------------------------------------------------------------
+TEST_F(HOV2Test, hot_true_avoids_hov3) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       use_hot_true
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+}
+
+//------------------------------------------------------------------
+TEST_F(HOV2Test, hov3_true_uses_hov2) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       use_hov3_true
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress2");
+}
+
+//=======================================================================================
 class HOV3Test : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -148,7 +238,7 @@ protected:
     const gurka::ways ways =
       {
       {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
-      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOVExpress"}, {"hov", "designated"}, {"hov:minimum", "3"}}}
+      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOVExpress3"}, {"hov", "designated"}, {"hov:minimum", "3"}}}
       };
 
     const gurka::nodes nodes;
@@ -218,98 +308,7 @@ TEST_F(HOV3Test, hov3_true_uses_hov3) {
        ).str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress");
-}
-
-
-//=======================================================================================
-class HOV2Test : public ::testing::Test {
-protected:
-  static gurka::map map;
-  static std::shared_ptr<baldr::GraphReader> reader;
-
-  static void SetUpTestSuite() {
-    constexpr double gridsize = 10;
-
-    const std::string ascii_map = R"(
-      A---------------------------B---------------------------C
-             1                                         2
-      D---------------------------E---------------------------F
-    )";
-    const gurka::ways ways =
-      {
-      {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
-      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOVExpress"}, {"hov", "designated"}, {"hov:minimum", "3"}}}
-      };
-
-    const gurka::nodes nodes;
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/HOV2", {});
-    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  }
-};
-
-std::shared_ptr<baldr::GraphReader> HOV2Test::reader;
-gurka::map HOV2Test::map = {};
-
-//------------------------------------------------------------------
-TEST_F(HOV2Test, default_avoids_hov2) {
-  std::string req =
-      (boost::format(req_hov) %
-       std::to_string(map.nodes.at("1").lat()) %
-       std::to_string(map.nodes.at("1").lng()) %
-       std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) %
-       ""
-       ).str();
-  auto result = gurka::do_action(Options::route, map, req, reader);
-
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
-}
-
-//------------------------------------------------------------------
-TEST_F(HOV2Test, hov2_true_avoids_hov3) {
-  std::string req =
-      (boost::format(req_hov) %
-       std::to_string(map.nodes.at("1").lat()) %
-       std::to_string(map.nodes.at("1").lng()) %
-       std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) %
-       use_hov2_true
-       ).str();
-  auto result = gurka::do_action(Options::route, map, req, reader);
-
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
-}
-
-//------------------------------------------------------------------
-TEST_F(HOV2Test, hot_true_avoids_hov3) {
-  std::string req =
-      (boost::format(req_hov) %
-       std::to_string(map.nodes.at("1").lat()) %
-       std::to_string(map.nodes.at("1").lng()) %
-       std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) %
-       use_hot_true
-       ).str();
-  auto result = gurka::do_action(Options::route, map, req, reader);
-
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
-}
-
-//------------------------------------------------------------------
-TEST_F(HOV2Test, hov3_true_uses_hov3) {
-  std::string req =
-      (boost::format(req_hov) %
-       std::to_string(map.nodes.at("1").lat()) %
-       std::to_string(map.nodes.at("1").lng()) %
-       std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) %
-       use_hov3_true
-       ).str();
-  auto result = gurka::do_action(Options::route, map, req, reader);
-
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress3");
 }
 
 //=======================================================================================
@@ -329,7 +328,7 @@ protected:
     const gurka::ways ways =
       {
       {"ABC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
-      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOVExpress"}, {"hov", "designated"}, {"hov:minimum", "3"}, {"toll", "yes"}}}
+      {"DEF", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "HOTExpress3"}, {"hov", "designated"}, {"hov:minimum", "3"}, {"toll", "yes"}}}
       };
 
     const gurka::nodes nodes;
@@ -358,6 +357,36 @@ TEST_F(HOTTest, default_avoids_hot) {
 }
 
 //------------------------------------------------------------------
+TEST_F(HOTTest, hov2_true_avoids_hot3) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       use_hov2_true
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+}
+
+//------------------------------------------------------------------
+TEST_F(HOTTest, hov3_true_uses_hot3) {
+  std::string req =
+      (boost::format(req_hov) %
+       std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) %
+       use_hov3_true
+       ).str();
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOTExpress3");
+}
+
+//------------------------------------------------------------------
 TEST_F(HOTTest, hot_true_uses_hot3) {
   std::string req =
       (boost::format(req_hov) %
@@ -369,5 +398,5 @@ TEST_F(HOTTest, hot_true_uses_hot3) {
        ).str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOTExpress3");
 }
