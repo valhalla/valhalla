@@ -733,12 +733,12 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                             .get_value_or(kDefaultAutoWidth)));
 
     // HOT/HOV-use
-    pbf_costing_options->set_use_hot(rapidjson::get_optional<bool>(*json_costing_options, "/use_hot")
-                            .get_value_or(false));
-    pbf_costing_options->set_use_hov2(rapidjson::get_optional<bool>(*json_costing_options, "/use_hov2")
-                            .get_value_or(false));
-    pbf_costing_options->set_use_hov3(rapidjson::get_optional<bool>(*json_costing_options, "/use_hov3")
-                            .get_value_or(false));
+    pbf_costing_options->set_use_hot(
+        rapidjson::get_optional<bool>(*json_costing_options, "/use_hot").get_value_or(false));
+    pbf_costing_options->set_use_hov2(
+        rapidjson::get_optional<bool>(*json_costing_options, "/use_hov2").get_value_or(false));
+    pbf_costing_options->set_use_hov3(
+        rapidjson::get_optional<bool>(*json_costing_options, "/use_hov3").get_value_or(false));
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults

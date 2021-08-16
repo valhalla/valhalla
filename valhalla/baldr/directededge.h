@@ -327,7 +327,7 @@ public:
    */
   void set_bridge(const bool bridge);
 
-    /**
+  /**
    * Get the hov type (see graphconstants.h).
    */
   HOVEdgeType hov_type() const {

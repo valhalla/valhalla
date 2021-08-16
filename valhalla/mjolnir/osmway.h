@@ -1274,7 +1274,7 @@ struct OSMWay {
 
   /**
    * Sets the HOV Type.
-   * @param  hov_type  
+   * @param  hov_type
    */
   void set_hov_type(const baldr::HOVEdgeType hov_type) {
     hov_type_ = static_cast<uint8_t>(hov_type);
