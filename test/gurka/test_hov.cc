@@ -14,22 +14,6 @@ TEST(HOVTest, mistagged_hov) {
 
   const std::string ascii_map = R"(
     A---------------------------B
-    C---------------------------D
-    E---------------------------F
-    G---------------------------H
-    I---------------------------J
-    K---------------------------L
-    M---------------------------N
-    O---------------------------P
-    Q---------------------------R
-    S---------------------------T
-    U---------------------------V
-    W---------------------------X
-    Y---------------------------Z
-    a---------------------------b
-    c---------------------------d
-    e---------------------------f
-    g---------------------------h
   )";
 
   // none of these are correctly tagged for HOV routing.
@@ -112,7 +96,7 @@ TEST(HOVTest, mistagged_hov) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  for (const auto ways : all_ways) {
+  for (const auto& ways : all_ways) {
     gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mistagged_HOV", {});
     std::shared_ptr<baldr::GraphReader> reader =
         test::make_clean_graphreader(map.config.get_child("mjolnir"));
