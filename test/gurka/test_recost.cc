@@ -58,6 +58,54 @@ TEST(recosting, forward_vs_reverse) {
   }
 }
 
+TEST(recosting, forward_vs_reverse_internal_turn) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse_internal_turn";
+
+  const std::string ascii_map = R"(
+           1
+           |
+    A------B-----C
+           |
+    2------E----F
+  )";
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      {"1B", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      // BE is supposed to be an internal edge
+      {"BE", {{"highway", "tertiary"}}},
+      {"FE2", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}},
+                              {"E", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 4);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["1"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["1"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["2"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["2"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    int node_count = forward.trip().routes(0).legs(0).node_size();
+    auto forward_cost = forward.trip().routes(0).legs(0).node().at(node_count).cost().elapsed_cost();
+    auto reverse_cost = reverse.trip().routes(0).legs(0).node().at(node_count).cost().elapsed_cost();
+    // if assert is triggered - check if uturn on internal edges is detected correctly
+    EXPECT_NEAR(forward_cost.cost(), reverse_cost.cost(), 0.1);
+  }
+}
+
 TEST(recosting, same_historical) {
   const std::string ascii_map = R"(A--1--B-2-3-C-----G
                                          |     |     |
