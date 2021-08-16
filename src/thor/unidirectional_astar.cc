@@ -431,8 +431,14 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
                                    destination.path_edges(0).ll().lat());
+
+  std::cout << "origin_new: " << origin_new.lng() << ", " << origin_new.lat() << "\n";
+  std::cout << "destination_new: " << destination_new.lng() << ", " << destination_new.lat() << "\n";
+
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
+
+  std::cout << "mindist: " << mindist << "\n";
 
   auto startpoint = FORWARD ? origin : destination;
   auto endpoint = FORWARD ? destination : origin;
@@ -443,6 +449,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, endpoint);
+  std::cout << "density: " << density << "\n";
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
   SetOrigin(graphreader, startpoint, endpoint, time_info.second_of_week);
@@ -455,9 +462,15 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
   size_t total_labels = 0;
+  std::cout << "\nNew loop\n";
+  for (auto a : edgelabels_) {
+    std::cout << a.edgeid() << ", ";
+  }
+  std::cout << "\n";
   while (true) {
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
+    std::cout << "current_labels: " << current_labels << "\n";
     if (interrupt &&
         total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
@@ -480,6 +493,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_[predindex];
+    std::cout << "pred index: " << predindex << " : " << pred.edgeid() << "\n";
     if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).

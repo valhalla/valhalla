@@ -437,7 +437,12 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
 }
 
 TEST_P(ChinesePostmanTest, TestRoute) {
-  test_request_route(complex_chinese_postman_map, GetParam(), "", "E", "D", {"FD"});
+  test_request_route(complex_chinese_postman_map, GetParam(), "", "E", "D",
+                     {
+                         "EA",
+                         "AC",
+                         "CD",
+                     });
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {

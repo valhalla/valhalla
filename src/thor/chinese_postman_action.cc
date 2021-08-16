@@ -346,6 +346,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   const auto& costing_ = mode_costing[Costing::auto_];
 
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
