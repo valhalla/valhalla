@@ -425,7 +425,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Get names and types - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
-      auto tagged_names = edgeinfo.GetNames(true);
+      auto tagged_values = edgeinfo.GetNames(true);
       auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
@@ -490,7 +490,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_names, types, forward,
+                                  edgeinfo.speed_limit(), shape, names, tagged_values, types, forward,
                                   diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 

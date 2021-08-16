@@ -2,8 +2,7 @@
 #define VALHALLA_BALDR_EDGEINFO_H_
 
 #include <cstdint>
-#include <iostream>
-#include <ostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -139,25 +138,27 @@ public:
 
   /**
    * Convenience method to get the names for an edge
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   * @param  only_tagged_values  Bool indicating whether or not to return only the tagged values
    *
    * @return   Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(bool only_tagged_values = false) const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
-   * @param  include_tagged_names  Bool indicating whether or not to return the tagged names too
+   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
    * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(bool include_tagged_names = false) const;
+  std::vector<std::pair<std::string, bool>>
+  GetNamesAndTypes(bool include_tagged_values = false) const;
 
   /**
-   * Convenience method to get the names and the tagged type for an edge.
-   * @return   Returns a list (vector) of name/tagged type pairs.
+   * Convenience method to get tags of the edge.
+   * Key incidates tag, value may contain arbitrary blob of data.
+   * @return   Returns a map of tags
    */
-  std::vector<std::pair<std::string, uint8_t>> GetTaggedNamesAndTypes() const;
+  const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
    * Convenience method to get the types for the names.
@@ -181,6 +182,13 @@ public:
    * @return  Returns the encoded shape string.
    */
   std::string encoded_shape() const;
+
+  /**
+   * Get Z-level of the edge relatively to other edges. Can be negative.
+   * @see https://wiki.openstreetmap.org/wiki/Key:layer
+   * @return Z-level of the edge
+   */
+  int8_t z_level() const;
 
   /**
    * Returns json representing this object
@@ -229,6 +237,10 @@ protected:
 
   // The size of the names list
   size_t names_list_length_;
+
+  // for O(1) access to tag values stored in names list
+  mutable std::multimap<TaggedValue, std::string> tag_cache_;
+  mutable bool tag_cache_ready_ = false;
 };
 
 } // namespace baldr

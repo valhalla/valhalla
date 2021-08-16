@@ -70,13 +70,13 @@ NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
 }
 
 // Get a list of names
-std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
+std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_values) const {
   // Get each name
   std::vector<std::string> names;
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    if ((only_tagged_names && !ni->tagged_) || (!only_tagged_names && ni->tagged_)) {
+    if ((only_tagged_values && !ni->tagged_) || (!only_tagged_values && ni->tagged_)) {
       continue;
     }
     if (ni->name_offset_ < names_list_length_) {
@@ -90,14 +90,14 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
 
 // Get a list of names
 std::vector<std::pair<std::string, bool>>
-EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
+EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
   // Get each name
   std::vector<std::pair<std::string, bool>> name_type_pairs;
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
     // Skip any tagged names (FUTURE code may make use of them)
-    if (ni->tagged_ && !include_tagged_names) {
+    if (ni->tagged_ && !include_tagged_values) {
       continue;
     }
     if (ni->tagged_) {
@@ -122,28 +122,37 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
 }
 
 // Get a list of tagged names
-std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() const {
-  // Get each name
-  std::vector<std::pair<std::string, uint8_t>> name_type_pairs;
-  name_type_pairs.reserve(name_count());
-  const NameInfo* ni = name_info_list_;
-  for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    // Skip any non tagged names
-    if (ni->tagged_) {
-      if (ni->name_offset_ < names_list_length_) {
-        std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1) {
-          try {
-            auto num = static_cast<uint8_t>(name.at(0));
-            name_type_pairs.push_back({name.substr(1), num});
-          } catch (const std::logic_error&) { LOG_DEBUG("logic_error thrown for name: " + name); }
+const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
+  // we could check `tag_cache_.empty()` here, but many edges contain no tags
+  // and it would mean we traverse all names on each `GetTags` call
+  // for such edges
+  if (!tag_cache_ready_) {
+    // Get each name
+    const NameInfo* ni = name_info_list_;
+    for (uint32_t i = 0; i < name_count(); i++, ni++) {
+      // Skip any non tagged names
+      if (ni->tagged_) {
+        if (ni->name_offset_ < names_list_length_) {
+          std::string name = names_list_ + ni->name_offset_;
+          if (name.size() > 1) {
+            uint8_t num = 0;
+            try {
+              num = static_cast<uint8_t>(name.at(0));
+              tag_cache_.emplace(static_cast<TaggedValue>(num), name.substr(1));
+            } catch (const std::logic_error& arg) {
+              LOG_DEBUG("logic_error thrown for name: " + name);
+            }
+          }
+        } else {
+          throw std::runtime_error("GetTags: offset exceeds size of text list");
         }
-      } else {
-        throw std::runtime_error("GetTaggedNamesAndTypes: offset exceeds size of text list");
       }
     }
+
+    tag_cache_ready_ = true;
   }
-  return name_type_pairs;
+
+  return tag_cache_;
 }
 
 // Get the types.  Are these names route numbers or not?
@@ -171,6 +180,19 @@ const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
 std::string EdgeInfo::encoded_shape() const {
   return encoded_shape_ == nullptr ? midgard::encode7(shape_)
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
+}
+
+int8_t EdgeInfo::z_level() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kZLevel);
+  if (itr == tags.end()) {
+    return 0;
+  }
+  const auto& value = itr->second;
+  if (value.size() != 1) {
+    throw std::runtime_error("z-level must contain 1-byte value");
+  }
+  return static_cast<int8_t>(value.front());
 }
 
 json::MapPtr EdgeInfo::json() const {

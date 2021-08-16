@@ -348,11 +348,11 @@ public:
   /**
    * Convenience method to get the names for an edge
    * @param  edge  Directed edge
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   * @param  only_tagged_values  Bool indicating whether or not to return only the tagged values
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const DirectedEdge* edge, bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(const DirectedEdge* edge, bool only_tagged_values = false) const;
 
   /**
    * Convenience method to get the types for the names given the edge
