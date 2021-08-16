@@ -9,10 +9,9 @@ namespace {
 
 // should return true for any tags which we should consider "named"
 bool IsNameTag(char ch) {
-  return true;
-  // static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
-  //                                                           TaggedValue::kTunnel};
-  // return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
+  static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
+                                                            TaggedValue::kTunnel};
+  return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
 }
 
 json::MapPtr bike_network_json(uint8_t mask) {
