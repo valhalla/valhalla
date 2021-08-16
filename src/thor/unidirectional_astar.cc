@@ -311,7 +311,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                              (pred.not_thru_pruning() || !meta.edge->not_thru()),
                              (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, meta.edge),
+                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                              restriction_idx);
     *meta.edge_status = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
