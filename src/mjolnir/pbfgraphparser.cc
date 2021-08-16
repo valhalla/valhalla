@@ -1234,7 +1234,10 @@ public:
         try {
           it->second();
         } catch (const std::exception& ex) {
-          LOG_ERROR("Error during parsing of `" + tag_.first + "` tag: " + std::string{ex.what()});
+          std::stringstream ss;
+          ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
+             << std::string{ex.what()};
+          LOG_WARN(ss.str());
         }
 
       }

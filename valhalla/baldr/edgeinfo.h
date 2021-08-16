@@ -244,7 +244,7 @@ protected:
   // The size of the names list
   size_t names_list_length_;
 
-  // for O(1) access to tag values stored in names list
+  // for fast access to tag values stored in names list
   mutable std::multimap<TaggedValue, std::string> tag_cache_;
   mutable bool tag_cache_ready_ = false;
 };
