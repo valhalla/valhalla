@@ -804,7 +804,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_resample_distance(*resample_distance);
   }
 
-  // expansion action, default to isochrone
+  // expansion action
   auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
   Options::Action exp_action;
   if (exp_action_str) {
