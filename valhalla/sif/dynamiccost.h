@@ -595,7 +595,7 @@ public:
    * @param  has_left     Did we make a left (left or sharp left)
    * @param  has_right    Did we make a right (right or sharp right)
    * @param  penalize_internal_uturns   Do we want to penalize uturns on a short, internal edge
-   * @param  internal_turn              Did we make an turn on a short internal edge.
+   * @param  internal_turn              Did we make an internal turn on the previous edge.
    * @param  seconds      Time.
    */
   inline void AddUturnPenalty(const uint32_t idx,
@@ -719,9 +719,9 @@ public:
   std::vector<HierarchyLimits>& GetHierarchyLimits();
 
   /**
-   * Relax hierarchy limits.
+   * Relax hierarchy limits using pre-defined algorithm-cased factors.
    */
-  void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
+  void RelaxHierarchyLimits(const bool using_bidirectional);
 
   /**
    * Checks if we should exclude or not.
@@ -886,6 +886,8 @@ protected:
 
   // Should we penalize uturns on short internal edges?
   bool penalize_uturns_;
+
+  bool exclude_unpaved_{false};
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -967,6 +969,8 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+
+    exclude_unpaved_ = costing_options.exclude_unpaved();
   }
 
   /**
@@ -1070,6 +1074,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_living_streets_;
 
   ranged_default_t<float> closure_factor_;
+
+  bool exclude_unpaved_;
 };
 
 /**
