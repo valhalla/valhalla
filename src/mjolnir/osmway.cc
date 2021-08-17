@@ -94,6 +94,10 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
+void OSMWay::set_z_level(int8_t z_level) {
+  z_level_ = z_level;
+}
+
 // Get the names for the edge info based on the road class.
 std::vector<std::string>
 OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
@@ -169,20 +173,24 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
   return names;
 }
 
-// Get the tagged names for an edge
-std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
+// Get the tagged values for an edge
+std::vector<std::string> OSMWay::GetTaggedValues(const UniqueNames& name_offset_map) const {
 
   std::vector<std::string> names;
 
-  auto encode_tag = [](TaggedName tag) {
+  auto encode_tag = [](TaggedValue tag) {
     return std::string(1, static_cast<std::string::value_type>(tag));
   };
   if (tunnel_name_index_ != 0) {
     // tunnel names
     auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
     for (const auto& t : tokens) {
-      names.emplace_back(encode_tag(TaggedName::kTunnel) + t);
+      names.emplace_back(encode_tag(TaggedValue::kTunnel) + t);
     }
+  }
+
+  if (z_level_ != 0) {
+    names.emplace_back(encode_tag(TaggedValue::kZLevel) + static_cast<char>(z_level_));
   }
 
   return names;

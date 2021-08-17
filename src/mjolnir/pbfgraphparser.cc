@@ -188,6 +188,11 @@ public:
       }
     };
 
+    tag_handlers_["layer"] = [this]() {
+      auto z_level = static_cast<int8_t>(std::stoi(tag_.second));
+      way_.set_z_level(z_level);
+    };
+
     tag_handlers_["road_class"] = [this]() {
       RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
       switch (roadclass) {
@@ -1226,7 +1231,15 @@ public:
       tag_ = kv;
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
-        it->second();
+        try {
+          it->second();
+        } catch (const std::exception& ex) {
+          std::stringstream ss;
+          ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
+             << std::string{ex.what()};
+          LOG_WARN(ss.str());
+        }
+
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||

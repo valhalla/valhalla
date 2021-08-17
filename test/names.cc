@@ -95,11 +95,11 @@ TEST(Names, TaggedNamesTest) {
   w1.set_road_class(RoadClass::kMotorway);
   w2.set_road_class(RoadClass::kMotorway);
 
-  std::vector<std::string> w1_tagged_names = w1.GetTaggedNames(name_offset_map);
-  EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
+  std::vector<std::string> w1_tagged_values = w1.GetTaggedValues(name_offset_map);
+  EXPECT_EQ(w1_tagged_values.at(0), "1Ted Williams Tunnel");
 
-  std::vector<std::string> w2_tagged_names = w2.GetTaggedNames(name_offset_map);
-  EXPECT_EQ(w2_tagged_names.at(0), "1Fort McHenry Tunnel");
+  std::vector<std::string> w2_tagged_values = w2.GetTaggedValues(name_offset_map);
+  EXPECT_EQ(w2_tagged_values.at(0), "1Fort McHenry Tunnel");
 }
 
 } // namespace

@@ -236,16 +236,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/07
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/universitatstunnel/2/000/812/907.gph
-  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/universitatstunnel/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/universitatstunnel","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
-      ${VALHALLA_SOURCE_DIR}/test/data/universitatstunnel.osm.pbf
-  COMMENT "Building Universitatstunnel Tiles..."
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-add_custom_target(de_universitatstunnel_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/universitatstunnel/2/000/812/907.gph)
-set_target_properties(de_universitatstunnel_tiles PROPERTIES FOLDER "Tests")
-
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
@@ -311,7 +301,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-summary utrecht_tiles)
   add_dependencies(run-urban utrecht_tiles)
-  add_dependencies(run-thor_worker de_universitatstunnel_tiles utrecht_tiles)
+  add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
   add_dependencies(run-astar_bss paris_bss_tiles)
