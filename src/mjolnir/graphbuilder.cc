@@ -704,7 +704,7 @@ void BuildTileSet(const std::string& ways_file,
 
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.name_offset_map, types);
-            auto tagged_names = w.GetTaggedNames(osmdata.name_offset_map);
+            auto tagged_values = w.GetTaggedValues(osmdata.name_offset_map);
 
             // Update bike_network type
             if (bike_network) {
@@ -717,7 +717,7 @@ void BuildTileSet(const std::string& ways_file,
             edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                                      (*nodes[target]).graph_id, w.way_id(), 1234,
                                                      bike_network, speed_limit, shape, names,
-                                                     tagged_names, types, added, dual_refs);
+                                                     tagged_values, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }
