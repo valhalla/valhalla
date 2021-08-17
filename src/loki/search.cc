@@ -304,7 +304,8 @@ struct bin_handler_t {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
-        const auto& info = *candidate.edge_info;
+        auto info = tile->edgeinfo(edge);
+
         // calculate the heading of the snapped point to the shape for use in heading filter
         size_t index = edge->forward() ? 0 : info.shape().size() - 2;
         float angle =
