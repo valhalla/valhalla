@@ -595,7 +595,7 @@ public:
    * @param  has_left     Did we make a left (left or sharp left)
    * @param  has_right    Did we make a right (right or sharp right)
    * @param  penalize_internal_uturns   Do we want to penalize uturns on a short, internal edge
-   * @param  internal_turn              Did we make an turn on a short internal edge.
+   * @param  internal_turn              Did we make an internal turn on the previous edge.
    * @param  seconds      Time.
    */
   inline void AddUturnPenalty(const uint32_t idx,

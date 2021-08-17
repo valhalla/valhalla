@@ -274,13 +274,11 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     Cost newcost =
         pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources);
 
-    InternalTurn internal_turn =
-        costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                         opp_pred_edge,
                                         static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                        internal_turn);
+                                        pred.internal_turn());
     newcost += transition_cost;
 
     uint32_t distance = pred.path_distance() + directededge->length();
@@ -303,7 +301,9 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), internal_turn);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
