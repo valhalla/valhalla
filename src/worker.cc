@@ -1153,12 +1153,9 @@ void service_worker_t::enqueue_statistics(Api& api) const {
 
   // before we are done with the request, if this was not an error we log it was ok
   if (!api.info().error()) {
-    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki"
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
-    statsd_client->count(action + ".info" + worker + ".ok", 1, 1.f, statsd_client->tags);
+    statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
   }
 }
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
@@ -1167,23 +1164,18 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
   return midgard::Finally<std::function<void()>>([this, &api, start]() {
     auto elapsed = std::chrono::steady_clock::now() - start;
     auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki"
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
     auto* stat = api.mutable_info()->mutable_statistics()->Add();
-    stat->set_key(action + ".info" + worker + ".latency_ms");
+    stat->set_key(action + ".info." + service_name() + ".latency_ms");
     stat->set_value(e);
     stat->set_type(timing);
   });
 }
 
 void service_worker_t::started() {
-  std::string worker = typeid(*this) == typeid(loki::loki_worker_t)
-                           ? "loki"
-                           : (typeid(*this) == typeid(thor::thor_worker_t) ? "thor" : "odin");
-  statsd_client->count("none.info." + worker + ".worker_started", 1, 1.f, statsd_client->tags);
+  statsd_client->count("none.info." + service_name() + ".worker_started", 1, 1.f,
+                       statsd_client->tags);
 }
 
 } // namespace valhalla
