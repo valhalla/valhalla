@@ -125,6 +125,9 @@ public:
     }
     l->set_heading_tolerance(pl.heading_tolerance_);
     l->set_node_snap_tolerance(pl.node_snap_tolerance_);
+    if (pl.preferred_z_level_) {
+      l->set_preferred_z_level(*pl.preferred_z_level_);
+    }
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
@@ -254,6 +257,9 @@ public:
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
+    }
+    if (loc.has_preferred_z_level()) {
+      l.preferred_z_level_ = loc.preferred_z_level();
     }
     return l;
   }

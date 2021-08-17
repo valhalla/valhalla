@@ -95,6 +95,7 @@ message Location {
   optional uint32 waypoint_index = 31;
   optional SearchFilter search_filter = 32;
   optional uint32 street_side_max_distance = 33;
+  optional int32 preferred_z_level = 34;
 }
 
 message TransitEgressInfo {

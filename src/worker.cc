@@ -305,6 +305,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (heading_tolerance) {
           location->set_heading_tolerance(*heading_tolerance);
         }
+        auto preferred_z_level = rapidjson::get_optional<int>(r_loc, "/preferred_z_level");
+        if (preferred_z_level) {
+          location->set_preferred_z_level(*preferred_z_level);
+        }
         auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
         if (node_snap_tolerance) {
           location->set_node_snap_tolerance(*node_snap_tolerance);
