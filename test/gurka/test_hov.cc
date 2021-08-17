@@ -203,7 +203,7 @@ protected:
                                 {"oneway", "yes"},
                                 {"name", "HOVExpress2"},
                                 {"hov", "designated"},
-                                {"hov:minimum", "3"}}}};
+                                {"hov:minimum", "2"}}}};
 
     const gurka::nodes nodes;
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -228,7 +228,7 @@ TEST_F(HOV2Test, default_avoids_hov2) {
 }
 
 //------------------------------------------------------------------
-TEST_F(HOV2Test, hov2_true_avoids_hov3) {
+TEST_F(HOV2Test, hov2_true_uses_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
@@ -236,11 +236,11 @@ TEST_F(HOV2Test, hov2_true_avoids_hov3) {
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress2");
 }
 
 //------------------------------------------------------------------
-TEST_F(HOV2Test, hot_true_avoids_hov3) {
+TEST_F(HOV2Test, hot_true_avoids_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
