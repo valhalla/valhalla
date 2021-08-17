@@ -442,6 +442,7 @@ void CopyLocations(TripLeg& trip_path,
     // copy
     valhalla::Location* tp_through = trip_path.add_location();
     tp_through->CopyFrom(through);
+
     // id set
     std::unordered_set<uint64_t> ids;
     for (const auto& e : tp_through->path_edges()) {
@@ -1329,11 +1330,11 @@ void TripLegBuilder::Build(
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,
     valhalla::Location& dest,
-    const std::list<valhalla::Location>& through_loc,
+    const std::list<valhalla::Location>& throughs,
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* intermediate_locs) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1344,7 +1345,7 @@ void TripLegBuilder::Build(
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  CopyLocations(trip_path, origin, through_loc, dest, path_begin, path_end);
+  CopyLocations(trip_path, origin, throughs, dest, path_begin, path_end);
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
@@ -1539,7 +1540,9 @@ void TripLegBuilder::Build(
     // Process the shape for edges where a route discontinuity occurs
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
-    if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
+
+    if (intermediate_locs && !intermediate_locs->empty() &&
+        intermediate_locs->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
@@ -1547,8 +1550,8 @@ void TripLegBuilder::Build(
       }
 
       // Grab the edge begin and end info
-      auto& edge_begin_info = edge_trimming->at(edge_index).first;
-      auto& edge_end_info = edge_trimming->at(edge_index).second;
+      auto& edge_begin_info = intermediate_locs->at(edge_index).first;
+      auto& edge_end_info = intermediate_locs->at(edge_index).second;
 
       // Handle partial shape for first edge
       if (is_first_edge && !edge_begin_info.trim) {
@@ -1625,6 +1628,18 @@ void TripLegBuilder::Build(
     // TODO: attributes controller and then use this in recosting
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
+
+    // We are looping the intermediate locs on the edge and if the edge id matches the loc edge id,
+    // Lets keep track of all the intermediate locations with an iterator and as we hit the edge index
+    // that matches that locations edge index we marked here right after we put the shape in there,
+    // we set the shape index.
+    for (auto& through : throughs) {
+      if (through.path_edges().begin()->graph_id() ==
+          intermediate_locs->at(edge).first.location_index) {
+        auto shape_index = intermediate_locs->at(edge).first.location_index;
+        std::cout << ">>>>>>>>>>>>>>>>THROUGH LOCS SHAPE INDEX: " << shape_index << std::endl;
+      }
+    }
 
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {

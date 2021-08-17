@@ -25,6 +25,7 @@ struct EdgeTrimmingInfo {
   bool trim;
   midgard::PointLL vertex;
   double distance_along;
+  size_t location_index;
 };
 
 /**
@@ -58,12 +59,12 @@ public:
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,
                     valhalla::Location& dest,
-                    const std::list<valhalla::Location>& through_loc,
+                    const std::list<valhalla::Location>& throughs,
                     TripLeg& trip_path,
                     const std::vector<std::string>& algorithms,
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        edge_trimming = nullptr);
+                        intermediate_locs = nullptr);
 };
 
 } // namespace thor
