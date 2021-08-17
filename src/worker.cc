@@ -704,8 +704,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // Option to use timestamps when computing elapsed time for matched routes
-  options.set_use_timestamps(
-      rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
+  options.set_use_timestamps(rapidjson::get<bool>(doc, "/use_timestamps", false));
 
   // Throw an error if use_timestamps is set to true but there are no timestamps in the
   // trace (or no durations present)
@@ -723,7 +722,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // TODO: remove this?
-  options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
+  options.set_do_not_track(rapidjson::get<bool>(doc, "/healthcheck", false));
 
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
@@ -831,18 +830,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // should the expansion track opposites?
-  auto exp_skip_opps = rapidjson::get_optional<bool>(doc, "/skip_opposites");
-  if (exp_skip_opps)
-    options.set_skip_opposites(*exp_skip_opps);
+  options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", false));
 
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 
   // if specified, get the polygons boolean in there
-  auto polygons = rapidjson::get_optional<bool>(doc, "/polygons");
-  if (polygons) {
-    options.set_polygons(*polygons);
-  }
+  options.set_polygons(rapidjson::get<bool>(doc, "/polygons", false));
 
   // if specified, get the denoise in there
   auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
@@ -857,10 +851,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // if specified, get the show_locations boolean in there
-  auto show_locations = rapidjson::get_optional<bool>(doc, "/show_locations");
-  if (show_locations) {
-    options.set_show_locations(*show_locations);
-  }
+  options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", false));
 
   // if specified, get the shape_match in there
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
@@ -939,10 +930,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_alternates(0);
 
   // whether to return guidance_views, default false
-  auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
-  if (guidance_views) {
-    options.set_guidance_views(*guidance_views);
-  }
+  options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", false));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
