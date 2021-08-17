@@ -31,8 +31,8 @@ public:
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
-        has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), cost_(0, 0),
-        sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
+        cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -81,7 +81,8 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
         restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        cost_(cost), sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
+        unpaved_(edge->unpaved()), cost_(cost), sortcost_(sortcost), distance_(dist),
+        transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -385,6 +386,14 @@ public:
     return has_measured_speed_;
   }
 
+  /**
+   * Get the unpaved flag.
+   * @return Returns true if the edge is an unpaved road, otherwise false.
+   */
+  bool unpaved() const {
+    return unpaved_;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -445,7 +454,9 @@ protected:
   uint32_t restriction_idx_ : 8;
   // internal_turn_ Did we make an turn on a short internal edge.
   uint32_t internal_turn_ : 2;
-  uint32_t spare : 15;
+  // Flag indicating edge is an unpaved road.
+  uint32_t unpaved_ : 1;
+  uint32_t spare : 14;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.

@@ -890,7 +890,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
   if (filter_attributes_json) {
     for (const auto& filter_attribute : *filter_attributes_json) {
-      options.add_filter_attributes(filter_attribute.GetString());
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = thor::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
     }
   }
 
