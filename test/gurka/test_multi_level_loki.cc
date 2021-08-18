@@ -1,8 +1,9 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "rapidjson/document.h"
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <gtest/gtest.h>
+#include <unordered_map>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -13,53 +14,9 @@ const std::unordered_map<std::string, std::string> build_config{{}};
 
 namespace {
 struct Waypoint {
-  midgard::PointLL ll;
+  std::string node;
   boost::optional<int8_t> preferred_z_level;
 };
-
-std::string ToString(const rapidjson::Document& doc) {
-  rapidjson::StringBuffer sb;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-  doc.Accept(writer);
-  return sb.GetString();
-}
-
-std::vector<std::string> GetStepNames(const rapidjson::Document& doc) {
-  std::vector<std::string> names;
-  auto steps = doc["routes"][0]["legs"][0]["steps"].GetArray();
-  names.reserve(steps.Size());
-  for (const auto& step : steps) {
-    names.emplace_back(step["name"].GetString());
-  }
-  return names;
-}
-
-std::string BuildRequest(const std::vector<Waypoint>& waypoints) {
-  rapidjson::Document requestDoc;
-  requestDoc.SetObject();
-  auto& allocator = requestDoc.GetAllocator();
-  rapidjson::Value locations(rapidjson::kArrayType);
-  for (const auto& waypoint : waypoints) {
-    rapidjson::Value p(rapidjson::kObjectType);
-    p.AddMember("lon", waypoint.ll.lng(), allocator);
-    p.AddMember("lat", waypoint.ll.lat(), allocator);
-    if (waypoint.preferred_z_level) {
-      p.AddMember("preferred_z_level", *waypoint.preferred_z_level, allocator);
-      // `preferred_z_level` is only working correctly if radius is provided,
-      // because Z-level filtering is performed as last step in loki and if we don't provide
-      // radius we would have only single candidate on the last step in this case
-      p.AddMember("radius", 1, allocator);
-    }
-
-    locations.PushBack(p, allocator);
-  }
-  requestDoc.AddMember("locations", locations, allocator);
-  requestDoc.AddMember("costing", "auto", allocator);
-  requestDoc.AddMember("verbose", true, allocator);
-  requestDoc.AddMember("shape_match", "map_snap", allocator);
-
-  return ToString(requestDoc);
-}
 
 } // namespace
 
@@ -103,9 +60,19 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_multi_level_loki", build_config);
   }
 
-  rapidjson::Document Route(const std::vector<Waypoint>& waypoints) {
-    auto result = gurka::do_action(valhalla::Options::route, map, BuildRequest(waypoints));
-    return gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+  valhalla::Api Route(const std::vector<Waypoint>& waypoints) {
+    std::vector<std::string> nodes;
+    std::unordered_map<std::string, std::string> options;
+    for (size_t index = 0; index < waypoints.size(); ++index) {
+      const auto& wp = waypoints[index];
+      nodes.emplace_back(wp.node);
+      if (wp.preferred_z_level) {
+        options["/locations/" + std::to_string(index) + "/preferred_z_level"] =
+            std::to_string(*wp.preferred_z_level);
+        options["/locations/" + std::to_string(index) + "/radius"] = "1";
+      }
+    }
+    return gurka::do_action(valhalla::Options::route, map, nodes, "auto", options);
   }
 };
 gurka::map MultiLevelLoki::map = {};
@@ -113,21 +80,16 @@ std::string MultiLevelLoki::ascii_map = {};
 gurka::nodelayout MultiLevelLoki::layout = {};
 
 TEST_F(MultiLevelLoki, test_multilevel_loki) {
-  auto start = map.nodes["B"];
-  auto end = map.nodes["G"];
+  auto result = Route({{"B", -1}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 
-  EXPECT_EQ(GetStepNames(Route({{start, -1}, {end}})), std::vector<std::string>({"HI", "HI"}));
-  EXPECT_EQ(GetStepNames(Route({{start, 0}, {end}})),
-            std::vector<std::string>({"BE", "EF", "FD", "DG", "DG"}));
-  EXPECT_EQ(GetStepNames(Route({{start}, {end}})), std::vector<std::string>({"HI", "HI"}));
+  result = Route({{"B", 0}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"BE", "EF", "FD", "DG"}));
+  result = Route({{"B"}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 }
 
 TEST_F(MultiLevelLoki, test_no_matching_z_level) {
-  // we don't have Z-level equal to "-1" near the `E` node,
-  // we should return something anyway
-  auto start = map.nodes["E"];
-  auto end = map.nodes["G"];
-
-  EXPECT_EQ(GetStepNames(Route({{start, -1}, {end}})),
-            std::vector<std::string>({"EF", "FD", "DG", "DG"}));
+  auto result = Route({{"E", -1}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"EF", "FD", "DG"}));
 }
