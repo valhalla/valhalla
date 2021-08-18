@@ -35,6 +35,7 @@ std::vector<std::pair<int, int>> getNodePairs(PathMatrix pathMatrix, int startIn
     std::cout << "path size is empty"
               << "\n";
     // Find route here
+    nodePairs.push_back(make_pair(startIndex, endIndex));
   } else {
     for (int i = 0; i < path.size() - 1; i++) {
       nodePairs.push_back(make_pair(path[i], path[i + 1]));
@@ -266,7 +267,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
       auto* path_edge = loc->add_path_edges();
       path_edge->set_distance(0);
       path_edge->set_begin_node(true);
-      path_edge->set_end_node(false);
+      path_edge->set_end_node(false); // It should not be like this
       loc->mutable_ll()->set_lng(ll.first);
       loc->mutable_ll()->set_lat(ll.second);
       path_edge->set_graph_id(edge_id);
@@ -275,6 +276,15 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
       ++edge_id;
     }
   }
+
+  try {
+    auto locations = PathLocation::fromPBF(locations_, true);
+    const auto projections = loki::Search(locations, *reader, this->mode_costing[Costing::auto_]);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& correlated = projections.at(locations[i]);
+      PathLocation::toPBF(correlated, locations_.Mutable(i), *reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   auto x = locations_.begin();
   auto y = std::next(x);

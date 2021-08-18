@@ -289,7 +289,7 @@ protected:
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
                                             {{"service_limits.max_exclude_polygons_length", "1000"}});
 
-    // Setup complex_chinese_postman_map
+    // Setup complex_chinese_postman_map "AB", "BC", "CD", "DE", "EA"
     // B----<---A--->----F
     //  \       | \     /|
     //   \      |  ^   v |
@@ -433,16 +433,19 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
   }
   // test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
   test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E",
-               {"FE", "EA", "AC", "CD", "DE"});
+               {"FD", "DE", "EA", "AF", "FE"});
+  test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "C",
+               {"AC", "CD", "DE", "EA", "AB", "BC"});
 }
 
-TEST_P(ChinesePostmanTest, TestRoute) {
+TEST_P(ChinesePostmanTest, DISABLED_TestRoute) {
   test_request_route(complex_chinese_postman_map, GetParam(), "", "E", "D",
                      {
                          "EA",
                          "AC",
                          "CD",
                      });
+  test_request_route(complex_chinese_postman_map, GetParam(), "", "C", "A", {"CD", "DE", "EA"});
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanMatrix) {

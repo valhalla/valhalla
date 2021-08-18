@@ -452,8 +452,9 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   std::cout << "density: " << density << "\n";
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
+  std::cout << "edge label size: " << edgelabels_.size() << "\n";
   SetOrigin(graphreader, startpoint, endpoint, time_info.second_of_week);
-
+  std::cout << "edge label size: " << edgelabels_.size() << "\n";
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
