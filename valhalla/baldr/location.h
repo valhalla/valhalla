@@ -71,7 +71,7 @@ public:
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
            const SearchFilter& search_filter = SearchFilter(),
-           boost::optional<int8_t> preferred_z_level = {});
+           boost::optional<int8_t> preferred_layer = {});
 
   /**
    * equality.
@@ -118,7 +118,7 @@ public:
   // coordinates of the location as used for altering the side of street
   boost::optional<midgard::PointLL> display_latlng_;
 
-  boost::optional<int8_t> preferred_z_level_;
+  boost::optional<int8_t> preferred_layer_;
 
 protected:
 };

@@ -1579,17 +1579,17 @@ struct OSMWay {
   }
 
   /**
-   * Sets z-level of the way.
-   * @param z_level Z-level.
+   * Sets layer index(Z-level) of the way.
+   * @param layer
    */
-  void set_z_level(int8_t z_level);
+  void set_layer(int8_t layer);
 
   /**
-   * Get z-level, can be negative.
-   * @return returns z-level of the way relatively to other ways.
+   * Get layer(Z-level), can be negative.
+   * @return returns layer index of the way relatively to other ways.
    */
-  int8_t z_level() const {
-    return z_level_;
+  int8_t layer() const {
+    return layer_;
   }
 
   /**
@@ -1741,8 +1741,8 @@ struct OSMWay {
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
 
-  // Z-level of the way relatively to other levels
-  int8_t z_level_;
+  // layer index(Z-level) of the way relatively to other levels
+  int8_t layer_;
 };
 
 } // namespace mjolnir
