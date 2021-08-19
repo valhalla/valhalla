@@ -347,7 +347,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   parse_locations(request);
   parse_filter_attributes(request);
-  auto costing = parse_costing(request);
+  auto costing_str = parse_costing(request);
   auto& options = *request.mutable_options();
 
   auto* co = options.mutable_costing_options(options.costing());
@@ -433,7 +433,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
   } else {
     DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
     for (int i = 0; i < G.numVertices(); i++) {
@@ -453,7 +453,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
 
-    computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing)->second);
+    computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing_str)->second);
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
@@ -524,7 +524,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
   }
   // Start build path here
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
