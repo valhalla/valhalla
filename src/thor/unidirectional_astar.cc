@@ -446,6 +446,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
   SetOrigin(graphreader, startpoint, endpoint, time_info.second_of_week);
+
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 

@@ -32,9 +32,7 @@ std::vector<std::pair<int, int>> getNodePairs(PathMatrix pathMatrix, int startIn
   std::vector<std::pair<int, int>> nodePairs;
   auto path = pathMatrix[startIndex][endIndex];
   if (path.size() == 0) {
-    // std::cout << "path size is empty"
-    //           << "\n";
-    // Find route here
+    // Set the pair from the index, the real route will be computed using full route computation
     nodePairs.push_back(make_pair(startIndex, endIndex));
   } else {
     for (int i = 0; i < path.size() - 1; i++) {
@@ -287,18 +285,13 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 
   auto x = locations_.begin();
   auto y = std::next(x);
-  // std::cout << "Start location: " << x->ll().lng() << ", " << x->ll().lat() << "\n";
-  // std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
   thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *x, *y, options);
-  // std::cout << "Chosen path algorithm: " << path_algorithm->name() << "\n";
   auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
   path_algorithm->Clear();
   // Only take the first path (there is only one path)
   auto path = paths[0];
-  // std::cout << "out poly path size: " << path.size() << "\n";
   for (auto p : path) {
     edge_graph_ids.push_back(p.edgeid);
-    // std::cout << "edge: " << p.edgeid << "\n";
   }
 
   return edge_graph_ids;
@@ -316,10 +309,8 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
     }
     auto cpEdge = G.getCPEdge(*it, *(it + 1));
     if (cpEdge) {
-      // std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
       eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
     } else {
-      // std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
       auto fullRoute =
@@ -461,34 +452,8 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
-    // for (int i = 0; i < pathMatrix.size(); i++) {
-    //   for (int j = 0; j < pathMatrix.size(); j++) {
-    //     std::cout << "path " << i << ", " << j << ":";
-    //     for (auto x : pathMatrix[i][j]) {
-    //       std::cout << x << " -> ";
-    //     }
-    //     std::cout << "\n";
-    //   }
-    //   std::cout << "\n";
-    // }
-
-    // std::cout << "Original distance matrix\n";
-    // for (int i = 0; i < distanceMatrix.size(); i++) {
-    //   for (int j = 0; j < distanceMatrix.size(); j++) {
-    //     std::cout << distanceMatrix[i][j] << ", ";
-    //   }
-    //   std::cout << "\n";
-    // }
 
     computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing)->second);
-
-    // std::cout << "Updated distance matrix\n";
-    // for (int i = 0; i < distanceMatrix.size(); i++) {
-    //   for (int j = 0; j < distanceMatrix.size(); j++) {
-    //     std::cout << distanceMatrix[i][j] << ", ";
-    //   }
-    //   std::cout << "\n";
-    // }
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
