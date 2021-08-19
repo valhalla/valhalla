@@ -197,7 +197,7 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
-std::string guide_destinations(const valhalla::TripSign& sign);
+std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
@@ -508,7 +508,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
           // exit_destinations(). exit_destinations() does not contain rest-area names.
           // guide_destinations() and destinations() return the same string value for
           // the rest area name. So I've decided to use guide_destinations().
-          sign_text = guide_destinations(trip_leg_sign);
+          sign_text = destinations(trip_leg_sign);
         }
 
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
