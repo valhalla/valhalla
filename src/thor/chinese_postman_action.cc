@@ -491,9 +491,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     // }
 
     // Check if the graph is not strongly connected
-    // if (!isStronglyConnectedGraph(distanceMatrix)) {
-    //   throw valhalla_exception_t(450);
-    // }
+    if (!isStronglyConnectedGraph(distanceMatrix)) {
+      throw valhalla_exception_t(450);
+    }
 
     // Do matching here
 

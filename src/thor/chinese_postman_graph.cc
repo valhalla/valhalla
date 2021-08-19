@@ -92,11 +92,11 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
   this->setupDFSEulerCycle(extraPaths);
   this->dfsEulerCycle(startNodeIndex);
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
-  // for (auto const& v : this->outEdges) {
-  //   if (v.second != 0) {
-  //     throw valhalla_exception_t(450);
-  //   }
-  // }
+  for (auto const& v : this->outEdges) {
+    if (v.second != 0) {
+      throw valhalla_exception_t(450);
+    }
+  }
   return this->reversedEulerPath;
 }
 
