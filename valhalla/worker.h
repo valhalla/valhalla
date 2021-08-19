@@ -132,6 +132,8 @@ const std::unordered_map<unsigned, std::string> error_codes{
           "documentation for valid shape_match input."},
 
     {450, "Can not find the routing path because the graph is not strongly connected"},
+    {451,
+     "Failed to find the nearest road for origin or destination because they are outside the Chinese polygon or too close to the polygon's edge."},
 
     {499, "Unknown"},
 
