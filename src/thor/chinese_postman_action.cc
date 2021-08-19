@@ -266,7 +266,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
       auto* path_edge = loc->add_path_edges();
       path_edge->set_distance(0);
       path_edge->set_begin_node(true);
-      path_edge->set_end_node(false); // It should not be like this
+      path_edge->set_end_node(false);
       loc->mutable_ll()->set_lng(ll.first);
       loc->mutable_ll()->set_lat(ll.second);
       path_edge->set_graph_id(edge_id);
