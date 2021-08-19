@@ -32,8 +32,8 @@ std::vector<std::pair<int, int>> getNodePairs(PathMatrix pathMatrix, int startIn
   std::vector<std::pair<int, int>> nodePairs;
   auto path = pathMatrix[startIndex][endIndex];
   if (path.size() == 0) {
-    std::cout << "path size is empty"
-              << "\n";
+    // std::cout << "path size is empty"
+    //           << "\n";
     // Find route here
     nodePairs.push_back(make_pair(startIndex, endIndex));
   } else {
@@ -178,7 +178,6 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
     CPVertex* cp_vertex = G.getCPVertex(i);
     GraphId g(cp_vertex->graph_id);
     auto l = getPointLL(g, *reader);
-    std::cout << i << ": " << l.first << ", " << l.second << "\n";
     i++;
     Location loc = Location();
 
@@ -288,18 +287,18 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 
   auto x = locations_.begin();
   auto y = std::next(x);
-  std::cout << "Start location: " << x->ll().lng() << ", " << x->ll().lat() << "\n";
-  std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
+  // std::cout << "Start location: " << x->ll().lng() << ", " << x->ll().lat() << "\n";
+  // std::cout << "End location: " << y->ll().lng() << ", " << y->ll().lat() << "\n";
   thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *x, *y, options);
-  std::cout << "Chosen path algorithm: " << path_algorithm->name() << "\n";
+  // std::cout << "Chosen path algorithm: " << path_algorithm->name() << "\n";
   auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
   path_algorithm->Clear();
   // Only take the first path (there is only one path)
   auto path = paths[0];
-  std::cout << "out poly path size: " << path.size() << "\n";
+  // std::cout << "out poly path size: " << path.size() << "\n";
   for (auto p : path) {
     edge_graph_ids.push_back(p.edgeid);
-    std::cout << "edge: " << p.edgeid << "\n";
+    // std::cout << "edge: " << p.edgeid << "\n";
   }
 
   return edge_graph_ids;
@@ -317,10 +316,10 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
     }
     auto cpEdge = G.getCPEdge(*it, *(it + 1));
     if (cpEdge) {
-      std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
+      // std::cout << "Edge found for " << *it << " and " << *(it + 1) << "\n";
       eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
     } else {
-      std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
+      // std::cout << "No edge found for " << *it << " and " << *(it + 1) << "\n";
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
       auto fullRoute =
@@ -492,9 +491,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     // }
 
     // Check if the graph is not strongly connected
-    if (!isStronglyConnectedGraph(distanceMatrix)) {
-      throw valhalla_exception_t(450);
-    }
+    // if (!isStronglyConnectedGraph(distanceMatrix)) {
+    //   throw valhalla_exception_t(450);
+    // }
 
     // Do matching here
 
@@ -549,7 +548,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
-    std::cout << "Total cost of hungarian algorithm: " << cost << "\n";
     std::vector<std::pair<int, int>> extraPairs;
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
       // Get node's index for that pair

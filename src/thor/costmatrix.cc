@@ -160,13 +160,10 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // Form the time, distance matrix from the destinations list
   uint32_t idx = 0;
   std::vector<TimeDistance> td;
-  std::cout << "result CostMatrix: \n";
   for (const auto& connection : best_connection_) {
-    std::cout << std::round(connection.cost.secs) << ", " << std::round(connection.distance) << "; ";
     td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
     idx++;
   }
-  std::cout << "\n";
   return td;
 }
 
