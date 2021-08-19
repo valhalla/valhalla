@@ -64,18 +64,18 @@ rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(TaggedValues, ZLevel) {
+TEST_F(TaggedValues, Layer) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
-  auto get_z_level = [&](auto from, auto to) {
+  auto get_layer = [&](auto from, auto to) {
     auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
-    return graphreader.edgeinfo(edgeId).z_level();
+    return graphreader.edgeinfo(edgeId).layer();
   };
-  EXPECT_EQ(get_z_level("A", "B"), 0);
-  EXPECT_EQ(get_z_level("B", "C"), -3);
-  EXPECT_EQ(get_z_level("C", "D"), -2);
-  EXPECT_EQ(get_z_level("D", "E"), -1);
-  EXPECT_EQ(get_z_level("B", "G"), 2);
+  EXPECT_EQ(get_layer("A", "B"), 0);
+  EXPECT_EQ(get_layer("B", "C"), -3);
+  EXPECT_EQ(get_layer("C", "D"), -2);
+  EXPECT_EQ(get_layer("D", "E"), -1);
+  EXPECT_EQ(get_layer("B", "G"), 2);
 }
 
 TEST_F(TaggedValues, Tunnel) {
@@ -86,19 +86,19 @@ TEST_F(TaggedValues, Tunnel) {
   EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
 
   EXPECT_EQ(leg.node(1).edge().tunnel(), true);
-  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).type(), TaggedValue_Type_kZLevel);
+  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
   EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).value(), std::string(1, char(-3)));
   EXPECT_EQ(leg.node(1).edge().tagged_value().Get(1).type(), TaggedValue_Type_kTunnel);
   EXPECT_EQ(leg.node(1).edge().tagged_value().Get(1).value(), "Fort McHenry Tunnel");
 
   EXPECT_EQ(leg.node(2).edge().tunnel(), true);
-  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(0).type(), TaggedValue_Type_kZLevel);
+  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
   EXPECT_EQ(leg.node(2).edge().tagged_value().Get(0).value(), std::string(1, char(-2)));
   EXPECT_EQ(leg.node(2).edge().tagged_value().Get(1).type(), TaggedValue_Type_kTunnel);
   EXPECT_EQ(leg.node(2).edge().tagged_value().Get(1).value(), "Fort McHenry Tunnel");
 
   EXPECT_EQ(leg.node(3).edge().tunnel(), true);
-  EXPECT_EQ(leg.node(3).edge().tagged_value().Get(0).type(), TaggedValue_Type_kZLevel);
+  EXPECT_EQ(leg.node(3).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
   EXPECT_EQ(leg.node(3).edge().tagged_value().Get(0).value(), std::string(1, char(-1)));
   EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).type() == TaggedValue_Type_kTunnel);
   EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).value() == "Fort McHenry Tunnel");

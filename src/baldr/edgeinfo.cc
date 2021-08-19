@@ -197,15 +197,15 @@ std::string EdgeInfo::encoded_shape() const {
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
 }
 
-int8_t EdgeInfo::z_level() const {
+int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
-  auto itr = tags.find(TaggedValue::kZLevel);
+  auto itr = tags.find(TaggedValue::kLayer);
   if (itr == tags.end()) {
     return 0;
   }
   const auto& value = itr->second;
   if (value.size() != 1) {
-    throw std::runtime_error("z-level must contain 1-byte value");
+    throw std::runtime_error("layer must contain 1-byte value");
   }
   return static_cast<int8_t>(value.front());
 }

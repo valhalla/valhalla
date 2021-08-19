@@ -15,9 +15,6 @@ using namespace valhalla::midgard;
  */
 namespace {
 // Defaults thresholds
-// TODO: global stretch parameter should depend on the optimal route cost/duration.
-// For an optimal route that takes 10min it's okay to have an alternative that takes 15min. But
-// it's unreasonable to propose an alternative that takes 15 hours if the optimal one takes 10 hours.
 float kAtMostLonger = 1.25f; // stretch threshold
 // Alternative route shouldn't contain unreasonable detours. We should skip an alternative
 // if it has a detour longer than 2 x cost of the corresponding path in the optimal route.
@@ -52,12 +49,34 @@ float get_max_sharing(const valhalla::Location& origin, const valhalla::Location
   return kAtMostShared;
 }
 
+// Calculate stretch threshold based on the optimal route cost.
+double get_at_most_longer(double optimal_cost) {
+  // < 10min
+  if (optimal_cost < 10. * 60.) {
+    return 2.;
+  }
+  // > 10min and < 5hours
+  if (optimal_cost < 5. * 3600.) {
+    // Coefficients of quadratic hyperbolic function that approximates the following values:
+    // t = [10 * 60, 20 * 60, 30 * 60, 60 * 60, 2 * 3600, 5 * 3600]
+    // y = [2.0,     1.75,    1.5,     1.4,     1.3,      1.25]
+    constexpr double a = 1.21067994e+00;
+    constexpr double b = 7.22941576e+02;
+    constexpr double c = -1.45726221e+05;
+
+    return a + b / optimal_cost + c / (optimal_cost * optimal_cost);
+  }
+  // > 5hours
+  return kAtMostLonger;
+}
+
 // Bounded stretch. We use cost as an approximation for stretch, to filter out
 // candidate connections that are much more costly than the optimal cost. Culls
 // the list of connections to only those within the stretch tolerance
 void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections) {
   std::sort(connections.begin(), connections.end());
-  auto max_cost = connections.front().cost * kAtMostLonger;
+  const float at_most_longer = get_at_most_longer(connections.front().cost);
+  auto max_cost = connections.front().cost * at_most_longer;
   auto new_end = std::lower_bound(connections.begin(), connections.end(), max_cost);
   connections.erase(new_end, connections.end());
 }

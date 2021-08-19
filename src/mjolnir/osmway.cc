@@ -94,8 +94,8 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
-void OSMWay::set_z_level(int8_t z_level) {
-  z_level_ = z_level;
+void OSMWay::set_layer(int8_t layer) {
+  layer_ = layer;
 }
 
 // Get the names for the edge info based on the road class.
@@ -189,8 +189,8 @@ std::vector<std::string> OSMWay::GetTaggedValues(const UniqueNames& name_offset_
     }
   }
 
-  if (z_level_ != 0) {
-    names.emplace_back(encode_tag(TaggedValue::kZLevel) + static_cast<char>(z_level_));
+  if (layer_ != 0) {
+    names.emplace_back(encode_tag(TaggedValue::kLayer) + static_cast<char>(layer_));
   }
 
   return names;
