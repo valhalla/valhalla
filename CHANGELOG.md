@@ -19,6 +19,9 @@
    * CHANGED: Fixed cost threshold fot bidirectional astar. Implemented reach-based pruning for suboptimal branches [#3257](https://github.com/valhalla/valhalla/pull/3257)
    * ADDED: Added `exclude_unpaved` request parameter [#3240](https://github.com/valhalla/valhalla/pull/3240)
    * ADDED: Add Z-level field to `EdgeInfo`. [#3261](https://github.com/valhalla/valhalla/pull/3261)
+   * CHANGED: Calculate stretch threshold for alternatives based on the optimal route cost [#3276](https://github.com/valhalla/valhalla/pull/3276)
+   * ADDED: Add `preferred_z_level` as a parameter of loki requests. [#3270](https://github.com/valhalla/valhalla/pull/3270)
+   * ADDED: Add `preferred_layer` as a parameter of loki requests. [#3270](https://github.com/valhalla/valhalla/pull/3270)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**

@@ -188,11 +188,11 @@ public:
   std::string encoded_shape() const;
 
   /**
-   * Get Z-level of the edge relatively to other edges. Can be negative.
+   * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
    * @see https://wiki.openstreetmap.org/wiki/Key:layer
-   * @return Z-level of the edge
+   * @return layer index of the edge
    */
-  int8_t z_level() const;
+  int8_t layer() const;
 
   /**
    * Returns json representing this object
