@@ -456,7 +456,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time() && options.date_time_type() != valhalla::Options::invariant && options.date_time_type() != valhalla::Options::current) {
+      if (destination->has_date_time() && options.date_time_type() != valhalla::Options::invariant &&
+          options.date_time_type() != valhalla::Options::current) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
@@ -600,7 +601,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time() && options.date_time_type() != valhalla::Options::invariant && options.date_time_type() != valhalla::Options::current) {
+      if (origin->has_date_time() && options.date_time_type() != valhalla::Options::invariant &&
+          options.date_time_type() != valhalla::Options::current) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);
