@@ -505,7 +505,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (intersecting_edge->has_sign()) {
           const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
           // I've looked at the results from guide_destinations(), destinations(), and
-          // exit_destinations(). exit_destinations() doe not contain rest-area names.
+          // exit_destinations(). exit_destinations() does not contain rest-area names.
           // guide_destinations() and destinations() return the same string value for
           // the rest area name. So I've decided to use guide_destinations().
           sign_text = guide_destinations(trip_leg_sign);
