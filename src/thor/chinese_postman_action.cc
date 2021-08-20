@@ -342,13 +342,12 @@ void thor_worker_t::chinese_postman(Api& request) {
   midgard::PointLL destinationPoint = to_ll(destinationLocation);
 
   ChinesePostmanGraph G;
-  // Only for auto for now
-  const auto& costing_ = mode_costing[Costing::auto_];
 
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing_str = parse_costing(request);
   auto& options = *request.mutable_options();
+  const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
 
   auto* co = options.mutable_costing_options(options.costing());
   std::list<std::string> avoid_edge_ids;
