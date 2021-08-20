@@ -455,4 +455,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanMatrix) {
   test_request_matrix(chinese_postman_map, GetParam(), "GHFEDCBA", "GHFEDCBA");
 }
 
-INSTANTIATE_TEST_SUITE_P(ChinesePostmanProfilesTest, ChinesePostmanTest, ::testing::Values("auto"));
+INSTANTIATE_TEST_SUITE_P(
+    ChinesePostmanProfilesTest,
+    ChinesePostmanTest,
+    ::testing::Values("auto", "truck", "motorcycle", "motor_scooter", "hov", "taxi", "bus"));
