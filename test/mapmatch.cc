@@ -287,6 +287,16 @@ TEST(Mapmatch, test_matcher) {
       std::cout << geojson << std::endl;
       FAIL() << "The match did not match the walk";
     }
+
+    for (const auto& point : matched.get_child("matched_points")) {
+      auto const edge_index = point.second.get<uint64_t>("edge_index");
+      auto const match_type = point.second.get<std::string>("type");
+
+      if (match_type == "matched" && edge_index == meili::kInvalidEdgeIndex)
+        FAIL() << "Bad edge index for matched point.";
+      if (match_type == "unmatched" && edge_index != meili::kInvalidEdgeIndex)
+        FAIL() << "Bad edge index for ummatched point.";
+    }
     ++tested;
   }
 }
@@ -305,6 +315,31 @@ TEST(Mapmatch, test_distance_only) {
       names.insert(name.second.get_value<std::string>());
   EXPECT_NE(names.find("Jan Pieterszoon Coenstraat"), names.end())
       << "Using distance only it should have taken a small detour";
+}
+
+TEST(Mapmatch, test_matched_points) {
+  tyr::actor_t actor(conf, true);
+  auto matched = test::json_to_pt(actor.trace_attributes(
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+
+  auto const edges_number = matched.get_child("edges").size();
+  std::vector<size_t> edge_indexes;
+  for (const auto& point : matched.get_child("matched_points")) {
+    auto const match_type = point.second.get<std::string>("type");
+    auto const edge_index = point.second.get<uint64_t>("edge_index");
+    edge_indexes.push_back(edge_index);
+
+    if (match_type == "matched" && edge_index == meili::kInvalidEdgeIndex)
+      FAIL() << "Bad edge index for matched point.";
+    if (match_type == "unmatched" && edge_index != meili::kInvalidEdgeIndex)
+      FAIL() << "Bad edge index for ummatched point.";
+  }
+  EXPECT_EQ(edge_indexes[0], 0);
+  EXPECT_EQ(edge_indexes.back(), edges_number - 1);
 }
 
 TEST(Mapmatch, test_trace_route_breaks) {
