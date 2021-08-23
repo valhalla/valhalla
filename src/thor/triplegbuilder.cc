@@ -454,6 +454,8 @@ void CopyLocations(TripLeg& trip_path,
     });
     pe = found;
     RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
+    std::cout << "#################################CopyLocations :: " << tp_through->ll().lat()
+              << ", " << tp_through->ll().lng() << std::endl;
   }
 
   // destination
@@ -1335,7 +1337,7 @@ void TripLegBuilder::Build(
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* intermediate_locs) {
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1446,6 +1448,15 @@ void TripLegBuilder::Build(
 
   // prepare to make some edges!
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
+
+  // Create an iterator for the list of through locations
+  auto& intermediate_locs_iterator = throughs.begin();
+  // There will be times when there is no shape index set on the through locso we will skip those
+  while (intermediate_locs_iterator != throughs.end() &&
+         !intermediate_locs_iterator->has_leg_shape_index()) {
+    ++intermediate_locs_iterator;
+  }
+
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
@@ -1538,12 +1549,11 @@ void TripLegBuilder::Build(
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
-    // Process the shape for edges where a route discontinuity occurs
+    // Process the shape for edges where an intermediate location occurs
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
 
-    if (intermediate_locs && !intermediate_locs->empty() &&
-        intermediate_locs->count(edge_index) > 0) {
+    if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
@@ -1551,18 +1561,37 @@ void TripLegBuilder::Build(
       }
 
       // Grab the edge begin and end info
-      auto& edge_begin_info = intermediate_locs->at(edge_index).first;
-      auto& edge_end_info = intermediate_locs->at(edge_index).second;
+      auto& edge_begin_info = edge_trimming->at(edge_index).first;
+      auto& edge_end_info = edge_trimming->at(edge_index).second;
+      std::cout << "######################################## edge_begin_info intermediate vertex:: "
+                << edge_begin_info.vertex.first << ", " << edge_begin_info.vertex.second << std::endl;
+      std::cout
+          << "######################################## edge_begin_info intermediate distance_along:: "
+          << edge_begin_info.distance_along << std::endl;
+
+      std::cout << "######################################## edge_end_info intermediate vertex:: "
+                << edge_end_info.vertex.first << ", " << edge_end_info.vertex.second << std::endl;
+      std::cout
+          << "######################################## edge_end_info intermediate distance_along:: "
+          << edge_end_info.distance_along << std::endl;
 
       // Handle partial shape for first edge
       if (is_first_edge && !edge_begin_info.trim) {
         edge_begin_info.trim = true;
         edge_begin_info.distance_along = start_pct;
         edge_begin_info.vertex = start_vrt;
+        std::cout << "######################################## HANDLE PARTIAL SHAPE FOR EDGE 1:: "
+                  << std::endl;
       } // No trimming needed
       else if (!edge_begin_info.trim) {
         edge_begin_info.distance_along = 0;
         edge_begin_info.vertex = edge_shape.front();
+        std::cout << "######################################## edge_begin_info origin vertex:: "
+                  << edge_begin_info.vertex.first << ", " << edge_begin_info.vertex.second
+                  << std::endl;
+        std::cout
+            << "######################################## edge_begin_info origin distance_along:: "
+            << edge_begin_info.distance_along << std::endl;
       }
 
       // Handle partial shape for last edge
@@ -1570,10 +1599,17 @@ void TripLegBuilder::Build(
         edge_end_info.trim = true;
         edge_end_info.distance_along = end_pct;
         edge_end_info.vertex = end_vrt;
+        std::cout << "######################################## HANDLE PARTIAL SHAPE FOR EDGE 2:: "
+                  << std::endl;
       } // No trimming needed
       else if (!edge_end_info.trim) {
         edge_end_info.distance_along = 1;
         edge_end_info.vertex = edge_shape.back();
+        std::cout << "######################################## edge_end_info destination vertex:: "
+                  << edge_end_info.vertex.first << ", " << edge_end_info.vertex.second << std::endl;
+        std::cout
+            << "######################################## edge_end_info destination distance_along:: "
+            << edge_end_info.distance_along << std::endl;
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
@@ -1592,7 +1628,7 @@ void TripLegBuilder::Build(
 
       // If edge_begin_info.trim and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
-      // of discontinuity
+      // of through/via
       if (edge_begin_info.trim && !is_first_edge) {
         ++begin_index;
       }
@@ -1630,15 +1666,19 @@ void TripLegBuilder::Build(
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
 
-    // We are looping the intermediate locs on the edge and if the edge id matches the loc edge id,
-    // Lets keep track of all the intermediate locations with an iterator and as we hit the edge index
-    // that matches that locations edge index we marked here right after we put the shape in there,
-    // we set the shape index.
-    for (auto& through : throughs) {
-      if (through.path_edges().begin()->graph_id() ==
-          intermediate_locs->at(edge).first.location_index) {
-        auto shape_index = intermediate_locs->at(edge).first.location_index;
-        std::cout << ">>>>>>>>>>>>>>>>THROUGH LOCS SHAPE INDEX: " << shape_index << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>> edge_index: " << edge_index << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>> intermediate_locs_iterator->leg_shape_index: "
+              << intermediate_locs_iterator->leg_shape_index() << std::endl;
+    // If we hit the edge index that matches our through location edge index, we need to reset to the
+    // shape index then increment the iterator
+    if (intermediate_locs_iterator != throughs.end() &&
+        intermediate_locs_iterator->leg_shape_index() == edge_index) {
+      *intermediate_locs_iterator->mutable_leg_shape_index() = trip_shape.size() - 1;
+      ++intermediate_locs_iterator;
+      // There will be times when there is no shape index set on the through locso we will skip those
+      while (intermediate_locs_iterator != throughs.end() &&
+             !intermediate_locs_iterator->has_leg_shape_index()) {
+        ++intermediate_locs_iterator;
       }
     }
 

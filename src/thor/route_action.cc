@@ -28,12 +28,12 @@ namespace {
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
 
 /**
- * Check if the paths meet at opposing edges (but not at a node). If so, add a route discontinuity
+ * Check if the paths meet at opposing edges (but not at a node). If so, add an intermediate location
  * so that the shape / distance along the path is adjusted at the location.
  */
 void intermediate_loc_edge_trimming(
     GraphReader& reader,
-    const valhalla::Location& loc,
+    valhalla::Location& loc,
     const GraphId& in,
     const GraphId& out,
     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& intermediate_locs,
@@ -48,14 +48,14 @@ void intermediate_loc_edge_trimming(
                    [&out](const valhalla::Location::PathEdge& e) { return e.graph_id() == out; });
 
   // Could not find the edges. This seems like it should not happen. Log a warning
-  // and do not add a discontinuity.
+  // and do not insert an intermediate location.
   if (in_pe == loc.path_edges().end() || out_pe == loc.path_edges().end()) {
     LOG_WARN("Could not find connecting edges within the intermediate loc edge trimming");
     return;
   }
 
-  // Do not add a discontinuity if the connections are at a graph node we dont need to signal a
-  // discontinuity.
+  // Do not add an intermediate location if the connections are at a graph node we dont need to signal
+  // a through/via.
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
     return;
   }
@@ -63,56 +63,49 @@ void intermediate_loc_edge_trimming(
   PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
   double dist_along = in_pe->percent_along();
 
+  /************************************* MAY NEED THIS LATER
+   * *******************************************/
   // Special case : When you have a single edge route, and you have multiple throughs/vias
   // along it. In this case you need to trim both sides of an edge before you add it if you are
   // continuing on the same edge.
   /*if (loc.path_edges_size() == 1 && (std::next(loc.path_edges().begin()) != loc.path_edges().end()))
   {
-          // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
-  & end
+          // Insert an intermediate location so the last edge of the first segment is trimmed at the
+  beginning & end
           // from 0 to dist_along. Set the first
           intermediate_locs.insert({path_index + (flip_index ? 1 : 0),
-                                   {{true, PointLL(), 0.0, path_index}, {true, snap_ll, dist_along,
-  path_index}}});
+                                   {{true, PointLL(), 0.0, path.size() - 1}, {true, snap_ll,
+  dist_along, path.size() - 1}}});
 
-          // Insert a second discontinuity so the next (opposing) edge is trimmed at the beginning &
-  end from
+          // Insert a second intermediate location so the next (opposing) edge is trimmed at the
+  beginning & end from
           // 1-dist along to 1
           intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
-                                   {{true, snap_ll, 1.0 - dist_along, path_index}, {true,
-  PointLL(), 1.0, path_index}}}); } else {*/
-  // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
+                                   {{true, snap_ll, 1.0 - dist_along, path.size() - 1}, {true,
+  PointLL(), 1.0, path.size() - 1}}}); } else {*/
+  /********************************************************************************************************/
+  // Insert an intermediate location so the last edge of the first segment is trimmed at the beginning
   // from 0 to dist_along. Set the first
-  intermediate_locs.insert(
-      {path_index + (flip_index ? 1 : 0),
-       {{false, PointLL(), 0.0, path_index}, {true, snap_ll, dist_along, path_index}}});
-
-  // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
-  // 1-dist along to 1
-  intermediate_locs.insert(
-      {path_index + (flip_index ? 0 : 1),
-       {{true, snap_ll, 1.0 - dist_along, path_index}, {false, PointLL(), 1.0, path_index}}});
-  //}
-  for (auto& intermediate_loc : intermediate_locs) {
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming ::"
-              << intermediate_loc.second.first.trim << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming vertex ::"
-              << intermediate_loc.second.first.vertex.lat() << ", "
-              << intermediate_loc.second.first.vertex.lng() << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming distance_along ::"
-              << intermediate_loc.second.first.distance_along << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming path_index ::"
-              << intermediate_loc.second.first.location_index << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming 2::"
-              << intermediate_loc.second.second.trim << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming 2 vertex ::"
-              << intermediate_loc.second.second.vertex.lat() << ", "
-              << intermediate_loc.second.second.vertex.lng() << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming 2 distance_along ::"
-              << intermediate_loc.second.second.distance_along << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>intermediate_loc_edge_trimming 2 path_index ::"
-              << intermediate_loc.second.second.location_index << std::endl;
+  // flip_index depends on arrive by or depart_at
+  auto inserted = intermediate_locs.insert(
+      {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+  // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+  // shape index
+  if (!flip_index) {
+    *loc.mutable_leg_shape_index() = inserted.first->first;
   }
+
+  // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
+  // 1-dist along to 1
+  // flip_index depends on arrive by or depart_at
+  inserted = intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
+                                       {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+  // shape index
+  if (flip_index) {
+    *loc.mutable_leg_shape_index() = inserted.first->first;
+  }
+  //}
 }
 
 inline bool is_through_point(const valhalla::Location& l) {
@@ -461,8 +454,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   // Things we'll need
   TripRoute* route = nullptr;
   GraphId first_edge;
-  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>
-      intermediate_locs_edge_trimming;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
@@ -508,10 +500,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
         // We should build edge_trimming objects for every via and through
         // location regardless of what the resulting path is.
-        // Insert a route discontinuity if the paths meet at opposing edges and not
-        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+        // Insert an intermediate location if the paths meet at opposing edges and not
+        // at a graph node. Use path size - 1 as the index where the through/via lies.
         intermediate_loc_edge_trimming(*reader, *origin, path.back().edgeid, temp_path.front().edgeid,
-                                       intermediate_locs_edge_trimming, path.size() - 1, false);
+                                       edge_trimming, path.size() - 1, false);
 
         path.insert(path.end(), temp_path.begin(), temp_path.end());
       }
@@ -524,14 +516,18 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         while (!is_break_point(*destination)) {
           throughs.push_back(*destination);
           --destination;
+          if (throughs.back().has_leg_shape_index()) {
+            *throughs.back().mutable_leg_shape_index() =
+                path.size() - throughs.back().leg_shape_index();
+          }
         }
 
         // We have to flip the intermediate loc indices because we built them in backwards order
-        std::remove_reference<decltype(intermediate_locs_edge_trimming)>::type flipped;
-        flipped.reserve(intermediate_locs_edge_trimming.size());
-        for (const auto& kv : intermediate_locs_edge_trimming)
+        std::remove_reference<decltype(edge_trimming)>::type flipped;
+        flipped.reserve(edge_trimming.size());
+        for (const auto& kv : edge_trimming)
           flipped.emplace(path.size() - kv.first, kv.second);
-        intermediate_locs_edge_trimming.swap(flipped);
+        edge_trimming.swap(flipped);
 
         // Form output information based on path edges
         if (trip.routes_size() == 0 || options.alternates() > 0) {
@@ -548,9 +544,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           }
         }
         std::cout << "#################################path_arrive_by intermediate_loc'S size :: "
-                  << intermediate_locs_edge_trimming.size() << std::endl;
-        if (intermediate_locs_edge_trimming.size() > 0) {
-          for (auto& intermediate_loc : intermediate_locs_edge_trimming) {
+                  << edge_trimming.size() << std::endl;
+        if (edge_trimming.size() > 0) {
+          for (auto& intermediate_loc : edge_trimming) {
             std::cout
                 << "#################################path_arrive_by intermediate_loc lat,lng :: "
                 << intermediate_loc.second.first.vertex.lat() << ", "
@@ -563,9 +559,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         }
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                               *origin, *destination, throughs, leg, algorithms, interrupt,
-                              &intermediate_locs_edge_trimming);
+                              &edge_trimming);
         path.clear();
-        intermediate_locs_edge_trimming.clear();
+        edge_trimming.clear();
       }
     }
 
@@ -605,7 +601,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // over from the beginning doing all the legs over
         route = nullptr;
         first_edge = {};
-        intermediate_locs_edge_trimming.clear();
+        edge_trimming.clear();
         path.clear();
         algorithms.clear();
         trip.mutable_routes()->Clear();
@@ -627,8 +623,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // Things we'll need
   TripRoute* route = nullptr;
   GraphId last_edge;
-  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>
-      intermediate_locs_edge_trimming;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
@@ -649,7 +644,6 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       remove_path_edges(*origin,
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
-
     // Get best path and keep it
     auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
     if (temp_paths.empty())
@@ -674,10 +668,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
         // We should build edge_trimming objects for every via and through
         // location regardless of what the resulting path is.
-        // Insert a route discontinuity if the paths meet at opposing edges and not
-        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+        // Insert an intermediate location if the paths meet at opposing edges and not
+        // at a graph node. Use path size - 1 as the index where the through/via lies.
         intermediate_loc_edge_trimming(*reader, *origin, path.back().edgeid, temp_path.front().edgeid,
-                                       intermediate_locs_edge_trimming, path.size() - 1, false);
+                                       edge_trimming, path.size() - 1, false);
 
         path.insert(path.end(), temp_path.begin(), temp_path.end());
       } // Didnt need to merge
@@ -695,41 +689,19 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           --origin;
         }
 
-        // Form output information based on path edges. vias are a route discontinuity map
+        // Form output information based on path edges.
         if (trip.routes_size() == 0 || options.alternates() > 0) {
           route = trip.mutable_routes()->Add();
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
-        if (throughs.size() > 0) {
-          std::cout << "#################################path_depart_at THROUGHS size :: "
-                    << throughs.size() << std::endl;
-          for (auto& through : throughs) {
-            std::cout << "#################################path_depart_at through lat,lng :: "
-                      << through.ll().lat() << ", " << through.ll().lng() << std::endl;
-          }
-        }
-        if (intermediate_locs_edge_trimming.size() > 0) {
-          std::cout << "#################################path_depart_at intermediate_loc'S size :: "
-                    << intermediate_locs_edge_trimming.size() << std::endl;
-          for (auto& intermediate_loc : intermediate_locs_edge_trimming) {
-            std::cout
-                << "#################################path_depart_at intermediate_loc lat,lng :: "
-                << intermediate_loc.second.first.vertex.lat() << ", "
-                << intermediate_loc.second.first.vertex.lng() << std::endl;
-            std::cout
-                << "#################################path_depart_at intermediate_loc lat,lng :: "
-                << intermediate_loc.second.second.vertex.lat() << ", "
-                << intermediate_loc.second.second.vertex.lng() << std::endl;
-          }
-        }
+
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, throughs, leg, algorithms,
-                                    interrupt, &intermediate_locs_edge_trimming);
-        std::cout << "####################### END path size" << path.size() << std::endl;
+                                    interrupt, &edge_trimming);
 
         path.clear();
-        intermediate_locs_edge_trimming.clear();
+        edge_trimming.clear();
       }
     }
 
@@ -768,7 +740,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         // over from the beginning doing all the legs over
         route = nullptr;
         last_edge = {};
-        intermediate_locs_edge_trimming.clear();
+        edge_trimming.clear();
         path.clear();
         algorithms.clear();
         trip.mutable_routes()->Clear();

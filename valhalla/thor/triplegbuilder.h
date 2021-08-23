@@ -25,7 +25,6 @@ struct EdgeTrimmingInfo {
   bool trim;
   midgard::PointLL vertex;
   double distance_along;
-  size_t location_index;
 };
 
 /**
@@ -64,7 +63,7 @@ public:
                     const std::vector<std::string>& algorithms,
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        intermediate_locs = nullptr);
+                        edge_trimming = nullptr);
 };
 
 } // namespace thor
