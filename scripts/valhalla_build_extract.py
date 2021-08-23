@@ -20,7 +20,7 @@ STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 INDEX_FILE = "index.bin"
 TAR_ARCNAME_DIR = Path('valhalla_tiles')
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description=description)
 parser.add_argument("-c", "--config", help="Absolute or relative path to the Valhalla config JSON.", type=Path)
 parser.add_argument("-v", "--verbosity", help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG", action='count', default=0)
 
