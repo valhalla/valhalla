@@ -46,22 +46,7 @@ def get_tile_info(in_path: Path, tiles: dict):
             tiles[p.resolve()] = get_padded_tar_size(p.stat().st_size)
 
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-    with open(args.config) as f:
-        config = json.load(f)
-    index_fp: Path = args.config.parent.joinpath(INDEX_FILE)
-    extract_fp: Path = Path(config["mjolnir"]["tile_extract"])
-    tiles_fp: Path = Path(config["mjolnir"]["tile_dir"])
-
-    # set the right logger level
-    if args.verbosity == 0:
-        LOGGER.setLevel(logging.CRITICAL)
-    elif args.verbosity == 1:
-        LOGGER.setLevel(logging.INFO)
-    elif args.verbosity >= 2:
-        LOGGER.setLevel(logging.DEBUG)
-
+def create_extract(tiles_fp: Path, extract_fp: Path):
     if tiles_fp.exists() and tiles_fp.is_dir():
         # collect the tile paths and file sizes
         files_stats: Dict[Path, int] = dict()
@@ -91,8 +76,6 @@ if __name__ == '__main__':
         LOGGER.critical(f"Neither 'tile_extract': {extract_fp} nor 'tile_dir': {tiles_fp} were found on the filesystem.")
         sys.exit(1)
 
-
-
     # build the tar with the index file as the first one
     index_bin_fd = BytesIO(index_bin)
     index_bin_fd.seek(0)
@@ -113,6 +96,25 @@ if __name__ == '__main__':
     index_bin_fd.close()
 
     print(f"Finished tarring {len(files_stats)} files: {extract_fp}")
+
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    with open(args.config) as f:
+        config = json.load(f)
+    extract_fp: Path = Path(config["mjolnir"]["tile_extract"])
+    tiles_fp: Path = Path(config["mjolnir"]["tile_dir"])
+
+    # set the right logger level
+    if args.verbosity == 0:
+        LOGGER.setLevel(logging.CRITICAL)
+    elif args.verbosity == 1:
+        LOGGER.setLevel(logging.INFO)
+    elif args.verbosity >= 2:
+        LOGGER.setLevel(logging.DEBUG)
+
+    create_extract(tiles_fp, extract_fp)
+
 
     ### logic for existing tar file, not sure if necessary ####
 
