@@ -594,6 +594,7 @@ protected:
 
 struct tar {
   struct header_t {
+    // 512 byte "block" size
     char name[100];
     char mode[8];
     char uid[8];

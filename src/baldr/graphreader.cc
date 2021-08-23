@@ -41,17 +41,27 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
-      // map files to graph ids
-      for (auto& c : archive->contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {
-          // It's possible to put non-tile files inside the tarfile.  As we're only
-          // parsing the file *name* as a GraphId here, we will just silently skip
-          // any file paths that can't be parsed by GraphId::GetTileId()
-          // If we end up with *no* recognizable tile files in the tarball at all,
-          // checks lower down will warn on that.
+      // map files to graph ids: use precomputed index.bin if available, else scan the tar
+      auto first_file = archive->contents.find("index.bin");
+      if (first_file != archive->contents.end()) {
+        // TODO: read the file contents from the tar
+        // open file with ofstream, seek sizeof(tar::header_t)
+        // then loop through in 12 byte packets until archive->contents->second->second (file size) is
+        // reached; get the tile_id and compute the position (without header) & size from the offsets
+        //
+        // https://www.cs.uaf.edu/2010/spring/cs202/lecture/02_04_binary_IO.html
+      } else {
+        for (auto& c : archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // It's possible to put non-tile files inside the tarfile.  As we're only
+            // parsing the file *name* as a GraphId here, we will just silently skip
+            // any file paths that can't be parsed by GraphId::GetTileId()
+            // If we end up with *no* recognizable tile files in the tarball at all,
+            // checks lower down will warn on that.
+          }
         }
       }
       // couldn't load it

@@ -71,6 +71,8 @@ if __name__ == '__main__':
         tiles_stats: Dict[Path, int] = dict()
         get_tile_info(tiles_fp, tiles_stats)
 
+        print(tiles_stats)
+
         index_size = STRUCT_SIZE * len(tiles_stats)
         index_bin = b''
         offset = get_padded_tar_size(index_size)  # initialize with the index file size inside the tar
