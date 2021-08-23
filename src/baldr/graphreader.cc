@@ -47,18 +47,23 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       fin.read((char*)&first_header, sizeof(tar::header_t));
       if (first_header.verify() &&
           std::strstr(const_cast<char*>(first_header.name), "valhalla_tiles/index.bin")) {
-        // auto position = sizeof(tar::header_t);
         fin.seekg(sizeof(tar::header_t));
-        auto position = fin.tellg();
-        while (fin.tellg() != first_header.get_file_size() + sizeof(tar::header_t)) {
+        auto index_size = first_header.get_file_size();
+        auto block_size = sizeof(tar::header_t);
+        // the position of the first tile is after the index file
+        auto remainder = index_size % block_size;
+        auto tile_pos =
+            block_size + index_size + block_size - (remainder == 0 ? block_size : remainder);
+        while (fin.tellg() != first_header.get_file_size() + block_size) {
           uint32_t tile_id = 0;
-          uint64_t padded_tile_size = 0;
+          uint64_t tile_padded_size = 0;
           fin.read(reinterpret_cast<char*>(&tile_id), sizeof(tile_id));
-          fin.read(reinterpret_cast<char*>(&padded_tile_size), sizeof(padded_tile_size));
+          fin.read(reinterpret_cast<char*>(&tile_padded_size), sizeof(tile_padded_size));
 
-          tiles[tile_id] = std::make_pair(reinterpret_cast<char*>(&position), padded_tile_size);
+          tiles[tile_id] = std::make_pair(reinterpret_cast<char*>(&tile_pos), tile_padded_size);
 
-          position += padded_tile_size;
+          // the parsed tile size includes header & padding
+          tile_pos += tile_padded_size;
         }
       } else {
         // load the tar
