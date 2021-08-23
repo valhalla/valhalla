@@ -55,7 +55,6 @@ def create_extract(tiles_fp: Path, extract_fp: Path):
 
         index_size = STRUCT_SIZE * tiles_count
         index_bin = b''
-        offset = get_padded_tar_size(index_size)  # initialize with the index file size inside the tar
         for tile_path, tile_size in files_stats.items():
             # extract level and ID portion to create a GraphId
             # tile_path is the absolute path to the tile
@@ -67,11 +66,10 @@ def create_extract(tiles_fp: Path, extract_fp: Path):
                 # ignore invalid tile ids, so other files can be tarred
                 continue
 
-            LOGGER.debug(f"Tile {tile_path} (ID {tile_id}) with size: {tile_size}, tar offset: {offset}")
+            LOGGER.debug(f"Tile {tile_path} (ID {tile_id}) with padded tar size: {tile_size}")
 
             # add 4 & 8 byte ints to the index file
-            index_bin += struct.pack(STRUCT_FORMAT, tile_id, offset)
-            offset += tile_size
+            index_bin += struct.pack(STRUCT_FORMAT, tile_id, tile_size)
     else:
         LOGGER.critical(f"Neither 'tile_extract': {extract_fp} nor 'tile_dir': {tiles_fp} were found on the filesystem.")
         sys.exit(1)

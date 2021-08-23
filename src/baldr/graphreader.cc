@@ -37,20 +37,32 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // if you really meant to load it
-  if (pt.get_optional<std::string>("tile_extract")) {
+  auto extract_fp = pt.get_optional<std::string>("tile_extract");
+  if (extract_fp) {
     try {
-      // load the tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
       // map files to graph ids: use precomputed index.bin if available, else scan the tar
-      auto first_file = archive->contents.find("index.bin");
-      if (first_file != archive->contents.end()) {
-        // TODO: read the file contents from the tar
-        // open file with ofstream, seek sizeof(tar::header_t)
-        // then loop through in 12 byte packets until archive->contents->second->second (file size) is
-        // reached; get the tile_id and compute the position (without header) & size from the offsets
-        //
-        // https://www.cs.uaf.edu/2010/spring/cs202/lecture/02_04_binary_IO.html
+      std::ifstream fin(*extract_fp, std::ios::binary);
+
+      tar::header_t first_header;
+      fin.read((char*)&first_header, sizeof(tar::header_t));
+      if (first_header.verify() &&
+          std::strstr(const_cast<char*>(first_header.name), "valhalla_tiles/index.bin")) {
+        // auto position = sizeof(tar::header_t);
+        fin.seekg(sizeof(tar::header_t));
+        auto position = fin.tellg();
+        while (fin.tellg() != first_header.get_file_size() + sizeof(tar::header_t)) {
+          uint32_t tile_id = 0;
+          uint64_t padded_tile_size = 0;
+          fin.read(reinterpret_cast<char*>(&tile_id), sizeof(tile_id));
+          fin.read(reinterpret_cast<char*>(&padded_tile_size), sizeof(padded_tile_size));
+
+          tiles[tile_id] = std::make_pair(reinterpret_cast<char*>(&position), padded_tile_size);
+
+          position += padded_tile_size;
+        }
       } else {
+        // load the tar
+        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
         for (auto& c : archive->contents) {
           try {
             auto id = GraphTile::GetTileId(c.first);
@@ -63,15 +75,17 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
             // checks lower down will warn on that.
           }
         }
-      }
-      // couldn't load it
-      if (tiles.empty()) {
-        LOG_WARN("Tile extract contained no usuable tiles");
-      } // loaded ok but with possibly bad blocks
-      else {
-        LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
-        if (archive->corrupt_blocks) {
-          LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
+        // couldn't load it
+        if (tiles.empty()) {
+          LOG_WARN("Tile extract contained no usuable tiles");
+        } // loaded ok but with possibly bad blocks
+        else {
+          LOG_INFO("Tile extract successfully loaded with tile count: " +
+                   std::to_string(tiles.size()));
+          if (archive->corrupt_blocks) {
+            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
+                     " corrupt blocks");
+          }
         }
       }
     } catch (const std::exception& e) {
