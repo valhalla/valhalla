@@ -50,8 +50,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
         fin.seekg(sizeof(tar::header_t));
         auto index_size = first_header.get_file_size();
         auto block_size = sizeof(tar::header_t);
-        // the position of the first tile is after the index file
         auto remainder = index_size % block_size;
+        // the initial data position is header + index_size + padding
         auto tile_pos =
             block_size + index_size + block_size - (remainder == 0 ? block_size : remainder);
         while (fin.tellg() != first_header.get_file_size() + block_size) {
@@ -60,9 +60,10 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
           fin.read(reinterpret_cast<char*>(&tile_id), sizeof(tile_id));
           fin.read(reinterpret_cast<char*>(&tile_padded_size), sizeof(tile_padded_size));
 
-          tiles[tile_id] = std::make_pair(reinterpret_cast<char*>(&tile_pos), tile_padded_size);
+          // add header size to position, subtract header size from file size
+          tiles[tile_id] = std::make_pair(reinterpret_cast<char*>(&tile_pos + block_size),
+                                          tile_padded_size - block_size);
 
-          // the parsed tile size includes header & padding
           tile_pos += tile_padded_size;
         }
       } else {
