@@ -341,6 +341,7 @@ install(
     scripts/valhalla_build_elevation
     scripts/valhalla_build_transit
     scripts/valhalla_build_timezones
+    scripts/valhalla_build_extract
   DESTINATION "${CMAKE_INSTALL_BINDIR}"
   PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
