@@ -43,10 +43,6 @@ def get_tile_info(in_path: Path, tiles: dict):
         if p.is_dir():
             get_tile_info(p, tiles)
         if p.is_file():
-            if not p.suffix == '.gph':
-                LOGGER.warning(f"Not a graph tile: {p}")
-                continue
-
             tiles[p.resolve()] = get_padded_tar_size(p.stat().st_size)
 
 
@@ -68,20 +64,23 @@ if __name__ == '__main__':
 
     if tiles_fp.exists() and tiles_fp.is_dir():
         # collect the tile paths and file sizes
-        tiles_stats: Dict[Path, int] = dict()
-        get_tile_info(tiles_fp, tiles_stats)
+        files_stats: Dict[Path, int] = dict()
+        get_tile_info(tiles_fp, files_stats)
+        tiles_count = abs(len(list(filter(lambda f: not f.name.endswith('.gph'), files_stats))) - len(files_stats))
 
-        print(tiles_stats)
-
-        index_size = STRUCT_SIZE * len(tiles_stats)
+        index_size = STRUCT_SIZE * tiles_count
         index_bin = b''
         offset = get_padded_tar_size(index_size)  # initialize with the index file size inside the tar
-        for tile_path, tile_size in tiles_stats.items():
+        for tile_path, tile_size in files_stats.items():
             # extract level and ID portion to create a GraphId
             # tile_path is the absolute path to the tile
-            tile_path = str(tile_path.relative_to(tiles_fp))[:-4]
-            level, idx = tile_path.split('/', 1)
-            tile_id = int(level) | (int(idx.replace('/', '')) << 3)
+            try:
+                tile_path = str(tile_path.relative_to(tiles_fp))[:-4]
+                level, idx = tile_path.split('/', 1)
+                tile_id = int(level) | (int(idx.replace('/', '')) << 3)
+            except ValueError:
+                # ignore invalid tile ids, so other files can be tarred
+                continue
 
             LOGGER.debug(f"Tile {tile_path} (ID {tile_id}) with size: {tile_size}, tar offset: {offset}")
 
@@ -92,26 +91,28 @@ if __name__ == '__main__':
         LOGGER.critical(f"Neither 'tile_extract': {extract_fp} nor 'tile_dir': {tiles_fp} were found on the filesystem.")
         sys.exit(1)
 
+
+
     # build the tar with the index file as the first one
     index_bin_fd = BytesIO(index_bin)
     index_bin_fd.seek(0)
     # write max 100 logs
-    reporting_size = int(len(tiles_stats) / 100) or 1
+    reporting_size = int(tiles_count / 100) or 1
     with tarfile.open(extract_fp, 'w') as tar:
         tarinfo = tarfile.TarInfo(str(TAR_ARCNAME_DIR.joinpath(INDEX_FILE)))
         tarinfo.size = index_size
         tar.addfile(tarinfo, index_bin_fd)
 
-        for count, tile_path in enumerate(tiles_stats.keys()):
+        for count, tile_path in enumerate(files_stats.keys()):
             arcname = TAR_ARCNAME_DIR.joinpath(tile_path.relative_to(tiles_fp))
             tar.add(str(tile_path), arcname=str(arcname))
 
             if count % reporting_size == 0:
-                LOGGER.info(f"Tarred {count}/{len(tiles_stats)} tiles.")
+                LOGGER.info(f"Tarred {count + 1}/{len(files_stats)} files.")
 
     index_bin_fd.close()
 
-    print(f"Finished tarring {len(tiles_stats)} tiles: {extract_fp}")
+    print(f"Finished tarring {len(files_stats)} files: {extract_fp}")
 
     ### logic for existing tar file, not sure if necessary ####
 
