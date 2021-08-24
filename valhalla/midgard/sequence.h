@@ -701,7 +701,7 @@ struct tar {
         // the caller may be able to construct the contents via an index header let them try
         if(!tried_index && from_index != nullptr) {
           tried_index = true;
-          contents = from_index(name, position, size);
+          contents = from_index(name, position, size, mm.get());
           // if it was able to intialize from an index we bail
           if(!contents.empty())
             return;
