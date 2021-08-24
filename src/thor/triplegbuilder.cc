@@ -1333,7 +1333,7 @@ void TripLegBuilder::Build(
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,
     valhalla::Location& dest,
-    const std::list<valhalla::Location>& throughs,
+    std::list<valhalla::Location> throughs,
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
@@ -1450,7 +1450,7 @@ void TripLegBuilder::Build(
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
 
   // Create an iterator for the list of through locations
-  auto& intermediate_locs_iterator = throughs.begin();
+  auto intermediate_locs_iterator = throughs.begin();
   // There will be times when there is no shape index set on the through locso we will skip those
   while (intermediate_locs_iterator != throughs.end() &&
          !intermediate_locs_iterator->has_leg_shape_index()) {
@@ -1673,7 +1673,7 @@ void TripLegBuilder::Build(
     // shape index then increment the iterator
     if (intermediate_locs_iterator != throughs.end() &&
         intermediate_locs_iterator->leg_shape_index() == edge_index) {
-      *intermediate_locs_iterator->mutable_leg_shape_index() = trip_shape.size() - 1;
+      intermediate_locs_iterator->set_leg_shape_index(trip_shape.size() - 1);
       ++intermediate_locs_iterator;
       // There will be times when there is no shape index set on the through locso we will skip those
       while (intermediate_locs_iterator != throughs.end() &&

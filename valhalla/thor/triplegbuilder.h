@@ -58,7 +58,7 @@ public:
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,
                     valhalla::Location& dest,
-                    const std::list<valhalla::Location>& throughs,
+                    std::list<valhalla::Location> throughs,
                     TripLeg& trip_path,
                     const std::vector<std::string>& algorithms,
                     const std::function<void()>* interrupt_callback = nullptr,

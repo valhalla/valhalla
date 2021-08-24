@@ -92,7 +92,7 @@ void intermediate_loc_edge_trimming(
   // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
   // shape index
   if (!flip_index) {
-    *loc.mutable_leg_shape_index() = inserted.first->first;
+    loc.set_leg_shape_index(inserted.first->first);
   }
 
   // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
@@ -103,7 +103,7 @@ void intermediate_loc_edge_trimming(
   // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
   // shape index
   if (flip_index) {
-    *loc.mutable_leg_shape_index() = inserted.first->first;
+    loc.set_leg_shape_index(inserted.first->first);
   }
   //}
 }
@@ -298,7 +298,8 @@ void thor_worker_t::centroid(Api& request) {
     auto* route = request.mutable_trip()->mutable_routes()->Add();
     auto& leg = *route->mutable_legs()->Add();
     thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                                *origin, dest, {}, leg, {"centroid"}, interrupt, nullptr);
+                                *origin, dest, std::list<valhalla::Location>{}, leg, {"centroid"},
+                                interrupt, nullptr);
 
     // TODO: set the time at the destination if time dependent
 
@@ -517,8 +518,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           throughs.push_back(*destination);
           --destination;
           if (throughs.back().has_leg_shape_index()) {
-            *throughs.back().mutable_leg_shape_index() =
-                path.size() - throughs.back().leg_shape_index();
+            throughs.back().set_leg_shape_index((path.size() - throughs.back().leg_shape_index()));
           }
         }
 
