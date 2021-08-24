@@ -89,13 +89,16 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   rapidjson::read_json("/home/hainan/hainche/02_gen20xi3/valhalla/data/bw/valhalla_bw.json", pt);
 
-  // // Build the default traffic data with invalid values
-  // test::build_live_traffic_data(pt);
+  // Build the default traffic data with invalid values
+  test::build_live_traffic_data(pt);
 
-  // // update the fake traffic for 5% of edges
-  // customize_traffic_fake(pt, 20);
+  // update the fake traffic for 5% of edges
+  customize_traffic_fake(pt, 20);
 
-  show_traffic_fake(pt);
+  // show the difference between traffic speed and graph speed
+  // show_traffic_fake(pt);
+
+  // customize traffic for single edge
   //   // Boebingen, Lessingstraße: way id: 13865735: 0,621568686498,1,621770013090
   //   auto tgt_edge_id = baldr::GraphId{621568686498};
   //   customize_traffic(pt, tgt_edge_id, 30); // original: 30
