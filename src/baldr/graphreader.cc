@@ -58,6 +58,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       // store this info for ourselves so we dont have to parse tile names again below
       tiles[entry.tile_id] = inserted.first->second;
     }
+    // hand it back to the tar parser
+    return contents;
   };    
     
   // if you really meant to load it
