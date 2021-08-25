@@ -20,11 +20,12 @@ namespace {
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
-    
+
 struct tile_index_entry {
-  uint32_t tile_id; //just level and tileindex hence fitting in 32bits
-  uint64_t offset; //number of bytes offset from the beginning of the tar to the beginning of this tile
-  uint32_t size;   //size of the tile in bytes
+  uint32_t tile_id; // just level and tileindex hence fitting in 32bits
+  uint64_t
+      offset;    // number of bytes offset from the beginning of the tar to the beginning of this tile
+  uint32_t size; // size of the tile in bytes
 };
 
 } // namespace
@@ -43,25 +44,25 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // A lambda for loading the contents of a graph tile tar from an index file
-  auto index_loader = [this](const std::string& filename, const char* position, size_t size, const char* file_begin) -> decltype(midgard::tar::contents) {
+  auto index_loader = [this](const std::string& filename, const char* tar_begin,
+                             size_t size) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
-    if(filename != "index.bin")
-        return {};
-    
+    if (filename != "index.bin")
+      return {};
+
     // get the info
     decltype(midgard::tar::contents) contents;
-    midgard::iterable_t<tile_index_entry> index(position, size);
-    for(const auto& entry : index) {
-      // informs the tar that we parsed the index, even though we write a bogus file name
-      auto inserted = contents.insert(std::to_string(entry.tile_id),
-                        std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size));
-      // store this info for ourselves so we dont have to parse tile names again below
-      tiles[entry.tile_id] = inserted.first->second;
+    tile_index_entry t = {0, 9, 9};
+    for (const auto& entry : midgard::iterable_t<tile_index_entry>(&t, size)) {
+      auto inserted = contents.insert(
+          std::make_pair(std::to_string(entry.tile_id),
+                         std::make_pair(const_cast<char*>(tar_begin + entry.offset), entry.size)));
+      tiles[entry.tile_id] = std::make_pair(const_cast<char*>(tar_begin + entry.offset), entry.size);
     }
     // hand it back to the tar parser
     return contents;
-  };    
-    
+  };
+
   // if you really meant to load it
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
@@ -134,7 +135,6 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   }
 }
 
-  
 // TODO: delete this and call the extract constructor directly from within graphreader
 // before we do this we need to figure out what to do with traffic tile extract
 // they should support index reading as well for fast reload
