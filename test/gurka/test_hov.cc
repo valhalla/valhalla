@@ -199,8 +199,7 @@ protected:
       A-----------------------------------------------------C
       D-----------1--------------------------------2--------F
     )";
-    const gurka::ways ways = {{"AC",
-                               {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
+    const gurka::ways ways = {{"AC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
                               {"DF",
                                {{"highway", "motorway"},
                                 {"oneway", "yes"},
