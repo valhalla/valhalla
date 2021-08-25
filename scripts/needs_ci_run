@@ -104,7 +104,7 @@ if not status:
     sys.exit(0)
 
 # if commit does not exist anymore, dont skip
-if subprocess.run(['git', 'cat-file', '-t', 'last_pr_gitsha'],
+if subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'],
                   capture_output=True,
                   text=True).stdout != 'commit':
     sys.exit(0)

@@ -70,7 +70,8 @@ public:
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
-           const SearchFilter& search_filter = SearchFilter());
+           const SearchFilter& search_filter = SearchFilter(),
+           boost::optional<int8_t> preferred_layer = {});
 
   /**
    * equality.
@@ -116,6 +117,8 @@ public:
 
   // coordinates of the location as used for altering the side of street
   boost::optional<midgard::PointLL> display_latlng_;
+
+  boost::optional<int8_t> preferred_layer_;
 
 protected:
 };

@@ -35,14 +35,14 @@ protected:
                               {"BC",
                                {{"highway", "motorway_link"},
                                 {"service", "rest_area"},
-                                {"destination", "Bear Peak"}}},
+                                {"destination", "Bear Peak Rest Area"}}},
                               {"BD", {{"highway", "motorway"}}},
                               {"DE", {{"highway", "motorway"}}},
                               {"EF",
                                {{"highway", "motorway_link"},
                                 {"service", "rest_area"},
                                 {"amenity", "yes"},
-                                {"destination", "Service Area"}}},
+                                {"destination", "Bear Peak Service Area"}}},
                               {"EG", {{"highway", "motorway"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
@@ -90,7 +90,8 @@ TEST_F(Use, test_passing_rest_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
   EXPECT_TRUE(steps[step_idx]["intersections"][1].HasMember("rest_stop"));
   EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["type"].GetString(), "rest_area");
-  EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["name"].GetString(), "Bear Peak");
+  EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["name"].GetString(),
+               "Bear Peak Rest Area");
 
   // Expect no rest stops on last step
   step_idx++;
@@ -125,10 +126,10 @@ TEST_F(Use, test_entering_rest_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Bear Peak.",
-      "Turn left toward Bear Peak. Then You will arrive at your destination.",
-      "Turn left toward Bear Peak.",
-      "Turn left toward Bear Peak. Then You will arrive at your destination.",
+      result, step_idx, "Turn left toward Bear Peak Rest Area.",
+      "Turn left toward Bear Peak Rest Area. Then You will arrive at your destination.",
+      "Turn left toward Bear Peak Rest Area.",
+      "Turn left toward Bear Peak Rest Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 
   // Expect no rest stops on third step
@@ -158,6 +159,8 @@ TEST_F(Use, test_passing_service_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
   EXPECT_TRUE(steps[step_idx]["intersections"][1].HasMember("rest_stop"));
   EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["type"].GetString(), "service_area");
+  EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["name"].GetString(),
+               "Bear Peak Service Area");
 
   // Expect no rest stops on last step
   step_idx++;
@@ -192,10 +195,10 @@ TEST_F(Use, test_entering_service_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Service Area.",
-      "Turn left toward Service Area. Then You will arrive at your destination.",
-      "Turn left toward Service Area.",
-      "Turn left toward Service Area. Then You will arrive at your destination.",
+      result, step_idx, "Turn left toward Bear Peak Service Area.",
+      "Turn left toward Bear Peak Service Area. Then You will arrive at your destination.",
+      "Turn left toward Bear Peak Service Area.",
+      "Turn left toward Bear Peak Service Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 
   // Expect no rest stops on third step
