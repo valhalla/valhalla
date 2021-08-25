@@ -122,9 +122,9 @@ namespace osrm {
 valhalla::baldr::json::MapPtr
 waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
 
-valhalla::baldr::json::MapPtr serialize_via_waypoint(valhalla::Location& location,
-                                                     const uint64_t geometry_idx,
-                                                     double distance_from_leg_start);
+valhalla::baldr::json::MapPtr serialize_intermediate_waypoints(double distance_from_leg_start,
+                                                               const valhalla::Location& location,
+                                                               const uint64_t geometry_index);
 
 /*
  * Serialize locations into osrm waypoints
@@ -133,8 +133,8 @@ valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
-valhalla::baldr::json::ArrayPtr via_waypoints(valhalla::Options options,
-                                              const std::vector<PointLL>& shape);
+valhalla::baldr::json::ArrayPtr intermediate_waypoints(valhalla::Options options,
+                                                       const std::vector<PointLL>& shape);
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
