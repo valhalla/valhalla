@@ -84,8 +84,8 @@ TEST_F(ViaWaypoints, test_single_through_at_node) {
 
   // this will have 3 "TE"s because we now have T->1, 1->E since we are now trimming those edges
   // and E->T(u-turn for through because of deadend), resulting in TE->TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "ST", "RS",
-                                           "DR", "CD", "CF", "FJ", "JK", "KL"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "TE", "ST",
+                                           "RS", "DR", "CD", "CF", "FJ", "JK", "KL"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);

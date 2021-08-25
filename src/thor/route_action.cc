@@ -63,49 +63,54 @@ void intermediate_loc_edge_trimming(
   PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
   double dist_along = in_pe->percent_along();
 
-  /************************************* MAY NEED THIS LATER
-   * *******************************************/
   // Special case : When you have a single edge route, and you have multiple throughs/vias
   // along it. In this case you need to trim both sides of an edge before you add it if you are
   // continuing on the same edge.
-  /*if (loc.path_edges_size() == 1 && (std::next(loc.path_edges().begin()) != loc.path_edges().end()))
-  {
-          // Insert an intermediate location so the last edge of the first segment is trimmed at the
-  beginning & end
-          // from 0 to dist_along. Set the first
-          intermediate_locs.insert({path_index + (flip_index ? 1 : 0),
-                                   {{true, PointLL(), 0.0, path.size() - 1}, {true, snap_ll,
-  dist_along, path.size() - 1}}});
+  if (loc.path_edges_size() == 1 && (std::next(loc.path_edges().begin()) != loc.path_edges().end())) {
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>ROUTE_ACTION - SINGLE ROUTE WITH MULTI THROUGHS"
+              << std::endl;
+    // Insert an intermediate location so the last edge of the first segment is trimmed at the
+    // beginning & end from 0 to dist_along. Set the first
+    auto inserted = intermediate_locs.insert(
+        {path_index + (flip_index ? 1 : 0), {{true, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+    // shape index
+    if (!flip_index) {
+      loc.set_leg_shape_index(inserted.first->first);
+    }
+    // Insert a second intermediate location so the next (opposing) edge is trimmed at the
+    // beginning & end from 1-dist along to 1
+    inserted =
+        intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
+                                  {{true, snap_ll, 1.0 - dist_along}, {true, PointLL(), 1.0}}});
+    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+    // shape index
+    if (flip_index) {
+      loc.set_leg_shape_index(inserted.first->first);
+    }
+  } else {
+    // Insert an intermediate location so the last edge of the first segment is trimmed at the
+    // beginning from 0 to dist_along. Set the first flip_index depends on arrive by or depart_at
+    auto inserted = intermediate_locs.insert(
+        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+    // shape index
+    if (!flip_index) {
+      loc.set_leg_shape_index(inserted.first->first);
+    }
 
-          // Insert a second intermediate location so the next (opposing) edge is trimmed at the
-  beginning & end from
-          // 1-dist along to 1
-          intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
-                                   {{true, snap_ll, 1.0 - dist_along, path.size() - 1}, {true,
-  PointLL(), 1.0, path.size() - 1}}}); } else {*/
-  /********************************************************************************************************/
-  // Insert an intermediate location so the last edge of the first segment is trimmed at the beginning
-  // from 0 to dist_along. Set the first
-  // flip_index depends on arrive by or depart_at
-  auto inserted = intermediate_locs.insert(
-      {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
-  // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
-  // shape index
-  if (!flip_index) {
-    loc.set_leg_shape_index(inserted.first->first);
+    // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
+    // 1-dist along to 1
+    // flip_index depends on arrive by or depart_at
+    inserted =
+        intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
+                                  {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+    // shape index
+    if (flip_index) {
+      loc.set_leg_shape_index(inserted.first->first);
+    }
   }
-
-  // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
-  // 1-dist along to 1
-  // flip_index depends on arrive by or depart_at
-  inserted = intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
-                                       {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
-  // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
-  // shape index
-  if (flip_index) {
-    loc.set_leg_shape_index(inserted.first->first);
-  }
-  //}
 }
 
 inline bool is_through_point(const valhalla::Location& l) {
