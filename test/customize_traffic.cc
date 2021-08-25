@@ -79,7 +79,6 @@ void customize_traffic_fake(const boost::property_tree::ptree& config, const int
     }
   };
   test::customize_live_traffic_data(config, generate_traffic);
-  LOG_INFO("customize_live_traffic_data with fake data");
 }
 
 } // namespace
@@ -87,13 +86,13 @@ void customize_traffic_fake(const boost::property_tree::ptree& config, const int
 int main(int argc, char** argv) {
 
   boost::property_tree::ptree pt;
-  rapidjson::read_json("/home/hainan/hainche/02_gen20xi3/valhalla/data/bw/valhalla_bw.json", pt);
+  rapidjson::read_json("/datadrive/valhalla/data/europe/valhalla_eur.json", pt);
 
-  // Build the default traffic data with invalid values
   test::build_live_traffic_data(pt);
+  LOG_INFO("Build the default traffic data with invalid values");
 
-  // update the fake traffic for 5% of edges
   customize_traffic_fake(pt, 20);
+  LOG_INFO("update the fake traffic for 5% of edges");
 
   // show the difference between traffic speed and graph speed
   // show_traffic_fake(pt);
