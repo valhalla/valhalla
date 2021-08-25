@@ -93,6 +93,9 @@ struct simplified_actor_t : public valhalla::tyr::actor_t {
   std::string centroid(const std::string& request_str) {
     return valhalla::tyr::actor_t::centroid(request_str, nullptr, nullptr);
   };
+  std::string status(const std::string& request_str) {
+    return valhalla::tyr::actor_t::status(request_str, nullptr, nullptr);
+  }
 };
 
 PYBIND11_MODULE(python_valhalla, m) {
@@ -123,5 +126,7 @@ PYBIND11_MODULE(python_valhalla, m) {
           "Returns all road segments which were touched by the routing algorithm during the graph traversal.")
       .def(
           "Centroid", &simplified_actor_t::centroid,
-          "Returns routes from all the input locations to the minimum cost meeting point of those paths.");
+          "Returns routes from all the input locations to the minimum cost meeting point of those paths.")
+      .def("Status", &simplified_actor_t::status,
+           "Returns nothing or optionally details about Valhalla's configuration.");
 }

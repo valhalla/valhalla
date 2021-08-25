@@ -223,6 +223,9 @@ config = {
       'max_matrix_distance': 0.0,
       'max_matrix_locations': 0
     },
+    'status': {
+      'allow_verbose': False
+    },
     'transit': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -288,7 +291,7 @@ help_text = {
     'lru_mem_cache_hard_control': 'Use hard memory limit control for LRU memory cache (i.e. on every put) - never allow overcommit',
     'use_simple_mem_cache': 'Use memory cache within a simple hash map the clears all tiles when overcommitted',
     'user_agent': 'User-Agent http header to request single tiles',
-    'tile_url': 'Location to read tiles from if they are not found in the tile_dir',
+    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/optional/path/{tilePath}?some=optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
     'tile_url_gz': 'Whether or not to request for compressed tiles',
     'concurrency': 'How many threads to use in the concurrent parts of tile building',
     'tile_dir': 'Location to read/write tiles to/from',
@@ -493,6 +496,9 @@ help_text = {
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+    },
+    'status': {
+      'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
     },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',

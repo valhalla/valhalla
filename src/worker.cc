@@ -305,6 +305,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (heading_tolerance) {
           location->set_heading_tolerance(*heading_tolerance);
         }
+        auto preferred_layer = rapidjson::get_optional<int>(r_loc, "/preferred_layer");
+        if (preferred_layer) {
+          location->set_preferred_layer(*preferred_layer);
+        }
         auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
         if (node_snap_tolerance) {
           location->set_node_snap_tolerance(*node_snap_tolerance);
@@ -890,7 +894,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
   if (filter_attributes_json) {
     for (const auto& filter_attribute : *filter_attributes_json) {
-      options.add_filter_attributes(filter_attribute.GetString());
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = thor::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
     }
   }
 
