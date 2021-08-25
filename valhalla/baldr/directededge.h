@@ -328,7 +328,7 @@ public:
   void set_bridge(const bool bridge);
 
   /**
-   * Get the hov type (see graphconstants.h).
+   * Get the HOV type (see graphconstants.h).
    */
   HOVEdgeType hov_type() const {
     return static_cast<baldr::HOVEdgeType>(hov_type_);
@@ -336,10 +336,15 @@ public:
 
   /**
    * Sets the hov type (see baldr/graphconstants.h)
-   * @param  surface   Surface type.
+   * @param  hov_type   HOV type.
    */
-
   void set_hov_type(const HOVEdgeType hov_type);
+
+  /**
+   * Returns t/f if this edge is HOV only.
+   * @return
+   */
+  bool is_hov_only() const;
 
   /**
    * Is this edge part of a roundabout?
@@ -1171,8 +1176,8 @@ protected:
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
-  uint64_t hov_type_ : 2;       // HOV type, see HOVEdgeType
-  uint64_t spare4_ : 5;
+  uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
+  uint64_t spare4_ : 6;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
@@ -1196,6 +1201,8 @@ protected:
     StopImpact s;
     uint32_t lineid;
   };
+
+  // 6th 8-byte word (this union plus the next uint32_t bitfield)
   StopOrLine stopimpact_;
 
   // Local edge index, opposing local index, shortcut info

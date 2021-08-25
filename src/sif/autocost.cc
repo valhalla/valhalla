@@ -137,7 +137,7 @@ public:
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = kAutoAccess);
+  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
 
   virtual ~AutoCost() {
   }
@@ -287,8 +287,7 @@ public:
 
   bool EvaluateHOVAllowed(const baldr::DirectedEdge* edge) const {
     // A non-hov edge means hov is allowed.
-    valhalla::baldr::HOVEdgeType edge_hov_type = edge->hov_type();
-    if (edge_hov_type == valhalla::baldr::HOVEdgeType::kNotHOV)
+    if (!edge->is_hov_only())
       return true;
 
     // The edge is either HOV-2 or HOV-3 from this point forward.
@@ -297,8 +296,8 @@ public:
     if (use_hov3_lanes_)
       return true;
 
-    // If use_hov2 is set we can route onto HOV-2 edges
-    if (use_hov2_lanes_ && (edge_hov_type == valhalla::baldr::HOVEdgeType::kHOV2))
+    // If use_hov2 is set we can route onto HOV-2 edges.
+    if (use_hov2_lanes_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
       return true;
 
     // If use_hot is set we can route onto HOT edges (HOV and tolled).

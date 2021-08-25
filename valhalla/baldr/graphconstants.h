@@ -619,13 +619,12 @@ constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
 
-// There are only 2 bits to store these values, do not exceed the value 3.
-enum class HOVEdgeType : uint8_t { kNotHOV = 0, kHOV2 = 1, kHOV3 = 2 };
+// There is only 1 bit to store these values, do not exceed the value 1.
+enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };
 
 inline std::string to_string(HOVEdgeType h) {
   static const std::unordered_map<uint8_t, std::string> HOVEdgeTypeStrings =
-      {{static_cast<uint8_t>(HOVEdgeType::kNotHOV), "Not HOV"},
-       {static_cast<uint8_t>(HOVEdgeType::kHOV2), "HOV-2"},
+      {{static_cast<uint8_t>(HOVEdgeType::kHOV2), "HOV-2"},
        {static_cast<uint8_t>(HOVEdgeType::kHOV3), "HOV-3"}};
   auto i = HOVEdgeTypeStrings.find(static_cast<uint8_t>(h));
   if (i == HOVEdgeTypeStrings.cend()) {

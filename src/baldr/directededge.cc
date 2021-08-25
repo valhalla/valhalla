@@ -208,6 +208,11 @@ void DirectedEdge::set_hov_type(const HOVEdgeType hov_type) {
   hov_type_ = static_cast<uint32_t>(hov_type);
 }
 
+// Is this edge strictly hov? (if so, it could be hov2 or hov3, check the hov_type_)
+bool DirectedEdge::is_hov_only() const {
+  return (forwardaccess() & kHOVAccess) && !(forwardaccess() & kAutoAccess);
+}
+
 // Sets the flag indicating the  edge is part of a roundabout.
 void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
@@ -591,6 +596,7 @@ json::MapPtr DirectedEdge::json() const {
       {"destination_only", static_cast<bool>(dest_only_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
+      {"is_hov", static_cast<bool>(is_hov_only())},
       {"hov_type", to_string(static_cast<HOVEdgeType>(hov_type_))},
       {"round_about", static_cast<bool>(roundabout_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},

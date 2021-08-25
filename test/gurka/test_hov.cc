@@ -102,7 +102,7 @@ TEST(HOVTest, mistagged_hov) {
         test::make_clean_graphreader(map.config.get_child("mjolnir"));
     auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
     const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
-    ASSERT_EQ(edge->hov_type(), baldr::HOVEdgeType::kNotHOV);
+    ASSERT_EQ(edge->is_hov_only(), false);
   }
 }
 
@@ -132,7 +132,9 @@ TEST(HOVTest, correctly_tagged_hov) {
         test::make_clean_graphreader(map.config.get_child("mjolnir"));
     auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
     const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
-    ASSERT_EQ(edge->hov_type(), baldr::HOVEdgeType::kHOV2);
+    ASSERT_EQ(edge->is_hov_only(), true);
+    ASSERT_TRUE(edge->hov_type() == baldr::HOVEdgeType::kHOV2);
+    ASSERT_TRUE(edge->hov_type() != baldr::HOVEdgeType::kHOV3);
   }
 
   // HOV-3
@@ -150,7 +152,9 @@ TEST(HOVTest, correctly_tagged_hov) {
         test::make_clean_graphreader(map.config.get_child("mjolnir"));
     auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
     const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
-    ASSERT_EQ(edge->hov_type(), baldr::HOVEdgeType::kHOV3);
+    ASSERT_EQ(edge->is_hov_only(), true);
+    ASSERT_TRUE(edge->hov_type() != baldr::HOVEdgeType::kHOV2);
+    ASSERT_TRUE(edge->hov_type() == baldr::HOVEdgeType::kHOV3);
   }
 }
 
@@ -192,13 +196,12 @@ protected:
     constexpr double gridsize = 10;
 
     const std::string ascii_map = R"(
-      A---------------------------B---------------------------C
-             1                                         2
-      D---------------------------E---------------------------F
+      A-----------------------------------------------------C
+      D-----------1--------------------------------2--------F
     )";
-    const gurka::ways ways = {{"ABC",
+    const gurka::ways ways = {{"AC",
                                {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
-                              {"DEF",
+                              {"DF",
                                {{"highway", "motorway"},
                                 {"oneway", "yes"},
                                 {"name", "HOVExpress2"},
@@ -274,8 +277,7 @@ protected:
 
     const std::string ascii_map = R"(
       A---------------------------B---------------------------C
-             1                                         2
-      D---------------------------E---------------------------F
+      D------1--------------------E------------------2--------F
     )";
     const gurka::ways ways = {{"ABC",
                                {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},
@@ -355,8 +357,7 @@ protected:
 
     const std::string ascii_map = R"(
       A---------------------------B---------------------------C
-             1                                         2
-      D---------------------------E---------------------------F
+      D---------1-----------------E--------------------2------F
     )";
     const gurka::ways ways = {{"ABC",
                                {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "RT 36"}}},

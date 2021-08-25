@@ -1704,7 +1704,8 @@ struct OSMWay {
   uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t hov_type_ : 2;
+  uint32_t hov_type_ : 1;
+  uint32_t spare1_ : 1;
   uint32_t pedestrian_forward_ : 1;
   uint32_t pedestrian_backward_ : 1;
 
