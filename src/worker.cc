@@ -173,7 +173,7 @@ void add_date_to_locations(Options& options,
 }
 
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
-// PBF objects of the sort "repeated LatLng". Open rings will be closed during search operation.
+// PBF objects of the sort "repeated LatLng". Invalid rings will be corrected during search operation.
 template <typename ring_pbf_t>
 void parse_ring(ring_pbf_t& ring, const rapidjson::Value& coord_array) {
   for (const auto& coords : coord_array.GetArray()) {
@@ -304,6 +304,10 @@ void parse_locations(const rapidjson::Document& doc,
         auto heading_tolerance = rapidjson::get_optional<int>(r_loc, "/heading_tolerance");
         if (heading_tolerance) {
           location->set_heading_tolerance(*heading_tolerance);
+        }
+        auto preferred_layer = rapidjson::get_optional<int>(r_loc, "/preferred_layer");
+        if (preferred_layer) {
+          location->set_preferred_layer(*preferred_layer);
         }
         auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
         if (node_snap_tolerance) {
@@ -890,7 +894,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
   if (filter_attributes_json) {
     for (const auto& filter_attribute : *filter_attributes_json) {
-      options.add_filter_attributes(filter_attribute.GetString());
+      std::string attribute = filter_attribute.GetString();
+      // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
+      // compatibility
+      if (attribute == "edge.tagged_names") {
+        attribute = thor::kEdgeTaggedValues;
+      }
+      options.add_filter_attributes(attribute);
     }
   }
 
@@ -1153,12 +1163,9 @@ void service_worker_t::enqueue_statistics(Api& api) const {
 
   // before we are done with the request, if this was not an error we log it was ok
   if (!api.info().error()) {
-    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki"
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
-    statsd_client->count(action + ".info" + worker + ".ok", 1, 1.f, statsd_client->tags);
+    statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
   }
 }
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
@@ -1167,23 +1174,18 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
   return midgard::Finally<std::function<void()>>([this, &api, start]() {
     auto elapsed = std::chrono::steady_clock::now() - start;
     auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto worker = typeid(*this) == typeid(loki::loki_worker_t)
-                      ? ".loki"
-                      : (typeid(*this) == typeid(thor::thor_worker_t) ? ".thor" : ".odin");
     const auto& action = Options_Action_Enum_Name(api.options().action());
 
     auto* stat = api.mutable_info()->mutable_statistics()->Add();
-    stat->set_key(action + ".info" + worker + ".latency_ms");
+    stat->set_key(action + ".info." + service_name() + ".latency_ms");
     stat->set_value(e);
     stat->set_type(timing);
   });
 }
 
 void service_worker_t::started() {
-  std::string worker = typeid(*this) == typeid(loki::loki_worker_t)
-                           ? "loki"
-                           : (typeid(*this) == typeid(thor::thor_worker_t) ? "thor" : "odin");
-  statsd_client->count("none.info." + worker + ".worker_started", 1, 1.f, statsd_client->tags);
+  statsd_client->count("none.info." + service_name() + ".worker_started", 1, 1.f,
+                       statsd_client->tags);
 }
 
 } // namespace valhalla

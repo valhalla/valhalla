@@ -229,7 +229,7 @@ message TripLeg {
     optional Restriction restriction = 45;
     optional bool destination_only = 46;
     optional bool is_urban = 47; // uses edge density to decide if edge is in an urban area
-    repeated TaggedName tagged_name = 48;
+    repeated TaggedValue tagged_value = 48;
 
     // for the part of the edge that is used in the path we must know where
     // it starts and ends along the length of the edge as a percentage

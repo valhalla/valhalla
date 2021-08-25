@@ -1579,6 +1579,20 @@ struct OSMWay {
   }
 
   /**
+   * Sets layer index(Z-level) of the way.
+   * @param layer
+   */
+  void set_layer(int8_t layer);
+
+  /**
+   * Get layer(Z-level), can be negative.
+   * @return returns layer index of the way relatively to other ways.
+   */
+  int8_t layer() const {
+    return layer_;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1586,7 +1600,7 @@ struct OSMWay {
    */
   std::vector<std::string>
   GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
-  std::vector<std::string> GetTaggedNames(const UniqueNames& name_offset_map) const;
+  std::vector<std::string> GetTaggedValues(const UniqueNames& name_offset_map) const;
 
   // OSM way Id
   uint64_t osmwayid_;
@@ -1727,7 +1741,8 @@ struct OSMWay {
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
 
-  uint8_t spare_;
+  // layer index(Z-level) of the way relatively to other levels
+  int8_t layer_;
 };
 
 } // namespace mjolnir

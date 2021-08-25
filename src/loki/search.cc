@@ -81,6 +81,15 @@ bool heading_filter(const Location& location, float angle) {
          location.heading_tolerance_;
 }
 
+bool layer_filter(const Location& location, int8_t layer) {
+  // no layer - we do not filter
+  if (!location.preferred_layer_) {
+    return false;
+  }
+
+  return *location.preferred_layer_ != layer;
+}
+
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   if (side != PathLocation::SideOfStreet::NONE) {
     return side == PathLocation::SideOfStreet::LEFT ? PathLocation::SideOfStreet::RIGHT
@@ -296,17 +305,19 @@ struct bin_handler_t {
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
         auto info = tile->edgeinfo(edge);
+
         // calculate the heading of the snapped point to the shape for use in heading filter
         size_t index = edge->forward() ? 0 : info.shape().size() - 2;
         float angle =
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+        auto layer = info.layer();
         // do we want this edge
         if (costing->Allowed(edge, tile, kDisallowShortcut)) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
               path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
-          if (heading_filter(location, angle)) {
+          if (heading_filter(location, angle) || layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -330,7 +341,8 @@ struct bin_handler_t {
                                            reach.outbound,
                                            reach.inbound};
           // angle is 180 degrees opposite direction of the one above
-          if (heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
+          if (heading_filter(location, std::fmod(angle + 180.f, 360.f)) ||
+              layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -382,6 +394,7 @@ struct bin_handler_t {
           tangent_angle(candidate.index, candidate.point, candidate.edge_info->shape(),
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
+      auto layer = candidate.edge_info->layer();
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto sq_max_distance = square(double(location.street_side_max_distance_));
       auto side =
@@ -396,7 +409,8 @@ struct bin_handler_t {
                                        distance,          side,         reach.outbound,
                                        reach.inbound};
       // correlate the edge we found
-      if (side_filter(path_edge, location, reader) || heading_filter(location, angle)) {
+      if (side_filter(path_edge, location, reader) || heading_filter(location, angle) ||
+          layer_filter(location, layer)) {
         filtered.push_back(std::move(path_edge));
       } else if (correlated_edges.insert(candidate.edge_id).second) {
         correlated.edges.push_back(std::move(path_edge));
@@ -413,7 +427,8 @@ struct bin_handler_t {
                                                reach.inbound};
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) ||
-            heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
+            heading_filter(location, std::fmod(angle + 180.f, 360.f)) ||
+            layer_filter(location, layer)) {
           filtered.push_back(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
           correlated.edges.push_back(std::move(other_path_edge));

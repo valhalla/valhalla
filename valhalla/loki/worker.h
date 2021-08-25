@@ -101,6 +101,12 @@ protected:
   size_t max_elevation_shape;
   float min_resample;
   unsigned int max_alternates;
+  bool allow_verbose;
+
+private:
+  std::string service_name() const override {
+    return "loki";
+  }
 };
 } // namespace loki
 } // namespace valhalla

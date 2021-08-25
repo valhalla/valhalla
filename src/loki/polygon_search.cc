@@ -7,6 +7,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/worker.h>
 
 namespace bg = boost::geometry;
@@ -32,13 +33,26 @@ static const auto Haversine = [] {
   return bg::strategy::distance::haversine<float>(vm::kRadEarthMeters);
 };
 
+void correct_ring(ring_bg_t& ring) {
+  // close open rings
+  bool is_open =
+      (ring.begin()->lat() != ring.rbegin()->lat() || ring.begin()->lng() != ring.rbegin()->lng());
+  if (!ring.empty() && is_open) {
+    ring.push_back(ring[0]);
+  }
+
+  // reverse ring if counter-clockwise
+  if (vm::polygon_area(ring) > 0) {
+    std::reverse(ring.begin(), ring.end());
+  }
+}
+
 ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
   ring_bg_t new_ring;
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
   }
-  // fixes windedness & closes open rings
-  bg::correct(new_ring);
+  correct_ring(new_ring);
   return new_ring;
 }
 

@@ -121,6 +121,11 @@ protected:
   void enqueue_statistics(Api& api) const;
 
   /**
+   * Returns name of the service used in statistics
+   */
+  virtual std::string service_name() const = 0;
+
+  /**
    * Used to measure the time it takes to do an action in the current stage of the pipeline.
    * This should be called at the top of the scope in each major action of each worker
    *
