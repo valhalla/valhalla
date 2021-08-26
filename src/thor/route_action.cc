@@ -59,9 +59,10 @@ void intermediate_loc_edge_trimming(
 
   // Special case : When you have a single edge route, and you have multiple throughs/vias
   // along it. In this case you need to trim both sides of an edge before you add it if you are
-  // continuing on the same edge.
-  if (loc.path_edges_size() == 1 && (std::next(loc.path_edges().begin()) != loc.path_edges().end())) {
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>ROUTE_ACTION - SINGLE ROUTE WITH MULTI THROUGHS"
+  // continuing on the same edge.  So if the path that we are adding is 1 edge in length and the
+  // edge ids are equal then we need to trim both ends.
+  if (loc.path_edges_size() == 1 && in == out == std::next(loc.path_edges().begin())->graph_id()) {
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>ROUTE_ACTION - SINGLE EDGE WITH MULTI THROUGHS"
               << std::endl;
     // Insert an intermediate location so the last edge of the first segment is trimmed at the
     // beginning & end from 0 to dist_along. Set the first

@@ -238,13 +238,13 @@ TEST_F(ViaWaypoints, test_multiple_throughs_single_edge) {
   auto via_waypoint = leg["via_waypoints"].GetArray();
   EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 184.337, 1.0);
+  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 184.337, .1);
   EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
   EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 4);
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 208.96, 1.0);
+  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 184.376, .1);
   EXPECT_EQ(via_waypoint[2]["waypoint_index"].GetInt(), 3);
   EXPECT_EQ(via_waypoint[2]["geometry_index"].GetInt(), 5);
-  EXPECT_NEAR(via_waypoint[2]["distance_from_leg_start"].GetDouble(), 208.96, 1.0);
+  EXPECT_NEAR(via_waypoint[2]["distance_from_leg_start"].GetDouble(), 208.96, .1);
 
   // Compare the last via distance_from_leg_start with overall route-length, they should be similar
   EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 514.269, 1.0);
