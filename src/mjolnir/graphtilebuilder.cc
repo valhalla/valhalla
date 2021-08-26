@@ -650,8 +650,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         };
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) +
-                            ss.str())};
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
 
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
@@ -796,8 +795,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         };
 
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) +
-                            ss.str())};
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
 
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;

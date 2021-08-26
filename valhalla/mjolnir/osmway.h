@@ -1630,10 +1630,10 @@ struct OSMWay {
                 std::vector<std::string>& pronunciations) const;
 
   void GetTaggedValues(const UniqueNames& name_offset_map,
-                      const OSMPronunciation& pronunciation,
-                      const size_t& names_size,
-                      std::vector<std::string>& names,
-                      std::vector<std::string>& pronunciations) const;
+                       const OSMPronunciation& pronunciation,
+                       const size_t& names_size,
+                       std::vector<std::string>& names,
+                       std::vector<std::string>& pronunciations) const;
 
   // OSM way Id
   uint64_t osmwayid_;

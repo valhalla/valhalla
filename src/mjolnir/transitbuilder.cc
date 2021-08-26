@@ -199,7 +199,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       bool added = false;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_values, conn.pronunciations, 0, added);
+                                        conn.names, conn.tagged_values, conn.pronunciations, 0,
+                                        added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));

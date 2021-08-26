@@ -721,7 +721,8 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             std::vector<std::string> names, tagged_values, pronunciations;
             w.GetNames(ref, osmdata.name_offset_map, p, types, names, pronunciations);
-            w.GetTaggedValues(osmdata.name_offset_map, p, names.size(), tagged_values, pronunciations);
+            w.GetTaggedValues(osmdata.name_offset_map, p, names.size(), tagged_values,
+                              pronunciations);
 
             // Update bike_network type
 

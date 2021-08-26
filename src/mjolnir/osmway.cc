@@ -296,10 +296,10 @@ void OSMWay::GetNames(const std::string& ref,
 
 // Get the tagged names for an edge
 void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
-                            const OSMPronunciation& pronunciation,
-                            const size_t& names_size,
-                            std::vector<std::string>& names,
-                            std::vector<std::string>& pronunciations) const {
+                             const OSMPronunciation& pronunciation,
+                             const size_t& names_size,
+                             std::vector<std::string>& names,
+                             std::vector<std::string>& pronunciations) const {
 
   std::vector<std::string> tokens;
 
