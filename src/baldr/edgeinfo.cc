@@ -7,6 +7,14 @@ using namespace valhalla::baldr;
 
 namespace {
 
+// should return true for any tags which we should consider "named"
+// do not return TaggedValue::kPronunciation
+bool IsNameTag(char ch) {
+  static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
+                                                            TaggedValue::kTunnel};
+  return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
+}
+
 json::MapPtr bike_network_json(uint8_t mask) {
   return json::map({
       {"national", static_cast<bool>(mask & kNcn)},
@@ -99,7 +107,7 @@ std::vector<std::string> EdgeInfo::GetNames() const {
 }
 
 // Get a list of tagged names
-std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) const {
+std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) const {
   // Get each name
   std::vector<std::string> names;
   names.reserve(name_count());
@@ -113,14 +121,14 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
       if (name.size() > 1) {
         uint8_t num = 0;
         try {
-          num = std::stoi(name.substr(0, 1));
-          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+          num = static_cast<uint8_t>(name.at(0));
+          TaggedValue tv = static_cast<baldr::TaggedValue>(num);
+          if (tv == baldr::TaggedValue::kPronunciation) {
             if (!only_pronunciations)
               continue;
 
             size_t location = name.length() + 1; // start from here
             name = name.substr(1);               // remove the tagged name type...actual data remains
-
             auto verbal_tokens = split(name, '#');
             // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
             // key  type value
@@ -156,28 +164,24 @@ std::vector<std::string> EdgeInfo::GetTaggedNames(bool only_pronunciations) cons
 
 // Get a list of names
 std::vector<std::pair<std::string, bool>>
-EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_names) const {
+EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_values) const {
+
   // Get each name
   std::vector<std::pair<std::string, bool>> name_type_pairs;
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
     // Skip any tagged names (FUTURE code may make use of them)
-    if (ni->tagged_ && !include_tagged_names) {
+    if (ni->tagged_ && !include_tagged_values) {
       continue;
     }
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1) {
-          uint8_t num = 0;
+        if (name.size() > 1 && IsNameTag(name[0])) {
           try {
-            num = std::stoi(name.substr(0, 1));
-            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation) {
-              name_type_pairs.push_back({name.substr(1), false});
-              types.push_back(num);
-            }
-
+            name_type_pairs.push_back({name.substr(1), false});
+            types.push_back(static_cast<uint8_t>(name.at(0)));
           } catch (const std::invalid_argument& arg) {
             LOG_DEBUG("invalid_argument thrown for name: " + name);
           }
@@ -195,33 +199,40 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_name
 }
 
 // Get a list of tagged names
-std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() const {
-  // Get each name
-  std::vector<std::pair<std::string, uint8_t>> name_type_pairs;
-  name_type_pairs.reserve(name_count());
-  const NameInfo* ni = name_info_list_;
-  for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    // Skip any non tagged names
-    if (ni->tagged_) {
-      if (ni->name_offset_ < names_list_length_) {
-        std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1) {
-          uint8_t num = 0;
-          try {
-            num = std::stoi(name.substr(0, 1));
-            if (static_cast<baldr::TaggedName>(num) != baldr::TaggedName::kPronunciation)
-              name_type_pairs.push_back({name.substr(1), num});
-
-          } catch (const std::invalid_argument& arg) {
-            LOG_DEBUG("invalid_argument thrown for name: " + name);
+const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
+  // we could check `tag_cache_.empty()` here, but many edges contain no tags
+  // and it would mean we traverse all names on each `GetTags` call
+  // for such edges
+  if (!tag_cache_ready_) {
+    // Get each name
+    const NameInfo* ni = name_info_list_;
+    for (uint32_t i = 0; i < name_count(); i++, ni++) {
+      // Skip any non tagged names
+      if (ni->tagged_) {
+        if (ni->name_offset_ < names_list_length_) {
+          std::string name = names_list_ + ni->name_offset_;
+          if (name.size() > 1) {
+            uint8_t num = 0;
+            try {
+              num = static_cast<uint8_t>(name.at(0));
+              TaggedValue tv = static_cast<baldr::TaggedValue>(num);
+              if (tv != baldr::TaggedValue::kPronunciation)
+                tag_cache_.emplace(tv, name.substr(1));
+            } catch (const std::logic_error& arg) {
+              LOG_DEBUG("logic_error thrown for name: " + name);
+            }
           }
+        } else {
+          throw std::runtime_error("GetTags: offset exceeds size of text list");
         }
-      } else {
-        throw std::runtime_error("GetTaggedNamesAndTypes: offset exceeds size of text list");
       }
     }
+
+    if (tag_cache_.size())
+      tag_cache_ready_ = true;
   }
-  return name_type_pairs;
+
+  return tag_cache_;
 }
 
 std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
@@ -237,11 +248,11 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
       if (name.length() > 1) {
         uint8_t num = 0;
         try {
-          num = std::stoi(name.substr(0, 1));
-          if (static_cast<baldr::TaggedName>(num) == baldr::TaggedName::kPronunciation) {
+          num = static_cast<uint8_t>(name.at(0));
+          TaggedValue tv = static_cast<baldr::TaggedValue>(num);
+          if (tv == baldr::TaggedValue::kPronunciation) {
             size_t location = name.length() + 1; // start from here
             name = name.substr(1);               // remove the tagged name type...actual data remains
-
             auto pronunciation_tokens = split(name, '#');
             // index # alphabet # pronunciation
             // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
@@ -308,6 +319,19 @@ const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
 std::string EdgeInfo::encoded_shape() const {
   return encoded_shape_ == nullptr ? midgard::encode7(shape_)
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
+}
+
+int8_t EdgeInfo::layer() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kLayer);
+  if (itr == tags.end()) {
+    return 0;
+  }
+  const auto& value = itr->second;
+  if (value.size() != 1) {
+    throw std::runtime_error("layer must contain 1-byte value");
+  }
+  return static_cast<int8_t>(value.front());
 }
 
 json::MapPtr EdgeInfo::json() const {

@@ -590,12 +590,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       Cost newcost =
           pred.cost() + costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
 
-      InternalTurn internal_turn =
-          costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                                internal_turn);
+                                                pred.internal_turn());
       newcost += tc;
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -617,7 +615,9 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                              static_cast<bool>(flow_sources & kDefaultFlowMask), internal_turn,
+                              static_cast<bool>(flow_sources & kDefaultFlowMask),
+                              costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                 opp_pred_edge),
                               restriction_idx);
       adj->add(idx);
 

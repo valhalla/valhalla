@@ -132,7 +132,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n2.size(), 1);
   EXPECT_EQ(n2.at(0), "einzelweg");
 
-  auto n3 = ei.GetTaggedNames();
+  auto n3 = ei.GetTaggedValues();
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
@@ -148,7 +148,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   auto t = types.at(0);
   EXPECT_EQ(t, false);
 
-  auto names_and_types_tagged = ei.GetTaggedNamesAndTypes();
+  const auto& names_and_types_tagged = ei.GetTags();
   EXPECT_EQ(names_and_types_tagged.size(), 1);
 
   n4 = names_and_types.at(0);
@@ -163,11 +163,9 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
-  for (const auto& tagged_name_and_type : tagged_names_and_types) {
-    EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
-    EXPECT_EQ(tagged_name_and_type.second, 1);
-  }
+  const auto& tags = ei.GetTags();
+  EXPECT_EQ(tags.size(), 1);
+  EXPECT_EQ(tags.find(TaggedValue::kTunnel)->second, "xyz tunnel");
 }
 
 TEST(GraphTileBuilder, TestAddBins) {

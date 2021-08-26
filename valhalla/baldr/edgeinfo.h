@@ -2,8 +2,7 @@
 #define VALHALLA_BALDR_EDGEINFO_H_
 
 #include <cstdint>
-#include <iostream>
-#include <ostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -139,7 +138,6 @@ public:
 
   /**
    * Convenience method to get the names for an edge
-   *
    * @return   Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames() const;
@@ -150,11 +148,11 @@ public:
    *
    * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedNames(bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
-   * @param  include_tagged_names  Bool indicating whether or not to return the tagged names too
+   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
    * @return   Returns a list (vector) of name/route number pairs.
    */
@@ -162,10 +160,11 @@ public:
                                                              bool include_tagged_names = false) const;
 
   /**
-   * Convenience method to get the names and the tagged type for an edge.
-   * @return   Returns a list (vector) of name/tagged type pairs.
+   * Convenience method to get tags of the edge.
+   * Key incidates tag, value may contain arbitrary blob of data.
+   * @return   Returns a map of tags
    */
-  std::vector<std::pair<std::string, uint8_t>> GetTaggedNamesAndTypes() const;
+  const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
    * Convenience method to get a pronunciation map for an edge.
@@ -198,6 +197,13 @@ public:
   std::string encoded_shape() const;
 
   /**
+   * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
+   * @see https://wiki.openstreetmap.org/wiki/Key:layer
+   * @return layer index of the edge
+   */
+  int8_t layer() const;
+
+  /**
    * Returns json representing this object
    * @return json object
    */
@@ -223,6 +229,8 @@ public:
   };
 
 protected:
+  std::vector<std::string> GetTaggedValuesOrNames(bool only_tagged_values) const;
+
   // Fixed size information
   EdgeInfoInner ei_;
 
@@ -244,6 +252,10 @@ protected:
 
   // The size of the names list
   size_t names_list_length_;
+
+  // for fast access to tag values stored in names list
+  mutable std::multimap<TaggedValue, std::string> tag_cache_;
+  mutable bool tag_cache_ready_ = false;
 };
 
 } // namespace baldr

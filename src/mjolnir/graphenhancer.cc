@@ -1136,7 +1136,7 @@ uint32_t GetStopImpact(uint32_t from,
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
              bestrc < RoadClass::kUnclassified) {
     // Ramp may be crossing a road (not a path or service road)
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact = 4;
     } else if (count > 3) {
       stop_impact += 2;
@@ -1174,7 +1174,7 @@ uint32_t GetStopImpact(uint32_t from,
            (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
            from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
            edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact += 2;
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;
@@ -1183,7 +1183,7 @@ uint32_t GetStopImpact(uint32_t from,
              (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
              from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
              edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact += 2;
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;

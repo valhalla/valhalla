@@ -1603,6 +1603,20 @@ struct OSMWay {
                          const baldr::PronunciationAlphabet verbal_type) const;
 
   /**
+   * Sets layer index(Z-level) of the way.
+   * @param layer
+   */
+  void set_layer(int8_t layer);
+
+  /**
+   * Get layer(Z-level), can be negative.
+   * @return returns layer index of the way relatively to other ways.
+   */
+  int8_t layer() const {
+    return layer_;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1614,11 +1628,12 @@ struct OSMWay {
                 uint16_t& types,
                 std::vector<std::string>& names,
                 std::vector<std::string>& pronunciations) const;
-  void GetTaggedNames(const UniqueNames& name_offset_map,
-                      const OSMPronunciation& pronunciation,
-                      const size_t& names_size,
-                      std::vector<std::string>& names,
-                      std::vector<std::string>& pronunciations) const;
+
+  void GetTaggedValues(const UniqueNames& name_offset_map,
+                       const OSMPronunciation& pronunciation,
+                       const size_t& names_size,
+                       std::vector<std::string>& names,
+                       std::vector<std::string>& pronunciations) const;
 
   // OSM way Id
   uint64_t osmwayid_;
@@ -1760,7 +1775,8 @@ struct OSMWay {
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
 
-  uint8_t spare_;
+  // layer index(Z-level) of the way relatively to other levels
+  int8_t layer_;
 };
 
 } // namespace mjolnir

@@ -362,8 +362,8 @@ public:
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetTaggedNames(const DirectedEdge* edge,
-                                          bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues(const DirectedEdge* edge,
+                                           bool only_pronunciations = false) const;
 
   /**
    * Convenience method to get the types for the names given the edge

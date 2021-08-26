@@ -95,13 +95,16 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
+void OSMWay::set_layer(int8_t layer) {
+  layer_ = layer;
+}
+
 void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
                                const UniqueNames& name_offset_map,
                                const uint32_t pronunciation_index,
                                const size_t name_tokens_size,
                                const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) const {
-
   size_t k = key;
   std::vector<std::string> pronunciation_tokens;
   if (pronunciation_index != 0)
@@ -292,18 +295,22 @@ void OSMWay::GetNames(const std::string& ref,
 }
 
 // Get the tagged names for an edge
-void OSMWay::GetTaggedNames(const UniqueNames& name_offset_map,
-                            const OSMPronunciation& pronunciation,
-                            const size_t& names_size,
-                            std::vector<std::string>& names,
-                            std::vector<std::string>& pronunciations) const {
+void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
+                             const OSMPronunciation& pronunciation,
+                             const size_t& names_size,
+                             std::vector<std::string>& names,
+                             std::vector<std::string>& pronunciations) const {
+
   std::vector<std::string> tokens;
 
+  auto encode_tag = [](TaggedValue tag) {
+    return std::string(1, static_cast<std::string::value_type>(tag));
+  };
   if (tunnel_name_index_ != 0) {
     // tunnel names
-    tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
+    auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
     for (const auto& t : tokens) {
-      names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
+      names.emplace_back(encode_tag(TaggedValue::kTunnel) + t);
     }
 
     size_t key = (names_size + names.size()) - tokens.size();
@@ -319,6 +326,10 @@ void OSMWay::GetTaggedNames(const UniqueNames& name_offset_map,
     AddPronunciations(pronunciations, name_offset_map,
                       pronunciation.tunnel_name_pronunciation_jeita_index(), tokens.size(), key,
                       PronunciationAlphabet::kXJeita);
+  }
+
+  if (layer_ != 0) {
+    names.emplace_back(encode_tag(TaggedValue::kLayer) + static_cast<char>(layer_));
   }
 }
 

@@ -574,7 +574,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
-                                       const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& tagged_values,
                                        const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
@@ -618,7 +618,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
-    for (const auto& name : tagged_names) {
+    for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
         LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
@@ -645,9 +645,13 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
           ss << pronunciation;
         }
 
+        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
+          return std::string(1, static_cast<std::string::value_type>(tag));
+        };
+
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kPronunciation)) +
-                            ss.str())};
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
+
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);
@@ -715,7 +719,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
-                                       const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& tagged_values,
                                        const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
@@ -759,7 +763,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
-    for (const auto& name : tagged_names) {
+    for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
         LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
@@ -786,9 +790,13 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
           ss << pronunciation;
         }
 
+        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
+          return std::string(1, static_cast<std::string::value_type>(tag));
+        };
+
         // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(std::to_string(static_cast<uint8_t>(baldr::TaggedName::kPronunciation)) +
-                            ss.str())};
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
+
         ni.is_route_num_ = 0;
         ni.tagged_ = 1;
         name_info_list.emplace_back(ni);

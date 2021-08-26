@@ -649,12 +649,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_names, pronunciations;
+        std::vector<std::string> names, tagged_values, pronunciations;
+
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_names, pronunciations, 0, added);
+                                            names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -697,13 +698,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_named(false);
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_names, pronunciations;
+        std::vector<std::string> names, tagged_values, pronunciations;
         std::list<PointLL> shape = {station_ll, egress_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_names, pronunciations, 0, added);
+                                            names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -754,13 +755,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_names, pronunciations;
+        std::vector<std::string> names, tagged_values, pronunciations;
         std::list<PointLL> shape = {station_ll, platform_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_names, pronunciations, 0, added);
+                                            names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -832,13 +833,14 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     directededge.set_named(false);
     // Add edge info to the tile and set the offset in the directed edge
     bool added = false;
-    std::vector<std::string> names, tagged_names, pronunciations;
+    std::vector<std::string> names, tagged_values, pronunciations;
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
     uint32_t edge_info_offset =
         tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                        names, tagged_names, pronunciations, 0, added);
+                                        names, tagged_values, pronunciations, 0, added);
+
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 
@@ -904,7 +906,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Leave the name empty. Use the trip Id to look up the route Id and
       // route within TripLegBuilder.
       bool added = false;
-      std::vector<std::string> names, tagged_names, pronunciations;
+      std::vector<std::string> names, tagged_values, pronunciations;
 
       std::vector<PointLL> points;
       std::vector<float> distance;
@@ -928,7 +930,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, endnode, 0, 0, 0, 0,
-                                          shape, names, tagged_names, pronunciations, 0, added);
+                                          shape, names, tagged_values, pronunciations, 0, added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
