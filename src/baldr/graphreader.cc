@@ -44,7 +44,7 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // A lambda for loading the contents of a graph tile tar from an index file
-  auto index_loader = [this](const std::string& filename, const char* tar_begin,
+  auto index_loader = [this](const std::string& filename, const char* index_begin,
                              size_t size) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
     if (filename != "index.bin")
@@ -52,12 +52,13 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 
     // get the info
     decltype(midgard::tar::contents) contents;
-    tile_index_entry t = {0, 9, 9};
+    tile_index_entry t = {};
     for (const auto& entry : midgard::iterable_t<tile_index_entry>(&t, size)) {
       auto inserted = contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
-                         std::make_pair(const_cast<char*>(tar_begin + entry.offset), entry.size)));
-      tiles[entry.tile_id] = std::make_pair(const_cast<char*>(tar_begin + entry.offset), entry.size);
+                         std::make_pair(const_cast<char*>(index_begin + entry.offset), entry.size)));
+      tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                    std::forward_as_tuple(const_cast<char*>(index_begin + entry.offset), entry.size));
     }
     // hand it back to the tar parser
     return contents;

@@ -29,7 +29,6 @@ LOGGER = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
 LOGGER.addHandler(handler)
-LOGGER.setLevel(logging.WARNING)
 
 
 def get_tile_count(in_path: Path) -> int:
