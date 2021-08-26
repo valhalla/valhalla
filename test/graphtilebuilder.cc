@@ -147,8 +147,8 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   auto t = types.at(0);
   EXPECT_EQ(t, false);
-
-  auto names_and_types_tagged = ei.GetTags();
+  
+  const auto& names_and_types_tagged = ei.GetTags();
   EXPECT_EQ(names_and_types_tagged.size(), 1);
 
   n4 = names_and_types.at(0);
