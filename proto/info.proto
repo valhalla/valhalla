@@ -2,11 +2,27 @@ syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 
-message Statistic {
-  optional string name = 1;  // the name of the statistic
-  optional double value = 2; // the value of the statistic
+// Statistics are modelled off of the statsd API
+
+// the type of statistic we are recording
+enum StatisticType {
+  count = 0;
+  gauge = 1;
+  timing = 2;
+  set = 3;
 }
 
-message Info{
+// The key for a statistic regarding the running of the service should be of the form:
+// action.worker_name.metric so that we can tell what type of request it was and where in the pipeline it happened
+
+message Statistic {
+  optional string key = 1;          // the key/name of the statistic
+  optional double value = 2;        // the value of the statistic
+  optional float frequency = 3;     // how often to report the statistic [0-1]
+  optional StatisticType type = 4;  // what type is it
+}
+
+message Info {
   repeated Statistic statistics = 1;
+  optional bool error = 2;
 }

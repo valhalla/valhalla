@@ -71,7 +71,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
 */
 std::string loki_worker_t::height(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::height");
+  auto _ = measure_scope_time(request);
 
   auto shape = init_height(request);
   // get the elevation of each posting

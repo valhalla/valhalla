@@ -189,6 +189,11 @@ public:
       }
     };
 
+    tag_handlers_["layer"] = [this]() {
+      auto layer = static_cast<int8_t>(std::stoi(tag_.second));
+      way_.set_layer(layer);
+    };
+
     tag_handlers_["road_class"] = [this]() {
       RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
       switch (roadclass) {
@@ -907,14 +912,18 @@ public:
       } else if (value.find("paved") != std::string::npos ||
                  value.find("pavement") != std::string::npos ||
                  value.find("asphalt") != std::string::npos ||
+                 // concrete, concrete:lanes, concrete:plates
                  value.find("concrete") != std::string::npos ||
-                 value.find("cement") != std::string::npos) {
+                 value.find("cement") != std::string::npos ||
+                 value.find("chipseal") != std::string::npos ||
+                 value.find("metal") != std::string::npos) {
         way_.set_surface(Surface::kPavedSmooth);
 
       } else if (value.find("tartan") != std::string::npos ||
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
-                 value.find("sett") != std::string::npos) {
+                 value.find("sett") != std::string::npos ||
+                 value.find("grass_paver") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
@@ -933,11 +942,12 @@ public:
                  value.find("mud") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
-      } else if (value.find("gravel") != std::string::npos ||
+      } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
                  value.find("pebblestone") != std::string::npos ||
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
-      } else if (value.find("grass") != std::string::npos) {
+      } else if (value.find("grass") != std::string::npos ||
+                 value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
       } else {
@@ -1473,10 +1483,26 @@ public:
         ++osmdata_.node_name_count;
       } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals");
+        n.set_stop_sign(tag.second == "stop");
+        n.set_yield_sign(tag.second == "give_way");
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true");
       } else if (tag.first == "backward_signal") {
         n.set_backward_signal(tag.second == "true");
+      } else if (tag.first == "forward_stop") {
+        n.set_forward_stop(tag.second == "true");
+        n.set_direction(true);
+      } else if (tag.first == "backward_stop") {
+        n.set_backward_stop(tag.second == "true");
+        n.set_direction(true);
+      } else if (tag.first == "forward_yield") {
+        n.set_forward_yield(tag.second == "true");
+        n.set_direction(true);
+      } else if (tag.first == "backward_yield") {
+        n.set_backward_yield(tag.second == "true");
+        n.set_direction(true);
+      } else if (tag.first == "stop" || tag.first == "give_way") {
+        n.set_minor(tag.second == "minor");
       } else if (use_urban_tag_ && tag.first == "urban") {
         n.set_urban(tag.second == "true");
       } else if (tag.first == "exit_to" && is_highway_junction && hasTag) {
@@ -1703,7 +1729,15 @@ public:
       tag_ = kv;
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
-        it->second();
+        try {
+          it->second();
+        } catch (const std::exception& ex) {
+          std::stringstream ss;
+          ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
+             << std::string{ex.what()};
+          LOG_WARN(ss.str());
+        }
+
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||

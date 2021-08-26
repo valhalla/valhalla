@@ -113,7 +113,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index,
-                    const graph_tile_ptr& tile,
+                    const graph_tile_ptr& end_node_tile,
                     const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
@@ -133,7 +133,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
-    std::string country_code_iso_2 = country_code_from_edge(tile, de);
+    std::string country_code_iso_2 = country_code_from_edge(end_node_tile, de);
     if (!country_code_iso_2.empty()) {
       new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
     }
@@ -176,6 +176,7 @@ valhalla::TripLeg_Closure* fetch_or_create_closure_annotation(TripLeg& leg) {
  */
 void SetShapeAttributes(const AttributesController& controller,
                         const graph_tile_ptr& tile,
+                        const graph_tile_ptr& end_node_tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
@@ -265,7 +266,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, end_node_tile, *edge);
         continue;
       }
 
@@ -384,7 +385,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
+        UpdateIncident(incidents.tile, leg, incident, i, end_node_tile, *edge);
       }
     }
 
@@ -860,13 +861,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   // Add tagged names to the edge if requested
-  if (controller.attributes.at(kEdgeTaggedNames)) {
-    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
-    trip_edge->mutable_tagged_name()->Reserve(tagged_names_and_types.size());
-    for (const auto& tagged_name_and_type : tagged_names_and_types) {
-      auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
-      trip_edge_tag_name->set_value(tagged_name_and_type.first);
-      trip_edge_tag_name->set_type(static_cast<TaggedName_Type>(tagged_name_and_type.second));
+  if (controller.attributes.at(kEdgeTaggedValues)) {
+    const auto& tagged_values_and_types = edgeinfo.GetTags();
+    trip_edge->mutable_tagged_value()->Reserve(tagged_values_and_types.size());
+    for (const auto& tagged_value_and_type : tagged_values_and_types) {
+      auto* trip_edge_tag_name = trip_edge->mutable_tagged_value()->Add();
+      trip_edge_tag_name->set_value(tagged_value_and_type.second);
+      trip_edge_tag_name->set_type(
+          static_cast<TaggedValue_Type>(static_cast<uint8_t>(tagged_value_and_type.first)));
     }
   }
 
@@ -1699,8 +1701,10 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
-                       trim_start_pct, trim_end_pct, edge_seconds,
+    graph_tile_ptr end_node_tile = graphtile;
+    graphreader.GetGraphTile(directededge->endnode(), end_node_tile);
+    SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
+                       trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested

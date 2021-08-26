@@ -68,7 +68,7 @@ namespace thor {
  */
 void thor_worker_t::trace_route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::trace_route");
+  auto _ = measure_scope_time(request);
 
   // Parse request
   parse_locations(request);
@@ -373,7 +373,7 @@ void thor_worker_t::build_route(
 
     for (int i = origin_match_idx; i <= dest_match_idx; ++i) {
       options.mutable_shape(i)->set_route_index(route_index);
-      options.mutable_shape(i)->set_shape_index(std::numeric_limits<uint32_t>::max());
+      options.mutable_shape(i)->set_waypoint_index(std::numeric_limits<uint32_t>::max());
     }
 
     // initialize the origin and destination location for route
@@ -382,8 +382,8 @@ void thor_worker_t::build_route(
 
     // when handling multi routes, orsm serializer need to know both the
     // matching_index(route_index) and the waypoint_index(shape_index).
-    origin_location->set_shape_index(way_point_index);
-    destination_location->set_shape_index(++way_point_index);
+    origin_location->set_waypoint_index(way_point_index);
+    destination_location->set_waypoint_index(++way_point_index);
 
     // we fake up something that looks like the output of loki. segment edge id and matchresult edge
     // ids can disagree at node snaps but leg building requires that we refer to edges in the path.

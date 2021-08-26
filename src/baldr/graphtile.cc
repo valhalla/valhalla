@@ -671,9 +671,9 @@ std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge) const {
 
 // Convenience method to get the tagged names for an edge given the offset to the
 // edge info
-std::vector<std::string> GraphTile::GetTaggedNames(const DirectedEdge* edge,
-                                                   bool only_pronunciations) const {
-  return edgeinfo(edge).GetTaggedNames(only_pronunciations);
+std::vector<std::string> GraphTile::GetTaggedValues(const DirectedEdge* edge,
+                                                    bool only_pronunciations) const {
+  return edgeinfo(edge).GetTaggedValues(only_pronunciations);
 }
 
 uint16_t GraphTile::GetTypes(const DirectedEdge* edge) const {

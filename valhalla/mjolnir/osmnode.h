@@ -29,14 +29,22 @@ struct OSMNode {
 
   uint64_t country_iso_index_ : 21;
   uint64_t state_iso_index_ : 21;
-  uint64_t spare_ : 22;
+  uint64_t traffic_signal_ : 1;
+  uint64_t forward_signal_ : 1;
+  uint64_t backward_signal_ : 1;
+  uint64_t stop_sign_ : 1;
+  uint64_t forward_stop_ : 1;
+  uint64_t backward_stop_ : 1;
+  uint64_t yield_sign_ : 1;
+  uint64_t forward_yield_ : 1;
+  uint64_t backward_yield_ : 1;
+  uint64_t minor_ : 1;
+  uint64_t direction_ : 1;
+  uint64_t spare_ : 11;
 
   uint32_t access_ : 12;
   uint32_t type_ : 4;
   uint32_t intersection_ : 1;
-  uint32_t traffic_signal_ : 1;
-  uint32_t forward_signal_ : 1;
-  uint32_t backward_signal_ : 1;
   uint32_t non_link_edge_ : 1;
   uint32_t link_edge_ : 1;
   uint32_t shortlink_ : 1; // Link edge < kMaxInternalLength
@@ -45,8 +53,8 @@ struct OSMNode {
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
   uint32_t tagged_access_ : 1; // Was access originally tagged?
-  uint64_t private_access_ : 1;
-  uint32_t spare1_ : 3;
+  uint32_t private_access_ : 1;
+  uint32_t spare1_ : 6;
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
@@ -278,6 +286,118 @@ struct OSMNode {
    */
   bool backward_signal() const {
     return backward_signal_;
+  }
+
+  /**
+   * Set stop sign flag.
+   */
+  void set_stop_sign(const bool sign) {
+    stop_sign_ = sign;
+  }
+
+  /**
+   * Get the stop sign flag.
+   */
+  bool stop_sign() const {
+    return stop_sign_;
+  }
+
+  /**
+   * Set forward_stop flag.
+   */
+  void set_forward_stop(const bool forward_stop) {
+    forward_stop_ = forward_stop;
+  }
+
+  /**
+   * Get the forward_stop flag.
+   */
+  bool forward_stop() const {
+    return forward_stop_;
+  }
+
+  /**
+   * Set backward_stop flag.
+   */
+  void set_backward_stop(const bool backward_stop) {
+    backward_stop_ = backward_stop;
+  }
+
+  /**
+   * Get the backward_stop flag.
+   */
+  bool backward_stop() const {
+    return backward_stop_;
+  }
+
+  /**
+   * Set yield sign flag.
+   */
+  void set_yield_sign(const bool sign) {
+    yield_sign_ = sign;
+  }
+
+  /**
+   * Get the yield sign flag.
+   */
+  bool yield_sign() const {
+    return yield_sign_;
+  }
+
+  /**
+   * Set forward_yield flag.
+   */
+  void set_forward_yield(const bool forward_yield) {
+    forward_yield_ = forward_yield;
+  }
+
+  /**
+   * Get the forward_yield flag.
+   */
+  bool forward_yield() const {
+    return forward_yield_;
+  }
+
+  /**
+   * Set backward_yield flag.
+   */
+  void set_backward_yield(const bool backward_yield) {
+    backward_yield_ = backward_yield;
+  }
+
+  /**
+   * Get the backward_yield flag.
+   */
+  bool backward_yield() const {
+    return backward_yield_;
+  }
+
+  /**
+   * Set minor flag.
+   */
+  void set_minor(const bool minor) {
+    minor_ = minor;
+  }
+
+  /**
+   * Get the minor flag.
+   */
+  bool minor() const {
+    return minor_;
+  }
+
+  /**
+   * Set direction flag.
+   */
+  void set_direction(const bool direction) {
+    direction_ = direction;
+  }
+
+  /**
+   * Get the direction flag.
+   */
+  bool direction() const {
+    return direction_;
   }
 
   /**

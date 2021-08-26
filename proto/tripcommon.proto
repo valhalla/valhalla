@@ -92,9 +92,10 @@ message Location {
   optional uint32 search_cutoff = 28;
   optional uint32 street_side_tolerance = 29;
   optional uint32 route_index = 30;
-  optional uint32 shape_index = 31;
+  optional uint32 waypoint_index = 31;
   optional SearchFilter search_filter = 32;
   optional uint32 street_side_max_distance = 33;
+  optional int32 preferred_layer = 34;
 }
 
 message TransitEgressInfo {
@@ -165,10 +166,13 @@ enum RoadClass {
   kServiceOther = 7;
 }
 
-message TaggedName {
+message TaggedValue {
   enum Type {
-    kTunnel = 1;
-    kBridge = 2;
+    kLayer = 1;
+    // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
+    // see https://github.com/valhalla/valhalla/issues/3262
+    kTunnel = 49; // static_cast<uint8_t>('1')
+    kBridge = 50; // static_cast<uint8_t>('2')
   }
   optional string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
   optional Type type = 2;      // The type of tagged name (tunnel or bridge)

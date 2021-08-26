@@ -13,7 +13,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#ifndef _MSC_VER
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 
 #include <gmock/gmock.h>
@@ -61,7 +63,11 @@ struct MMap {
   MMap(const char* filename) {
     fd = open(filename, O_RDWR);
     struct stat s;
+#ifdef _MSC_VER
+    _fstat64(fd, &s);
+#else
     fstat(fd, &s);
+#endif
     data = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     length = s.st_size;
   }
@@ -342,6 +348,9 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "skadi": {
           "max_shape": 750000,
           "min_resample": 10.0
+        },
+        "status": {
+          "allow_verbose": true
         },
         "taxi": {
           "max_distance": 5000000.0,

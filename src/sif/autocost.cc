@@ -54,6 +54,9 @@ constexpr float kTaxiFactor = 0.85f;
 // Do not avoid alleys by default
 constexpr float kDefaultAlleyFactor = 1.0f;
 
+// How much to favor turn channels
+constexpr float kTurnChannelFactor = 0.6f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -409,7 +412,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -433,7 +437,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
 
@@ -501,6 +506,12 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
     case Use::kServiceRoad:
       factor *= service_factor_;
+      break;
+    case Use::kTurnChannel:
+      if (flow_sources & kDefaultFlowMask) {
+        // boost only historic & live speeds
+        factor *= kTurnChannelFactor;
+      }
       break;
     default:
       break;
@@ -797,7 +808,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -821,7 +833,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
 
@@ -973,7 +986,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -997,7 +1011,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
 
@@ -1148,7 +1163,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -1172,7 +1188,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,

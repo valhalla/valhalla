@@ -9,14 +9,16 @@
 using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
-class TaggedNames : public ::testing::Test {
+class TaggedValues : public ::testing::Test {
 protected:
   static gurka::map map;
+  static std::string ascii_map;
+  static gurka::nodelayout layout;
 
   static void SetUpTestSuite() {
     constexpr double gridsize_metres = 100;
 
-    const std::string ascii_map = R"(
+    ascii_map = R"(
                           A
                           |
                           |
@@ -27,28 +29,56 @@ protected:
                           |
                           |
                           H
-  )";
+    )";
 
-    const gurka::ways ways =
-        {{"AB", {{"highway", "motorway"}}},
-         {"BC", {{"highway", "motorway"}, {"tunnel", "yes"}, {"tunnel:name", "Fort McHenry Tunnel"}}},
-         {"CD", {{"highway", "motorway"}, {"tunnel", "yes"}, {"tunnel:name", "Fort McHenry Tunnel"}}},
-         {"DE", {{"highway", "motorway"}, {"tunnel", "yes"}, {"tunnel:name", "Fort McHenry Tunnel"}}},
-         {"EF", {{"highway", "motorway"}}},
-         {"BG", {{"highway", "motorway"}}},
-         {"GH", {{"highway", "motorway"}}}};
+    const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
+                              {"BC",
+                               {{"highway", "motorway"},
+                                {"layer", "-3"},
+                                {"tunnel", "yes"},
+                                {"tunnel:name", "Fort McHenry Tunnel"}}},
+                              {"CD",
+                               {{"highway", "motorway"},
+                                {"layer", "-2"},
+                                {"tunnel", "yes"},
+                                {"tunnel:name", "Fort McHenry Tunnel"}}},
+                              {"DE",
+                               {{"highway", "motorway"},
+                                {"layer", "-1"},
+                                {"tunnel", "yes"},
+                                {"tunnel:name", "Fort McHenry Tunnel"}}},
+                              {"EF", {{"highway", "motorway"}}},
+                              {"BG", {{"highway", "motorway"}, {"layer", "2"}}},
+                              {"GH", {{"highway", "motorway"}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_names", build_config);
+    layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_values", build_config);
   }
 };
-gurka::map TaggedNames::map = {};
+gurka::map TaggedValues::map = {};
+std::string TaggedValues::ascii_map = {};
+gurka::nodelayout TaggedValues::layout = {};
+
 Api api;
 rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(TaggedNames, Tunnel) {
+TEST_F(TaggedValues, Layer) {
+  baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
+
+  auto get_layer = [&](auto from, auto to) {
+    auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
+    return graphreader.edgeinfo(edgeId).layer();
+  };
+  EXPECT_EQ(get_layer("A", "B"), 0);
+  EXPECT_EQ(get_layer("B", "C"), -3);
+  EXPECT_EQ(get_layer("C", "D"), -2);
+  EXPECT_EQ(get_layer("D", "E"), -1);
+  EXPECT_EQ(get_layer("B", "G"), 2);
+}
+
+TEST_F(TaggedValues, Tunnel) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -56,23 +86,29 @@ TEST_F(TaggedNames, Tunnel) {
   EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
 
   EXPECT_EQ(leg.node(1).edge().tunnel(), true);
-  EXPECT_TRUE(leg.node(1).edge().tagged_name().Get(0).type() == TaggedName_Type_kTunnel);
-  EXPECT_TRUE(leg.node(1).edge().tagged_name().Get(0).value() == "Fort McHenry Tunnel");
+  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
+  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).value(), std::string(1, char(-3)));
+  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(1).type(), TaggedValue_Type_kTunnel);
+  EXPECT_EQ(leg.node(1).edge().tagged_value().Get(1).value(), "Fort McHenry Tunnel");
 
   EXPECT_EQ(leg.node(2).edge().tunnel(), true);
-  EXPECT_TRUE(leg.node(2).edge().tagged_name().Get(0).type() == TaggedName_Type_kTunnel);
-  EXPECT_TRUE(leg.node(2).edge().tagged_name().Get(0).value() == "Fort McHenry Tunnel");
+  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
+  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(0).value(), std::string(1, char(-2)));
+  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(1).type(), TaggedValue_Type_kTunnel);
+  EXPECT_EQ(leg.node(2).edge().tagged_value().Get(1).value(), "Fort McHenry Tunnel");
 
   EXPECT_EQ(leg.node(3).edge().tunnel(), true);
-  EXPECT_TRUE(leg.node(3).edge().tagged_name().Get(0).type() == TaggedName_Type_kTunnel);
-  EXPECT_TRUE(leg.node(3).edge().tagged_name().Get(0).value() == "Fort McHenry Tunnel");
+  EXPECT_EQ(leg.node(3).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
+  EXPECT_EQ(leg.node(3).edge().tagged_value().Get(0).value(), std::string(1, char(-1)));
+  EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).type() == TaggedValue_Type_kTunnel);
+  EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).value() == "Fort McHenry Tunnel");
 
   EXPECT_EQ(leg.node(4).edge().has_tunnel(), false);
 
   EXPECT_EQ(leg.node(5).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNames, NoTunnel) {
+TEST_F(TaggedValues, NoTunnel) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -82,7 +118,7 @@ TEST_F(TaggedNames, NoTunnel) {
   EXPECT_EQ(leg.node(2).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNames, test_taking_tunnel) {
+TEST_F(TaggedValues, test_taking_tunnel) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -137,7 +173,7 @@ TEST_F(TaggedNames, test_taking_tunnel) {
   }
 }
 
-TEST_F(TaggedNames, test_bypass_tunnel) {
+TEST_F(TaggedValues, test_bypass_tunnel) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
