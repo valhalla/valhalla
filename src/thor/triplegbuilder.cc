@@ -1666,20 +1666,12 @@ void TripLegBuilder::Build(
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
 
-    std::cout << ">>>>>>>>>>>>>>>> edge_index: " << edge_index << std::endl;
-    std::cout << ">>>>>>>>>>>>>>>> intermediate_locs_iterator->leg_shape_index: "
-              << intermediate_locs_iterator->leg_shape_index() << std::endl;
-    // If we hit the edge index that matches our through location edge index, we need to reset to the
-    // shape index then increment the iterator
+    // If we are at a node or if we hit the edge index that matches our through location edge index,
+    // we need to reset to the shape index then increment the iterator
     if (intermediate_locs_iterator != throughs.end() &&
-        intermediate_locs_iterator->leg_shape_index() == edge_index) {
+        (intermediate_locs_iterator->leg_shape_index() == edge_index || directededge->endnode())) {
       intermediate_locs_iterator->set_leg_shape_index(trip_shape.size() - 1);
       ++intermediate_locs_iterator;
-      // There will be times when there is no shape index set on the through locso we will skip those
-      while (intermediate_locs_iterator != throughs.end() &&
-             !intermediate_locs_iterator->has_leg_shape_index()) {
-        ++intermediate_locs_iterator;
-      }
     }
 
     // Set length if requested. Convert to km

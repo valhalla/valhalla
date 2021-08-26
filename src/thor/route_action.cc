@@ -54,12 +54,6 @@ void intermediate_loc_edge_trimming(
     return;
   }
 
-  // Do not add an intermediate location if the connections are at a graph node we dont need to signal
-  // a through/via.
-  if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
-    return;
-  }
-
   PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
   double dist_along = in_pe->percent_along();
 
@@ -90,7 +84,8 @@ void intermediate_loc_edge_trimming(
     }
   } else {
     // Insert an intermediate location so the last edge of the first segment is trimmed at the
-    // beginning from 0 to dist_along. Set the first flip_index depends on arrive by or depart_at
+    // beginning from 0 to dist_along. Set the first flip_index depends on arrive by or depart_at.
+    // These intermediate locations will also include connections at a graph node.
     auto inserted = intermediate_locs.insert(
         {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
     // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
