@@ -207,15 +207,15 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 /*
  * This function serializes the via_waypoints object on the leg.
  */
-valhalla::baldr::json::MapPtr serialize_intermediate_waypoints(double distance_from_leg_start,
-                                                               const valhalla::Location& location,
-                                                               const uint64_t geometry_index) {
+valhalla::baldr::json::MapPtr serialize_intermediate_waypoints(const valhalla::Location& location,
+                                                               uint64_t waypoint_index) {
   // Create a via waypoint to add to the array
   auto via_waypoint = json::map({});
   // Add distance in meters from the input location to the silent waypoint
-  via_waypoint->emplace("distance_from_leg_start", json::fixed_t{distance_from_leg_start, 3});
-  via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
-  via_waypoint->emplace("geometry_index", geometry_index);
+  via_waypoint->emplace("distance_from_leg_start", json::fixed_t{location.distance_from_origin(), 3});
+  // Why isnt waypoint index set in the parser
+  via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+  via_waypoint->emplace("geometry_index", static_cast<uint64_t>(location.leg_shape_index()));
 
   return via_waypoint;
 }
@@ -262,20 +262,15 @@ json::ArrayPtr intermediate_waypoints(valhalla::Options options, const std::vect
   auto locs = *options.mutable_locations();
   auto via_waypoints = json::array({});
   double distance_from_leg_start = 0;
+  uint64_t waypoint_index = 0;
   // only loop thru the locations that are not origin or destinations
-  for (auto loc_i = 1; loc_i < locs.size(); loc_i++) {
+  for (const auto& loc : options.locations()) {
     // Only create via_waypoints object if the locations are via or through types
-    if (locs.Get(loc_i).type() == valhalla::Location::kVia ||
-        locs.Get(loc_i).type() == valhalla::Location::kThrough) {
-      locs.Mutable(loc_i)->set_waypoint_index(loc_i);
-      uint64_t geometry_index = locs.Mutable(loc_i)->leg_shape_index();
-      // Calculate the distance from the origin to the intermediate location
-      distance_from_leg_start = shape[0].Distance(shape[geometry_index]);
+    if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
 
-      via_waypoints->emplace_back(osrm::serialize_intermediate_waypoints(distance_from_leg_start,
-                                                                         locs.Get(loc_i),
-                                                                         geometry_index));
+      via_waypoints->emplace_back(osrm::serialize_intermediate_waypoints(loc, waypoint_index));
     }
+    waypoint_index++;
   }
   return via_waypoints;
 }

@@ -1563,35 +1563,16 @@ void TripLegBuilder::Build(
       // Grab the edge begin and end info
       auto& edge_begin_info = edge_trimming->at(edge_index).first;
       auto& edge_end_info = edge_trimming->at(edge_index).second;
-      std::cout << "######################################## edge_begin_info intermediate vertex:: "
-                << edge_begin_info.vertex.first << ", " << edge_begin_info.vertex.second << std::endl;
-      std::cout
-          << "######################################## edge_begin_info intermediate distance_along:: "
-          << edge_begin_info.distance_along << std::endl;
-
-      std::cout << "######################################## edge_end_info intermediate vertex:: "
-                << edge_end_info.vertex.first << ", " << edge_end_info.vertex.second << std::endl;
-      std::cout
-          << "######################################## edge_end_info intermediate distance_along:: "
-          << edge_end_info.distance_along << std::endl;
 
       // Handle partial shape for first edge
       if (is_first_edge && !edge_begin_info.trim) {
         edge_begin_info.trim = true;
         edge_begin_info.distance_along = start_pct;
         edge_begin_info.vertex = start_vrt;
-        std::cout << "######################################## HANDLE PARTIAL SHAPE FOR EDGE 1:: "
-                  << std::endl;
       } // No trimming needed
       else if (!edge_begin_info.trim) {
         edge_begin_info.distance_along = 0;
         edge_begin_info.vertex = edge_shape.front();
-        std::cout << "######################################## edge_begin_info origin vertex:: "
-                  << edge_begin_info.vertex.first << ", " << edge_begin_info.vertex.second
-                  << std::endl;
-        std::cout
-            << "######################################## edge_begin_info origin distance_along:: "
-            << edge_begin_info.distance_along << std::endl;
       }
 
       // Handle partial shape for last edge
@@ -1599,17 +1580,10 @@ void TripLegBuilder::Build(
         edge_end_info.trim = true;
         edge_end_info.distance_along = end_pct;
         edge_end_info.vertex = end_vrt;
-        std::cout << "######################################## HANDLE PARTIAL SHAPE FOR EDGE 2:: "
-                  << std::endl;
       } // No trimming needed
       else if (!edge_end_info.trim) {
         edge_end_info.distance_along = 1;
         edge_end_info.vertex = edge_shape.back();
-        std::cout << "######################################## edge_end_info destination vertex:: "
-                  << edge_end_info.vertex.first << ", " << edge_end_info.vertex.second << std::endl;
-        std::cout
-            << "######################################## edge_end_info destination distance_along:: "
-            << edge_end_info.distance_along << std::endl;
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
