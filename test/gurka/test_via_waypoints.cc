@@ -10,34 +10,26 @@ using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
 
-class ViaWaypoints : public testing::Test {
+class IntermediateLocations : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {
 protected:
   static gurka::map map;
+  static double distance(const std::string& startNode, const std::string& endNode) {
+    return map.nodes[startNode].Distance(map.nodes[endNode]);
+  }
 
   static void SetUpTestSuite() {
-    constexpr double gridsize_metres = 20;
-    const std::string ascii_map = R"(
-    A----B----C----D-456R----S----T----1E
-              |
-              |
-              F----2G
-              |
-              |
-              J----K---3L
-    )";
-
-    const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
-                              {"CD", {{"highway", "primary"}}}, {"DR", {{"highway", "primary"}}},
-                              {"RS", {{"highway", "primary"}}}, {"ST", {{"highway", "primary"}}},
-                              {"TE", {{"highway", "primary"}}}, {"CF", {{"highway", "primary"}}},
-                              {"FJ", {{"highway", "primary"}}}, {"FG", {{"highway", "primary"}}},
-                              {"JK", {{"highway", "primary"}}}, {"KL", {{"highway", "primary"}}}};
+    constexpr double gridsize_metres = 10;
+    const std::string ascii_map = R"(A1234B5678C)";
+    const gurka::ways ways = {
+        {"AB", {{"highway", "primary"}}},
+        {"BC", {{"highway", "primary"}}},
+    };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.00, 0.00});
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_via_waypoints", build_config);
   }
 };
-gurka::map ViaWaypoints::map = {};
+gurka::map IntermediateLocations::map = {};
 Api api;
 rapidjson::Document d;
 
@@ -45,425 +37,139 @@ rapidjson::Document d;
 // /route?json={"locations":[{"lon":5.1079374,"lat":52.0887174,"type":"break"},{"lon":5.109734024089489,"lat":52.087819087955299,"type":"via"},{"lon":5.111530648178978,"lat":52.0887174,"type":"break"}],"format":"osrm","costing":"auto","costing_options":{"auto":{"speed_types":["freeflow","constrained","predicted"]}},"verbose":true,"shape_match":"map_snap"}
 /*************************************************************/
 
-TEST_F(ViaWaypoints, test_single_through_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "L"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "break_through"}});
+TEST_P(IntermediateLocations, test_single) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "6", "B"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", intermediate_type},
+                                     {"/locations/2/type", "break"},
+                                     {"/date_time/type", date_time_type},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  // this will have 3 "TE"s because we now have T->1, 1->E since we are now trimming those edges
-  // and E->T(u-turn for through because of deadend), resulting in TE->TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "TE", "ST",
-                                           "RS", "DR", "CD", "CF", "FJ", "JK", "KL"});
+  // if its a through then we have to keep going past 6 in the same direction so in that case
+  // we get the edge name BC 3 times because we have it partially to reach 6, then partially to reach
+  // C then we uturn and take the whole thing back to B
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "BC", "BC"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 6);
-  // auto dist = map.nodes["A"].Distance(map.nodes["1"]);
-  // std::cout << dist << std::endl;
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 700, 1.0);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
+              distance("A", "6"), 1.0);
 }
 
-TEST_F(ViaWaypoints, test_single_through_at_node_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E", "L"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "break_through"}});
+TEST_P(IntermediateLocations, test_single_at_node) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C", "B"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", intermediate_type},
+                                     {"/locations/2/type", "break"},
+                                     {"/date_time/type", date_time_type},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  // this will have 2 "TE"s because we now have T->E since we are now trimming those edges
-  // and E->T(u-turn for through because of deadend), resulting in TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "ST", "RS",
-                                           "DR", "CD", "CF", "FJ", "JK", "KL"});
+  // since its at the node we see the edge name only twice once to hit the node and again to leave
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 7);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 720, 1.0);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
+              distance("A", "C"), 1.0);
 }
 
-TEST_F(ViaWaypoints, test_single_via_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "L"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "via"},
-                                  {"/locations/2/type", "break_through"}});
+TEST_P(IntermediateLocations, test_multiple) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "3", "5", "C"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", intermediate_type},
+                                     {"/locations/2/type", intermediate_type},
+                                     {"/locations/3/type", "break"},
+                                     {"/date_time/type", date_time_type},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  // this will have 2 "TE"s because we now have T->E since we are not trimming those edges and
-  // E->T(u-turn), resulting in TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "ST", "RS",
-                                           "DR", "CD", "CF", "FJ", "JK", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 6);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 700, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_multiple_throughs_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "L"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "through"},
-                                  {"/locations/3/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  gurka::assert::raw::expect_path(result,
-                                  {"AB", "BC", "CF", "FG", "FG", "FG", "FJ", "JK", "KL", "KL"});
+  gurka::assert::raw::expect_path(result, {"AB", "AB", "BC", "BC"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 359, 1.0);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 8);
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 739, 1.0);
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 899, 1.0);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
+              distance("A", "3"), 1.0);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt(), 3);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_leg_start"].GetDouble(),
+              distance("A", "5"), 1.0);
 }
 
-TEST_F(ViaWaypoints, test_multiple_vias_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "L"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "via"},
-                                  {"/locations/2/type", "via"},
-                                  {"/locations/3/type", "break_through"}});
+TEST_P(IntermediateLocations, test_multiple_single_edge) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  auto result = gurka::do_action(valhalla::Options::route, map,
+                                 {"A", "1", "2", "3", "4", "5", "6", "7", "8", "C"}, "auto",
+                                 {
+                                     {"/locations/0/type", "break"},
+                                     {"/locations/1/type", intermediate_type},
+                                     {"/locations/2/type", intermediate_type},
+                                     {"/locations/3/type", intermediate_type},
+                                     {"/locations/4/type", intermediate_type},
+                                     {"/locations/5/type", intermediate_type},
+                                     {"/locations/6/type", intermediate_type},
+                                     {"/locations/7/type", intermediate_type},
+                                     {"/locations/8/type", intermediate_type},
+                                     {"/locations/9/type", "break"},
+                                     {"/date_time/type", date_time_type},
+                                     {"/date_time/value", "2111-11-11T11:11"},
+                                 });
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FG", "FG", "FJ", "JK", "KL", "KL"});
+  gurka::assert::raw::expect_path(result,
+                                  {"AB", "AB", "AB", "AB", "AB", "BC", "BC", "BC", "BC", "BC"});
 
   ASSERT_EQ(d["routes"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
   ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 359, 1.0);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 7);
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 698, 1.0);
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 779, 1.0);
+  for (int i = 0; i < 8; ++i) {
+    ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i);
+    ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
+              i + 1 + (i > 3));
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_leg_start"].GetDouble(),
+                distance("A", std::to_string(i + 1)), 1.0);
+  }
 }
 
-TEST_F(ViaWaypoints, test_multiple_throughs_single_edge_depart_at) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "4", "5", "6", "E"}, "auto",
-                                 {{"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "through"},
-                                  {"/locations/3/type", "through"},
-                                  {"/locations/4/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  gurka::assert::raw::expect_path(result,
-                                  {"AB", "BC", "CD", "DR", "DR", "DR", "DR", "RS", "ST", "TE"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 3);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 340, 1.0);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 4);
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 399, 1.0);
-  EXPECT_EQ(via_waypoint[2]["waypoint_index"].GetInt(), 3);
-  EXPECT_EQ(via_waypoint[2]["geometry_index"].GetInt(), 5);
-  EXPECT_NEAR(via_waypoint[2]["distance_from_leg_start"].GetDouble(), 439, 1.0);
-
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 839, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_single_through_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "L"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "break_through"}});
-
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  // this will have 3 "TE"s because we now have T->1,1->E since we are now trimming those edges
-  // and E->T(u-turn for through because of deadend), resulting in TE->TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "TE", "ST",
-                                           "RS", "DR", "CD", "CF", "FJ", "JK", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 6);
-  // auto dist = map.nodes["A"].Distance(map.nodes["1"]);
-  // std::cout << dist << std::endl;
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 700, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_single_through_at_node_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E", "L"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  // this will have 2 "TE"s because we now have T->E since we are now trimming those edges
-  // and E->T(u-turn for through because of deadend), resulting in TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "ST", "RS",
-                                           "DR", "CD", "CF", "FJ", "JK", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 7);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 720, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_single_via_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "1", "L"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "via"},
-                                  {"/locations/2/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  // this will have 2 "TE"s because we now have T->E since we are not trimming those edges and
-  // E->T(u-turn), resulting in TE->TE
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DR", "RS", "ST", "TE", "TE", "ST", "RS",
-                                           "DR", "CD", "CF", "FJ", "JK", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint1 = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint1[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint1[0]["geometry_index"].GetInt(), 6);
-  EXPECT_NEAR(via_waypoint1[0]["distance_from_leg_start"].GetDouble(), 700, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_multiple_throughs_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "L"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "through"},
-                                  {"/locations/3/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  gurka::assert::raw::expect_path(result,
-                                  {"AB", "BC", "CF", "FG", "FG", "FG", "FJ", "JK", "KL", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 359, 1.0);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 8);
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 739, 1.0);
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 899, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_multiple_vias_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "2", "3", "L"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/0/type", "break_through"},
-                                  {"/locations/1/type", "via"},
-                                  {"/locations/2/type", "via"},
-                                  {"/locations/3/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FG", "FG", "FJ", "JK", "KL", "KL"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 359, 1.0);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 7);
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 698, 1.0);
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 779, 1.0);
-}
-
-TEST_F(ViaWaypoints, test_multiple_throughs_single_edge_arrive_by) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "4", "5", "6", "E"}, "auto",
-                                 {{"/date_time/type", "2"},
-                                  {"/date_time/value", "2022-12-01T08:00"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/2/type", "through"},
-                                  {"/locations/3/type", "through"},
-                                  {"/locations/4/type", "break_through"}});
-  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  gurka::assert::raw::expect_path(result,
-                                  {"AB", "BC", "CD", "DR", "DR", "DR", "DR", "RS", "ST", "TE"});
-
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 3);
-
-  // Expect via waypoint array at leg level
-  auto leg = d["routes"][0]["legs"][0].GetObject();
-  EXPECT_TRUE(leg.HasMember("via_waypoints"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][0].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][1].HasMember("distance_from_leg_start"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("waypoint_index"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("geometry_index"));
-  EXPECT_TRUE(leg["via_waypoints"][2].HasMember("distance_from_leg_start"));
-
-  auto via_waypoint = leg["via_waypoints"].GetArray();
-  EXPECT_EQ(via_waypoint[0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(via_waypoint[0]["geometry_index"].GetInt(), 3);
-  auto dist = map.nodes["A"].Distance(map.nodes["4"]);
-  EXPECT_NEAR(via_waypoint[0]["distance_from_leg_start"].GetDouble(), 184.337, .1);
-  EXPECT_EQ(via_waypoint[1]["waypoint_index"].GetInt(), 2);
-  EXPECT_EQ(via_waypoint[1]["geometry_index"].GetInt(), 4);
-  auto dist = map.nodes["A"].Distance(map.nodes["5"]);
-  EXPECT_NEAR(via_waypoint[1]["distance_from_leg_start"].GetDouble(), 184.376, .1);
-  EXPECT_EQ(via_waypoint[2]["waypoint_index"].GetInt(), 3);
-  EXPECT_EQ(via_waypoint[2]["geometry_index"].GetInt(), 5);
-  auto dist = map.nodes["A"].Distance(map.nodes["6"]);
-  EXPECT_NEAR(via_waypoint[2]["distance_from_leg_start"].GetDouble(), 208.96, .1);
-
-  // Compare the last via distance_from_leg_start with overall route-length, they should be similar
-  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), 514.269, 1.0);
-}
+// 1 is depart_at and 2 is arrive_by and 3 is invariant
+INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
+                         IntermediateLocations,
+                         ::testing::ValuesIn(std::vector<std::tuple<std::string, std::string>>{
+                             {"1", "through"},
+                             //{"2", "through"},
+                             //{"3", "through"},
+                             //{"1", "via"},
+                             //{"2", "via"},
+                             //{"3", "via"},
+                         }));
