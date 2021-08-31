@@ -428,6 +428,12 @@ public:
   T* end() {
     return tail;
   }
+  const T* begin() const {
+    return head;
+  }
+  const T* end() const {
+    return tail;
+  }
   T& operator[](size_t index) {
     return *(head + index);
   }

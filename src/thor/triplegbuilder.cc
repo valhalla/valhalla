@@ -428,7 +428,7 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
  */
 void CopyLocations(TripLeg& trip_path,
                    const valhalla::Location& origin,
-                   const std::list<valhalla::Location>& intermediates,
+                   const iterable_t<valhalla::Location>* intermediates,
                    const valhalla::Location& dest,
                    const std::vector<PathInfo>::const_iterator path_begin,
                    const std::vector<PathInfo>::const_iterator path_end) {
@@ -438,24 +438,26 @@ void CopyLocations(TripLeg& trip_path,
   RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
 
   // intermediates
-  for (const auto& intermediate : intermediates) {
-    // copy
-    valhalla::Location* tp_intermediate = trip_path.add_location();
-    tp_intermediate->CopyFrom(intermediate);
+  if (intermediates) {
+    for (const auto& intermediate : *intermediates) {
+      // copy
+      valhalla::Location* tp_intermediate = trip_path.add_location();
+      tp_intermediate->CopyFrom(intermediate);
 
-    // id set
-    std::unordered_set<uint64_t> ids;
-    for (const auto& e : tp_intermediate->path_edges()) {
-      ids.insert(e.graph_id());
+      // id set
+      std::unordered_set<uint64_t> ids;
+      for (const auto& e : tp_intermediate->path_edges()) {
+        ids.insert(e.graph_id());
+      }
+      // find id
+      auto found = std::find_if(pe, path_end, [&ids](const PathInfo& pi) {
+        return ids.find(pi.edgeid) != ids.end();
+      });
+      pe = found;
+      RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
+      std::cout << "#################################CopyLocations :: " << tp_intermediate->ll().lat()
+                << ", " << tp_intermediate->ll().lng() << std::endl;
     }
-    // find id
-    auto found = std::find_if(pe, path_end, [&ids](const PathInfo& pi) {
-      return ids.find(pi.edgeid) != ids.end();
-    });
-    pe = found;
-    RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
-    std::cout << "#################################CopyLocations :: " << tp_intermediate->ll().lat()
-              << ", " << tp_intermediate->ll().lng() << std::endl;
   }
 
   // destination
@@ -1333,11 +1335,11 @@ void TripLegBuilder::Build(
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,
     valhalla::Location& dest,
-    const std::list<valhalla::Location>& intermediate_locations,
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming,
+    iterable_t<Location>* intermediate_locs) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1348,7 +1350,7 @@ void TripLegBuilder::Build(
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  CopyLocations(trip_path, origin, intermediate_locations, dest, path_begin, path_end);
+  CopyLocations(trip_path, origin, intermediate_locs, dest, path_begin, path_end);
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
@@ -1451,8 +1453,8 @@ void TripLegBuilder::Build(
 
   // as we iterate over the path we mark intermediate locations with their place on the shape
   // we always have at least 2 non intermediates and we dont care about them for this
-  auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
-  auto intermediate_end = trip_path.mutable_location()->end() - 1;
+  auto intermediate_itr = intermediate_locs ? intermediate_locs->begin() : nullptr;
+  auto intermediate_end = intermediate_locs ? intermediate_locs->end() : nullptr;
 
   // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {

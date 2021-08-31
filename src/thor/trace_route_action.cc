@@ -166,8 +166,7 @@ void thor_worker_t::route_match(Api& request) {
       // Form the trip path based on mode costing, origin, destination, and path edges
       auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
       thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, pleg.begin(),
-                                  pleg.end(), *origin, *dest, std::list<valhalla::Location>{}, leg,
-                                  {"edge_walk"}, interrupt);
+                                  pleg.end(), *origin, *dest, leg, {"edge_walk"}, interrupt);
       // Next leg
       origin = dest;
     }
@@ -342,8 +341,7 @@ void thor_worker_t::build_trace(
   auto& leg = *request.mutable_trip()->add_routes()->add_legs();
   thor::TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                               path_edges.begin(), path_edges.end(), *origin_location,
-                              *destination_location, std::list<valhalla::Location>{}, leg,
-                              {"map_snap"}, interrupt, &edge_trimming);
+                              *destination_location, leg, {"map_snap"}, interrupt, &edge_trimming);
 }
 
 void thor_worker_t::build_route(
@@ -426,8 +424,7 @@ void thor_worker_t::build_route(
     auto& leg = *route->mutable_legs()->Add();
     TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                           path.first.cbegin(), path.first.cend(), *origin_location,
-                          *destination_location, std::list<valhalla::Location>{}, leg, {"map_snap"},
-                          interrupt, &edge_trimming);
+                          *destination_location, leg, {"map_snap"}, interrupt, &edge_trimming);
 
     if (path.second.back()->discontinuity) {
       ++route_index;

@@ -309,8 +309,7 @@ void thor_worker_t::centroid(Api& request) {
     auto* route = request.mutable_trip()->mutable_routes()->Add();
     auto& leg = *route->mutable_legs()->Add();
     thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                                *origin, dest, std::list<valhalla::Location>{}, leg, {"centroid"},
-                                interrupt, nullptr);
+                                *origin, dest, leg, {"centroid"}, interrupt);
 
     // TODO: set the time at the destination if time dependent
 
@@ -534,13 +533,12 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // location is a BREAK or if this is the last location
       if (is_break_point(*origin)) {
         // Move destination back to the last break and collect the throughs
-        std::list<valhalla::Location> throughs;
         while (!is_break_point(*destination)) {
-          throughs.push_back(*destination);
-          --destination;
-          if (throughs.back().has_leg_shape_index()) {
-            throughs.back().set_leg_shape_index((path.size() - throughs.back().leg_shape_index()));
+          if (destination->has_leg_shape_index()) {
+            destination->set_leg_shape_index((path.size() - destination->leg_shape_index()));
+            // TODO: we need to update all of the leg shape indices and distance_from_origin
           }
+          --destination;
         }
 
         // We have to flip the intermediate loc indices because we built them in backwards order
@@ -558,9 +556,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
+        iterable_t<Location> throughs(&*(origin + 1), &*destination);
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                              *origin, *destination, throughs, leg, algorithms, interrupt,
-                              &edge_trimming);
+                              *origin, *destination, leg, algorithms, interrupt, &edge_trimming,
+                              &throughs);
         path.clear();
         edge_trimming.clear();
       }
@@ -698,10 +697,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
       if (is_break_point(*destination)) {
-        // Move origin back to the last break and collect the throughs
-        std::list<valhalla::Location> throughs;
+        // Move origin back to the last break and collect the intermediate locations
         while (!is_break_point(*origin)) {
-          throughs.push_front(*origin);
           --origin;
         }
 
@@ -711,10 +708,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
-
+        iterable_t<Location> throughs(&*(origin + 1), &*destination);
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
-                                    path.end(), *origin, *destination, throughs, leg, algorithms,
-                                    interrupt, &edge_trimming);
+                                    path.end(), *origin, *destination, leg, algorithms, interrupt,
+                                    &edge_trimming, &throughs);
 
         path.clear();
         edge_trimming.clear();
