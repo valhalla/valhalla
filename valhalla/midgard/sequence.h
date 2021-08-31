@@ -667,8 +667,8 @@ struct tar {
 
   tar(const std::string& tar_file,
       bool regular_files_only = true,
-      const std::function<decltype(contents)(const std::string&, const char*, size_t)>& from_index =
-          nullptr)
+      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
+          from_index = nullptr)
       : tar_file(tar_file), corrupt_blocks(0) {
     // get the file size
     struct stat s;
@@ -710,7 +710,7 @@ struct tar {
         // the caller may be able to construct the contents via an index header let them try
         if (!tried_index && from_index != nullptr) {
           tried_index = true;
-          contents = from_index(name, mm.get(), size);
+          contents = from_index(name, position, mm.get(), size);
           // if it was able to intialize from an index we bail
           if (!contents.empty())
             return;

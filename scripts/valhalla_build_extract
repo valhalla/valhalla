@@ -10,13 +10,14 @@ import struct
 import sys
 import tarfile
 from tarfile import BLOCKSIZE
+from time import time
 from typing import Dict, Tuple, List
 
 description = """Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."""
 
-# "=" prefix means native byte order with standard size and no alignment:
-# https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment
-STRUCT_FORMAT = '<LQL'
+# "<" prefix means little-endian and no alignment
+# order is important! if uint64_t is not first, c++ will use padding bytes to unpack
+STRUCT_FORMAT = '<QLL'
 STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 INDEX_FILE = "index.bin"
 
@@ -47,7 +48,7 @@ def get_tile_id(path: str):
     return int(level) | (int(idx.replace('/', '')) << 3)
 
 
-def create_extract(tiles_fp: Path, extract_fp: Path):
+def create_extract(tiles_fp: Path, extract_fp: Path, traffic_fp: Path):
     """Actually creates the tar ball. Break out of main function for testability."""
     if not tiles_fp.exists() or not tiles_fp.is_dir():
         LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp} was not found on the filesystem.")
@@ -58,37 +59,46 @@ def create_extract(tiles_fp: Path, extract_fp: Path):
         LOGGER.critical(f"Directory {tiles_fp} does not contain any usable graph tiles.")
         sys.exit(1)
 
-    # write the in-memory index file
-    index_size = STRUCT_SIZE * tiles_count
-    index_fd = BytesIO(b'0' * index_size)
-    index_fd.seek(0)
+    tile_dirs = [tiles_fp]
+    
+    if not traffic_fp.exists() or not traffic_fp.is_dir():
+        LOGGER.warning(f"Traffic tiles do not exist.")
+    else:
+        tile_dirs.append(traffic_fp)
 
-    # first add the index file, then the tile dir to the tarfile
-    with tarfile.open(extract_fp, 'w') as tar:
-        tarinfo = tarfile.TarInfo(INDEX_FILE)
-        tarinfo.size = index_size
-        tar.addfile(tarinfo, index_fd)
-        index_fd.close()
+    for tile_dir in tile_dirs:
+        # write the in-memory index file
+        index_size = STRUCT_SIZE * tiles_count
+        index_fd = BytesIO(b'0' * index_size)
+        index_fd.seek(0)
 
-        tar.add(str(tiles_fp), recursive=True, arcname='')
+        # first add the index file, then the tile dir to the tarfile
+        with tarfile.open(extract_fp, 'w') as tar:
+            tarinfo = tarfile.TarInfo(INDEX_FILE)
+            tarinfo.size = index_size
+            tarinfo.mtime = int(time())
+            tar.addfile(tarinfo, index_fd)
+            index_fd.close()
 
-    # get the offset and size from the tarred tile members
-    index: List[Tuple[str, int, int]] = list()
-    with tarfile.open(extract_fp, 'r|') as tar:
-        for member in tar.getmembers():
-            if member.name.endswith('.gph'):
-                LOGGER.debug(f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}")
+            tar.add(str(tiles_fp), recursive=True, arcname='')
 
-                index.append((get_tile_id(member.name), member.offset_data, member.size))
+        # get the offset and size from the tarred tile members
+        index: List[Tuple[int, str, int]] = list()
+        with tarfile.open(extract_fp, 'r|') as tar:
+            for member in tar.getmembers():
+                if member.name.endswith('.gph'):
+                    LOGGER.debug(f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}")
 
-    # write back the actual index info
-    with open(extract_fp, 'r+b') as tar:
-        # jump to the data block, index.bin is the first file
-        tar.seek(BLOCKSIZE)
-        for entry in index:
-            tar.write(struct.pack(STRUCT_FORMAT, *entry))
+                    index.append((member.offset_data, get_tile_id(member.name), member.size))
 
-    print(f"Finished tarring {tiles_count} tiles to {extract_fp}")
+        # write back the actual index info
+        with open(extract_fp, 'r+b') as tar:
+            # jump to the data block, index.bin is the first file
+            tar.seek(BLOCKSIZE)
+            for entry in index:
+                tar.write(struct.pack(STRUCT_FORMAT, *entry))
+
+        print(f"Finished tarring {tiles_count} tiles to {tile_dir}")
 
 
 if __name__ == '__main__':
@@ -97,6 +107,7 @@ if __name__ == '__main__':
         config = json.load(f)
     extract_fp: Path = Path(config["mjolnir"]["tile_extract"])
     tiles_fp: Path = Path(config["mjolnir"]["tile_dir"])
+    traffic_fp: Path = Path(config["mjolnir"]["traffic_extract"])
 
     # set the right logger level
     if args.verbosity == 0:
@@ -106,4 +117,4 @@ if __name__ == '__main__':
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    create_extract(tiles_fp, extract_fp)
+    create_extract(tiles_fp, extract_fp, traffic_fp)
