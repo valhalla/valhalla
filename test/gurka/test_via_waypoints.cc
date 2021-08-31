@@ -61,8 +61,8 @@ TEST_P(IntermediateLocations, test_single) {
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["leg_geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["leg_distance"].GetDouble(),
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
               distance("A", "6"), 1.0);
 }
 
@@ -89,7 +89,7 @@ TEST_P(IntermediateLocations, test_single_at_node) {
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
               distance("A", "C"), 1.0);
 }
 
@@ -116,11 +116,11 @@ TEST_P(IntermediateLocations, test_multiple) {
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
               distance("A", "3"), 1.0);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt(), 3);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_leg_start"].GetDouble(),
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_start"].GetDouble(),
               distance("A", "5"), 1.0);
 }
 
@@ -157,7 +157,7 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i + 1);
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
               i + 1 + (i > 2));
-    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_leg_start"].GetDouble(),
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_start"].GetDouble(),
                 distance("A", std::to_string(i + 1)), 1.0);
   }
 }

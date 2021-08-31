@@ -415,9 +415,10 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
                           [&edge_id](const valhalla::Location::PathEdge& e) {
                             return e.graph_id() == edge_id;
                           });
-  if (pos == location->path_edges().end()) {
-    location->mutable_path_edges()->Clear();
-  } else if (location->path_edges_size() > 1) {
+  if (pos == location->path_edges().end())
+    throw std::logic_error("Could not find matching edge candidate");
+
+  if (location->path_edges_size() > 1) {
     location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
     location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
   }

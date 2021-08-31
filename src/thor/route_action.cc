@@ -57,10 +57,9 @@ bool intermediate_loc_edge_trimming(
 
   // This is the distance for the intermediate locs from the start of the leg
   loc.set_distance_from_origin(path_distance);
-  // Do not add an intermediate location if the connections are at a graph node we dont need to signal
-  // a through/via.
+  // If the intermediate point is at a node we dont need to trim the edge we just set the edge index
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
-    loc.set_leg_shape_index(path_index + (flip_index ? 0 : 1));
+    loc.set_leg_shape_index(path_index + (flip_index ? 1 : 0));
     return true;
   }
 
