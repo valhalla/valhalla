@@ -217,7 +217,6 @@ void parse_locations(const rapidjson::Document& doc,
     return;
   }
 
-  int leg_index = -1;
   bool had_date_time = false;
   bool exclude_closures_disabled = false;
   auto request_locations =
@@ -259,11 +258,6 @@ void parse_locations(const rapidjson::Document& doc,
         else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
         }
-
-        // keep track of the legs
-        if (location->type() == Location::kBreak || location->type() == Location::kBreakThrough)
-          ++leg_index;
-        location->set_leg_index(leg_index);
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
         if (name) {

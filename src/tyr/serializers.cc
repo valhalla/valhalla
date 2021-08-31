@@ -180,13 +180,6 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
                     json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())),
                                   3});
 
-  // Intermediate locations get some extra info, technically we could do this for all though
-  if (location.type() == Location_Type_kVia || location.type() == Location_Type_kThrough) {
-    waypoint->emplace("leg_distance", json::fixed_t{location.distance_from_origin(), 3});
-    waypoint->emplace("leg_index", static_cast<uint64_t>(location.leg_index()));
-    waypoint->emplace("leg_geometry_index", static_cast<uint64_t>(location.leg_shape_index()));
-  }
-
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
@@ -239,6 +232,32 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
     }
   }
   return waypoints;
+}
+
+/*
+ * This function takes any waypoints (excluding origin and destination) and gets
+ * the associated leg shape index (geometry index) from the location.  We use
+ * that geometry index to calculate the distance_from_leg_start.
+ * Then we serialize the via_waypoints object.
+ *
+ */
+json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
+  // Create a vector of indexes based on the number of locations.
+  auto via_waypoints = json::array({});
+  // only loop thru the locations that are not origin or destinations
+  for (const auto& loc : leg.location()) {
+    // Only create via_waypoints object if the locations are via or through types
+    if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
+      auto via_waypoint = json::map({});
+      // Add distance in meters from the input location to the silent waypoint
+      via_waypoint->emplace("leg_distance", json::fixed_t{loc.distance_from_origin(), 3});
+      // Why isnt waypoint index set in the parser
+      via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(loc.original_index()));
+      via_waypoint->emplace("leg_geometry_index", static_cast<uint64_t>(loc.leg_shape_index()));
+      via_waypoints->emplace_back(via_waypoint);
+    }
+  }
+  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,

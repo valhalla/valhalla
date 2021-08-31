@@ -32,6 +32,7 @@ struct EdgeTrimmingInfo {
  */
 class TripLegBuilder {
 public:
+  using loc_itr = google::protobuf::RepeatedField<valhalla::Location>::iterator;
   /**
    * Form a trip leg out of a path (sequence of path infos)
    *
@@ -47,7 +48,7 @@ public:
    * @param alagorithms           The list of graph search algorithm names used to create the path
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
    * @param edge_trimming         Markers on edges with information on how to trim their shape
-   * @param intermediate_locs     The locations between the origin and dest (through or via types)
+   * @param intermediate          The locations between the origin and dest (through or via types)
    * @return
    */
   static void Build(const valhalla::Options& options,
@@ -63,7 +64,7 @@ public:
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
                         edge_trimming = nullptr,
-                    iterable_t<Location>* intermediate_locs = nullptr);
+                    const std::vector<valhalla::Location>& intermediates = {});
 };
 
 } // namespace thor
