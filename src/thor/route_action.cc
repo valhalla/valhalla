@@ -647,9 +647,6 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     }
     // Get best path and keep it
     auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
-    for (const PathInfo& path : temp_paths[0]) {
-      std::cout << path.edgeid << std::endl;
-    }
     if (temp_paths.empty())
       return false;
 

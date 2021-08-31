@@ -424,7 +424,8 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
 }
 
 /**
- *
+ * Copy the subset of options::location into the tripleg::locations and remove edge candidates
+ * that werent removed during the construction of the route
  */
 void CopyLocations(TripLeg& trip_path,
                    const valhalla::Location& origin,
@@ -434,33 +435,18 @@ void CopyLocations(TripLeg& trip_path,
                    const std::vector<PathInfo>::const_iterator path_end) {
   // origin
   trip_path.add_location()->CopyFrom(origin);
-  auto pe = path_begin;
-  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
-
+  RemovePathEdges(&*trip_path.mutable_location()->rbegin(), path_begin->edgeid);
   // intermediates
   for (const auto& intermediate : intermediates) {
-    // copy
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
-
-    // id set
-    std::unordered_set<uint64_t> ids;
-    for (const auto& e : tp_intermediate->path_edges()) {
-      ids.insert(e.graph_id());
-    }
-    // find id
-    auto found = std::find_if(pe, path_end, [&ids](const PathInfo& pi) {
-      return ids.find(pi.edgeid) != ids.end();
-    });
-    pe = found;
-    RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
-    std::cout << "#################################CopyLocations :: " << tp_intermediate->ll().lat()
-              << ", " << tp_intermediate->ll().lng() << std::endl;
+    // we can grab the right edge index in the path because we temporarily set it for trimming
+    RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
+                    (path_begin + intermediate.leg_shape_index())->edgeid);
   }
-
   // destination
   trip_path.add_location()->CopyFrom(dest);
-  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), (path_end - 1)->edgeid);
+  RemovePathEdges(&*trip_path.mutable_location()->rbegin(), std::prev(path_end)->edgeid);
 }
 
 /**

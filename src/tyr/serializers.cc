@@ -222,13 +222,13 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   auto waypoints = json::array({});
   // For multi-route the same waypoints are used for all routes.
-  const auto& legs = trip.routes(0).legs();
-  for (const auto& leg : legs) {
-    for (const auto& location : leg.location()) {
-      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+  for (const auto& leg : trip.routes(0).legs()) {
+    for (int i = 0; i < leg.location_size(); ++i) {
+      // we skip the first location of legs > 0 because that would duplicate waypoints
+      if (i == 0 && !waypoints->empty()) {
         continue;
       }
-      waypoints->emplace_back(waypoint(location, false));
+      waypoints->emplace_back(waypoint(leg.location(i), false));
     }
   }
   return waypoints;
