@@ -428,7 +428,7 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
  */
 void CopyLocations(TripLeg& trip_path,
                    const valhalla::Location& origin,
-                   const std::list<valhalla::Location>& throughs,
+                   const std::list<valhalla::Location>& intermediates,
                    const valhalla::Location& dest,
                    const std::vector<PathInfo>::const_iterator path_begin,
                    const std::vector<PathInfo>::const_iterator path_end) {
@@ -437,15 +437,15 @@ void CopyLocations(TripLeg& trip_path,
   auto pe = path_begin;
   RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
 
-  // throughs
-  for (const auto& through : throughs) {
+  // intermediates
+  for (const auto& intermediate : intermediates) {
     // copy
-    valhalla::Location* tp_through = trip_path.add_location();
-    tp_through->CopyFrom(through);
+    valhalla::Location* tp_intermediate = trip_path.add_location();
+    tp_intermediate->CopyFrom(intermediate);
 
     // id set
     std::unordered_set<uint64_t> ids;
-    for (const auto& e : tp_through->path_edges()) {
+    for (const auto& e : tp_intermediate->path_edges()) {
       ids.insert(e.graph_id());
     }
     // find id
@@ -454,8 +454,8 @@ void CopyLocations(TripLeg& trip_path,
     });
     pe = found;
     RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
-    std::cout << "#################################CopyLocations :: " << tp_through->ll().lat()
-              << ", " << tp_through->ll().lng() << std::endl;
+    std::cout << "#################################CopyLocations :: " << tp_intermediate->ll().lat()
+              << ", " << tp_intermediate->ll().lng() << std::endl;
   }
 
   // destination
@@ -1333,7 +1333,7 @@ void TripLegBuilder::Build(
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,
     valhalla::Location& dest,
-    std::list<valhalla::Location> throughs,
+    const std::list<valhalla::Location>& intermediate_locations,
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
@@ -1348,7 +1348,7 @@ void TripLegBuilder::Build(
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  CopyLocations(trip_path, origin, throughs, dest, path_begin, path_end);
+  CopyLocations(trip_path, origin, intermediate_locations, dest, path_begin, path_end);
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
@@ -1449,14 +1449,12 @@ void TripLegBuilder::Build(
   // prepare to make some edges!
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
 
-  // Create an iterator for the list of through locations
-  auto intermediate_locs_iterator = throughs.begin();
-  // There will be times when there is no shape index set on the through locso we will skip those
-  while (intermediate_locs_iterator != throughs.end() &&
-         !intermediate_locs_iterator->has_leg_shape_index()) {
-    ++intermediate_locs_iterator;
-  }
+  // as we iterate over the path we mark intermediate locations with their place on the shape
+  // we always have at least 2 non intermediates and we dont care about them for this
+  auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
+  auto intermediate_end = trip_path.mutable_location()->end() - 1;
 
+  // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
@@ -1642,10 +1640,9 @@ void TripLegBuilder::Build(
 
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
-    if (intermediate_locs_iterator != throughs.end() &&
-        (intermediate_locs_iterator->leg_shape_index() == edge_index || directededge->endnode())) {
-      intermediate_locs_iterator->set_leg_shape_index(trip_shape.size() - 1);
-      ++intermediate_locs_iterator;
+    if (intermediate_itr != intermediate_end && intermediate_itr->leg_shape_index() == edge_index) {
+      intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
+      ++intermediate_itr;
     }
 
     // Set length if requested. Convert to km

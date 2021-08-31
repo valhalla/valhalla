@@ -57,13 +57,12 @@ TEST_P(IntermediateLocations, test_single) {
   // C then we uturn and take the whole thing back to B
   gurka::assert::raw::expect_path(result, {"AB", "BC", "BC", "BC"});
 
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
-              distance("A", "6"), 1.0);
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["waypoints"].Size(), 3);
+  EXPECT_EQ(d["waypoints"][1]["leg_index"].GetInt(), 0);
+  EXPECT_EQ(d["waypoints"][1]["leg_geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["waypoints"][1]["leg_distance"].GetDouble(), distance("A", "6"), 1.0);
 }
 
 TEST_P(IntermediateLocations, test_single_at_node) {
@@ -84,11 +83,11 @@ TEST_P(IntermediateLocations, test_single_at_node) {
   // since its at the node we see the edge name only twice once to hit the node and again to leave
   gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
 
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
               distance("A", "C"), 1.0);
 }
@@ -111,15 +110,15 @@ TEST_P(IntermediateLocations, test_multiple) {
 
   gurka::assert::raw::expect_path(result, {"AB", "AB", "BC", "BC"});
 
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_leg_start"].GetDouble(),
               distance("A", "3"), 1.0);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt(), 3);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt(), 3);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_leg_start"].GetDouble(),
               distance("A", "5"), 1.0);
 }
@@ -150,12 +149,12 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
   gurka::assert::raw::expect_path(result,
                                   {"AB", "AB", "AB", "AB", "AB", "BC", "BC", "BC", "BC", "BC"});
 
-  ASSERT_EQ(d["routes"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
   for (int i = 0; i < 8; ++i) {
-    ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i);
-    ASSERT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i);
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
               i + 1 + (i > 3));
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_leg_start"].GetDouble(),
                 distance("A", std::to_string(i + 1)), 1.0);

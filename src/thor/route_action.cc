@@ -36,7 +36,7 @@ bool intermediate_loc_edge_trimming(
     valhalla::Location& loc,
     const GraphId& in,
     const GraphId& out,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& intermediate_locs,
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
     const size_t path_index,
     const bool flip_index,
     const double path_distance) {
@@ -71,7 +71,7 @@ bool intermediate_loc_edge_trimming(
   // along it. In this case you need to trim both sides of an edge before you add it if you are
   // continuing on the same edge.  So if the path that we are adding is 1 edge in length and the
   // edge ids are equal then we need to trim both ends.
-  if (loc.path_edges_size() == 1 && in == out) {
+  /*if (loc.path_edges_size() == 1 && in == out) {
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>ROUTE_ACTION - SINGLE EDGE WITH MULTI THROUGHS"
               << std::endl;
     // Insert an intermediate location so the last edge of the first segment is trimmed at the
@@ -93,30 +93,29 @@ bool intermediate_loc_edge_trimming(
     if (flip_index) {
       loc.set_leg_shape_index(inserted.first->first);
     }
-  } else {
-    // Insert an intermediate location so the last edge of the first segment is trimmed at the
-    // beginning from 0 to dist_along. Set the first flip_index depends on arrive by or depart_at.
-    // These intermediate locations will also include connections at a graph node.
-    auto inserted = intermediate_locs.insert(
-        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
-    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
-    // shape index
-    if (!flip_index) {
-      loc.set_leg_shape_index(inserted.first->first);
-    }
-
-    // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
-    // 1-dist along to 1
-    // flip_index depends on arrive by or depart_at
-    inserted =
-        intermediate_locs.insert({path_index + (flip_index ? 0 : 1),
-                                  {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
-    // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
-    // shape index
-    if (flip_index) {
-      loc.set_leg_shape_index(inserted.first->first);
-    }
+  } else {*/
+  // Insert an intermediate location so the last edge of the first segment is trimmed at the
+  // beginning from 0 to dist_along. Set the first flip_index depends on arrive by or depart_at.
+  // These intermediate locations will also include connections at a graph node.
+  auto inserted = edge_trimming.insert(
+      {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+  // Initially we set to the edge index on the location, then in triplegbuilder, we will reset to the
+  // shape index
+  if (!flip_index) {
+    loc.set_leg_shape_index(inserted.first->first);
   }
+
+  // Insert a second intermediate location so the next (opposing) edge is trimmed at the end from
+  // 1-dist along to 1
+  // flip_index depends on arrive by or depart_at
+  inserted = edge_trimming.insert({path_index + (flip_index ? 0 : 1),
+                                   {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  // Initially we set to the edge index to the through, then in triplegbuilder, we will reset to the
+  // shape index
+  if (flip_index) {
+    loc.set_leg_shape_index(inserted.first->first);
+  }
+  //}
   return false;
 }
 
@@ -678,6 +677,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         // location regardless of what the resulting path is.
         // Insert an intermediate location if the paths meet at opposing edges and not
         // at a graph node. Use path size - 1 as the index where the through/via lies.
+        // TODO: path distance doesnt seem to be filled out on the last edge of the path
+        //  probably has something to do with the path being fully found in one direction
         auto at_node =
             intermediate_loc_edge_trimming(*reader, *origin, path.back().edgeid,
                                            temp_path.front().edgeid, edge_trimming, path.size() - 1,
