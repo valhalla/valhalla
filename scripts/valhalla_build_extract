@@ -10,13 +10,14 @@ import struct
 import sys
 import tarfile
 from tarfile import BLOCKSIZE
+from time import time
 from typing import Dict, Tuple, List
 
 description = """Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."""
 
-# "=" prefix means native byte order with standard size and no alignment:
-# https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment
-STRUCT_FORMAT = '<LQL'
+# "<" prefix means little-endian and no alignment
+# order is important! if uint64_t is not first, c++ will use padding bytes to unpack
+STRUCT_FORMAT = '<QLL'
 STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
 INDEX_FILE = "index.bin"
 
@@ -67,19 +68,20 @@ def create_extract(tiles_fp: Path, extract_fp: Path):
     with tarfile.open(extract_fp, 'w') as tar:
         tarinfo = tarfile.TarInfo(INDEX_FILE)
         tarinfo.size = index_size
+        tarinfo.mtime = int(time())
         tar.addfile(tarinfo, index_fd)
         index_fd.close()
 
         tar.add(str(tiles_fp), recursive=True, arcname='')
 
     # get the offset and size from the tarred tile members
-    index: List[Tuple[str, int, int]] = list()
+    index: List[Tuple[int, str, int]] = list()
     with tarfile.open(extract_fp, 'r|') as tar:
         for member in tar.getmembers():
             if member.name.endswith('.gph'):
                 LOGGER.debug(f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}")
 
-                index.append((get_tile_id(member.name), member.offset_data, member.size))
+                index.append((member.offset_data, get_tile_id(member.name), member.size))
 
     # write back the actual index info
     with open(extract_fp, 'r+b') as tar:

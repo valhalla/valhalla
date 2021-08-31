@@ -22,10 +22,10 @@ constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 
 struct tile_index_entry {
-  uint32_t tile_id; // just level and tileindex hence fitting in 32bits
   uint64_t
-      offset;    // number of bytes offset from the beginning of the tar to the beginning of this tile
-  uint32_t size; // size of the tile in bytes
+      offset; // number of bytes offset from the beginning of the tar to the beginning of this tile
+  uint32_t tile_id; // just level and tileindex hence fitting in 32bits
+  uint32_t size;    // size of the tile in bytes
 };
 
 } // namespace
@@ -45,6 +45,7 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // A lambda for loading the contents of a graph tile tar from an index file
   auto index_loader = [this](const std::string& filename, const char* index_begin,
+                             const char* file_begin,
                              size_t size) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
     if (filename != "index.bin")
@@ -52,13 +53,16 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 
     // get the info
     decltype(midgard::tar::contents) contents;
-    tile_index_entry t = {};
-    for (const auto& entry : midgard::iterable_t<tile_index_entry>(&t, size)) {
+    auto entry_size = sizeof(tile_index_entry);
+    auto entries = midgard::iterable_t<tile_index_entry>(reinterpret_cast<tile_index_entry*>(
+                                                             const_cast<char*>(index_begin)),
+                                                         size / sizeof(tile_index_entry));
+    for (const auto& entry : entries) {
       auto inserted = contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
-                         std::make_pair(const_cast<char*>(index_begin + entry.offset), entry.size)));
+                         std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
       tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
-                    std::forward_as_tuple(const_cast<char*>(index_begin + entry.offset), entry.size));
+                    std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset), entry.size));
     }
     // hand it back to the tar parser
     return contents;
