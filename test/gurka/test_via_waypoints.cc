@@ -60,9 +60,9 @@ TEST_P(IntermediateLocations, test_single) {
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["leg_index"].GetInt(), 0);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["leg_geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["leg_distance"].GetDouble(),
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["leg_geometry_index"].GetInt(), 2);
+  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["leg_distance"].GetDouble(),
               distance("A", "6"), 1.0);
 }
 
@@ -153,10 +153,10 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-  for (int i = 0; i < 8; ++i) {
-    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i);
+  for (int i = 0; i < 6; ++i) {
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i + 1);
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
-              i + 1 + (i > 3));
+              i + 1 + (i > 2));
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_leg_start"].GetDouble(),
                 distance("A", std::to_string(i + 1)), 1.0);
   }
