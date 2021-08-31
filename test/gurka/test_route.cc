@@ -906,3 +906,17 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
   }
   ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
 }
+
+TEST(AlgorithmTestTrivial, unidirectional_regression) {
+  constexpr double gridsize_metres = 10;
+  const std::string ascii_map = R"(A1234B5678C)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.00, 0.00});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trivial_regression");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "auto");
+  // the route should simply be one little piece of AB
+  gurka::assert::raw::expect_path(result, {"AB"});
+}
