@@ -115,7 +115,7 @@ TEST_P(IntermediateLocations, test_multiple) {
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 1);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
               distance("A", "3"), 1.0);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["waypoint_index"].GetInt(), 2);
