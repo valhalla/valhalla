@@ -532,13 +532,11 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // location is a BREAK or if this is the last location
       if (is_break_point(*origin)) {
         // Move destination back to the last break
-        std::vector<Location> intermediates;
         while (!is_break_point(*destination)) {
           if (destination->has_leg_shape_index()) {
             destination->set_leg_shape_index((path.size() - destination->leg_shape_index()));
             // TODO: we need to update all of the leg shape indices and distance_from_origin
           }
-          intermediates.push_back(*destination);
           --destination;
         }
 
@@ -559,7 +557,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                               *origin, *destination, leg, algorithms, interrupt, &edge_trimming,
-                              intermediates);
+                              {origin + 1, destination});
         path.clear();
         edge_trimming.clear();
       }
@@ -695,9 +693,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // location is a BREAK or if this is the last location
       if (is_break_point(*destination)) {
         // Move origin back to the last break
-        std::vector<Location> intermediates;
         while (!is_break_point(*origin)) {
-          intermediates.push_back(*origin);
           --origin;
         }
 
@@ -709,7 +705,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, leg, algorithms, interrupt,
-                                    &edge_trimming, intermediates);
+                                    &edge_trimming, {origin + 1, destination});
 
         path.clear();
         edge_trimming.clear();
