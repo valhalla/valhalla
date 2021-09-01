@@ -364,15 +364,15 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
-  // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
-    auto p = destinations_.find(edge.graph_id());
-    if (p != destinations_.end()) {
-      for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edge.graph_id()) {
-          return true;
-        }
-      }
+  // its super trivial if both are node snapped to the same end of the same edge
+  // note the check for node snapping is in the if below and not in this lambda
+  auto super_trivial = [this, &destination](const valhalla::Location::PathEdge& edge) {
+    if (destinations_.find(edge.graph_id()) != destinations_.end()) {
+      auto p = std::find_if(destination.path_edges().begin(), destination.path_edges().end(),
+                            [&edge](const auto& path_edge) {
+                              return edge.graph_id() == path_edge.graph_id();
+                            });
+      return p != destination.path_edges().end() && p->percent_along() == edge.percent_along();
     }
     return false;
   };
@@ -381,9 +381,9 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
   const NodeInfo* nodeinfo = nullptr;
   const NodeInfo* closest_ni = nullptr;
   for (const auto& edge : origin.path_edges()) {
-    // If origin is at a node - skip any inbound edge (dist = 1) unless the
-    // destination is also at the same end node (trivial path).
-    if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
+    // If this is a node snap and we have other candidates that we can skip this unless its the one we
+    // need for super trivial route
+    if (edge.end_node() && has_other_edges && !super_trivial(edge)) {
       continue;
     }
 

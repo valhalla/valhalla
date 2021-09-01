@@ -928,4 +928,8 @@ TEST(AlgorithmTestTrivial, unidirectional_regression) {
                                 {"/date_time/value", "2111-11-11T11:11"},
                             });
   gurka::assert::raw::expect_path(result, {"AB"});
+
+  // again with reverse a* search direction
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "bikeshare");
+  gurka::assert::raw::expect_path(result, {"AB"});
 }
