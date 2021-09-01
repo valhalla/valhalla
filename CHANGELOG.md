@@ -10,6 +10,7 @@
    * FIXED: Optimize tiles usage in reach-based pruning [#3294](https://github.com/valhalla/valhalla/pull/3294)
    * FIXED: Fix distance value in a 0-length road [#3185](https://github.com/valhalla/valhalla/pull/3185)
    * FIXED: Trivial routes were broken when origin was node snapped and destnation was not and vice-versa for reverse astar [#3299](https://github.com/valhalla/valhalla/pull/3299)
+   * FIXED: Tweaked TestAvoids map to get TestAvoidShortcutsTruck working [#3301](https://github.com/valhalla/valhalla/pull/3301)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
