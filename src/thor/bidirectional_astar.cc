@@ -28,7 +28,7 @@ constexpr float kThresholdDelta = 420.0f;
 // an upper bound value cost for alternative routes we're looking for. Due to the fact that
 // we can't estimate route cost that goes through some particular edge very precisely, we
 // can find alternatives with costs greater than the threshold.
-constexpr float kAlternativeCostExtend = 1.1f;
+constexpr float kAlternativeCostExtend = 1.2f;
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
