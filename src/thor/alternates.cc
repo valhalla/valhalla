@@ -28,24 +28,18 @@ namespace thor {
 float get_max_sharing(const valhalla::Location& origin, const valhalla::Location& destination) {
   PointLL from(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   PointLL to(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
-  auto distance = from.Distance(to);
+  float distance = from.Distance(to);
 
   // 10km
-  if (distance < 10000.) {
-    return 0.50;
-  }
-  // 20km
-  else if (distance < 20000.) {
-    return 0.60;
-  }
-  // 50km
-  else if (distance < 50000.) {
-    return 0.65;
-  }
+  if (distance < 10000.f)
+    return 0.6f;
   // 100km
-  else if (distance < 100000.) {
-    return 0.70;
+  if (distance < 100000.f) {
+    // Uniformly increase 'at_most_shared' value from 0.6 to 0.75 for routes
+    // from 10km to 100km
+    return 0.6f + (kAtMostShared - 0.6f) * (distance - 10000.f) / (100000.f - 10000.f);
   }
+  // > 100km
   return kAtMostShared;
 }
 
