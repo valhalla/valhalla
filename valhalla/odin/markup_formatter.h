@@ -1,0 +1,57 @@
+#pragma once
+
+#include <string>
+
+#include <boost/optional.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/baldr/streetname.h>
+
+namespace valhalla {
+namespace odin {
+
+class MarkupFormatter {
+public:
+  /**
+   * Constructor.
+   * @param  config  the valhalla odin config values.
+   */
+  explicit MarkupFormatter(const boost::property_tree::ptree& config = {});
+
+  /**
+   * Returns true if markup is enabled.
+   * @return true if markup is enabled.
+   */
+  bool markup_enabled() const;
+
+  /**
+   * Sets the markup enabled flag.
+   * @param  markup_enabled  bool flag to enable/disable markup.
+   */
+  void set_markup_enabled(bool markup_enabled);
+
+  /**
+   * Returns the phoneme format string.
+   * @return  the phoneme format string.
+   */
+  const std::string& phoneme_format() const;
+
+  /**
+   * Return the street name with phoneme markup if it exists.
+   *
+   * @param  street_name  the street name record to format.
+   * @return the street name with phoneme markup if it exists.
+   */
+  boost::optional<std::string> Format(const std::unique_ptr<baldr::StreetName>& street_name) const;
+
+protected:
+  bool UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet) const;
+
+  void FormatQuotes(valhalla::Pronunciation_Alphabet alphabet, std::string& markup_string) const;
+
+  bool markup_enabled_;
+  std::string phoneme_format_;
+};
+
+} // namespace odin
+} // namespace valhalla
