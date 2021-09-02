@@ -8,6 +8,7 @@
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/options.pb.h>
@@ -20,7 +21,8 @@ class NarrativeBuilder {
 public:
   NarrativeBuilder(const Options& options,
                    const EnhancedTripLeg* trip_path,
-                   const NarrativeDictionary& dictionary);
+                   const NarrativeDictionary& dictionary,
+                   const MarkupFormatter& markup_formatter);
 
   virtual ~NarrativeBuilder() = default;
 
@@ -631,6 +633,7 @@ protected:
   const Options& options_;
   const EnhancedTripLeg* trip_path_;
   const NarrativeDictionary& dictionary_;
+  MarkupFormatter markup_formatter_; // No ref - need our own copy
   bool articulated_preposition_enabled_;
 };
 
@@ -640,8 +643,9 @@ class NarrativeBuilder_csCZ : public NarrativeBuilder {
 public:
   NarrativeBuilder_csCZ(const Options& options,
                         const EnhancedTripLeg* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(options, trip_path, dictionary) {
+                        const NarrativeDictionary& dictionary,
+                        const MarkupFormatter& markup_formatter)
+      : NarrativeBuilder(options, trip_path, dictionary, markup_formatter) {
   }
 
 protected:
@@ -663,8 +667,9 @@ class NarrativeBuilder_hiIN : public NarrativeBuilder {
 public:
   NarrativeBuilder_hiIN(const Options& options,
                         const EnhancedTripLeg* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(options, trip_path, dictionary) {
+                        const NarrativeDictionary& dictionary,
+                        const MarkupFormatter& markup_formatter)
+      : NarrativeBuilder(options, trip_path, dictionary, markup_formatter) {
   }
 
 protected:
@@ -686,8 +691,9 @@ class NarrativeBuilder_itIT : public NarrativeBuilder {
 public:
   NarrativeBuilder_itIT(const Options& options,
                         const EnhancedTripLeg* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(options, trip_path, dictionary) {
+                        const NarrativeDictionary& dictionary,
+                        const MarkupFormatter& markup_formatter)
+      : NarrativeBuilder(options, trip_path, dictionary, markup_formatter) {
     // Enable articulated prepositions for Itailian
     articulated_preposition_enabled_ = true;
   }
@@ -708,8 +714,9 @@ class NarrativeBuilder_ruRU : public NarrativeBuilder {
 public:
   NarrativeBuilder_ruRU(const Options& options,
                         const EnhancedTripLeg* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(options, trip_path, dictionary) {
+                        const NarrativeDictionary& dictionary,
+                        const MarkupFormatter& markup_formatter)
+      : NarrativeBuilder(options, trip_path, dictionary, markup_formatter) {
   }
 
 protected:

@@ -5,6 +5,7 @@
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
+#include "odin/markup_formatter.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
 #include "proto/directions.pb.h"
@@ -65,7 +66,7 @@ const std::unordered_map<int, DirectionsLeg_TravelMode> translate_travel_mode{
 // NarrativeBuilder::Build to form the maneuver list. This method
 // calls PopulateDirectionsLeg to transform the maneuver list into the
 // trip directions.
-void DirectionsBuilder::Build(Api& api) {
+void DirectionsBuilder::Build(Api& api, const MarkupFormatter& markup_formatter) {
   const auto& options = api.options();
   for (auto& trip_route : *api.mutable_trip()->mutable_routes()) {
     auto& directions_route = *api.mutable_directions()->mutable_routes()->Add();
@@ -92,7 +93,7 @@ void DirectionsBuilder::Build(Api& api) {
         // Create the instructions if desired
         if (options.directions_type() == DirectionsType::instructions) {
           std::unique_ptr<NarrativeBuilder> narrative_builder =
-              NarrativeBuilderFactory::Create(options, &etp);
+              NarrativeBuilderFactory::Create(options, &etp, markup_formatter);
           narrative_builder->Build(maneuvers);
         }
       }

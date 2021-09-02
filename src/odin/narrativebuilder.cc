@@ -12,6 +12,7 @@
 
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
+#include "odin/markup_formatter.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
@@ -42,9 +43,10 @@ namespace odin {
 
 NarrativeBuilder::NarrativeBuilder(const Options& options,
                                    const EnhancedTripLeg* trip_path,
-                                   const NarrativeDictionary& dictionary)
+                                   const NarrativeDictionary& dictionary,
+                                   const MarkupFormatter& markup_formatter)
     : options_(options), trip_path_(trip_path), dictionary_(dictionary),
-      articulated_preposition_enabled_(false) {
+      markup_formatter_(markup_formatter), articulated_preposition_enabled_(false) {
 }
 
 void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
@@ -4436,9 +4438,12 @@ std::string NarrativeBuilder::FormStreetNames(const StreetNames& street_names,
 
     // Append next name to string
     street_names_string +=
-        (verbal_formatter) ? verbal_formatter->Format(street_name->value()) : street_name->value();
+        (verbal_formatter)
+            ? verbal_formatter->Format(street_name->value(), markup_formatter_.Format(street_name))
+            : street_name->value();
     ++count;
   }
+
   return street_names_string;
 }
 

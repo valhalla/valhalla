@@ -4,6 +4,8 @@
 #include <regex>
 #include <string>
 
+#include <boost/optional.hpp>
+
 namespace valhalla {
 namespace baldr {
 
@@ -24,9 +26,12 @@ public:
    * Returns a text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
+   * @param  markup_string  the optional markup string that should be used.
+   *
    * @return a text-to-speech formatted string based on the specified text.
    */
-  virtual std::string Format(const std::string& text) const;
+  virtual std::string Format(const std::string& text,
+                             const boost::optional<std::string>& markup_string = boost::none) const;
 
 protected:
   virtual std::string ProcessNumberSplitMatch(const std::smatch& m) const;
