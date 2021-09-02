@@ -169,20 +169,19 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
 
     // if an edge on the candidate_path is encountered that is also on one of the existing paths,
     // we count it as a "shared" edge
-    float shared_length = 0.f, total_length = 0.f;
+    float shared_length = 0.f;
     for (const auto& cpi : candidate_path) {
       const auto length = &cpi == &candidate_path.front()
                               ? cpi.path_distance
                               : cpi.path_distance - (&cpi - 1)->path_distance;
-      total_length += length;
       if (shared.find(cpi.edgeid) != shared.end()) {
         shared_length += length;
       }
     }
 
-    // throw this alternate away if it shares more than at_most_shared with any of the chosen paths
-    assert(total_length > 0);
-    if ((shared_length / total_length) > at_most_shared) {
+    // throw this alternate away if any of the chosen paths shares more than at_most_shared with it
+    assert(paths[i].back().path_distance > 0);
+    if ((shared_length / paths[i].back().path_distance) > at_most_shared) {
       LOG_DEBUG("Candidate alternate rejected by sharing");
       return false;
     }
