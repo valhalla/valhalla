@@ -425,3 +425,101 @@ TEST_F(HOTTest, hot_true_uses_hot3) {
 
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOTExpress3");
 }
+
+//=======================================================================================
+class HOVChoices : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static std::shared_ptr<baldr::GraphReader> reader;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 10;
+
+    const std::string ascii_map = R"(
+                  A-----------------------------------------------C
+      D----------E-------------------------------------------------F----------------G
+    )";
+    const gurka::ways ways =
+        {{"DEFG",
+          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "35"}, {"name", "RT 36"}}},
+         {"EACF",
+          {{"highway", "motorway"},
+           {"oneway", "yes"},
+           {"name", "HOTExpress3"},
+           {"hov", "designated"},
+           {"hov:minimum", "3"},
+           {"maxspeed", "95"},
+           {"toll", "yes"}}}};
+
+    const gurka::nodes nodes;
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/HOVChosen", {});
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  }
+};
+
+std::shared_ptr<baldr::GraphReader> HOVChoices::reader;
+gurka::map HOVChoices::map = {};
+
+//------------------------------------------------------------------
+TEST_F(HOVChoices, choices) {
+  {
+    std::string req =
+        (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
+         std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
+         std::to_string(map.nodes.at("G").lng()) % "")
+            .str();
+    auto result = gurka::do_action(Options::route, map, req, reader);
+
+    // The hov lane is fastest, but router cannot choose it because
+    // the user has not specified any hov settings.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 2);
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+  }
+
+  {
+    std::string req =
+        (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
+         std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
+         std::to_string(map.nodes.at("G").lng()) % use_hov2_true)
+            .str();
+    auto result = gurka::do_action(Options::route, map, req, reader);
+
+    // The hov lane is fastest, but router cannot choose it because
+    // the user has allowed hov2 but the highway is hot3.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 2);
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+  }
+
+  {
+    std::string req =
+        (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
+         std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
+         std::to_string(map.nodes.at("G").lng()) % use_hot_true)
+            .str();
+    auto result = gurka::do_action(Options::route, map, req, reader);
+
+    // User allows hot-lanes and the router can choose the super fast HOTExpress3.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).street_name(0).value(),
+              "HOTExpress3");
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(), "RT 36");
+  }
+
+  {
+    std::string req =
+        (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
+         std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
+         std::to_string(map.nodes.at("G").lng()) % use_hov3_true)
+            .str();
+    auto result = gurka::do_action(Options::route, map, req, reader);
+
+    // User allows hov3-lanes and the router can choose the super fast HOTExpress3.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).street_name(0).value(),
+              "HOTExpress3");
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(), "RT 36");
+  }
+}

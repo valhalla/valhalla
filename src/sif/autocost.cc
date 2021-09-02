@@ -317,7 +317,6 @@ public:
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const graph_tile_ptr& tile,
                        uint16_t disallow_mask = kDisallowNone) const override {
-
     if (!EvaluateHOVAllowed(edge))
       return false;
 
@@ -434,6 +433,9 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx) const {
+  if (!EvaluateHOVAllowed(edge))
+    return false;
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -461,6 +463,9 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx) const {
+  if (!EvaluateHOVAllowed(opp_edge))
+    return false;
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
