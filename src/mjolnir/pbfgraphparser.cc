@@ -554,70 +554,70 @@ public:
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:pronunciation:katakana"] = [this]() {
+    tag_handlers_["name:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_name_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:en:pronunciation:katakana"] = [this]() {
+    tag_handlers_["name:en:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_name_en_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["alt_name:pronunciation:katakana"] = [this]() {
+    tag_handlers_["alt_name:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_alt_name_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["official_name:pronunciation:katakana"] = [this]() {
+    tag_handlers_["official_name:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_official_name_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["tunnel:name:pronunciation:katakana"] = [this]() {
+    tag_handlers_["tunnel:name:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_tunnel_name_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:pronunciation:jeita"] = [this]() {
+    tag_handlers_["name:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_name_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["name:en:pronunciation:jeita"] = [this]() {
+    tag_handlers_["name:en:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_name_en_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["alt_name:pronunciation:jeita"] = [this]() {
+    tag_handlers_["alt_name:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_alt_name_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["official_name:pronunciation:jeita"] = [this]() {
+    tag_handlers_["official_name:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_official_name_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["tunnel:name:pronunciation:jeita"] = [this]() {
+    tag_handlers_["tunnel:name:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_tunnel_name_pronunciation_jeita_index(
@@ -795,7 +795,7 @@ public:
           int_ref_pronunciation_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["ref:pronunciation:katakana"] = [this]() {
+    tag_handlers_["ref:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
@@ -805,7 +805,7 @@ public:
           ref_pronunciation_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["int_ref:pronunciation:katakana"] = [this]() {
+    tag_handlers_["int_ref:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
@@ -815,7 +815,7 @@ public:
           int_ref_pronunciation_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["ref:pronunciation:jeita"] = [this]() {
+    tag_handlers_["ref:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
@@ -825,7 +825,7 @@ public:
           ref_pronunciation_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["int_ref:pronunciation:jeita"] = [this]() {
+    tag_handlers_["int_ref:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         if (!use_direction_on_ways_)
@@ -859,19 +859,19 @@ public:
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_nt_sampa_ = tag_.second;
     };
-    tag_handlers_["direction:pronunciation:katakana"] = [this]() {
+    tag_handlers_["direction:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_pronunciation_katakana_ = tag_.second;
     };
-    tag_handlers_["int_direction:pronunciation:katakana"] = [this]() {
+    tag_handlers_["int_direction:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_katakana_ = tag_.second;
     };
-    tag_handlers_["direction:pronunciation:jeita"] = [this]() {
+    tag_handlers_["direction:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_pronunciation_jeita_ = tag_.second;
     };
-    tag_handlers_["int_direction:pronunciation:jeita"] = [this]() {
+    tag_handlers_["int_direction:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_jeita_ = tag_.second;
     };
@@ -1217,112 +1217,112 @@ public:
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:forward:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:forward:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_forward_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:backward:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:backward:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_backward_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:ref:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_ref_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:to:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:ref:to:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_ref_to_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:street:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_street_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:to:pronunciation:katakana"] = [this]() {
+    tag_handlers_["destination:street:to:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_street_to_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["junction:ref:pronunciation:katakana"] = [this]() {
+    tag_handlers_["junction:ref:pronunciation:x-katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_junction_ref_pronunciation_katakana_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:forward:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:forward:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_forward_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:backward:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:backward:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_backward_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:ref:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_ref_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:ref:to:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:ref:to:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_ref_to_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:street:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_street_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["destination:street:to:pronunciation:jeita"] = [this]() {
+    tag_handlers_["destination:street:to:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_destination_street_to_pronunciation_jeita_index(
             osmdata_.name_offset_map.index(tag_.second));
       }
     };
-    tag_handlers_["junction:ref:pronunciation:jeita"] = [this]() {
+    tag_handlers_["junction:ref:pronunciation:x-jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
         osm_pronunciation_.set_junction_ref_pronunciation_jeita_index(
@@ -1522,17 +1522,17 @@ public:
         n.set_name_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "name:pronunciation:nt-sampa") {
         n.set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "name:pronunciation:katakana") {
+      } else if (tag.first == "name:pronunciation:x-katakana") {
         n.set_name_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "name:pronunciation:jeita") {
+      } else if (tag.first == "name:pronunciation:x-jeita") {
         n.set_name_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "ref:pronunciation") {
         n.set_ref_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "ref:pronunciation:nt-sampa") {
         n.set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "ref:pronunciation:katakana") {
+      } else if (tag.first == "ref:pronunciation:x-katakana") {
         n.set_ref_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "ref:pronunciation:jeita") {
+      } else if (tag.first == "ref:pronunciation:x-jeita") {
         n.set_ref_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;

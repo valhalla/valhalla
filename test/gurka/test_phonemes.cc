@@ -48,29 +48,29 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"official_name:pronunciation:nt-sampa", "official_name:pronunciation:nt-sampa"},
          {"tunnel:name:pronunciation:nt-sampa", "tunnel:name:pronunciation:nt-sampa"},
          {"name:en:pronunciation:nt-sampa", "name:en:pronunciation:nt-sampa"},
-         {"name:pronunciation:katakana", "name:pronunciation:katakana"},
-         {"ref:pronunciation:katakana", "ref:pronunciation:katakana"},
-         {"int_ref:pronunciation:katakana", "int_ref:pronunciation:katakana"},
-         {"direction:pronunciation:katakana", "direction:pronunciation:katakana"},
-         {"int_direction:pronunciation:katakana", "int_direction:pronunciation:katakana"},
-         {"alt_name:pronunciation:katakana", "alt_name:pronunciation:katakana"},
-         {"official_name:pronunciation:katakana", "official_name:pronunciation:katakana"},
-         {"tunnel:name:pronunciation:katakana", "tunnel:name:pronunciation:katakana"},
-         {"name:en:pronunciation:katakana", "name:en:pronunciation:katakana"},
-         {"name:pronunciation:jeita", "name:pronunciation:jeita"},
-         {"ref:pronunciation:jeita", "ref:pronunciation:jeita"},
-         {"int_ref:pronunciation:jeita", "int_ref:pronunciation:jeita"},
-         {"direction:pronunciation:jeita", "direction:pronunciation:jeita"},
-         {"int_direction:pronunciation:jeita", "int_direction:pronunciation:jeita"},
-         {"alt_name:pronunciation:jeita", "alt_name:pronunciation:jeita"},
-         {"official_name:pronunciation:jeita", "official_name:pronunciation:jeita"},
-         {"tunnel:name:pronunciation:jeita", "tunnel:name:pronunciation:jeita"},
-         {"name:en:pronunciation:jeita", "name:en:pronunciation:jeita"},
+         {"name:pronunciation:x-katakana", "name:pronunciation:x-katakana"},
+         {"ref:pronunciation:x-katakana", "ref:pronunciation:x-katakana"},
+         {"int_ref:pronunciation:x-katakana", "int_ref:pronunciation:x-katakana"},
+         {"direction:pronunciation:x-katakana", "direction:pronunciation:x-katakana"},
+         {"int_direction:pronunciation:x-katakana", "int_direction:pronunciation:x-katakana"},
+         {"alt_name:pronunciation:x-katakana", "alt_name:pronunciation:x-katakana"},
+         {"official_name:pronunciation:x-katakana", "official_name:pronunciation:x-katakana"},
+         {"tunnel:name:pronunciation:x-katakana", "tunnel:name:pronunciation:x-katakana"},
+         {"name:en:pronunciation:x-katakana", "name:en:pronunciation:x-katakana"},
+         {"name:pronunciation:x-jeita", "name:pronunciation:x-jeita"},
+         {"ref:pronunciation:x-jeita", "ref:pronunciation:x-jeita"},
+         {"int_ref:pronunciation:x-jeita", "int_ref:pronunciation:x-jeita"},
+         {"direction:pronunciation:x-jeita", "direction:pronunciation:x-jeita"},
+         {"int_direction:pronunciation:x-jeita", "int_direction:pronunciation:x-jeita"},
+         {"alt_name:pronunciation:x-jeita", "alt_name:pronunciation:x-jeita"},
+         {"official_name:pronunciation:x-jeita", "official_name:pronunciation:x-jeita"},
+         {"tunnel:name:pronunciation:x-jeita", "tunnel:name:pronunciation:x-jeita"},
+         {"name:en:pronunciation:x-jeita", "name:en:pronunciation:x-jeita"},
          {"destination", "destination"},
          {"destination:pronunciation", "destination:pronunciation"},
          {"destination:pronunciation:nt-sampa", "destination:pronunciation:nt-sampa"},
-         {"destination:pronunciation:katakana", "destination:pronunciation:katakana"},
-         {"destination:pronunciation:jeita", "destination:pronunciation:jeita"}}},
+         {"destination:pronunciation:x-katakana", "destination:pronunciation:x-katakana"},
+         {"destination:pronunciation:x-jeita", "destination:pronunciation:x-jeita"}}},
        {"BC",
         {{"highway", "trunk"},
          {"name", "BC"},
@@ -79,11 +79,11 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"name:en", "name:en"},
          {"name:pronunciation", "name:pronunciation"},
          {"alt_name:pronunciation:nt-sampa", "alt_name:pronunciation:nt-sampa"},
-         {"alt_name:pronunciation:katakana", "alt_name:pronunciation:katakana"},
-         {"official_name:pronunciation:katakana", "official_name:pronunciation:katakana"},
-         {"official_name:pronunciation:jeita", "official_name:pronunciation:jeita"},
+         {"alt_name:pronunciation:x-katakana", "alt_name:pronunciation:x-katakana"},
+         {"official_name:pronunciation:x-katakana", "official_name:pronunciation:x-katakana"},
+         {"official_name:pronunciation:x-jeita", "official_name:pronunciation:x-jeita"},
          {"name:en:pronunciation", "name:en:pronunciation"},
-         {"name:en:pronunciation:katakana", "name:en:pronunciation:katakana"},
+         {"name:en:pronunciation:x-katakana", "name:en:pronunciation:x-katakana"},
          {"destination:forward", "destination:forward"},
          {"destination:backward", "destination:backward"},
          {"destination:ref", "destination:ref"},
@@ -98,22 +98,22 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"destination:street:pronunciation", "destination:street:pronunciation"},
          {"destination:street:to:pronunciation", "destination:street:to:pronunciation"},
          {"junction:ref:pronunciation", "junction:ref:pronunciation"},
-         {"destination:forward:pronunciation:katakana", "destination:forward:pronunciation:katakana"},
-         {"destination:backward:pronunciation:katakana",
-          "destination:backward:pronunciation:katakana"},
-         {"destination:ref:pronunciation:katakana", "destination:ref:pronunciation:katakana"},
-         {"destination:ref:to:pronunciation:katakana", "destination:ref:to:pronunciation:katakana"},
-         {"destination:street:pronunciation:katakana", "destination:street:pronunciation:katakana"},
-         {"destination:street:to:pronunciation:katakana",
-          "destination:street:to:pronunciation:katakana"},
-         {"junction:ref:pronunciation:katakana", "junction:ref:pronunciation:katakana"},
-         {"destination:forward:pronunciation:jeita", "destination:forward:pronunciation:jeita"},
-         {"destination:backward:pronunciation:jeita", "destination:backward:pronunciation:jeita"},
-         {"destination:ref:pronunciation:jeita", "destination:ref:pronunciation:jeita"},
-         {"destination:ref:to:pronunciation:jeita", "destination:ref:to:pronunciation:jeita"},
-         {"destination:street:pronunciation:jeita", "destination:street:pronunciation:jeita"},
-         {"destination:street:to:pronunciation:jeita", "destination:street:to:pronunciation:jeita"},
-         {"junction:ref:pronunciation:jeita", "junction:ref:pronunciation:jeita"}}},
+         {"destination:forward:pronunciation:x-katakana", "destination:forward:pronunciation:x-katakana"},
+         {"destination:backward:pronunciation:x-katakana",
+          "destination:backward:pronunciation:x-katakana"},
+         {"destination:ref:pronunciation:x-katakana", "destination:ref:pronunciation:x-katakana"},
+         {"destination:ref:to:pronunciation:x-katakana", "destination:ref:to:pronunciation:x-katakana"},
+         {"destination:street:pronunciation:x-katakana", "destination:street:pronunciation:x-katakana"},
+         {"destination:street:to:pronunciation:x-katakana",
+          "destination:street:to:pronunciation:x-katakana"},
+         {"junction:ref:pronunciation:x-katakana", "junction:ref:pronunciation:x-katakana"},
+         {"destination:forward:pronunciation:x-jeita", "destination:forward:pronunciation:x-jeita"},
+         {"destination:backward:pronunciation:x-jeita", "destination:backward:pronunciation:x-jeita"},
+         {"destination:ref:pronunciation:x-jeita", "destination:ref:pronunciation:x-jeita"},
+         {"destination:ref:to:pronunciation:x-jeita", "destination:ref:to:pronunciation:x-jeita"},
+         {"destination:street:pronunciation:x-jeita", "destination:street:pronunciation:x-jeita"},
+         {"destination:street:to:pronunciation:x-jeita", "destination:street:to:pronunciation:x-jeita"},
+         {"junction:ref:pronunciation:x-jeita", "junction:ref:pronunciation:x-jeita"}}},
        {"BD",
         {{"highway", "trunk"},
          {"destination:forward", "destination:forward"},
@@ -130,15 +130,15 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"destination:street:pronunciation", "destination:street:pronunciation"},
          {"destination:street:to:pronunciation", "destination:street:to:pronunciation"},
          {"junction:ref:pronunciation", "junction:ref:pronunciation"},
-         {"destination:forward:pronunciation:katakana", "destination:forward:pronunciation:katakana"},
-         {"destination:backward:pronunciation:katakana",
-          "destination:backward:pronunciation:katakana"},
-         {"destination:ref:pronunciation:katakana", "destination:ref:pronunciation:katakana"},
-         {"destination:ref:to:pronunciation:katakana", "destination:ref:to:pronunciation:katakana"},
-         {"destination:street:pronunciation:katakana", "destination:street:pronunciation:katakana"},
-         {"destination:street:to:pronunciation:katakana",
-          "destination:street:to:pronunciation:katakana"},
-         {"junction:ref:pronunciation:katakana", "junction:ref:pronunciation:katakana"}}},
+         {"destination:forward:pronunciation:x-katakana", "destination:forward:pronunciation:x-katakana"},
+         {"destination:backward:pronunciation:x-katakana",
+          "destination:backward:pronunciation:x-katakana"},
+         {"destination:ref:pronunciation:x-katakana", "destination:ref:pronunciation:x-katakana"},
+         {"destination:ref:to:pronunciation:x-katakana", "destination:ref:to:pronunciation:x-katakana"},
+         {"destination:street:pronunciation:x-katakana", "destination:street:pronunciation:x-katakana"},
+         {"destination:street:to:pronunciation:x-katakana",
+          "destination:street:to:pronunciation:x-katakana"},
+         {"junction:ref:pronunciation:x-katakana", "junction:ref:pronunciation:x-katakana"}}},
        {"DE",
         {{"highway", "primary"},
          {"destination", "destination1;destination2"},
@@ -152,13 +152,13 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"highway", "motorway_junction"},
          {"name:pronunciation", "named junction:pronunciation"},
          {"name:pronunciation:nt-sampa", "named junction:pronunciation:nt-sampa"},
-         {"name:pronunciation:katakana", "named junction:pronunciation:katakana"},
-         {"name:pronunciation:jeita", "named junction:pronunciation:jeita"}}},
+         {"name:pronunciation:x-katakana", "named junction:pronunciation:x-katakana"},
+         {"name:pronunciation:x-jeita", "named junction:pronunciation:x-jeita"}}},
        {"E",
         {{"ref", "node ref"},
          {"highway", "motorway_junction"},
          {"ref:pronunciation", "node ref:pronunciation"},
-         {"ref:pronunciation:katakana", "node ref:pronunciation:katakana"}}}};
+         {"ref:pronunciation:x-katakana", "node ref:pronunciation:x-katakana"}}}};
 
   constexpr double gridsize = 100;
 
@@ -287,7 +287,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       if (iter == pronunciations.end()) {
         EXPECT_EQ(signs.at(sign_index).text(), "E"); // gurka adds a name of "E"
       } else {
-        if ((iter->second).second == "node ref:pronunciation:katakana") {
+        if ((iter->second).second == "node ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "node ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
@@ -381,27 +381,27 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
 
-        if ((iter->second).second == "destination:forward:pronunciation:katakana") {
+        if ((iter->second).second == "destination:forward:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:forward");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:street:to:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:street:to:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:ref:to:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:ref:to:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:ref:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:street:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:street:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "junction:ref:pronunciation:katakana") {
+        } else if ((iter->second).second == "junction:ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "junction:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
@@ -429,27 +429,27 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
 
-        if ((iter->second).second == "destination:backward:pronunciation:katakana") {
+        if ((iter->second).second == "destination:backward:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:backward");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:street:to:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:street:to:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:ref:to:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:ref:to:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:ref:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "destination:street:pronunciation:katakana") {
+        } else if ((iter->second).second == "destination:street:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
-        } else if ((iter->second).second == "junction:ref:pronunciation:katakana") {
+        } else if ((iter->second).second == "junction:ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "junction:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
@@ -478,27 +478,27 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
 
-        if ((iter->second).second == "destination:forward:pronunciation:jeita") {
+        if ((iter->second).second == "destination:forward:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:forward");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-        } else if ((iter->second).second == "destination:street:to:pronunciation:jeita") {
+        } else if ((iter->second).second == "destination:street:to:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-        } else if ((iter->second).second == "destination:ref:to:pronunciation:jeita") {
+        } else if ((iter->second).second == "destination:ref:to:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref:to");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-        } else if ((iter->second).second == "destination:ref:pronunciation:jeita") {
+        } else if ((iter->second).second == "destination:ref:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-        } else if ((iter->second).second == "destination:street:pronunciation:jeita") {
+        } else if ((iter->second).second == "destination:street:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "destination:street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-        } else if ((iter->second).second == "junction:ref:pronunciation:jeita") {
+        } else if ((iter->second).second == "junction:ref:pronunciation:x-jeita") {
           EXPECT_EQ(signs.at(sign_index).text(), "junction:ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
@@ -542,11 +542,11 @@ TEST(Standalone, PhonemesWithAltandDirection) {
             EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
-          } else if ((iter->second).second == "official_name:pronunciation:jeita") {
+          } else if ((iter->second).second == "official_name:pronunciation:x-jeita") {
             EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
-          } else if ((iter->second).second == "name:en:pronunciation:katakana") {
+          } else if ((iter->second).second == "name:en:pronunciation:x-katakana") {
             EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
