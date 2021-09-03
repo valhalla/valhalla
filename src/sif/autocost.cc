@@ -285,7 +285,7 @@ public:
     return static_cast<uint8_t>(type_);
   }
 
-  bool EvaluateHOVAllowed(const baldr::DirectedEdge* edge) const {
+  bool IsHOVAllowed(const baldr::DirectedEdge* edge) const {
     // A non-hov edge means hov is allowed.
     if (!edge->is_hov_only())
       return true;
@@ -317,13 +317,11 @@ public:
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const graph_tile_ptr& tile,
                        uint16_t disallow_mask = kDisallowNone) const override {
-    if (!EvaluateHOVAllowed(edge))
-      return false;
-
+    bool allow_hov = IsHOVAllowed(edge);
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (allow_closures || !tile->IsClosed(edge));
+           (allow_closures || !tile->IsClosed(edge)) && allow_hov;
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -433,8 +431,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx) const {
-  if (!EvaluateHOVAllowed(edge))
-    return false;
+
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
@@ -445,7 +442,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
+      !IsHOVAllowed(edge)) {
     return false;
   }
 
@@ -463,9 +461,6 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx) const {
-  if (!EvaluateHOVAllowed(opp_edge))
-    return false;
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -473,7 +468,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
+      !IsHOVAllowed(opp_edge)) {
     return false;
   }
 
