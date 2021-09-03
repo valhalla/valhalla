@@ -8,6 +8,7 @@
    * FIXED: Fix Tagged Value Support in EdgeInfo [#3262](https://github.com/valhalla/valhalla/issues/3262)
    * FIXED: TransitionCostReverse fix: revert internal_turn change [#3271](https://github.com/valhalla/valhalla/issues/3271)
    * FIXED: Optimize tiles usage in reach-based pruning [#3294](https://github.com/valhalla/valhalla/pull/3294)
+   * FIXED: Slip lane detection: track visited nodes to avoid infinite loops [#3297](https://github.com/valhalla/valhalla/pull/3297)
    * FIXED: Fix distance value in a 0-length road [#3185](https://github.com/valhalla/valhalla/pull/3185)
    * FIXED: Trivial routes were broken when origin was node snapped and destnation was not and vice-versa for reverse astar [#3299](https://github.com/valhalla/valhalla/pull/3299)
    * FIXED: Tweaked TestAvoids map to get TestAvoidShortcutsTruck working [#3301](https://github.com/valhalla/valhalla/pull/3301)
