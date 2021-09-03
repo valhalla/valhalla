@@ -542,17 +542,17 @@ std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
                                             Data& data) {
   Edge start_edge = *data.edges[start_edge_idx];
   uint32_t node = EndNode(start_node, start_edge);
-  size_t prev_edge_idx = start_edge_idx;
   Edge prev_edge = start_edge;
   bool next_found = false;
   std::vector<uint32_t> nodes{start_node, node};
+  std::unordered_set<size_t> visited_nodes{start_node, node};
   double current_length = length(EdgeShape(data, start_edge));
 
   auto next = [&](const std::pair<Edge, size_t>& edge) {
     next_found = true;
     node = EndNode(node, edge.first);
+    visited_nodes.insert(node);
     prev_edge = edge.first;
-    prev_edge_idx = edge.second;
     nodes.push_back(node);
     current_length += length(EdgeShape(data, edge.first));
   };
@@ -566,8 +566,8 @@ std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
     // looking for a non link edge with right direction
     for (const auto& node_edge : bundle.node_edges) {
       const Edge& edge = node_edge.first;
-      if (node_edge.second != prev_edge_idx && !edge.attributes.link &&
-          IsEdgeDriveableInDirection(node, edge, forward)) {
+      if (!edge.attributes.link && IsEdgeDriveableInDirection(node, edge, forward) &&
+          visited_nodes.find(EndNode(node, node_edge.first)) == visited_nodes.end()) {
         candidates.push_back(node_edge);
       }
     }
