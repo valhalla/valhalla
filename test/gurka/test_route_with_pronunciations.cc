@@ -7,6 +7,13 @@
 
 using namespace valhalla;
 
+const std::unordered_map<std::string, std::string> build_config{
+    {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+    {"odin.markup_formatter.markup_enabled", "true"},
+    {"odin.markup_formatter.phoneme_format",
+     "%1% (<span class=<QUOTES>phoneme<QUOTES>>/%2%/</span>)"},
+};
+
 class RouteWithPronunciation : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -74,8 +81,7 @@ protected:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_route_with_pronunciation",
-                            {{"mjolnir.admin",
-                              {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
+                            build_config);
   }
 };
 
