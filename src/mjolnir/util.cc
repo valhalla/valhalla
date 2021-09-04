@@ -363,17 +363,17 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     LOG_INFO("Skipping hierarchy builder and shortcut builder");
   }
 
-  // Add elevation to the tiles
-  if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
-    ElevationBuilder::Build(config);
-  }
-
   // Build the Complex Restrictions
   // ComplexRestrictions must be done after elevation. The reason is that building
   // elevation into the tiles reads each tile and serializes the data to "builders"
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+  }
+
+  // Add elevation to the tiles
+  if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
+    ElevationBuilder::Build(config);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
