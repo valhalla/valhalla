@@ -90,12 +90,13 @@ struct OSMNode {
    * @param  lat  Latitude of the node.
    *
    */
-  void set_latlng(const double lng, double lat) {
-    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
-    if (lng >= -180 && lng <= 180)
-      lng7_ = std::round((lng + 180) * 1e7);
-    if (lat >= -90 && lat <= 90)
-      lat7_ = std::round((lat + 90) * 1e7);
+  void set_latlng(const double lng, const double lat) {
+    lng7_ = std::round((lng + 180) * 1e7);
+    lat7_ = std::round((lat + 90) * 1e7);
+    if (std::abs(lng7_) > 360 * 1e7)
+      lng7_ = std::numeric_limits<uint32_t>::max();
+    if (std::abs(lat7_) > 180 * 1e7)
+      lat7_ = std::numeric_limits<uint32_t>::max();
   }
 
   /**
