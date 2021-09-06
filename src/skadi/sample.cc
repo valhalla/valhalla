@@ -201,17 +201,26 @@ public:
     }
   }
 
-  tile_data(const tile_data& other)
-      : c(other.c), data(other.data), index(other.index), reusable(other.reusable) {
-    if (reusable) {
-      c->increment_usages(index);
-    }
+  tile_data(const tile_data& other) {
+    this->operator=(other);
   }
 
   ~tile_data() {
     if (reusable) {
       c->decrement_usages(index);
     }
+  }
+
+  tile_data& operator=(const tile_data& other) {
+    c = other.c;
+    data = other.data;
+    index = other.index;
+    reusable = other.reusable;
+
+    if (reusable) {
+      c->increment_usages(index);
+    }
+    return *this;
   }
 
   tile_data& operator=(tile_data&& other) {
