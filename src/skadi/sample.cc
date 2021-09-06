@@ -200,7 +200,7 @@ public:
       c->increment_usages(index);
   }
 
-  tile_data(const tile_data& other) {
+  tile_data(const tile_data& other) : c(nullptr) {
     *this = other;
   }
 
@@ -236,7 +236,7 @@ public:
     return data != nullptr;
   }
 
-  double get(double u, double v) {
+  double get(double u, double v) const {
     // integer pixel
     size_t x = std::floor(u);
     size_t y = std::floor(v);
@@ -403,7 +403,7 @@ template <class coord_t> double sample::get(const coord_t& coord) {
   auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
 
   // get the proper source of the data
-  auto tile = cache_->source(index);
+  const auto& tile = cache_->source(index);
   if (!tile) {
     return NO_DATA_VALUE;
   }
