@@ -189,6 +189,11 @@ private:
   bool reusable;
 
 public:
+// MVSC requires tile_data to have default constructor. https://godbolt.org/z/s3aczr8sr
+#ifdef _MSC_VER
+  tile_data() {
+  }
+#endif
   tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
       : c(c), data(data), index(index), reusable(reusable) {
     if (reusable) {
