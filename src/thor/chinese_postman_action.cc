@@ -289,9 +289,15 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
   auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
   path_algorithm->Clear();
   // Only take the first path (there is only one path)
-  auto path = paths[0];
-  for (auto p : path) {
-    edge_graph_ids.push_back(p.edgeid);
+  if (paths.size() > 0) {
+    auto path = paths[0];
+    for (auto p : path) {
+      edge_graph_ids.push_back(p.edgeid);
+    }
+  } else {
+    auto start_loc_string = std::to_string(x->ll().lng()) + ", " + std::to_string(x->ll().lat());
+    auto end_loc_string = std::to_string(y->ll().lng()) + ", " + std::to_string(y->ll().lat());
+    LOG_WARN("No route from " + start_loc_string + " to " + end_loc_string);
   }
 
   return edge_graph_ids;
@@ -315,6 +321,7 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
       auto a = G.getCPVertex(*it);
       auto fullRoute =
           computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options, costing);
+
       for (auto edge_graph_id : fullRoute) {
         eulerPathEdgeGraphIDs.push_back(edge_graph_id);
       }
