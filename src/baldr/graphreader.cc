@@ -139,16 +139,6 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   }
 }
 
-// TODO: delete this and call the extract constructor directly from within graphreader
-// before we do this we need to figure out what to do with traffic tile extract
-// they should support index reading as well for fast reload
-std::shared_ptr<const GraphReader::tile_extract_t>
-GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
-  std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(
-      new GraphReader::tile_extract_t(pt));
-  return tile_extract;
-}
-
 // ----------------------------------------------------------------------------
 // FlatTileCache implementation
 // ----------------------------------------------------------------------------
@@ -460,8 +450,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt,
                          std::unique_ptr<tile_getter_t>&& tile_getter)
-    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
-      tile_getter_(std::move(tile_getter)),
+    : tile_extract_(new GraphReader::tile_extract_t(pt)),
+      tile_dir_(pt.get<std::string>("tile_dir", "")), tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
       tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
 
