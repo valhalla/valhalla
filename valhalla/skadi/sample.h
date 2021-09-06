@@ -60,9 +60,6 @@ protected:
    */
   template <class coord_t> static uint16_t get_tile_index(const coord_t& coord);
 
-  cache_t* cache_;
-  friend cache_t;
-
   /**
    * @return The file name of a tile for a given index
    */
@@ -73,6 +70,9 @@ protected:
    * @param path path to the tile
    */
   void add_single_tile(const std::string& path);
+
+  cache_t* cache_;
+  friend cache_t;
 };
 
 } // namespace skadi

@@ -15,10 +15,6 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 
-namespace valhalla {
-namespace skadi {}
-} // namespace valhalla
-
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
 // by .5 seconds on all sides. that means that the center of pixel 0 is
@@ -161,11 +157,16 @@ public:
 class tile_data;
 
 struct cache_t {
-  // using memory maps
+  // Cached tiles
   std::vector<cache_item_t> cache;
+  // Set of reusable tile indexes
   std::unordered_set<uint16_t> reusable;
+  // Map of pending tiles. No matter how many requests received, only one inflate job per tile
+  // started.
   std::unordered_map<uint16_t, std::shared_future<tile_data>> pending_tiles;
+  // Guards access to the pending_tiles
   std::recursive_mutex mutex;
+  // Elevation tile path
   std::string data_source;
 
   void increment_usages(uint16_t index) {
@@ -181,6 +182,7 @@ struct cache_t {
   tile_data source(uint16_t index);
 };
 
+// tile_data object holds unpacked elevation tile data
 class tile_data {
 private:
   cache_t* c;
@@ -189,37 +191,35 @@ private:
   bool reusable;
 
 public:
-// MVSC requires tile_data to have default constructor. https://godbolt.org/z/s3aczr8sr
-#ifdef _MSC_VER
-  tile_data() {
+  tile_data() : c(nullptr), index(0), reusable(false), data(nullptr) {
   }
-#endif
+
   tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
       : c(c), data(data), index(index), reusable(reusable) {
-    if (reusable) {
+    if (reusable)
       c->increment_usages(index);
-    }
   }
 
   tile_data(const tile_data& other) {
-    this->operator=(other);
+    *this = other;
   }
 
   ~tile_data() {
-    if (reusable) {
+    if (reusable)
       c->decrement_usages(index);
-    }
   }
 
   tile_data& operator=(const tile_data& other) {
+    if (c && reusable)
+      c->decrement_usages(index);
+
     c = other.c;
     data = other.data;
     index = other.index;
     reusable = other.reusable;
 
-    if (reusable) {
+    if (c && reusable)
       c->increment_usages(index);
-    }
     return *this;
   }
 
@@ -295,7 +295,7 @@ public:
 tile_data cache_t::source(uint16_t index) {
   // bail if its out of bounds
   if (index >= TILE_COUNT) {
-    return tile_data(this, index, false, nullptr);
+    return tile_data();
   }
 
   // if we dont have anything maybe its lazy loaded
@@ -307,7 +307,7 @@ tile_data cache_t::source(uint16_t index) {
 
   // it wasnt in cache and when we tried to load it the file was of unknown type
   if (item.get_format() == format_t::UNKNOWN) {
-    return tile_data(this, index, false, nullptr);
+    return tile_data();
   }
 
   // we have it raw or we dont
@@ -324,6 +324,7 @@ tile_data cache_t::source(uint16_t index) {
     return future.get();
   }
 
+  // item in cache is already unpacked
   const char* unpacked = item.get_unpacked();
   if (unpacked) {
     auto rv = tile_data(this, index, true, (const int16_t*)unpacked);
@@ -351,7 +352,7 @@ tile_data cache_t::source(uint16_t index) {
   mutex.unlock();
 
   if (!item.unpack(unpacked)) {
-    rv = tile_data(this, index, false, nullptr);
+    rv = tile_data();
   }
 
   mutex.lock();
