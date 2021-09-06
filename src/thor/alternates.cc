@@ -180,8 +180,7 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
     }
 
     // throw this alternate away if any of the chosen paths shares more than at_most_shared with it
-    assert(paths[i].back().path_distance > 0);
-    if ((shared_length / paths[i].back().path_distance) > at_most_shared) {
+    if (shared_length > at_most_shared * paths[i].back().path_distance) {
       LOG_DEBUG("Candidate alternate rejected by sharing");
       return false;
     }
