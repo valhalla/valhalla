@@ -42,6 +42,7 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 }
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  static bool tile_msg = true, traffic_msg = true;
   // A lambda for loading the contents of a graph tile tar from an index file
   auto index_loader = [this](const std::string& filename, const char* index_begin,
                              const char* file_begin,
@@ -91,11 +92,12 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       if (tiles.empty()) {
         LOG_WARN("Tile extract contained no usuable tiles");
       } // loaded ok but with possibly bad blocks
-      else {
+      else if (tile_msg) {
         LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
         if (archive->corrupt_blocks) {
           LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
         }
+        tile_msg = false;
       }
     } catch (const std::exception& e) {
       LOG_ERROR(e.what());
@@ -124,13 +126,14 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       if (traffic_tiles.empty()) {
         LOG_WARN("Traffic tile extract contained no usuable tiles");
       } // loaded ok but with possibly bad blocks
-      else {
+      else if (traffic_msg) {
         LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
                  std::to_string(traffic_tiles.size()));
         if (traffic_archive->corrupt_blocks) {
           LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
                    " corrupt blocks");
         }
+        traffic_msg = false;
       }
     } catch (const std::exception& e) {
       LOG_WARN(e.what());
