@@ -598,7 +598,7 @@ public:
       } else if (hov_type == "HOV3") {
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       } else {
-        // assert? For now just set to the max hov level.
+        LOG_WARN("Unrecognized HOV type: " + hov_type);
         way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
       }
     };

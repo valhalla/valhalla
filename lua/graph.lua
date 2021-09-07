@@ -1647,7 +1647,7 @@ function filter_tags_generic(kv)
 
     if only_hov_allowed then
       -- If we get here we know the way is a true hov-lane (not mixed).
-      -- As a result, none of the following profiles can use it.
+      -- As a result, none of the following costings can use it.
       -- (Okay, that's not exactly true, we do some wizardry in some of the
       -- costings to allow hov under certain conditions.)
       if (kv["auto_tag"] == nil) then

@@ -574,7 +574,7 @@ void DirectedEdge::set_bss_connection(const bool bss_connection) {
 
 // Json representation
 json::MapPtr DirectedEdge::json() const {
-  return json::map({
+  json::MapPtr map = json::map({
       {"end_node", endnode().json()},
       {"speeds", json::map({
                      {"default", static_cast<uint64_t>(speed_)},
@@ -596,8 +596,6 @@ json::MapPtr DirectedEdge::json() const {
       {"destination_only", static_cast<bool>(dest_only_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
-      {"is_hov", static_cast<bool>(is_hov_only())},
-      {"hov_type", to_string(static_cast<HOVEdgeType>(hov_type_))},
       {"round_about", static_cast<bool>(roundabout_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},
@@ -637,6 +635,12 @@ json::MapPtr DirectedEdge::json() const {
         {"shortcut", static_cast<bool>(is_shortcut_)},
       })},*/
   });
+
+  if (is_hov_only()) {
+    map->emplace("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
+  }
+
+  return map;
 }
 
 } // namespace baldr
