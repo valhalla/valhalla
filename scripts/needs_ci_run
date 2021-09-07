@@ -32,6 +32,8 @@ status of the last run, we do the following:
 - Store the gitsha of the last successful run. This is later used to fetch the
   list of files changed since last CI run
 '''
+
+
 def last_build_successful():
     branch = environ.get('CIRCLE_BRANCH')
     current_workflow_id = environ.get('CIRCLE_WORKFLOW_ID')
@@ -71,10 +73,12 @@ def last_build_successful():
         # workflow ID
         if build['workflows']['workflow_id'] == current_workflow_id:
             continue
-        job_status[build['workflows']['job_name']] = (build['status'], build['vcs_revision'])
+        job_status[build['workflows']['job_name']] = (
+            build['status'], build['vcs_revision'])
 
     if sorted(job_status.keys()) != sorted(JOBS):
-        print(f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
+        print(
+            f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
         return False, None
 
     # Return False if any of the jobs were not in 'success' state
@@ -99,6 +103,13 @@ print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}')
 if not status:
     sys.exit(0)
 
+# if commit does not exist anymore, dont skip
+if subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'],
+                  capture_output=True,
+                  text=True).stdout != 'commit':
+    sys.exit(0)
+
+
 # Get all changes since the last succesful CI run
 GIT_CMD = ['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 
@@ -106,7 +117,6 @@ GIT_CMD = ['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 changed_files = subprocess.run(GIT_CMD,
                                capture_output=True,
                                text=True).stdout.splitlines()
-
 # Get CI ignore rules
 with open(CI_IGNORE_FILE, 'r') as f:
     CI_IGNORE_RULES = f.readlines()
