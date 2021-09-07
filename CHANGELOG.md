@@ -13,6 +13,7 @@
    * FIXED: Trivial routes were broken when origin was node snapped and destnation was not and vice-versa for reverse astar [#3299](https://github.com/valhalla/valhalla/pull/3299)
    * FIXED: Tweaked TestAvoids map to get TestAvoidShortcutsTruck working [#3301](https://github.com/valhalla/valhalla/pull/3301)
    * FIXED: Overflow in sequence sort [#3303](https://github.com/valhalla/valhalla/pull/3303)
+   * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
