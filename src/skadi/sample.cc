@@ -3,17 +3,24 @@
 #include <cmath>
 #include <cstddef>
 #include <fstream>
+#include <future>
 #include <limits>
 #include <list>
+#include <mutex>
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+
+#include <boost/optional.hpp>
 #include <sys/stat.h>
 
 #include "baldr/compression_utils.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
 
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile

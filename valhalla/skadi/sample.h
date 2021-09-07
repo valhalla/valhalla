@@ -1,20 +1,8 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include <cstdint>
-#include <functional>
-#include <future>
-#include <memory>
-#include <mutex>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <vector>
-
-#include <valhalla/midgard/sequence.h>
-
-#include <boost/optional.hpp>
 
 namespace valhalla {
 namespace skadi {
