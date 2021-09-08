@@ -56,9 +56,12 @@ protected:
           {{"highway", "motorway_link"},
            {"name", ""},
            {"oneway", "yes"},
-           {"junction:ref", "126"},
+           {"junction:ref", "126B"},
+           {"junction:ref:pronunciation", "1 26bi"},
            {"destination", "Granville;Lancaster"},
            {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
+           {"destination:street", "Lancaster Road"},
+           {"destination:street:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
            {"destination:ref", "SR 37"}}},
          {"CE",
           {{"highway", "motorway_link"},
@@ -69,7 +72,8 @@ protected:
           {{"highway", "motorway_link"},
            {"name", ""},
            {"oneway", "yes"},
-           {"junction:ref", "126"},
+           {"junction:ref", "126B"},
+           {"junction:ref:pronunciation", "1 26bi"},
            {"destination", "Granville;Lancaster"},
            {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
            {"destination:ref", "SR 37"}}},
@@ -108,7 +112,7 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
                 .maneuver(maneuver_index)
                 .sign()
                 .exit_onto_streets_size(),
-            1);
+            2);
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
@@ -117,6 +121,34 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
                 .exit_onto_streets(0)
                 .text(),
             "SR 37");
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_onto_streets(1)
+                .text(),
+            "Lancaster Road");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_onto_streets(1)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_onto_streets(1)
+                .pronunciation()
+                .value(),
+            "ˈlæŋkəstər ˈɹoʊd");
+
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
@@ -179,9 +211,9 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
 
   // Verify sign pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Take exit 126 onto SR 37 toward Granville/Lancaster.", "",
-      "Take exit 126.",
-      "Take exit 126 onto SR 37 toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
+      result, maneuver_index, "Take exit 126B onto SR 37/Lancaster Road toward Granville/Lancaster.",
+      "", "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
+      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) onto SR 37, Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>) toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
       "");
 
   // Verify street name pronunciation - alphabet & value
@@ -207,4 +239,11 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
             "ˈlæŋkəstər ˈɹoʊd");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(1).value(),
             "SR 37");
+
+  // Verify street name pronunciation instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Turn right onto Lancaster Road/SR 37.", "Turn right.",
+      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>).",
+      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37.",
+      "Continue for 400 meters.");
 }
