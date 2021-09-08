@@ -130,7 +130,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false), use_hot_{false}, use_hov2_{false}, use_hov3_{false} {
+      exclude_unpaved_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -454,9 +454,9 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
       rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
 
   // HOT/HOV
-  pbf_costing_options->set_use_hot(rapidjson::get<bool>(value, "/use_hot", base_cfg.use_hot_));
-  pbf_costing_options->set_use_hov2(rapidjson::get<bool>(value, "/use_hov2", base_cfg.use_hov2_));
-  pbf_costing_options->set_use_hov3(rapidjson::get<bool>(value, "/use_hov3", base_cfg.use_hov3_));
+  pbf_costing_options->set_include_hot(rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
+  pbf_costing_options->set_include_hov2(rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
+  pbf_costing_options->set_include_hov3(rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
 }
 
 void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
@@ -495,9 +495,9 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
 
   pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
 
-  pbf_costing_options->set_use_hot(shared_opts.use_hot_);
-  pbf_costing_options->set_use_hov2(shared_opts.use_hov2_);
-  pbf_costing_options->set_use_hov3(shared_opts.use_hov3_);
+  pbf_costing_options->set_include_hot(shared_opts.include_hot_);
+  pbf_costing_options->set_include_hov2(shared_opts.include_hov2_);
+  pbf_costing_options->set_include_hov3(shared_opts.include_hov3_);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,

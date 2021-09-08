@@ -615,7 +615,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // hov costing is deprecated and will be turned into auto costing with
-  // use_hov2=true costing option.
+  // include_hov2=true costing option.
   if (costing_str == "hov") {
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -623,7 +623,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     if (json_options) {
       rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
     }
-    rapidjson::SetValueByPointer(doc, "/costing_options/auto/use_hov2", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/include_hov2", true);
   }
 
   // auto_data_fix is deprecated and will be turned into

@@ -289,16 +289,16 @@ public:
 
     // The edge is either HOV-2 or HOV-3 from this point forward.
 
-    // If use_hov3 is set we can route onto both HOV-2 and HOV-3 edges
-    if (use_hov3_lanes_)
+    // If include_hov3 is set we can route onto both HOV-2 and HOV-3 edges
+    if (include_hov3_lanes_)
       return true;
 
-    // If use_hov2 is set we can route onto HOV-2 edges.
-    if (use_hov2_lanes_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
+    // If include_hov2 is set we can route onto HOV-2 edges.
+    if (include_hov2_lanes_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
       return true;
 
-    // If use_hot is set we can route onto HOT edges (HOV and tolled).
-    if (use_hot_lanes_ && edge->toll())
+    // If include_hot is set we can route onto HOT edges (HOV and tolled).
+    if (include_hot_lanes_ && edge->toll())
       return true;
 
     return false;
@@ -398,9 +398,9 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
-  use_hot_lanes_ = costing_options.use_hot();
-  use_hov2_lanes_ = costing_options.use_hov2();
-  use_hov3_lanes_ = costing_options.use_hov3();
+  include_hot_lanes_ = costing_options.include_hot();
+  include_hov2_lanes_ = costing_options.include_hov2();
+  include_hov3_lanes_ = costing_options.include_hov3();
 
   // Get the vehicle attributes
   height_ = costing_options.height();
@@ -729,12 +729,12 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                             .get_value_or(kDefaultAutoWidth)));
 
     // HOT/HOV-use
-    pbf_costing_options->set_use_hot(
-        rapidjson::get_optional<bool>(*json_costing_options, "/use_hot").get_value_or(false));
-    pbf_costing_options->set_use_hov2(
-        rapidjson::get_optional<bool>(*json_costing_options, "/use_hov2").get_value_or(false));
-    pbf_costing_options->set_use_hov3(
-        rapidjson::get_optional<bool>(*json_costing_options, "/use_hov3").get_value_or(false));
+    pbf_costing_options->set_include_hot(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hot").get_value_or(false));
+    pbf_costing_options->set_include_hov2(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov2").get_value_or(false));
+    pbf_costing_options->set_include_hov3(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov3").get_value_or(false));
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults

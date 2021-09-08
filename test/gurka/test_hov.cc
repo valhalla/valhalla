@@ -159,9 +159,9 @@ TEST(HOVTest, correctly_tagged_hov) {
 }
 
 //=======================================================================================
-const std::string use_hov2_true = R"("use_hov2": true)";
-const std::string use_hov3_true = R"("use_hov3": true)";
-const std::string use_hot_true = R"("use_hot": true)";
+const std::string include_hov2_true = R"("include_hov2": true)";
+const std::string include_hov3_true = R"("include_hov3": true)";
+const std::string include_hot_true = R"("include_hot": true)";
 
 const std::string req_hov = R"({
   "locations": [
@@ -234,7 +234,7 @@ TEST_F(HOV2Test, hov2_true_uses_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov2_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov2_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -246,7 +246,7 @@ TEST_F(HOV2Test, hot_true_avoids_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hot_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hot_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -258,7 +258,7 @@ TEST_F(HOV2Test, hov3_true_uses_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov3_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov3_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -335,7 +335,7 @@ TEST_F(HOV3Test, hov2_true_avoids_hov3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov2_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov2_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -347,7 +347,7 @@ TEST_F(HOV3Test, hot_true_avoids_hov3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hot_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hot_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -359,7 +359,7 @@ TEST_F(HOV3Test, hov3_true_uses_hov3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov3_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov3_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -416,7 +416,7 @@ TEST_F(HOTTest, hov2_true_avoids_hot3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov2_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov2_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -428,7 +428,7 @@ TEST_F(HOTTest, hov3_true_uses_hot3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov3_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hov3_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -440,7 +440,7 @@ TEST_F(HOTTest, hot_true_uses_hot3) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hot_true)
+       std::to_string(map.nodes.at("2").lng()) % include_hot_true)
           .str();
   auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -502,7 +502,7 @@ TEST_F(HOVChoices, choices) {
     std::string req =
         (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
          std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
-         std::to_string(map.nodes.at("G").lng()) % use_hov2_true)
+         std::to_string(map.nodes.at("G").lng()) % include_hov2_true)
             .str();
     auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -516,7 +516,7 @@ TEST_F(HOVChoices, choices) {
     std::string req =
         (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
          std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
-         std::to_string(map.nodes.at("G").lng()) % use_hot_true)
+         std::to_string(map.nodes.at("G").lng()) % include_hot_true)
             .str();
     auto result = gurka::do_action(Options::route, map, req, reader);
 
@@ -532,7 +532,7 @@ TEST_F(HOVChoices, choices) {
     std::string req =
         (boost::format(req_hov) % std::to_string(map.nodes.at("D").lat()) %
          std::to_string(map.nodes.at("D").lng()) % std::to_string(map.nodes.at("G").lat()) %
-         std::to_string(map.nodes.at("G").lng()) % use_hov3_true)
+         std::to_string(map.nodes.at("G").lng()) % include_hov3_true)
             .str();
     auto result = gurka::do_action(Options::route, map, req, reader);
 
