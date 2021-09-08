@@ -197,7 +197,7 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
-std::string guide_destinations(const valhalla::TripSign& sign);
+std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
@@ -501,21 +501,28 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
+        std::string sign_text;
+        if (intersecting_edge->has_sign()) {
+          const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+          // I've looked at the results from guide_destinations(), destinations(), and
+          // exit_destinations(). exit_destinations() does not contain rest-area names.
+          // guide_destinations() and destinations() return the same string value for
+          // the rest area name. So I've decided to use guide_destinations().
+          sign_text = destinations(trip_leg_sign);
+        }
+
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
-          if (intersecting_edge->has_sign()) {
-            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
-            // I've looked at the results from guide_destinations(), destinations(), and
-            // exit_destinations(). exit_destinations() doe not contain rest-area names.
-            // guide_destinations() and destinations() return the same string value for
-            // the rest area name. So I've decided to use guide_destinations().
-            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
-            rest_stop->emplace("name", guide_destinations_str);
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
           }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
           rest_stop->emplace("type", std::string("service_area"));
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         }
@@ -572,10 +579,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
-      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
-          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+      if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
+          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
           }
         }
       }

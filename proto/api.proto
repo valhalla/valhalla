@@ -5,11 +5,13 @@ import public "options.proto"; // the request, filled out by loki
 import public "trip.proto"; // the paths, filled out by thor
 import public "directions.proto"; // the directions, filled out by odin
 import public "info.proto"; // statistics about the request, filled out by loki/thor/odin
+import public "status.proto"; // info for status endpoint
 
 message Api {
   optional Options options = 1;
   optional Trip trip = 2;
   optional Directions directions = 3;
   optional Info info = 4;
+  optional Status status = 5;
   //TODO: other outputs locate, isochrone, matrix, height
 }

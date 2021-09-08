@@ -149,9 +149,11 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : service_worker_t(config), config(config), reader(graph_reader),
+    : service_worker_t(config), config(config),
+      reader(graph_reader ? graph_reader
+                          : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
-                           ? new connectivity_map_t(config.get_child("mjolnir"), graph_reader)
+                           ? new connectivity_map_t(config.get_child("mjolnir"), reader)
                            : nullptr),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_contour_min(config.get<size_t>("service_limits.isochrone.max_time_contour")),
@@ -160,9 +162,6 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
-  // If we weren't provided with a graph reader make our own
-  if (!reader)
-    reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -184,7 +183,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "skadi") {
+        kv.first == "skadi" || kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -242,6 +241,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
   max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
+  allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
 
   // signal that the worker started successfully
   started();

@@ -23,8 +23,12 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // cost creates large performance drops - so perhaps some other metric can be found?
 constexpr float kThresholdDelta = 420.0f;
 
-// Relative cost extension to find alternative routes.
-constexpr float kAlternativeCostExtend = 0.1f;
+// Relative cost extension to find alternative routes. It's a multiplier that we apply
+// to the optimal route cost in order to get a new cost threshold. This threshold indicates
+// an upper bound value cost for alternative routes we're looking for. Due to the fact that
+// we can't estimate route cost that goes through some particular edge very precisely, we
+// can find alternatives with costs greater than the threshold.
+constexpr float kAlternativeCostExtend = 1.2f;
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
@@ -58,6 +62,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   cost_diff_ = 0.0f;
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
+  ignore_hierarchy_limits_ = false;
 }
 
 // Destructor
@@ -90,6 +95,7 @@ void BidirectionalAStar::Clear() {
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
+  ignore_hierarchy_limits_ = false;
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -134,6 +140,20 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Support for hierarchy transitions
   hierarchy_limits_forward_ = costing_->GetHierarchyLimits();
   hierarchy_limits_reverse_ = costing_->GetHierarchyLimits();
+  bool ignore_forward_limits =
+      std::all_of(hierarchy_limits_forward_.begin() + 1,
+                  hierarchy_limits_forward_.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions == kUnlimitedTransitions;
+                  });
+  bool ignore_reverse_limits =
+      std::all_of(hierarchy_limits_reverse_.begin() + 1,
+                  hierarchy_limits_reverse_.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions == kUnlimitedTransitions;
+                  });
+  // Set this flag to 'true' if we can expand edges at all hierarchy levels without limits
+  ignore_hierarchy_limits_ = ignore_forward_limits && ignore_reverse_limits;
 }
 
 // Runs in the inner loop of `Expand`, essentially evaluating if
@@ -156,20 +176,47 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                             uint32_t& shortcuts,
                                             const graph_tile_ptr& tile,
                                             const baldr::TimeInfo& time_info) {
+  // Skip if this is a regular edge superseded by a shortcut.
+  if (shortcuts & meta.edge->superseded()) {
+    return false;
+  }
+
+  graph_tile_ptr t2 = nullptr;
+  baldr::GraphId opp_edge_id;
+  const auto get_opp_edge_data = [&t2, &opp_edge_id, &graphreader, &meta, &tile]() {
+    // Get end node tile, opposing edge Id, and opposing directed edge.
+    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+    if (t2 == nullptr) {
+      return false;
+    }
+
+    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
+    return true;
+  };
+
   constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   auto& hierarchy_limits = FORWARD ? hierarchy_limits_forward_ : hierarchy_limits_reverse_;
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
-  // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
-  // edge superseded by a shortcut.
+  // that level. If using a shortcut, set the shortcuts mask.
   if (meta.edge->is_shortcut()) {
-    if (hierarchy_limits[meta.edge_id.level() + 1].StopExpanding(pred.distance())) {
+    // Skip shortcuts if hierarchy limits are disabled
+    if (ignore_hierarchy_limits_ || !get_opp_edge_data())
+      return false;
+
+    const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;
+    const auto opp_edge_set = opp_edgestatus.Get(opp_edge_id).set();
+    // Synchronize shortcuts for both directions. If this shortcut has been already
+    // encountered on the opposing search we should do the same now: skip or traverse.
+    if ((opp_edge_set != EdgeSet::kSkipped &&
+         hierarchy_limits[meta.edge_id.level() + 1].StopExpanding(pred.distance())) ||
+        opp_edge_set == EdgeSet::kPermanent || opp_edge_set == EdgeSet::kTemporary) {
       shortcuts |= meta.edge->shortcut();
     } else {
+      // Mark this edge as "skipped".
+      *meta.edge_status = {EdgeSet::kSkipped, 0};
       return false;
     }
-  } else if (shortcuts & meta.edge->superseded()) {
-    return false;
   }
 
   // Skip this edge if edge is permanently labeled (best path already found
@@ -179,8 +226,6 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     return true; // This is an edge we _could_ have expanded, so return true
   }
 
-  graph_tile_ptr t2 = nullptr;
-  baldr::GraphId opp_edge_id;
   const baldr::DirectedEdge* opp_edge = nullptr;
 
   if (!FORWARD) {
@@ -191,13 +236,10 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       return false;
     }
 
-    // Get end node tile, opposing edge Id, and opposing directed edge.
-    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
-    if (t2 == nullptr) {
+    if (t2 == nullptr && !get_opp_edge_data()) {
       return false;
     }
 
-    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
     opp_edge = t2->directededge(opp_edge_id);
   }
 
@@ -230,17 +272,21 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     }
   }
 
-  // Get cost. Separate out transition cost.
+  // Get cost
+  uint8_t flow_sources;
+  sif::Cost newcost =
+      pred.cost() + (FORWARD
+                         ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
+                         : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources));
+
+  // Separate out transition cost.
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
+                                                opp_pred_edge,
+                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
-  uint8_t flow_sources;
-  sif::Cost newcost =
-      pred.cost() + transition_cost +
-      (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
-               : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources));
+  newcost += transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -262,13 +308,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   }
 
   // Get end node tile (skip if tile is not found) and opposing edge Id
-  if (FORWARD) {
-    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
-    if (t2 == nullptr) {
-      return false;
-    }
-    opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
-  }
+  if (t2 == nullptr && !get_opp_edge_data())
+    return false;
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
@@ -400,7 +441,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
-      if ((!trans->up() &&
+      if ((!trans->up() && !ignore_hierarchy_limits_ &&
            hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
@@ -492,7 +533,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   SetDestination(graphreader, destination, reverse_time_info);
 
   // Update hierarchy limits
-  ModifyHierarchyLimits();
+  if (!ignore_hierarchy_limits_)
+    ModifyHierarchyLimits();
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -531,9 +573,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Check if the edge on the forward search connects to a settled edge on the
         // reverse search tree. Do not expand further past this edge since it will just
-        // result in other connections.
-        if (edgestatus_reverse_.Get(fwd_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetForwardConnection(graphreader, fwd_pred)) {
+        // result in other connections. Handle special edge case when we encountered the
+        // destination edge that wasn't still pulled out of the queue.
+        const auto opp_status = edgestatus_reverse_.Get(fwd_pred.opp_edgeid());
+        if (opp_status.set() == EdgeSet::kPermanent ||
+            (opp_status.set() == EdgeSet::kTemporary &&
+             edgelabels_reverse_[opp_status.index()].predecessor() == kInvalidLabel)) {
+          if (SetForwardConnection(graphreader, fwd_pred) &&
+              opp_status.set() == EdgeSet::kPermanent) {
             continue;
           }
         }
@@ -576,9 +623,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Check if the edge on the reverse search connects to a settled edge on the
         // forward search tree. Do not expand further past this edge since it will just
-        // result in other connections.
-        if (edgestatus_forward_.Get(rev_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetReverseConnection(graphreader, rev_pred)) {
+        // result in other connections. Handle special edge case when we encountered the
+        // destination edge that wasn't still pulled out of the queue.
+        const auto opp_status = edgestatus_forward_.Get(rev_pred.opp_edgeid());
+        if (opp_status.set() == EdgeSet::kPermanent ||
+            (opp_status.set() == EdgeSet::kTemporary &&
+             edgelabels_forward_[opp_status.index()].predecessor() == kInvalidLabel)) {
+          if (SetReverseConnection(graphreader, rev_pred) &&
+              opp_status.set() == EdgeSet::kPermanent) {
             continue;
           }
         }
@@ -617,11 +669,32 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       return {};
     }
 
+    // Exhaust hierarchy limits simultaneously in both directions. As soon as forward/reverse
+    // search exhausts limits on the particular level - it should stop and wait until reverse/forward
+    // search exhausts limits on the same hierarchy level. This logic ensures local optimality near
+    // the origin and destination and provides valid conditions for the reach-based pruning.
+    bool force_forward = false;
+    bool force_reverse = false;
+    if (!ignore_hierarchy_limits_) {
+      for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
+        if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&
+            !hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance())) {
+          force_forward = true;
+          break;
+        } else if (hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance()) &&
+                   !hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance())) {
+          force_reverse = true;
+          break;
+        }
+      }
+    }
+
     // Expand from the search direction with lower sort cost
     // Note: If one direction is exhausted, we force search in the remaining
     // direction
     if (!forward_exhausted &&
-        ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost() || reverse_exhausted)) {
+        ((!force_reverse && (fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) ||
+         force_forward || reverse_exhausted)) {
       // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
@@ -634,8 +707,31 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
       if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
-          hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(fwd_pred.distance())) {
+          (!ignore_hierarchy_limits_ &&
+           hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(
+               fwd_pred.distance()))) {
         continue;
+      }
+
+      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
+      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
+      if (cost_threshold_ != std::numeric_limits<float>::max() &&
+          fwd_pred.predecessor() != kInvalidLabel) {
+        const auto tile = graphreader.GetGraphTile(fwd_pred.endnode());
+        if (tile != nullptr) {
+          // Estimate lower bound cost for the shortest path that goes through the current edge.
+          float route_lower_bound =
+              edgelabels_forward_[fwd_pred.predecessor()].cost().cost +
+              fwd_pred.transition_cost().cost + rev_pred.sortcost() -
+              astarheuristic_reverse_.Get(tile->get_node_ll(fwd_pred.endnode()));
+          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
+          if (route_lower_bound > cost_threshold_) {
+            continue;
+          }
+        } else {
+          // Failed to get tile for the endnode. Skip expansion from this node.
+          continue;
+        }
       }
 
       // Expand from the end node in forward direction.
@@ -653,7 +749,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
-          hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(rev_pred.distance())) {
+          (!ignore_hierarchy_limits_ &&
+           hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(
+               rev_pred.distance()))) {
         continue;
       }
 
@@ -664,6 +762,27 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         continue;
       }
       const DirectedEdge* opp_pred_edge = rev_pred_tile->directededge(rev_pred.opp_edgeid());
+
+      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
+      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
+      if (cost_threshold_ != std::numeric_limits<float>::max() &&
+          rev_pred.predecessor() != kInvalidLabel) {
+        const auto tile = graphreader.GetGraphTile(rev_pred.endnode());
+        if (tile != nullptr) {
+          // Estimate lower bound cost for the shortest path that goes through the current edge.
+          float route_lower_bound =
+              edgelabels_reverse_[rev_pred.predecessor()].cost().cost +
+              rev_pred.transition_cost().cost + fwd_pred.sortcost() -
+              astarheuristic_forward_.Get(tile->get_node_ll(rev_pred.endnode()));
+          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
+          if (route_lower_bound > cost_threshold_) {
+            continue;
+          }
+        } else {
+          // Failed to get tile for the endnode. Skip expansion from this node.
+          continue;
+        }
+      }
 
       // Expand from the end node in reverse direction.
       Expand<ExpansionType::reverse>(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
@@ -714,23 +833,25 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = c + kThresholdDelta;
+    } else {
+      // For short routes it may be not enough to use just scale to extend the cost threshold.
+      // So, we also add the delta to find more alternatives.
+      // TODO: use different constants to extend the search based on route distance.
+      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
 
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
-
-  // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
-    float sortcost = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost());
-    if (desired_paths_count_ == 1) {
-      cost_threshold_ = sortcost + kThresholdDelta;
-    } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-      iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-    }
-  }
 
   // setting this edge as connected
   if (expansion_callback_) {
@@ -780,23 +901,25 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
   }
 
+  // Set thresholds to extend search
+  if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
+    if (desired_paths_count_ == 1) {
+      cost_threshold_ = c + kThresholdDelta;
+    } else {
+      // For short routes it may be not enough to use just scale to extend the cost threshold.
+      // So, we also add the delta to find more alternatives.
+      // TODO: use different constants to extend the search based on route distance.
+      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      iterations_threshold_ =
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+    }
+  }
+
   // Keep the best ones at the front all others to the back
   best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
 
   if (c < best_connections_.front().cost)
     std::swap(best_connections_.front(), best_connections_.back());
-
-  // Set thresholds to extend search
-  if (cost_threshold_ == std::numeric_limits<float>::max()) {
-    float sortcost = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_);
-    if (desired_paths_count_ == 1) {
-      cost_threshold_ = sortcost + kThresholdDelta;
-    } else {
-      cost_threshold_ = sortcost + std::max(kAlternativeCostExtend * sortcost, kThresholdDelta);
-      iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
-    }
-  }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
   if (expansion_callback_) {
@@ -1155,6 +1278,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // For the first path just add it for subsequent paths only add if it passes viability tests
     if (paths.empty() || (validate_alternate_by_sharing(shared_edgeids, paths, path, max_sharing) &&
+                          validate_alternate_by_stretch(paths.front(), path) &&
                           validate_alternate_by_local_optimality(path))) {
       paths.emplace_back(std::move(path));
     }

@@ -352,10 +352,11 @@ public:
 
       // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
       // Pq keeps track of element and its index.
-      auto cmp = [&predicate](const std::pair<T, int>& a, std::pair<T, int>& b) {
+      auto cmp = [&predicate](const std::pair<T, size_t>& a, std::pair<T, size_t>& b) {
         return predicate(b.first, a.first);
       };
-      std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
+      std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, decltype(cmp)> pq(
+          cmp);
 
       // Sort the subsections
       for (size_t i = 0; i < memmap.size(); i += buffer_size) {
