@@ -454,9 +454,12 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
       rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
 
   // HOT/HOV
-  pbf_costing_options->set_include_hot(rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
-  pbf_costing_options->set_include_hov2(rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
-  pbf_costing_options->set_include_hov3(rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
+  pbf_costing_options->set_include_hot(
+      rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
+  pbf_costing_options->set_include_hov2(
+      rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
+  pbf_costing_options->set_include_hov3(
+      rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
 }
 
 void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
