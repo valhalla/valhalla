@@ -35,8 +35,8 @@ void validate_path(const valhalla::Api& result, const std::vector<std::string>& 
   gurka::assert::raw::expect_path(result, expected_names);
 }
 
-const std::vector<std::string>& costing = {"auto",  "hov",        "taxi",          "bus",
-                                           "truck", "motorcycle", "motor_scooter", "pedestrian"};
+const std::vector<std::string>& costing = {"auto",       "taxi",          "bus",       "truck",
+                                           "motorcycle", "motor_scooter", "pedestrian"};
 
 class ServiceRoadsTest : public ::testing::Test {
 protected:

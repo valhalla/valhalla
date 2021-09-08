@@ -555,10 +555,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParseBusCostOptions(doc, key, costing_options);
       break;
     }
-    case hov: {
-      sif::ParseAutoCostOptions(doc, key, costing_options);
-      break;
-    }
     case taxi: {
       sif::ParseTaxiCostOptions(doc, key, costing_options);
       break;

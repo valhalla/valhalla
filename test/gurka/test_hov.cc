@@ -265,6 +265,27 @@ TEST_F(HOV2Test, hov3_true_uses_hov2) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress2");
 }
 
+//------------------------------------------------------------------
+TEST_F(HOV2Test, hov_costing_uses_auto_hov2) {
+  auto replace_all = [](std::string& original, const std::string& find, const std::string& replace) {
+    size_t i = 0;
+    while ((i = original.find(find, i)) != std::string::npos) {
+      original.replace(i, find.size(), replace);
+      i += replace.size();
+    }
+  };
+
+  std::string req =
+      (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
+       std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
+       std::to_string(map.nodes.at("2").lng()) % use_hov2_true)
+          .str();
+  replace_all(req, "auto", "hov");
+  auto result = gurka::do_action(Options::route, map, req, reader);
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "HOVExpress2");
+}
+
 //=======================================================================================
 class HOV3Test : public ::testing::Test {
 protected:

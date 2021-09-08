@@ -168,21 +168,9 @@ config = {
       'max_matrix_distance': 400000.0,
       'max_matrix_locations': 50
     },
-    'auto_shorter': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
     'bus': {
       'max_distance': 5000000.0,
       'max_locations': 50,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
-    'hov': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
       'max_matrix_distance': 400000.0,
       'max_matrix_locations': 50
     },
@@ -442,19 +430,7 @@ help_text = {
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
-    'auto_shorter': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
     'bus': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
-    'hov': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

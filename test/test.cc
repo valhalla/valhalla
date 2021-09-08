@@ -272,12 +272,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_distance": 400000.0,
           "max_matrix_locations": 50
         },
-        "auto_shorter": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
-        },
         "bicycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
@@ -299,12 +293,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "centroid": {
           "max_distance": 200000.0,
           "max_locations": 5
-        },
-        "hov": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
         },
         "isochrone": {
           "max_contours": 4,
