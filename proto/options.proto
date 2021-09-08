@@ -37,7 +37,7 @@ enum Costing {
   // deprecated auto_shorter = 1;
   bicycle = 2;
   bus = 3;
-  // hov = 4;
+  // deprecated hov = 4;
   motor_scooter = 5;
   multimodal = 6;
   pedestrian = 7;

@@ -53,7 +53,7 @@ gurka::map UseTracksTest::use_tracks_map = {};
 
 TEST_F(UseTracksTest, test_default_value) {
   for (const auto& c : costing)
-    if (c == "auto" || c == "hov" || c == "taxi" || c == "bus" || c == "truck")
+    if (c == "auto" || c == "taxi" || c == "bus" || c == "truck")
       // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
       validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c),
                     {"AB", "BC", "CD", "DE", "EF"});

@@ -37,7 +37,7 @@ TEST(Standalone, NodeAccess) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_access");
 
   for (auto& c : costing) {
-    if (c == "auto" || c == "hov" || c == "taxi")
+    if (c == "auto" || c == "taxi")
       validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else if (c == "bicycle" || c == "pedestrian")

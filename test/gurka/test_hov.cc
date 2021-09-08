@@ -278,7 +278,7 @@ TEST_F(HOV2Test, hov_costing_uses_auto_hov2) {
   std::string req =
       (boost::format(req_hov) % std::to_string(map.nodes.at("1").lat()) %
        std::to_string(map.nodes.at("1").lng()) % std::to_string(map.nodes.at("2").lat()) %
-       std::to_string(map.nodes.at("2").lng()) % use_hov2_true)
+       std::to_string(map.nodes.at("2").lng()) % "")
           .str();
   replace_all(req, "auto", "hov");
   auto result = gurka::do_action(Options::route, map, req, reader);
