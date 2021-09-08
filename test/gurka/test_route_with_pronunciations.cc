@@ -103,7 +103,10 @@ protected:
           {"destination:street:pronunciation", "ˈgɹænvɪl ˈɹoʊd"}}},
     };
 
-    const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
+    const gurka::nodes nodes = {{"M",
+                                 {{"highway", "traffic_signals"},
+                                  {"name", "M Junction"},
+                                  {"name:pronunciation", "ɛm ˈʤʌŋkʃən"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
@@ -352,6 +355,7 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns2) {
       "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) toward I 80 (<span class=&quot;phoneme&quot;>/aɪ 80/</span>), Main Street (<span class=&quot;phoneme&quot;>/meɪn strit/</span>).",
       "");
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(RouteWithStreetnameAndSignPronunciation, CheckGuideSigns) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"J", "O"}, "auto");
@@ -438,11 +442,72 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckGuideSigns) {
                 .value(),
             "ˈgɹænvɪl");
 
-  // Verify sign pronunciation instructions
+  // Verify guide sign pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right toward Granville Road/Granville.",
       "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
       "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>).",
       "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
       "Continue for 500 meters.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(RouteWithStreetnameAndSignPronunciation, CheckJunctionName) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"J", "Q"}, "auto");
+  gurka::assert::raw::expect_path(result,
+                                  {"Lancaster Road/SR 37", "Lancaster Road/SR 37",
+                                   "Lancaster Road/SR 37", "Lancaster Road/SR 37", "Granville Road"});
+
+  // Verify starting on Lancaster Road/SR 37
+  int maneuver_index = 0;
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name_size(), 2);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(0).value(),
+            "Lancaster Road");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(01).value(),
+            "SR 37");
+
+  // Verify guide sign pronunciations - alphabet & value
+  ++maneuver_index;
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .junction_names_size(),
+            1);
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .junction_names(0)
+                .text(),
+            "M Junction");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .junction_names(0)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .junction_names(0)
+                .pronunciation()
+                .value(),
+            "ɛm ˈʤʌŋkʃən");
+
+  // Verify junction name pronunciation instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Turn left at M Junction.",
+      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
+      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
+      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
+      "Continue for 400 meters.");
 }
