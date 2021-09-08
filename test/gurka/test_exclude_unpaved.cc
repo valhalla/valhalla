@@ -6,7 +6,10 @@ using namespace valhalla;
 
 namespace {
 const std::vector<std::string> kSupportedCostingModels = {
-    "auto", "taxi", "bus", "truck",
+    "auto",
+    "taxi",
+    "bus",
+    "truck",
 };
 } // namespace
 
