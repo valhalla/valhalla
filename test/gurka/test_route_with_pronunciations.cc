@@ -14,7 +14,7 @@ const std::unordered_map<std::string, std::string> build_config{
      "%1% (<span class=<QUOTES>phoneme<QUOTES>>/%2%/</span>)"},
 };
 
-class RouteWithPronunciation : public ::testing::Test {
+class RouteWithExitSignPronunciation : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -51,7 +51,8 @@ protected:
           {{"highway", "primary"},
            {"name", "Lancaster Road"},
            {"name:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
-           {"ref", "SR 37"}}},
+           {"ref", "SR 37"},
+           {"ref:pronunciation", "ˈsinjər 37"}}},
          {"BC",
           {{"highway", "motorway_link"},
            {"name", ""},
@@ -62,7 +63,8 @@ protected:
            {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
            {"destination:street", "Lancaster Road"},
            {"destination:street:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
-           {"destination:ref", "SR 37"}}},
+           {"destination:ref", "SR 37"},
+           {"destination:ref:pronunciation", "ˈsinjər 37"}}},
          {"CE",
           {{"highway", "motorway_link"},
            {"name", ""},
@@ -85,16 +87,16 @@ protected:
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_route_with_pronunciation",
-                            build_config);
+    map = gurka::buildtiles(layout, ways, {}, {},
+                            "test/data/gurka_route_with_exit_sign_pronunciation", build_config);
   }
 };
 
-gurka::map RouteWithPronunciation::map = {};
+gurka::map RouteWithExitSignPronunciation::map = {};
 
 /*************************************************************/
 
-TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
+TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
 
@@ -213,7 +215,7 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Take exit 126B onto SR 37/Lancaster Road toward Granville/Lancaster.",
       "", "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
-      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) onto SR 37, Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>) toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
+      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) onto SR 37 (<span class=&quot;phoneme&quot;>/ˈsinjər 37/</span>), Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>) toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
       "");
 
   // Verify street name pronunciation - alphabet & value
@@ -244,6 +246,6 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right onto Lancaster Road/SR 37.", "Turn right.",
       "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>).",
-      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37.",
+      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37 (<span class=&quot;phoneme&quot;>/ˈsinjər 37/</span>).",
       "Continue for 400 meters.");
 }
