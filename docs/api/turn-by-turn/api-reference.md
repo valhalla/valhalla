@@ -123,9 +123,9 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `height` | The height of the vehicle (in meters). |
 | `width` | The width of the vehicle (in meters). |
 | `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. |
-| `use_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
-| `use_hov3` | A bollean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
-| `use_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
+| `include_hov3` | A bollean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
 
 The following options are available for `truck` costing.
 
