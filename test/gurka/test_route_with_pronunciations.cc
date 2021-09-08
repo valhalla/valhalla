@@ -79,7 +79,8 @@ protected:
            {"oneway", "yes"},
            {"destination:ref", "I 70 West"}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_route_with_pronunciation",
                             build_config);
   }
@@ -94,20 +95,47 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
   gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
 
   // Verify starting on I 70
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "I 70");
+  int maneuver_index = 0;
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name_size(), 1);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(0).value(),
+            "I 70");
 
   // Verify sign pronunciations - alphabet & value
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).sign().exit_onto_streets_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).sign().exit_onto_streets(0).text(),
+  ++maneuver_index;
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_onto_streets_size(),
+            1);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_onto_streets(0)
+                .text(),
             "SR 37");
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).sign().exit_toward_locations_size(), 2);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).sign().exit_toward_locations(0).text(),
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations_size(),
+            2);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(0)
+                .text(),
             "Granville");
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
-                .maneuver(1)
+                .maneuver(maneuver_index)
                 .sign()
                 .exit_toward_locations(0)
                 .pronunciation()
@@ -116,18 +144,24 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
-                .maneuver(1)
+                .maneuver(maneuver_index)
                 .sign()
                 .exit_toward_locations(0)
                 .pronunciation()
                 .value(),
             "ˈgɹænvɪl");
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).sign().exit_toward_locations(1).text(),
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(1)
+                .text(),
             "Lancaster");
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
-                .maneuver(1)
+                .maneuver(maneuver_index)
                 .sign()
                 .exit_toward_locations(1)
                 .pronunciation()
@@ -136,26 +170,41 @@ TEST_F(RouteWithPronunciation, CheckStreetNamesAndSigns) {
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
-                .maneuver(1)
+                .maneuver(maneuver_index)
                 .sign()
                 .exit_toward_locations(1)
                 .pronunciation()
                 .value(),
             "ˈlæŋkəstər");
 
+  // Verify sign pronunciation instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Take exit 126 onto SR 37 toward Granville/Lancaster.", "",
+      "Take exit 126.",
+      "Take exit 126 onto SR 37 toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
+      "");
+
   // Verify street name pronunciation - alphabet & value
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name_size(), 2);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(),
+  ++maneuver_index;
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name_size(), 2);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(0).value(),
             "Lancaster Road");
   EXPECT_EQ(result.directions()
                 .routes(0)
                 .legs(0)
-                .maneuver(2)
+                .maneuver(maneuver_index)
                 .street_name(0)
                 .pronunciation()
                 .alphabet(),
             Pronunciation_Alphabet_kIpa);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).pronunciation().value(),
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .street_name(0)
+                .pronunciation()
+                .value(),
             "ˈlæŋkəstər ˈɹoʊd");
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(1).value(), "SR 37");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(1).value(),
+            "SR 37");
 }
