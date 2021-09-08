@@ -523,11 +523,11 @@ public:
    *                       if nullptr is passed in flow_sources does nothing.
    * @return Returns the speed for the edge.
    */
-  inline uint32_t GetSpeed(const DirectedEdge* de,
-                           uint8_t flow_mask = kConstrainedFlowMask,
-                           uint32_t seconds = kInvalidSecondsOfWeek,
-                           bool is_truck = false,
-                           uint8_t* flow_sources = nullptr) const {
+  uint32_t GetSpeed(const DirectedEdge* de,
+                    uint8_t flow_mask = kConstrainedFlowMask,
+                    uint32_t seconds = kInvalidSecondsOfWeek,
+                    bool is_truck = false,
+                    uint8_t* flow_sources = nullptr) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
