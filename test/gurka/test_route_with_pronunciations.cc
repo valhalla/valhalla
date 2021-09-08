@@ -76,9 +76,10 @@ protected:
            {"oneway", "yes"},
            {"junction:ref", "126B"},
            {"junction:ref:pronunciation", "1 26bi"},
-           {"destination", "Granville;Lancaster"},
-           {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
-           {"destination:ref", "SR 37"}}},
+           {"destination:street:to", "Main Street"},
+           {"destination:street:to:pronunciation", "meɪn strit"},
+           {"destination:ref:to", "I 80"},
+           {"destination:ref:to:pronunciation", "aɪ 80"}}},
          {"IK",
           {{"highway", "motorway_link"},
            {"name", ""},
@@ -94,9 +95,8 @@ protected:
 
 gurka::map RouteWithExitSignPronunciation::map = {};
 
-/*************************************************************/
-
-TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns) {
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns1) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
 
@@ -248,4 +248,87 @@ TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns) {
       "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>).",
       "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37 (<span class=&quot;phoneme&quot;>/ˈsinjər 37/</span>).",
       "Continue for 400 meters.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns2) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"G", "J"}, "auto");
+  gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
+
+  // Verify starting on I 70
+  int maneuver_index = 0;
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name_size(), 1);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(0).value(),
+            "I 70");
+
+  // Verify sign pronunciations - alphabet & value
+  ++maneuver_index;
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations_size(),
+            2);
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(0)
+                .text(),
+            "I 80");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(0)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(0)
+                .pronunciation()
+                .value(),
+            "aɪ 80");
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(1)
+                .text(),
+            "Main Street");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(1)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .exit_toward_locations(1)
+                .pronunciation()
+                .value(),
+            "meɪn strit");
+
+  // Verify sign pronunciation instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Take exit 126B toward I 80/Main Street.", "",
+      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
+      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) toward I 80 (<span class=&quot;phoneme&quot;>/aɪ 80/</span>), Main Street (<span class=&quot;phoneme&quot;>/meɪn strit/</span>).",
+      "");
 }
