@@ -127,8 +127,8 @@ protected:
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
-  meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
+  meili::MapMatcherFactory matcher_factory;
   AttributesController controller;
   Centroid centroid_gen;
 
