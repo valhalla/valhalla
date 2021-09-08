@@ -14,7 +14,7 @@ const std::unordered_map<std::string, std::string> build_config{
      "%1% (<span class=<QUOTES>phoneme<QUOTES>>/%2%/</span>)"},
 };
 
-class RouteWithExitSignPronunciation : public ::testing::Test {
+class RouteWithStreetnameAndSignPronunciation : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -40,63 +40,83 @@ protected:
                        |
                        |
                        D
-
+               O------PM------Q
+                       |
+                       |
+                       |
+                       N
 
     )";
 
-    const gurka::ways ways =
-        {{"ABEF", {{"highway", "motorway"}, {"name", ""}, {"ref", "I 70"}, {"oneway", "yes"}}},
-         {"GHKL", {{"highway", "motorway"}, {"name", ""}, {"ref", "I 70"}, {"oneway", "yes"}}},
-         {"JICD",
-          {{"highway", "primary"},
-           {"name", "Lancaster Road"},
-           {"name:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
-           {"ref", "SR 37"},
-           {"ref:pronunciation", "ˈsinjər 37"}}},
-         {"BC",
-          {{"highway", "motorway_link"},
-           {"name", ""},
-           {"oneway", "yes"},
-           {"junction:ref", "126B"},
-           {"junction:ref:pronunciation", "1 26bi"},
-           {"destination", "Granville;Lancaster"},
-           {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
-           {"destination:street", "Lancaster Road"},
-           {"destination:street:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
-           {"destination:ref", "SR 37"},
-           {"destination:ref:pronunciation", "ˈsinjər 37"}}},
-         {"CE",
-          {{"highway", "motorway_link"},
-           {"name", ""},
-           {"oneway", "yes"},
-           {"destination:ref", "I 70 East"}}},
-         {"HI",
-          {{"highway", "motorway_link"},
-           {"name", ""},
-           {"oneway", "yes"},
-           {"junction:ref", "126B"},
-           {"junction:ref:pronunciation", "1 26bi"},
-           {"destination:street:to", "Main Street"},
-           {"destination:street:to:pronunciation", "meɪn strit"},
-           {"destination:ref:to", "I 80"},
-           {"destination:ref:to:pronunciation", "aɪ 80"}}},
-         {"IK",
-          {{"highway", "motorway_link"},
-           {"name", ""},
-           {"oneway", "yes"},
-           {"destination:ref", "I 70 West"}}}};
+    const gurka::ways ways = {
+        {"ABEF", {{"highway", "motorway"}, {"name", ""}, {"ref", "I 70"}, {"oneway", "yes"}}},
+        {"GHKL", {{"highway", "motorway"}, {"name", ""}, {"ref", "I 70"}, {"oneway", "yes"}}},
+        {"JICDMN",
+         {{"highway", "primary"},
+          {"name", "Lancaster Road"},
+          {"name:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
+          {"ref", "SR 37"},
+          {"ref:pronunciation", "ˈsinjər 37"}}},
+        {"BC",
+         {{"highway", "motorway_link"},
+          {"name", ""},
+          {"oneway", "yes"},
+          {"junction:ref", "126B"},
+          {"junction:ref:pronunciation", "1 26bi"},
+          {"destination", "Granville;Lancaster"},
+          {"destination:pronunciation", "ˈgɹænvɪl;ˈlæŋkəstər"},
+          {"destination:street", "Lancaster Road"},
+          {"destination:street:pronunciation", "ˈlæŋkəstər ˈɹoʊd"},
+          {"destination:ref", "SR 37"},
+          {"destination:ref:pronunciation", "ˈsinjər 37"}}},
+        {"CE",
+         {{"highway", "motorway_link"},
+          {"name", ""},
+          {"oneway", "yes"},
+          {"destination:ref", "I 70 East"}}},
+        {"HI",
+         {{"highway", "motorway_link"},
+          {"name", ""},
+          {"oneway", "yes"},
+          {"junction:ref", "126B"},
+          {"junction:ref:pronunciation", "1 26bi"},
+          {"destination:street:to", "Main Street"},
+          {"destination:street:to:pronunciation", "meɪn strit"},
+          {"destination:ref:to", "I 80"},
+          {"destination:ref:to:pronunciation", "aɪ 80"}}},
+        {"IK",
+         {{"highway", "motorway_link"},
+          {"name", ""},
+          {"oneway", "yes"},
+          {"destination:ref", "I 70 West"}}},
+        {"OPMQ",
+         {{"highway", "secondary"},
+          {"name", "Granville Road"},
+          {"name:pronunciation", "ˈgɹænvɪl ˈɹoʊd"}}},
+        {"DP",
+         {{"highway", "secondary_link"},
+          {"name", ""},
+          {"oneway", "yes"},
+          {"destination", "Granville"},
+          {"destination:pronunciation", "ˈgɹænvɪl"},
+          {"destination:street", "Granville Road"},
+          {"destination:street:pronunciation", "ˈgɹænvɪl ˈɹoʊd"}}},
+    };
+
+    const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
-    map = gurka::buildtiles(layout, ways, {}, {},
-                            "test/data/gurka_route_with_exit_sign_pronunciation", build_config);
+    map = gurka::buildtiles(layout, ways, nodes, {},
+                            "test/data/gurka_route_with_streetname_and_sign_pronunciation",
+                            build_config);
   }
 };
 
-gurka::map RouteWithExitSignPronunciation::map = {};
+gurka::map RouteWithStreetnameAndSignPronunciation::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
-TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns1) {
+TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns1) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
 
@@ -251,7 +271,7 @@ TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns1) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns2) {
+TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns2) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"G", "J"}, "auto");
   gurka::assert::raw::expect_path(result, {"I 70", "", "Lancaster Road/SR 37"});
 
@@ -331,4 +351,98 @@ TEST_F(RouteWithExitSignPronunciation, CheckStreetNamesAndSigns2) {
       "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
       "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) toward I 80 (<span class=&quot;phoneme&quot;>/aɪ 80/</span>), Main Street (<span class=&quot;phoneme&quot;>/meɪn strit/</span>).",
       "");
+}
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(RouteWithStreetnameAndSignPronunciation, CheckGuideSigns) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"J", "O"}, "auto");
+  gurka::assert::raw::expect_path(result, {"Lancaster Road/SR 37", "Lancaster Road/SR 37",
+                                           "Lancaster Road/SR 37", "", "Granville Road"});
+
+  // Verify starting on Lancaster Road/SR 37
+  int maneuver_index = 0;
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name_size(), 2);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(0).value(),
+            "Lancaster Road");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(maneuver_index).street_name(01).value(),
+            "SR 37");
+
+  // Verify guide sign pronunciations - alphabet & value
+  ++maneuver_index;
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_onto_streets_size(),
+            1);
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_onto_streets(0)
+                .text(),
+            "Granville Road");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_onto_streets(0)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_onto_streets(0)
+                .pronunciation()
+                .value(),
+            "ˈgɹænvɪl ˈɹoʊd");
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_toward_locations_size(),
+            1);
+
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_toward_locations(0)
+                .text(),
+            "Granville");
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_toward_locations(0)
+                .pronunciation()
+                .alphabet(),
+            Pronunciation_Alphabet_kIpa);
+  EXPECT_EQ(result.directions()
+                .routes(0)
+                .legs(0)
+                .maneuver(maneuver_index)
+                .sign()
+                .guide_toward_locations(0)
+                .pronunciation()
+                .value(),
+            "ˈgɹænvɪl");
+
+  // Verify sign pronunciation instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Turn right toward Granville Road/Granville.",
+      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
+      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>).",
+      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
+      "Continue for 500 meters.");
 }
