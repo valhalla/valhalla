@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/streetname.h>
+#include <valhalla/odin/sign.h>
 
 namespace valhalla {
 namespace odin {
@@ -43,6 +44,14 @@ public:
    * @return the street name with phoneme markup if it exists.
    */
   boost::optional<std::string> Format(const std::unique_ptr<baldr::StreetName>& street_name) const;
+
+  /**
+   * Return the sign with phoneme markup if it exists.
+   *
+   * @param  sign  the sign record to format.
+   * @return the sign with phoneme markup if it exists.
+   */
+  boost::optional<std::string> Format(const Sign& sign) const;
 
 protected:
   bool UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet) const;

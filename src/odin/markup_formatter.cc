@@ -57,6 +57,26 @@ MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) c
   return boost::none;
 }
 
+boost::optional<std::string> MarkupFormatter::Format(const Sign& sign) const {
+  // Check if markup is enabled
+  if (markup_enabled()) {
+
+    // If pronunciation exists then process the phoneme format
+    if (sign.pronunciation()) {
+      std::string markup_sign = phoneme_format();
+
+      // Use the proper quotes depending on the pronunciation alphabet
+      FormatQuotes(sign.pronunciation()->alphabet(), markup_sign);
+
+      // If the markup string exists then return the sign with the phoneme
+      return boost::make_optional(!markup_sign.empty(), (boost::format(markup_sign) % sign.text() %
+                                                         sign.pronunciation()->value())
+                                                            .str());
+    }
+  }
+  return boost::none;
+}
+
 bool MarkupFormatter::UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet) const {
   if (alphabet == valhalla::Pronunciation_Alphabet_kNtSampa) {
     return true;
