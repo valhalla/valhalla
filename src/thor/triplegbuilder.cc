@@ -1439,6 +1439,7 @@ void TripLegBuilder::Build(
   // we track the intermediate locations while we iterate so we can update their shape index
   // from the edge index that we assigned to them earlier in route_action
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
+  double total_distance = 0;
 
   // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
@@ -1624,11 +1625,17 @@ void TripLegBuilder::Build(
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
 
+    // TODO: is this overkill or duplicating other code (shape attributes etc?)
+    for (auto i = begin_index + 1; i < trip_shape.size(); ++i) {
+      total_distance += trip_shape[i - 1].Distance(trip_shape[i]);
+    }
+
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
     if (intermediate_itr != trip_path.mutable_location()->end() &&
         intermediate_itr->leg_shape_index() == edge_index) {
       intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
+      intermediate_itr->set_distance_from_origin(total_distance);
       ++intermediate_itr;
     }
 
