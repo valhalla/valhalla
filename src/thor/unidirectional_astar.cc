@@ -210,8 +210,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   uint8_t restriction_idx = kInvalidRestriction;
-  bool const is_dest =
-      destinations_percent_along_.find(meta.edge_id) != destinations_percent_along_.cend();
+  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
+  const bool is_dest = dest_edge != destinations_percent_along_.end();
   if (FORWARD) {
     if (!costing_->Allowed(meta.edge, is_dest, pred, tile, meta.edge_id, time_info.local_time,
                            nodeinfo->timezone(), restriction_idx) ||
@@ -246,8 +246,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
-  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
-  if (dest_edge != destinations_percent_along_.end()) {
+  if (is_dest) {
     // Adapt cost to potentially not using the entire destination edge
     newcost -= edge_cost * (FORWARD ? (1.0f - dest_edge->second) : dest_edge->second);
 
@@ -290,7 +289,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // end node of the directed edge.
   float dist = 0.0f;
   float sortcost = newcost.cost;
-  if (dest_edge == destinations_percent_along_.end()) {
+  if (!is_dest) {
     graph_tile_ptr t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
@@ -309,6 +308,13 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                              restriction_idx);
+    // TODO: the BDEdgeLabel constructor doesnt have a way to set the path distance and the distance
+    //  so we work around it by using the update function. in the future we could just make edge
+    //  labels simple structs with public access
+    auto path_distance = static_cast<uint32_t>(
+        pred.path_distance() + meta.edge->length() * (is_dest ? dest_edge->second : 1.f) + .5f);
+    edgelabels_.back().Update(pred_idx, newcost, sortcost, transition_cost, path_distance,
+                              restriction_idx);
     *meta.edge_status = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   } else {
@@ -482,11 +488,20 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_[predindex];
-    if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
+    auto maybe_dest = destinations_percent_along_.find(pred.edgeid());
+    if (maybe_dest != destinations_percent_along_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(FORWARD ? pred.edgeid() : pred.opp_edgeid(), origin, destination)) {
+          // so this is the the portion of the edge from the origin but doesnt account for how
+          // far along the destination is along the edge so we need to subtract off the part after
+          // the dest
+          auto edge_length = graphreader.directededge(pred.edgeid())->length();
+          auto path_distance = static_cast<uint32_t>(
+              std::max(0.f, pred.path_distance() - (1.f - maybe_dest->second) * edge_length) + .5f);
+          pred.Update(pred.predecessor(), pred.cost(), pred.sortcost(), pred.transition_cost(),
+                      path_distance, pred.restriction_idx());
           return {FormPath(predindex)};
         }
       } else {
@@ -763,7 +778,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     uint32_t idx = edgelabels_.size();
     if (FORWARD) {
       uint32_t path_distance =
-          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()) + .5f);
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
                              Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -772,7 +787,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
        * same time - so we need to update immediately after to set path_distance */
       edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, kInvalidRestriction);
       // Set the origin flag
-      edgelabels_.push_back(edge_label);
+      edgelabels_.emplace_back(std::move(edge_label));
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
                                mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
