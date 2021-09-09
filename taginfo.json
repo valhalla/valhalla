@@ -4182,6 +4182,14 @@
       ],
       "description": "Official name for a country used in that country if it differs from what is in the name tag"
     },
+   {
+      "key": "access",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the access on the way can change conditionally."
+    },
     {
       "key": "oneway",
       "value": "-1",
@@ -4213,6 +4221,30 @@
         "way"
       ],
       "description": "Sets reverse flag to true for all types of routing."
+    },
+   {
+      "key": "oneway",
+      "value": "reversible",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
+    },
+   {
+      "key": "oneway",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change conditionally."
+    },
+    {
+      "key": "oneway",
+      "value": "alternating",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
     },
     {
       "key": "oneway:bicycle",
