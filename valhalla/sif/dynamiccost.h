@@ -890,9 +890,9 @@ protected:
   bool exclude_unpaved_{false};
 
   // HOT/HOV flags
-  bool include_hot_lanes_{false};
-  bool include_hov2_lanes_{false};
-  bool include_hov3_lanes_{false};
+  bool include_hot_{false};
+  bool include_hov2_{false};
+  bool include_hov3_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.

@@ -290,15 +290,15 @@ public:
     // The edge is either HOV-2 or HOV-3 from this point forward.
 
     // If include_hov3 is set we can route onto both HOV-2 and HOV-3 edges
-    if (include_hov3_lanes_)
+    if (include_hov3_)
       return true;
 
     // If include_hov2 is set we can route onto HOV-2 edges.
-    if (include_hov2_lanes_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
+    if (include_hov2_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
       return true;
 
     // If include_hot is set we can route onto HOT edges (HOV and tolled).
-    if (include_hot_lanes_ && edge->toll())
+    if (include_hot_ && edge->toll())
       return true;
 
     return false;
@@ -314,11 +314,10 @@ public:
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const graph_tile_ptr& tile,
                        uint16_t disallow_mask = kDisallowNone) const override {
-    bool allow_hov = IsHOVAllowed(edge);
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (allow_closures || !tile->IsClosed(edge)) && allow_hov;
+           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge);
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -398,9 +397,9 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
-  include_hot_lanes_ = costing_options.include_hot();
-  include_hov2_lanes_ = costing_options.include_hov2();
-  include_hov3_lanes_ = costing_options.include_hov3();
+  include_hot_ = costing_options.include_hot();
+  include_hov2_ = costing_options.include_hov2();
+  include_hov3_ = costing_options.include_hov3();
 
   // Get the vehicle attributes
   height_ = costing_options.height();
