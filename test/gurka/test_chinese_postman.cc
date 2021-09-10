@@ -358,7 +358,8 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
                {"BE_2", "DE_2", "DE_2", "BE_2", "AB_2", "AB_2"});
 }
 
-TEST_P(ChinesePostmanTest, TestChinesePostmanNotConnected) {
+// Disabled in favor of outside chinese polygon route.
+TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
   // create a chinese polygon (prwu) and avoid polygon (iknl)
   // the exclude polygon is dividing the map into two, that makes it not connected.
   // make sure the right exception is thrown
