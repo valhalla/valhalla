@@ -454,22 +454,24 @@ enum class Surface : uint8_t {
   kImpassable = 7
 };
 inline std::string to_string(Surface s) {
-  static const std::unordered_map<uint8_t, std::string> SurfaceStrings = {
-      {static_cast<uint8_t>(Surface::kPavedSmooth), "paved_smooth"},
-      {static_cast<uint8_t>(Surface::kPaved), "paved"},
-      {static_cast<uint8_t>(Surface::kPavedRough), "paved_rough"},
-      {static_cast<uint8_t>(Surface::kCompacted), "compacted"},
-      {static_cast<uint8_t>(Surface::kDirt), "dirt"},
-      {static_cast<uint8_t>(Surface::kGravel), "gravel"},
-      {static_cast<uint8_t>(Surface::kPath), "path"},
-      {static_cast<uint8_t>(Surface::kImpassable), "impassable"},
-  };
-
-  auto i = SurfaceStrings.find(static_cast<uint8_t>(s));
-  if (i == SurfaceStrings.cend()) {
-    return "null";
+  switch (s) {
+    case Surface::kPavedSmooth:
+      return "paved_smooth";
+    case Surface::kPaved:
+      return "paved";
+    case Surface::kPavedRough:
+      return "paved_rough";
+    case Surface::kCompacted:
+      return "compacted";
+    case Surface::kDirt:
+      return "dirt";
+    case Surface::kGravel:
+      return "gravel";
+    case Surface::kPath:
+      return "path";
+    case Surface::kImpassable:
+      return "impassable";
   }
-  return i->second;
 }
 
 // Used for restrictions.  A restriction can start and end on a particular day

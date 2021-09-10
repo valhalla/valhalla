@@ -711,7 +711,24 @@ public:
    * Is this edge unpaved or bad surface?
    */
   bool unpaved() const {
-    return (surface() >= Surface::kCompacted);
+    switch (surface()) {
+      case Surface::kPavedSmooth:
+        return false;
+      case Surface::kPaved:
+        return false;
+      case Surface::kPavedRough:
+        return false;
+      case Surface::kCompacted:
+        return true;
+      case Surface::kDirt:
+        return true;
+      case Surface::kGravel:
+        return true;
+      case Surface::kPath:
+        return true;
+      case Surface::kImpassable:
+        return true;
+    }
   }
 
   /**
