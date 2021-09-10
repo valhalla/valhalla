@@ -384,7 +384,7 @@ help_text = {
       'proxy': 'IPC linux domain socket file location'
     },
     'markup_formatter': {
-      'markup_enabled': 'Boolean flag to us e markup formatting',
+      'markup_enabled': 'Boolean flag to use markup formatting',
       'phoneme_format': 'The phoneme format string that will be used by street names and signs'
     }
   },
