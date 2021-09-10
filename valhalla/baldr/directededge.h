@@ -713,19 +713,13 @@ public:
   bool unpaved() const {
     switch (surface()) {
       case Surface::kPavedSmooth:
-        return false;
       case Surface::kPaved:
-        return false;
       case Surface::kPavedRough:
         return false;
       case Surface::kCompacted:
-        return true;
       case Surface::kDirt:
-        return true;
       case Surface::kGravel:
-        return true;
       case Surface::kPath:
-        return true;
       case Surface::kImpassable:
         return true;
     }
