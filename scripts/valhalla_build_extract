@@ -17,8 +17,8 @@ description = """Builds a tar extract from the tiles in mjolnir.tile_dir to the 
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
-STRUCT_FORMAT = '<QLL'
-STRUCT_SIZE = struct.calcsize(STRUCT_FORMAT)
+INDEX_STRUCT_FORMAT = '<QLL'
+INDEX_STRUCT_SIZE = struct.calcsize(INDEX_STRUCT_FORMAT)
 INDEX_FILE = "index.bin"
 
 parser = argparse.ArgumentParser(description=description)
