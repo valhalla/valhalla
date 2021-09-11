@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import json
 import pprint
+from distutils.util import strtobool
 
 class optional:
   def __init__(self, t=None):
@@ -167,21 +168,9 @@ config = {
       'max_matrix_distance': 400000.0,
       'max_matrix_locations': 50
     },
-    'auto_shorter': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
     'bus': {
       'max_distance': 5000000.0,
       'max_locations': 50,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
-    'hov': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
       'max_matrix_distance': 400000.0,
       'max_matrix_locations': 50
     },
@@ -441,19 +430,7 @@ help_text = {
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
     },
-    'auto_shorter': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
     'bus': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
-    'hov': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
@@ -557,18 +534,6 @@ help_text = {
   }
 }
 
-#used to convert comma separated list of strings into a list
-def comma_separated_list(arg):
-  return arg.split(',')
-
-def parse_bool(arg):
-  if arg.lower() in ('yes', 'true', 't', 'y', '1'):
-    return True
-  elif arg.lower() in ('no', 'false', 'f', 'n', '0'):
-    return False
-  else:
-    raise argparse.ArgumentTypeError('Boolean value expected.')
-
 #returns a list of leaves of the tree, `\0` separated, stops at non dicts
 #while doing so it also adds arguments to the parser
 def add_leaf_args(path, tree, leaves, parser):
@@ -583,9 +548,19 @@ def add_leaf_args(path, tree, leaves, parser):
     h = help_text
     for k in keys:
       h = h[k]
-    t = comma_separated_list if type(tree) == type([]) else (type(tree) if type(tree) != type(optional()) else tree.type)
+
+    # its either required and is the right type or optional and has a type to use
+    # lists are supported as comma separated and bools support a bunch of conventions
+    # the rest of the primatives (strings and numbers) parse automatically
+    t = type(tree) if type(tree) != type(optional()) else tree.type
+    if t == type([]):
+      t = lambda arg: arg.split(',')
+    elif t == type(bool()):
+      t = lambda arg: bool(strtobool(arg))     
+    
     arg = '--' + path.replace('_', '-').replace('\0', '-')
-    parser.add_argument(arg, type = t if t != type(bool()) else parse_bool, help=h, default=tree)
+    parser.add_argument(arg, type = t, help=h, default=tree)
+
     leaves.append(path)
 
 #entry point to program

@@ -45,9 +45,6 @@ constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
 
-// How much to favor hov roads.
-constexpr float kHOVFactor = 0.85f;
-
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
 
@@ -137,7 +134,7 @@ public:
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = kAutoAccess);
+  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
 
   virtual ~AutoCost() {
   }
@@ -285,6 +282,28 @@ public:
     return static_cast<uint8_t>(type_);
   }
 
+  bool IsHOVAllowed(const baldr::DirectedEdge* edge) const {
+    // A non-hov edge means hov is allowed.
+    if (!edge->is_hov_only())
+      return true;
+
+    // The edge is either HOV-2 or HOV-3 from this point forward.
+
+    // If include_hov3 is set we can route onto both HOV-2 and HOV-3 edges
+    if (include_hov3_)
+      return true;
+
+    // If include_hov2 is set we can route onto HOV-2 edges.
+    if (include_hov2_ && (edge->hov_type() == baldr::HOVEdgeType::kHOV2))
+      return true;
+
+    // If include_hot is set we can route onto HOT edges (HOV and tolled).
+    if (include_hot_ && edge->toll())
+      return true;
+
+    return false;
+  }
+
   /**
    * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
@@ -298,7 +317,7 @@ public:
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (allow_closures || !tile->IsClosed(edge));
+           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge);
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -378,6 +397,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
+  include_hot_ = costing_options.include_hot();
+  include_hov2_ = costing_options.include_hov2();
+  include_hov3_ = costing_options.include_hov3();
+
   // Get the vehicle attributes
   height_ = costing_options.height();
   width_ = costing_options.width();
@@ -404,6 +427,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx) const {
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -413,7 +437,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
     return false;
   }
 
@@ -438,7 +462,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge)) {
     return false;
   }
 
@@ -703,6 +727,13 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
                             .get_value_or(kDefaultAutoWidth)));
 
+    // HOT/HOV-use
+    pbf_costing_options->set_include_hot(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hot").get_value_or(false));
+    pbf_costing_options->set_include_hov2(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov2").get_value_or(false));
+    pbf_costing_options->set_include_hov3(
+        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov3").get_value_or(false));
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults
@@ -852,184 +883,6 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
 
 cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
   return std::make_shared<BusCost>(costing_options);
-}
-
-/**
- * Derived class providing an alternate costing for driving that is intended
- * to favor HOV roads.
- */
-class HOVCost : public AutoCost {
-public:
-  /**
-   * Construct hov costing.
-   * Pass in costing_options using protocol buffer(pbf).
-   * @param  costing_options  pbf with costing_options.
-   */
-  HOVCost(const CostingOptions& costing_options) : AutoCost(costing_options, kHOVAccess) {
-  }
-
-  virtual ~HOVCost() {
-  }
-
-  /**
-   * Checks if access is allowed for the provided directed edge.
-   * This is generally based on mode of travel and the access modes
-   * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters such as conditional restrictions and
-   * conditional access that can depend on time and travel mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  is_dest        Is a directed edge the destination?
-   * @param  pred           Predecessor edge information.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the directed edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
-   * @return Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const bool is_dest,
-                       const EdgeLabel& pred,
-                       const graph_tile_ptr& tile,
-                       const baldr::GraphId& edgeid,
-                       const uint64_t current_time,
-                       const uint32_t tz_index,
-                       uint8_t& restriction_idx) const override;
-
-  /**
-   * Checks if access is allowed for an edge on the reverse path
-   * (from destination towards origin). Both opposing edges (current and
-   * predecessor) are provided. The access check is generally based on mode
-   * of travel and the access modes allowed on the edge. However, it can be
-   * extended to exclude access based on other parameters such as conditional
-   * restrictions and conditional access that can depend on time and travel
-   * mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  pred           Predecessor edge information.
-   * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
-   */
-  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                              const EdgeLabel& pred,
-                              const baldr::DirectedEdge* opp_edge,
-                              const graph_tile_ptr& tile,
-                              const baldr::GraphId& opp_edgeid,
-                              const uint64_t current_time,
-                              const uint32_t tz_index,
-                              uint8_t& restriction_idx) const override;
-
-  /**
-   * Returns the cost to traverse the edge and an estimate of the actual time
-   * (in seconds) to traverse the edge.
-   * @param  edge      Pointer to a directed edge.
-   * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
-   * @return  Returns the cost to traverse the edge.
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const graph_tile_ptr& tile,
-                        const uint32_t seconds,
-                        uint8_t& flow_sources) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
-    auto final_speed = std::min(edge_speed, top_speed_);
-
-    float sec = (edge->length() * speedfactor_[final_speed]);
-
-    if (shortest_) {
-      return Cost(edge->length(), sec);
-    }
-
-    float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-    float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-    factor += speed_penalty;
-
-    if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
-      factor *= kHOVFactor;
-    }
-
-    if (edge->use() == Use::kAlley) {
-      factor *= alley_factor_;
-    } else if (edge->use() == Use::kTrack) {
-      factor *= track_factor_;
-    } else if (edge->use() == Use::kLivingStreet) {
-      factor *= living_street_factor_;
-    } else if (edge->use() == Use::kServiceRoad) {
-      factor *= service_factor_;
-    }
-    if (IsClosed(edge, tile)) {
-      // Add a penalty for traversing a closed edge
-      factor *= closure_factor_;
-    }
-
-    return Cost(sec * factor, sec);
-  }
-};
-
-// Check if access is allowed on the specified edge.
-bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
-                      const bool is_dest,
-                      const EdgeLabel& pred,
-                      const graph_tile_ptr& tile,
-                      const baldr::GraphId& edgeid,
-                      const uint64_t current_time,
-                      const uint32_t tz_index,
-                      uint8_t& restriction_idx) const {
-  // Check access, U-turn, and simple turn restriction.
-  // Allow U-turns at dead-end nodes in case the origin is inside
-  // a not thru region and a heading selected an edge entering the
-  // region.
-  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
-      edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
-    return false;
-  }
-
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
-}
-
-// Checks if access is allowed for an edge on the reverse path (from
-// destination towards origin). Both opposing edges are provided.
-bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
-                             const EdgeLabel& pred,
-                             const baldr::DirectedEdge* opp_edge,
-                             const graph_tile_ptr& tile,
-                             const baldr::GraphId& opp_edgeid,
-                             const uint64_t current_time,
-                             const uint32_t tz_index,
-                             uint8_t& restriction_idx) const {
-  // Check access, U-turn, and simple turn restriction.
-  // Allow U-turns at dead-end nodes.
-  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
-    return false;
-  }
-
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
-}
-
-void ParseHOVCostOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::hov);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-}
-
-cost_ptr_t CreateHOVCost(const CostingOptions& costing_options) {
-  return std::make_shared<HOVCost>(costing_options);
 }
 
 /**

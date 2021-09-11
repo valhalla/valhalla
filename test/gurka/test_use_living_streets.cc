@@ -4,9 +4,8 @@
 
 using namespace valhalla;
 
-const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
-                                           "bus",           "bicycle",    "truck",
-                                           "motor_scooter", "motorcycle", "pedestrian"};
+const std::vector<std::string>& costing = {"auto",  "taxi",          "bus",        "bicycle",
+                                           "truck", "motor_scooter", "motorcycle", "pedestrian"};
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
