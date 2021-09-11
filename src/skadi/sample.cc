@@ -161,34 +161,6 @@ public:
   }
 };
 
-class tile_data;
-
-struct cache_t {
-  // Cached tiles
-  std::vector<cache_item_t> cache;
-  // Set of reusable tile indexes
-  std::unordered_set<uint16_t> reusable;
-  // Map of pending tiles. No matter how many requests received, only one inflate job per tile
-  // started.
-  std::unordered_map<uint16_t, std::shared_future<tile_data>> pending_tiles;
-  // Guards access to the pending_tiles
-  std::recursive_mutex mutex;
-  // Elevation tile path
-  std::string data_source;
-
-  void increment_usages(uint16_t index) {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-    cache[index].get_usages()++;
-  }
-
-  void decrement_usages(uint16_t index) {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-    cache[index].get_usages()--;
-  }
-
-  tile_data source(uint16_t index);
-};
-
 // tile_data object holds unpacked elevation tile data
 class tile_data {
 private:
@@ -201,34 +173,13 @@ public:
   tile_data() : c(nullptr), index(0), reusable(false), data(nullptr) {
   }
 
-  tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
-      : c(c), data(data), index(index), reusable(reusable) {
-    if (reusable)
-      c->increment_usages(index);
-  }
-
   tile_data(const tile_data& other) : c(nullptr) {
     *this = other;
   }
 
-  ~tile_data() {
-    if (reusable)
-      c->decrement_usages(index);
-  }
-
-  tile_data& operator=(const tile_data& other) {
-    if (c && reusable)
-      c->decrement_usages(index);
-
-    c = other.c;
-    data = other.data;
-    index = other.index;
-    reusable = other.reusable;
-
-    if (c && reusable)
-      c->increment_usages(index);
-    return *this;
-  }
+  tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data);
+  ~tile_data();
+  tile_data& operator=(const tile_data& other);
 
   tile_data& operator=(tile_data&& other) {
     std::swap(c, other.c);
@@ -298,6 +249,58 @@ public:
     return value / adjust;
   }
 };
+
+struct cache_t {
+  // Cached tiles
+  std::vector<cache_item_t> cache;
+  // Set of reusable tile indexes
+  std::unordered_set<uint16_t> reusable;
+  // Map of pending tiles. No matter how many requests received, only one inflate job per tile
+  // started.
+  std::unordered_map<uint16_t, std::shared_future<tile_data>> pending_tiles;
+  // Guards access to the pending_tiles
+  std::recursive_mutex mutex;
+  // Elevation tile path
+  std::string data_source;
+
+  void increment_usages(uint16_t index) {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    cache[index].get_usages()++;
+  }
+
+  void decrement_usages(uint16_t index) {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    cache[index].get_usages()--;
+  }
+
+  tile_data source(uint16_t index);
+};
+
+
+tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
+    : c(c), data(data), index(index), reusable(reusable) {
+  if (reusable)
+    c->increment_usages(index);
+}
+
+tile_data::~tile_data() {
+  if (reusable)
+    c->decrement_usages(index);
+}
+
+tile_data& tile_data::operator=(const tile_data& other) {
+  if (c && reusable)
+    c->decrement_usages(index);
+
+  c = other.c;
+  data = other.data;
+  index = other.index;
+  reusable = other.reusable;
+
+  if (c && reusable)
+    c->increment_usages(index);
+  return *this;
+}
 
 tile_data cache_t::source(uint16_t index) {
   // bail if its out of bounds
