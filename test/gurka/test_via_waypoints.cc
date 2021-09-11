@@ -152,8 +152,8 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
 
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);
-  for (int i = 0; i < 6; ++i) {
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 8);
+  for (int i = 0; i < 8; ++i) {
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i + 1);
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
               i + 1 + (i > 2));
