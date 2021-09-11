@@ -276,7 +276,6 @@ struct cache_t {
   tile_data source(uint16_t index);
 };
 
-
 tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
     : c(c), data(data), index(index), reusable(reusable) {
   if (reusable)
