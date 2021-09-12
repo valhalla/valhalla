@@ -5,7 +5,7 @@ import importlib
 CWD = Path(__file__).parent.resolve()
 
 
-def import_path(module_name):
+def import_module(module_name):
     """Returns the module as object"""
     # Get the right path to the module
     path = str(CWD.parent.parent.joinpath('scripts', module_name))
