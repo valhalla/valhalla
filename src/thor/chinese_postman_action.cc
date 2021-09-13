@@ -170,7 +170,7 @@ thor_worker_t::computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
                                            const std::shared_ptr<sif::DynamicCost>& costing,
                                            const float max_matrix_distance) {
   // map of graph id (as string)
-  auto unbalancedVertices = G.getUnbalancedVerticesMap();
+  auto unbalancedVertices = G.getUnbalancedVertices();
   DistanceMatrix distanceMatrix(boost::extents[unbalancedVertices.size()][unbalancedVertices.size()]);
 
   // TODO: Need to populate these two variables
@@ -178,7 +178,48 @@ thor_worker_t::computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
   LOG_DEBUG("computeCostMatrixUnbalanced: setup for cost matrix computation");
-  for (const auto& ubv : unbalancedVertices) {}
+  for (const auto& cp_vertex : unbalancedVertices) {
+    GraphId g(cp_vertex.graph_id);
+    auto l = getPointLL(g, *reader);
+    Location loc = Location();
+
+    loc.mutable_ll()->set_lng(l.first);
+    loc.mutable_ll()->set_lat(l.second);
+    source_location_list.Add()->CopyFrom(loc);
+    target_location_list.Add()->CopyFrom(loc);
+  }
+
+  try {
+    auto locations = PathLocation::fromPBF(source_location_list, true);
+    const auto projections = loki::Search(locations, *reader, costing);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& correlated = projections.at(locations[i]);
+      PathLocation::toPBF(correlated, source_location_list.Mutable(i), *reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+
+  try {
+    auto locations = PathLocation::fromPBF(target_location_list, true);
+    const auto projections = loki::Search(locations, *reader, costing);
+    for (size_t i = 0; i < locations.size(); ++i) {
+      const auto& correlated = projections.at(locations[i]);
+      PathLocation::toPBF(correlated, target_location_list.Mutable(i), *reader);
+    }
+  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
+
+  LOG_DEBUG("computeCostMatrixUnbalanced: the real cost matrix computation");
+  CostMatrix costmatrix;
+  std::vector<thor::TimeDistance> td =
+      costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
+                                mode, max_matrix_distance);
+
+  LOG_DEBUG("computeCostMatrixUnbalanced: update distance matrix computation");
+  // Update Distance Matrix
+  for (int i = 0; i < unbalancedVertices.size(); i++) {
+    for (int j = 0; j < unbalancedVertices.size(); j++) {
+      distanceMatrix[i][j] = td[i * source_location_list.size() + j].dist;
+    }
+  }
 
   return distanceMatrix;
 }
@@ -512,6 +553,9 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     LOG_DEBUG("Compute Cost matrix with number of element: " + std::to_string(distanceMatrix.size()));
     computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing_str)->second);
+
+    auto newDM =
+        computeCostMatrixUnbalanced(G, costing_, max_matrix_distance.find(costing_str)->second);
 
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {

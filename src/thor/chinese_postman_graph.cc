@@ -84,6 +84,21 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVerticesMap() {
   return unbalaced_vertices;
 }
 
+std::vector<CPVertex> ChinesePostmanGraph::getUnbalancedVertices() {
+  std::vector<CPVertex> unbalaced_vertices;
+  std::vector<std::string> unbalaced_graph_ids;
+  for (auto const& v : this->vertices) {
+    if (this->indegrees[v.first] != this->outdegrees[v.first]) {
+      unbalaced_graph_ids.push_back(v.first);
+    }
+  }
+  sort(unbalaced_graph_ids.begin(), unbalaced_graph_ids.end());
+  for (auto const& graph_id : unbalaced_graph_ids) {
+    unbalaced_vertices.push_back(CPVertex(GraphId(graph_id)));
+  }
+  return unbalaced_vertices;
+}
+
 std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
                                                              ExtraPaths extraPaths) {
   LOG_DEBUG("computeIdealEulerCycle");

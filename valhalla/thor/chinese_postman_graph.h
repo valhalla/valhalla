@@ -81,8 +81,8 @@ public:
   // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVerticesMap();
 
-  // Return a vector of unbalanced vertices (CPVertex)
-  // std::vector<CPVertex> getUnbalancedVertices();
+  // Return a sorted vector of unbalanced vertices (CPVertex)
+  std::vector<CPVertex> getUnbalancedVertices();
 
   // Helper to get the adjacency list from the graph. It returns a map with
   // node-index as the key and a vector of node-indexes from that node in the
