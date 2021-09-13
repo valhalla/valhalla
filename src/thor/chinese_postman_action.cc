@@ -165,6 +165,24 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
   }
 }
 
+DistanceMatrix
+thor_worker_t::computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
+                                           const std::shared_ptr<sif::DynamicCost>& costing,
+                                           const float max_matrix_distance) {
+  // map of graph id (as string)
+  auto unbalancedVertices = G.getUnbalancedVerticesMap();
+  DistanceMatrix distanceMatrix(boost::extents[unbalancedVertices.size()][unbalancedVertices.size()]);
+
+  // TODO: Need to populate these two variables
+  google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
+  google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
+
+  LOG_DEBUG("computeCostMatrixUnbalanced: setup for cost matrix computation");
+  for (const auto& ubv : unbalancedVertices) {}
+
+  return distanceMatrix;
+}
+
 void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
                                       DistanceMatrix& dm,
                                       const std::shared_ptr<sif::DynamicCost>& costing,
@@ -509,7 +527,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     // Populate the list of node which has too many incoming and too few incoming
     std::vector<baldr::GraphId> overNodes;
     std::vector<baldr::GraphId> underNodes;
-    for (auto const& v : G.getUnbalancedVertices()) {
+    for (auto const& v : G.getUnbalancedVerticesMap()) {
       // Calculate the number of needed edges to make it balanced
       int extraEdges = 0;
       if (!isSameOriginDestination && v.first == originVertex.vertex_id) {
@@ -551,7 +569,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
     // Calling hungarian algorithm
     LOG_DEBUG("Run Hungarian Algorithm");
-    LOG_DEBUG("Number of pairing candidates: " + std::to_string(overNodes.size()));
+    LOG_DEBUG("Number of overNodes: " + std::to_string(overNodes.size()));
+    LOG_DEBUG("Number of underNodes: " + std::to_string(underNodes.size()));
+    LOG_DEBUG("Number of unbalancedNodes: " + std::to_string(G.getUnbalancedVerticesMap().size()));
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);

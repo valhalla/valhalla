@@ -74,7 +74,7 @@ void ChinesePostmanGraph::addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, 
   this->outdegrees[cpStartVertex.vertex_id]++;
 }
 
-std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
+std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVerticesMap() {
   std::map<std::string, int> unbalaced_vertices;
   for (auto const& v : this->vertices) {
     if (this->indegrees[v.first] != this->outdegrees[v.first]) {
@@ -153,7 +153,7 @@ CPEdge* ChinesePostmanGraph::getCPEdge(int i, int j) {
 }
 
 bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_vertex) {
-  auto unbalancedVertices = this->getUnbalancedVertices();
+  auto unbalancedVertices = this->getUnbalancedVerticesMap();
   if (start_vertex.graph_id == end_vertex.graph_id) {
     return unbalancedVertices.size() == 0;
   } else {

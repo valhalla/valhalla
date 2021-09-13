@@ -109,6 +109,10 @@ protected:
                          const std::shared_ptr<sif::DynamicCost>& costing,
                          const float max_matrix_distance);
 
+  DistanceMatrix computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
+                                             const std::shared_ptr<sif::DynamicCost>& costing,
+                                             const float max_matrix_distance);
+
   std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
                                         CPVertex cpvertex_end,
                                         const Options& options,
