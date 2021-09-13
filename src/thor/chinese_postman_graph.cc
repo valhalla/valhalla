@@ -86,17 +86,19 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVertices() {
 
 std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
                                                              ExtraPaths extraPaths) {
+  LOG_DEBUG("computeIdealEulerCycle");
   int startNodeIndex = this->getVertexIndex(start_vertex);
-  int edgeVisited = 0;
 
   this->setupDFSEulerCycle(extraPaths);
   this->dfsEulerCycle(startNodeIndex);
+  int edgeUnvisited = 0;
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
-  // for (auto const& v : this->outEdges) {
-  //   if (v.second != 0) {
-  //     throw valhalla_exception_t(450);
-  //   }
-  // }
+  for (auto const& v : this->outEdges) {
+    if (v.second != 0) {
+      edgeUnvisited++;
+    }
+  }
+  LOG_WARN("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
   return this->reversedEulerPath;
 }
 

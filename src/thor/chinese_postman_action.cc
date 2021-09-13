@@ -122,8 +122,10 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
 PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
   if (dm.shape()[0] == dm.shape()[1]) {
     // create path matrix
+    LOG_DEBUG("Floyd-Warshall: create path matrix");
     PathMatrix pathMatrix(boost::extents[dm.shape()[0]][dm.shape()[0]]);
     // populate the path matrix
+    LOG_DEBUG("Floyd-Warshall: populate the path matrix");
     for (int i = 0; i < pathMatrix.shape()[0]; i++) {
       for (int j = 0; j < pathMatrix.shape()[0]; j++) {
         if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
@@ -133,7 +135,7 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
         }
       }
     }
-
+    LOG_DEBUG("Floyd-Warshall: compute floyd-warshall");
     for (int k = 0; k < dm.shape()[0]; k++) {
       for (int i = 0; i < dm.shape()[0]; i++) {
         for (int j = 0; j < dm.shape()[0]; j++) {
@@ -172,6 +174,7 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
   int i = 0;
+  LOG_DEBUG("computeCostMatrix: setup for cost matrix computation");
   while (i < G.numVertices()) {
     CPVertex* cp_vertex = G.getCPVertex(i);
     GraphId g(cp_vertex->graph_id);
@@ -203,10 +206,13 @@ void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
+  LOG_DEBUG("computeCostMatrix: the real cost matrix computation");
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
                                 mode, max_matrix_distance);
+
+  LOG_DEBUG("computeCostMatrix: update distance matrix computation");
   // Update Distance Matrix
   for (int i = 0; i < G.numVertices(); i++) {
     for (int j = 0; j < G.numVertices(); j++) {
@@ -226,6 +232,28 @@ bool isStronglyConnectedGraph(DistanceMatrix& dm) {
     }
   }
   return true;
+}
+
+int notConnectedNode(DistanceMatrix& dm) {
+  int num = 0;
+  int num_i = 0;
+  int num_j = 0;
+  for (int i = 0; i < dm.shape()[0]; i++) {
+    bool found_not_connected = std::any_of(dm[i].begin(), dm[i].end(), [](double e) {
+      return e == valhalla::thor::NOT_CONNECTED;
+    });
+    if (found_not_connected) {
+      num_i++;
+    }
+    for (int j = 0; j < dm.shape()[0]; j++) {
+      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
+        num++;
+      }
+    }
+  }
+  LOG_DEBUG("number element " + std::to_string(num));
+  LOG_DEBUG("number column " + std::to_string(num_i));
+  return num;
 }
 
 double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
@@ -307,7 +335,7 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
                                                  ChinesePostmanGraph& G,
                                                  const Options& options,
                                                  const std::string costing) {
-
+  LOG_DEBUG("buildEdgeIds");
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
     if (it + 1 == reversedEulerPath.rend()) {
@@ -431,6 +459,8 @@ void thor_worker_t::chinese_postman(Api& request) {
     throw valhalla_exception_t(451);
   }
 
+  LOG_DEBUG("Number of edges in Chinese Postman Graph: " + std::to_string(G.numEdges()));
+
   bool isSameOriginDestination = destinationVertex.graph_id == originVertex.graph_id;
 
   // Solving the Chinese Postman
@@ -457,8 +487,12 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
 
+    LOG_DEBUG("Compute Floyd Warshall number of element: " + std::to_string(distanceMatrix.size()));
     PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
 
+    notConnectedNode(distanceMatrix);
+
+    LOG_DEBUG("Compute Cost matrix with number of element: " + std::to_string(distanceMatrix.size()));
     computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing_str)->second);
 
     // Check if the graph is not strongly connected
@@ -467,7 +501,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     }
 
     // Do matching here
-
+    LOG_DEBUG("Populate pairing");
     // A flag to check whether we already evaluate the origin and destination nodes
     bool originNodeChecked = false;
     bool destinationNodeChecked = false;
@@ -516,6 +550,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     // Calling hungarian algorithm
+    LOG_DEBUG("Run Hungarian Algorithm");
+    LOG_DEBUG("Number of pairing candidates: " + std::to_string(overNodes.size()));
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
@@ -533,6 +569,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
   }
   // Start build path here
+  LOG_DEBUG("Building full path");
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
   std::vector<PathInfo> path =
