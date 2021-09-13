@@ -166,20 +166,18 @@ PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
 }
 
 DistanceMatrix
-thor_worker_t::computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
+thor_worker_t::computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
                                            const std::shared_ptr<sif::DynamicCost>& costing,
                                            const float max_matrix_distance) {
-  // map of graph id (as string)
-  auto unbalancedVertices = G.getUnbalancedVertices();
-  DistanceMatrix distanceMatrix(boost::extents[unbalancedVertices.size()][unbalancedVertices.size()]);
+  DistanceMatrix distanceMatrix(boost::extents[graph_ids.size()][graph_ids.size()]);
 
   // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
   LOG_DEBUG("computeCostMatrixUnbalanced: setup for cost matrix computation");
-  for (const auto& cp_vertex : unbalancedVertices) {
-    GraphId g(cp_vertex.graph_id);
+  for (const auto& graph_id : graph_ids) {
+    GraphId g(graph_id);
     auto l = getPointLL(g, *reader);
     Location loc = Location();
 
@@ -215,8 +213,8 @@ thor_worker_t::computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
 
   LOG_DEBUG("computeCostMatrixUnbalanced: update distance matrix computation");
   // Update Distance Matrix
-  for (int i = 0; i < unbalancedVertices.size(); i++) {
-    for (int j = 0; j < unbalancedVertices.size(); j++) {
+  for (int i = 0; i < graph_ids.size(); i++) {
+    for (int j = 0; j < graph_ids.size(); j++) {
       distanceMatrix[i][j] = td[i * source_location_list.size() + j].dist;
     }
   }
@@ -417,9 +415,9 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
   return eulerPathEdgeGraphIDs;
 }
 
-int getCPVertexIndex(baldr::GraphId graph_id, std::vector<CPVertex> cp_vertices) {
+int getCPVertexIndex(baldr::GraphId graph_id, std::vector<baldr::GraphId> cp_vertices) {
   for (int i = 0; i < cp_vertices.size(); i++) {
-    if (graph_id == cp_vertices[i].graph_id) {
+    if (graph_id == cp_vertices[i]) {
       return i;
     }
   }
@@ -564,9 +562,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     LOG_DEBUG("Compute Cost matrix with number of element: " + std::to_string(distanceMatrix.size()));
     computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing_str)->second);
 
-    auto newDM =
-        computeCostMatrixUnbalanced(G, costing_, max_matrix_distance.find(costing_str)->second);
-
     // Check if the graph is not strongly connected
     if (!isStronglyConnectedGraph(distanceMatrix)) {
       throw valhalla_exception_t(450);
@@ -574,6 +569,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     // Do matching here
     LOG_DEBUG("Populate pairing");
+    auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
     // A flag to check whether we already evaluate the origin and destination nodes
     bool originNodeChecked = false;
     bool destinationNodeChecked = false;
@@ -604,14 +600,17 @@ void thor_worker_t::chinese_postman(Api& request) {
     // Handle if the origin or destination nodes are not managed yet
     if (!isSameOriginDestination) {
       if (!originNodeChecked) {
+        sorted_unbalanced_nodes.push_back(originVertex.graph_id);
         overNodes.push_back(originVertex.graph_id);
       }
       if (!destinationNodeChecked) {
+        sorted_unbalanced_nodes.push_back(destinationVertex.graph_id);
         underNodes.push_back(destinationVertex.graph_id);
       }
     }
 
-    auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
+    auto newDM = computeCostMatrixUnbalanced(sorted_unbalanced_nodes, costing_,
+                                             max_matrix_distance.find(costing_str)->second);
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {

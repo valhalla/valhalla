@@ -82,7 +82,7 @@ public:
   std::map<std::string, int> getUnbalancedVerticesMap();
 
   // Return a sorted vector of unbalanced vertices (CPVertex)
-  std::vector<CPVertex> getUnbalancedVertices();
+  std::vector<baldr::GraphId> getUnbalancedVertices();
 
   // Helper to get the adjacency list from the graph. It returns a map with
   // node-index as the key and a vector of node-indexes from that node in the

@@ -84,8 +84,8 @@ std::map<std::string, int> ChinesePostmanGraph::getUnbalancedVerticesMap() {
   return unbalaced_vertices;
 }
 
-std::vector<CPVertex> ChinesePostmanGraph::getUnbalancedVertices() {
-  std::vector<CPVertex> unbalaced_vertices;
+std::vector<baldr::GraphId> ChinesePostmanGraph::getUnbalancedVertices() {
+  std::vector<GraphId> unbalaced_vertices;
   std::vector<std::string> unbalaced_graph_ids;
   for (auto const& v : this->vertices) {
     if (this->indegrees[v.first] != this->outdegrees[v.first]) {
@@ -94,7 +94,7 @@ std::vector<CPVertex> ChinesePostmanGraph::getUnbalancedVertices() {
   }
   sort(unbalaced_graph_ids.begin(), unbalaced_graph_ids.end());
   for (auto const& graph_id : unbalaced_graph_ids) {
-    unbalaced_vertices.push_back(CPVertex(GraphId(graph_id)));
+    unbalaced_vertices.push_back(GraphId(graph_id));
   }
   return unbalaced_vertices;
 }

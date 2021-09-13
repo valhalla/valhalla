@@ -109,7 +109,7 @@ protected:
                          const std::shared_ptr<sif::DynamicCost>& costing,
                          const float max_matrix_distance);
 
-  DistanceMatrix computeCostMatrixUnbalanced(ChinesePostmanGraph& G,
+  DistanceMatrix computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
                                              const std::shared_ptr<sif::DynamicCost>& costing,
                                              const float max_matrix_distance);
 
