@@ -417,6 +417,16 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
   return eulerPathEdgeGraphIDs;
 }
 
+int getCPVertexIndex(baldr::GraphId graph_id, std::vector<CPVertex> cp_vertices) {
+  for (int i = 0; i < cp_vertices.size(); i++) {
+    if (graph_id == cp_vertices[i].graph_id) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 void thor_worker_t::chinese_postman(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
@@ -600,14 +610,18 @@ void thor_worker_t::chinese_postman(Api& request) {
         underNodes.push_back(destinationVertex.graph_id);
       }
     }
+
+    auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
       pairingMatrix.push_back(std::vector<double>{});
       for (int j = 0; j < underNodes.size(); j++) {
-        int overNodeIndex = G.getVertexIndex(overNodes[i]);
-        int underNodeIndex = G.getVertexIndex(underNodes[j]);
-        double distance = distanceMatrix[overNodeIndex][underNodeIndex];
+        // int overNodeIndex = G.getVertexIndex(overNodes[i]);
+        int overNodeIndex = getCPVertexIndex(overNodes[i], sorted_unbalanced_nodes);
+        int underNodeIndex = getCPVertexIndex(underNodes[i], sorted_unbalanced_nodes);
+
+        double distance = newDM[overNodeIndex][underNodeIndex];
         pairingMatrix[i].push_back(distance);
       }
     }
