@@ -15,24 +15,31 @@ mock_parser.add_argument = MagicMock()
 
 class TestBuildConfig(unittest.TestCase):
     def test_add_leaf_types(self):
-        # test all data types, except for bool & list, since they have costum lambdas we can't test
+        # test all data types, except for bool & list
+        # they have costum lambdas we can't test this way
         help_text = {
-            'bool': "boolean",
             "str": "string",
-            "list": "list",
+            "int": "integer",
+            "float": "float",
             "opt_str": "optional string",
             "opt_list": "optional list",
             "opt_int": "optional int",
         }
         config = {
             'str': 'string',
+            'int': 100,
+            "float": 10.9,
             'opt_str': valhalla_build_config.Optional(str),
             'opt_list': valhalla_build_config.Optional(list),
             'opt_int': valhalla_build_config.Optional(int),
         }
 
+        # these are the types the config values should resolve to
+        # for the parser.add_argument(type=) arg
         value_types = {
             "str": str,
+            "int": int,
+            "float": float,
             "opt_str": str,
             "opt_list": list,
             "opt_int": int
