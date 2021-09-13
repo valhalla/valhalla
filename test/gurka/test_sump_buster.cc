@@ -3,9 +3,8 @@
 
 using namespace valhalla;
 
-const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
-                                           "bus",           "truck",      "bicycle",
-                                           "motor_scooter", "motorcycle", "pedestrian"};
+const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
+                                           "bicycle", "motor_scooter", "motorcycle", "pedestrian"};
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -39,7 +38,7 @@ TEST(Standalone, SumpBusterDefaults) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_sump_busterdefaults");
 
   for (auto& c : costing) {
-    if (c == "auto" || c == "hov" || c == "taxi")
+    if (c == "auto" || c == "taxi")
       validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else

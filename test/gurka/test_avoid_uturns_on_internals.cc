@@ -10,9 +10,8 @@ using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
 
-const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
-                                           "bus",           "truck",      "bicycle",
-                                           "motor_scooter", "motorcycle", "pedestrian"};
+const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
+                                           "bicycle", "motor_scooter", "motorcycle", "pedestrian"};
 
 TEST(Standalone, AvoidUturnsOnInternals) {
   constexpr double gridsize_metres = 5;
