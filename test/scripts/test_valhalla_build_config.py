@@ -83,7 +83,7 @@ class TestBuildConfig(unittest.TestCase):
 
         valhalla_build_config.override_config(args, leaves, config)
         # the Optional arg should be removed
-        self.assertTrue(len(config["0"]), 2)
+        self.assertEqual(len(config["0"]), 2)
         self.assertEqual(config, {"0": {"bool": True, "1": {"list": [3, 4, 5]}}})
 
 
