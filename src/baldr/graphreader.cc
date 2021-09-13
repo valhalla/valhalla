@@ -22,12 +22,7 @@ constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 
 struct tile_index_entry {
-<<<<<<< HEAD
   uint64_t offset;  // byte offset from the beginning of the tar
-=======
-  uint64_t
-      offset; // number of bytes offset from the beginning of the tar to the beginning of this tile
->>>>>>> fdb5efbcb0dc2ea7b0e6e2d1abd9914afee7dbc5
   uint32_t tile_id; // just level and tileindex hence fitting in 32bits
   uint32_t size;    // size of the tile in bytes
 };
