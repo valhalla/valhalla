@@ -538,34 +538,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
   } else {
-    DistanceMatrix distanceMatrix(boost::extents[G.numVertices()][G.numVertices()]);
-    for (int i = 0; i < G.numVertices(); i++) {
-      for (int j = 0; j < G.numVertices(); j++) {
-        if (i == j) {
-          distanceMatrix[i][j] = 0;
-        } else {
-          auto* cp_edge = G.getCPEdge(i, j);
-          if (cp_edge) {
-            distanceMatrix[i][j] = getEdgeCost(*reader, cp_edge->graph_id);
-          } else {
-            distanceMatrix[i][j] = valhalla::thor::NOT_CONNECTED;
-          }
-        }
-      }
-    }
-
-    LOG_DEBUG("Compute Floyd Warshall number of element: " + std::to_string(distanceMatrix.size()));
-    PathMatrix pathMatrix = computeFloydWarshall(distanceMatrix);
-
-    notConnectedNode(distanceMatrix);
-
-    LOG_DEBUG("Compute Cost matrix with number of element: " + std::to_string(distanceMatrix.size()));
-    computeCostMatrix(G, distanceMatrix, costing_, max_matrix_distance.find(costing_str)->second);
-
-    // Check if the graph is not strongly connected
-    if (!isStronglyConnectedGraph(distanceMatrix)) {
-      throw valhalla_exception_t(450);
-    }
 
     // Do matching here
     LOG_DEBUG("Populate pairing");
@@ -638,9 +610,10 @@ void thor_worker_t::chinese_postman(Api& request) {
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
       // Expand the path between the paired nodes, using the path matrix
-      auto nodePairs = getNodePairs(pathMatrix, overNodeIndex, underNodeIndex);
+      auto nodePairs = make_pair(overNodeIndex, underNodeIndex);
       // Concat with main vector
-      extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
+      extraPairs.push_back(nodePairs);
+      // extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);

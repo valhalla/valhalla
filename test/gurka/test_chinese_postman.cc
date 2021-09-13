@@ -358,18 +358,6 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
                {"BE_2", "DE_2", "DE_2", "BE_2", "AB_2", "AB_2"});
 }
 
-// Disabled in favor of outside chinese polygon route.
-TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanNotConnected) {
-  // create a chinese polygon (prwu) and avoid polygon (iknl)
-  // the exclude polygon is dividing the map into two, that makes it not connected.
-  // make sure the right exception is thrown
-  try {
-    test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "A", "A", {});
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 450); } catch (...) {
-    FAIL() << "Expected valhalla_exception_t.";
-  };
-}
-
 TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
   // create a chinese polygon (rtyw)
   test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "C", {"CG", "GH", "HF", "FC"});
@@ -387,10 +375,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
   // create a chinese polygon (pqsr)
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "B",
-               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE",
+               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE",
                 "EA", "AB"});
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "C", "C",
-               {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE",
+               {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FE",
                 "EA", "AC"});
 }
 
