@@ -38,7 +38,7 @@ bool intermediate_loc_edge_trimming(
     const GraphId& out,
     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
     const size_t path_index,
-    const bool flip_index) {
+    const bool arrive_by) {
   // Find the path edges within the locations.
   auto in_pe =
       std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
@@ -76,11 +76,19 @@ bool intermediate_loc_edge_trimming(
 
   // Cut the first edges end off back to where the location lands along it
   auto inserted = edge_trimming.insert(
-      {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+      {path_index + (arrive_by ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+  // If it was already there we need to update it, should only happen for depart at (left to right)
+  if (!inserted.second) {
+    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+  }
 
   // Cut the second edges beginning off up to where the location lands along it
-  inserted = edge_trimming.insert({path_index + (flip_index ? 0 : 1),
+  inserted = edge_trimming.insert({path_index + (arrive_by ? 0 : 1),
                                    {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  // If it was already there we need to update it, should only happen for arrive by (right to left)
+  if (!inserted.second) {
+    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+  }
 
   return false;
 }
@@ -481,9 +489,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // When stitching routes at an intermediate location we need to store information about where
         // along the edge it happened so triplegbuilder can properly cut the shape where the location
         // was and store that info to be serialized int he output
-        auto at_node = intermediate_loc_edge_trimming(*reader, *origin, path.back().edgeid,
+        auto at_node = intermediate_loc_edge_trimming(*reader, *destination, path.back().edgeid,
                                                       temp_path.front().edgeid, edge_trimming,
-                                                      path.size() - 1, false);
+                                                      temp_path.size(), true);
 
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid && at_node) {
@@ -499,8 +507,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // Move destination back to the last break
         while (!is_break_point(*destination)) {
           if (destination->has_leg_shape_index()) {
+            // TODO: validate
             destination->set_leg_shape_index((path.size() - destination->leg_shape_index()));
-            // TODO: we need to update all of the leg shape indices and distance_from_origin
           }
           --destination;
         }
@@ -510,7 +518,6 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         flipped.reserve(edge_trimming.size());
         for (const auto& kv : edge_trimming) {
           flipped.emplace(path.size() - kv.first, kv.second);
-          // TODO: we need to update all of the leg shape indices and distance_from_origin
         }
         edge_trimming.swap(flipped);
 

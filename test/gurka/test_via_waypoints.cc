@@ -156,7 +156,7 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
   for (int i = 0; i < 8; ++i) {
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["waypoint_index"].GetInt(), i + 1);
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i]["geometry_index"].GetInt(),
-              i + 1 + (i > 2));
+              i + (i > 3 ? 2 : 1));
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_start"].GetDouble(),
                 distance("A", std::to_string(i + 1)), 1.0);
   }
