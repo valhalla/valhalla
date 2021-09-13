@@ -102,14 +102,6 @@ TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
                                    {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, HOVIgnoreOneWay) {
-  const std::string cost = "hov";
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
-                                   {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, TaxiIgnoreOneWay) {
   const std::string cost = "taxi";
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
@@ -164,15 +156,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
 
 TEST_F(IgnoreAccessTest, BusIgnoreAccess) {
   const std::string cost = "bus";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
-                                   {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, HOVIgnoreAccess) {
-  const std::string cost = "hov";
   // ignore edges and nodes access restriction
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
                std::runtime_error);

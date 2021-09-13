@@ -888,6 +888,12 @@ protected:
   bool penalize_uturns_;
 
   bool exclude_unpaved_{false};
+
+  // HOT/HOV flags
+  bool include_hot_{false};
+  bool include_hov2_{false};
+  bool include_hov3_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1076,6 +1082,10 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
+
+  bool include_hot_ = false;
+  bool include_hov2_ = false;
+  bool include_hov3_ = false;
 };
 
 /**

@@ -130,7 +130,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false) {
+      exclude_unpaved_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -452,6 +452,14 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
   // closure_factor
   pbf_costing_options->set_closure_factor(base_cfg.closure_factor_(
       rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
+
+  // HOT/HOV
+  pbf_costing_options->set_include_hot(
+      rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
+  pbf_costing_options->set_include_hov2(
+      rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
+  pbf_costing_options->set_include_hov3(
+      rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
 }
 
 void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
@@ -487,7 +495,12 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
 
   pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
+
   pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
+
+  pbf_costing_options->set_include_hot(shared_opts.include_hot_);
+  pbf_costing_options->set_include_hov2(shared_opts.include_hov2_);
+  pbf_costing_options->set_include_hov3(shared_opts.include_hov3_);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -543,10 +556,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case bus: {
       sif::ParseBusCostOptions(doc, key, costing_options);
-      break;
-    }
-    case hov: {
-      sif::ParseHOVCostOptions(doc, key, costing_options);
       break;
     }
     case taxi: {
