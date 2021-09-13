@@ -15,6 +15,7 @@ mock_parser.add_argument = MagicMock()
 
 class TestBuildConfig(unittest.TestCase):
     def test_add_leaf_types(self):
+        # test all data types, except for bool & list, since they have costum lambdas we can't test
         help_text = {
             'bool': "boolean",
             "str": "string",
@@ -24,18 +25,14 @@ class TestBuildConfig(unittest.TestCase):
             "opt_int": "optional int",
         }
         config = {
-            'bool': True,
             'str': 'string',
-            'list': [0, 1, 2],
             'opt_str': valhalla_build_config.Optional(str),
             'opt_list': valhalla_build_config.Optional(list),
             'opt_int': valhalla_build_config.Optional(int),
         }
 
         value_types = {
-            "bool": valhalla_build_config.parse_bool,
             "str": str,
-            "list": valhalla_build_config.comma_separated_list,
             "opt_str": str,
             "opt_list": list,
             "opt_int": int
@@ -52,8 +49,8 @@ class TestBuildConfig(unittest.TestCase):
 
     def test_nested_config(self):
         """tests if we get the values of nested dicts"""
-        config = {"0": {"str": "string", "opt_str": valhalla_build_config.Optional(str), "1": {"int": 100}}}
-        help_text = {"0": {"str": "string", "opt_str": "optional string", "1": {"int": "integer"}}}
+        config = {"0": {"bool": False, "opt_str": valhalla_build_config.Optional(str), "1": {"list": [0, 1, 2]}}}
+        help_text = {"0": {"bool": "boolean", "opt_str": "optional string", "1": {"list": "list"}}}
 
         # populate the leaves
         leaves = list()
@@ -62,25 +59,25 @@ class TestBuildConfig(unittest.TestCase):
         # 3 unique values
         self.assertEqual(len(set(leaves)), 3)
         
-        expected_keys = ["0\x00str", "0\x00opt_str", "0\x001\x00int"]
+        expected_keys = ["0\x00bool", "0\x00opt_str", "0\x001\x00list"]
         self.assertEqual(leaves, expected_keys)
 
     def test_override_config(self):
         """tests end to end if the arg parsing is working"""
-        config = {"0": {"str": "string", "opt_str": valhalla_build_config.Optional(str), "1": {"int": 100}}}
-        help_text = {"0": {"str": "string", "opt_str": "optional string", "1": {"int": "integer"}}}
+        config = {"0": {"bool": False, "opt_str": valhalla_build_config.Optional(str), "1": {"list": [0, 1, 2]}}}
+        help_text = {"0": {"bool": "boolean", "opt_str": "optional string", "1": {"list": "list"}}}
 
         # populate the leaves
         leaves = list()
         valhalla_build_config.add_leaf_args('', config, leaves, mock_parser, help_text)
 
         # create the args mock
-        args = {'0_str': 'new string', "0_opt_str": valhalla_build_config.Optional(str), "0_1_int": 5}
+        args = {'0_bool': True, "0_opt_str": valhalla_build_config.Optional(str), "0_1_list": [3, 4, 5]}
 
         valhalla_build_config.override_config(args, leaves, config)
         # the Optional arg should be removed
         self.assertTrue(len(config["0"]), 2)
-        self.assertEqual(config, {"0": {"str": "new string", "1": {"int": 5}}})
+        self.assertEqual(config, {"0": {"bool": True, "1": {"list": [3, 4, 5]}}})
 
 
 if __name__ == '__main__':
