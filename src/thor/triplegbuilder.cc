@@ -1580,10 +1580,16 @@ void TripLegBuilder::Build(
       trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
                  edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      // TODO: uncommment correct removal of redundant shape after odin can handle uturns
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
-      /*trip_shape.insert(trip_shape.end(), edge_shape.begin() + !edge_begin_info.trim,
-                        edge_shape.end());*/
+
+      /** It seems this was a bug, we kept duplicated points at mid edge uturns and it also caused
+          issues in odin not calling out the uturns. We'll see if both not duplicating and not having
+          the wrong index will both fix the output to be correct but also remove any problem with odin
+
+
+      // Old code kept duplicate point
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !edge_begin_info.trim,
+                        edge_shape.end());
 
       // If edge_begin_info.trim and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
@@ -1591,6 +1597,7 @@ void TripLegBuilder::Build(
       if (edge_begin_info.trim && !is_first_edge) {
         ++begin_index;
       }
+      */
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.

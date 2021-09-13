@@ -72,10 +72,6 @@ TEST_F(TopSpeedTest, BusTopSpeed) {
   doTests("bus", {{"/costing_options/bus/top_speed", "20"}});
 }
 
-TEST_F(TopSpeedTest, HovTopSpeed) {
-  doTests("hov", {{"/costing_options/hov/top_speed", "20"}});
-}
-
 TEST_F(TopSpeedTest, TaxiTopSpeed) {
   doTests("taxi", {{"/costing_options/taxi/top_speed", "20"}});
 }
