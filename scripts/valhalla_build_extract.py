@@ -12,11 +12,14 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
+from typing import Dict, Tuple, List
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
 from typing import List, Tuple
 
+# "<" prefix means little-endian and no alignment
+# order is important! if uint64_t is not first, c++ will use padding bytes to unpack
 INDEX_BIN_FORMAT = '<QLL'
 INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
 INDEX_FILE = "index.bin"
@@ -111,6 +114,7 @@ def create_extracts(tiles_fp_: Path, extract_fp_: Path, traffic_fp_: Path, do_tr
 
     LOGGER.info(f"Finished tarring {tiles_count} tiles to {extract_fp_}")
 
+    # exit if no traffic extract wanted
     if not do_traffic:
         index_fd.close()
         sys.exit(0)
