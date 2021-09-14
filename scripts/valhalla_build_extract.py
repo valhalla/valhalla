@@ -71,15 +71,48 @@ def get_tile_id(path: str):
     return int(level) | (int(idx.replace('/', '')) << 3)
 
 
-def create_extracts(tiles_fp_: Path, extract_fp_: Path, traffic_fp_: Path, do_traffic: bool):
+def get_tar_info(name: str, size: int) -> tarfile.TarInfo:
+    """Creates and returns a tarinfo object"""
+    tarinfo = tarfile.TarInfo(name)
+    tarinfo.size = size
+    tarinfo.mtime = int(time())
+    tarinfo.type = tarfile.REGTYPE
+
+    return tarinfo
+
+
+def write_index_to_tar(tar_fp_: Path):
+    """Loop through all tiles and write the correct index.bin file to the tar"""
+    # get the offset and size from the tarred tile members
+    index: List[Tuple[int, int, int]] = list()
+    with tarfile.open(tar_fp_, 'r|') as tar:
+        for member in tar.getmembers():
+            if member.name.endswith('.gph'):
+                LOGGER.debug(f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}")
+
+                index.append((member.offset_data, get_tile_id(member.name), member.size))
+
+    # write back the actual index info
+    with open(tar_fp_, 'r+b') as tar:
+        # jump to the data block, index.bin is the first file
+        tar.seek(BLOCKSIZE)
+        for entry in index:
+            tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
+
+
+def create_extracts(config_: dict, do_traffic: bool):
     """Actually creates the tar ball. Break out of main function for testability."""
-    if not tiles_fp_.exists() or not tiles_fp_.is_dir():
-        LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp_} was not found on the filesystem.")
+    tiles_fp: Path = Path(config_["mjolnir"]["tile_dir"])
+    extract_fp: Path = Path(config_["mjolnir"]["tile_extract"] or tiles_fp.parent.joinpath('valhalla_tiles.tar'))
+    traffic_fp: Path = Path(config["mjolnir"]["traffic_extract"] or tiles_fp.parent.joinpath('traffic.tar'))
+
+    if not tiles_fp.is_dir():
+        LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp} was not found on the filesystem.")
         sys.exit(1)
 
-    tiles_count = get_tile_count(tiles_fp_)
+    tiles_count = get_tile_count(tiles_fp)
     if not tiles_count:
-        LOGGER.critical(f"Directory {tiles_fp_} does not contain any usable graph tiles.")
+        LOGGER.critical(f"Directory {tiles_fp} does not contain any usable graph tiles.")
         sys.exit(1)
 
     # write the in-memory index file
@@ -88,31 +121,13 @@ def create_extracts(tiles_fp_: Path, extract_fp_: Path, traffic_fp_: Path, do_tr
     index_fd.seek(0)
 
     # first add the index file, then the tile dir to the tarfile
-    with tarfile.open(extract_fp_, 'w') as tar:
-        tarinfo = tarfile.TarInfo(INDEX_FILE)
-        tarinfo.size = index_size
-        tarinfo.mtime = int(time())
-        tar.addfile(tarinfo, index_fd)
+    with tarfile.open(extract_fp, 'w') as tar:
+        tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
+        tar.add(str(tiles_fp), recursive=True, arcname='')
 
-        tar.add(str(tiles_fp_), recursive=True, arcname='')
+    write_index_to_tar(extract_fp)
 
-    # get the offset and size from the tarred tile members
-    index: List[Tuple[int, int, int]] = list()
-    with tarfile.open(extract_fp_, 'r|') as tar:
-        for member in tar.getmembers():
-            if member.name.endswith('.gph'):
-                LOGGER.debug(f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}")
-
-                index.append((member.offset_data, get_tile_id(member.name), member.size))
-
-    # write back the actual index info
-    with open(extract_fp_, 'r+b') as tar:
-        # jump to the data block, index.bin is the first file
-        tar.seek(BLOCKSIZE)
-        for entry in index:
-            tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
-
-    LOGGER.info(f"Finished tarring {tiles_count} tiles to {extract_fp_}")
+    LOGGER.info(f"Finished tarring {tiles_count} tiles to {extract_fp}")
 
     # exit if no traffic extract wanted
     if not do_traffic:
@@ -123,17 +138,16 @@ def create_extracts(tiles_fp_: Path, extract_fp_: Path, traffic_fp_: Path, do_tr
 
     # we already have the right size of the index file, simply reset it
     index_fd.seek(0)
-    with tarfile.open(extract_fp_) as tar_in, tarfile.open(traffic_fp_, 'w') as tar_traffic:
-        # get a reference to the
+    with tarfile.open(extract_fp) as tar_in, tarfile.open(traffic_fp, 'w') as tar_traffic:
+        # this will let us do seeks
         in_fileobj = tar_in.fileobj
 
         # add the index file as first data
-        tarinfo = tarfile.TarInfo('index.bin')
-        tarinfo.size = index_size
-        tarinfo.mtime = int(time())
-        tar_traffic.addfile(tarinfo, index_fd)
+        tar_traffic.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
         index_fd.close()
 
+        # loop over all routing tiles and create fixed-size traffic tiles
+        # based on the directed edge count
         for tile_in in tar_in.getmembers():
             if not tile_in.name.endswith('.gph'):
                 continue
@@ -146,16 +160,13 @@ def create_extracts(tiles_fp_: Path, extract_fp_: Path, traffic_fp_: Path, do_tr
             b.readinto(tile_header)
             b.close()
 
+            # create the traffic tile
+            traffic_size = TRAFFIC_HEADER_SIZE + TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
+            tar_traffic.addfile(get_tar_info(tile_in.name, traffic_size), BytesIO(b'\0' * traffic_size))
+
             LOGGER.debug(f"Tile {tile_in.name} has {tile_header.directededgecount_} directed edges")
 
-            # create the traffic tile
-            size = TRAFFIC_HEADER_SIZE + TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
-            tarinfo = tarfile.TarInfo(tile_in.name)
-            tarinfo.size = TRAFFIC_HEADER_SIZE + TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
-            tarinfo.mtime = int(time())
-            tar_traffic.addfile(tarinfo, BytesIO(b'\0' * size))
-
-    index_fd.close()
+    write_index_to_tar(traffic_fp)
 
     LOGGER.info(f"Finished creating the traffic extract at {traffic_fp}")
 
@@ -164,9 +175,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     with open(args.config) as f:
         config = json.load(f)
-    extract_fp: Path = Path(config["mjolnir"]["tile_extract"])
-    tiles_fp: Path = Path(config["mjolnir"]["tile_dir"])
-    traffic_fp: Path = Path(config["mjolnir"]["traffic_extract"])
 
     # set the right logger level
     if args.verbosity == 0:
@@ -176,4 +184,4 @@ if __name__ == '__main__':
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    create_extracts(tiles_fp, extract_fp, traffic_fp, args.traffic)
+    create_extracts(config, args.traffic)

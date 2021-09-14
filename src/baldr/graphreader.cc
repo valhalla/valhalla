@@ -42,11 +42,10 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 }
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
-  static bool tile_msg = true, traffic_msg = true;
   // A lambda for loading the contents of a graph tile tar from an index file
   auto index_loader = [this](const std::string& filename, const char* index_begin,
-                             const char* file_begin,
-                             size_t size) -> decltype(midgard::tar::contents) {
+                             const char* file_begin, size_t size,
+                             tar::TarType tar_type) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
     if (filename != "index.bin")
       return {};
@@ -61,8 +60,17 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       auto inserted = contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
                          std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
-      tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
-                    std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset), entry.size));
+      if (tar_type == tar::TarType::kTiles) {
+        tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                      std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
+                                            entry.size));
+      } else if (tar_type == tar::TarType::kTraffic) {
+        traffic_tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                              std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
+                                                    entry.size));
+      } else {
+        throw std::runtime_error("Wrong tar type specified.");
+      }
     }
     // hand it back to the tar parser
     return contents;
@@ -72,7 +80,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
       // load the tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), tar::TarType::kTiles, true,
+                                     index_loader));
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -92,12 +101,11 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       if (tiles.empty()) {
         LOG_WARN("Tile extract contained no usuable tiles");
       } // loaded ok but with possibly bad blocks
-      else if (tile_msg) {
+      else {
         LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
         if (archive->corrupt_blocks) {
           LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
         }
-        tile_msg = false;
       }
     } catch (const std::exception& e) {
       LOG_ERROR(e.what());
@@ -108,32 +116,34 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("traffic_extract")) {
     try {
       // load the tar
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
-      // map files to graph ids
-      for (auto& c : traffic_archive->contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {
-          // It's possible to put non-tile files inside the tarfile.  As we're only
-          // parsing the file *name* as a GraphId here, we will just silently skip
-          // any file paths that can't be parsed by GraphId::GetTileId()
-          // If we end up with *no* recognizable tile files in the tarball at all,
-          // checks lower down will warn on that.
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"),
+                                             tar::TarType::kTraffic, true, index_loader));
+      if (traffic_tiles.empty()) {
+        // map files to graph ids
+        for (auto& c : traffic_archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // It's possible to put non-tile files inside the tarfile.  As we're only
+            // parsing the file *name* as a GraphId here, we will just silently skip
+            // any file paths that can't be parsed by GraphId::GetTileId()
+            // If we end up with *no* recognizable tile files in the tarball at all,
+            // checks lower down will warn on that.
+          }
         }
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
         LOG_WARN("Traffic tile extract contained no usuable tiles");
       } // loaded ok but with possibly bad blocks
-      else if (traffic_msg) {
+      else {
         LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
                  std::to_string(traffic_tiles.size()));
         if (traffic_archive->corrupt_blocks) {
           LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
                    " corrupt blocks");
         }
-        traffic_msg = false;
       }
     } catch (const std::exception& e) {
       LOG_WARN(e.what());
