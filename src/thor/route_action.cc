@@ -79,15 +79,18 @@ bool intermediate_loc_edge_trimming(
       {path_index + (arrive_by ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
   // If it was already there we need to update it, should only happen for depart at (left to right)
   if (!inserted.second) {
-    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
 
+  // TODO: when a via location does a uturn we need to use 1 - dist_along because we are clipping the
+  // opposing edge (ie the opposite direction) below
+
   // Cut the second edges beginning off up to where the location lands along it
-  inserted = edge_trimming.insert({path_index + (arrive_by ? 0 : 1),
-                                   {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  inserted = edge_trimming.insert(
+      {path_index + (arrive_by ? 0 : 1), {{true, snap_ll, dist_along}, {false, PointLL(), 1.0}}});
   // If it was already there we need to update it, should only happen for arrive by (right to left)
   if (!inserted.second) {
-    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
 
   return false;
