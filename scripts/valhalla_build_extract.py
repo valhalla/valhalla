@@ -12,10 +12,6 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
-from typing import Dict, Tuple, List
-
-# "<" prefix means little-endian and no alignment
-# order is important! if uint64_t is not first, c++ will use padding bytes to unpack
 from typing import List, Tuple
 
 # "<" prefix means little-endian and no alignment
@@ -31,7 +27,7 @@ TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
 
 class TileHeader(ctypes.Structure):
     """
-    Resembles the uint64_t bit field bytes 40 - 48 of the
+    Resembles the uint64_t bit field at bytes 40 - 48 of the
     graphtileheader to get the directededgecount_.
     """
     _fields_ = [
@@ -184,4 +180,4 @@ if __name__ == '__main__':
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    create_extracts(config, args.traffic)
+    create_extracts(config, args.with_traffic)
