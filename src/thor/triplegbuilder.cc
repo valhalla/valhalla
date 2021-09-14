@@ -1633,6 +1633,7 @@ void TripLegBuilder::Build(
     trip_edge->set_target_along_edge(trim_end_pct);
 
     // TODO: is this overkill or duplicating other code (shape attributes etc?)
+    // could do what the trimming is doing and just use coarse length * pct used
     for (auto i = begin_index + 1; i < trip_shape.size(); ++i) {
       total_distance += trip_shape[i - 1].Distance(trip_shape[i]);
     }
