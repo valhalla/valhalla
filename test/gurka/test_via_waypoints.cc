@@ -61,9 +61,16 @@ TEST_P(IntermediateLocations, test_single) {
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
-  EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
-              distance("A", "6"), 1.0);
+  if (date_time_type != "2") {
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
+                distance("A", "6"), 1.0);
+  } // arrive by does a reverse search so it prefers to start traveling left from 6 to B
+  else {
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 3);
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
+                distance("A", "C") + distance("C", "6"), 1.0);
+  }
 }
 
 TEST_P(IntermediateLocations, test_single_at_node) {
@@ -162,12 +169,15 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
   }
 }
 
+// TODO: do not forget to add a test for uturns and multiple intermediates on the same edge before and
+//  after the uturn, basically the most pathological things we can think of
+
 // 1 is depart_at and 2 is arrive_by and 3 is invariant
 INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
                          IntermediateLocations,
                          ::testing::ValuesIn(std::vector<std::tuple<std::string, std::string>>{
-                             {"1", "through"},
-                             //{"2", "through"},
+                             //{"1", "through"},
+                             {"2", "through"},
                              //{"3", "through"},
                              //{"1", "via"},
                              //{"2", "via"},
