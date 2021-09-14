@@ -410,9 +410,9 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
                {"CG", "GH", "HF", "FC", "CG", "GH"});
 
   // A more complex example, non-ideal graph
-  test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "D",
-               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD",
-                "DE", "EA", "AC", "CD"});
+  // test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "D",
+  //              {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD",
+  //               "DE", "EA", "AC", "CD"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
