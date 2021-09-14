@@ -1,7 +1,6 @@
 #include <array>
 #include <cmath>
 #include <queue>
-#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -56,7 +55,7 @@ template <class coord_t> struct closest_first_generator_t {
   robin_hood::unordered_set<int32_t> queued;
   int32_t subcols, subrows;
   using best_t = std::pair<double, int32_t>;
-  std::set<best_t, std::function<bool(const best_t&, const best_t&)>> queue;
+  std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>> queue;
 
   // re-usable, pre-allocated vector used by dist
   std::vector<coord_t> corners;
@@ -145,8 +144,8 @@ template <class coord_t> struct closest_first_generator_t {
     if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");
     }
-    auto best = *queue.cbegin();
-    queue.erase(queue.cbegin());
+    auto best = queue.top();
+    queue.pop();
     // add its neighbors
     neighbors(best.second);
     // return it
