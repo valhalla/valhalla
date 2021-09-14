@@ -1647,12 +1647,14 @@ void TripLegBuilder::Build(
     // we need to reset to the shape index then increment the iterator
     if (intermediate_itr != trip_path.mutable_location()->end() &&
         intermediate_itr->leg_shape_index() == edge_index) {
-      if (trimming == edge_trimming.end() /*&& is_arrive_by*/) {
+      intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
+      if (trimming == edge_trimming.end() &&
+          (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
         // TODO: When we didnt do any trimming that means that this one was at a node
         // in that case and only for arrive by the edge index is off by one so we need
         // the shape length before we added this edge :(
+        // intermediate_itr->set_leg_shape_index();
       }
-      intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
       intermediate_itr->set_distance_from_origin(total_distance);
       ++intermediate_itr;
     }

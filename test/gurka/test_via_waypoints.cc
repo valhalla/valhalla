@@ -55,7 +55,11 @@ TEST_P(IntermediateLocations, test_single) {
   // if its a through then we have to keep going past 6 in the same direction so in that case
   // we get the edge name BC 3 times because we have it partially to reach 6, then partially to reach
   // C then we uturn and take the whole thing back to B
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "BC", "BC"});
+  if (intermediate_type == "through") {
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "BC", "BC"});
+  } else if (intermediate_type == "via") {
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
+  }
 
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
@@ -176,10 +180,10 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
 INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
                          IntermediateLocations,
                          ::testing::ValuesIn(std::vector<std::tuple<std::string, std::string>>{
-                             //{"1", "through"},
+                             {"1", "through"},
                              {"2", "through"},
-                             //{"3", "through"},
-                             //{"1", "via"},
-                             //{"2", "via"},
-                             //{"3", "via"},
+                             {"3", "through"},
+                             {"1", "via"},
+                             {"2", "via"},
+                             {"3", "via"},
                          }));
