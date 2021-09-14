@@ -62,8 +62,8 @@ public:
                     TripLeg& trip_path,
                     const std::vector<std::string>& algorithms,
                     const std::function<void()>* interrupt_callback = nullptr,
-                    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        edge_trimming = nullptr,
+                    const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>&
+                        edge_trimming = {},
                     const std::vector<valhalla::Location>& intermediates = {});
 };
 

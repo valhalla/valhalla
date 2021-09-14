@@ -1323,7 +1323,7 @@ void TripLegBuilder::Build(
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming,
+    const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
     const std::vector<valhalla::Location>& intermediates) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
@@ -1538,7 +1538,9 @@ void TripLegBuilder::Build(
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
 
-    if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
+    auto trimming = edge_trimming.end();
+    if (!edge_trimming.empty() &&
+        (trimming = edge_trimming.find(edge_index)) != edge_trimming.end()) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
@@ -1546,29 +1548,32 @@ void TripLegBuilder::Build(
       }
 
       // Grab the edge begin and end info
-      auto& edge_begin_info = edge_trimming->at(edge_index).first;
-      auto& edge_end_info = edge_trimming->at(edge_index).second;
+      const auto& edge_begin_info = trimming->second.first;
+      const auto& edge_end_info = trimming->second.second;
 
+      // Start by assuming no trimming
+      double begin_trim_dist = 0, end_trim_dist = 1;
+      auto begin_trim_vrt = edge_shape.front(), end_trim_vrt = edge_shape.back();
+
+      // Trimming needed
+      if (edge_begin_info.trim) {
+        begin_trim_dist = edge_begin_info.distance_along;
+        begin_trim_vrt = edge_begin_info.vertex;
+      }
       // Handle partial shape for first edge
-      if (is_first_edge && !edge_begin_info.trim) {
-        edge_begin_info.trim = true;
-        edge_begin_info.distance_along = start_pct;
-        edge_begin_info.vertex = start_vrt;
-      } // No trimming needed
-      else if (!edge_begin_info.trim) {
-        edge_begin_info.distance_along = 0;
-        edge_begin_info.vertex = edge_shape.front();
+      else if (is_first_edge && !edge_begin_info.trim) {
+        begin_trim_dist = start_pct;
+        begin_trim_vrt = start_vrt;
       }
 
-      // Handle partial shape for last edge
-      if (is_last_edge && !edge_end_info.trim) {
-        edge_end_info.trim = true;
-        edge_end_info.distance_along = end_pct;
-        edge_end_info.vertex = end_vrt;
-      } // No trimming needed
-      else if (!edge_end_info.trim) {
-        edge_end_info.distance_along = 1;
-        edge_end_info.vertex = edge_shape.back();
+      // Trimming needed
+      if (edge_end_info.trim) {
+        end_trim_dist = edge_end_info.distance_along;
+        end_trim_vrt = edge_end_info.vertex;
+      } // Handle partial shape for last edge
+      else if (is_last_edge && !edge_end_info.trim) {
+        end_trim_dist = end_pct;
+        end_trim_vrt = end_vrt;
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
@@ -1577,8 +1582,8 @@ void TripLegBuilder::Build(
 
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
-      trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
-                 edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
+      trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
+                 end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
 
@@ -1642,6 +1647,11 @@ void TripLegBuilder::Build(
     // we need to reset to the shape index then increment the iterator
     if (intermediate_itr != trip_path.mutable_location()->end() &&
         intermediate_itr->leg_shape_index() == edge_index) {
+      if (trimming == edge_trimming.end() /*&& is_arrive_by*/) {
+        // TODO: When we didnt do any trimming that means that this one was at a node
+        // in that case and only for arrive by the edge index is off by one so we need
+        // the shape length before we added this edge :(
+      }
       intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
       intermediate_itr->set_distance_from_origin(total_distance);
       ++intermediate_itr;

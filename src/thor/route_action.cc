@@ -55,9 +55,11 @@ bool intermediate_loc_edge_trimming(
   }
 
   // Just set the edge index on the location for now then in triplegbuilder set to the shape index
-  loc.set_leg_shape_index(path_index);
+  loc.set_leg_shape_index(path_index + (arrive_by ? 1 : 0));
   // If the intermediate point is at a node we dont need to trim the edge we just set the edge index
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
+    // In this case we won't add a duplicate edge so we cant increment for arrive by
+    loc.set_leg_shape_index(path_index);
     return true;
   }
 
@@ -79,15 +81,18 @@ bool intermediate_loc_edge_trimming(
       {path_index + (arrive_by ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
   // If it was already there we need to update it, should only happen for depart at (left to right)
   if (!inserted.second) {
-    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
 
+  // TODO: when a via location does a uturn we need to use 1 - dist_along because we are clipping the
+  // opposing edge (ie the opposite direction) below
+
   // Cut the second edges beginning off up to where the location lands along it
-  inserted = edge_trimming.insert({path_index + (arrive_by ? 0 : 1),
-                                   {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  inserted = edge_trimming.insert(
+      {path_index + (arrive_by ? 0 : 1), {{true, snap_ll, dist_along}, {false, PointLL(), 1.0}}});
   // If it was already there we need to update it, should only happen for arrive by (right to left)
   if (!inserted.second) {
-    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, 1.0 - dist_along};
+    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
 
   return false;
@@ -505,11 +510,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // location is a BREAK or if this is the last location
       if (is_break_point(*origin)) {
         // Move destination back to the last break
+        std::vector<valhalla::Location> intermediates;
         while (!is_break_point(*destination)) {
-          if (destination->has_leg_shape_index()) {
-            // TODO: validate
-            destination->set_leg_shape_index((path.size() - destination->leg_shape_index()));
-          }
+          destination->set_leg_shape_index(path.size() - destination->leg_shape_index());
+          intermediates.push_back(*destination);
           --destination;
         }
 
@@ -528,8 +532,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                              *origin, *destination, leg, algorithms, interrupt, &edge_trimming,
-                              {origin + 1, destination});
+                              *origin, *destination, leg, algorithms, interrupt, edge_trimming,
+                              intermediates);
         path.clear();
         edge_trimming.clear();
       }
@@ -673,7 +677,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, leg, algorithms, interrupt,
-                                    &edge_trimming, {origin + 1, destination});
+                                    edge_trimming, {std::next(origin), destination});
 
         path.clear();
         edge_trimming.clear();
