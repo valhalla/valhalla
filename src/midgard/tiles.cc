@@ -62,7 +62,7 @@ template <class coord_t> struct closest_first_generator_t {
 
   closest_first_generator_t(const valhalla::midgard::Tiles<coord_t>& tiles, const coord_t& seed)
       : tiles(tiles), seed(seed), queued(100), queue([](const best_t& a, const best_t& b) {
-          return a.first == b.first ? a.second < b.second : a.first < b.first;
+          return a.first == b.first ? b.second < a.second : b.first < a.first;
         }) {
     // what global subdivision are we starting in
     // TODO: worry about wrapping around valid range
