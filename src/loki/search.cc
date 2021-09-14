@@ -213,11 +213,11 @@ struct projector_wrapper {
       // we have something AND cant find more in the search radius AND
       // cant find anything better in general than what we have
       int32_t tile_index;
-      double distance;
-      std::tie(tile_index, bin_index, distance) = binner();
-      if (distance > location.search_cutoff_ ||
-          (reachable.size() && distance > location.radius_ &&
-           distance > std::sqrt(reachable.back().sq_distance))) {
+      double distance_squared;
+      std::tie(tile_index, bin_index, distance_squared) = binner();
+      if (distance_squared > location.search_cutoff_ * location.search_cutoff_ ||
+          (reachable.size() && distance_squared > location.radius_ * location.radius_ &&
+           distance_squared > reachable.back().sq_distance)) {
         cur_tile = nullptr;
         break;
       }

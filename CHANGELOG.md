@@ -35,6 +35,7 @@
    * ADDED: Added traffic signal and stop sign check for stop impact. These traffic signals and stop sign are located on edges. [#3279](https://github.com/valhalla/valhalla/pull/3279)
    * CHANGED: Improved sharing criterion to obtain more reasonable alternatives; extended alternatives search [#3302](https://github.com/valhalla/valhalla/pull/3302)
    * ADDED: pull ubuntu:20.04 base image before building [#3233](https://github.com/valhalla/valhalla/pull/3223)
+   * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
