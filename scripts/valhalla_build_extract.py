@@ -45,7 +45,7 @@ class TileHeader(ctypes.Structure):
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument("-c", "--config", help="Absolute or relative path to the Valhalla config JSON.", type=Path)
-parser.add_argument("-t", "--traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False)
+parser.add_argument("-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False)
 parser.add_argument("-v", "--verbosity", help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG", action='count', default=0)
 
 # set up the logger basics
