@@ -623,25 +623,47 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                   has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
-  // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
+  /**
+   * Consider the route from 1 to 2 on the following graph:
+   *
+   * 1          2
+   * A----------B
+   *
+   * Here both locations get both directions of the edge AB, but it doesnt make sense to use all of
+   * these candidates in practice. The edge candidate for the origin which are at 100% along the edge
+   * amount to no distance traveled. Similarly the edge candidate for the destination at 0% along
+   * would result in an edge with no distance traveled. In other words when its a node snap, you want
+   * to use only those edge candidates that are leaving the origin and those that are arriving at the
+   * destination. In addition to the node snapping, this route is trivial because it consists of one
+   * edge.
+   *
+   * Now consider the route from 1 to 2 on the following graph:
+   *            2
+   * A----------B
+   *            1
+   * In this case the edge candidates for both locations are node snapped to B meaning both locations
+   * get both directions of AB again but this time they are on the same node. We can call this route
+   * super-trivial because its not just a single edge its actually a single node. In both SetOrigin
+   * and in SetDestination we try to remove edge candidates that are superfluous as described above.
+   * SetDestination happens first and trivially removes the edge candidate for 2 that travels from B
+   * back to A. This means the destination now can only be reached via the edge traveling from A to B.
+   * However that edge candidate of 1 is 100% along that edge and would be trivially removed, since
+   * its a node snap that is arriving at the origin rather than leaving it. So here in SetOrigin we
+   * add a bit more complicated logic to say that if this case occurs, allow that edge to be used
+   */
+
+  // its super trivial if both are node snapped to the same end of the same edge
+  // note the check for node snapping is in the if below and not in this lambda
+  auto super_trivial = [this](const valhalla::Location::PathEdge& edge) {
     auto p = destinations_percent_along_.find(edge.graph_id());
-    if (p != destinations_percent_along_.end()) {
-      for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edge.graph_id()) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return p != destinations_percent_along_.end() && edge.percent_along() == p->second;
   };
 
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.path_edges()) {
-    // If origin is at a node - skip any inbound edge (dist = 1) unless the
-    // destination is also at the same end node (trivial path).
-    if (has_other_edges && (FORWARD ? edge.end_node() : edge.begin_node()) &&
-        !trivial_at_node(edge)) {
+    // If this is a node snap and we have other candidates that we can skip this unless its the one we
+    // need for super trivial route
+    if ((FORWARD ? edge.end_node() : edge.begin_node()) && has_other_edges && !super_trivial(edge)) {
       continue;
     }
 

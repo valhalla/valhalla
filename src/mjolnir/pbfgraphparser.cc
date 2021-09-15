@@ -589,6 +589,19 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["hov_type"] = [this]() {
+      // If this tag is set then the way is either HOV-2 or HOV-3.
+      // There are no other real-world hov levels.
+      std::string hov_type = tag_.second;
+      if (hov_type == "HOV2") {
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV2);
+      } else if (hov_type == "HOV3") {
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
+      } else {
+        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
+      }
+    };
     tag_handlers_["default_speed"] = [this]() {
       try {
         default_speed_ = std::stof(tag_.second);

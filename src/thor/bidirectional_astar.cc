@@ -28,7 +28,7 @@ constexpr float kThresholdDelta = 420.0f;
 // an upper bound value cost for alternative routes we're looking for. Due to the fact that
 // we can't estimate route cost that goes through some particular edge very precisely, we
 // can find alternatives with costs greater than the threshold.
-constexpr float kAlternativeCostExtend = 1.1f;
+constexpr float kAlternativeCostExtend = 1.2f;
 // Maximum number of additional iterations allowed once the first connection has been found.
 // For alternative routes we use bigger cost extension than in the case with one route. This
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
@@ -717,17 +717,20 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
       if (cost_threshold_ != std::numeric_limits<float>::max() &&
           fwd_pred.predecessor() != kInvalidLabel) {
-        const auto& fwd_pred_pred = edgelabels_forward_[fwd_pred.predecessor()];
-        const auto pred_tile = graphreader.GetGraphTile(fwd_pred_pred.endnode());
-        if (pred_tile != nullptr) {
+        const auto tile = graphreader.GetGraphTile(fwd_pred.endnode());
+        if (tile != nullptr) {
           // Estimate lower bound cost for the shortest path that goes through the current edge.
           float route_lower_bound =
-              fwd_pred_pred.cost().cost + fwd_pred.transition_cost().cost + rev_pred.sortcost() -
-              astarheuristic_reverse_.Get(pred_tile->get_node_ll(fwd_pred_pred.endnode()));
+              edgelabels_forward_[fwd_pred.predecessor()].cost().cost +
+              fwd_pred.transition_cost().cost + rev_pred.sortcost() -
+              astarheuristic_reverse_.Get(tile->get_node_ll(fwd_pred.endnode()));
           // Prune this edge if estimated lower bound cost exceeds the cost threshold.
           if (route_lower_bound > cost_threshold_) {
             continue;
           }
+        } else {
+          // Failed to get tile for the endnode. Skip expansion from this node.
+          continue;
         }
       }
 
@@ -752,24 +755,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         continue;
       }
 
-      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
-      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
-      if (cost_threshold_ != std::numeric_limits<float>::max() &&
-          rev_pred.predecessor() != kInvalidLabel) {
-        const auto& rev_pred_pred = edgelabels_reverse_[rev_pred.predecessor()];
-        const auto pred_tile = graphreader.GetGraphTile(rev_pred_pred.endnode());
-        if (pred_tile != nullptr) {
-          // Estimate lower bound cost for the shortest path that goes through the current edge.
-          float route_lower_bound =
-              rev_pred_pred.cost().cost + rev_pred.transition_cost().cost + fwd_pred.sortcost() -
-              astarheuristic_forward_.Get(pred_tile->get_node_ll(rev_pred_pred.endnode()));
-          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
-          if (route_lower_bound > cost_threshold_) {
-            continue;
-          }
-        }
-      }
-
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
       const auto rev_pred_tile = graphreader.GetGraphTile(rev_pred.opp_edgeid());
@@ -777,6 +762,27 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         continue;
       }
       const DirectedEdge* opp_pred_edge = rev_pred_tile->directededge(rev_pred.opp_edgeid());
+
+      // Check if this branch can be pruned. It's implementation of the reach-based pruning technique
+      // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
+      if (cost_threshold_ != std::numeric_limits<float>::max() &&
+          rev_pred.predecessor() != kInvalidLabel) {
+        const auto tile = graphreader.GetGraphTile(rev_pred.endnode());
+        if (tile != nullptr) {
+          // Estimate lower bound cost for the shortest path that goes through the current edge.
+          float route_lower_bound =
+              edgelabels_reverse_[rev_pred.predecessor()].cost().cost +
+              rev_pred.transition_cost().cost + fwd_pred.sortcost() -
+              astarheuristic_forward_.Get(tile->get_node_ll(rev_pred.endnode()));
+          // Prune this edge if estimated lower bound cost exceeds the cost threshold.
+          if (route_lower_bound > cost_threshold_) {
+            continue;
+          }
+        } else {
+          // Failed to get tile for the endnode. Skip expansion from this node.
+          continue;
+        }
+      }
 
       // Expand from the end node in reverse direction.
       Expand<ExpansionType::reverse>(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
