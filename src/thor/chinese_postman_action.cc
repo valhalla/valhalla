@@ -28,23 +28,6 @@ namespace thor {
 typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
 typedef PathMatrix::index PathMatrixIndex;
 
-std::vector<std::pair<int, int>> getNodePairs(PathMatrix pathMatrix, int startIndex, int endIndex) {
-  std::vector<std::pair<int, int>> nodePairs;
-  auto path = pathMatrix[startIndex][endIndex];
-  if (path.size() == 0) {
-    // Set the pair from the index, the real route will be computed using full route computation
-    nodePairs.push_back(make_pair(startIndex, endIndex));
-  } else {
-    for (int i = 0; i < path.size() - 1; i++) {
-      nodePairs.push_back(make_pair(path[i], path[i + 1]));
-    }
-    // Add the last edge
-    nodePairs.push_back(make_pair(path.back(), endIndex));
-  }
-
-  return nodePairs;
-}
-
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
@@ -128,7 +111,6 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
-  LOG_DEBUG("computeCostMatrix: setup for cost matrix computation");
   for (const auto& graph_id : graph_ids) {
     GraphId g(graph_id);
     auto l = getPointLL(g, *reader);
@@ -158,13 +140,11 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
-  LOG_DEBUG("computeCostMatrix: the real cost matrix computation");
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
                                 mode, max_matrix_distance);
 
-  LOG_DEBUG("computeCostMatrix: update distance matrix computation");
   // Update Distance Matrix
   for (int i = 0; i < graph_ids.size(); i++) {
     for (int j = 0; j < graph_ids.size(); j++) {
@@ -175,51 +155,12 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
   return distanceMatrix;
 }
 
-bool isStronglyConnectedGraph(DistanceMatrix& dm) {
-  for (int i = 0; i < dm.shape()[0]; i++) {
-    for (int j = 0; j < dm.shape()[0]; j++) {
-      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-int notConnectedNode(DistanceMatrix& dm) {
-  int num = 0;
-  int num_i = 0;
-  int num_j = 0;
-  for (int i = 0; i < dm.shape()[0]; i++) {
-    bool found_not_connected = std::any_of(dm[i].begin(), dm[i].end(), [](double e) {
-      return e == valhalla::thor::NOT_CONNECTED;
-    });
-    if (found_not_connected) {
-      num_i++;
-    }
-    for (int j = 0; j < dm.shape()[0]; j++) {
-      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
-        num++;
-      }
-    }
-  }
-  LOG_DEBUG("number element " + std::to_string(num));
-  LOG_DEBUG("number column " + std::to_string(num_i));
-  return num;
-}
-
 double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   Cost cost{};
   // fetch the graph objects
   graph_tile_ptr tile;
   const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
   // Notes: Use edge length for now
-  // uint8_t flow_sources;
-  // // Update the time information even if time is invariant to account for timezones
-  // const auto seconds_offset = invariant ? 0.f : cost.secs;
-  // const auto offset_time =
-  //       node ? time_info.forward(seconds_offset, static_cast<int>(node->timezone())) : time_info;
-  // cost = costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources); // * edge_pct;
   return edge->length();
 }
 
@@ -257,6 +198,7 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
     }
   }
 
+  // This try-catch block below can be replaced with something cheaper
   try {
     auto locations = PathLocation::fromPBF(locations_, true);
     const auto projections = loki::Search(locations, *reader, costing);
@@ -291,7 +233,6 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
                                                  const Options& options,
                                                  const std::string costing_str,
                                                  const std::shared_ptr<sif::DynamicCost>& costing) {
-  LOG_DEBUG("buildEdgeIds");
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
     if (it + 1 == reversedEulerPath.rend()) {
@@ -439,7 +380,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   } else {
 
     // Do matching here
-    LOG_DEBUG("Populate pairing");
     auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
     // A flag to check whether we already evaluate the origin and destination nodes
     bool originNodeChecked = false;
@@ -480,8 +420,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
 
-    auto newDM = computeCostMatrix(sorted_unbalanced_nodes, costing_,
-                                   max_matrix_distance.find(costing_str)->second);
+    auto distance_matrix = computeCostMatrix(sorted_unbalanced_nodes, costing_,
+                                             max_matrix_distance.find(costing_str)->second);
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
@@ -491,15 +431,13 @@ void thor_worker_t::chinese_postman(Api& request) {
         int overNodeIndex = getCPVertexIndex(overNodes[i], sorted_unbalanced_nodes);
         int underNodeIndex = getCPVertexIndex(underNodes[i], sorted_unbalanced_nodes);
 
-        double distance = newDM[overNodeIndex][underNodeIndex];
+        double distance = distance_matrix[overNodeIndex][underNodeIndex];
         pairingMatrix[i].push_back(distance);
       }
     }
     // Calling hungarian algorithm
     LOG_DEBUG("Run Hungarian Algorithm");
-    LOG_DEBUG("Number of overNodes: " + std::to_string(overNodes.size()));
-    LOG_DEBUG("Number of underNodes: " + std::to_string(underNodes.size()));
-    LOG_DEBUG("Number of unbalancedNodes: " + std::to_string(G.getUnbalancedVerticesMap().size()));
+    LOG_DEBUG("Number of nodes: " + std::to_string(pairingMatrix.size()));
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
     double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
@@ -508,11 +446,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Get node's index for that pair
       int overNodeIndex = G.getVertexIndex(overNodes[x]);
       int underNodeIndex = G.getVertexIndex(underNodes[assignment[x]]);
-      // Expand the path between the paired nodes, using the path matrix
-      auto nodePairs = make_pair(overNodeIndex, underNodeIndex);
       // Concat with main vector
-      extraPairs.push_back(nodePairs);
-      // extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
+      extraPairs.push_back(make_pair(overNodeIndex, underNodeIndex));
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str, costing_);
