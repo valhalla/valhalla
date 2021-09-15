@@ -33,8 +33,6 @@ gurka::map IntermediateLocations::map = {};
 Api api;
 rapidjson::Document d;
 
-// Request:
-// /route?json={"locations":[{"lon":5.1079374,"lat":52.0887174,"type":"break"},{"lon":5.109734024089489,"lat":52.087819087955299,"type":"via"},{"lon":5.111530648178978,"lat":52.0887174,"type":"break"}],"format":"osrm","costing":"auto","costing_options":{"auto":{"speed_types":["freeflow","constrained","predicted"]}},"verbose":true,"shape_match":"map_snap"}
 /*************************************************************/
 
 TEST_P(IntermediateLocations, test_single) {
@@ -60,12 +58,11 @@ TEST_P(IntermediateLocations, test_single) {
   } else if (intermediate_type == "via") {
     gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
   }
-
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["waypoint_index"].GetInt(), 1);
-  if (date_time_type != "2") {
+  if (intermediate_type == "via" || date_time_type != "2") {
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
                 distance("A", "6"), 1.0);
@@ -94,7 +91,6 @@ TEST_P(IntermediateLocations, test_single_at_node) {
 
   // since its at the node we see the edge name only twice once to hit the node and again to leave
   gurka::assert::raw::expect_path(result, {"AB", "BC", "BC"});
-
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 1);
@@ -121,7 +117,6 @@ TEST_P(IntermediateLocations, test_multiple) {
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   gurka::assert::raw::expect_path(result, {"AB", "AB", "BC", "BC"});
-
   EXPECT_EQ(d["routes"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 2);

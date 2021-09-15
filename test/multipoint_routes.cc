@@ -200,7 +200,7 @@ void test_mid_via(const std::string& date_time) {
   EXPECT_EQ(uturns, 1) << "Should be exactly 1 u-turn but there are: " + std::to_string(uturns);
 
   float mid_via_distance = directions.begin()->summary().length();
-  EXPECT_NEAR(mid_via_distance, mid_break_distance, 0.001f)
+  EXPECT_NEAR(mid_via_distance, mid_break_distance, 0.1f)
       << "The only difference in path between mid break and mid via is arrive/depart guidance";
 
   EXPECT_EQ(names, (std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
