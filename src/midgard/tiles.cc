@@ -57,6 +57,9 @@ template <class coord_t> struct closest_first_generator_t {
   using best_t = std::pair<double, int32_t>;
   std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>> queue;
 
+  // re-usable, pre-allocated vector used by dist
+  std::vector<coord_t> corners;
+
   closest_first_generator_t(const valhalla::midgard::Tiles<coord_t>& tiles, const coord_t& seed)
       : tiles(tiles), seed(seed), queued(100), queue([](const best_t& a, const best_t& b) {
           return a.first == b.first ? b.second < a.second : b.first < a.first;
@@ -75,13 +78,35 @@ template <class coord_t> struct closest_first_generator_t {
     corners.reserve(max_tested_corners);
   }
 
-  // Measure the distance to the midpoint of each subdivision for distance sorting purposes
+  // something to measure the closest possible point of a subdivision from the given seed point
   double dist(int32_t sub) {
     auto x = sub % subcols;
-    auto mid_x = tiles.TileBounds().minx() + (x + 0.5) * tiles.SubdivisionSize();
+    auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
+    auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
     auto y = sub / subcols;
-    auto mid_y = tiles.TileBounds().miny() + (y + 0.5) * tiles.SubdivisionSize();
-    return seed.DistanceSquared({mid_x, mid_y});
+    auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
+    auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
+    auto distance = std::numeric_limits<double>::max();
+    corners.clear();
+    corners.emplace_back(x0, y0);
+    corners.emplace_back(x1, y0);
+    corners.emplace_back(x0, y1);
+    corners.emplace_back(x1, y1);
+    if (x0 < seed.first && x1 > seed.first) {
+      corners.emplace_back(seed.first, y0);
+      corners.emplace_back(seed.first, y1);
+    }
+    if (y0 < seed.second && y1 > seed.second) {
+      corners.emplace_back(x0, seed.second);
+      corners.emplace_back(x1, seed.second);
+    }
+    for (const auto& c : corners) {
+      auto d = seed.DistanceSquared(c);
+      if (d < distance) {
+        distance = d;
+      }
+    }
+    return distance;
   }
 
   // something to add the neighbors of a given subdivision
