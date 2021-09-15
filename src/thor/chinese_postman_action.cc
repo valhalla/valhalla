@@ -119,52 +119,6 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
   return path;
 }
 
-PathMatrix computeFloydWarshall(DistanceMatrix& dm) {
-  if (dm.shape()[0] == dm.shape()[1]) {
-    // create path matrix
-    LOG_DEBUG("Floyd-Warshall: create path matrix");
-    PathMatrix pathMatrix(boost::extents[dm.shape()[0]][dm.shape()[0]]);
-    // populate the path matrix
-    LOG_DEBUG("Floyd-Warshall: populate the path matrix");
-    for (int i = 0; i < pathMatrix.shape()[0]; i++) {
-      for (int j = 0; j < pathMatrix.shape()[0]; j++) {
-        if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
-          pathMatrix[i][j] = std::vector<int>{};
-        } else {
-          pathMatrix[i][j] = std::vector<int>{i};
-        }
-      }
-    }
-    LOG_DEBUG("Floyd-Warshall: compute floyd-warshall");
-    for (int k = 0; k < dm.shape()[0]; k++) {
-      for (int i = 0; i < dm.shape()[0]; i++) {
-        for (int j = 0; j < dm.shape()[0]; j++) {
-          if (i == j || j == k || k == i) {
-            continue;
-          }
-          bool is_connected = (dm[i][k] != valhalla::thor::NOT_CONNECTED &&
-                               dm[k][j] != valhalla::thor::NOT_CONNECTED);
-          if (!is_connected) {
-            continue;
-          } else {
-            double alt_distance = dm[i][k] + dm[k][j];
-            if (alt_distance < dm[i][j] && is_connected) {
-              dm[i][j] = alt_distance;
-              // Update path matrix here.
-              std::vector<int> new_path;
-              new_path.reserve(pathMatrix[i][k].size() + pathMatrix[k][j].size());
-              new_path.insert(new_path.end(), pathMatrix[i][k].begin(), pathMatrix[i][k].end());
-              new_path.insert(new_path.end(), pathMatrix[k][j].begin(), pathMatrix[k][j].end());
-              pathMatrix[i][j] = new_path;
-            }
-          }
-        }
-      }
-    }
-    return pathMatrix;
-  }
-}
-
 DistanceMatrix
 thor_worker_t::computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
                                            const std::shared_ptr<sif::DynamicCost>& costing,
@@ -220,64 +174,6 @@ thor_worker_t::computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids
   }
 
   return distanceMatrix;
-}
-
-void thor_worker_t::computeCostMatrix(ChinesePostmanGraph& G,
-                                      DistanceMatrix& dm,
-                                      const std::shared_ptr<sif::DynamicCost>& costing,
-                                      const float max_matrix_distance) {
-  // TODO: Need to populate these two variables
-  google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
-  google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
-
-  int i = 0;
-  LOG_DEBUG("computeCostMatrix: setup for cost matrix computation");
-  while (i < G.numVertices()) {
-    CPVertex* cp_vertex = G.getCPVertex(i);
-    GraphId g(cp_vertex->graph_id);
-    auto l = getPointLL(g, *reader);
-    i++;
-    Location loc = Location();
-
-    loc.mutable_ll()->set_lng(l.first);
-    loc.mutable_ll()->set_lat(l.second);
-    source_location_list.Add()->CopyFrom(loc);
-    target_location_list.Add()->CopyFrom(loc);
-  }
-
-  try {
-    auto locations = PathLocation::fromPBF(source_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, source_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  try {
-    auto locations = PathLocation::fromPBF(target_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, target_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  LOG_DEBUG("computeCostMatrix: the real cost matrix computation");
-  CostMatrix costmatrix;
-  std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
-                                mode, max_matrix_distance);
-
-  LOG_DEBUG("computeCostMatrix: update distance matrix computation");
-  // Update Distance Matrix
-  for (int i = 0; i < G.numVertices(); i++) {
-    for (int j = 0; j < G.numVertices(); j++) {
-      if (dm[i][j] == valhalla::thor::NOT_CONNECTED) {
-        dm[i][j] = td[i * source_location_list.size() + j].dist;
-      }
-    }
-  }
 }
 
 bool isStronglyConnectedGraph(DistanceMatrix& dm) {

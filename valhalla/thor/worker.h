@@ -104,11 +104,6 @@ protected:
   std::vector<baldr::GraphId>
   computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
 
-  void computeCostMatrix(ChinesePostmanGraph& G,
-                         DistanceMatrix& dm,
-                         const std::shared_ptr<sif::DynamicCost>& costing,
-                         const float max_matrix_distance);
-
   DistanceMatrix computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
                                              const std::shared_ptr<sif::DynamicCost>& costing,
                                              const float max_matrix_distance);
