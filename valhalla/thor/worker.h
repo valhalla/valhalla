@@ -111,11 +111,13 @@ protected:
   std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
                                         CPVertex cpvertex_end,
                                         const Options& options,
-                                        const std::string costing);
+                                        const std::string costing_str,
+                                        const std::shared_ptr<sif::DynamicCost>& costing);
   std::vector<GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
                                     ChinesePostmanGraph& G,
                                     const Options& options,
-                                    const std::string costing);
+                                    const std::string costing_str,
+                                    const std::shared_ptr<sif::DynamicCost>& costing);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&

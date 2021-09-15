@@ -223,10 +223,13 @@ double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
   return edge->length();
 }
 
-std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
-                                                     CPVertex cpvertex_end,
-                                                     const Options& options,
-                                                     const std::string costing) {
+std::vector<GraphId>
+thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
+                                CPVertex cpvertex_end,
+                                const Options& options,
+                                const std::string costing_str,
+                                const std::shared_ptr<sif::DynamicCost>& costing) {
+  LOG_DEBUG("computeFullRoute");
   std::vector<GraphId> edge_graph_ids;
 
   // Setup
@@ -256,7 +259,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 
   try {
     auto locations = PathLocation::fromPBF(locations_, true);
-    const auto projections = loki::Search(locations, *reader, this->mode_costing[Costing::auto_]);
+    const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, locations_.Mutable(i), *reader);
@@ -265,7 +268,7 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 
   auto x = locations_.begin();
   auto y = std::next(x);
-  thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *x, *y, options);
+  thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing_str, *x, *y, options);
   auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
   path_algorithm->Clear();
   // Only take the first path (there is only one path)
@@ -286,7 +289,8 @@ std::vector<GraphId> thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerPath,
                                                  ChinesePostmanGraph& G,
                                                  const Options& options,
-                                                 const std::string costing) {
+                                                 const std::string costing_str,
+                                                 const std::shared_ptr<sif::DynamicCost>& costing) {
   LOG_DEBUG("buildEdgeIds");
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {
@@ -299,8 +303,8 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
     } else {
       // Find the edges for path through outside polygon
       auto a = G.getCPVertex(*it);
-      auto fullRoute =
-          computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options, costing);
+      auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options,
+                                        costing_str, costing);
 
       for (auto edge_graph_id : fullRoute) {
         eulerPathEdgeGraphIDs.push_back(edge_graph_id);
@@ -431,7 +435,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str, costing_);
   } else {
 
     // Do matching here
@@ -511,7 +515,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       // extraPairs.insert(extraPairs.end(), nodePairs.begin(), nodePairs.end());
     }
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex, extraPairs);
-    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str);
+    edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str, costing_);
   }
   // Start build path here
   LOG_DEBUG("Building full path");
