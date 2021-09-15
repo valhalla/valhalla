@@ -104,9 +104,9 @@ protected:
   std::vector<baldr::GraphId>
   computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
 
-  DistanceMatrix computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
-                                             const std::shared_ptr<sif::DynamicCost>& costing,
-                                             const float max_matrix_distance);
+  DistanceMatrix computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
+                                   const std::shared_ptr<sif::DynamicCost>& costing,
+                                   const float max_matrix_distance);
 
   std::vector<GraphId> computeFullRoute(CPVertex cpvertex_start,
                                         CPVertex cpvertex_end,

@@ -119,17 +119,16 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
   return path;
 }
 
-DistanceMatrix
-thor_worker_t::computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids,
-                                           const std::shared_ptr<sif::DynamicCost>& costing,
-                                           const float max_matrix_distance) {
+DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
+                                                const std::shared_ptr<sif::DynamicCost>& costing,
+                                                const float max_matrix_distance) {
   DistanceMatrix distanceMatrix(boost::extents[graph_ids.size()][graph_ids.size()]);
 
   // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
-  LOG_DEBUG("computeCostMatrixUnbalanced: setup for cost matrix computation");
+  LOG_DEBUG("computeCostMatrix: setup for cost matrix computation");
   for (const auto& graph_id : graph_ids) {
     GraphId g(graph_id);
     auto l = getPointLL(g, *reader);
@@ -159,13 +158,13 @@ thor_worker_t::computeCostMatrixUnbalanced(std::vector<baldr::GraphId> graph_ids
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
-  LOG_DEBUG("computeCostMatrixUnbalanced: the real cost matrix computation");
+  LOG_DEBUG("computeCostMatrix: the real cost matrix computation");
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
       costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
                                 mode, max_matrix_distance);
 
-  LOG_DEBUG("computeCostMatrixUnbalanced: update distance matrix computation");
+  LOG_DEBUG("computeCostMatrix: update distance matrix computation");
   // Update Distance Matrix
   for (int i = 0; i < graph_ids.size(); i++) {
     for (int j = 0; j < graph_ids.size(); j++) {
@@ -477,8 +476,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
 
-    auto newDM = computeCostMatrixUnbalanced(sorted_unbalanced_nodes, costing_,
-                                             max_matrix_distance.find(costing_str)->second);
+    auto newDM = computeCostMatrix(sorted_unbalanced_nodes, costing_,
+                                   max_matrix_distance.find(costing_str)->second);
     // Populating matrix for pairing
     std::vector<std::vector<double>> pairingMatrix;
     for (int i = 0; i < overNodes.size(); i++) {
