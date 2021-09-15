@@ -1648,14 +1648,19 @@ void TripLegBuilder::Build(
     if (intermediate_itr != trip_path.mutable_location()->end() &&
         intermediate_itr->leg_shape_index() == edge_index) {
       intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
+      intermediate_itr->set_distance_from_origin(total_distance);
       if (trimming == edge_trimming.end() &&
           (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
-        // TODO: When we didnt do any trimming that means that this one was at a node
-        // in that case and only for arrive by the edge index is off by one so we need
-        // the shape length before we added this edge :(
-        // intermediate_itr->set_leg_shape_index();
+        // When we did not do any trimming, that means that this one was at a node.
+        // In this case and only for ARRIVE_BY, the edge index is off by 1 so we need
+        // to find the shape length before we prior to adding this edge
+        intermediate_itr->set_leg_shape_index(edgeinfo.shape().size());
+        // Find the distance between the full shape and the shape index prior to adding the last edge
+        // Then subtract from the total distance
+        double distance_node_shape_index =
+            trip_shape[trip_shape.size() - 1].Distance(trip_shape[edgeinfo.shape().size()]);
+        intermediate_itr->set_distance_from_origin(total_distance - distance_node_shape_index);
       }
-      intermediate_itr->set_distance_from_origin(total_distance);
       ++intermediate_itr;
     }
 
