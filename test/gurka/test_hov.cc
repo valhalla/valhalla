@@ -457,8 +457,8 @@ protected:
     constexpr double gridsize = 10;
 
     const std::string ascii_map = R"(
-                  A-----------------------------------------------C
-      D----------E-------------------------------------------------F----------------G
+                  A------------------------------------------------------C
+      D----------E--------------------------------------------------------F----------------G
     )";
     const gurka::ways ways =
         {{"DEFG",
@@ -469,7 +469,7 @@ protected:
            {"name", "HOTExpress3"},
            {"hov", "designated"},
            {"hov:minimum", "3"},
-           {"maxspeed", "60"},
+           {"maxspeed", "65"},
            {"toll", "yes"}}}};
 
     const gurka::nodes nodes;
