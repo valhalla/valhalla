@@ -55,7 +55,8 @@ template <class coord_t> struct closest_first_generator_t {
   robin_hood::unordered_set<int32_t> queued;
   int32_t subcols, subrows;
   using best_t = std::pair<double, int32_t>;
-  std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>> queue;
+  std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>>
+      queue;
 
   // re-usable, pre-allocated vector used by dist
   std::vector<coord_t> corners;
