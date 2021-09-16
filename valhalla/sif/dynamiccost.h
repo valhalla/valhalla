@@ -1003,6 +1003,9 @@ protected:
                                  const predecessor_t* pred,
                                  const uint32_t idx) const {
 
+    bool is_hov_transition = (pred->is_hov_only() && !edge->is_hov_only()) ||
+                             (!pred->is_hov_only() && edge->is_hov_only());
+
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
@@ -1012,7 +1015,8 @@ protected:
          node->private_access();
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
-         (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
+         (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) *
+         !is_hov_transition;
     c += ferry_transition_cost_ *
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
     c += rail_ferry_transition_cost_ *
@@ -1022,7 +1026,8 @@ protected:
     c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
-    c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
+    c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx)) *
+              (is_hov_transition ? 0.1 : 1.0);
     c.cost += living_street_penalty_ *
               (edge->use() == baldr::Use::kLivingStreet && pred->use() != baldr::Use::kLivingStreet);
     c.cost +=
@@ -1036,11 +1041,6 @@ protected:
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
-
-    // switching into/out-of an hov-lane is just a lane change.
-    bool hov_transition = (pred->is_hov_only() && !edge->is_hov_only()) ||
-                          (!pred->is_hov_only() && edge->is_hov_only());
-    c.cost *= !hov_transition;
 
     return c;
   }
