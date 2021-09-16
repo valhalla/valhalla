@@ -81,8 +81,8 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
         restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        unpaved_(edge->unpaved()), is_hov_only_(edge->is_hov_only()), cost_(cost), sortcost_(sortcost),
-        distance_(dist), transition_cost_(transition_cost) {
+        unpaved_(edge->unpaved()), is_hov_only_(edge->is_hov_only()), cost_(cost),
+        sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 

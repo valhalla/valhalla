@@ -1038,7 +1038,8 @@ protected:
     c.cost *= !shortest_;
 
     // switching into/out-of an hov-lane is just a lane change.
-    bool hov_transition = (pred->is_hov_only() && !edge->is_hov_only()) || (!pred->is_hov_only() && edge->is_hov_only());
+    bool hov_transition = (pred->is_hov_only() && !edge->is_hov_only()) ||
+                          (!pred->is_hov_only() && edge->is_hov_only());
     c.cost *= !hov_transition;
 
     return c;
