@@ -13,8 +13,8 @@ constexpr auto kPhoneticAlphabetTag = "<PHONETIC_ALPHABET>";
 constexpr auto kTextualStringTag = "<TEXTUAL_STRING>";
 constexpr auto kVerbalStringTag = "<VERBAL_STRING>";
 
-constexpr auto KSingleQuotes = "&apos;";
-constexpr auto KDoubleQuotes = "&quot;";
+constexpr auto KSingleQuotes = "'";
+constexpr auto KDoubleQuotes = "\"";
 
 const std::string& Pronunciation_Alphabet_Name(int v) {
   static const std::unordered_map<int, std::string> values{{0, "ipa"},

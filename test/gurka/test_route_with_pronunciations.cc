@@ -237,8 +237,8 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns1) {
   // Verify sign pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Take exit 126B onto SR 37/Lancaster Road toward Granville/Lancaster.",
-      "", "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
-      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) onto SR 37 (<span class=&quot;phoneme&quot;>/ˈsinjər 37/</span>), Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>) toward Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>), Lancaster (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər/</span>).",
+      "", "Take exit 126B (<span class=\"phoneme\">/1 26bi/</span>).",
+      "Take exit 126B (<span class=\"phoneme\">/1 26bi/</span>) onto SR 37 (<span class=\"phoneme\">/ˈsinjər 37/</span>), Lancaster Road (<span class=\"phoneme\">/ˈlæŋkəstər ˈɹoʊd/</span>) toward Granville (<span class=\"phoneme\">/ˈgɹænvɪl/</span>), Lancaster (<span class=\"phoneme\">/ˈlæŋkəstər/</span>).",
       "");
 
   // Verify street name pronunciation - alphabet & value
@@ -268,8 +268,8 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns1) {
   // Verify street name pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right onto Lancaster Road/SR 37.", "Turn right.",
-      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>).",
-      "Turn right onto Lancaster Road (<span class=&quot;phoneme&quot;>/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37 (<span class=&quot;phoneme&quot;>/ˈsinjər 37/</span>).",
+      "Turn right onto Lancaster Road (<span class=\"phoneme\">/ˈlæŋkəstər ˈɹoʊd/</span>).",
+      "Turn right onto Lancaster Road (<span class=\"phoneme\">/ˈlæŋkəstər ˈɹoʊd/</span>), SR 37 (<span class=\"phoneme\">/ˈsinjər 37/</span>).",
       "Continue for 400 meters.");
 }
 
@@ -351,8 +351,8 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckStreetNamesAndSigns2) {
   // Verify sign pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Take exit 126B toward I 80/Main Street.", "",
-      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>).",
-      "Take exit 126B (<span class=&quot;phoneme&quot;>/1 26bi/</span>) toward I 80 (<span class=&quot;phoneme&quot;>/aɪ 80/</span>), Main Street (<span class=&quot;phoneme&quot;>/meɪn strit/</span>).",
+      "Take exit 126B (<span class=\"phoneme\">/1 26bi/</span>).",
+      "Take exit 126B (<span class=\"phoneme\">/1 26bi/</span>) toward I 80 (<span class=\"phoneme\">/aɪ 80/</span>), Main Street (<span class=\"phoneme\">/meɪn strit/</span>).",
       "");
 }
 
@@ -445,9 +445,9 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckGuideSigns) {
   // Verify guide sign pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right toward Granville Road/Granville.",
-      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
-      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>).",
-      "Turn right toward Granville Road (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=&quot;phoneme&quot;>/ˈgɹænvɪl/</span>).",
+      "Turn right toward Granville Road (<span class=\"phoneme\">/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=\"phoneme\">/ˈgɹænvɪl/</span>).",
+      "Turn right toward Granville Road (<span class=\"phoneme\">/ˈgɹænvɪl ˈɹoʊd/</span>).",
+      "Turn right toward Granville Road (<span class=\"phoneme\">/ˈgɹænvɪl ˈɹoʊd/</span>), Granville (<span class=\"phoneme\">/ˈgɹænvɪl/</span>).",
       "Continue for 500 meters.");
 }
 
@@ -506,8 +506,8 @@ TEST_F(RouteWithStreetnameAndSignPronunciation, CheckJunctionName) {
   // Verify junction name pronunciation instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn left at M Junction.",
-      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
-      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
-      "Turn left at M Junction (<span class=&quot;phoneme&quot;>/ɛm ˈʤʌŋkʃən/</span>).",
+      "Turn left at M Junction (<span class=\"phoneme\">/ɛm ˈʤʌŋkʃən/</span>).",
+      "Turn left at M Junction (<span class=\"phoneme\">/ɛm ˈʤʌŋkʃən/</span>).",
+      "Turn left at M Junction (<span class=\"phoneme\">/ɛm ˈʤʌŋkʃən/</span>).",
       "Continue for 400 meters.");
 }
