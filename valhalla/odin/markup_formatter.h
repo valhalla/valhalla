@@ -32,12 +32,6 @@ public:
   void set_markup_enabled(bool markup_enabled);
 
   /**
-   * Returns the phoneme format string.
-   * @return  the phoneme format string.
-   */
-  const std::string& phoneme_format() const;
-
-  /**
    * Return the street name with phoneme markup if it exists.
    *
    * @param  street_name  the street name record to format.
@@ -54,9 +48,19 @@ public:
   boost::optional<std::string> Format(const Sign& sign) const;
 
 protected:
+  /**
+   * Returns the phoneme format string.
+   * @return  the phoneme format string.
+   */
+  const std::string& phoneme_format() const;
+
   bool UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet) const;
 
-  void FormatQuotes(valhalla::Pronunciation_Alphabet alphabet, std::string& markup_string) const;
+  void FormatQuotes(std::string& markup_string, valhalla::Pronunciation_Alphabet alphabet) const;
+
+  void FormatPhoneme(std::string& phoneme_markup_string,
+                     const std::string& textual_string,
+                     const boost::optional<baldr::Pronunciation>& pronunciation) const;
 
   bool markup_enabled_;
   std::string phoneme_format_;

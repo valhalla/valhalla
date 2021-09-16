@@ -9,9 +9,24 @@
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";
+constexpr auto kPhoneticAlphabetTag = "<PHONETIC_ALPHABET>";
+constexpr auto kTextualStringTag = "<TEXTUAL_STRING>";
+constexpr auto kVerbalStringTag = "<VERBAL_STRING>";
 
 constexpr auto KSingleQuotes = "&apos;";
 constexpr auto KDoubleQuotes = "&quot;";
+
+const std::string& Pronunciation_Alphabet_Name(int v) {
+  static const std::unordered_map<int, std::string> values{{0, "ipa"},
+                                                           {1, "x-katakana"},
+                                                           {2, "x-jeita"},
+                                                           {3, "nt-sampa"}};
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
+  return f->second;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -31,10 +46,6 @@ void MarkupFormatter::set_markup_enabled(bool markup_enabled) {
   markup_enabled_ = markup_enabled;
 }
 
-const std::string& MarkupFormatter::phoneme_format() const {
-  return phoneme_format_;
-}
-
 boost::optional<std::string>
 MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) const {
   // Check if markup is enabled
@@ -42,16 +53,13 @@ MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) c
 
     // If pronunciation exists then process the phoneme format
     if (street_name->pronunciation()) {
-      std::string markup_street_name = phoneme_format();
+      std::string phoneme_markup_string = phoneme_format();
 
-      // Use the proper quotes depending on the pronunciation alphabet
-      FormatQuotes(street_name->pronunciation()->alphabet(), markup_street_name);
+      // Populate the phoneme markup string
+      FormatPhoneme(phoneme_markup_string, street_name->value(), street_name->pronunciation());
 
       // If the markup string exists then return the street name with the phoneme
-      return boost::make_optional(!markup_street_name.empty(),
-                                  (boost::format(markup_street_name) % street_name->value() %
-                                   street_name->pronunciation()->value())
-                                      .str());
+      return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
     }
   }
   return boost::none;
@@ -63,18 +71,20 @@ boost::optional<std::string> MarkupFormatter::Format(const Sign& sign) const {
 
     // If pronunciation exists then process the phoneme format
     if (sign.pronunciation()) {
-      std::string markup_sign = phoneme_format();
+      std::string phoneme_markup_string = phoneme_format();
 
-      // Use the proper quotes depending on the pronunciation alphabet
-      FormatQuotes(sign.pronunciation()->alphabet(), markup_sign);
+      // Populate the phoneme markup string
+      FormatPhoneme(phoneme_markup_string, sign.text(), sign.pronunciation());
 
       // If the markup string exists then return the sign with the phoneme
-      return boost::make_optional(!markup_sign.empty(), (boost::format(markup_sign) % sign.text() %
-                                                         sign.pronunciation()->value())
-                                                            .str());
+      return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
     }
   }
   return boost::none;
+}
+
+const std::string& MarkupFormatter::phoneme_format() const {
+  return phoneme_format_;
 }
 
 bool MarkupFormatter::UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet) const {
@@ -84,11 +94,25 @@ bool MarkupFormatter::UseSingleQuotes(valhalla::Pronunciation_Alphabet alphabet)
   return false;
 }
 
-void MarkupFormatter::FormatQuotes(valhalla::Pronunciation_Alphabet alphabet,
-                                   std::string& markup_string) const {
+void MarkupFormatter::FormatQuotes(std::string& markup_string,
+                                   valhalla::Pronunciation_Alphabet alphabet) const {
   // Use the proper quotes depending on the pronunciation alphabet
   UseSingleQuotes(alphabet) ? boost::replace_all(markup_string, kQuotesTag, KSingleQuotes)
                             : boost::replace_all(markup_string, kQuotesTag, KDoubleQuotes);
+}
+
+void MarkupFormatter::FormatPhoneme(
+    std::string& phoneme_markup_string,
+    const std::string& textual_string,
+    const boost::optional<baldr::Pronunciation>& pronunciation) const {
+  // Use the proper quotes depending on the pronunciation alphabet
+  FormatQuotes(phoneme_markup_string, pronunciation->alphabet());
+
+  // Replace phrase tags with values
+  boost::replace_all(phoneme_markup_string, kPhoneticAlphabetTag,
+                     Pronunciation_Alphabet_Name(pronunciation->alphabet()));
+  boost::replace_all(phoneme_markup_string, kTextualStringTag, textual_string);
+  boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value());
 }
 
 } // namespace odin

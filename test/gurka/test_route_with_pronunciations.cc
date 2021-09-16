@@ -11,7 +11,7 @@ const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
     {"odin.markup_formatter.markup_enabled", "true"},
     {"odin.markup_formatter.phoneme_format",
-     "%1% (<span class=<QUOTES>phoneme<QUOTES>>/%2%/</span>)"},
+     "<TEXTUAL_STRING> (<span class=<QUOTES>phoneme<QUOTES>>/<VERBAL_STRING>/</span>)"},
 };
 
 class RouteWithStreetnameAndSignPronunciation : public ::testing::Test {
