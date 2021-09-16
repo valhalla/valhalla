@@ -16,6 +16,7 @@
    * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
    * FIXED: Cache for gzipped elevation tiles [#3120](https://github.com/valhalla/valhalla/pull/3120)
    * FIXED: Current time conversion regression introduced in unidirectional algorithm refractor [#3278](https://github.com/valhalla/valhalla/issues/3278)
+   * FIXED: Making HOV transition cost zero [#3326](https://github.com/valhalla/valhalla/issues/3326)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
