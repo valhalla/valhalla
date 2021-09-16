@@ -102,7 +102,7 @@ template <class coord_t> struct closest_first_generator_t {
       corners.emplace_back(x1, seed.second);
     }
     for (const auto& c : corners) {
-      auto d = seed.DistanceSquared(c);
+      auto d = seed.Distance(c);
       if (d < distance) {
         distance = d;
       }
