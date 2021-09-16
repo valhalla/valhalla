@@ -1002,6 +1002,7 @@ protected:
                                  const baldr::DirectedEdge* edge,
                                  const predecessor_t* pred,
                                  const uint32_t idx) const {
+
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
@@ -1035,6 +1036,11 @@ protected:
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
+
+    // switching into/out-of an hov-lane is just a lane change.
+    bool hov_transition = (pred->is_hov_only() && !edge->is_hov_only()) || (!pred->is_hov_only() && edge->is_hov_only());
+    c.cost *= !hov_transition;
+
     return c;
   }
 };

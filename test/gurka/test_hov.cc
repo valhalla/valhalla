@@ -462,14 +462,14 @@ protected:
     )";
     const gurka::ways ways =
         {{"DEFG",
-          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "35"}, {"name", "RT 36"}}},
+          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "55"}, {"name", "RT 36"}}},
          {"EACF",
           {{"highway", "motorway"},
            {"oneway", "yes"},
            {"name", "HOTExpress3"},
            {"hov", "designated"},
            {"hov:minimum", "3"},
-           {"maxspeed", "95"},
+           {"maxspeed", "60"},
            {"toll", "yes"}}}};
 
     const gurka::nodes nodes;
