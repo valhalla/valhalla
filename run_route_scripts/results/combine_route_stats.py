@@ -39,7 +39,7 @@ def main(old_stats_file, new_stats_file, output_file):
             stats_diff_fieldnames.append('{}_diff'.format(col))
             stats_diff_fieldnames.append('{}_%diff'.format(col))
 
-        csv_writer = csv.writer(output_csv)
+        csv_writer = csv.writer(output_csv,quoting=csv.QUOTE_ALL)
         csv_writer.writerow(stats_diff_fieldnames)
 
         route_num = 1
