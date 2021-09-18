@@ -9,7 +9,7 @@
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
 
-const std::vector<std::string>& costing = {"auto",  "hov",           "taxi",      "bus",
+const std::vector<std::string>& costing = {"auto",  "taxi",          "bus",
                                            "truck", "motor_scooter", "motorcycle"};
 
 void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
