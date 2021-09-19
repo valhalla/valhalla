@@ -84,6 +84,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
                                      index_loader));
       // map files to graph ids
       if (tiles.empty()) {
+        LOG_WARN(
+            "Tile extract contained no index file, expect degraded performance for tile (re-)loading.");
         for (const auto& c : archive->contents) {
           try {
             auto id = GraphTile::GetTileId(c.first);
@@ -119,6 +121,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"),
                                              tar::TarType::kTraffic, true, index_loader));
       if (traffic_tiles.empty()) {
+        LOG_WARN(
+            "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
         // map files to graph ids
         for (auto& c : traffic_archive->contents) {
           try {
