@@ -43,9 +43,11 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // A lambda for loading the contents of a graph tile tar from an index file
-  auto index_loader = [this](const std::string& filename, const char* index_begin,
-                             const char* file_begin, size_t size,
-                             tar::TarType tar_type) -> decltype(midgard::tar::contents) {
+  bool traffic_idx = false;
+  auto index_loader = [this,
+                       &traffic_idx](const std::string& filename, const char* index_begin,
+                                     const char* file_begin, size_t size,
+                                     tar::TarType tar_type) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
     if (filename != "index.bin")
       return {};
@@ -60,16 +62,14 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       auto inserted = contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
                          std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
-      if (tar_type == tar::TarType::kTiles) {
+      if (!traffic_idx) {
         tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
                       std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
                                             entry.size));
-      } else if (tar_type == tar::TarType::kTraffic) {
+      } else {
         traffic_tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
                               std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
                                                     entry.size));
-      } else {
-        throw std::runtime_error("Wrong tar type specified.");
       }
     }
     // hand it back to the tar parser
@@ -118,6 +118,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("traffic_extract")) {
     try {
       // load the tar
+      traffic_idx = true;
       traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"),
                                              tar::TarType::kTraffic, true, index_loader));
       if (traffic_tiles.empty()) {

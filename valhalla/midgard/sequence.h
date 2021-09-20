@@ -188,6 +188,8 @@ public:
       }
       ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE),
                  MAP_SHARED, fd, 0);
+      // TODO: multithreading might mmap more than once
+      std::cout << ptr << std::endl;
       if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
@@ -660,6 +662,8 @@ struct tar {
   };
 
   std::string tar_file;
+
+  // TODO:
   mem_map<char> mm;
   using entry_name_t = std::string;
   using entry_location_t = std::pair<const char*, size_t>;
