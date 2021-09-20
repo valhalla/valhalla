@@ -586,7 +586,20 @@ protected:
    * @return the verbal multi-cue instruction based on the specified maneuvers.
    */
   std::string
-  FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver, bool process_succinct = false);
+  FormVerbalMultiCue(Maneuver& maneuver, Maneuver& next_maneuver, bool process_succinct = false);
+
+  /**
+   * Returns the verbal multi-cue instruction based on the specified maneuver and strings.
+   *
+   * @param maneuver The current quick maneuver.
+   * @param first_verbal_cue The first verbal cue in the returned instruction.
+   * @param second_verbal_cue The second verbal cue in the returned instruction.
+   *
+   * @return the verbal multi-cue instruction based on the specified maneuver and strings.
+   */
+  std::string FormVerbalMultiCue(Maneuver& maneuver,
+                                 const std::string& first_verbal_cue,
+                                 const std::string& second_verbal_cue);
 
   /**
    * Returns true if a verbal multi-cue instruction should be formed for the

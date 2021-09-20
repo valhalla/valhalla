@@ -4518,12 +4518,12 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
       // Set verbal succinct transition instruction as a verbal multi-cue
       if (prev_maneuver->HasVerbalSuccinctTransitionInstruction()) {
         prev_maneuver->set_verbal_succinct_transition_instruction(
-            FormVerbalMultiCue(prev_maneuver, maneuver, true));
+            FormVerbalMultiCue(*prev_maneuver, maneuver, true));
       }
 
       // Set verbal pre transition instruction as a verbal multi-cue
       prev_maneuver->set_verbal_pre_transition_instruction(
-          FormVerbalMultiCue(prev_maneuver, maneuver));
+          FormVerbalMultiCue(*prev_maneuver, maneuver));
     }
 
     // Update previous maneuver
@@ -4531,38 +4531,44 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   }
 }
 
-std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
+std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver& maneuver,
                                                  Maneuver& next_maneuver,
                                                  bool process_succinct) {
-  // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
-  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-
   // Set current verbal cue
   const std::string& current_verbal_cue =
-      ((process_succinct && maneuver->HasVerbalSuccinctTransitionInstruction())
-           ? maneuver->verbal_succinct_transition_instruction()
-           : maneuver->verbal_pre_transition_instruction());
+      ((process_succinct && maneuver.HasVerbalSuccinctTransitionInstruction())
+           ? maneuver.verbal_succinct_transition_instruction()
+           : maneuver.verbal_pre_transition_instruction());
 
   // Set next verbal cue
   std::string next_verbal_cue = next_maneuver.HasVerbalTransitionAlertInstruction()
                                     ? next_maneuver.verbal_transition_alert_instruction()
                                     : next_maneuver.verbal_pre_transition_instruction();
 
+  return FormVerbalMultiCue(maneuver, current_verbal_cue, next_verbal_cue);
+}
+
+std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver& maneuver,
+                                                 const std::string& first_verbal_cue,
+                                                 const std::string& second_verbal_cue) {
+  // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
   // Set instruction to the proper verbal multi-cue
   uint8_t phrase_id = 0;
-  if (maneuver->distant_verbal_multi_cue()) {
+  if (maneuver.distant_verbal_multi_cue()) {
     phrase_id = 1;
   }
   instruction = dictionary_.verbal_multi_cue_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kCurrentVerbalCueTag, current_verbal_cue);
-  boost::replace_all(instruction, kNextVerbalCueTag, next_verbal_cue);
+  boost::replace_all(instruction, kCurrentVerbalCueTag, first_verbal_cue);
+  boost::replace_all(instruction, kNextVerbalCueTag, second_verbal_cue);
   boost::replace_all(instruction, kLengthTag,
-                     FormLength(*maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
+                     FormLength(maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
                                 dictionary_.post_transition_verbal_subset.us_customary_lengths));
 
   // If enabled, form articulated prepositions

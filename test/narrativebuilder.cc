@@ -59,7 +59,7 @@ public:
                                                                  element_max_count, delim);
   }
 
-  std::string FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
+  std::string FormVerbalMultiCue(Maneuver& maneuver, Maneuver& next_maneuver) {
     return NarrativeBuilder::FormVerbalMultiCue(maneuver, next_maneuver);
   }
 };
@@ -8980,7 +8980,7 @@ void TryFormVerbalMultiCue(NarrativeBuilderTest& nbt,
                            Maneuver current_maneuver,
                            Maneuver next_maneuver,
                            const std::string& expected) {
-  EXPECT_EQ(nbt.FormVerbalMultiCue(&current_maneuver, next_maneuver), expected);
+  EXPECT_EQ(nbt.FormVerbalMultiCue(current_maneuver, next_maneuver), expected);
 }
 
 TEST(NarrativeBuilder, TestFormVerbalMultiCue) {
