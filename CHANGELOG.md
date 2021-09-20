@@ -15,6 +15,10 @@
    * FIXED: Overflow in sequence sort [#3303](https://github.com/valhalla/valhalla/pull/3303)
    * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
    * FIXED: Cache for gzipped elevation tiles [#3120](https://github.com/valhalla/valhalla/pull/3120)
+   * FIXED: Current time conversion regression introduced in unidirectional algorithm refractor [#3278](https://github.com/valhalla/valhalla/issues/3278)
+   * FIXED: Make combine_route_stats.py properly quote CSV output (best practice improvement) [#3328](https://github.com/valhalla/valhalla/pull/3328)
+   * FIXED: Merge edge segment records in map matching properly so that resulting edge indices in trace_attributes are valid [#3280](https://github.com/valhalla/valhalla/pull/3280)
+   * FIXED: Shape walking map matcher now sets correct edge candidates used in the match for origin and destination location [#3329](https://github.com/valhalla/valhalla/pull/3329)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
@@ -36,6 +40,7 @@
    * CHANGED: Improved sharing criterion to obtain more reasonable alternatives; extended alternatives search [#3302](https://github.com/valhalla/valhalla/pull/3302)
    * ADDED: pull ubuntu:20.04 base image before building [#3233](https://github.com/valhalla/valhalla/pull/3223)
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
+   * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**

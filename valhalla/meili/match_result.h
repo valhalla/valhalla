@@ -3,6 +3,7 @@
 #define MMP_MATCH_RESULT_H_
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
@@ -12,6 +13,8 @@
 
 namespace valhalla {
 namespace meili {
+
+constexpr size_t kInvalidEdgeIndex = std::numeric_limits<size_t>::max();
 
 struct MatchResult {
   // Coordinate of the match point
@@ -34,7 +37,7 @@ struct MatchResult {
   bool ends_discontinuity;
   // An index into the full list of edges in the path even across discontinuities (for
   // trace_attributes)
-  size_t edge_index;
+  size_t edge_index = kInvalidEdgeIndex;
 
   bool HasState() const {
     return stateid.IsValid();
