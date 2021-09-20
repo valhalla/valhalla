@@ -16,6 +16,9 @@
    * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
    * FIXED: Cache for gzipped elevation tiles [#3120](https://github.com/valhalla/valhalla/pull/3120)
    * FIXED: Current time conversion regression introduced in unidirectional algorithm refractor [#3278](https://github.com/valhalla/valhalla/issues/3278)
+   * FIXED: Make combine_route_stats.py properly quote CSV output (best practice improvement) [#3328](https://github.com/valhalla/valhalla/pull/3328)
+   * FIXED: Merge edge segment records in map matching properly so that resulting edge indices in trace_attributes are valid [#3280](https://github.com/valhalla/valhalla/pull/3280)
+   * FIXED: Shape walking map matcher now sets correct edge candidates used in the match for origin and destination location [#3329](https://github.com/valhalla/valhalla/pull/3329)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)

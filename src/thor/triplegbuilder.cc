@@ -1637,11 +1637,9 @@ void TripLegBuilder::Build(
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
 
-    // TODO: is this overkill or duplicating other code (shape attributes etc?)
-    // could do what the trimming is doing and just use coarse length * pct used
-    for (auto i = begin_index + 1; i < trip_shape.size(); ++i) {
-      total_distance += trip_shape[i - 1].Distance(trip_shape[i]);
-    }
+    // We need the total offset from the beginning of leg for the intermediate locations
+    auto previous_total_distance = total_distance;
+    total_distance += directededge->length() * (trim_end_pct - trim_start_pct);
 
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
@@ -1649,17 +1647,14 @@ void TripLegBuilder::Build(
         intermediate_itr->leg_shape_index() == edge_index) {
       intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
       intermediate_itr->set_distance_from_origin(total_distance);
+      // NOTE:
+      // So for intermediate locations that dont have any trimming we know they occur at the node
+      // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
+      // So here we need to set this one as if it were at the end of the previous edge in the path
       if (trimming == edge_trimming.end() &&
           (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
-        // When we did not do any trimming, that means that this one was at a node.
-        // In this case and only for ARRIVE_BY, the edge index is off by 1 so we need
-        // to find the shape length before we prior to adding this edge
-        intermediate_itr->set_leg_shape_index(edgeinfo.shape().size());
-        // Find the distance between the full shape and the shape index prior to adding the last edge
-        // Then subtract from the total distance
-        double distance_node_shape_index =
-            trip_shape[trip_shape.size() - 1].Distance(trip_shape[edgeinfo.shape().size()]);
-        intermediate_itr->set_distance_from_origin(total_distance - distance_node_shape_index);
+        intermediate_itr->set_leg_shape_index(begin_index);
+        intermediate_itr->set_distance_from_origin(previous_total_distance);
       }
       ++intermediate_itr;
     }
