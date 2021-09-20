@@ -1,4 +1,4 @@
-// be aware: the python modules that need testing, need to be symlinked to the test/scripts folder with a .py extension
+# be aware: the python modules that need testing, need to be symlinked to the test/scripts folder with a .py extension
 find_package(Python COMPONENTS Interpreter)
 if (Python_FOUND)
   add_custom_command(OUTPUT scripts.log
