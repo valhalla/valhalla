@@ -1,13 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 
-try:
-    from test.scripts import helper
-except (ModuleNotFoundError, ImportError):
-    import helper
+import valhalla_build_config
 
-# get the module to test
-valhalla_build_config = helper.import_module('valhalla_build_config')
 # mock the add_argument so we can track which arguments it's called with in the main code
 mock_parser = valhalla_build_config.parser
 mock_parser.add_argument = MagicMock()
