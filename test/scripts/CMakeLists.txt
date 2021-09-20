@@ -8,7 +8,6 @@ if (Python_FOUND)
         /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/scripts -v > ${CMAKE_BINARY_DIR}/test/scripts.log 2>&1"
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS
-        ${VALHALLA_SOURCE_DIR}/test/scripts/helper.py
         ${VALHALLA_SOURCE_DIR}/test/scripts/test_valhalla_build_config.py
       VERBATIM)
   add_custom_target(run-scripts DEPENDS scripts.log)
