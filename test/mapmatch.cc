@@ -218,9 +218,13 @@ TEST(Mapmatch, test_matcher) {
     std::string walked_json;
 
     try {
+      Api api;
       walked_json = actor.trace_attributes(
           R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-          json_escape(encoded_shape) + "\"}");
+              json_escape(encoded_shape) + "\"}",
+          nullptr, &api);
+      EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
+      EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
       walked = test::json_to_pt(walked_json);
     } catch (...) {
       std::cout << test_case << std::endl;
@@ -287,6 +291,16 @@ TEST(Mapmatch, test_matcher) {
       std::cout << geojson << std::endl;
       FAIL() << "The match did not match the walk";
     }
+
+    for (const auto& point : matched.get_child("matched_points")) {
+      auto const edge_index = point.second.get<uint64_t>("edge_index");
+      auto const match_type = point.second.get<std::string>("type");
+
+      if (match_type == "matched" && edge_index == meili::kInvalidEdgeIndex)
+        FAIL() << "Bad edge index for matched point.";
+      if (match_type == "unmatched" && edge_index != meili::kInvalidEdgeIndex)
+        FAIL() << "Bad edge index for ummatched point.";
+    }
     ++tested;
   }
 }
@@ -305,6 +319,31 @@ TEST(Mapmatch, test_distance_only) {
       names.insert(name.second.get_value<std::string>());
   EXPECT_NE(names.find("Jan Pieterszoon Coenstraat"), names.end())
       << "Using distance only it should have taken a small detour";
+}
+
+TEST(Mapmatch, test_matched_points) {
+  tyr::actor_t actor(conf, true);
+  auto matched = test::json_to_pt(actor.trace_attributes(
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+
+  auto const edges_number = matched.get_child("edges").size();
+  std::vector<size_t> edge_indexes;
+  for (const auto& point : matched.get_child("matched_points")) {
+    auto const match_type = point.second.get<std::string>("type");
+    auto const edge_index = point.second.get<uint64_t>("edge_index");
+    edge_indexes.push_back(edge_index);
+
+    if (match_type == "matched" && edge_index == meili::kInvalidEdgeIndex)
+      FAIL() << "Bad edge index for matched point.";
+    if (match_type == "unmatched" && edge_index != meili::kInvalidEdgeIndex)
+      FAIL() << "Bad edge index for ummatched point.";
+  }
+  EXPECT_EQ(edge_indexes[0], 0);
+  EXPECT_EQ(edge_indexes.back(), edges_number - 1);
 }
 
 TEST(Mapmatch, test_trace_route_breaks) {
@@ -911,7 +950,10 @@ TEST(Mapmatch, test_now_matches) {
   test_case =
       R"({"date_time":{"type":0},"shape_match":"edge_walk","costing":"auto","encoded_polyline":")" +
       json_escape(encoded_shape) + "\"}";
-  actor.trace_route(test_case);
+  Api api;
+  actor.trace_route(test_case, nullptr, &api);
+  EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
+  EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
 }
 
 TEST(Mapmatch, test_leg_duration_trimming) {
