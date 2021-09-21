@@ -55,7 +55,7 @@ MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) c
     if (street_name->pronunciation()) {
       // Populate the phoneme markup string
       std::string phoneme_markup_string =
-          FormatPhoneme(street_name->value(), street_name->pronunciation());
+          FormatPhonemeElement(street_name->value(), street_name->pronunciation());
 
       // If the markup string exists then return the street name with the phoneme
       return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
@@ -71,7 +71,7 @@ boost::optional<std::string> MarkupFormatter::Format(const Sign& sign) const {
     // If pronunciation exists then process the phoneme format
     if (sign.pronunciation()) {
       // Populate the phoneme markup string
-      std::string phoneme_markup_string = FormatPhoneme(sign.text(), sign.pronunciation());
+      std::string phoneme_markup_string = FormatPhonemeElement(sign.text(), sign.pronunciation());
 
       // If the markup string exists then return the sign with the phoneme
       return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
@@ -98,9 +98,9 @@ void MarkupFormatter::FormatQuotes(std::string& markup_string,
                             : boost::replace_all(markup_string, kQuotesTag, KDoubleQuotes);
 }
 
-std::string
-MarkupFormatter::FormatPhoneme(const std::string& textual_string,
-                               const boost::optional<baldr::Pronunciation>& pronunciation) const {
+std::string MarkupFormatter::FormatPhonemeElement(
+    const std::string& textual_string,
+    const boost::optional<baldr::Pronunciation>& pronunciation) const {
   std::string phoneme_markup_string = phoneme_format();
 
   // Use the proper quotes depending on the pronunciation alphabet
