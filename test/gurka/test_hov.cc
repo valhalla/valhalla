@@ -467,8 +467,8 @@ protected:
       D--------------E--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------F----------------G
     )";
     const gurka::ways ways =
-        {
-         {"DEFG", {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "40"}, {"name", "RT 36"}}},
+        {{"DEFG",
+          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "40"}, {"name", "RT 36"}}},
          {"EA",
           {{"highway", "motorway_link"},
            {"oneway", "yes"},
@@ -484,8 +484,7 @@ protected:
            {"hov", "designated"},
            {"hov:minimum", "3"},
            {"maxspeed", "65"},
-           {"toll", "yes"}}}
-        };
+           {"toll", "yes"}}}};
 
     const gurka::nodes nodes;
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
