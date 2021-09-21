@@ -130,7 +130,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false), include_hot_{true}, include_hov2_{true}, include_hov3_{true} {
+      exclude_unpaved_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
