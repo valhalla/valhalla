@@ -1290,6 +1290,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the HOV Type.
+   * @param  hov_type
+   */
+  void set_hov_type(const baldr::HOVEdgeType hov_type) {
+    hov_type_ = static_cast<uint8_t>(hov_type);
+  }
+
+  /**
+   * Get the hov_type flag.
+   * @return  Returns hov_type flag.
+   */
+  baldr::HOVEdgeType hov_type() const {
+    return static_cast<baldr::HOVEdgeType>(hov_type_);
+  }
+
+  /**
    * Set seasonal flag.
    * @param  seasonal   Is this seasonal?
    */
@@ -1722,7 +1738,8 @@ struct OSMWay {
   uint32_t has_user_tags_ : 1;
   uint32_t has_pronunciation_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare1_ : 2; // Spare
+  uint32_t hov_type_ : 1;
+  uint32_t spare1_ : 1;
   uint32_t pedestrian_forward_ : 1;
   uint32_t pedestrian_backward_ : 1;
 

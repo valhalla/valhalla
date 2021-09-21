@@ -37,7 +37,7 @@ enum Costing {
   // deprecated auto_shorter = 1;
   bicycle = 2;
   bus = 3;
-  hov = 4;
+  // deprecated hov = 4;
   motor_scooter = 5;
   multimodal = 6;
   pedestrian = 7;
@@ -128,6 +128,9 @@ message CostingOptions {
   optional float closure_factor = 70;
   optional float private_access_penalty = 71;
   optional bool exclude_unpaved = 72;
+  optional bool include_hot = 73;
+  optional bool include_hov2 = 74;
+  optional bool include_hov3 = 75;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;

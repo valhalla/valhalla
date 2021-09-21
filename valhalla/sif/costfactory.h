@@ -37,7 +37,6 @@ public:
     // auto_shorter was deprecated
     Register(Costing::bicycle, CreateBicycleCost);
     Register(Costing::bus, CreateBusCost);
-    Register(Costing::hov, CreateHOVCost);
     Register(Costing::taxi, CreateTaxiCost);
     Register(Costing::motor_scooter, CreateMotorScooterCost);
     Register(Costing::motorcycle, CreateMotorcycleCost);

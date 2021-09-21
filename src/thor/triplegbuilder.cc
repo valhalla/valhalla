@@ -416,7 +416,7 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
                             return e.graph_id() == edge_id;
                           });
   if (pos == location->path_edges().end()) {
-    location->mutable_path_edges()->Clear();
+    location->mutable_path_edges()->Clear(); // should never happen
   } else if (location->path_edges_size() > 1) {
     location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
     location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
@@ -1687,7 +1687,7 @@ void TripLegBuilder::Build(
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
       float km =
-          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.001f);
+          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.0f);
       trip_edge->set_length_km(km);
     }
 
