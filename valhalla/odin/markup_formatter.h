@@ -58,9 +58,8 @@ protected:
 
   void FormatQuotes(std::string& markup_string, valhalla::Pronunciation_Alphabet alphabet) const;
 
-  void FormatPhoneme(std::string& phoneme_markup_string,
-                     const std::string& textual_string,
-                     const boost::optional<baldr::Pronunciation>& pronunciation) const;
+  std::string FormatPhoneme(const std::string& textual_string,
+                            const boost::optional<baldr::Pronunciation>& pronunciation) const;
 
   bool markup_enabled_;
   std::string phoneme_format_;

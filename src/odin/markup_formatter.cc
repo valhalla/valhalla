@@ -53,10 +53,9 @@ MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) c
 
     // If pronunciation exists then process the phoneme format
     if (street_name->pronunciation()) {
-      std::string phoneme_markup_string = phoneme_format();
-
       // Populate the phoneme markup string
-      FormatPhoneme(phoneme_markup_string, street_name->value(), street_name->pronunciation());
+      std::string phoneme_markup_string =
+          FormatPhoneme(street_name->value(), street_name->pronunciation());
 
       // If the markup string exists then return the street name with the phoneme
       return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
@@ -71,10 +70,8 @@ boost::optional<std::string> MarkupFormatter::Format(const Sign& sign) const {
 
     // If pronunciation exists then process the phoneme format
     if (sign.pronunciation()) {
-      std::string phoneme_markup_string = phoneme_format();
-
       // Populate the phoneme markup string
-      FormatPhoneme(phoneme_markup_string, sign.text(), sign.pronunciation());
+      std::string phoneme_markup_string = FormatPhoneme(sign.text(), sign.pronunciation());
 
       // If the markup string exists then return the sign with the phoneme
       return boost::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
@@ -101,10 +98,11 @@ void MarkupFormatter::FormatQuotes(std::string& markup_string,
                             : boost::replace_all(markup_string, kQuotesTag, KDoubleQuotes);
 }
 
-void MarkupFormatter::FormatPhoneme(
-    std::string& phoneme_markup_string,
-    const std::string& textual_string,
-    const boost::optional<baldr::Pronunciation>& pronunciation) const {
+std::string
+MarkupFormatter::FormatPhoneme(const std::string& textual_string,
+                               const boost::optional<baldr::Pronunciation>& pronunciation) const {
+  std::string phoneme_markup_string = phoneme_format();
+
   // Use the proper quotes depending on the pronunciation alphabet
   FormatQuotes(phoneme_markup_string, pronunciation->alphabet());
 
@@ -113,6 +111,8 @@ void MarkupFormatter::FormatPhoneme(
                      Pronunciation_Alphabet_Name(pronunciation->alphabet()));
   boost::replace_all(phoneme_markup_string, kTextualStringTag, textual_string);
   boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value());
+
+  return phoneme_markup_string;
 }
 
 } // namespace odin
