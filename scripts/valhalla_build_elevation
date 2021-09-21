@@ -163,12 +163,7 @@ def bbox_is_valid(bbox):
 
 def download(tile: Tile, output_dir, decompress):
     dest_directory = Path(output_dir, tile.dir)
-
-    lock = Lock()
-    lock.acquire()
     Path.mkdir(dest_directory, parents=True, exist_ok=True)
-    lock.release()
-
     filepath = Path(dest_directory, tile.name + (".gz" if not decompress else ""))
     if filepath.is_file():
         return False
