@@ -42,9 +42,9 @@ void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& wri
 }
 
 void serialize_edges(const AttributesController& controller,
-                      const Options& options,
-                      const TripLeg& trip_path,
-                      rapidjson::writer_wrapper_t& writer) {
+                     const Options& options,
+                     const TripLeg& trip_path,
+                     rapidjson::writer_wrapper_t& writer) {
   writer.start_array("edges");
 
   // Length and speed default to kilometers
@@ -206,15 +206,14 @@ void serialize_edges(const AttributesController& controller,
           writer.start_object();
           writer.set_precision(3);
           writer("segment_id", segment.segment_id());
-	  writer("begin_percent", segment.begin_percent());
-	  writer("end_percent", segment.end_percent());
-	  writer("starts_segment", segment.starts_segment());
-	  writer("ends_segment", segment.ends_segment());
+          writer("begin_percent", segment.begin_percent());
+          writer("end_percent", segment.end_percent());
+          writer("starts_segment", segment.starts_segment());
+          writer("ends_segment", segment.ends_segment());
           writer.end_object();
         }
         writer.end_array();
       }
-      writer.end_object();
 
       // Process edge sign
       // TODO: do we want to output 'is_route_number'?
@@ -262,7 +261,6 @@ void serialize_edges(const AttributesController& controller,
       // Process edge end node only if any node items are enabled
       if (controller.category_attribute_enabled(kNodeCategory)) {
         const auto& node = trip_path.node(i);
-        writer.start_object();
         if (node.intersecting_edge_size() > 0) {
           writer.start_array("intersecting_edges");
           for (const auto& xedge : node.intersecting_edge()) {
@@ -323,7 +321,6 @@ void serialize_edges(const AttributesController& controller,
         // kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
         // kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
 
-        writer.end_object();
       }
 
       // TODO - transit info on edge
@@ -340,6 +337,8 @@ void serialize_edges(const AttributesController& controller,
       // kEdgeTransitRouteInfoOperatorOnestopId = "edge.transit_route_info.operator_onestop_id";
       // kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
       // kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
+
+      writer.end_object();
     }
   }
   writer.end_array();
@@ -519,7 +518,6 @@ std::string serializeTraceAttributes(
   // Loop over all results to process the best path
   // and the alternate paths (if alternates exist)
   bool best_path = true;
-  writer.start_array("alternate_paths");
   auto route = request.trip().routes().begin();
   for (const auto& map_match_result : map_match_results) {
     if (best_path) {
@@ -528,14 +526,12 @@ std::string serializeTraceAttributes(
       best_path = false;
     } else {
       // Append alternate path trace info to alternate path array
-      writer.start_object();
-      append_trace_info(writer, controller, request.options(), map_match_result,
-                        route->legs(0));
-      writer.end_object();
+      writer.start_array("alternate_paths");
+      append_trace_info(writer, controller, request.options(), map_match_result, route->legs(0));
+      writer.end_array();
     }
     ++route;
   }
-  writer.end_array();
   writer.end_object();
   return writer.get_buffer();
 }
