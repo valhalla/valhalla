@@ -496,9 +496,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // When stitching routes at an intermediate location we need to store information about where
         // along the edge it happened so triplegbuilder can properly cut the shape where the location
         // was and store that info to be serialized int he output
-        auto at_node = intermediate_loc_edge_trimming(*reader, *destination, path.back().edgeid,
-                                                      temp_path.front().edgeid, edge_trimming,
-                                                      temp_path.size(), true);
+        auto at_node =
+            intermediate_loc_edge_trimming(*destination, path.back().edgeid, temp_path.front().edgeid,
+                                           edge_trimming, temp_path.size(), true);
 
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid && at_node) {
@@ -648,9 +648,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         // When stitching routes at an intermediate location we need to store information about where
         // along the edge it happened so triplegbuilder can properly cut the shape where the location
         // was and store that info to be serialized int he output
-        auto at_node = intermediate_loc_edge_trimming(*reader, *origin, path.back().edgeid,
-                                                      temp_path.front().edgeid, edge_trimming,
-                                                      path.size() - 1, false);
+        auto at_node =
+            intermediate_loc_edge_trimming(*origin, path.back().edgeid, temp_path.front().edgeid,
+                                           edge_trimming, path.size() - 1, false);
 
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid && at_node) {
