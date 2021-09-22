@@ -454,22 +454,36 @@ protected:
   static std::shared_ptr<baldr::GraphReader> reader;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 10;
 
+    // This gridsize/map is attempting to emulate a real-world hov-lane that parallels
+    // a highway. It isn't perfect... the hov-lane would probably be a little less than
+    // 5 meters from the highway lane... and AC would be much longer. The transition from
+    // E to A and from C to F are about 90 m, which is accurate based on my measurements.
+    // Note also that EA is a motorway-link, which emulates what I'm seeing in the real
+    // world. However, CF is not a motorway-link.
+    constexpr double gridsize = 5;
     const std::string ascii_map = R"(
-                  A-----------------------------------------------C
-      D----------E-------------------------------------------------F----------------G
+                                        A------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------C
+      D--------------E--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------F----------------G
     )";
     const gurka::ways ways =
         {{"DEFG",
-          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "35"}, {"name", "RT 36"}}},
-         {"EACF",
-          {{"highway", "motorway"},
+          {{"highway", "motorway"}, {"oneway", "yes"}, {"maxspeed", "40"}, {"name", "RT 36"}}},
+         {"EA",
+          {{"highway", "motorway_link"},
            {"oneway", "yes"},
-           {"name", "HOTExpress3"},
+           {"name", "US 36 Express Lane"},
            {"hov", "designated"},
            {"hov:minimum", "3"},
-           {"maxspeed", "95"},
+           {"maxspeed", "65"},
+           {"toll", "yes"}}},
+         {"ACF",
+          {{"highway", "motorway"},
+           {"oneway", "yes"},
+           {"name", "US 36 Express Lane"},
+           {"hov", "designated"},
+           {"hov:minimum", "3"},
+           {"maxspeed", "65"},
            {"toll", "yes"}}}};
 
     const gurka::nodes nodes;
@@ -520,12 +534,13 @@ TEST_F(HOVChoices, choices) {
             .str();
     auto result = gurka::do_action(Options::route, map, req, reader);
 
-    // User allows hot-lanes and the router can choose the super fast HOTExpress3.
-    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
+    // User allows hot-lanes and the router can choose the faster US 36 Express Lane.
+    // Note: the return angle from the HOV lane onto the highway is very slight,
+    // so we don't announce a maneuver returning onto RT-36.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 3);
     EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
     EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).street_name(0).value(),
-              "HOTExpress3");
-    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(), "RT 36");
+              "US 36 Express Lane");
   }
 
   {
@@ -536,11 +551,12 @@ TEST_F(HOVChoices, choices) {
             .str();
     auto result = gurka::do_action(Options::route, map, req, reader);
 
-    // User allows hov3-lanes and the router can choose the super fast HOTExpress3.
-    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 4);
+    // User allows hov3-lanes and the router can choose the faster US 36 Express Lane.
+    // Note: the return angle from the HOV lane onto the highway is very slight,
+    // so we don't announce a maneuver returning onto RT-36.
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 3);
     EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name(0).value(), "RT 36");
     EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).street_name(0).value(),
-              "HOTExpress3");
-    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(), "RT 36");
+              "US 36 Express Lane");
   }
 }
