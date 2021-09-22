@@ -45,7 +45,6 @@ void serialize_edges(const AttributesController& controller,
                       const Options& options,
                       const TripLeg& trip_path,
                       rapidjson::writer_wrapper_t& writer) {
-LOG_INFO("start of serialize_edges");
   writer.start_array("edges");
 
   // Length and speed default to kilometers
@@ -54,7 +53,6 @@ LOG_INFO("start of serialize_edges");
     scale = kMilePerKm;
   }
 
-LOG_INFO("A");
   // Loop over edges to add attributes
   for (int i = 1; i < trip_path.node().size(); i++) {
     if (trip_path.node(i - 1).has_edge()) {
@@ -74,7 +72,6 @@ LOG_INFO("A");
           writer("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
         }
       }
-LOG_INFO("B");
       if (edge.has_density()) {
         writer("density", static_cast<uint64_t>(edge.density()));
       }
@@ -113,7 +110,6 @@ LOG_INFO("B");
       if (edge.has_max_upward_grade()) {
         writer("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
       }
-LOG_INFO("C");
       if (edge.has_weighted_grade()) {
         writer.set_precision(3);
         writer("weighted_grade", edge.weighted_grade());
@@ -165,7 +161,6 @@ LOG_INFO("C");
       if (edge.has_unpaved()) {
         writer("unpaved", static_cast<bool>(edge.unpaved()));
       }
-LOG_INFO("D");
       if (edge.has_toll()) {
         writer("toll", static_cast<bool>(edge.toll()));
       }
@@ -197,7 +192,6 @@ LOG_INFO("D");
         writer.set_precision(3);
         writer("length", edge.length_km() * scale);
       }
-LOG_INFO("E");
       // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {
         writer.start_array("names");
@@ -220,9 +214,8 @@ LOG_INFO("E");
         }
         writer.end_array();
       }
-      writer.end_object(); // TODO - is this correct?
+      writer.end_object();
 
-LOG_INFO("F");
       // Process edge sign
       // TODO: do we want to output 'is_route_number'?
       if (edge.has_sign()) {
@@ -265,19 +258,14 @@ LOG_INFO("F");
         }
         writer.end_object();
       }
-LOG_INFO("F1");
 
       // Process edge end node only if any node items are enabled
       if (controller.category_attribute_enabled(kNodeCategory)) {
         const auto& node = trip_path.node(i);
-LOG_INFO("Inside category attribute enabled, start object");
         writer.start_object();
-LOG_INFO("started the object");
         if (node.intersecting_edge_size() > 0) {
-LOG_INFO("F10");
           writer.start_array("intersecting_edges");
           for (const auto& xedge : node.intersecting_edge()) {
-LOG_INFO("F11");
             writer.start_object();
             if (xedge.has_walkability() && (xedge.walkability() != TripLeg_Traversability_kNone)) {
               writer("walkability", to_string(xedge.walkability()));
@@ -288,15 +276,12 @@ LOG_INFO("F11");
             if (xedge.has_driveability() && (xedge.driveability() != TripLeg_Traversability_kNone)) {
               writer("driveability", to_string(xedge.driveability()));
             }
-LOG_INFO("F12");
             writer("from_edge_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
             writer("to_edge_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
-LOG_INFO("F13");
             writer("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
             if (xedge.has_use()) {
               writer("use", to_string(static_cast<baldr::Use>(xedge.use())));
             }
-LOG_INFO("F14");
             if (xedge.has_road_class()) {
               writer("road_class", to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
             }
@@ -305,7 +290,6 @@ LOG_INFO("F14");
           writer.end_array();
         }
 
-LOG_INFO("F2");
         if (node.has_cost() && node.cost().has_elapsed_cost() &&
             node.cost().elapsed_cost().has_seconds()) {
           writer.set_precision(3);
@@ -328,7 +312,6 @@ LOG_INFO("F2");
           writer.set_precision(3);
           writer("transition_time", node.cost().transition_cost().seconds());
         }
-LOG_INFO("F3");
 
         // TODO transit info at node
         // kNodeTransitStopInfoType = "node.transit_stop_info.type";
@@ -343,7 +326,6 @@ LOG_INFO("F3");
         writer.end_object();
       }
 
-LOG_INFO("G");
       // TODO - transit info on edge
       // kEdgeTransitType = "edge.transit_type";
       // kEdgeTransitRouteInfoOnestopId = "edge.transit_route_info.onestop_id";
@@ -358,8 +340,6 @@ LOG_INFO("G");
       // kEdgeTransitRouteInfoOperatorOnestopId = "edge.transit_route_info.operator_onestop_id";
       // kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
       // kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
-
-      // DO WE NEED THIS?  writer.end_object();
     }
   }
   writer.end_array();
@@ -473,7 +453,6 @@ void append_trace_info(
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
 
-LOG_INFO("append_trace_info");
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
     writer("osm_changeset", trip_path.osm_changeset());
@@ -500,17 +479,14 @@ LOG_INFO("append_trace_info");
     serialize_admins(trip_path, writer);
   }
 
-LOG_INFO("serialize edges");
   // Add edges
   serialize_edges(controller, options, trip_path, writer);
 
-LOG_INFO("serialize matched points");
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {
     serialize_matched_points(controller, match_results, writer);
   }
 
-LOG_INFO("serialize shape attributes");
   // Add shape_attributes, if requested
   if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
     serialize_shape_attributes(controller, trip_path, writer);
@@ -526,7 +502,6 @@ std::string serializeTraceAttributes(
     const AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
-LOG_INFO("Serialize trace_attributes!");
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
   writer.start_object();
@@ -541,12 +516,10 @@ LOG_INFO("Serialize trace_attributes!");
     writer("units", valhalla::Options_Units_Enum_Name(request.options().units()));
   }
 
-LOG_INFO("Serialize paths");
   // Loop over all results to process the best path
   // and the alternate paths (if alternates exist)
   bool best_path = true;
   writer.start_array("alternate_paths");
-LOG_INFO("Started array!");
   auto route = request.trip().routes().begin();
   for (const auto& map_match_result : map_match_results) {
     if (best_path) {
@@ -564,7 +537,6 @@ LOG_INFO("Started array!");
   }
   writer.end_array();
   writer.end_object();
-LOG_INFO("Done serialize");
   return writer.get_buffer();
 }
 
