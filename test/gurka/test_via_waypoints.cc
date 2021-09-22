@@ -72,6 +72,14 @@ TEST_P(IntermediateLocations, test_single) {
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
                 distance("A", "C") + distance("C", "6"), 1.0);
   }
+
+  // a uturn right at 6
+  if (intermediate_type == "via") {
+    EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "6") + distance("B", "6"), 1.0);
+  } // have to continue past 6 and come back
+  else {
+    EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C") + distance("B", "C"), 1.0);
+  }
 }
 
 TEST_P(IntermediateLocations, test_single_at_node) {
