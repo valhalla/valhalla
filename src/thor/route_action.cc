@@ -84,8 +84,11 @@ bool intermediate_loc_edge_trimming(
     inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
 
-  // TODO: when a via location does a uturn we need to use 1 - dist_along because we are clipping the
-  // opposing edge (ie the opposite direction) below
+  // We need to use the distance along from the edge exiting the intermediate location to handle the
+  // case when its a uturn at a via using the opposing edge that came into the via. Basically we need
+  // to invert the distance along because we inverted the direction we are traveling along the edge.
+  // This is handled automatically by using the correct exiting edge
+  dist_along = out_pe->percent_along();
 
   // Cut the second edges beginning off up to where the location lands along it
   inserted = edge_trimming.insert(
