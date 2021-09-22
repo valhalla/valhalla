@@ -209,7 +209,7 @@ TEST_P(IntermediateLocations, test_back_to_back_via_uturns) {
   for (int i = 1; i < 5; ++i) {
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["waypoint_index"].GetInt(), i);
     EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["geometry_index"].GetInt(), i);
-    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["distance_from_start"].GetDouble(),
                 total_dist, 1.0);
     total_dist += distance("2", "3");
   }
