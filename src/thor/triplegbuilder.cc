@@ -1534,10 +1534,9 @@ void TripLegBuilder::Build(
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
-    // Process the shape for edges where an intermediate location occurs
+    // Some edges at the beginning and end of the path and at intermediate locations will need trimmed
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
-
     auto trimming = edge_trimming.end();
     if (!edge_trimming.empty() &&
         (trimming = edge_trimming.find(edge_index)) != edge_trimming.end()) {
@@ -1577,8 +1576,8 @@ void TripLegBuilder::Build(
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
-      trim_start_pct = edge_begin_info.distance_along;
-      trim_end_pct = edge_end_info.distance_along;
+      trim_start_pct = begin_trim_dist;
+      trim_end_pct = end_trim_dist;
 
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
@@ -1586,23 +1585,6 @@ void TripLegBuilder::Build(
                  end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
-
-      /** It seems this was a bug, we kept duplicated points at mid edge uturns and it also caused
-          issues in odin not calling out the uturns. We'll see if both not duplicating and not having
-          the wrong index will both fix the output to be correct but also remove any problem with odin
-
-
-      // Old code kept duplicate point
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !edge_begin_info.trim,
-                        edge_shape.end());
-
-      // If edge_begin_info.trim and is not the first edge then increment begin_index since
-      // the previous end shape index should not equal the current begin shape index because
-      // of through/via
-      if (edge_begin_info.trim && !is_first_edge) {
-        ++begin_index;
-      }
-      */
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.

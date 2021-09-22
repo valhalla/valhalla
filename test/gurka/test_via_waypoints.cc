@@ -72,6 +72,14 @@ TEST_P(IntermediateLocations, test_single) {
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
                 distance("A", "C") + distance("C", "6"), 1.0);
   }
+
+  // a uturn right at 6
+  if (intermediate_type == "via") {
+    EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "6") + distance("B", "6"), 1.0);
+  } // have to continue past 6 and come back
+  else {
+    EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C") + distance("B", "C"), 1.0);
+  }
 }
 
 TEST_P(IntermediateLocations, test_single_at_node) {
@@ -98,6 +106,7 @@ TEST_P(IntermediateLocations, test_single_at_node) {
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][0]["geometry_index"].GetInt(), 2);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][0]["distance_from_start"].GetDouble(),
               distance("A", "C"), 1.0);
+  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C") + distance("A", "B"), 1.0);
 }
 
 TEST_P(IntermediateLocations, test_multiple) {
@@ -128,6 +137,7 @@ TEST_P(IntermediateLocations, test_multiple) {
   EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][1]["geometry_index"].GetInt(), 3);
   EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][1]["distance_from_start"].GetDouble(),
               distance("A", "5"), 1.0);
+  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C"), 1.0);
 }
 
 TEST_P(IntermediateLocations, test_multiple_single_edge) {
@@ -166,10 +176,48 @@ TEST_P(IntermediateLocations, test_multiple_single_edge) {
     EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i]["distance_from_start"].GetDouble(),
                 distance("A", std::to_string(i + 1)), 1.0);
   }
+  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), distance("A", "C"), 1.0);
 }
 
-// TODO: do not forget to add a test for uturns and multiple intermediates on the same edge before and
-//  after the uturn, basically the most pathological things we can think of
+TEST_P(IntermediateLocations, test_back_to_back_via_uturns) {
+  std::string date_time_type;
+  std::string intermediate_type;
+  std::tie(date_time_type, intermediate_type) = GetParam();
+
+  // we already tested this earlier
+  if (intermediate_type == "through")
+    return;
+
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "3", "2", "3", "2", "3"}, "auto",
+                       {
+                           {"/locations/0/type", "break"},
+                           {"/locations/1/type", intermediate_type},
+                           {"/locations/2/type", intermediate_type},
+                           {"/locations/3/type", intermediate_type},
+                           {"/locations/4/type", intermediate_type},
+                           {"/locations/5/type", "break"},
+                           {"/date_time/type", date_time_type},
+                           {"/date_time/value", "2111-11-11T11:11"},
+                       });
+  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  // since its at the node we see the edge name only twice once to hit the node and again to leave
+  gurka::assert::raw::expect_path(result, {"AB", "AB", "AB", "AB", "AB"});
+  EXPECT_EQ(d["routes"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"].Size(), 1);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"].Size(), 4);
+
+  auto total_dist = distance("1", "3");
+  for (int i = 1; i < 5; ++i) {
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["waypoint_index"].GetInt(), i);
+    EXPECT_EQ(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["geometry_index"].GetInt(), i);
+    EXPECT_NEAR(d["routes"][0]["legs"][0]["via_waypoints"][i - 1]["distance_from_start"].GetDouble(),
+                total_dist, 1.0);
+    total_dist += distance("2", "3");
+  }
+  EXPECT_NEAR(d["routes"][0]["distance"].GetDouble(), total_dist, 1.0);
+}
 
 // 1 is depart_at and 2 is arrive_by and 3 is invariant
 INSTANTIATE_TEST_SUITE_P(ViaWaypoints,
