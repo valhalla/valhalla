@@ -32,7 +32,6 @@ constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
  * so that the shape / distance along the path is adjusted at the location.
  */
 bool intermediate_loc_edge_trimming(
-    GraphReader& reader,
     valhalla::Location& loc,
     const GraphId& in,
     const GraphId& out,
