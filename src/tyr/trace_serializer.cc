@@ -320,7 +320,6 @@ void serialize_edges(const AttributesController& controller,
         // kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
         // kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
         // kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
-
       }
 
       // TODO - transit info on edge
