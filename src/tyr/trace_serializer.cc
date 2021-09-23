@@ -524,14 +524,16 @@ std::string serializeTraceAttributes(
       // Append the best path trace info
       append_trace_info(writer, controller, request.options(), map_match_result, route->legs(0));
       best_path = false;
+      writer.start_array("alternate_paths");
     } else {
       // Append alternate path trace info to alternate path array
-      writer.start_array("alternate_paths");
+      writer.start_object();
       append_trace_info(writer, controller, request.options(), map_match_result, route->legs(0));
-      writer.end_array();
+      writer.end_object();
     }
     ++route;
   }
+  writer.end_array();
   writer.end_object();
   return writer.get_buffer();
 }
