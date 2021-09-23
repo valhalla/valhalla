@@ -43,6 +43,7 @@
    * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
    * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
+   * CHANGED: Ported trace_attributes serialization to RapidJSON. [#3333](https://github.com/valhalla/valhalla/pull/3333)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
