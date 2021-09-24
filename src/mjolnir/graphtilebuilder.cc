@@ -189,8 +189,35 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     edgeinfo_offset_map_[offset] = &edgeinfo_list_.back();
   }
 
+  // To support "strings" which might be any arbitrary data we need to know the full lengths of every
+  // entry. this is because we rely on parsing until nul char for normal strings.
+  std::vector<std::tuple<size_t, uint32_t, uint32_t>> entry_widths;
+  size_t i = 0;
+  for (const auto& ni : name_info) {
+    entry_widths.emplace_back(i++, ni.name_offset_, 0);
+  }
+  // First we sort on offset
+  std::sort(entry_widths.begin(), entry_widths.end(),
+            [](const auto& a, const auto& b) -> bool { return std::get<1>(a) < std::get<1>(b); });
+  // Then we fill in the lengths
+  for (auto& entry : entry_widths) {
+    // look at the next one to see how wide
+    if (&entry != &entry_widths.back()) {
+      const auto& next = *std::next(&entry);
+      std::get<2>(entry) = std::get<1>(next) - std::get<1>(entry);
+    } // look at the next part of the tile to see how wide
+    else {
+      std::get<2>(entry) =
+          (reinterpret_cast<const char*>(lane_connectivity_) - textlist_) - std::get<1>(entry);
+    }
+  }
+  // now sort it back to order of occurrence in the set of name infos
+  std::sort(entry_widths.begin(), entry_widths.end(),
+            [](const auto& a, const auto& b) -> bool { return std::get<0>(a) < std::get<0>(b); });
+
   // Text list
-  for (auto ni : name_info) {
+  auto width_entry = entry_widths.begin();
+  for (const auto& ni : name_info) {
     // Verify offsets as we add text. Identify any strings in the text list
     // that are not referenced by any objects.
     while (ni.name_offset_ != text_list_offset_) {
@@ -202,7 +229,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
       LOG_WARN("Unused text string: " + unused_string);
     }
-    std::string str(textlist_ + ni.name_offset_);
+
+    // use the width we recovered above to copy the string, avoids problems with nul char
+    std::string str(textlist_ + ni.name_offset_, std::get<2>(*width_entry));
+    std::next(width_entry);
+
     textlistbuilder_.push_back(str);
     uint32_t offset = ni.name_offset_;
     text_offset_map_.emplace(str, offset);
