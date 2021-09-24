@@ -5,7 +5,7 @@ import math
 import random
 
 # example usage, each arg is a comma separated quadruplet of lon,lat,radius_meters,count
-#./gen_multipoint_route_requests.py 40.2690,-76.8713,10000,2,through  35.9825,-83.9246,10000,2,through 39.775,-105.007,10000,2,through 37.7653,-122.4316,10000,2,through 52.590,13.381,10000,2,through > multi_point_through_auto_routes.txt
+#./gen_multipoint_route_requests.py 40.2690,-76.8713,1000,2,through  35.9825,-83.9246,1000,2,through 39.775,-105.007,1000,2,through 37.7653,-122.4316,1000,2,through 52.590,13.381,1000,2,through > multi_point_through_auto_routes.txt
 
 # TODO: use argparse to parse other request options and validate quadruplets
 
