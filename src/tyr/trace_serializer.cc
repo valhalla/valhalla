@@ -261,6 +261,7 @@ void serialize_edges(const AttributesController& controller,
       // Process edge end node only if any node items are enabled
       if (controller.category_attribute_enabled(kNodeCategory)) {
         const auto& node = trip_path.node(i);
+        writer.start_object("end_node");
         if (node.intersecting_edge_size() > 0) {
           writer.start_array("intersecting_edges");
           for (const auto& xedge : node.intersecting_edge()) {
@@ -320,6 +321,7 @@ void serialize_edges(const AttributesController& controller,
         // kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
         // kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
         // kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
+        writer.end_object();
       }
 
       // TODO - transit info on edge
@@ -412,9 +414,9 @@ void serialize_shape_attributes(const AttributesController& controller,
                                 const TripLeg& trip_path,
                                 rapidjson::writer_wrapper_t& writer) {
   writer.start_object("shape_attributes");
+  writer.set_precision(3);
   if (controller.attributes.at(kShapeAttributesTime)) {
     writer.start_array("time");
-    writer.set_precision(3);
     for (const auto& time : trip_path.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
       writer(time * kSecPerMillisecond);
@@ -423,7 +425,6 @@ void serialize_shape_attributes(const AttributesController& controller,
   }
   if (controller.attributes.at(kShapeAttributesLength)) {
     writer.start_array("length");
-    writer.set_precision(3);
     for (const auto& length : trip_path.shape_attributes().length()) {
       // decimeters (dm) to kilometer (km)
       writer(length * kKmPerDecimeter);
@@ -432,7 +433,6 @@ void serialize_shape_attributes(const AttributesController& controller,
   }
   if (controller.attributes.at(kShapeAttributesSpeed)) {
     writer.start_array("speed");
-    writer.set_precision(3);
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
       writer(speed * kDecimeterPerSectoKPH);
