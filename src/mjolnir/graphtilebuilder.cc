@@ -232,7 +232,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
     // use the width we recovered above to copy the string, avoids problems with nul char
     std::string str(textlist_ + ni.name_offset_, std::get<2>(*width_entry));
-    std::next(width_entry);
+    width_entry = std::next(width_entry);
 
     textlistbuilder_.push_back(str);
     uint32_t offset = ni.name_offset_;
