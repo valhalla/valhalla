@@ -53,6 +53,15 @@ struct NameInfo {
   }
 };
 
+struct linguistic_text_header_t {
+  uint32_t length_ : 8;   // pronunciation length
+  uint32_t language_ : 8; // derive locale by getting admin info
+  uint32_t phonetic_alphabet_ : 3;
+  uint32_t name_index_ : 4; // what name is this pronunciation for
+  uint32_t spare_ : 1;
+  uint32_t DO_NOT_USE_ : 8; // DONT EVER USE THIS WE DON'T ACTUALLY STORE IT IN THE TEXT LIST
+};
+
 /**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
@@ -229,8 +238,6 @@ public:
   };
 
 protected:
-  std::vector<std::string> GetTaggedValuesOrNames(bool only_tagged_values) const;
-
   // Fixed size information
   EdgeInfoInner ei_;
 

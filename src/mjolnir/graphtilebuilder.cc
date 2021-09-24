@@ -71,6 +71,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     return;
   }
 
+  // TODO: DELETE ME
+  for (const auto& e : baldr::GraphTile::GetDirectedEdges()) {
+    auto ei = edgeinfo(&e);
+    auto f = ei.GetTaggedValues(true);
+  }
+
   // Street name info. Unique set of offsets into the text list
   std::set<NameInfo> name_info;
   name_info.insert({0});
@@ -634,8 +640,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          if (ss.str().size())
-            ss << "#";
           ss << pronunciation;
         }
 
@@ -779,8 +783,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          if (ss.str().size())
-            ss << "#";
           ss << pronunciation;
         }
 

@@ -1,4 +1,5 @@
 #include "mjolnir/osmway.h"
+#include "baldr/edgeinfo.h"
 #include "mjolnir/util.h"
 
 #include "midgard/logging.h"
@@ -105,20 +106,23 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
                                const size_t name_tokens_size,
                                const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) const {
-  size_t k = key;
   std::vector<std::string> pronunciation_tokens;
   if (pronunciation_index != 0)
     pronunciation_tokens = GetTagTokens(name_offset_map.name(pronunciation_index));
   else
     return;
-
+  // TODO language_ this will an enum.  to be created when we process default_languages.
+  linguistic_text_header_t header{1, 0, static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
+  std::string pronunciation;
   if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size()) {
     for (const auto& t : pronunciation_tokens) {
-      pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(k)) + '#' +
-                                  std::to_string(static_cast<uint8_t>(verbal_type)) + '#' + t);
-      k++;
+      header.length_ = t.size();
+      pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
+      ++header.name_index_;
     }
   }
+  // keep the whole slew of them
+  pronunciations.emplace_back(std::move(pronunciation));
 }
 
 // Get the names for the edge info based on the road class.

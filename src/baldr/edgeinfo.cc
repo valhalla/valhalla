@@ -117,43 +117,23 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
       continue;
 
     if (ni->name_offset_ < names_list_length_) {
-      std::string name = names_list_ + ni->name_offset_;
-      if (name.size() > 1) {
-        uint8_t num = 0;
-        try {
-          num = static_cast<uint8_t>(name.at(0));
-          TaggedValue tv = static_cast<baldr::TaggedValue>(num);
-          if (tv == baldr::TaggedValue::kPronunciation) {
-            if (!only_pronunciations)
-              continue;
+      const auto* name = names_list_ + ni->name_offset_;
+      try {
+        TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
+        ++name;
+        if (tv == baldr::TaggedValue::kPronunciation) {
+          if (!only_pronunciations)
+            continue;
 
-            size_t location = name.length() + 1; // start from here
-            name = name.substr(1);               // remove the tagged name type...actual data remains
-            auto verbal_tokens = split(name, '#');
-            // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
-            // key  type value
-            uint8_t index = 0;
-            std::string key, type;
-            for (const auto& v : verbal_tokens) {
-              if (index == 0) { // key
-                key = v;
-                index++;
-              } else if (index == 1) { // type
-                type = v;
-                index++;
-              } else { // value
-                names.push_back(key + '#' + type + '#' + v);
-                index = 0;
-              }
-            }
-          } else if (!only_pronunciations) {
-            names.push_back(names_list_ + ni->name_offset_);
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
+          // TODO: collect them, in a loop until hitting null char after the last record you parsed
+          const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name);
+
+        } else if (!only_pronunciations) {
+          names.push_back(name);
         }
-      } else {
-        throw std::runtime_error("GetTaggedNames: Tagged name with no text");
+      } catch (const std::invalid_argument& arg) {
+        // TODO:
+        LOG_DEBUG("invalid_argument thrown for name: ");
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
