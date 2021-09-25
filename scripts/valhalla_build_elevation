@@ -10,10 +10,10 @@ function usage() {
 if [ -z "$4" ]; then
 	usage
 fi
-min_x=$(python -c "import math; print(int(math.floor($1)))")
-max_x=$(python -c "import math; print(int(math.ceil($2) - 1))")
-min_y=$(python -c "import math; print(int(math.floor($3)))")
-max_y=$(python -c "import math; print(int(math.ceil($4) - 1))")
+min_x=$(python3 -c "import math; print(int(math.floor($1)))")
+max_x=$(python3 -c "import math; print(int(math.ceil($2) - 1))")
+min_y=$(python3 -c "import math; print(int(math.floor($3)))")
+max_y=$(python3 -c "import math; print(int(math.ceil($4) - 1))")
 
 if [ $min_x -gt $max_x ] || [ $min_x -lt -180 ] || [ $max_x -gt 180 ]; then
 	usage
@@ -41,7 +41,7 @@ fi
 
 #get dirs
 for y in $(seq ${min_y} 1 ${max_y}); do
-	dir=$(python -c "print('%s%02d' % ('S' if ${y} < 0 else 'N', abs(${y})))")
+	dir=$(python3 -c "print('%s%02d' % ('S' if ${y} < 0 else 'N', abs(${y})))")
 	echo "${dest}/${dir}"
 done | while read d; do mkdir -p $d; done
 
@@ -51,7 +51,7 @@ echo "extracting $expected elevation tiles"
 ext=$( [[ ${decomp} ]] && echo "" || echo ".gz" )
 for x in $(seq ${min_x} 1 ${max_x}); do
 	for y in $(seq ${min_y} 1 ${max_y}); do
-		file=$(python -c "print('%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x})))")
+		file=$(python3 -c "print('%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x})))")
 		dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
 		#if we dont already have it or its the wrong size
 		if [ ! -e ${dest}/${dir}/${file} ] || [ $(stat -c %s ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then

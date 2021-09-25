@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
+
 import sys
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import math
 import os
 import shutil
@@ -31,7 +31,7 @@ class json_resource_t:
     self.url = url
     try:
       #open a readable object at that url
-      response = urllib2.urlopen(url)
+      response = urllib.request.urlopen(url)
     except Exception as e:
       print('Could not fetch %s' % url, file=sys.stderr)
       raise e
@@ -73,7 +73,7 @@ class Tile(object):
 
   def digits(self, number):
      digits = 1 if (number < 0) else 0
-     while (long(number)):
+     while (int(number)):
         number /= 10
         digits += 1
      return int(digits)
@@ -135,13 +135,13 @@ def check_args(argv):
       valhalla_config = json.load(config_file)
 
       for level in valhalla_config['mjolnir']['hierarchy']['levels']:
-         if 'name' in level.keys():
+         if 'name' in list(level.keys()):
             if (level['name'] == 'local'):
-               if 'level' in level.keys():
+               if 'level' in list(level.keys()):
                   level_ = level['level']
                else: 
                   print('Using default level.')
-               if 'size' in level.keys():
+               if 'size' in list(level.keys()):
                   tilesize_ = level['size']
                else:
                   print('Using default size.')
@@ -212,13 +212,13 @@ if __name__ == "__main__":
    block_key = 1
    blocks = dict()
 
-   for row in xrange(0, nrows_):
-      for col in xrange(0, ncolumns_):
+   for row in range(0, nrows_):
+      for col in range(0, ncolumns_):
          
          #tile for world BB
          min_x = minx_ + (col * tilesize_)
          min_y = miny_ + (row * tilesize_)
-  	 max_x = min_x + tilesize_
+         max_x = min_x + tilesize_
          max_y = min_y + tilesize_
                 
          tile = Tile(min_x,min_y,max_x,max_y)
@@ -242,7 +242,7 @@ if __name__ == "__main__":
                   meta = tl_stops.kv.get('meta', [])
 
                   for tl_s in tl_stops.kv.get('stops', []):
-                     map(tl_s.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','created_at','updated_at','operators_serving_stop','routes_serving_stop'])
+                     list(map(tl_s.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','created_at','updated_at','operators_serving_stop','routes_serving_stop']))
                      onestop_id = tl_s['onestop_id']
                      if onestop_id not in onestops:
                         onestops[onestop_id] = onestop_key
@@ -257,7 +257,7 @@ if __name__ == "__main__":
                   print(url)
                   dictionary['stops_url'].append(url)
 
-                  if 'next' in meta.keys():
+                  if 'next' in list(meta.keys()):
                      url = meta['next']
                      url += '&api_key='
                      url += api_key
@@ -283,7 +283,7 @@ if __name__ == "__main__":
                   dictionary['schedule_stop_pairs_url'].append(url)
 
                   for tl_s_p in tl_stop_pairs.kv.get('schedule_stop_pairs', []):
-                     map(tl_s_p.pop, ['origin_timezone','destination_timezone','pickup_type','drop_off_type', 'shape_dist_traveled','origin_arrival_time','destination_departure_time','window_start','window_end','origin_timepoint_source','destination_timepoint_source','created_at','updated_at'])
+                     list(map(tl_s_p.pop, ['origin_timezone','destination_timezone','pickup_type','drop_off_type', 'shape_dist_traveled','origin_arrival_time','destination_departure_time','window_start','window_end','origin_timepoint_source','destination_timepoint_source','created_at','updated_at']))
 
                      end_date = datetime.strptime(tl_s_p['service_end_date'],"%Y-%m-%d").date()
                      
@@ -327,7 +327,7 @@ if __name__ == "__main__":
                   if not stop_pairs:
                      break;
 
-                  if 'next' in meta.keys():
+                  if 'next' in list(meta.keys()):
                      url = meta['next']
                      url += '&api_key='
                      url += api_key
@@ -358,7 +358,7 @@ if __name__ == "__main__":
                   routes['route_url'].append(url)
 
                   for tl_r in tl_routes.kv.get('routes', []):
-                     map(tl_r.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','geometry','created_at','updated_at'])
+                     list(map(tl_r.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','geometry','created_at','updated_at']))
 
                      onestop_id = tl_r['onestop_id']
                      if onestop_id not in onestops:
@@ -372,7 +372,7 @@ if __name__ == "__main__":
                   if not routes:
                      break;
 
-                  if 'next' in meta.keys():
+                  if 'next' in list(meta.keys()):
                      url = meta['next']
                      url += '&api_key='
                      url += api_key

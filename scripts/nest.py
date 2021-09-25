@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys, errno
 
 '''
@@ -31,7 +31,7 @@ for dim in dims:
 			cmd.insert(0, 'gdalbuildvrt ./' + str(y) + '_' + str(level - 1) + '.vrt')
 			cmd.insert(0, 'cd tiles/%s;' % x)
 			try:
-				print(' '.join(cmd))
+				print((' '.join(cmd)))
 			except IOError as e:
 				sys.exit(0)
 	level += 1
