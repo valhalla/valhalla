@@ -75,6 +75,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   for (const auto& e : baldr::GraphTile::GetDirectedEdges()) {
     auto ei = edgeinfo(&e);
     auto f = ei.GetTaggedValues(true);
+
+    for (auto& t:f)
+      std::cout << "GT tags " << t << std::endl;
+
   }
 
   // Street name info. Unique set of offsets into the text list
