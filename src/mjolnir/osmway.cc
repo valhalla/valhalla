@@ -112,10 +112,12 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
   else
     return;
   // TODO language_ this will an enum.  to be created when we process default_languages.
-  linguistic_text_header_t header{1, 0, static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
+  linguistic_text_header_t header{0, 1, static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
   std::string pronunciation;
   if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size()) {
     for (const auto& t : pronunciation_tokens) {
+      if (!t.size())
+        continue;
       header.length_ = t.size();
       pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
       ++header.name_index_;
