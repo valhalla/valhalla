@@ -110,6 +110,7 @@ std::vector<std::string> EdgeInfo::GetNames() const {
 std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) const {
   // Get each name
   std::vector<std::string> names;
+  std::string pronunciation;
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
@@ -120,20 +121,24 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
       const auto* name = names_list_ + ni->name_offset_;
       try {
         TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
-        ++name;
         if (tv == baldr::TaggedValue::kPronunciation) {
           if (!only_pronunciations)
             continue;
 
-          // TODO: collect them, in a loop until hitting null char after the last record you parsed
-          const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name);
+          size_t pos = 1;
+           while(pos < strlen(name)) {
+             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+             pos += 3;
+             pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
+             pos += header.length_;
+           }
+           names.emplace_back(std::move(pronunciation));
 
         } else if (!only_pronunciations) {
           names.push_back(name);
         }
       } catch (const std::invalid_argument& arg) {
-        // TODO:
-        LOG_DEBUG("invalid_argument thrown for name: ");
+        LOG_DEBUG("invalid_argument thrown for name: " + name);
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
@@ -224,47 +229,37 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
       continue;
 
     if (ni->name_offset_ < names_list_length_) {
-      std::string name = names_list_ + ni->name_offset_;
-      if (name.length() > 1) {
-        uint8_t num = 0;
-        try {
-          num = static_cast<uint8_t>(name.at(0));
-          TaggedValue tv = static_cast<baldr::TaggedValue>(num);
-          if (tv == baldr::TaggedValue::kPronunciation) {
-            size_t location = name.length() + 1; // start from here
-            name = name.substr(1);               // remove the tagged name type...actual data remains
-            auto pronunciation_tokens = split(name, '#');
-            // index # alphabet # pronunciation
-            // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
-            uint8_t token_index = 0, index, pronunciation_alphabet;
-            for (const auto& token : pronunciation_tokens) {
-              if (token_index == 0) { // index
-                index = std::stoi(token);
-                token_index++;
-              } else if (token_index == 1) { // pronunciation_alphabet
-                pronunciation_alphabet = std::stoi(token);
-                token_index++;
-              } else { // value
-                std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
-                    index_pronunciation_map.find(index);
+      const auto* name = names_list_ + ni->name_offset_;
+      try {
+        TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
+        if (tv == baldr::TaggedValue::kPronunciation) {
 
-                if (iter == index_pronunciation_map.end())
-                  index_pronunciation_map.emplace(
-                      std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
-                else {
-                  if (pronunciation_alphabet > (iter->second).first) {
-                    iter->second = std::make_pair(pronunciation_alphabet, token);
-                  }
-                }
-                token_index = 0;
-              }
-            }
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
+          std::string pronunciation;
+          size_t pos = 1;
+           while(pos < strlen(name)) {
+             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+             pos += 3;
+
+             pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
+
+             std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
+                 index_pronunciation_map.find(header.name_index_);
+
+             if (iter == index_pronunciation_map.end())
+               index_pronunciation_map.emplace(
+                   std::make_pair(header.name_index_, std::make_pair(header.phonetic_alphabet_, pronunciation)));
+             else {
+               if (header.phonetic_alphabet_ > (iter->second).first) {
+                 iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
+               }
+             }
+
+             pos += header.length_;
+           }
+
         }
-      } else {
-        throw std::runtime_error("GetPronunciationsMap: Tagged name with no text");
+      } catch (const std::invalid_argument& arg) {
+        LOG_DEBUG("invalid_argument thrown for name: " + name);
       }
     } else {
       throw std::runtime_error("GetPronunciationsMap: offset exceeds size of text list");
