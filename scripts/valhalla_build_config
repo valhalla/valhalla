@@ -596,4 +596,4 @@ if __name__ == '__main__':
     override_config(args.__dict__, leaves, config)
 
     # show the config
-    print((json.dumps(config, sort_keys=True, indent=2, separators=(',', ': '))))
+    print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
