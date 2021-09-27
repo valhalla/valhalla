@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
     while (len(bounding_boxes) != 0):
       b_box = bounding_boxes.pop(0)
-      for level, tiles in list(tile_hierarchy.levels.items()):
+      for level, tiles in tile_hierarchy.levels.items():
         mincol = tiles.Col(b_box.minx)
         i = tiles.Row(b_box.miny)
         while i <= tiles.Row(b_box.maxy):

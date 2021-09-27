@@ -82,7 +82,7 @@ def last_build_successful():
         return False, None
 
     # Return False if any of the jobs were not in 'success' state
-    for status, gitsha in list(job_status.values()):
+    for status, gitsha in job_status.values():
         if status != 'success':
             return False, gitsha
 

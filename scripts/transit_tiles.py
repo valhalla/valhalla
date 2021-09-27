@@ -135,13 +135,13 @@ def check_args(argv):
       valhalla_config = json.load(config_file)
 
       for level in valhalla_config['mjolnir']['hierarchy']['levels']:
-         if 'name' in list(level.keys()):
+         if 'name' in level.keys():
             if (level['name'] == 'local'):
-               if 'level' in list(level.keys()):
+               if 'level' in level.keys():
                   level_ = level['level']
                else: 
                   print('Using default level.')
-               if 'size' in list(level.keys()):
+               if 'size' in level.keys():
                   tilesize_ = level['size']
                else:
                   print('Using default size.')
@@ -242,7 +242,7 @@ if __name__ == "__main__":
                   meta = tl_stops.kv.get('meta', [])
 
                   for tl_s in tl_stops.kv.get('stops', []):
-                     list(map(tl_s.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','created_at','updated_at','operators_serving_stop','routes_serving_stop']))
+                     map(tl_s.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','created_at','updated_at','operators_serving_stop','routes_serving_stop'])
                      onestop_id = tl_s['onestop_id']
                      if onestop_id not in onestops:
                         onestops[onestop_id] = onestop_key
@@ -257,7 +257,7 @@ if __name__ == "__main__":
                   print(url)
                   dictionary['stops_url'].append(url)
 
-                  if 'next' in list(meta.keys()):
+                  if 'next' in meta.keys():
                      url = meta['next']
                      url += '&api_key='
                      url += api_key
@@ -283,7 +283,7 @@ if __name__ == "__main__":
                   dictionary['schedule_stop_pairs_url'].append(url)
 
                   for tl_s_p in tl_stop_pairs.kv.get('schedule_stop_pairs', []):
-                     list(map(tl_s_p.pop, ['origin_timezone','destination_timezone','pickup_type','drop_off_type', 'shape_dist_traveled','origin_arrival_time','destination_departure_time','window_start','window_end','origin_timepoint_source','destination_timepoint_source','created_at','updated_at']))
+                     map(tl_s_p.pop, ['origin_timezone','destination_timezone','pickup_type','drop_off_type', 'shape_dist_traveled','origin_arrival_time','destination_departure_time','window_start','window_end','origin_timepoint_source','destination_timepoint_source','created_at','updated_at'])
 
                      end_date = datetime.strptime(tl_s_p['service_end_date'],"%Y-%m-%d").date()
                      
@@ -327,7 +327,7 @@ if __name__ == "__main__":
                   if not stop_pairs:
                      break;
 
-                  if 'next' in list(meta.keys()):
+                  if 'next' in meta.keys():
                      url = meta['next']
                      url += '&api_key='
                      url += api_key
@@ -358,7 +358,7 @@ if __name__ == "__main__":
                   routes['route_url'].append(url)
 
                   for tl_r in tl_routes.kv.get('routes', []):
-                     list(map(tl_r.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','geometry','created_at','updated_at']))
+                     map(tl_r.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','geometry','created_at','updated_at'])
 
                      onestop_id = tl_r['onestop_id']
                      if onestop_id not in onestops:
@@ -372,7 +372,7 @@ if __name__ == "__main__":
                   if not routes:
                      break;
 
-                  if 'next' in list(meta.keys()):
+                  if 'next' in meta.keys():
                      url = meta['next']
                      url += '&api_key='
                      url += api_key
