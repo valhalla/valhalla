@@ -129,10 +129,11 @@ message TransitPlatformInfo {
 
 message Pronunciation {
   enum Alphabet {
-    kIpa = 0;
-    kXKatakana = 1;
-    kXJeita = 2;
-    kNtSampa = 3;
+    kNone = 0;
+    kIpa = 1;
+    kXKatakana = 2;
+    kXJeita = 3;
+    kNtSampa = 4;
   }
   optional Alphabet alphabet = 1 [default = kIpa];
   optional string value = 2;
