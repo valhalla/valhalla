@@ -131,7 +131,6 @@ inline Pronunciation_Alphabet
 GetTripPronunciationAlphabet(const valhalla::baldr::PronunciationAlphabet pronunciation_alphabet) {
   switch (pronunciation_alphabet) {
     case baldr::PronunciationAlphabet::kNone:
-      return Pronunciation_Alphabet_kNone;
     case baldr::PronunciationAlphabet::kIpa:
       return Pronunciation_Alphabet_kIpa;
     case baldr::PronunciationAlphabet::kXKatakana:
