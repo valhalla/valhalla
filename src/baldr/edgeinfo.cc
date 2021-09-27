@@ -126,13 +126,14 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
             continue;
 
           size_t pos = 1;
-           while(pos < strlen(name)) {
-             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
-             pos += 3;
-             pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
-             pos += header.length_;
-           }
-           names.emplace_back(std::move(pronunciation));
+          while (pos < strlen(name)) {
+            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+            pos += 3;
+            pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
+                                 (name + pos));
+            pos += header.length_;
+          }
+          names.emplace_back(std::move(pronunciation));
 
         } else if (!only_pronunciations) {
           names.push_back(name);
@@ -236,27 +237,27 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
 
           std::string pronunciation;
           size_t pos = 1;
-           while(pos < strlen(name)) {
-             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
-             pos += 3;
+          while (pos < strlen(name)) {
+            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+            pos += 3;
 
-             pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
+            pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
 
-             std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
-                 index_pronunciation_map.find(header.name_index_);
+            std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
+                index_pronunciation_map.find(header.name_index_);
 
-             if (iter == index_pronunciation_map.end())
-               index_pronunciation_map.emplace(
-                   std::make_pair(header.name_index_, std::make_pair(header.phonetic_alphabet_, pronunciation)));
-             else {
-               if (header.phonetic_alphabet_ > (iter->second).first) {
-                 iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
-               }
-             }
+            if (iter == index_pronunciation_map.end())
+              index_pronunciation_map.emplace(
+                  std::make_pair(header.name_index_,
+                                 std::make_pair(header.phonetic_alphabet_, pronunciation)));
+            else {
+              if (header.phonetic_alphabet_ > (iter->second).first) {
+                iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
+              }
+            }
 
-             pos += header.length_;
-           }
-
+            pos += header.length_;
+          }
         }
       } catch (const std::invalid_argument& arg) {
         LOG_DEBUG("invalid_argument thrown for name: " + name);
