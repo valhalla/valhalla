@@ -71,16 +71,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     return;
   }
 
-  // TODO: DELETE ME
-  for (const auto& e : baldr::GraphTile::GetDirectedEdges()) {
-    auto ei = edgeinfo(&e);
-    auto f = ei.GetTaggedValues(true);
-
-    for (auto& t:f)
-      std::cout << "GT tags " << t << std::endl;
-
-  }
-
   // Street name info. Unique set of offsets into the text list
   std::set<NameInfo> name_info;
   name_info.insert({0});
@@ -203,10 +193,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
     // compute the width of the entry by looking at the next offset or the end if its the last one
     auto next = std::next(ni);
-    auto width = next != name_info.end() ? next->name_offset_ - ni->name_offset_
-                                         : textlist_size_ - ni->name_offset_;
-    // Keep the bytes for this entry
-    textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width);
+    auto width = next != name_info.end() ? (next->name_offset_ - ni->name_offset_)
+                                         : (textlist_size_ - ni->name_offset_);
+
+    // Keep the bytes for this entry....remove null terminating char as it is added in StoreTileData
+    textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width - 1);
     // Remember what offset they had
     text_offset_map_.emplace(textlistbuilder_.back(), ni->name_offset_);
     // Keep track of how large it is for storing it back to disk later
