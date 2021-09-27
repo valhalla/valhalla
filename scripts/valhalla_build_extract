@@ -41,6 +41,7 @@ class TileHeader(ctypes.Structure):
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument("-c", "--config", help="Absolute or relative path to the Valhalla config JSON.", type=Path)
+parser.add_argument("-i", "--inline-config", help="Inline JSON config, will override --config JSON if present", type=str, default='{}')
 parser.add_argument("-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False)
 parser.add_argument("-v", "--verbosity", help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG", action='count', default=0)
 
@@ -98,9 +99,9 @@ def write_index_to_tar(tar_fp_: Path):
 
 def create_extracts(config_: dict, do_traffic: bool):
     """Actually creates the tar ball. Break out of main function for testability."""
-    tiles_fp: Path = Path(config_["mjolnir"]["tile_dir"])
-    extract_fp: Path = Path(config_["mjolnir"]["tile_extract"] or tiles_fp.parent.joinpath('valhalla_tiles.tar'))
-    traffic_fp: Path = Path(config["mjolnir"]["traffic_extract"] or tiles_fp.parent.joinpath('traffic.tar'))
+    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir"))
+    extract_fp: Path = Path(config_["mjolnir"].get("tile_extract") or tiles_fp.parent.joinpath('valhalla_tiles.tar'))
+    traffic_fp: Path = Path(config_["mjolnir"].get("traffic_extract") or tiles_fp.parent.joinpath('traffic.tar'))
 
     if not tiles_fp.is_dir():
         LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp} was not found on the filesystem.")
@@ -169,8 +170,18 @@ def create_extracts(config_: dict, do_traffic: bool):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    with open(args.config) as f:
-        config = json.load(f)
+
+    config = dict()
+    if args.config.exists():
+        with open(args.config) as f:
+            config = json.load(f)
+    
+    # override with inline-config
+    config.update(**json.loads(args.inline_config))
+
+    if not config:
+        LOGGER.critical("No valid config file or inline config used.")
+        sys.exit(1)
 
     # set the right logger level
     if args.verbosity == 0:

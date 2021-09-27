@@ -670,14 +670,10 @@ struct tar {
   std::unordered_map<entry_name_t, entry_location_t> contents;
   size_t corrupt_blocks;
 
-  enum class TarType { kTiles = 0, kTraffic = 1 };
-
   tar(const std::string& tar_file,
-      TarType tar_type,
       bool regular_files_only = true,
-      const std::function<decltype(
-          contents)(const std::string&, const char*, const char*, size_t, TarType)>& from_index =
-          nullptr)
+      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
+          from_index = nullptr)
       : tar_file(tar_file), corrupt_blocks(0) {
     // get the file size
     struct stat s;
@@ -719,7 +715,7 @@ struct tar {
         // the caller may be able to construct the contents via an index header let them try
         if (!tried_index && from_index != nullptr) {
           tried_index = true;
-          contents = from_index(name, position, mm.get(), size, tar_type);
+          contents = from_index(name, position, mm.get(), size);
           // if it was able to intialize from an index we bail
           if (!contents.empty())
             return;
