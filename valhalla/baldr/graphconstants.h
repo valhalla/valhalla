@@ -366,7 +366,15 @@ enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kBridge = static_cast<uint8_t>('2'),
 };
 
-enum class PronunciationAlphabet : uint8_t { kIpa = 0, kXKatakana = 1, kXJeita = 2, kNtSampa = 3 };
+enum class PronunciationAlphabet : uint8_t {
+  kNone = 0,
+  kIpa = 1,
+  kXKatakana = 2,
+  kXJeita = 3,
+  kNtSampa = 4
+};
+// must start at 1 due to nulls
+enum class Language : uint8_t { kNone = 1 };
 
 // Speed type
 enum class SpeedType : uint8_t {
