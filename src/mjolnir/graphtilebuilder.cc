@@ -71,6 +71,16 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     return;
   }
 
+  // TODO: DELETE ME
+  for (const auto& e : baldr::GraphTile::GetDirectedEdges()) {
+    auto ei = edgeinfo(&e);
+    auto f = ei.GetTaggedValues(true);
+
+    for (auto& t:f)
+      std::cout << "GT tags " << t << std::endl;
+
+  }
+
   // Street name info. Unique set of offsets into the text list
   std::set<NameInfo> name_info;
   name_info.insert({0});
@@ -190,23 +200,17 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   }
 
   // Text list
-  for (auto ni : name_info) {
-    // Verify offsets as we add text. Identify any strings in the text list
-    // that are not referenced by any objects.
-    while (ni.name_offset_ != text_list_offset_) {
-      std::string unused_string(textlist_ + text_list_offset_);
-      textlistbuilder_.push_back(unused_string);
-
-      text_offset_map_.emplace(unused_string, text_list_offset_);
-      text_list_offset_ += unused_string.length() + 1;
-
-      LOG_WARN("Unused text string: " + unused_string);
-    }
-    std::string str(textlist_ + ni.name_offset_);
-    textlistbuilder_.push_back(str);
-    uint32_t offset = ni.name_offset_;
-    text_offset_map_.emplace(str, offset);
-    text_list_offset_ += str.length() + 1;
+  for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
+    // compute the width of the entry by looking at the next offset or the end if its the last one
+    auto next = std::next(ni);
+    auto width = next != name_info.end() ? next->name_offset_ - ni->name_offset_
+                                         : textlist_size_ - ni->name_offset_;
+    // Keep the bytes for this entry
+    textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width);
+    // Remember what offset they had
+    text_offset_map_.emplace(textlistbuilder_.back(), ni->name_offset_);
+    // Keep track of how large it is for storing it back to disk later
+    text_list_offset_ += textlistbuilder_.back().length() + 1;
   }
 
   // Lane connectivity
@@ -640,8 +644,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          if (ss.str().size())
-            ss << "#";
           ss << pronunciation;
         }
 
@@ -785,8 +787,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (name_count != kMaxNamesPerEdge) {
         std::stringstream ss;
         for (const auto& pronunciation : pronunciations) {
-          if (ss.str().size())
-            ss << "#";
           ss << pronunciation;
         }
 
