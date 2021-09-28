@@ -805,40 +805,33 @@ std::vector<SignInfo> GraphTile::GetSigns(
   for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
 
-      std::string text = (textlist_ + signs_[found].text_offset());
+      const auto* text = (textlist_ + signs_[found].text_offset());
       if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
 
         // route_num_type indicates if this phonome is for a node or not
         if ((signs_[found].route_num_type() && signs_on_node) ||
             (!signs_[found].route_num_type() && !signs_on_node)) {
+          std::string pronunciation;
+          size_t pos = 0;
+          while (pos < strlen(text)) {
+            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(text + pos);
+            pos += 3;
 
-          auto pronunciation_tokens = split(text, '#');
-          // index # alphabet # pronunciation
-          // 0     # 1        # ˌwɛst ˈhaʊstən stɹiːt
-          uint8_t token_index = 0;
-          uint32_t index;
-          uint8_t pronunciation_alphabet;
-          for (const auto& token : pronunciation_tokens) {
-            if (token_index == 0) { // index
-              index = std::stoi(token);
-              token_index++;
-            } else if (token_index == 1) { // pronunciation_alphabet
-              pronunciation_alphabet = std::stoi(token);
-              token_index++;
-            } else { // value
-              std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::iterator iter =
-                  index_pronunciation_map.find(index);
+            pronunciation = std::string((text + pos), header.length_);
+            std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::iterator iter =
+                index_pronunciation_map.find(header.name_index_);
 
-              if (iter == index_pronunciation_map.end())
-                index_pronunciation_map.emplace(
-                    std::make_pair(index, std::make_pair(pronunciation_alphabet, token)));
-              else {
-                if (pronunciation_alphabet > (iter->second).first) {
-                  iter->second = std::make_pair(pronunciation_alphabet, token);
-                }
+            if (iter == index_pronunciation_map.end())
+              index_pronunciation_map.emplace(
+                  std::make_pair(header.name_index_,
+                                 std::make_pair(header.phonetic_alphabet_, pronunciation)));
+            else {
+              if (header.phonetic_alphabet_ > (iter->second).first) {
+                iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
               }
-              token_index = 0;
             }
+
+            pos += header.length_;
           }
         }
         continue;
