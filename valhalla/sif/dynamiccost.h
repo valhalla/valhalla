@@ -204,7 +204,9 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & access_mask_) || ignore_access_;
+    return ((node->access() & access_mask_) &&
+            !(exclude_cash_only_tolls_ && node->cash_only_toll())) ||
+           ignore_access_;
   }
 
   /**
@@ -889,6 +891,8 @@ protected:
 
   bool exclude_unpaved_{false};
 
+  bool exclude_cash_only_tolls_{false};
+
   // HOT/HOV flags
   bool include_hot_{false};
   bool include_hov2_{false};
@@ -977,6 +981,8 @@ protected:
     top_speed_ = costing_options.top_speed();
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
+
+    exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
   /**
@@ -1082,6 +1088,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
+
+  bool exclude_cash_only_tolls_ = false;
 
   bool include_hot_ = false;
   bool include_hov2_ = false;

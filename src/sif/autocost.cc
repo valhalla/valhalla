@@ -316,8 +316,11 @@ public:
                        uint16_t disallow_mask = kDisallowNone) const override {
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
+    if (exclude_cash_only_tolls_ && edge->cash_only_toll())
+      printf("");
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge);
+           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge) &&
+           !(exclude_cash_only_tolls_ && edge->cash_only_toll());
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -437,7 +440,9 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && edge->cash_only_toll()) ||
+      !IsHOVAllowed(edge)) {
     return false;
   }
 
@@ -462,7 +467,9 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge)) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && opp_edge->cash_only_toll()) ||
+      !IsHOVAllowed(opp_edge)) {
     return false;
   }
 
@@ -840,7 +847,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && edge->cash_only_toll())) {
     return false;
   }
 
@@ -865,7 +873,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && opp_edge->cash_only_toll())) {
     return false;
   }
 
@@ -1017,7 +1026,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && edge->cash_only_toll())) {
     return false;
   }
 
@@ -1042,7 +1052,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
+      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && opp_edge->cash_only_toll())) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,

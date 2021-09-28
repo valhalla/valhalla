@@ -76,6 +76,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_stop_sign(stop_sign);
   set_yield_sign(yield_sign);
 
+  set_cash_only_toll(way.cash_only_toll());
+
   // temporarily set the deadend flag to indicate if the stop or yield should be at the minor roads
   set_deadend(minor);
 

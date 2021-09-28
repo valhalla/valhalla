@@ -819,12 +819,35 @@ function normalize_measurement(measurement)
   return nil
 end
 
+function is_cash_only_payment(kv)
+  local allows_cash_payment = false
+  local allows_noncash_payment = false
+  for key, value in pairs(kv) do
+    if string.sub(key, 1, 8) == "payment:" then
+      local payment_type = string.sub(key, 9, -1)
+      local is_cash_payment_type = payment_type == "cash" or payment_type == "notes" or payment_type == "coins"
+      if (is_cash_payment_type == true and allows_cash_payment == false) then
+        allows_cash_payment = value ~= "no"
+      end
+      if (is_cash_payment_type == false and allows_noncash_payment == false) then
+        allows_noncash_payment = value ~= "no"
+      end
+    end
+  end
+
+  local cash_only_payment = allows_cash_payment == true and allows_noncash_payment == false
+
+  return cash_only_payment
+end
+
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 
   if (kv["highway"] == "construction" or kv["highway"] == "proposed") then
     return 1
   end
+
+  local cash_only_payment = is_cash_only_payment(kv)
 
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
@@ -1692,7 +1715,6 @@ function filter_tags_generic(kv)
   end
 
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
-  kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
   kv["destination:forward"] = kv["destination:forward"]
   kv["destination:backward"] = kv["destination:backward"]
@@ -1704,6 +1726,10 @@ function filter_tags_generic(kv)
   kv["turn:lanes"] = kv["turn:lanes"]
   kv["turn:lanes:forward"] = kv["turn:lanes:forward"]
   kv["turn:lanes:backward"] = kv["turn:lanes:backward"]
+  kv["toll"] = toll[kv["toll"]] or "false"
+  if (kv["toll"] == "true" and cash_only_payment) then
+    kv["cash_only_toll"] = "true"
+  end
 
   --truck goodies
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
@@ -1748,6 +1774,8 @@ function filter_tags_generic(kv)
 end
 
 function nodes_proc (kv, nokeys)
+
+  local cash_only_payment = is_cash_only_payment(kv)
 
   if kv["iso:3166_2"] then
     i, j = string.find(kv["iso:3166_2"], '-', 1, true)
@@ -1963,39 +1991,12 @@ function nodes_proc (kv, nokeys)
     kv["border_control"] = "true"
   elseif kv["barrier"] == "toll_booth" then
     kv["toll_booth"] = "true"
+    if cash_only_payment then
+      kv["cash_only_toll"] = "true"
+    end
   elseif kv["highway"] == "toll_gantry" then
     kv["toll_gantry"] = "true"
   end
-
-  local coins = toll[kv["payment:coins"]] or "false"
-  local notes = toll[kv["payment:notes"]] or "false"
-
-  --assume cash for toll, toll:*, and fee
-  local cash =  toll[kv["toll"]] or toll[kv["toll:hgv"]] or toll[kv["toll:bicycle"]] or toll[kv["toll:hov"]] or
-                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or
-                toll[kv["toll:motorcycle"]] or toll[kv["payment:cash"]] or toll[kv["fee"]] or "false"
-
-  local etc = toll[kv["payment:e_zpass"]] or toll[kv["payment:e_zpass:name"]] or
-              toll[kv["payment:pikepass"]] or toll[kv["payment:via_verde"]] or "false"
-
-  local cash_payment = 0
-
-  if (cash == "true" or (coins == "true" and notes == "true")) then
-    cash_payment = 3
-  elseif coins == "true" then
-    cash_payment = 1
-  elseif notes == "true" then
-    cash_payment = 2
-  end
-
-  local etc_payment = 0
-
-  if etc == "true" then
-    etc_payment = 4
-  end
-
-  --store a mask denoting payment type
-  kv["payment_mask"] = bit.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
