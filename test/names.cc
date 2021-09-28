@@ -11,39 +11,22 @@ using namespace valhalla::baldr;
 
 namespace {
 
-std::vector<std::string> split(const std::string& source, char delimiter) {
-  std::vector<std::string> tokens;
-  std::string token;
-  std::istringstream tokenStream(source);
-  while (std::getline(tokenStream, token, delimiter)) {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
-
 void TestKeyTypeValue(const std::string& pronunciation,
                       uint32_t expected_key,
                       PronunciationAlphabet expected_type,
                       const std::string& expected_value) {
 
-  auto verbal_tokens = split(pronunciation, '#');
-  // 0 \0 1 \0 ˌwɛst ˈhaʊstən stɹiːt
-  // key  type value
-  uint8_t index = 0;
-  std::string key, type;
-  for (const auto& v : verbal_tokens) {
-    if (index == 0) { // key
-      key = v;
-      index++;
-    } else if (index == 1) { // type
-      type = v;
-      index++;
-    } else { // value
-      index = 0;
-      EXPECT_EQ(std::stoi(key), expected_key);
-      EXPECT_EQ(static_cast<PronunciationAlphabet>(std::stoi(type)), expected_type);
-      EXPECT_EQ(v, expected_value);
-    }
+  auto* p = const_cast<char*>(pronunciation.c_str());
+
+  size_t pos = 0;
+  while (pos < strlen(p)) {
+    const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(p + pos);
+    pos += 3;
+    EXPECT_EQ(header.name_index_, expected_key);
+    EXPECT_EQ(static_cast<PronunciationAlphabet>(header.phonetic_alphabet_), expected_type);
+    EXPECT_EQ(std::string((p + pos), header.length_), expected_value);
+
+    pos += header.length_;
   }
 }
 
