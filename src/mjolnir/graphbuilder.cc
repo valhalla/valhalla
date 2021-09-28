@@ -1344,7 +1344,7 @@ void GraphBuilder::GetPronunciationTokens(const OSMData& osmdata,
 }
 
 void GraphBuilder::AddPronunciation(const baldr::PronunciationAlphabet alphabet,
-                                    const std::string phoneme,
+                                    const std::string& phoneme,
                                     std::vector<std::string>& pronunciations) {
 
   // TODO set the language
@@ -1355,10 +1355,10 @@ void GraphBuilder::AddPronunciation(const baldr::PronunciationAlphabet alphabet,
       std::move((std::string(reinterpret_cast<const char*>(&header), 3) + phoneme)));
 }
 
-void GraphBuilder::BuildPronunciations(const std::vector<std::string> ipa_tokens,
-                                       const std::vector<std::string> nt_sampa_tokens,
-                                       const std::vector<std::string> katakana_tokens,
-                                       const std::vector<std::string> jeita_tokens,
+void GraphBuilder::BuildPronunciations(const std::vector<std::string>& ipa_tokens,
+                                       const std::vector<std::string>& nt_sampa_tokens,
+                                       const std::vector<std::string>& katakana_tokens,
+                                       const std::vector<std::string>& jeita_tokens,
                                        const size_t index,
                                        std::vector<std::string>& pronunciations,
                                        bool add_ipa,
