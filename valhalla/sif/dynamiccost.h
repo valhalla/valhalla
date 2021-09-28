@@ -891,7 +891,7 @@ protected:
 
   bool exclude_unpaved_{false};
 
-  bool exclude_cash_only_tolls_{false};
+  bool exclude_cash_only_tolls_{true}; // temporarily enabling for testing
 
   // HOT/HOV flags
   bool include_hot_{false};
@@ -982,7 +982,8 @@ protected:
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 
-    exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    // temporarily enabling for testing
+    exclude_cash_only_tolls_ = true; // costing_options.exclude_cash_only_tolls();
   }
 
   /**
@@ -1089,7 +1090,7 @@ struct BaseCostingOptionsConfig {
 
   bool exclude_unpaved_;
 
-  bool exclude_cash_only_tolls_ = false;
+  bool exclude_cash_only_tolls_ = true; // temporarily enabling for testing
 
   bool include_hot_ = false;
   bool include_hov2_ = false;
