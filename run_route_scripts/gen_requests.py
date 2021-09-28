@@ -13,7 +13,7 @@ import random
 # TODO: use argparse to parse other request options and validate quadruplets
 
 # generate a certain number of random lls around a center ll with a certain radius
-def get_random_locs(yc, xc, radius, count):
+def get_random_locs(yc, xc, radius, count, waypoint_type):
     locs = []
     rads = radius / 110567.0
     for i in range(0, count):
@@ -25,35 +25,20 @@ def get_random_locs(yc, xc, radius, count):
         y = r * math.sin(c)
         x += xc
         y += yc
-        locs.append({'lon':round(x, 6),'lat':round(y, 6),'type':"break"});
+        locs.append({'lon':round(x, 6),'lat':round(y, 6),'type':waypoint_type});
     return locs
     
-def get_random_intermediate_locs(yc, xc, radius, count, intermediate):
-    intermediate_locs = []
-    rads = radius / 110567.0
-    for i in range(0, count):
-        a = float(random.uniform(0.0, 1.0))
-        b = float(random.uniform(0.0, 1.0))
-        r = rads * math.sqrt(a)
-        c = 2 * math.pi * b
-        x = r * math.cos(c)
-        y = r * math.sin(c)
-        x += xc
-        y += yc
-        intermediate_locs.append({'lon':round(x, 6),'lat':round(y, 6),'type':intermediate});
-    return intermediate_locs
-
 # do each input quadruplet
 locs = []
 intermediate_locs = []
 for arg in sys.argv[1:]:
     if (len(arg.split(',')) > 4):
-        y, x, radius, count, intermediate = arg.split(',')
-        locs.extend(get_random_locs(float(y), float(x), float(radius), int(count)))
-        intermediate_locs.extend(get_random_intermediate_locs(float(y), float(x),   float(radius), int(count), str(intermediate)))
+        y, x, radius, count, waypoint_type = arg.split(',')
+        locs.extend(get_random_locs(float(y), float(x), float(radius), int(count), "break"))
+        intermediate_locs.extend(get_random_locs(float(y), float(x),   float(radius), int(count), str(waypoint_type)))
     else:
         y, x, radius, count = arg.split(',')
-        locs.extend(get_random_locs(float(y), float(x), float(radius), int(count)))
+        locs.extend(get_random_locs(float(y), float(x), float(radius), int(count), "break"))
 
 # make requests
 if (intermediate_locs):
@@ -62,9 +47,9 @@ if (intermediate_locs):
             for end in locs:
                 if start == end:
                     continue
-            req = {'locations':[start, intermediates, end], 'costing': 'auto', 'shape_format': 'polyline6', 'format':'osrm'}
-            #req = {'locations':[start, intermediates[start], end], 'costing': 'bicycle'}
-            #req = {'locations':[start, intermediates[start], end], 'costing': 'pedestrian'}
+                req = {'locations':[start, intermediates, end], 'costing': 'auto', 'shape_format': 'polyline6', 'format':'osrm'}
+                #req = {'locations':[start, intermediates, end], 'costing': 'bicycle'}
+                #req = {'locations':[start, intermediates, end], 'costing': 'pedestrian'}
             print(json.dumps(req, separators=(',', ':')))
 else:
     for start in locs:
