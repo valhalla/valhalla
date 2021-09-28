@@ -1354,20 +1354,54 @@ void GraphBuilder::AddPronunciations(const std::vector<std::string>& ipa_tokens,
                                      bool add_katakana,
                                      bool add_jeita) {
 
-  if (add_ipa)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kIpa)) +
-                                '#' + ipa_tokens[index]);
-  if (add_nt_sampa)
-    pronunciations.emplace_back(
-        std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kNtSampa)) + '#' +
-        nt_sampa_tokens[index]);
-  if (add_katakana)
-    pronunciations.emplace_back(
-        std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXKatakana)) + '#' +
-        katakana_tokens[index]);
-  if (add_jeita)
-    pronunciations.emplace_back(std::to_string(static_cast<uint8_t>(PronunciationAlphabet::kXJeita)) +
-                                '#' + jeita_tokens[index]);
+  // TODO refactor this
+
+  if (add_ipa) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(PronunciationAlphabet::kIpa),
+                                    static_cast<uint8_t>(0)};
+    std::string pronunciation;
+    const auto t = ipa_tokens[index];
+    header.length_ = t.size();
+    pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
+    pronunciations.emplace_back(std::move(pronunciation));
+  }
+
+  if (add_nt_sampa) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(PronunciationAlphabet::kNtSampa),
+                                    static_cast<uint8_t>(0)};
+
+    std::string pronunciation;
+    const auto t = nt_sampa_tokens[index];
+    header.length_ = t.size();
+    pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
+    pronunciations.emplace_back(std::move(pronunciation));
+  }
+
+  if (add_katakana) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(PronunciationAlphabet::kXKatakana),
+                                    static_cast<uint8_t>(0)};
+
+    std::string pronunciation;
+    const auto t = katakana_tokens[index];
+    header.length_ = t.size();
+    pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
+    pronunciations.emplace_back(std::move(pronunciation));
+  }
+
+  if (add_jeita) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(PronunciationAlphabet::kXJeita),
+                                    static_cast<uint8_t>(0)};
+
+    std::string pronunciation;
+    const auto t = jeita_tokens[index];
+    header.length_ = t.size();
+    pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
+    pronunciations.emplace_back(std::move(pronunciation));
+  }
 }
 
 bool GraphBuilder::CreateSignInfoList(const OSMNode& node,

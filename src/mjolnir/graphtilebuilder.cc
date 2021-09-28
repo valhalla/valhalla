@@ -506,9 +506,20 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
         bool phoneme_on_node = sign.type() == Sign::Type::kJunctionName;
         uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
         for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
-          std::stringstream ss;
-          ss << std::to_string(i) << '#' << pronunciations[x];
-          uint32_t offset = AddName(ss.str());
+          auto* p = const_cast<char*>(pronunciations[x].c_str());
+          size_t pos = 0;
+          std::string updated_pronunciation;
+
+          while (pos < strlen(p)) {
+            linguistic_text_header_t header = *reinterpret_cast<linguistic_text_header_t*>(p + pos);
+            pos += 3;
+            header.name_index_ = i;
+            updated_pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
+                                         (p + pos));
+            pos += header.length_;
+          }
+
+          uint32_t offset = AddName(updated_pronunciation);
           signs_builder_.emplace_back(idx, Sign::Type::kPronunciation, phoneme_on_node, true, offset);
         }
       }
