@@ -54,9 +54,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     pkg-config \
     prime-server${primeserver_version}-bin \
     protobuf-compiler \
-    python-all-dev \
     python3-all-dev \
-    python3-minimal \
     spatialite-bin \
     unzip \
     zlib1g-dev \
