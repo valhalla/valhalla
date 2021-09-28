@@ -129,17 +129,18 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
           while (pos < strlen(name)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
             pos += 3;
-            pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
-                                 (name + pos));
+            pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) +
+                             std::string((name + pos), header.length_));
+            names.emplace_back(pronunciation);
+
             pos += header.length_;
           }
-          names.emplace_back(std::move(pronunciation));
 
         } else if (!only_pronunciations) {
           names.push_back(name);
         }
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + name);
+        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
@@ -240,9 +241,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
           while (pos < strlen(name)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
             pos += 3;
-
-            pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) + (name + pos));
-
+            pronunciation = std::string((name + pos), header.length_);
             std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
                 index_pronunciation_map.find(header.name_index_);
 
