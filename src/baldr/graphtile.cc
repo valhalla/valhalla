@@ -811,23 +811,23 @@ std::vector<SignInfo> GraphTile::GetSigns(
         // route_num_type indicates if this phonome is for a node or not
         if ((signs_[found].route_num_type() && signs_on_node) ||
             (!signs_[found].route_num_type() && !signs_on_node)) {
-          std::string pronunciation;
           size_t pos = 0;
           while (pos < strlen(text)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(text + pos);
             pos += 3;
 
-            pronunciation = std::string((text + pos), header.length_);
             std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::iterator iter =
                 index_pronunciation_map.find(header.name_index_);
 
             if (iter == index_pronunciation_map.end())
               index_pronunciation_map.emplace(
                   std::make_pair(header.name_index_,
-                                 std::make_pair(header.phonetic_alphabet_, pronunciation)));
+                                 std::make_pair(header.phonetic_alphabet_,
+                                                std::string((text + pos), header.length_))));
             else {
               if (header.phonetic_alphabet_ > (iter->second).first) {
-                iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
+                iter->second = std::make_pair(header.phonetic_alphabet_,
+                                              std::string((text + pos), header.length_));
               }
             }
 
