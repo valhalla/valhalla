@@ -249,12 +249,12 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
     // Only create via_waypoints object if the locations are via or through types
     if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
       auto via_waypoint = json::map({});
-      via_waypoint->emplace("distance",
-                            json::fixed_t{to_ll(loc.ll()).Distance(to_ll(loc.path_edges(0).ll())),
-                                          3});
+      // via_waypoint->emplace("distance",
+      // json::fixed_t{to_ll(loc.ll()).Distance(to_ll(loc.path_edges(0).ll())),
+      // 3});
+      via_waypoint->emplace("geometry_index", static_cast<uint64_t>(loc.leg_shape_index()));
       via_waypoint->emplace("distance_from_start", json::fixed_t{loc.distance_from_origin(), 3});
       via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(loc.original_index()));
-      via_waypoint->emplace("geometry_index", static_cast<uint64_t>(loc.leg_shape_index()));
       via_waypoints->emplace_back(via_waypoint);
     }
   }
