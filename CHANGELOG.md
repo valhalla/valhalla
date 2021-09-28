@@ -44,6 +44,7 @@
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
    * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
    * CHANGED: Update python usage innall scripts to python3 [#3337](https://github.com/valhalla/valhalla/pull/3337)
+   * ADDED: Added `exclude_cash_only_tolls` request parameter [#3341](https://github.com/valhalla/valhalla/pull/3341)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
