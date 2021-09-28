@@ -259,7 +259,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
           }
         }
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + name);
+        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
       }
     } else {
       throw std::runtime_error("GetPronunciationsMap: offset exceeds size of text list");
