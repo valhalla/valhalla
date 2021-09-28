@@ -68,16 +68,20 @@ public:
                                      std::vector<std::string>& jeita_tokens,
                                      bool is_node_pronunciation = false);
 
-  static void AddPronunciations(const std::vector<std::string>& ipa_tokens,
-                                const std::vector<std::string>& nt_sampa_tokens,
-                                const std::vector<std::string>& katakana_tokens,
-                                const std::vector<std::string>& jeita_tokens,
-                                const size_t index,
-                                std::vector<std::string>& pronunciations,
-                                bool add_ipa,
-                                bool add_nt_sampa,
-                                bool add_katakana,
-                                bool add_jeita);
+  static void AddPronunciation(const baldr::PronunciationAlphabet alphabet,
+                               const std::string phoneme,
+                               std::vector<std::string>& pronunciations);
+
+  static void BuildPronunciations(const std::vector<std::string> ipa_tokens,
+                                  const std::vector<std::string> nt_sampa_tokens,
+                                  const std::vector<std::string> katakana_tokens,
+                                  const std::vector<std::string> jeita_tokens,
+                                  const size_t index,
+                                  std::vector<std::string>& pronunciations,
+                                  bool add_ipa,
+                                  bool add_nt_sampa,
+                                  bool add_katakana,
+                                  bool add_jeita);
 
   static bool CreateSignInfoList(const OSMNode& node,
                                  const OSMWay& way,
