@@ -464,6 +464,7 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
+  // if toll_==true, indicates if it is cash-only
   uint32_t cash_only_toll_ : 1;
   uint32_t spare : 13;
 

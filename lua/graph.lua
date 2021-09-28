@@ -819,6 +819,15 @@ function normalize_measurement(measurement)
   return nil
 end
 
+-- Returns true if the only payment types present are cash. Example payment kv's look like:
+-- payment:cash=yes
+-- payment:credit_cards=no
+-- There can be multiple payment types on a given way/node. This routine determines
+-- if the payment types on the way/node are all cash types. There are (at the moment) 60
+-- types of payments, but only three are cash: cash, notes, coins.
+-- Examining the types of values you might find for 'payment:coins' the predominant
+-- usages are 'yes' and 'no'. However, there are also some values like '$0.35' and 'euro'.
+-- Hence, this routine considers ~'NO' an affirmative value.
 function is_cash_only_payment(kv)
   local allows_cash_payment = false
   local allows_noncash_payment = false
@@ -827,10 +836,10 @@ function is_cash_only_payment(kv)
       local payment_type = string.sub(key, 9, -1)
       local is_cash_payment_type = payment_type == "cash" or payment_type == "notes" or payment_type == "coins"
       if (is_cash_payment_type == true and allows_cash_payment == false) then
-        allows_cash_payment = value ~= "no"
+        allows_cash_payment = string.upper(value) ~= "NO"
       end
       if (is_cash_payment_type == false and allows_noncash_payment == false) then
-        allows_noncash_payment = value ~= "no"
+        allows_noncash_payment = string.upper(value) ~= "NO"
       end
     end
   end

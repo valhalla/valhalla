@@ -1721,7 +1721,7 @@ struct OSMWay {
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
   uint32_t hov_type_ : 1;
-  uint32_t cash_only_toll_ : 1; // if the way is toll=true, is it cash-only?
+  uint32_t cash_only_toll_ : 1; // if toll_==true, indicates if it is cash-only
   uint32_t pedestrian_forward_ : 1;
   uint32_t pedestrian_backward_ : 1;
 

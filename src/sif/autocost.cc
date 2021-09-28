@@ -316,11 +316,8 @@ public:
                        uint16_t disallow_mask = kDisallowNone) const override {
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
-    if (exclude_cash_only_tolls_ && edge->cash_only_toll())
-      printf("");
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge) &&
-           !(exclude_cash_only_tolls_ && edge->cash_only_toll());
+           (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge);
   }
 
   // Hidden in source file so we don't need it to be protected
