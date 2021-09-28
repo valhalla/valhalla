@@ -110,7 +110,6 @@ std::vector<std::string> EdgeInfo::GetNames() const {
 std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) const {
   // Get each name
   std::vector<std::string> names;
-  std::string pronunciation;
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
@@ -129,9 +128,8 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
           while (pos < strlen(name)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
             pos += 3;
-            pronunciation = (std::string(reinterpret_cast<const char*>(&header), 3) +
-                             std::string((name + pos), header.length_));
-            names.emplace_back(pronunciation);
+            names.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) +
+                                std::string((name + pos), header.length_)));
 
             pos += header.length_;
           }
@@ -165,13 +163,13 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_valu
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1 && IsNameTag(name[0])) {
-          try {
+        try {
+          if (IsNameTag(name[0])) {
             name_type_pairs.push_back({name.substr(1), false});
             types.push_back(static_cast<uint8_t>(name.at(0)));
-          } catch (const std::invalid_argument& arg) {
-            LOG_DEBUG("invalid_argument thrown for name: " + name);
           }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
         }
       } else
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
@@ -198,17 +196,11 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
       if (ni->tagged_) {
         if (ni->name_offset_ < names_list_length_) {
           std::string name = names_list_ + ni->name_offset_;
-          if (name.size() > 1) {
-            uint8_t num = 0;
-            try {
-              num = static_cast<uint8_t>(name.at(0));
-              TaggedValue tv = static_cast<baldr::TaggedValue>(num);
-              if (tv != baldr::TaggedValue::kPronunciation)
-                tag_cache_.emplace(tv, name.substr(1));
-            } catch (const std::logic_error& arg) {
-              LOG_DEBUG("logic_error thrown for name: " + name);
-            }
-          }
+          try {
+            TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
+            if (tv != baldr::TaggedValue::kPronunciation)
+              tag_cache_.emplace(tv, name.substr(1));
+          } catch (const std::logic_error& arg) { LOG_DEBUG("logic_error thrown for name: " + name); }
         } else {
           throw std::runtime_error("GetTags: offset exceeds size of text list");
         }
@@ -235,23 +227,22 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
       try {
         TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
         if (tv == baldr::TaggedValue::kPronunciation) {
-
-          std::string pronunciation;
           size_t pos = 1;
           while (pos < strlen(name)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
             pos += 3;
-            pronunciation = std::string((name + pos), header.length_);
             std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
                 index_pronunciation_map.find(header.name_index_);
 
             if (iter == index_pronunciation_map.end())
               index_pronunciation_map.emplace(
                   std::make_pair(header.name_index_,
-                                 std::make_pair(header.phonetic_alphabet_, pronunciation)));
+                                 std::make_pair(header.phonetic_alphabet_,
+                                                std::string((name + pos), header.length_))));
             else {
               if (header.phonetic_alphabet_ > (iter->second).first) {
-                iter->second = std::make_pair(header.phonetic_alphabet_, pronunciation);
+                iter->second = std::make_pair(header.phonetic_alphabet_,
+                                              std::string((name + pos), header.length_));
               }
             }
 
