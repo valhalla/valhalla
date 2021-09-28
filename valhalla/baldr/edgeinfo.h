@@ -54,7 +54,7 @@ struct NameInfo {
 };
 
 struct linguistic_text_header_t {
-  uint32_t language_ : 8; // derive locale by getting admin info
+  uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
   uint32_t phonetic_alphabet_ : 3;
   uint32_t name_index_ : 4; // what name is this pronunciation for
