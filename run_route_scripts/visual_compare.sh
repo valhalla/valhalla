@@ -20,7 +20,7 @@ input_file1=${3}
 input_file2=${4}
 
 # this will urlencode strings from pipe
-alias urlencode='python -c "import sys; import os; import requests; print(*(requests.utils.quote(line.strip()) for line in sys.stdin), sep=os.linesep)"'
+alias urlencode='python3 -c "import sys; import os; import requests; print(*(requests.utils.quote(line.strip()) for line in sys.stdin), sep=os.linesep)"'
 
 # diff to get the file names, these have the line number in the orginal input
 for i in $(diff -qr ${output_dir1} ${output_dir2} | sed -e "s/.*\///g" -e "s/\..*$//g" | sort -n | grep -v "statistics"); do
