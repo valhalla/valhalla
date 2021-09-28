@@ -488,6 +488,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       if (!temp_path.empty()) {
         auto offset = path.back().elapsed_cost;
         auto distance_offset = path.back().path_distance;
+        // NOTE: This will not work for all algorithms.  At this point, path_distance
+        // is not correct across the board so do not rely on it downstream.
         std::for_each(temp_path.begin(), temp_path.end(), [offset, distance_offset](PathInfo& i) {
           i.elapsed_cost += offset;
           i.path_distance += distance_offset;

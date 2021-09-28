@@ -32,7 +32,6 @@ struct EdgeTrimmingInfo {
  */
 class TripLegBuilder {
 public:
-  using loc_itr = google::protobuf::RepeatedField<valhalla::Location>::iterator;
   /**
    * Form a trip leg out of a path (sequence of path infos)
    *

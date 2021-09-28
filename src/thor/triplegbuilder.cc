@@ -442,6 +442,9 @@ void CopyLocations(TripLeg& trip_path,
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
     // we can grab the right edge index in the path because we temporarily set it for trimming
+    if (!intermediate.has_leg_shape_index()) {
+      throw std::logic_error("leg_shape_index not set for intermediate location");
+    }
     RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
                     (path_begin + intermediate.leg_shape_index())->edgeid);
   }
@@ -1628,7 +1631,7 @@ void TripLegBuilder::Build(
     if (intermediate_itr != trip_path.mutable_location()->end() &&
         intermediate_itr->leg_shape_index() == edge_index) {
       intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
-      intermediate_itr->set_distance_from_origin(total_distance);
+      intermediate_itr->set_distance_from_leg_origin(total_distance);
       // NOTE:
       // So for intermediate locations that dont have any trimming we know they occur at the node
       // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
@@ -1636,7 +1639,7 @@ void TripLegBuilder::Build(
       if (trimming == edge_trimming.end() &&
           (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
         intermediate_itr->set_leg_shape_index(begin_index);
-        intermediate_itr->set_distance_from_origin(previous_total_distance);
+        intermediate_itr->set_distance_from_leg_origin(previous_total_distance);
       }
       ++intermediate_itr;
     }

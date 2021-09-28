@@ -207,6 +207,12 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     opp_edge = t2->directededge(opp_edge_id);
   }
 
+  /*
+   * NOTE:
+   * When bidirectional a* degenerates to unidirectional, in practice we probably
+   * need to handle these same problems with the destination edge and
+   * path_distance.. probably.. but did not check
+   */
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   uint8_t restriction_idx = kInvalidRestriction;
