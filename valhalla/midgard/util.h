@@ -420,7 +420,7 @@ public:
   using iterator = T*;
   iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
   }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(end - first) {
+  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
   }
   T* begin() {
     return head;
@@ -428,7 +428,16 @@ public:
   T* end() {
     return tail;
   }
+  const T* begin() const {
+    return head;
+  }
+  const T* end() const {
+    return tail;
+  }
   T& operator[](size_t index) {
+    return *(head + index);
+  }
+  const T& operator[](size_t index) const {
     return *(head + index);
   }
   size_t size() const {
