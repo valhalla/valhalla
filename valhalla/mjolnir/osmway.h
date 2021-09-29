@@ -1273,22 +1273,6 @@ struct OSMWay {
   }
 
   /**
-   * Sets the cash_only_toll flag.
-   * @param  cash_only_toll   Is a cash_only_toll?
-   */
-  void set_cash_only_toll(const bool cash_only_toll) {
-    cash_only_toll_ = cash_only_toll;
-  }
-
-  /**
-   * Get the cash_only_toll flag.
-   * @return  Returns cash_only_toll flag.
-   */
-  bool cash_only_toll() const {
-    return cash_only_toll_;
-  }
-
-  /**
    * Sets the HOV Type.
    * @param  hov_type
    */
@@ -1721,7 +1705,7 @@ struct OSMWay {
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
   uint32_t hov_type_ : 1;
-  uint32_t cash_only_toll_ : 1; // if toll_==true, indicates if it is cash-only
+  uint32_t spare1_ : 1;
   uint32_t pedestrian_forward_ : 1;
   uint32_t pedestrian_backward_ : 1;
 

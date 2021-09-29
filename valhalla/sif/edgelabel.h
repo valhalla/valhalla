@@ -32,7 +32,7 @@ public:
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
         has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        cash_only_toll_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -81,8 +81,8 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
         restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        unpaved_(edge->unpaved()), cash_only_toll_(edge->cash_only_toll()), cost_(cost),
-        sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
+        unpaved_(edge->unpaved()), cost_(cost), sortcost_(sortcost), distance_(dist),
+        transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -293,14 +293,6 @@ public:
   }
 
   /**
-   * Does this edge have a cash only toll?
-   * @return  Returns true if this edge has a cash only toll.
-   */
-  bool cash_only_toll() const {
-    return cash_only_toll_;
-  }
-
-  /**
    * Get the current path distance in meters.
    * @return  Returns the current path distance.
    */
@@ -464,9 +456,7 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-  // if toll_==true, indicates if it is cash-only
-  uint32_t cash_only_toll_ : 1;
-  uint32_t spare : 13;
+  uint32_t spare : 14;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.

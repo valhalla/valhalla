@@ -213,10 +213,6 @@ bool DirectedEdge::is_hov_only() const {
   return (forwardaccess() & kHOVAccess) && !(forwardaccess() & kAutoAccess);
 }
 
-void DirectedEdge::set_cash_only_toll(const bool cash_only_toll) {
-  cash_only_toll_ = cash_only_toll;
-}
-
 // Sets the flag indicating the  edge is part of a roundabout.
 void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;

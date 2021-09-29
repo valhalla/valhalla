@@ -347,20 +347,6 @@ public:
   bool is_hov_only() const;
 
   /**
-   * Is this edge a cash only toll?
-   * @return  Returns true if this edge is a cash only toll, false if not.
-   */
-  bool cash_only_toll() const {
-    return cash_only_toll_;
-  }
-
-  /**
-   * Sets the flag indicating the edge is a cash only toll.
-   * @param  cash_only_toll  True if the edge is a cash only toll, false if not.
-   */
-  void set_cash_only_toll(const bool cash_only_toll);
-
-  /**
    * Is this edge part of a roundabout?
    * @return  Returns true if this edge is part of a roundabout, false if not.
    */
@@ -1191,8 +1177,7 @@ protected:
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
-  uint64_t cash_only_toll_ : 1; // if (toll()==true), this indicates if the toll is cash-only
-  uint64_t spare4_ : 5;
+  uint64_t spare4_ : 6;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

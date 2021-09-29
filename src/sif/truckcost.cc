@@ -390,8 +390,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
-      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && edge->cash_only_toll())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -415,8 +414,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
-      (exclude_cash_only_tolls_ && !pred.cash_only_toll() && opp_edge->cash_only_toll())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
 
