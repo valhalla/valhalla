@@ -224,7 +224,14 @@ public:
 namespace std {
 template <> struct hash<valhalla::baldr::GraphId> {
   inline std::size_t operator()(const valhalla::baldr::GraphId& k) const {
-    return static_cast<size_t>(k.value);
+    // simplified version of murmur3 hash for 64 bit
+    uint64_t v = k.value;
+    v ^= v >> 33;
+    v *= 0xff51afd7ed558ccdULL;
+    v ^= v >> 33;
+    v *= 0xc4ceb9fe1a85ec53ULL;
+    v ^= v >> 33;
+    return static_cast<size_t>(v);
   }
 };
 inline std::string to_string(const valhalla::baldr::GraphId& id) {

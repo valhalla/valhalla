@@ -1,15 +1,16 @@
-#!/usr/bin/env python
-from __future__ import print_function
-import argparse
-import json
-import pprint
+#!/usr/bin/env python3
+from argparse import ArgumentParser, ArgumentTypeError, ArgumentDefaultsHelpFormatter
 from distutils.util import strtobool
+import json
+from typing import List, Union
 
-class optional:
-  def __init__(self, t=None):
-    self.type = t
 
-#global default configuration
+class Optional:
+    def __init__(self, t=None):
+        self.type = t
+
+
+# global default configuration
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
@@ -17,20 +18,20 @@ config = {
     'use_lru_mem_cache': False,
     'lru_mem_cache_hard_control': False,
     'use_simple_mem_cache': False,
-    'user_agent': optional(str),
-    'tile_url': optional(str),
-    'tile_url_gz': optional(bool),
-    'concurrency': optional(int),
+    'user_agent': Optional(str),
+    'tile_url': Optional(str),
+    'tile_url_gz': Optional(bool),
+    'concurrency': Optional(int),
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'traffic_extract': '/data/valhalla/traffic.tar',
-    'incident_dir': optional(str),
-    'incident_log': optional(str),
-    'shortcut_caching': optional(bool),
+    'incident_dir': Optional(str),
+    'incident_log': Optional(str),
+    'shortcut_caching': Optional(bool),
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
-    'transit_bounding_box': optional(str),
+    'transit_bounding_box': Optional(str),
     'hierarchy': True,
     'shortcuts': True,
     'include_driveways': True,
@@ -41,7 +42,7 @@ config = {
     'global_synchronized_cache': False,
     'max_concurrent_reader_users' : 1,
     'reclassify_links': True,
-    'default_speeds_config': optional(str),
+    'default_speeds_config': Optional(str),
     'data_processing': {
       'infer_internal_intersections': True,
       'infer_turn_channels': True,
@@ -264,11 +265,11 @@ config = {
     'max_exclude_polygons_length': 10000
   },
   'statsd': {
-    'host': optional(str),
+    'host': Optional(str),
     'port': 8125,
     'prefix': 'valhalla',
-    'batch_size': optional(int),
-    'tags': optional(list)
+    'batch_size': Optional(int),
+    'tags': Optional(list)
   }
 }
 
@@ -280,7 +281,7 @@ help_text = {
     'lru_mem_cache_hard_control': 'Use hard memory limit control for LRU memory cache (i.e. on every put) - never allow overcommit',
     'use_simple_mem_cache': 'Use memory cache within a simple hash map the clears all tiles when overcommitted',
     'user_agent': 'User-Agent http header to request single tiles',
-    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/optional/path/{tilePath}?some=optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
+    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
     'tile_url_gz': 'Whether or not to request for compressed tiles',
     'concurrency': 'How many threads to use in the concurrent parts of tile building',
     'tile_dir': 'Location to read/write tiles to/from',
@@ -534,54 +535,65 @@ help_text = {
   }
 }
 
-#returns a list of leaves of the tree, `\0` separated, stops at non dicts
-#while doing so it also adds arguments to the parser
-def add_leaf_args(path, tree, leaves, parser):
-  #if we are at a dict go deeper
-  if isinstance(tree, dict):
-    for k in tree:
-      v = tree[k]
-      add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves, parser)
-  #we've reached a leaf
-  else:
-    keys = path.split('\0')
-    h = help_text
-    for k in keys:
-      h = h[k]
 
-    # its either required and is the right type or optional and has a type to use
-    # lists are supported as comma separated and bools support a bunch of conventions
-    # the rest of the primatives (strings and numbers) parse automatically
-    t = type(tree) if type(tree) != type(optional()) else tree.type
-    if t == type([]):
-      t = lambda arg: arg.split(',')
-    elif t == type(bool()):
-      t = lambda arg: bool(strtobool(arg))     
-    
-    arg = '--' + path.replace('_', '-').replace('\0', '-')
-    parser.add_argument(arg, type = t, help=h, default=tree)
+def add_leaf_args(path: str, tree: Union[dict, bool, str, list, Optional], leaves_: List[str], parser_: ArgumentParser, help: dict):
+    """
+    returns a list of leaves of the tree, `\0` separated, stops at non dicts
+    while doing so it also adds arguments to the parser
+    """
+    # if we are at a dict go deeper
+    if isinstance(tree, dict):
+        for k in tree:
+            v = tree[k]
+            add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves_, parser_, help)
+    # we've reached a leaf
+    else:
+        keys = path.split('\0')
+        h = help
+        for k in keys:
+            h = h[k]
 
-    leaves.append(path)
+        # its either required and is the right type or optional and has a type to use
+        # lists are supported as comma separated and bools support a bunch of conventions
+        # the rest of the primatives (strings and numbers) parse automatically
+        if isinstance(tree, Optional):
+          t = tree.type
+        elif isinstance(tree, list):
+          t = lambda arg: arg.split(',')
+        elif isinstance(tree, bool):
+          t = lambda arg: bool(strtobool(arg))
+        else:
+          t = type(tree)
 
-#entry point to program
+        arg = '--' + path.replace('_', '-').replace('\0', '-')
+        parser_.add_argument(arg, type=t, help=h, default=tree)
+        leaves_.append(path)
+
+
+def override_config(args_: dict, leaves_: list, config_: dict):
+    """override the defaults given what was passed"""
+    for leaf in leaves_:
+        keys = leaf.split('\0')
+        v = config_
+        for k in keys[:-1]:
+            v = v[k]
+        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
+        if isinstance(v[keys[-1]], type(Optional())):
+            del v[keys[-1]]
+
+
+# set up available program options
+leaves = []
+parser = ArgumentParser(description='Generate valhalla configuration', formatter_class=ArgumentDefaultsHelpFormatter)
+add_leaf_args('', config, leaves, parser, help_text)
+
+# entry point to program
 if __name__ == '__main__':
+    # TODO: add argument to set base path and use in all other path based values
+    args = parser.parse_args()
 
-  #set up program options
-  leaves = []
-  parser = argparse.ArgumentParser(description='Generate valhalla configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  add_leaf_args('', config, leaves, parser)
-  #TODO: add argument to set base path and use in all other path based values
-  args = parser.parse_args()
+    # encapsulate to test easier
+    override_config(args.__dict__, leaves, config)
 
-  #override the defaults given what was passed
-  for leaf in leaves:
-    keys = leaf.split('\0')
-    v = config
-    for k in keys[:-1]:
-      v = v[k]
-    v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
-    if isinstance(v[keys[-1]], type(optional())):
-      del v[keys[-1]]
-
-  #show the config
-  print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
+    # show the config
+    print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
