@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 
 #include "odin/markup_formatter.h"
+#include "proto/tripcommon.pb.h"
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";
@@ -16,12 +17,13 @@ constexpr auto kVerbalStringTag = "<VERBAL_STRING>";
 constexpr auto KSingleQuotes = "'";
 constexpr auto KDoubleQuotes = "\"";
 
-const std::string& Pronunciation_Alphabet_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "ipa"},
-                                                           {1, "x-katakana"},
-                                                           {2, "x-jeita"},
-                                                           {3, "nt-sampa"}};
-  auto f = values.find(v);
+const std::string& PronunciationAlphabetToString(valhalla::Pronunciation_Alphabet alphabet) {
+  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
+      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "ipa"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "x-katakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "x-jeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "nt-sampa"}};
+  auto f = values.find(alphabet);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
   return f->second;
@@ -108,7 +110,7 @@ std::string MarkupFormatter::FormatPhonemeElement(
 
   // Replace phrase tags with values
   boost::replace_all(phoneme_markup_string, kPhoneticAlphabetTag,
-                     Pronunciation_Alphabet_Name(pronunciation->alphabet()));
+                     PronunciationAlphabetToString(pronunciation->alphabet()));
   boost::replace_all(phoneme_markup_string, kTextualStringTag, textual_string);
   boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value());
 
