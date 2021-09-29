@@ -2789,12 +2789,12 @@
       "description": "Allows access for hov."
     },
     {
-      "key": "cash_only_toll",
+      "key": "payment:*",
       "object_types": [
         "way",
         "node"
       ],
-      "description": "Indicates whether a toll only accepts cash payment."
+      "description": "Payment keys/values (for tolls)."
     },
     {
       "key": "impassable",
