@@ -50,7 +50,7 @@ if (intermediate_locs):
                 req = {'locations':[start, intermediates, end], 'costing': 'auto', 'shape_format': 'polyline6', 'format':'osrm'}
                 #req = {'locations':[start, intermediates, end], 'costing': 'bicycle'}
                 #req = {'locations':[start, intermediates, end], 'costing': 'pedestrian'}
-            print(json.dumps(req, separators=(',', ':')))
+                print(json.dumps(req, separators=(',', ':')))
 else:
     for start in locs:
         for end in locs:
@@ -59,4 +59,4 @@ else:
             req = {'locations':[start, end], 'costing': 'auto', 'shape_format': 'polyline6', 'format':'osrm'}
             #req = {'locations':[start, end], 'costing': 'bicycle'}
             #req = {'locations':[start, end], 'costing': 'pedestrian'}
-        print(json.dumps(req, separators=(',', ':')))
+            print(json.dumps(req, separators=(',', ':')))
