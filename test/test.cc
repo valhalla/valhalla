@@ -13,7 +13,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#ifndef _MSC_VER
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 
 #include <gmock/gmock.h>
@@ -61,7 +63,11 @@ struct MMap {
   MMap(const char* filename) {
     fd = open(filename, O_RDWR);
     struct stat s;
+#ifdef _MSC_VER
+    _fstat64(fd, &s);
+#else
     fstat(fd, &s);
+#endif
     data = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     length = s.st_size;
   }
@@ -266,12 +272,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_distance": 400000.0,
           "max_matrix_locations": 50
         },
-        "auto_shorter": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
-        },
         "bicycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
@@ -293,12 +293,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "centroid": {
           "max_distance": 200000.0,
           "max_locations": 5
-        },
-        "hov": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
         },
         "isochrone": {
           "max_contours": 4,

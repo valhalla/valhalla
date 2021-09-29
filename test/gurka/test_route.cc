@@ -102,14 +102,6 @@ TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
                                    {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, HOVIgnoreOneWay) {
-  const std::string cost = "hov";
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
-                                   {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, TaxiIgnoreOneWay) {
   const std::string cost = "taxi";
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
@@ -164,15 +156,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
 
 TEST_F(IgnoreAccessTest, BusIgnoreAccess) {
   const std::string cost = "bus";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
-                                   {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, HOVIgnoreAccess) {
-  const std::string cost = "hov";
   // ignore edges and nodes access restriction
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
                std::runtime_error);
@@ -905,4 +888,27 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
     actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
   }
   ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
+}
+
+TEST(AlgorithmTestTrivial, unidirectional_regression) {
+  constexpr double gridsize_metres = 10;
+  const std::string ascii_map = R"(A1234B5678C)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.00, 0.00});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trivial_regression");
+
+  // the code used to remove one of the origin edge candidates which then forced a uturn
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB"});
+
+  // again with reverse a* search direction
+  result = gurka::do_action(valhalla::Options::route, map, {"3", "A"}, "auto",
+                            {
+                                {"/date_time/type", "2"},
+                                {"/date_time/value", "2111-11-11T11:11"},
+                            });
+  gurka::assert::raw::expect_path(result, {"AB"});
 }

@@ -13,6 +13,13 @@
   },
   "tags": [
     {
+      "key": "layer",
+      "object_types": [
+        "way"
+      ],
+      "description": "Relative Z-level"
+    },
+    {
       "key": "ISO3166-1",
       "object_types": [
         "relation"
@@ -2495,6 +2502,20 @@
     },
     {
       "key": "highway",
+      "value": "stop",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
+      "value": "give_way",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
       "value": "trunk",
       "object_types": [
         "way"
@@ -4161,6 +4182,14 @@
       ],
       "description": "Official name for a country used in that country if it differs from what is in the name tag"
     },
+   {
+      "key": "access",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the access on the way can change conditionally."
+    },
     {
       "key": "oneway",
       "value": "-1",
@@ -4192,6 +4221,30 @@
         "way"
       ],
       "description": "Sets reverse flag to true for all types of routing."
+    },
+   {
+      "key": "oneway",
+      "value": "reversible",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
+    },
+   {
+      "key": "oneway",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change conditionally."
+    },
+    {
+      "key": "oneway",
+      "value": "alternating",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
     },
     {
       "key": "oneway:bicycle",
@@ -6513,6 +6566,46 @@
         "node"
       ],
       "description": "Traffic signal direction."
+    },
+    {
+      "key": "direction",
+      "value": "forward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "backward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "both",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "stop",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the stop signs at the minor roads."
+    },
+    {
+      "key": "give_way",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the give_way signs at the minor roads."
     },
     {
       "key": "tunnel",

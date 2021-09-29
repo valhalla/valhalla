@@ -15,9 +15,6 @@ using namespace valhalla::midgard;
  */
 namespace {
 // Defaults thresholds
-// TODO: global stretch parameter should depend on the optimal route cost/duration.
-// For an optimal route that takes 10min it's okay to have an alternative that takes 15min. But
-// it's unreasonable to propose an alternative that takes 15 hours if the optimal one takes 10 hours.
 float kAtMostLonger = 1.25f; // stretch threshold
 // Alternative route shouldn't contain unreasonable detours. We should skip an alternative
 // if it has a detour longer than 2 x cost of the corresponding path in the optimal route.
@@ -31,25 +28,40 @@ namespace thor {
 float get_max_sharing(const valhalla::Location& origin, const valhalla::Location& destination) {
   PointLL from(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   PointLL to(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
-  auto distance = from.Distance(to);
+  float distance = from.Distance(to);
 
   // 10km
-  if (distance < 10000.) {
-    return 0.50;
-  }
-  // 20km
-  else if (distance < 20000.) {
-    return 0.60;
-  }
-  // 50km
-  else if (distance < 50000.) {
-    return 0.65;
-  }
+  if (distance < 10000.f)
+    return 0.6f;
   // 100km
-  else if (distance < 100000.) {
-    return 0.70;
+  if (distance < 100000.f) {
+    // Uniformly increase 'at_most_shared' value from 0.6 to 0.75 for routes
+    // from 10km to 100km
+    return 0.6f + (kAtMostShared - 0.6f) * (distance - 10000.f) / (100000.f - 10000.f);
   }
+  // > 100km
   return kAtMostShared;
+}
+
+// Calculate stretch threshold based on the optimal route cost.
+double get_at_most_longer(double optimal_cost) {
+  // < 10min
+  if (optimal_cost < 10. * 60.) {
+    return 2.;
+  }
+  // > 10min and < 5hours
+  if (optimal_cost < 5. * 3600.) {
+    // Coefficients of quadratic hyperbolic function that approximates the following values:
+    // t = [10 * 60, 20 * 60, 30 * 60, 60 * 60, 2 * 3600, 5 * 3600]
+    // y = [2.0,     1.75,    1.5,     1.4,     1.3,      1.25]
+    constexpr double a = 1.21067994e+00;
+    constexpr double b = 7.22941576e+02;
+    constexpr double c = -1.45726221e+05;
+
+    return a + b / optimal_cost + c / (optimal_cost * optimal_cost);
+  }
+  // > 5hours
+  return kAtMostLonger;
 }
 
 // Bounded stretch. We use cost as an approximation for stretch, to filter out
@@ -57,7 +69,8 @@ float get_max_sharing(const valhalla::Location& origin, const valhalla::Location
 // the list of connections to only those within the stretch tolerance
 void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections) {
   std::sort(connections.begin(), connections.end());
-  auto max_cost = connections.front().cost * kAtMostLonger;
+  const float at_most_longer = get_at_most_longer(connections.front().cost);
+  auto max_cost = connections.front().cost * at_most_longer;
   auto new_end = std::lower_bound(connections.begin(), connections.end(), max_cost);
   connections.erase(new_end, connections.end());
 }
@@ -156,20 +169,18 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
 
     // if an edge on the candidate_path is encountered that is also on one of the existing paths,
     // we count it as a "shared" edge
-    float shared_length = 0.f, total_length = 0.f;
+    float shared_length = 0.f;
     for (const auto& cpi : candidate_path) {
       const auto length = &cpi == &candidate_path.front()
                               ? cpi.path_distance
                               : cpi.path_distance - (&cpi - 1)->path_distance;
-      total_length += length;
       if (shared.find(cpi.edgeid) != shared.end()) {
         shared_length += length;
       }
     }
 
-    // throw this alternate away if it shares more than at_most_shared with any of the chosen paths
-    assert(total_length > 0);
-    if ((shared_length / total_length) > at_most_shared) {
+    // throw this alternate away if any of the chosen paths shares more than at_most_shared with it
+    if (shared_length > at_most_shared * paths[i].back().path_distance) {
       LOG_DEBUG("Candidate alternate rejected by sharing");
       return false;
     }

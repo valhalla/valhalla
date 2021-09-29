@@ -416,7 +416,7 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
                             return e.graph_id() == edge_id;
                           });
   if (pos == location->path_edges().end()) {
-    location->mutable_path_edges()->Clear();
+    location->mutable_path_edges()->Clear(); // should never happen
   } else if (location->path_edges_size() > 1) {
     location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
     location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
@@ -816,13 +816,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   // Add tagged names to the edge if requested
-  if (controller.attributes.at(kEdgeTaggedNames)) {
-    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
-    trip_edge->mutable_tagged_name()->Reserve(tagged_names_and_types.size());
-    for (const auto& tagged_name_and_type : tagged_names_and_types) {
-      auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
-      trip_edge_tag_name->set_value(tagged_name_and_type.first);
-      trip_edge_tag_name->set_type(static_cast<TaggedName_Type>(tagged_name_and_type.second));
+  if (controller.attributes.at(kEdgeTaggedValues)) {
+    const auto& tagged_values_and_types = edgeinfo.GetTags();
+    trip_edge->mutable_tagged_value()->Reserve(tagged_values_and_types.size());
+    for (const auto& tagged_value_and_type : tagged_values_and_types) {
+      auto* trip_edge_tag_name = trip_edge->mutable_tagged_value()->Add();
+      trip_edge_tag_name->set_value(tagged_value_and_type.second);
+      trip_edge_tag_name->set_type(
+          static_cast<TaggedValue_Type>(static_cast<uint8_t>(tagged_value_and_type.first)));
     }
   }
 
@@ -1629,7 +1630,7 @@ void TripLegBuilder::Build(
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
       float km =
-          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.001f);
+          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.0f);
       trip_edge->set_length_km(km);
     }
 

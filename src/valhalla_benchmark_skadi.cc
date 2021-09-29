@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <list>
+#include <sstream>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -9,8 +10,8 @@
 #include "midgard/logging.h"
 #include "skadi/sample.h"
 
-void get_samples(const valhalla::skadi::sample& sample,
-                 const std::list<std::pair<double, double>>& postings,
+void get_samples(valhalla::skadi::sample& sample,
+                 const std::vector<std::pair<double, double>>& postings,
                  size_t id) {
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) +
            " postings");
@@ -43,27 +44,29 @@ int main(int argc, char** argv) {
   valhalla::skadi::sample sample(argv[1]);
 
   LOG_INFO("Loading coordinate postings");
-  std::vector<std::list<std::pair<double, double>>> postings(thread_count);
-  auto posting = postings.end() - 1;
+  std::vector<std::vector<std::pair<double, double>>> postings;
+  postings.resize(thread_count);
+
   size_t posting_count = 0;
   std::ifstream file(argv[2]);
-  do {
-    ++posting;
-    if (posting == postings.end()) {
-      posting = postings.begin();
+  std::string line;
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
+    double lat, lon;
+    if (!(iss >> lat >> lon)) {
+      continue; // error
     }
-    posting->emplace_back();
-    ++posting_count;
-  } while (file >> posting->back().first >> posting->back().second);
-  posting->pop_back();
-  --posting_count;
+
+    postings[posting_count % thread_count].emplace_back(lat, lon);
+    posting_count++;
+  }
 
   // run the threads
   auto start = std::chrono::system_clock::now();
   std::list<std::thread> threads;
   size_t id = 0;
   for (const auto& p : postings) {
-    threads.emplace_back(get_samples, std::cref(sample), std::cref(p), id++);
+    threads.emplace_back(get_samples, std::ref(sample), std::cref(p), id++);
   }
   for (auto& t : threads) {
     t.join();

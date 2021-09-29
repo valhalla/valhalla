@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
+
 import sys
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import math
 import os
 import shutil
@@ -31,7 +31,7 @@ class json_resource_t:
     self.url = url
     try:
       #open a readable object at that url
-      response = urllib2.urlopen(url)
+      response = urllib.request.urlopen(url)
     except Exception as e:
       print('Could not fetch %s' % url, file=sys.stderr)
       raise e
@@ -73,7 +73,7 @@ class Tile(object):
 
   def digits(self, number):
      digits = 1 if (number < 0) else 0
-     while (long(number)):
+     while (int(number)):
         number /= 10
         digits += 1
      return int(digits)
@@ -212,13 +212,13 @@ if __name__ == "__main__":
    block_key = 1
    blocks = dict()
 
-   for row in xrange(0, nrows_):
-      for col in xrange(0, ncolumns_):
+   for row in range(0, nrows_):
+      for col in range(0, ncolumns_):
          
          #tile for world BB
          min_x = minx_ + (col * tilesize_)
          min_y = miny_ + (row * tilesize_)
-  	 max_x = min_x + tilesize_
+         max_x = min_x + tilesize_
          max_y = min_y + tilesize_
                 
          tile = Tile(min_x,min_y,max_x,max_y)

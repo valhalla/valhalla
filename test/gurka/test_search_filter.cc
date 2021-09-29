@@ -797,7 +797,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
 std::vector<std::string> buildParams() {
   // Return the different costings we want to test closures against
   return {
-      "auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",
+      "auto", "motorcycle", "motor_scooter", "bus", "truck", "taxi",
   };
 }
 

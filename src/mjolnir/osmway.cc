@@ -94,6 +94,10 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
+void OSMWay::set_layer(int8_t layer) {
+  layer_ = layer;
+}
+
 // Get the names for the edge info based on the road class.
 std::vector<std::string>
 OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
@@ -169,18 +173,24 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
   return names;
 }
 
-// Get the tagged names for an edge
-std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
+// Get the tagged values for an edge
+std::vector<std::string> OSMWay::GetTaggedValues(const UniqueNames& name_offset_map) const {
 
   std::vector<std::string> names;
-  std::vector<std::string> tokens;
 
+  auto encode_tag = [](TaggedValue tag) {
+    return std::string(1, static_cast<std::string::value_type>(tag));
+  };
   if (tunnel_name_index_ != 0) {
     // tunnel names
-    tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
+    auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
     for (const auto& t : tokens) {
-      names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
+      names.emplace_back(encode_tag(TaggedValue::kTunnel) + t);
     }
+  }
+
+  if (layer_ != 0) {
+    names.emplace_back(encode_tag(TaggedValue::kLayer) + static_cast<char>(layer_));
   }
 
   return names;

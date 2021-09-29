@@ -236,7 +236,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/07
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
-
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
@@ -345,3 +344,4 @@ set_target_properties(check PROPERTIES FOLDER "Tests")
 add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
+add_subdirectory(scripts)
