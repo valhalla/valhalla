@@ -114,11 +114,8 @@ D--3--4--C--5--6--E)";
 
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
-  // TODO: Remove the duplicate 6 when we fix odin to handle uturn maneuver generation with only one
-  // turn around point
   auto expected_shape = decltype(shape){
-      map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"],
-      map.nodes["6"], map.nodes["C"], map.nodes["3"],
+      map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"], map.nodes["C"], map.nodes["3"],
   };
   EXPECT_EQ(shape.size(), expected_shape.size());
   for (int i = 0; i < shape.size(); ++i) {
