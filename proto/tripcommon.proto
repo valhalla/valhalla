@@ -85,6 +85,8 @@ message Location {
   repeated PathEdge filtered_edges = 23;
   optional uint32 original_index = 24;
   optional LatLng projected_ll = 25;
+  optional uint32 leg_shape_index = 35;
+  optional double distance_from_leg_origin = 36;
 
   //more inputs
   optional PreferredSide preferred_side = 26 [default = either];

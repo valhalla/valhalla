@@ -354,8 +354,8 @@ Each maneuver includes:
 | `verbal_transition_alert_instruction` | Text suitable for use as a verbal alert in a navigation application. The transition alert instruction will prepare the user for the forthcoming transition. For example: "Turn right onto North Prince Street". |
 | `verbal_pre_transition_instruction` | Text suitable for use as a verbal message immediately prior to the maneuver transition. For example "Turn right onto North Prince Street, U.S. 2 22". |
 | `verbal_post_transition_instruction` | Text suitable for use as a verbal message immediately after the maneuver transition. For example "Continue on U.S. 2 22 for 3.9 miles". |
-| `street_names` | List of street names that are consistent along the entire maneuver. |
-| `begin_street_names` | When present, these are the street names at the beginning of the maneuver (if they are different than the names that are consistent along the entire maneuver). |
+| `street_names` | List of street names that are consistent along the entire nonobvious maneuver. |
+| `begin_street_names` | When present, these are the street names at the beginning (transition point) of the nonobvious maneuver (if they are different than the names that are consistent along the entire nonobvious maneuver). |
 | `time` | Estimated time along the maneuver in seconds. |
 | `length` | Maneuver length in the units specified. |
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |
