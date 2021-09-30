@@ -844,9 +844,7 @@ function is_cash_only_payment(kv)
     end
   end
 
-  local cash_only_payment = allows_cash_payment == true and allows_noncash_payment == false
-
-  return cash_only_payment
+  return allows_cash_payment == true and allows_noncash_payment == false
 end
 
 --returns 1 if you should filter this way 0 otherwise
@@ -855,8 +853,6 @@ function filter_tags_generic(kv)
   if (kv["highway"] == "construction" or kv["highway"] == "proposed") then
     return 1
   end
-
-  local cash_only_payment = is_cash_only_payment(kv)
 
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
@@ -1724,6 +1720,7 @@ function filter_tags_generic(kv)
   end
 
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
+  kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
   kv["destination:forward"] = kv["destination:forward"]
   kv["destination:backward"] = kv["destination:backward"]
@@ -1735,10 +1732,6 @@ function filter_tags_generic(kv)
   kv["turn:lanes"] = kv["turn:lanes"]
   kv["turn:lanes:forward"] = kv["turn:lanes:forward"]
   kv["turn:lanes:backward"] = kv["turn:lanes:backward"]
-  kv["toll"] = toll[kv["toll"]] or "false"
-  if (kv["toll"] == "true" and cash_only_payment) then
-    kv["cash_only_toll"] = "true"
-  end
 
   --truck goodies
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
@@ -1783,8 +1776,6 @@ function filter_tags_generic(kv)
 end
 
 function nodes_proc (kv, nokeys)
-
-  local cash_only_payment = is_cash_only_payment(kv)
 
   if kv["iso:3166_2"] then
     i, j = string.find(kv["iso:3166_2"], '-', 1, true)
@@ -2000,7 +1991,7 @@ function nodes_proc (kv, nokeys)
     kv["border_control"] = "true"
   elseif kv["barrier"] == "toll_booth" then
     kv["toll_booth"] = "true"
-    if cash_only_payment then
+    if is_cash_only_payment(kv) then
       kv["cash_only_toll"] = "true"
     end
   elseif kv["highway"] == "toll_gantry" then
