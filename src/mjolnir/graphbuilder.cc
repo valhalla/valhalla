@@ -1348,10 +1348,12 @@ void GraphBuilder::AddPronunciation(const baldr::PronunciationAlphabet alphabet,
                                     std::vector<std::string>& pronunciations) {
 
   // TODO set the language
-  linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
-                                  static_cast<uint8_t>(alphabet), static_cast<uint8_t>(0)};
-  header.length_ = phoneme.size();
-  pronunciations.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) + phoneme));
+  if (!phoneme.size()) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(alphabet), static_cast<uint8_t>(0)};
+    header.length_ = phoneme.length();
+    pronunciations.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) + phoneme));
+  }
 }
 
 void GraphBuilder::BuildPronunciations(const std::vector<std::string>& ipa_tokens,
