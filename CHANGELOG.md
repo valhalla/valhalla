@@ -42,7 +42,10 @@
    * ADDED: pull ubuntu:20.04 base image before building [#3233](https://github.com/valhalla/valhalla/pull/3223)
    * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
+   * ADDED: Shape points and information about where intermediate locations are placed along the legs of a route [#3274](https://github.com/valhalla/valhalla/pull/3274)
    * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
+   * CHANGED: Update python usage in all scripts to python3 [#3337](https://github.com/valhalla/valhalla/pull/3337)
+   * CHANGED: Update api-reference for street_names [#3342](https://github.com/valhalla/valhalla/pull/3342)
    * CHANGED: Ported trace_attributes serialization to RapidJSON. [#3333](https://github.com/valhalla/valhalla/pull/3333)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
