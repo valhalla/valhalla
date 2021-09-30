@@ -13,6 +13,7 @@
 #include "odin/util.h"
 
 #include "proto/trip.pb.h"
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -26,12 +27,13 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
-const std::string& Pronunciation_Alphabet_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kIpa"},
-                                                           {1, "kXKatakana"},
-                                                           {2, "kXJeita"},
-                                                           {3, "kNtSampa"}};
-  auto f = values.find(v);
+const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
+  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
+      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
+  auto f = values.find(alphabet);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
   return f->second;
