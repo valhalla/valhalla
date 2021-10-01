@@ -34,8 +34,9 @@ int main(int argc, char** argv) {
     // ref:
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
     cxxopts::Options options(
-        "valhalla_build_tiles " VALHALLA_VERSION,
-        "valhalla_build_tiles is a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
+        "valhalla_build_tiles",
+        "valhalla_build_tiles v" VALHALLA_VERSION
+        "\n\nvalhalla_build_tiles is a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
 
     options.add_options()("h,help",
                           "Print this help message.")("v,version",
@@ -65,12 +66,6 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
 
-    if (result.count("files") == 0) {
-      std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
-    input_files = result["files"].as<decltype(input_files)>();
-
     // Convert stage strings to BuildStage
     BuildStage start_stage = BuildStage::kInitialize;
     BuildStage end_stage = BuildStage::kCleanup;
@@ -99,6 +94,13 @@ int main(int argc, char** argv) {
       list_stages();
       return EXIT_FAILURE;
     }
+
+    if (result.count("files") == 0 &&
+        (start_stage <= BuildStage::kParseNodes && end_stage >= BuildStage::kParseWays)) {
+      std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
+      return EXIT_FAILURE;
+    }
+    input_files = result["files"].as<decltype(input_files)>();
 
     // Read the config file
     boost::property_tree::ptree pt;
