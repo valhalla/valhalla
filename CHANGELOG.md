@@ -13,6 +13,13 @@
    * FIXED: Trivial routes were broken when origin was node snapped and destnation was not and vice-versa for reverse astar [#3299](https://github.com/valhalla/valhalla/pull/3299)
    * FIXED: Tweaked TestAvoids map to get TestAvoidShortcutsTruck working [#3301](https://github.com/valhalla/valhalla/pull/3301)
    * FIXED: Overflow in sequence sort [#3303](https://github.com/valhalla/valhalla/pull/3303)
+   * FIXED: Setting statsd tags in config via valhalla_build_config [#3225](https://github.com/valhalla/valhalla/pull/3225)
+   * FIXED: Cache for gzipped elevation tiles [#3120](https://github.com/valhalla/valhalla/pull/3120)
+   * FIXED: Current time conversion regression introduced in unidirectional algorithm refractor [#3278](https://github.com/valhalla/valhalla/issues/3278)
+   * FIXED: Make combine_route_stats.py properly quote CSV output (best practice improvement) [#3328](https://github.com/valhalla/valhalla/pull/3328)
+   * FIXED: Merge edge segment records in map matching properly so that resulting edge indices in trace_attributes are valid [#3280](https://github.com/valhalla/valhalla/pull/3280)
+   * FIXED: Shape walking map matcher now sets correct edge candidates used in the match for origin and destination location [#3329](https://github.com/valhalla/valhalla/pull/3329)
+   * FIXED: Better hash function of GraphId [#3332](https://github.com/valhalla/valhalla/pull/3332)
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
@@ -24,6 +31,7 @@
    * ADDED: use_hills for pedestrian costing, which also affects the walking speed [#3234](https://github.com/valhalla/valhalla/pull/3234)
    * CHANGED: Fixed cost threshold fot bidirectional astar. Implemented reach-based pruning for suboptimal branches [#3257](https://github.com/valhalla/valhalla/pull/3257)
    * ADDED: Added `exclude_unpaved` request parameter [#3240](https://github.com/valhalla/valhalla/pull/3240)
+   * ADDED: Added support for routing onto HOV/HOT lanes via request parameters `include_hot`, `include_hov2`, and `include_hov3` [#3273](https://github.com/valhalla/valhalla/pull/3273)
    * ADDED: Add Z-level field to `EdgeInfo`. [#3261](https://github.com/valhalla/valhalla/pull/3261)
    * CHANGED: Calculate stretch threshold for alternatives based on the optimal route cost [#3276](https://github.com/valhalla/valhalla/pull/3276)
    * ADDED: Add `preferred_z_level` as a parameter of loki requests. [#3270](https://github.com/valhalla/valhalla/pull/3270)
@@ -31,6 +39,11 @@
    * ADDED: Exposing service area names in passive maneuvers. [#3277](https://github.com/valhalla/valhalla/pull/3277)
    * ADDED: Added traffic signal and stop sign check for stop impact. These traffic signals and stop sign are located on edges. [#3279](https://github.com/valhalla/valhalla/pull/3279)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and vendor all header-only boost libs. [#3346](https://github.com/valhalla/valhalla/pull/3346)
+   * CHANGED: Improved sharing criterion to obtain more reasonable alternatives; extended alternatives search [#3302](https://github.com/valhalla/valhalla/pull/3302)
+   * ADDED: pull ubuntu:20.04 base image before building [#3233](https://github.com/valhalla/valhalla/pull/3223)
+   * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
+   * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
+   * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
@@ -51,7 +64,7 @@
    * FIXED: googletest wasn't really updated in #3166 [#3187](https://github.com/valhalla/valhalla/pull/3187)
    * FIXED: Minor fix of benchmark code [#3190](https://github.com/valhalla/valhalla/pull/3190)
    * FIXED: avoid_polygons intersected edges as polygons instead of linestrings [#3194]((https://github.com/valhalla/valhalla/pull/3194)
-   * FIXED: when binning horizontal edge shapes using single precision floats (converted from not double precision floats) allowed for the possiblity of marking many many tiles no where near the shape [#3204](https://github.com/valhalla/valhalla/pull/3204) 
+   * FIXED: when binning horizontal edge shapes using single precision floats (converted from not double precision floats) allowed for the possiblity of marking many many tiles no where near the shape [#3204](https://github.com/valhalla/valhalla/pull/3204)
    * FIXED: Fix improper iterator usage in ManeuversBuilder [#3205](https://github.com/valhalla/valhalla/pull/3205)
    * FIXED: Modified approach for retrieving signs from a directed edge #3166 [#3208](https://github.com/valhalla/valhalla/pull/3208)
    * FIXED: Improve turn channel classification: detect slip lanes [#3196](https://github.com/valhalla/valhalla/pull/3196)
@@ -97,11 +110,11 @@
    * FIXED: Highway/ramp lane bifurcation [#3088](https://github.com/valhalla/valhalla/pull/3088)
    * FIXED: out of bound access of tile hierarchy in base_ll function in graphheader [#3089](https://github.com/valhalla/valhalla/pull/3089)
    * FIXED: include shortcuts in avoid edge set for avoid_polygons [#3090](https://github.com/valhalla/valhalla/pull/3090)
-  
+
 * **Enhancement**
    * CHANGED: Refactor timedep forward/reverse to reduce code repetition [#2987](https://github.com/valhalla/valhalla/pull/2987)
    * CHANGED: Sync translation files with Transifex command line tool [#3030](https://github.com/valhalla/valhalla/pull/3030)
-   * CHANGED: Use osm tags in links reclassification algorithm in order to reduce false positive downgrades [#3042](https://github.com/valhalla/valhalla/pull/3042) 
+   * CHANGED: Use osm tags in links reclassification algorithm in order to reduce false positive downgrades [#3042](https://github.com/valhalla/valhalla/pull/3042)
    * CHANGED: Use CircleCI XL instances for linux based builds [#3043](https://github.com/valhalla/valhalla/pull/3043)
    * ADDED: ci: Enable undefined sanitizer [#2999](https://github.com/valhalla/valhalla/pull/2999)
    * ADDED: Optionally pass preconstructed graphreader to connectivity map [#3046](https://github.com/valhalla/valhalla/pull/3046)

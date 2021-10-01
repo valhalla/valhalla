@@ -372,10 +372,13 @@ separated = {
 
 oneway = {
 ["no"] = "false",
+["false"] = "false",
 ["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
-["1"] = "true"
+["1"] = "true",
+["reversible"] = "false",
+["alternating"] = "false"
 }
 
 bridge = {
@@ -1039,6 +1042,7 @@ function filter_tags_generic(kv)
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
     else
+      -- by returning 1 we will toss this way
       return 1
     end
   end
@@ -1618,20 +1622,17 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
+  kv["hov_tag"] = "true"
   if (kv["hov"] and kv["hov"] == "no") then
-    kv["hov_tag"] = "false"
     kv["hov_forward"] = "false"
     kv["hov_backward"] = "false"
   else
     kv["hov_forward"] = kv["auto_forward"]
     kv["hov_backward"] = kv["auto_backward"]
-
   end
 
   -- hov restrictions
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
-
-    kv["hov_tag"] = "true"
 
     local only_hov_allowed = kv["hov"] == "designated"
     if only_hov_allowed then
@@ -1645,6 +1646,10 @@ function filter_tags_generic(kv)
     end
 
     if only_hov_allowed then
+      -- If we get here we know the way is a true hov-lane (not mixed).
+      -- As a result, none of the following costings can use it.
+      -- (Okay, that's not exactly true, we do some wizardry in some of the
+      -- costings to allow hov under certain conditions.)
       if (kv["auto_tag"] == nil) then
         kv["auto_forward"] = "false"
         kv["auto_backward"] = "false"
@@ -1663,6 +1668,25 @@ function filter_tags_generic(kv)
       if (kv["bike_tag"] == nil) then
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
+      end
+
+      -- I want to be strict with the "hov:minimum" tag: I will only accept the
+      -- values 2 or 3. We want to be strict because routing onto an HOV lane
+      -- without the correct number of occupants is illegal.
+      if (kv["hov:minimum"] == "2") then
+        kv["hov_type"] = "HOV2";
+      elseif (kv["hov:minimum"] == "3") then
+        kv["hov_type"] = "HOV3";
+      end
+
+      -- HOV lanes are sometimes time-conditional and can change direction. We avoid
+      -- these. Also, we expect "hov_type" to be set.
+      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or kv["oneway"] == "false" or
+            kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil or kv["hov_type"] == nil
+
+      if avoid_these_hovs then
+        kv["hov_forward"] = "false"
+        kv["hov_backward"] = "false"
       end
     end
   end

@@ -241,6 +241,5 @@ INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
                                            "pedestrian",
                                            "motorcycle",
                                            "motor_scooter",
-                                           "hov",
                                            "taxi",
                                            "bus"));

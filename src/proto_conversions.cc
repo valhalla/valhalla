@@ -184,7 +184,6 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       // auto_shorter is deprecated
       {"bicycle", Costing::bicycle},
       {"bus", Costing::bus},
-      {"hov", Costing::hov},
       {"taxi", Costing::taxi},
       {"motor_scooter", Costing::motor_scooter},
       {"multimodal", Costing::multimodal},
@@ -211,7 +210,6 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       // auto_shorter is deprecated
       {Costing::bicycle, "bicycle"},
       {Costing::bus, "bus"},
-      {Costing::hov, "hov"},
       {Costing::taxi, "taxi"},
       {Costing::motor_scooter, "motor_scooter"},
       {Costing::multimodal, "multimodal"},
