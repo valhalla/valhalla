@@ -38,18 +38,16 @@ int main(int argc, char** argv) {
         "valhalla_build_tiles v" VALHALLA_VERSION
         "\n\nvalhalla_build_tiles is a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
 
-    options.add_options()("h,help",
-                          "Print this help message.")("v,version",
-                                                      "Print the version of this software.")(
-        "c,config", "Path to the configuration file",
-        cxxopts::value<std::string>())("i,inline-config", "Inline JSON config",
-                                       cxxopts::value<std::string>())(
-        "s,start", "Starting stage of the build pipeline",
-        cxxopts::value<std::string>()->default_value(
-            "initialize"))("e,end", "End stage of the build pipeline",
-                           cxxopts::value<std::string>()->default_value(
-                               "cleanup"))("f,files", "positional arguments",
-                                           cxxopts::value<std::vector<std::string>>());
+    // clang-format off
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version","Print the version of this software.")
+      ("c,config", "Path to the configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("s,start", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value("initialize"))
+      ("e,end", "End stage of the build pipeline", cxxopts::value<std::string>()->default_value("cleanup"))
+      ("f,files", "positional arguments", cxxopts::value<std::vector<std::string>>());
+    // clang-format on
 
     options.parse_positional({"files"});
     options.positional_help("OSM PBF file(s)");
