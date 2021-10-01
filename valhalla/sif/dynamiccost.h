@@ -204,9 +204,8 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return ((node->access() & access_mask_) &&
-            !(exclude_cash_only_tolls_ && node->cash_only_toll())) ||
-           ignore_access_;
+    return ((node->access() & access_mask_) || ignore_access_) &&
+            !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
   /**
