@@ -1069,6 +1069,11 @@ public:
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kBorderControl);
+      } else if (tag.first == "cash_only_toll" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kTollBooth);
+        n.set_cash_only_toll(true);
       } else if (tag.first == "toll_gantry" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -1084,11 +1089,6 @@ public:
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       }
-
-      /* TODO: payment type.
-      else if (tag.first == "payment_mask")
-        n.set_payment_mask(std::stoi(tag.second));
-      */
     }
 
     // If we ended up storing a name for a regular junction flag that
