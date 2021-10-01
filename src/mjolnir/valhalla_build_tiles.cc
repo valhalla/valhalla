@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
   try {
     // args
     std::string config_file_path = "";
+    std::vector<std::string> input_files;
 
     // ref:
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
@@ -92,8 +93,9 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
 
-    if (result.count("files") == 0 &&
-        (start_stage <= BuildStage::kParseNodes && end_stage >= BuildStage::kParseWays)) {
+    if (result.count("files") > 0) {
+      input_files = result["files"].as<std::vector<std::string>>();
+    } else if (start_stage <= BuildStage::kParseNodes && end_stage >= BuildStage::kParseWays) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
@@ -123,7 +125,7 @@ int main(int argc, char** argv) {
     }
 
     // Build some tiles!
-    if (build_tile_set(pt, result["files"].as<std::vector<std::string>>(), start_stage, end_stage)) {
+    if (build_tile_set(pt, input_files, start_stage, end_stage)) {
       return EXIT_SUCCESS;
     } else {
       return EXIT_FAILURE;
