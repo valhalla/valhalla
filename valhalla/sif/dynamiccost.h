@@ -205,7 +205,7 @@ public:
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
     return ((node->access() & access_mask_) || ignore_access_) &&
-            !(exclude_cash_only_tolls_ && node->cash_only_toll());
+           !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
   /**
