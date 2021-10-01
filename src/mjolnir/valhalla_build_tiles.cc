@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
   try {
     // args
     std::string config_file_path = "";
-    std::vector<std::string> input_files;
 
     // ref:
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
@@ -98,7 +97,6 @@ int main(int argc, char** argv) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
-    input_files = result["files"].as<decltype(input_files)>();
 
     // Read the config file
     boost::property_tree::ptree pt;
