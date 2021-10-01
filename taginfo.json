@@ -2791,7 +2791,6 @@
     {
       "key": "payment:*",
       "object_types": [
-        "way",
         "node"
       ],
       "description": "Payment keys/values (for tolls)."
