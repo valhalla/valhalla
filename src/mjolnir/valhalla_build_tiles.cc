@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
       rapidjson::read_json(ss, pt);
     } else if (result.count("config") &&
                filesystem::is_regular_file(config_file_path = result["config"].as<std::string>())) {
-      std::cout << config_file_path << std::endl;
       rapidjson::read_json(config_file_path, pt);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
