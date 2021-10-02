@@ -1,6 +1,6 @@
 #include "filesystem.h"
 
-#include <boost/program_options.hpp>
+#include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
@@ -8,67 +8,63 @@
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
 
-namespace bpo = boost::program_options;
-
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
 
 bool ParseArguments(int argc, char* argv[]) {
-
-  bpo::options_description options(
-      "pbfadminbuilder " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: pbfadminbuilder [options] <protocolbuffer_input_file>\n"
-      "\n"
-      "pbfadminbuilder is a program that creates the route graph from a osm.pbf "
-      "extract or osm2pgsql import.  You should use the lua scripts provided for "
-      "either method.  The scripts are located in the ./import/osm2pgsql directory.  "
-      "Moreover, sample json configs are located in ./import/configs directory."
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.")
-      // positional arguments
-      ("input_files",
-       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("input_files", 16);
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+        "pbfadminbuilder",
+        "pbfadminbuilder " VALHALLA_VERSION "\n\n"
+        "pbfadminbuilder is a program that creates a administrative SQLite database from \n"
+        "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
+        "nodes and edges."
+        "\n\n");
 
-  } catch (std::exception& e) {
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>());
+    // clang-format on
+
+    options.parse_positional({"input_files"});
+    options.positional_help("OSM PBF file(s)");
+    auto result = options.parse(argc, argv);
+
+    if (result.count("version")) {
+      std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    // input files are positional
+    if (result.count("input_files") == 0) {
+      std::cerr << "Input file is required\n" << std::endl;
+      return false;
+    }
+    input_files = result["input_files"].as<std::vector<std::string>>();
+
+    if (result.count("config")) {
+      auto fp = result["config"].as<std::string>();
+      config_file_path = filesystem::path(fp);
+      if (filesystem::is_regular_file(config_file_path)) {
+        return true;
+      } else {
+        std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
+      }
+    }
+  } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
   }
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
-    return true;
-  }
-
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    }
-  }
-
-  return false;
+  return EXIT_FAILURE;
 }
 
 int main(int argc, char** argv) {
