@@ -258,7 +258,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>())
-      ("traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
+      ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"traffic-tile-dir"});
@@ -277,9 +277,9 @@ bool ParseArguments(int argc, char* argv[]) {
 
     if (!result.count("traffic_tile_dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
-      return EXIT_FAILURE;
+      return false;
     }
-    auto traffic_tile_dir = result["traffic_tile_dir"].as<std::string>();
+    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
 
     // Read the config file
     if (result.count("inline-config")) {
@@ -291,7 +291,7 @@ bool ParseArguments(int argc, char* argv[]) {
       rapidjson::read_json(result["config"].as<std::string>(), config);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
+      return false;
     }
 
     if (result.count("concurrency")) {
@@ -304,10 +304,10 @@ bool ParseArguments(int argc, char* argv[]) {
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
+    return false;
   }
 
-  return EXIT_SUCCESS;
+  return true;
 }
 
 int main(int argc, char** argv) {
@@ -347,6 +347,8 @@ int main(int argc, char** argv) {
 
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
+
+  std::cout << traffic_tile_dir << std::endl;
 
   LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();

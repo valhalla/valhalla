@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
 
-    // Read the config file
+    // Read the config filegi
     if (result.count("inline-config")) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
