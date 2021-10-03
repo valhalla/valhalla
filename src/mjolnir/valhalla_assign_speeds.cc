@@ -4,7 +4,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
 
-#include <boost/program_options.hpp>
+#include <cxxopts.hpp>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
@@ -76,92 +77,89 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
-  bpo::options_description options("valhalla_assign_speeds " VALHALLA_VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_assign_speeds [options]\n"
-                                   "\n"
-                                   "Modifies default speeds based on provided configuration."
-                                   "\n"
-                                   "\n");
-
-  std::string config_file_path;
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", bpo::value<std::string>(&config_file_path), "Path to the json configuration file.");
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_assign_speeds",
+      "valhalla_assign_speeds " VALHALLA_VERSION "\n\n"
+      "Modifies default speeds based on provided configuration.\n");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("version")) {
+      std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (!result.count("config")) {
+      std::cout << "You must provide a config for loading and modifying tiles.\n";
+      return EXIT_FAILURE;
+    }
+    auto config_file_path = result["config"].as<std::string>();
+
+    // configure logging
+    bpt::ptree config;
+    rapidjson::read_json(config_file_path, config);
+    config.get_child("mjolnir").erase("tile_extract");
+    config.get_child("mjolnir").erase("tile_url");
+    config.get_child("mjolnir").erase("traffic_extract");
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        config.get_child_optional("mjolnir.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
+    // queue some tiles up to modify
+    std::deque<GraphId> tilequeue;
+    GraphReader reader(config.get_child("mjolnir"));
+    auto tileset = reader.GetTileSet();
+    for (const auto& id : tileset) {
+      tilequeue.emplace_back(id);
+    }
+    std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
+
+    // spawn threads to modify the tiles
+    auto concurrency = std::max(static_cast<unsigned int>(1),
+                                config.get<unsigned int>("mjolnir.concurrency",
+                                                         std::thread::hardware_concurrency()));
+    std::vector<std::shared_ptr<std::thread>> threads(concurrency);
+    std::list<std::promise<std::pair<size_t, size_t>>> results;
+    std::mutex lock;
+    for (auto& thread : threads) {
+      results.emplace_back();
+      thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
+                                   std::ref(results.back())));
+    }
+
+    // collect the results
+    for (auto& thread : threads) {
+      thread->join();
+    }
+    size_t assigned = 0, total = 0;
+    for (auto& result : results) {
+      auto stat = result.get_future().get();
+      assigned += stat.first;
+      total += stat.second;
+    }
+
+    LOG_INFO("Assigned speeds to " + std::to_string(assigned) + " edges in total out of " +
+             std::to_string(total));
+  } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
   }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_assign_speeds " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (!vm.count("config")) {
-    std::cout << "You must provide a config for loading and modifying tiles.\n";
-    return EXIT_FAILURE;
-  }
-
-  // configure logging
-  bpt::ptree config;
-  rapidjson::read_json(config_file_path, config);
-  config.get_child("mjolnir").erase("tile_extract");
-  config.get_child("mjolnir").erase("tile_url");
-  config.get_child("mjolnir").erase("traffic_extract");
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
-
-  // queue some tiles up to modify
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(config.get_child("mjolnir"));
-  auto tileset = reader.GetTileSet();
-  for (const auto& id : tileset) {
-    tilequeue.emplace_back(id);
-  }
-  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
-
-  // spawn threads to modify the tiles
-  auto concurrency =
-      std::max(static_cast<unsigned int>(1),
-               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  std::vector<std::shared_ptr<std::thread>> threads(concurrency);
-  std::list<std::promise<std::pair<size_t, size_t>>> results;
-  std::mutex lock;
-  for (auto& thread : threads) {
-    results.emplace_back();
-    thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
-  }
-
-  // collect the results
-  for (auto& thread : threads) {
-    thread->join();
-  }
-  size_t assigned = 0, total = 0;
-  for (auto& result : results) {
-    auto stat = result.get_future().get();
-    assigned += stat.first;
-    total += stat.second;
-  }
-
-  LOG_INFO("Assigned speeds to " + std::to_string(assigned) + " edges in total out of " +
-           std::to_string(total));
 }

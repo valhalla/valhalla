@@ -15,8 +15,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <algorithm>
 #include <deque>
@@ -38,7 +38,6 @@ namespace vj = valhalla::mjolnir;
 namespace pbf = opentraffic::osmlr;
 
 namespace bal = boost::algorithm;
-namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
 namespace bfs = filesystem;
 
@@ -945,52 +944,60 @@ void add_chunks(const bpt::ptree& pt,
 
 } // anonymous namespace
 
-int main(int argc, char** argv) {
-  std::string config, tile_dir;
-  unsigned int num_threads = 1;
+// args
+std::string config, tile_dir;
+unsigned int num_threads = 1;
 
-  bpo::options_description options(
-      "valhalla_associate_segments " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_associate_segments [options]\n"
-      "\n"
-      "osmlr associates traffic segment descriptors with a valhalla graph. "
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir),
-      "Location of traffic segment tiles.")("concurrency,j", bpo::value<unsigned int>(&num_threads),
-                                            "Number of threads to use.")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-  bpo::variables_map vm;
+bool ParseArguments(int argc, char* argv[]) {
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
-  }
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_associate_segments",
+      "valhalla_associate_segments " VALHALLA_VERSION "\n\n"
+      "valhalla_associate_segments associates traffic segment\n"
+      "descriptors with a valhalla graph via osmlr.\n\n");
 
-  if (vm.count("help") || !vm.count("config")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("t,osmlr-tile-dir", "Location of traffic segment tiles.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>())
+      ("c,config", "Valhalla configuration file [required]", cxxopts::value<std::string>());
+    // clang-format on
 
-  if (vm.count("version")) {
-    std::cout << "valhalla_associate_segments " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
+    auto result = options.parse(argc, argv);
 
-  if (!vm.count("osmlr-tile-dir")) {
-    std::cout << "You must provide a tile directory to read OSMLR tiles from.\n";
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      exit(0);
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_associate_segments " << VALHALLA_VERSION << "\n";
+      exit(0);
+    }
+
+    if (!result.count("osmlr-tile-dir")) {
+      std::cout << "You must provide a tile directory to read OSMLR tiles from.\n";
+      return false;
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
+      config = result["config"].as<std::string>();
+      return true;
+    } else {
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  }
+  return false;
+}
+
+int main(int argc, char** argv) {
+  // Parse command line arguments
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
   }
 

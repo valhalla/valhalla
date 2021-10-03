@@ -15,12 +15,12 @@ bool ParseArguments(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-        "pbfadminbuilder",
-        "pbfadminbuilder " VALHALLA_VERSION "\n\n"
-        "pbfadminbuilder is a program that creates a administrative SQLite database from \n"
-        "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
-        "nodes and edges."
-        "\n\n");
+      "valhalla_build_admins",
+      "valhalla_build_admins " VALHALLA_VERSION "\n\n"
+      "valhalla_build_admins is a program that creates a administrative SQLite database from \n"
+      "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
+      "nodes and edges."
+      "\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
@@ -44,20 +44,18 @@ bool ParseArguments(int argc, char* argv[]) {
     }
 
     // input files are positional
-    if (result.count("input_files") == 0) {
+    if (!result.count("input_files")) {
       std::cerr << "Input file is required\n" << std::endl;
       return false;
     }
     input_files = result["input_files"].as<std::vector<std::string>>();
 
-    if (result.count("config")) {
-      auto fp = result["config"].as<std::string>();
-      config_file_path = filesystem::path(fp);
-      if (filesystem::is_regular_file(config_file_path)) {
-        return true;
-      } else {
-        std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
-      }
+    if (result.count("config") &&
+        filesystem::is_regular_file(config_file_path =
+                                        filesystem::path(result["config"].as<std::string>()))) {
+      return true;
+    } else {
+      std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
