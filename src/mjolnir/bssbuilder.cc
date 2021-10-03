@@ -279,6 +279,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
                           NodeType::kBikeShare,
                           false,
                           true,
+                          false,
                           false};
 
     new_bss_node.set_mode_change(true);

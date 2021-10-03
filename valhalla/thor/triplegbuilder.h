@@ -43,11 +43,11 @@ public:
    * @param path_end              One past the last path info in the path
    * @param origin                The origin location with path edges filled in from loki
    * @param dest                  The destination location with path edges filled in from loki
-   * @param through_loc           The list of through locations along this leg if any
    * @param trip_path             The leg we will fill out
    * @param alagorithms           The list of graph search algorithm names used to create the path
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
    * @param edge_trimming         Markers on edges with information on how to trim their shape
+   * @param intermediate          The locations between the origin and dest (through or via types)
    * @return
    */
   static void Build(const valhalla::Options& options,
@@ -58,12 +58,12 @@ public:
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,
                     valhalla::Location& dest,
-                    const std::list<valhalla::Location>& through_loc,
                     TripLeg& trip_path,
                     const std::vector<std::string>& algorithms,
                     const std::function<void()>* interrupt_callback = nullptr,
-                    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        edge_trimming = nullptr);
+                    const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>&
+                        edge_trimming = {},
+                    const std::vector<valhalla::Location>& intermediates = {});
 };
 
 } // namespace thor

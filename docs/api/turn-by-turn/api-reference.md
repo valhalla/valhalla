@@ -123,8 +123,9 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `height` | The height of the vehicle (in meters). |
 | `width` | The width of the vehicle (in meters). |
 | `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. |
 | `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
-| `include_hov3` | A bollean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
 
 The following options are available for `truck` costing.
@@ -354,8 +355,8 @@ Each maneuver includes:
 | `verbal_transition_alert_instruction` | Text suitable for use as a verbal alert in a navigation application. The transition alert instruction will prepare the user for the forthcoming transition. For example: "Turn right onto North Prince Street". |
 | `verbal_pre_transition_instruction` | Text suitable for use as a verbal message immediately prior to the maneuver transition. For example "Turn right onto North Prince Street, U.S. 2 22". |
 | `verbal_post_transition_instruction` | Text suitable for use as a verbal message immediately after the maneuver transition. For example "Continue on U.S. 2 22 for 3.9 miles". |
-| `street_names` | List of street names that are consistent along the entire maneuver. |
-| `begin_street_names` | When present, these are the street names at the beginning of the maneuver (if they are different than the names that are consistent along the entire maneuver). |
+| `street_names` | List of street names that are consistent along the entire nonobvious maneuver. |
+| `begin_street_names` | When present, these are the street names at the beginning (transition point) of the nonobvious maneuver (if they are different than the names that are consistent along the entire nonobvious maneuver). |
 | `time` | Estimated time along the maneuver in seconds. |
 | `length` | Maneuver length in the units specified. |
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |

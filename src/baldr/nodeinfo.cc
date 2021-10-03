@@ -77,7 +77,8 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const NodeType type,
                    const bool traffic_signal,
                    const bool tagged_access,
-                   const bool private_access) {
+                   const bool private_access,
+                   const bool cash_only_toll) {
   memset(this, 0, sizeof(NodeInfo));
   set_latlng(tile_corner, ll);
   set_access(access);
@@ -85,6 +86,7 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
   set_traffic_signal(traffic_signal);
   set_tagged_access(tagged_access);
   set_private_access(private_access);
+  set_cash_only_toll(cash_only_toll);
 }
 
 // Sets the latitude and longitude.
