@@ -525,7 +525,8 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 int main(int argc, char* argv[]) {
   // args
   std::string json_str, json_file, config;
-  bool multi_run, match_test, verbose_lanes;
+  bool match_test, verbose_lanes;
+  bool multi_run = false;
   uint32_t iterations;
 
   try {
@@ -569,6 +570,10 @@ int main(int argc, char* argv[]) {
     match_test = result["match-test"].as<bool>();
     iterations = result["multi-run"].as<uint32_t>();
     verbose_lanes = result["verbose-lanes"].as<bool>();
+
+    if (iterations > 1) {
+      multi_run = true;
+    }
 
     if (result.count("json-file") && result.count("json")) {
       LOG_WARN("json and json-file option are set, using json-file content");
