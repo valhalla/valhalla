@@ -76,6 +76,8 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
+  // args
+  std::string config_file_path;
   try {
     // clang-format off
     cxxopts::Options options(
@@ -106,59 +108,59 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
     auto config_file_path = result["config"].as<std::string>();
-
-    // configure logging
-    bpt::ptree config;
-    rapidjson::read_json(config_file_path, config);
-    config.get_child("mjolnir").erase("tile_extract");
-    config.get_child("mjolnir").erase("tile_url");
-    config.get_child("mjolnir").erase("traffic_extract");
-    boost::optional<boost::property_tree::ptree&> logging_subtree =
-        config.get_child_optional("mjolnir.logging");
-    if (logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
-
-    // queue some tiles up to modify
-    std::deque<GraphId> tilequeue;
-    GraphReader reader(config.get_child("mjolnir"));
-    auto tileset = reader.GetTileSet();
-    for (const auto& id : tileset) {
-      tilequeue.emplace_back(id);
-    }
-    std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
-
-    // spawn threads to modify the tiles
-    auto concurrency = std::max(static_cast<unsigned int>(1),
-                                config.get<unsigned int>("mjolnir.concurrency",
-                                                         std::thread::hardware_concurrency()));
-    std::vector<std::shared_ptr<std::thread>> threads(concurrency);
-    std::list<std::promise<std::pair<size_t, size_t>>> results;
-    std::mutex lock;
-    for (auto& thread : threads) {
-      results.emplace_back();
-      thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
-                                   std::ref(results.back())));
-    }
-
-    // collect the results
-    for (auto& thread : threads) {
-      thread->join();
-    }
-    size_t assigned = 0, total = 0;
-    for (auto& result : results) {
-      auto stat = result.get_future().get();
-      assigned += stat.first;
-      total += stat.second;
-    }
-
-    LOG_INFO("Assigned speeds to " + std::to_string(assigned) + " edges in total out of " +
-             std::to_string(total));
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
   }
+
+  // configure logging
+  bpt::ptree config;
+  rapidjson::read_json(config_file_path, config);
+  config.get_child("mjolnir").erase("tile_extract");
+  config.get_child("mjolnir").erase("tile_url");
+  config.get_child("mjolnir").erase("traffic_extract");
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      config.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
+    valhalla::midgard::logging::Configure(logging_config);
+  }
+
+  // queue some tiles up to modify
+  std::deque<GraphId> tilequeue;
+  GraphReader reader(config.get_child("mjolnir"));
+  auto tileset = reader.GetTileSet();
+  for (const auto& id : tileset) {
+    tilequeue.emplace_back(id);
+  }
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
+
+  // spawn threads to modify the tiles
+  auto concurrency =
+      std::max(static_cast<unsigned int>(1),
+               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  std::vector<std::shared_ptr<std::thread>> threads(concurrency);
+  std::list<std::promise<std::pair<size_t, size_t>>> results;
+  std::mutex lock;
+  for (auto& thread : threads) {
+    results.emplace_back();
+    thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
+                                 std::ref(results.back())));
+  }
+
+  // collect the results
+  for (auto& thread : threads) {
+    thread->join();
+  }
+  size_t assigned = 0, total = 0;
+  for (auto& result : results) {
+    auto stat = result.get_future().get();
+    assigned += stat.first;
+    total += stat.second;
+  }
+
+  LOG_INFO("Assigned speeds to " + std::to_string(assigned) + " edges in total out of " +
+           std::to_string(total));
 }

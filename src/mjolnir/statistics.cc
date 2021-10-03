@@ -133,7 +133,7 @@ void statistics::add_country_hazmat(const std::string& ctry_code,
 }
 
 void statistics::add_tile_truck_route(const uint64_t& tile_id,
-                                      const valhalla::baldr::RoadClass& rclass,
+                                      const RoadClass& rclass,
                                       const float length) {
   tile_truck_route[tile_id][rclass] += length;
 }
