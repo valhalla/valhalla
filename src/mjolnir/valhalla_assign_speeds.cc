@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
