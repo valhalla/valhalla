@@ -358,8 +358,13 @@ GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  // args
+  std::string config;
+  float o_lng, o_lat, d_lng, d_lat;
+  std::string o_onestop_id, d_onestop_id, time;
+  int tripid;
+
   try {
-    std::string config;
     // clang-format off
     cxxopts::Options options(
       "valhalla_query_transit",
@@ -407,75 +412,74 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
       }
     }
-    auto o_lng = result["o_lng"].as<float>();
-    auto o_lat = result["o_lat"].as<float>();
-    auto d_lng = result["d_lng"].as<float>();
-    auto d_lat = result["d_lat"].as<float>();
-    auto o_onestop_id = result["o_onestop_id"].as<std::string>();
-    auto d_onestop_id = result["d_onestop_id"].as<std::string>();
-    auto tripid = result["tripid"].as<int>();
-    auto time = result["time"].as<std::string>();
-
-    // Read config
-    boost::property_tree::ptree pt;
-    rapidjson::read_json(config, pt);
-
-    LOG_INFO("Read config");
-
-    // Bail if no transit dir
-    auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
-    if (!transit_dir || !filesystem::exists(*transit_dir) ||
-        !filesystem::is_directory(*transit_dir)) {
-      LOG_INFO("Transit directory not found.");
-      return 0;
-    }
-
-    // Get the tile
-    PointLL stopll(o_lng, o_lat);
-    auto local_level = TileHierarchy::levels().back().level;
-    auto tiles = TileHierarchy::levels().back().tiles;
-    uint32_t tileid = tiles.TileId(stopll);
-    LOG_INFO("Origin Tile " + std::to_string(tileid));
-
-    // Read transit tile
-    GraphId tile(tileid, local_level, 0);
-    std::string file_name;
-    Transit transit = read_pbf(tile, *transit_dir, file_name);
-
-    // Get the graph Id of the stop
-    GraphId originid = GetGraphId(transit, o_onestop_id);
-
-    if (tripid == 0 || time.empty()) {
-      // Log departures from this stop
-      LogDepartures(transit, originid, file_name);
-
-      // Log routes in this tile
-      LogRoutes(transit);
-    } else {
-
-      GraphId destid = GraphId();
-      if (!o_onestop_id.empty()) {
-
-        // Get the tile
-        PointLL stopll(d_lng, d_lat);
-        uint32_t tileid = tiles.TileId(stopll);
-
-        // Read transit tile
-        GraphId tile(tileid, local_level, 0);
-        std::string file_name;
-        Transit transit = read_pbf(tile, *transit_dir, file_name);
-
-        LOG_INFO("Dest Tile " + std::to_string(tileid));
-        // Get the graph Id of the stop
-        destid = GetGraphId(transit, d_onestop_id);
-      }
-
-      LOG_INFO("Schedule:");
-      LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name, local_level);
-    }
+    o_lng = result["o_lng"].as<float>();
+    o_lat = result["o_lat"].as<float>();
+    d_lng = result["d_lng"].as<float>();
+    d_lat = result["d_lat"].as<float>();
+    o_onestop_id = result["o_onestop_id"].as<std::string>();
+    d_onestop_id = result["d_onestop_id"].as<std::string>();
+    tripid = result["tripid"].as<int>();
+    time = result["time"].as<std::string>();
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
+  }
+
+  // Read config
+  boost::property_tree::ptree pt;
+  rapidjson::read_json(config, pt);
+
+  LOG_INFO("Read config");
+
+  // Bail if no transit dir
+  auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
+  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
+    LOG_INFO("Transit directory not found.");
+    return 0;
+  }
+
+  // Get the tile
+  PointLL stopll(o_lng, o_lat);
+  auto local_level = TileHierarchy::levels().back().level;
+  auto tiles = TileHierarchy::levels().back().tiles;
+  uint32_t tileid = tiles.TileId(stopll);
+  LOG_INFO("Origin Tile " + std::to_string(tileid));
+
+  // Read transit tile
+  GraphId tile(tileid, local_level, 0);
+  std::string file_name;
+  Transit transit = read_pbf(tile, *transit_dir, file_name);
+
+  // Get the graph Id of the stop
+  GraphId originid = GetGraphId(transit, o_onestop_id);
+
+  if (tripid == 0 || time.empty()) {
+    // Log departures from this stop
+    LogDepartures(transit, originid, file_name);
+
+    // Log routes in this tile
+    LogRoutes(transit);
+  } else {
+
+    GraphId destid = GraphId();
+    if (!o_onestop_id.empty()) {
+
+      // Get the tile
+      PointLL stopll(d_lng, d_lat);
+      uint32_t tileid = tiles.TileId(stopll);
+
+      // Read transit tile
+      GraphId tile(tileid, local_level, 0);
+      std::string file_name;
+      Transit transit = read_pbf(tile, *transit_dir, file_name);
+
+      LOG_INFO("Dest Tile " + std::to_string(tileid));
+      // Get the graph Id of the stop
+      destid = GetGraphId(transit, d_onestop_id);
+    }
+
+    LOG_INFO("Schedule:");
+    LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name, local_level);
   }
 
   return EXIT_SUCCESS;

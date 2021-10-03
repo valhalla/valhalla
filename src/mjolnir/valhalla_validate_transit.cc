@@ -42,12 +42,12 @@ bool ParseArguments(int argc, char* argv[]) {
 
     if (result.count("help")) {
       std::cout << options.help() << "\n";
-      return true;
+      exit(0);
     }
 
     if (result.count("version")) {
       std::cout << "valhalla_validate_transit " << VALHALLA_VERSION << "\n";
-      return true;
+      exit(0);
     }
 
     if (result.count("config") &&

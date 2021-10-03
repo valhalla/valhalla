@@ -127,15 +127,14 @@ int main(int argc, char* argv[]) {
       std::cout << "valhalla_benchmakr_adjacency_list " << VALHALLA_VERSION << "\n";
       return EXIT_SUCCESS;
     }
-
-    // Benchmark with count, maxcost, and bucketsize
-    Benchmark(1000000, 50000, 1);
-    LOG_INFO("Done Benchmark!");
-
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
+
+  // Benchmark with count, maxcost, and bucketsize
+  Benchmark(1000000, 50000, 1);
+  LOG_INFO("Done Benchmark!");
 
   return EXIT_SUCCESS;
 }

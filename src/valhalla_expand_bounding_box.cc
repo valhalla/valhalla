@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
     }
 
     // Read the config file
-    boost::property_tree::ptree pt;
     if (result.count("inline-config")) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
