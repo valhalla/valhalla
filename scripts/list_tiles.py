@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #Author: Greg Knisely
 #TileHierarchy and Tiles logic based on 
 #https://github.com/valhalla/valhalla/blob/master/src/baldr/tilehierarchy.cc and
