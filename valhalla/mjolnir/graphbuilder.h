@@ -70,7 +70,8 @@ public:
 
   static void AddPronunciation(const baldr::PronunciationAlphabet alphabet,
                                const std::string& phoneme,
-                               std::vector<std::string>& pronunciations);
+                               std::vector<std::string>& pronunciations,
+                               uint32_t& count);
 
   static void BuildPronunciations(const std::vector<std::string>& ipa_tokens,
                                   const std::vector<std::string>& nt_sampa_tokens,
@@ -81,7 +82,8 @@ public:
                                   bool add_ipa,
                                   bool add_nt_sampa,
                                   bool add_katakana,
-                                  bool add_jeita);
+                                  bool add_jeita,
+                                  uint32_t& count);
 
   static bool CreateSignInfoList(const OSMNode& node,
                                  const OSMWay& way,
