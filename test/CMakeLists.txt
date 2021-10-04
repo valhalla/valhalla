@@ -35,7 +35,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles)
+  incident_loading worker_nullptr_tiles tar_index)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
@@ -134,12 +134,15 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
+      --with-traffic
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1,"logging":{"type":""}}}'
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
@@ -309,6 +312,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-astar_bss paris_bss_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
+  add_dependencies(run-tar_index utrecht_tiles)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

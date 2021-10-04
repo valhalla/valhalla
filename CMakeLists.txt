@@ -335,19 +335,21 @@ if(ENABLE_SERVICES)
   endforeach()
 endif()
 
-install(
-  FILES
-    scripts/valhalla_build_config
-    scripts/valhalla_build_elevation
-    scripts/valhalla_build_transit
-    scripts/valhalla_build_timezones
-    scripts/valhalla_build_extract
-  DESTINATION "${CMAKE_INSTALL_BINDIR}"
-  PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  COMPONENT runtime)
+# add the scripts to the build folder as well
+foreach(script valhalla_build_config valhalla_build_elevation valhalla_build_transit valhalla_build_extract)
+  configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
+  
+  install(
+    FILES
+      scripts/${script}
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
+      COMPONENT runtime
+    )
+endforeach()
 
 install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"

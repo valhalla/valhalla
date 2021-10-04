@@ -188,8 +188,6 @@ public:
       }
       ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE),
                  MAP_SHARED, fd, 0);
-      // TODO: multithreading might mmap more than once
-      std::cout << ptr << std::endl;
       if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
@@ -662,6 +660,7 @@ struct tar {
   };
 
   std::string tar_file;
+  bool success_index = false;
 
   // TODO:
   mem_map<char> mm;
@@ -717,8 +716,10 @@ struct tar {
           tried_index = true;
           contents = from_index(name, position, mm.get(), size);
           // if it was able to intialize from an index we bail
-          if (!contents.empty())
+          if (!contents.empty()) {
+            success_index = true;
             return;
+          }
         }
         // otherwise we just get each item at a time
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),

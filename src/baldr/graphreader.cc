@@ -78,7 +78,6 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
       // load the tar
-      graph_from_index = true;
       archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
       // map files to graph ids
       if (tiles.empty()) {

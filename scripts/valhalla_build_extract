@@ -171,17 +171,20 @@ def create_extracts(config_: dict, do_traffic: bool):
 if __name__ == '__main__':
     args = parser.parse_args()
 
+    if not args.config and not args.inline_config:
+        LOGGER.critical("No valid config file or inline config used.")
+        sys.exit(1)
+
     config = dict()
-    if args.config.exists():
+    try:
         with open(args.config) as f:
             config = json.load(f)
+    except TypeError:
+        LOGGER.warning("Only inline-config will be used.")
+        pass
     
     # override with inline-config
     config.update(**json.loads(args.inline_config))
-
-    if not config:
-        LOGGER.critical("No valid config file or inline config used.")
-        sys.exit(1)
 
     # set the right logger level
     if args.verbosity == 0:
