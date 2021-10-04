@@ -15,7 +15,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
       A----B----C
             \
-             D-------E-------F
+             D-------E-------F-------G-------H-------I-------J-------K-------L-------M-------N
   )";
 
   const gurka::ways ways =
@@ -150,7 +150,53 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {{"highway", "primary"},
          {"destination", "destination1;destination2"},
          {"destination:pronunciation", "destination:pronunciation1;destination:pronunciation2"}}},
-       {"EF", {{"highway", "primary_link"}, {"oneway", "yes"}}}};
+       {"EF",
+        {{"highway", "primary_link"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2"},
+         {"destination:pronunciation", ";"}}},
+       {"FG",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", ";;destination:pronunciation3"}}},
+       {"GH",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", ";destination:pronunciation2;"}}},
+       {"HI",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", ";destination:pronunciation2;destination:pronunciation3"}}},
+       {"IJ",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", "destination:pronunciation1;;destination:pronunciation3"}}},
+       {"JK",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", "destination:pronunciation1;destination:pronunciation2;"}}},
+       {"KL",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation", "destination:pronunciation1;;"}}},
+       {"LM",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation:x-katakana", ";destination:pronunciation2:x-katakana;"},
+         {"destination:pronunciation:x-jeita", ";destination:pronunciation2:x-jeita;"}}},
+       {"MN",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"destination", "destination1;destination2;destination3"},
+         {"destination:pronunciation:x-katakana", ";;destination:pronunciation3:x-katakana"},
+         {"destination:pronunciation:x-jeita", ";destination:pronunciation2:x-jeita;"}}}};
 
   const gurka::nodes nodes =
       {{"B",
@@ -244,6 +290,70 @@ TEST(Standalone, PhonemesWithAltandDirection) {
   EXPECT_NE(EF_edge, nullptr);
   EXPECT_NE(FE_edge, nullptr);
 
+  GraphId FG_edge_id;
+  const DirectedEdge* FG_edge = nullptr;
+  GraphId GF_edge_id;
+  const DirectedEdge* GF_edge = nullptr;
+  std::tie(FG_edge_id, FG_edge, GF_edge_id, GF_edge) = findEdge(graph_reader, map.nodes, "FG", "G");
+  EXPECT_NE(FG_edge, nullptr);
+  EXPECT_NE(GF_edge, nullptr);
+
+  GraphId GH_edge_id;
+  const DirectedEdge* GH_edge = nullptr;
+  GraphId HG_edge_id;
+  const DirectedEdge* HG_edge = nullptr;
+  std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) = findEdge(graph_reader, map.nodes, "GH", "H");
+  EXPECT_NE(GH_edge, nullptr);
+  EXPECT_NE(HG_edge, nullptr);
+
+  GraphId HI_edge_id;
+  const DirectedEdge* HI_edge = nullptr;
+  GraphId IH_edge_id;
+  const DirectedEdge* IH_edge = nullptr;
+  std::tie(HI_edge_id, HI_edge, IH_edge_id, IH_edge) = findEdge(graph_reader, map.nodes, "HI", "I");
+  EXPECT_NE(HI_edge, nullptr);
+  EXPECT_NE(IH_edge, nullptr);
+
+  GraphId IJ_edge_id;
+  const DirectedEdge* IJ_edge = nullptr;
+  GraphId JI_edge_id;
+  const DirectedEdge* JI_edge = nullptr;
+  std::tie(IJ_edge_id, IJ_edge, JI_edge_id, JI_edge) = findEdge(graph_reader, map.nodes, "IJ", "J");
+  EXPECT_NE(IJ_edge, nullptr);
+  EXPECT_NE(JI_edge, nullptr);
+
+  GraphId JK_edge_id;
+  const DirectedEdge* JK_edge = nullptr;
+  GraphId KJ_edge_id;
+  const DirectedEdge* KJ_edge = nullptr;
+  std::tie(JK_edge_id, JK_edge, KJ_edge_id, KJ_edge) = findEdge(graph_reader, map.nodes, "JK", "K");
+  EXPECT_NE(JK_edge, nullptr);
+  EXPECT_NE(KJ_edge, nullptr);
+
+  GraphId KL_edge_id;
+  const DirectedEdge* KL_edge = nullptr;
+  GraphId LK_edge_id;
+  const DirectedEdge* LK_edge = nullptr;
+  std::tie(KL_edge_id, KL_edge, LK_edge_id, LK_edge) = findEdge(graph_reader, map.nodes, "KL", "L");
+  EXPECT_NE(KL_edge, nullptr);
+  EXPECT_NE(LK_edge, nullptr);
+
+  GraphId LM_edge_id;
+  const DirectedEdge* LM_edge = nullptr;
+  GraphId ML_edge_id;
+  const DirectedEdge* ML_edge = nullptr;
+  std::tie(LM_edge_id, LM_edge, ML_edge_id, ML_edge) = findEdge(graph_reader, map.nodes, "LM", "M");
+  EXPECT_NE(LM_edge, nullptr);
+  EXPECT_NE(ML_edge, nullptr);
+
+  GraphId MN_edge_id;
+  const DirectedEdge* MN_edge = nullptr;
+  GraphId NM_edge_id;
+  const DirectedEdge* NM_edge = nullptr;
+  std::tie(MN_edge_id, MN_edge, NM_edge_id, NM_edge) = findEdge(graph_reader, map.nodes, "MN", "N");
+  EXPECT_NE(MN_edge, nullptr);
+  EXPECT_NE(NM_edge, nullptr);
+
   // Test the named junction on the node.  nt-sampa wins
   {
     GraphId node_id = AB_edge->endnode();
@@ -275,7 +385,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       ++sign_index;
     }
   }
-  // Test the ref on the node.  katakana wins
+  // Test the ref on the node katakana wins.  Also, test empty pronunciations
   {
 
     GraphId node_id = EF_edge->endnode();
@@ -292,7 +402,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
       if (iter == pronunciations.end()) {
-        EXPECT_EQ(signs.at(sign_index).text(), "E"); // gurka adds a name of "E"
+        if (sign_index == 1)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        if (sign_index == 2)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination2");
       } else {
         if ((iter->second).second == "node ref:pronunciation:x-katakana") {
           EXPECT_EQ(signs.at(sign_index).text(), "node ref");
@@ -301,6 +414,298 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         } else
           EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
       }
+      ++sign_index;
+    }
+  }
+
+  // Test 2 empty pronunciations
+  {
+
+    GraphId node_id = FG_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(FG_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(FG_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 0)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        else if (sign_index == 1)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation3") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 2 empty pronunciations
+  {
+
+    GraphId node_id = GH_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(GH_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(GH_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 0)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        else if (sign_index == 2)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation2") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 1 empty pronunciation
+  {
+
+    GraphId node_id = HI_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(HI_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(HI_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 0)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation2") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else if ((iter->second).second == "destination:pronunciation3") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 1 empty pronunciation
+  {
+
+    GraphId node_id = IJ_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(IJ_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(IJ_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 1)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation1") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else if ((iter->second).second == "destination:pronunciation3") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 1 empty pronunciation
+  {
+
+    GraphId node_id = JK_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(JK_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(JK_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 2)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation1") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else if ((iter->second).second == "destination:pronunciation2") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 2 empty pronunciations
+  {
+
+    GraphId node_id = KL_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(KL_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(KL_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 1)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        else if (sign_index == 2)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation1") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 2 empty pronunciations and jeita wins
+  {
+
+    GraphId node_id = LM_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(LM_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(LM_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 0)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        else if (sign_index == 2)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation2:x-jeita") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      ++sign_index;
+    }
+  }
+
+  // Test 2 empty pronunciations.  Should have katakanna and jeita
+  {
+
+    GraphId node_id = MN_edge->endnode();
+    auto tile = graph_reader.GetGraphTile(node_id);
+    auto edgeinfo = tile->edgeinfo(MN_edge);
+
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> signs = tile->GetSigns(MN_edge_id.id(), pronunciations);
+
+    uint32_t sign_index = 0;
+    EXPECT_NE(signs.size(), 0);
+    for (const auto& sign : signs) {
+
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(sign_index);
+
+      if (iter == pronunciations.end()) {
+        if (sign_index == 0)
+          EXPECT_EQ(signs.at(sign_index).text(), "destination1");
+        else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      } else if ((iter->second).second == "destination:pronunciation3:x-katakana") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination3");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
+      } else if ((iter->second).second == "destination:pronunciation2:x-jeita") {
+
+        EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        EXPECT_EQ(static_cast<int>((iter->second).first),
+                  static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
+      } else
+        EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
       ++sign_index;
     }
   }
