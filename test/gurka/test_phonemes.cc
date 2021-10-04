@@ -148,6 +148,8 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
          {"junction:ref:pronunciation:x-katakana", "junction:ref:pronunciation:x-katakana"}}},
        {"DE",
         {{"highway", "primary"},
+         {"name", "DE;xyz street;abc ave"},
+         {"name:pronunciation", ";;name:pronunciation"},
          {"destination", "destination1;destination2"},
          {"destination:pronunciation", "destination:pronunciation1;destination:pronunciation2"}}},
        {"EF",
@@ -1001,6 +1003,50 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       }
       ++sign_index;
     }
+
+    auto edgeinfo = tile->edgeinfo(DE_edge);
+    std::vector<uint8_t> types;
+    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+
+    EXPECT_NE(names_and_types.size(), 0);
+
+    pronunciations =
+        edgeinfo.GetPronunciationsMap();
+    uint8_t name_index = 0;
+    for (const auto& name_and_type : names_and_types) {
+      if (types.at(name_index) != 0) {
+        // Skip the tagged names
+        ++name_index;
+        continue;
+      }
+      std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(name_index);
+      if (iter == pronunciations.end()) {
+        EXPECT_NE(iter, pronunciations.end());
+      } else {
+
+        if ((iter->second).second == "name:pronunciation") {
+          EXPECT_EQ(names_and_types.at(name_index).first, "BC");
+          EXPECT_EQ(static_cast<int>((iter->second).first),
+                    static_cast<int>(baldr::PronunciationAlphabet::kIpa));
+        } else if ((iter->second).second == "alt_name:pronunciation:nt-sampa") {
+          EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
+          EXPECT_EQ(static_cast<int>((iter->second).first),
+                    static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+        } else if ((iter->second).second == "official_name:pronunciation:x-jeita") {
+          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(static_cast<int>((iter->second).first),
+                    static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
+        } else if ((iter->second).second == "name:en:pronunciation:x-katakana") {
+          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(static_cast<int>((iter->second).first),
+                    static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
+        } else
+          EXPECT_EQ((iter->second).second, "Extra key.  This should not happen.");
+      }
+      ++name_index;
+    }
+  }
 
     // more signs.  should all be ipa
     node_id = ED_edge->endnode();
