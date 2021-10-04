@@ -94,9 +94,12 @@ int ParseArguments(int argc, char* argv[]) {
       ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>()->default_value("false"))
       ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>())
       ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>()->default_value("0"))
-      ("costing", "Which costing model to use.", cxxopts::value<std::string>()->default_value("auto"));
+      ("costing", "Which costing model to use.", cxxopts::value<std::string>()->default_value("auto"))
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>());
     // clang-format on
 
+    options.parse_positional({"input_files"});
+    options.positional_help("LOCATIONS.TXT");
     auto result = options.parse(argc, argv);
 
     if (result.count("help")) {
@@ -113,6 +116,7 @@ int ParseArguments(int argc, char* argv[]) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return false;
     }
+    input_files = result["input_files"].as<std::vector<std::string>>();
 
     threads = result["threads"].as<size_t>();
     batch = result["batch"].as<size_t>();

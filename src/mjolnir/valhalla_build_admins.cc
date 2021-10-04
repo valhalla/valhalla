@@ -35,12 +35,12 @@ bool ParseArguments(int argc, char* argv[]) {
 
     if (result.count("version")) {
       std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
+      exit(0);
     }
 
     if (result.count("help")) {
       std::cout << options.help() << "\n";
-      return EXIT_SUCCESS;
+      exit(0);
     }
 
     // input files are positional
