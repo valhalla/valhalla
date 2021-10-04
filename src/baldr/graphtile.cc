@@ -47,16 +47,6 @@ std::string GenerateTmpSuffix() {
   return ss.str();
 }
 
-std::vector<std::string> split(const std::string& source, char delimiter) {
-  std::vector<std::string> tokens;
-  std::string token;
-  std::istringstream tokenStream(source);
-  while (std::getline(tokenStream, token, delimiter)) {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
-
 } // namespace
 
 namespace valhalla {
@@ -667,13 +657,6 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
 // Convenience method to get the names for an edge
 std::vector<std::string> GraphTile::GetNames(const DirectedEdge* edge) const {
   return edgeinfo(edge).GetNames();
-}
-
-// Convenience method to get the tagged names for an edge given the offset to the
-// edge info
-std::vector<std::string> GraphTile::GetTaggedValues(const DirectedEdge* edge,
-                                                    bool only_pronunciations) const {
-  return edgeinfo(edge).GetTaggedValues(only_pronunciations);
 }
 
 uint16_t GraphTile::GetTypes(const DirectedEdge* edge) const {

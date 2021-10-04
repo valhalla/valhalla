@@ -354,18 +354,6 @@ public:
   std::vector<std::string> GetNames(const DirectedEdge* edge) const;
 
   /**
-   * Convenience method to get the tagged names for an edge given the offset to the
-   * edge information.
-   * @param  edge  Directed edge
-   * @param  only_pronunciations    Bool indicating whether or not to return only the pronunciation
-   * names
-   *
-   * @return  Returns a list (vector) of names.
-   */
-  std::vector<std::string> GetTaggedValues(const DirectedEdge* edge,
-                                           bool only_pronunciations = false) const;
-
-  /**
    * Convenience method to get the types for the names given the edge
    * @param  edge  Directed edge
    * @return  Returns unit16_t.  If a bit is set, then it is a ref.
