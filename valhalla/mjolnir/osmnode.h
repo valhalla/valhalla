@@ -54,7 +54,8 @@ struct OSMNode {
   uint32_t urban_ : 1;
   uint32_t tagged_access_ : 1; // Was access originally tagged?
   uint32_t private_access_ : 1;
-  uint32_t spare1_ : 6;
+  uint32_t cash_only_toll_ : 1;
+  uint32_t spare1_ : 5;
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
@@ -644,6 +645,22 @@ struct OSMNode {
    */
   bool private_access() const {
     return private_access_;
+  }
+
+  /**
+   * Set the cash_only_toll flag.
+   * @param  cash_only_toll bool.
+   */
+  void set_cash_only_toll(const bool cash_only_toll) {
+    cash_only_toll_ = cash_only_toll;
+  }
+
+  /**
+   * Get the cash_only_toll flag.
+   * @return  Returns cash_only_toll flag.
+   */
+  bool cash_only_toll() const {
+    return cash_only_toll_;
   }
 };
 

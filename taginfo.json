@@ -2789,6 +2789,13 @@
       "description": "Allows access for hov."
     },
     {
+      "key": "payment:*",
+      "object_types": [
+        "node"
+      ],
+      "description": "Payment keys/values (for tolls)."
+    },
+    {
       "key": "impassable",
       "value": "yes",
       "object_types": [
