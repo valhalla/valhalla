@@ -126,10 +126,6 @@ TEST(ConnectivityMap, Basic) {
   filesystem::remove_all(tile_dir);
 }
 
-TEST(TileExtract, IndexFile) {
-  auto config = test::make_config("test/data/utrecht_tiles", {}, {"mjolnir.tile_dir"});
-}
-
 class TestGraphMemory final : public GraphMemory {
 public:
   TestGraphMemory() : memory_(sizeof(GraphTileHeader)) {

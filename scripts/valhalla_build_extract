@@ -99,12 +99,12 @@ def write_index_to_tar(tar_fp_: Path):
 
 def create_extracts(config_: dict, do_traffic: bool):
     """Actually creates the tar ball. Break out of main function for testability."""
-    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir"))
-    extract_fp: Path = Path(config_["mjolnir"].get("tile_extract") or tiles_fp.parent.joinpath('valhalla_tiles.tar'))
+    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", 'nodirectory.foo'))
+    extract_fp: Path = Path(config_["mjolnir"].get("tile_extract") or tiles_fp.parent.joinpath('tiles.tar'))
     traffic_fp: Path = Path(config_["mjolnir"].get("traffic_extract") or tiles_fp.parent.joinpath('traffic.tar'))
 
     if not tiles_fp.is_dir():
-        LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp} was not found on the filesystem.")
+        LOGGER.critical(f"Directory 'mjolnir.tile_dir': {tiles_fp.resolve()} was not found on the filesystem.")
         sys.exit(1)
 
     tiles_count = get_tile_count(tiles_fp)
