@@ -114,10 +114,21 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
   linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
                                   static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
   std::string pronunciation;
+  // TODO: We need to address the fact that a name/ref value could of been entered incorrectly
+  // For example, name="XYZ Street;;ABC Street"
+  // name:pronunciation="pronunciation1;pronunciation2;pronunciation3" So we check for
+  // name_tokens_size == pronunciation_tokens.size() and we will not toss the second record in the
+  // vector, but we should as it is blank.  We actually address with blank name in edgeinfo via
+  // tossing the name if GraphTileBuilder::AddName returns 0.  Thought is we could address this now in
+  // GetTagTokens and if we have a mismatch then don't add the pronunciations.  To date no data has
+  // been found as described, but it could happen.  Address this issue with the Language updates.
+
   if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size()) {
     for (const auto& t : pronunciation_tokens) {
-      if (!t.size())
+      if (!t.size()) { // pronunciation is blank. skip and increment the index
+        ++header.name_index_;
         continue;
+      }
       header.length_ = t.size();
       pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
       ++header.name_index_;
