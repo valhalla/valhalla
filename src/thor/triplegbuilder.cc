@@ -843,14 +843,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
       name_index++;
     }
-
-    // TODO - debug output for testing - remove in the future
-    for (const auto& pronunciation : pronunciations) {
-      std::cout << static_cast<int>(pronunciation.first) << " "
-                << static_cast<int>((pronunciation.second).first) << " "
-                << (pronunciation.second).second << "-----> "
-                << names_and_types.at(static_cast<int>(pronunciation.first)).first << std::endl;
-    }
   }
 
   // Add tagged names to the edge if requested
@@ -874,15 +866,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Add the edge signs
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
-
-    // TODO - debug output for testing - remove in the future
-    for (const auto& pronunciation : pronunciations) {
-      std::cout << static_cast<int>(pronunciation.first) << " "
-                << static_cast<int>((pronunciation.second).first) << " "
-                << (pronunciation.second).second << "-----> "
-                << edge_signs.at(static_cast<int>(pronunciation.first)).text() << std::endl;
-    }
-
     if (!edge_signs.empty()) {
       valhalla::TripSign* sign = trip_edge->mutable_sign();
       AddSignInfo(controller, edge_signs, pronunciations, sign);
