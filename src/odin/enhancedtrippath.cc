@@ -176,7 +176,7 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
 
 // TODO: in the future might have to have dynamic angle based on road class and lane count
 bool is_fork_forward(uint32_t turn_degree) {
-  return ((turn_degree > 339) || (turn_degree < 21));
+  return ((turn_degree > 345) || (turn_degree < 15));
 }
 
 bool is_relative_straight(uint32_t turn_degree) {
