@@ -53,6 +53,7 @@
    * CHANGED: Update python usage innall scripts to python3 [#3337](https://github.com/valhalla/valhalla/pull/3337)
    * ADDED: Added `exclude_cash_only_tolls` request parameter [#3341](https://github.com/valhalla/valhalla/pull/3341)
    * CHANGED: Update api-reference for street_names [#3342](https://github.com/valhalla/valhalla/pull/3342)
+   * ADDED: Disable msse2 flags when building on Apple Silicon chip [#3327](https://github.com/valhalla/valhalla/pull/3327)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
