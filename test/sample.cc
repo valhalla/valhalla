@@ -2,6 +2,7 @@
 #include "pixels.h"
 
 #include "baldr/compression_utils.h"
+#include "baldr/curl_tilegetter.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
@@ -138,6 +139,10 @@ struct testable_sample_t : public skadi::sample {
   static std::string get_hgt_file_name(uint16_t index) {
     return skadi::sample::get_hgt_file_name(index);
   }
+
+  std::string test_make_single_point_url(const std::string& tile_url, const std::string& fname) {
+    return make_single_point_url(tile_url, fname);
+  }
 };
 
 TEST(Sample, edges) {
@@ -200,6 +205,38 @@ TEST(Sample, hgt_file_name) {
   const auto amsterdam_index =
       testable_sample_t::get_tile_index(midgard::PointLL{4.898484, 52.380697});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
+}
+
+TEST(Sample, test_make_single_point_url) {
+  struct test_case {
+    std::string url;
+    midgard::PointLL point;
+    std::string result;
+  };
+
+  std::vector<test_case> tests{{{"http://s3.amazonaws.com/mapzen.valhalla{DataPath}"},
+                                {-73.512143, 40.646556},
+                                {"http://s3.amazonaws.com/mapzen.valhalla/N40/N40W074.hgt"}},
+                               {{"http://s3.amazonaws.com/mapzen.valhalla{DataPath}"},
+                                {-78.504476, -0.212297},
+                                {"http://s3.amazonaws.com/mapzen.valhalla/S01/S01W079.hgt"}},
+                               {{"http://s3.amazonaws.com/mapzen.valhalla{DataPath}"},
+                                {152.967888, -27.533658},
+                                {"http://s3.amazonaws.com/mapzen.valhalla/S28/S28E152.hgt"}},
+                               {{"http://s3.amazonaws.com/mapzen.valhalla{DataPath}"},
+                                {139.737345, 35.628096},
+                                {"http://s3.amazonaws.com/mapzen.valhalla/N35/N35E139.hgt"}},
+                               {{"http://s3.amazonaws.com/mapzen.valhalla{DataPath}"},
+                                {4.898484, 52.380697},
+                                {"http://s3.amazonaws.com/mapzen.valhalla/N52/N52E004.hgt"}}};
+
+  testable_sample_t s{"test/data"};
+  for (auto&& test : tests) {
+    EXPECT_EQ(test.result,
+              s.test_make_single_point_url(test.url,
+                                           testable_sample_t::get_hgt_file_name(
+                                               testable_sample_t::get_tile_index(test.point))));
+  }
 }
 
 } // namespace

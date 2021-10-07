@@ -8,6 +8,7 @@
 #include <list>
 #include <mutex>
 #include <regex>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -22,6 +23,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
@@ -36,9 +38,42 @@ constexpr int16_t NO_DATA_HIGH = 16384;
 constexpr int16_t NO_DATA_LOW = -16384;
 constexpr size_t TILE_COUNT = 180 * 360;
 constexpr int8_t UNPACKED_TILES_COUNT = 50;
+const constexpr char* kDataPathPattern = "{DataPath}";
 
-// macro is faster than inline function for this..
+// macro is faster than inline function for this...
 #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
+
+template <typename T>
+void parallel_call(const std::function<double(const T&)>& func,
+                   std::vector<T> st,
+                   std::vector<double>& result) {
+  if (!func || st.empty())
+    return;
+
+  std::uint32_t size = std::max(1U, std::thread::hardware_concurrency());
+  std::vector<std::thread> threads;
+  threads.reserve(size);
+  std::mutex m;
+  for (std::size_t i = 0; i < size; ++i) {
+    threads.emplace_back([&]() {
+      while (!st.empty()) {
+        m.lock();
+        if (st.empty()) {
+          m.unlock();
+          return;
+        }
+
+        auto param = st.back();
+        st.pop_back();
+        m.unlock();
+
+        result.push_back(func(param));
+      }
+    });
+  }
+
+  std::for_each(std::begin(threads), std::end(threads), [](auto& thread) { thread.join(); });
+}
 
 std::vector<std::string> get_files(const std::string& root_dir) {
   std::vector<std::string> files;
@@ -54,6 +89,43 @@ std::vector<std::string> get_files(const std::string& root_dir) {
     LOG_WARN(root_dir + " currently has no elevation tiles");
   }
   return files;
+}
+
+std::string generate_tmp_suffix() {
+  std::stringstream ss;
+  ss << ".tmp_" << std::this_thread::get_id() << "_"
+     << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return ss.str();
+}
+
+void save_to(const std::vector<char>& tile_data, const std::string& fpath) {
+  // At first we save tile to a temporary file and then move it
+  // so we can avoid cases when another thread could read partially written file.
+  auto dir = filesystem::path(fpath);
+  dir.replace_filename("");
+
+  filesystem::path tmp_location;
+  if (filesystem::create_directories(dir)) {
+    // Technically this is a race condition but its super unlikely (famous last words)
+    while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+      tmp_location = fpath + generate_tmp_suffix();
+    std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+    file.write(tile_data.data(), tile_data.size());
+    file.close();
+
+    if (file.fail()) {
+      LOG_ERROR("Failed to save data into " + fpath);
+      filesystem::remove(tmp_location);
+      return;
+    }
+
+    if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+      LOG_ERROR("Failed to save data into " + fpath);
+      filesystem::remove(tmp_location);
+    }
+  } else {
+    LOG_ERROR("Failed to create directory " + dir.string());
+  }
 }
 
 int16_t flip(int16_t value) {
@@ -320,6 +392,7 @@ struct cache_t {
   }
 
   tile_data source(uint16_t index);
+  bool store(const std::vector<char>& data, const std::string& elev);
 };
 
 tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
@@ -345,6 +418,22 @@ tile_data& tile_data::operator=(const tile_data& other) {
   if (c && reusable)
     c->increment_usages(index);
   return *this;
+}
+
+bool cache_t::store(const std::vector<char>& raw_data, const std::string& elev) {
+  auto fpath = data_source + elev;
+  if (filesystem::exists(fpath))
+    return true;
+
+  auto data = cache_item_t::parse_hgt_name(elev);
+  if (!data || data->second == format_t::UNKNOWN)
+    return false;
+
+  if (data->first >= cache.size())
+    return false;
+
+  save_to(raw_data, fpath);
+  return cache[data->first].init(fpath, data->second);
 }
 
 tile_data cache_t::source(uint16_t index) {
@@ -418,6 +507,19 @@ tile_data cache_t::source(uint16_t index) {
   return rv;
 }
 
+sample::sample(const boost::property_tree::ptree& pt)
+    : sample(pt.get<std::string>("additional_data.elevation", "")) {
+  url_ = pt.get<std::string>("additional_data.elevation_url", "");
+  remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
+
+  auto max_concurrent_users = pt.get<size_t>("mjolnir.max_concurrent_reader_users", 1);
+  remote_loader_ =
+      std::make_unique<baldr::curl_tile_getter_t>(max_concurrent_users,
+                                                  pt.get<std::string>("mjolnir.user_agent", ""),
+                                                  pt.get<bool>("additional_data.elevation_url_gz",
+                                                               false));
+}
+
 sample::sample(const std::string& data_source) {
   cache_ = new cache_t();
   cache_->data_source = data_source;
@@ -485,12 +587,67 @@ template <class coord_t> double sample::get(const coord_t& coord) {
 template <class coords_t> std::vector<double> sample::get_all(const coords_t& coords) {
   std::vector<double> values;
   values.reserve(coords.size());
+
   // reusable tile
   tile_data tile;
   for (const auto& coord : coords) {
     values.emplace_back(get(coord, tile));
   }
+
   return values;
+}
+
+template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
+  auto tile = cache_->source(get_tile_index(coord));
+  if (!tile)
+    return get_no_data_value();
+
+  double u = (coord.first - std::floor(coord.first)) * (HGT_DIM - 1);
+  double v = (1.0 - (coord.second - std::floor(coord.second))) * (HGT_DIM - 1);
+  return tile.get(u, v);
+}
+
+template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
+  if (url_.empty() || !remote_loader_)
+    return get_no_data_value();
+
+  auto index = get_tile_index(coord);
+  auto elev = get_hgt_file_name(index);
+  auto uri = make_single_point_url(url_, elev);
+
+  {
+    std::lock_guard<std::mutex> _(st_lck_);
+    if (st_.count(uri))
+      return get_from_cache(coord);
+
+    st_.insert(uri);
+  }
+
+  LOG_INFO("Start loading data from remote server address: " + uri);
+  int repeat{3};
+  auto result = remote_loader_->get(uri);
+  while (repeat-- > 0 && result.status_ != baldr::tile_getter_t::status_code_t::SUCCESS) {
+    result = remote_loader_->get(uri);
+  }
+
+  if (result.status_ != baldr::tile_getter_t::status_code_t::SUCCESS) {
+    LOG_WARN("Failed to load data from remote server address: " + uri);
+    return get_no_data_value();
+  }
+
+  if (!cache_->store(result.bytes_, elev)) {
+    LOG_WARN("Failed to save loaded data from remote server address: " + uri);
+    return get_no_data_value();
+  }
+
+  auto res = get_from_cache(coord);
+  if (res == get_no_data_value()) {
+    LOG_WARN("Failed to load data from remote server address: " + uri);
+    return get_no_data_value();
+  }
+
+  LOG_INFO("Data loaded from remote server address: " + uri);
+  return res;
 }
 
 double sample::get_no_data_value() {
@@ -533,11 +690,29 @@ std::string sample::get_hgt_file_name(uint16_t index) {
   return name;
 }
 
+std::string sample::make_single_point_url(const std::string& tile_url, const std::string& fname) {
+  auto id_pos = tile_url.find(kDataPathPattern);
+  return tile_url.substr(0, id_pos) + remote_path_ + fname +
+         tile_url.substr(id_pos + std::strlen(kDataPathPattern));
+}
+
 // explicit instantiations for templated get
 template double sample::get<std::pair<double, double>>(const std::pair<double, double>&);
 template double sample::get<std::pair<float, float>>(const std::pair<float, float>&);
 template double sample::get<midgard::PointLL>(const midgard::PointLL&);
 template double sample::get<midgard::Point2>(const midgard::Point2&);
+
+template double sample::get_from_remote<std::pair<double, double>>(const std::pair<double, double>&);
+template double sample::get_from_remote<std::pair<float, float>>(const std::pair<float, float>&);
+template double sample::get_from_remote<midgard::PointLL>(const midgard::PointLL&);
+template double sample::get_from_remote<midgard::Point2>(const midgard::Point2&);
+
+template double
+sample::get_from_cache<std::pair<double, double>>(const std::pair<double, double>& coord);
+template double sample::get_from_cache<std::pair<float, float>>(const std::pair<float, float>& coord);
+template double sample::get_from_cache<midgard::PointLL>(const midgard::PointLL& coord);
+template double sample::get_from_cache<midgard::Point2>(const midgard::Point2& coord);
+
 template std::vector<double>
 sample::get_all<std::list<std::pair<double, double>>>(const std::list<std::pair<double, double>>&);
 template std::vector<double> sample::get_all<std::vector<std::pair<double, double>>>(

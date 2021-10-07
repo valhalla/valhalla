@@ -1,8 +1,14 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
+#include <mutex>
 #include <string>
+#include <unordered_set>
 #include <vector>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace skadi {
@@ -24,6 +30,7 @@ public:
    * @param data_source  directory name of the datasource from which to sample
    */
   sample(const std::string& data_source);
+  sample(const boost::property_tree::ptree& pt);
   ~sample();
 
   /**
@@ -31,6 +38,12 @@ public:
    * @param coord  the single posting at which to sample the datasource
    */
   template <class coord_t> double get(const coord_t& coord);
+
+  /**
+   * Get a single sample from the remote source
+   * @param coord the single posting at which to sample the datasource
+   */
+  template <class coord_t> double get_from_remote(const coord_t& coord);
 
   /**
    * Get multiple samples from the datasource
@@ -70,8 +83,23 @@ protected:
    */
   void add_single_tile(const std::string& path);
 
+  std::string make_single_point_url(const std::string& tile_url, const std::string& fname);
+
   cache_t* cache_;
   friend cache_t;
+
+private:
+  /**
+   * Get a single sample from cache
+   * @param coord the single posting at which to sample the datasource
+   */
+  template <class coord_t> double get_from_cache(const coord_t& coord);
+
+  std::string url_;
+  std::string remote_path_;
+  std::unique_ptr<baldr::tile_getter_t> remote_loader_;
+  std::unordered_set<std::string> st_;
+  std::mutex st_lck_;
 };
 
 } // namespace skadi
