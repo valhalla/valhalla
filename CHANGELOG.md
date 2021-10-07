@@ -1,4 +1,10 @@
-## Release Date: 2021-??-?? Valhalla 3.1.4
+## Release Date: 2021-??-?? Valhalla 3.1.5
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+   * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
+
+## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
 * **Bug Fix**
    * FIXED: Revert default speed boost for turn channels [#3232](https://github.com/valhalla/valhalla/pull/3232)
@@ -41,7 +47,6 @@
    * CHANGED: Improved sharing criterion to obtain more reasonable alternatives; extended alternatives search [#3302](https://github.com/valhalla/valhalla/pull/3302)
    * ADDED: pull ubuntu:20.04 base image before building [#3233](https://github.com/valhalla/valhalla/pull/3223)
    * CHANGED: Improve Loki nearest-neighbour performance for large radius searches in open space [#3233](https://github.com/valhalla/valhalla/pull/3324)
-   * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
    * ADDED: Shape points and information about where intermediate locations are placed along the legs of a route [#3274](https://github.com/valhalla/valhalla/pull/3274)
    * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
