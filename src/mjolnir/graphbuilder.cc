@@ -385,6 +385,7 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& edges_file,
                   const std::string& complex_restriction_from_file,
                   const std::string& complex_restriction_to_file,
+                  const std::string& pronunciation_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
                   std::map<GraphId, size_t>::const_iterator tile_start,
@@ -399,6 +400,11 @@ void BuildTileSet(const std::string& ways_file,
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
+
+  auto less_than = [](const OSMPronunciation& a, const OSMPronunciation& b) {
+    return a.way_id() < b.way_id();
+  };
+  sequence<OSMPronunciation> pronunciation(pronunciation_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
@@ -693,6 +699,16 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
+          OSMPronunciation p{0};
+          if (w.has_pronunciation_tags()) {
+            OSMPronunciation target{w.way_id()};
+            sequence<OSMPronunciation>::iterator pronunciation_it =
+                pronunciation.find(target, less_than);
+            if (pronunciation_it != pronunciation.end()) {
+              p = pronunciation_it;
+            }
+          }
+
           // Get the shape for the edge and compute its length
           uint32_t edge_info_offset;
           auto found = geo_attribute_cache.cend();
@@ -703,10 +719,13 @@ void BuildTileSet(const std::string& ways_file,
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             uint16_t types = 0;
-            auto names = w.GetNames(ref, osmdata.name_offset_map, types);
-            auto tagged_values = w.GetTaggedValues(osmdata.name_offset_map);
+            std::vector<std::string> names, tagged_values, pronunciations;
+            w.GetNames(ref, osmdata.name_offset_map, p, types, names, pronunciations);
+            w.GetTaggedValues(osmdata.name_offset_map, p, names.size(), tagged_values,
+                              pronunciations);
 
             // Update bike_network type
+
             if (bike_network) {
               bike_network |= w.bike_network();
             } else {
@@ -714,10 +733,11 @@ void BuildTileSet(const std::string& ways_file,
             }
 
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
-            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
-                                                     bike_network, speed_limit, shape, names,
-                                                     tagged_values, types, added, dual_refs);
+            edge_info_offset =
+                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
+                                      speed_limit, shape, names, tagged_values, pronunciations, types,
+                                      added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }
@@ -785,11 +805,11 @@ void BuildTileSet(const std::string& ways_file,
           // TODO - update logic so we limit the CreateSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> signs;
+          std::vector<std::string> pronunciations;
           bool has_guide =
-              GraphBuilder::CreateSignInfoList(node, w, osmdata, signs, fork, forward,
-                                               (directededge.use() == Use::kRamp),
+              GraphBuilder::CreateSignInfoList(node, w, p, osmdata, signs, pronunciations, fork,
+                                               forward, (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
-
           // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
@@ -799,7 +819,8 @@ void BuildTileSet(const std::string& ways_file,
               ((directededge.link() &&
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
                fork || has_guide)) {
-            graphtile.AddSigns(idx, signs);
+
+            graphtile.AddSigns(idx, signs, pronunciations);
             directededge.set_sign(true);
           }
 
@@ -1010,17 +1031,43 @@ void BuildTileSet(const std::string& ways_file,
         }
 
         if (admin_index != 0 && node.named_intersection() && allow_intersection_names[admin_index]) {
+
           std::vector<std::string> node_names;
           node_names = GetTagTokens(osmdata.node_names.name(node.name_index()));
 
           std::vector<SignInfo> signs;
           signs.reserve(node_names.size());
-          for (auto& name : node_names) {
-            signs.emplace_back(Sign::Type::kJunctionName, false, name);
+
+          std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+          GraphBuilder::GetPronunciationTokens(osmdata, node.name_pronunciation_ipa_index(),
+                                               node.name_pronunciation_nt_sampa_index(),
+                                               node.name_pronunciation_katakana_index(),
+                                               node.name_pronunciation_jeita_index(), ipa_tokens,
+                                               nt_sampa_tokens, katakana_tokens, jeita_tokens, true);
+
+          bool add_ipa = (ipa_tokens.size() && node_names.size() == ipa_tokens.size());
+          bool add_nt_sampa = (nt_sampa_tokens.size() && node_names.size() == nt_sampa_tokens.size());
+          bool add_katakana = (katakana_tokens.size() && node_names.size() == katakana_tokens.size());
+          bool add_jeita = (jeita_tokens.size() && node_names.size() == jeita_tokens.size());
+
+          std::vector<std::string> pronunciations;
+
+          for (size_t i = 0; i < node_names.size(); ++i) {
+            if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+              uint32_t count = 0;
+              const size_t size = pronunciations.size();
+              GraphBuilder::BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens,
+                                                jeita_tokens, i, pronunciations, add_ipa,
+                                                add_nt_sampa, add_katakana, add_jeita, count);
+              signs.emplace_back(Sign::Type::kJunctionName, false, false, (count != 0), size, count,
+                                 node_names[i]);
+            } else
+              signs.emplace_back(Sign::Type::kJunctionName, false, false, false, 0, 0, node_names[i]);
           }
+
           if (signs.size()) {
             graphtile.nodes().back().set_named_intersection(true);
-            graphtile.AddSigns(graphtile.nodes().size() - 1, signs);
+            graphtile.AddSigns(graphtile.nodes().size() - 1, signs, pronunciations);
           }
         }
         // Set drive on right flag
@@ -1082,6 +1129,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& edges_file,
                      const std::string& complex_from_restriction_file,
                      const std::string& complex_to_restriction_file,
+                     const std::string& pronunciation_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1116,7 +1164,8 @@ void BuildLocalTiles(const unsigned int thread_count,
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
-                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
+                                     std::cref(complex_to_restriction_file),
+                                     std::cref(pronunciation_file), std::cref(tile_dir),
                                      std::cref(osmdata), tile_start, tile_end, tile_creation_date,
                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
   }
@@ -1173,6 +1222,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
+                         const std::string& pronunciation_file,
                          const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
@@ -1200,8 +1250,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
-                  pt);
+                  complex_from_restriction_file, complex_to_restriction_file, pronunciation_file,
+                  tiles, tile_dir, stats, pt);
   stats.LogStatistics();
 }
 
@@ -1254,30 +1304,154 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
   return refs;
 }
 
+void GraphBuilder::GetPronunciationTokens(const OSMData& osmdata,
+                                          const uint32_t ipa_index,
+                                          const uint32_t nt_sampa_index,
+                                          const uint32_t katakana_index,
+                                          const uint32_t jeita_index,
+                                          std::vector<std::string>& ipa_tokens,
+                                          std::vector<std::string>& nt_sampa_tokens,
+                                          std::vector<std::string>& katakana_tokens,
+                                          std::vector<std::string>& jeita_tokens,
+                                          bool is_node_pronunciation) {
+
+  if (is_node_pronunciation) {
+    if (ipa_index != 0)
+      ipa_tokens = GetTagTokens(osmdata.node_names.name(ipa_index));
+
+    if (nt_sampa_index != 0)
+      nt_sampa_tokens = GetTagTokens(osmdata.node_names.name(nt_sampa_index));
+
+    if (katakana_index != 0)
+      katakana_tokens = GetTagTokens(osmdata.node_names.name(katakana_index));
+
+    if (jeita_index != 0)
+      jeita_tokens = GetTagTokens(osmdata.node_names.name(jeita_index));
+
+  } else {
+    if (ipa_index != 0)
+      ipa_tokens = GetTagTokens(osmdata.name_offset_map.name(ipa_index));
+
+    if (nt_sampa_index != 0)
+      nt_sampa_tokens = GetTagTokens(osmdata.name_offset_map.name(nt_sampa_index));
+
+    if (katakana_index != 0)
+      katakana_tokens = GetTagTokens(osmdata.name_offset_map.name(katakana_index));
+
+    if (jeita_index != 0)
+      jeita_tokens = GetTagTokens(osmdata.name_offset_map.name(jeita_index));
+  }
+}
+
+void GraphBuilder::AddPronunciation(const baldr::PronunciationAlphabet alphabet,
+                                    const std::string& phoneme,
+                                    std::vector<std::string>& pronunciations,
+                                    uint32_t& count) {
+
+  // TODO set the language
+  if (phoneme.size()) {
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
+                                    static_cast<uint8_t>(alphabet), static_cast<uint8_t>(0)};
+    header.length_ = phoneme.length();
+    pronunciations.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) + phoneme));
+    count++;
+  }
+}
+
+void GraphBuilder::BuildPronunciations(const std::vector<std::string>& ipa_tokens,
+                                       const std::vector<std::string>& nt_sampa_tokens,
+                                       const std::vector<std::string>& katakana_tokens,
+                                       const std::vector<std::string>& jeita_tokens,
+                                       const size_t index,
+                                       std::vector<std::string>& pronunciations,
+                                       bool add_ipa,
+                                       bool add_nt_sampa,
+                                       bool add_katakana,
+                                       bool add_jeita,
+                                       uint32_t& count) {
+  if (add_ipa)
+    AddPronunciation(PronunciationAlphabet::kIpa, ipa_tokens[index], pronunciations, count);
+
+  if (add_nt_sampa)
+    AddPronunciation(PronunciationAlphabet::kNtSampa, nt_sampa_tokens[index], pronunciations, count);
+
+  if (add_katakana)
+    AddPronunciation(PronunciationAlphabet::kXKatakana, katakana_tokens[index], pronunciations,
+                     count);
+
+  if (add_jeita)
+    AddPronunciation(PronunciationAlphabet::kXJeita, jeita_tokens[index], pronunciations, count);
+}
+
 bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
                                       const OSMWay& way,
+                                      const OSMPronunciation& pronunciation,
                                       const OSMData& osmdata,
                                       std::vector<SignInfo>& exit_list,
+                                      std::vector<std::string>& pronunciations,
                                       bool fork,
                                       bool forward,
                                       bool ramp,
                                       bool tc) {
 
   bool has_guide = false;
+
   ////////////////////////////////////////////////////////////////////////////
   // NUMBER
   // Exit sign number
   if (way.junction_ref_index() != 0) {
-
     std::vector<std::string> j_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.junction_ref_index()));
-    for (auto& j_ref : j_refs) {
-      exit_list.emplace_back(Sign::Type::kExitNumber, false, j_ref);
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, pronunciation.junction_ref_pronunciation_ipa_index(),
+                           pronunciation.junction_ref_pronunciation_nt_sampa_index(),
+                           pronunciation.junction_ref_pronunciation_katakana_index(),
+                           pronunciation.junction_ref_pronunciation_jeita_index(), ipa_tokens,
+                           nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && j_refs.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && j_refs.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && j_refs.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && j_refs.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < j_refs.size(); ++i) {
+      if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitNumber, false, false, (count != 0), size, count,
+                               j_refs[i]);
+      } else
+        exit_list.emplace_back(Sign::Type::kExitNumber, false, false, false, 0, 0, j_refs[i]);
     }
   } else if (node.has_ref() && !fork && ramp) {
+
     std::vector<std::string> n_refs = GetTagTokens(osmdata.node_names.name(node.ref_index()));
-    for (auto& n_ref : n_refs) {
-      exit_list.emplace_back(Sign::Type::kExitNumber, false, n_ref);
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, node.ref_pronunciation_ipa_index(),
+                           node.ref_pronunciation_nt_sampa_index(),
+                           node.ref_pronunciation_katakana_index(),
+                           node.ref_pronunciation_jeita_index(), ipa_tokens, nt_sampa_tokens,
+                           katakana_tokens, jeita_tokens, true);
+
+    bool add_ipa = (ipa_tokens.size() && n_refs.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && n_refs.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && n_refs.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && n_refs.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < n_refs.size(); ++i) {
+      if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitNumber, false, false, (count != 0), size, count,
+                               n_refs[i]);
+      } else
+        exit_list.emplace_back(Sign::Type::kExitNumber, false, false, false, 0, 0, n_refs[i]);
     }
   }
 
@@ -1291,12 +1465,40 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     has_branch = true;
     std::vector<std::string> branch_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_index()));
-    for (auto& branch_ref : branch_refs) {
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, pronunciation.destination_ref_pronunciation_ipa_index(),
+                           pronunciation.destination_ref_pronunciation_nt_sampa_index(),
+                           pronunciation.destination_ref_pronunciation_katakana_index(),
+                           pronunciation.destination_ref_pronunciation_jeita_index(), ipa_tokens,
+                           nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && branch_refs.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && branch_refs.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && branch_refs.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && branch_refs.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < branch_refs.size(); ++i) {
       if (tc || (!ramp && !fork)) {
-        exit_list.emplace_back(Sign::Type::kGuideBranch, true, branch_ref);
+        if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+          uint32_t count = 0;
+          const size_t size = pronunciations.size();
+          BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                              pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+          exit_list.emplace_back(Sign::Type::kGuideBranch, true, false, (count != 0), size, count,
+                                 branch_refs[i]);
+        } else
+          exit_list.emplace_back(Sign::Type::kGuideBranch, true, false, false, 0, 0, branch_refs[i]);
         has_guide = true;
+      } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitBranch, true, false, (count != 0), size, count,
+                               branch_refs[i]);
       } else
-        exit_list.emplace_back(Sign::Type::kExitBranch, true, branch_ref);
+        exit_list.emplace_back(Sign::Type::kExitBranch, true, false, false, 0, 0, branch_refs[i]);
     }
   }
 
@@ -1305,12 +1507,41 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     has_branch = true;
     std::vector<std::string> branch_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_index()));
-    for (auto& branch_street : branch_streets) {
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, pronunciation.destination_street_pronunciation_ipa_index(),
+                           pronunciation.destination_street_pronunciation_nt_sampa_index(),
+                           pronunciation.destination_street_pronunciation_katakana_index(),
+                           pronunciation.destination_street_pronunciation_jeita_index(), ipa_tokens,
+                           nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && branch_streets.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && branch_streets.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && branch_streets.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && branch_streets.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < branch_streets.size(); ++i) {
       if (tc || (!ramp && !fork)) {
-        exit_list.emplace_back(Sign::Type::kGuideBranch, false, branch_street);
+        if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+          uint32_t count = 0;
+          const size_t size = pronunciations.size();
+          BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                              pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+          exit_list.emplace_back(Sign::Type::kGuideBranch, false, false, (count != 0), size, count,
+                                 branch_streets[i]);
+        } else
+          exit_list.emplace_back(Sign::Type::kGuideBranch, false, false, false, 0, 0,
+                                 branch_streets[i]);
         has_guide = true;
+      } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitBranch, false, false, (count != 0), size, count,
+                               branch_streets[i]);
       } else
-        exit_list.emplace_back(Sign::Type::kExitBranch, false, branch_street);
+        exit_list.emplace_back(Sign::Type::kExitBranch, false, false, false, 0, 0, branch_streets[i]);
     }
   }
 
@@ -1321,15 +1552,45 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
 
   // Guide or Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
+
     has_toward = true;
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_to_index()));
-    for (auto& toward_ref : toward_refs) {
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, pronunciation.destination_ref_to_pronunciation_ipa_index(),
+                           pronunciation.destination_ref_to_pronunciation_nt_sampa_index(),
+                           pronunciation.destination_ref_to_pronunciation_katakana_index(),
+                           pronunciation.destination_ref_to_pronunciation_jeita_index(), ipa_tokens,
+                           nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && toward_refs.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && toward_refs.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && toward_refs.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && toward_refs.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < toward_refs.size(); ++i) {
       if (tc || (!ramp && !fork)) {
-        exit_list.emplace_back(Sign::Type::kGuideToward, true, toward_ref);
+        if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+          uint32_t count = 0;
+          const size_t size = pronunciations.size();
+          BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                              pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+          exit_list.emplace_back(Sign::Type::kGuideToward, true, false, (count != 0), size, count,
+                                 toward_refs[i]);
+        } else
+          exit_list.emplace_back(Sign::Type::kGuideToward, true, false, false, 0, 0, toward_refs[i]);
+
         has_guide = true;
+      } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitToward, true, false, (count != 0), size, count,
+                               toward_refs[i]);
       } else
-        exit_list.emplace_back(Sign::Type::kExitToward, true, toward_ref);
+        exit_list.emplace_back(Sign::Type::kExitToward, true, false, false, 0, 0, toward_refs[i]);
     }
   }
 
@@ -1338,12 +1599,43 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     has_toward = true;
     std::vector<std::string> toward_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_to_index()));
-    for (auto& toward_street : toward_streets) {
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, pronunciation.destination_street_to_pronunciation_ipa_index(),
+                           pronunciation.destination_street_to_pronunciation_nt_sampa_index(),
+                           pronunciation.destination_street_to_pronunciation_katakana_index(),
+                           pronunciation.destination_street_to_pronunciation_jeita_index(),
+                           ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && toward_streets.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && toward_streets.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && toward_streets.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && toward_streets.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < toward_streets.size(); ++i) {
       if (tc || (!ramp && !fork)) {
-        exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_street);
+        if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+          uint32_t count = 0;
+          const size_t size = pronunciations.size();
+          BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                              pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+          exit_list.emplace_back(Sign::Type::kGuideToward, false, false, (count != 0), size, count,
+                                 toward_streets[i]);
+        } else
+          exit_list.emplace_back(Sign::Type::kGuideToward, false, false, false, 0, 0,
+                                 toward_streets[i]);
+
         has_guide = true;
+      } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitToward, false, false, (count != 0), size, count,
+                               toward_streets[i]);
+
       } else
-        exit_list.emplace_back(Sign::Type::kExitToward, false, toward_street);
+        exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0, toward_streets[i]);
     }
   }
 
@@ -1355,17 +1647,73 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
                                              : (forward ? way.destination_forward_index()
                                                         : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(osmdata.name_offset_map.name(index));
-    for (auto& toward_name : toward_names) {
+
+    uint32_t ipa_index =
+        pronunciation.destination_pronunciation_ipa_index()
+            ? pronunciation.destination_pronunciation_ipa_index()
+            : (forward ? pronunciation.destination_forward_pronunciation_ipa_index()
+                       : pronunciation.destination_backward_pronunciation_ipa_index());
+
+    uint32_t nt_sampa_index =
+        pronunciation.destination_pronunciation_nt_sampa_index()
+            ? pronunciation.destination_pronunciation_nt_sampa_index()
+            : (forward ? pronunciation.destination_forward_pronunciation_nt_sampa_index()
+                       : pronunciation.destination_backward_pronunciation_nt_sampa_index());
+
+    uint32_t katakana_index =
+        pronunciation.destination_pronunciation_katakana_index()
+            ? pronunciation.destination_pronunciation_katakana_index()
+            : (forward ? pronunciation.destination_forward_pronunciation_katakana_index()
+                       : pronunciation.destination_backward_pronunciation_katakana_index());
+
+    uint32_t jeita_index =
+        pronunciation.destination_pronunciation_jeita_index()
+            ? pronunciation.destination_pronunciation_jeita_index()
+            : (forward ? pronunciation.destination_forward_pronunciation_jeita_index()
+                       : pronunciation.destination_backward_pronunciation_jeita_index());
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, ipa_index, nt_sampa_index, katakana_index, jeita_index,
+                           ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens);
+
+    bool add_ipa = (ipa_tokens.size() && toward_names.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && toward_names.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && toward_names.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && toward_names.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < toward_names.size(); ++i) {
+
+      auto toward_name = toward_names[i];
       if (tc || (!ramp && !fork)) {
-        exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_name);
+        if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+          uint32_t count = 0;
+          const size_t size = pronunciations.size();
+          BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                              pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+
+          exit_list.emplace_back(Sign::Type::kGuideToward, false, false, (count != 0), size, count,
+                                 toward_name);
+
+        } else
+          exit_list.emplace_back(Sign::Type::kGuideToward, false, false, false, 0, 0, toward_name);
+
         has_guide = true;
+      } else if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+
+        exit_list.emplace_back(Sign::Type::kExitToward, false, false, (count != 0), size, count,
+                               toward_name);
+
       } else
-        exit_list.emplace_back(Sign::Type::kExitToward, false, toward_name);
+        exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0, toward_name);
     }
   }
 
   ////////////////////////////////////////////////////////////////////////////
-  // Process exit_to only if other branch or toward info does not exist
+  // Process exit_to only if other branch or toward info does not exist  No pronunciations.
   if (!has_branch && !has_toward) {
     if (node.has_exit_to() && !fork) {
       std::string tmp;
@@ -1378,12 +1726,14 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
 
         // remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "to ")) {
-          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(3));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
+                                 exit_to.substr(3));
           continue;
         }
         // remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "toward ")) {
-          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(7));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
+                                 exit_to.substr(7));
           continue;
         }
 
@@ -1394,9 +1744,11 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         if (found != std::string::npos && (tmp.find(" to ", found + 4) == std::string::npos &&
                                            tmp.find(" toward ") == std::string::npos)) {
 
-          exit_list.emplace_back(Sign::Type::kExitBranch, false, exit_to.substr(0, found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, false, false, false, 0, 0,
+                                 exit_to.substr(0, found));
 
-          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(found + 4));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
+                                 exit_to.substr(found + 4));
           continue;
         }
 
@@ -1407,14 +1759,16 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         if (found != std::string::npos && (tmp.find(" toward ", found + 8) == std::string::npos &&
                                            tmp.find(" to ") == std::string::npos)) {
 
-          exit_list.emplace_back(Sign::Type::kExitBranch, false, exit_to.substr(0, found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, false, false, false, 0, 0,
+                                 exit_to.substr(0, found));
 
-          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(found + 8));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
+                                 exit_to.substr(found + 8));
           continue;
         }
 
         // default to toward.
-        exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to);
+        exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0, exit_to);
       }
     }
   }
@@ -1426,8 +1780,29 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
   if (node.has_name() && !node.named_intersection() && !fork && ramp) {
     // Get the name from OSMData using the name index
     std::vector<std::string> names = GetTagTokens(osmdata.node_names.name(node.name_index()));
-    for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kExitName, false, name);
+
+    std::vector<std::string> ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens;
+    GetPronunciationTokens(osmdata, node.name_pronunciation_ipa_index(),
+                           node.name_pronunciation_nt_sampa_index(),
+                           node.name_pronunciation_katakana_index(),
+                           node.name_pronunciation_jeita_index(), ipa_tokens, nt_sampa_tokens,
+                           katakana_tokens, jeita_tokens, true);
+
+    bool add_ipa = (ipa_tokens.size() && names.size() == ipa_tokens.size());
+    bool add_nt_sampa = (nt_sampa_tokens.size() && names.size() == nt_sampa_tokens.size());
+    bool add_katakana = (katakana_tokens.size() && names.size() == katakana_tokens.size());
+    bool add_jeita = (jeita_tokens.size() && names.size() == jeita_tokens.size());
+
+    for (size_t i = 0; i < names.size(); ++i) {
+      if (add_ipa || add_nt_sampa || add_katakana || add_jeita) {
+        uint32_t count = 0;
+        const size_t size = pronunciations.size();
+        BuildPronunciations(ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens, i,
+                            pronunciations, add_ipa, add_nt_sampa, add_katakana, add_jeita, count);
+        exit_list.emplace_back(Sign::Type::kExitName, false, false, (count != 0), size, count,
+                               names[i]);
+      } else
+        exit_list.emplace_back(Sign::Type::kExitName, false, false, false, 0, 0, names[i]);
     }
   }
 
@@ -1440,7 +1815,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_base_index()), '|');
     // route number set to true for kGuidanceViewJct type means base type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, false, false, 0, 0, name);
       has_guidance_view = true;
     }
   } else if (!forward && way.bwd_jct_base_index() > 0) {
@@ -1448,7 +1823,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_base_index()), '|');
     // route number set to true for kGuidanceViewJct type means base type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, false, false, 0, 0, name);
       has_guidance_view = true;
     }
   }
@@ -1458,7 +1833,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_overlay_index()), '|');
     // route number set to false for kGuidanceViewJct type means overlay type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, false, false, 0, 0, name);
       has_guidance_view = true;
     }
   } else if (!forward && way.bwd_jct_overlay_index() > 0) {
@@ -1466,7 +1841,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_overlay_index()), '|');
     // route number set to false for kGuidanceViewJct type means overlay type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, false, false, 0, 0, name);
       has_guidance_view = true;
     }
   }
@@ -1476,7 +1851,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.fwd_signboard_base_index()), '|');
     // route number set to true for kGuidanceViewSignboard type means base type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, false, false, 0, 0, name);
       has_guidance_view_signboard = true;
     }
   } else if (!forward && way.bwd_signboard_base_index() > 0) {
@@ -1484,10 +1859,13 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.bwd_signboard_base_index()), '|');
     // route number set to true for kGuidanceViewSignboard type means base type
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, false, false, 0, 0, name);
       has_guidance_view_signboard = true;
     }
   }
+
+  // we have to sort because we need the key/indexes for phonemes
+  std::stable_sort(exit_list.begin(), exit_list.end());
 
   return (has_guide || has_guidance_view || has_guidance_view_signboard);
 }

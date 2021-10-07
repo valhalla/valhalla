@@ -1249,18 +1249,23 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            " Unhandled travel_mode: " + std::to_string(num));
 }
 
+const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>&
+get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
+  return ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
+              ? maneuver.roundabout_exit_street_names()
+              : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                        : maneuver.street_name());
+}
+
 // Get the names and ref names
 std::pair<std::string, std::string>
 names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
-  // Roundabouts need to use the roundabout_exit_street_names
-  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
-  // TODO: in the future we may switch to use both
-  auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
-                           ? maneuver.roundabout_exit_street_names()
-                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
-                                                                     : maneuver.street_name();
+  const auto& street_names = get_maneuver_street_names(maneuver);
 
   for (const auto& name : street_names) {
     // Check if the name is a ref
@@ -1278,6 +1283,23 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   }
 
   return std::make_pair(names, refs);
+}
+// Get the pronunciations string
+std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  std::string pronunciations;
+
+  const auto& street_names = get_maneuver_street_names(maneuver);
+
+  for (const auto& name : street_names) {
+    if (name.has_pronunciation()) {
+      if (!pronunciations.empty()) {
+        pronunciations += "; ";
+      }
+      pronunciations += name.pronunciation().value();
+    }
+  }
+
+  return pronunciations;
 }
 
 // Serialize each leg
@@ -1314,6 +1336,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     std::string drive_side = "right";
     std::string name = "";
     std::string ref = "";
+    std::string pronunciation = "";
     std::string mode = "";
     std::string prev_mode = "";
     bool rotary = false;
@@ -1346,6 +1369,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
+        pronunciation = get_pronunciations(maneuver);
         mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -1382,6 +1406,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
+      }
+      if (!pronunciation.empty()) {
+        step->emplace("pronunciation", pronunciation);
       }
 
       // Check if speed limits were requested

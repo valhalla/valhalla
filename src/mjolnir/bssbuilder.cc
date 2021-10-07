@@ -50,6 +50,8 @@ struct BSSConnection {
   uint64_t wayid = std::numeric_limits<uint64_t>::max();
   std::vector<std::string> names = {};
   std::vector<std::string> tagged_values = {};
+  std::vector<std::string> pronunciations = {};
+
   std::vector<PointLL> shape = {};
   // Is the outbound edge from the waynode is forward?
   bool is_forward_from_waynode = true;
@@ -77,6 +79,8 @@ struct BSSConnection {
     wayid = edgeinfo.wayid();
     names = edgeinfo.GetNames();
     tagged_values = edgeinfo.GetTaggedValues();
+    pronunciations = edgeinfo.GetTaggedValues(true);
+
     is_forward_from_waynode = is_forward;
     speed = best.directededge->speed();
     surface = best.directededge->surface();
@@ -115,7 +119,6 @@ DirectedEdge make_directed_edge(const GraphId endnode,
   directededge.set_forwardaccess(accesses[static_cast<size_t>(!is_forward)]);
   directededge.set_reverseaccess(accesses[static_cast<size_t>(is_forward)]);
 
-  directededge.set_named(conn.names.size());
   directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
   directededge.set_forward(is_forward);
   directededge.set_bss_connection(true);
@@ -305,7 +308,9 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
           tilebuilder_local.AddEdgeInfo(tilebuilder_local.directededges().size(),
                                         new_bss_node_graphid, bss_to_waynode.way_node_id,
                                         bss_to_waynode.wayid, 0, 0, 0, bss_to_waynode.shape,
-                                        bss_to_waynode.names, bss_to_waynode.tagged_values, 0, added);
+                                        bss_to_waynode.names, bss_to_waynode.tagged_values,
+                                        bss_to_waynode.pronunciations, 0, added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
     }
@@ -442,7 +447,9 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(tilebuilder_local.directededges().size(), lower->way_node_id,
                                         lower->bss_node_id, lower->wayid, 0, 0, 0, lower->shape,
-                                        lower->names, lower->tagged_values, 0, added);
+                                        lower->names, lower->tagged_values, lower->pronunciations, 0,
+                                        added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
 
       tilebuilder_local.directededges().emplace_back(std::move(directededge));

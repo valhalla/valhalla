@@ -348,6 +348,7 @@ public:
   /**
    * Convenience method to get the names for an edge
    * @param  edge  Directed edge
+   *
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const DirectedEdge* edge) const;
@@ -382,6 +383,16 @@ public:
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
+   * Convenience method to process the signs for an edge given the directed
+   * edge index.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<SignInfo> ProcessSigns(const uint32_t idx, bool signs_on_node = false) const;
+
+  /**
    * Convenience method to get the signs for an edge given the directed
    * edge index.
    * @param  idx  Directed edge or node index. Used to lookup list of signs.
@@ -389,7 +400,10 @@ public:
    *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+  std::vector<SignInfo>
+  GetSigns(const uint32_t idx,
+           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
+           bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current

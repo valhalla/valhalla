@@ -5,6 +5,7 @@
 
 #include "baldr/rapidjson_utils.h"
 #include "odin/directionsbuilder.h"
+#include "odin/markup_formatter.h"
 #include "tyr/serializers.h"
 
 #include "proto/api.pb.h"
@@ -41,7 +42,7 @@ void test_instructions(const std::string& filename,
   request.ParseFromString(path_bytes);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();
@@ -113,7 +114,7 @@ void test_osrm_maneuver(const std::string& filename,
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Serialize to osrm json string
   auto json_str = valhalla::tyr::serializeDirections(request);
@@ -158,7 +159,7 @@ void test_osrm_destinations(const std::string& filename,
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Serialize to osrm json string
   auto json_str = valhalla::tyr::serializeDirections(request);
