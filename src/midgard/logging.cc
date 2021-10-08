@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "filesystem.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -238,7 +239,18 @@ protected:
         file.close();
       } catch (...) {}
       try {
+        // Ensure directory for log file exists. Otherwise, log file creation is silently skipped.
+        // e.g. if "mjolnir.logging.file_name" points to location inside "mjolnir.tile_dir"
+        const auto parent_dir = filesystem::path(file_name).parent_path();
+        if (!filesystem::is_directory(parent_dir)) {
+          if (!filesystem::create_directories(parent_dir)) {
+            throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
+          }
+        }
         file.open(file_name, std::ofstream::out | std::ofstream::app);
+        if (file.fail()) {
+            throw std::runtime_error("Cannot create log file: " + file_name);
+        }
         last_reopen = std::chrono::system_clock::now();
       } catch (std::exception& e) {
         try {
