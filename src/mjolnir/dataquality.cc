@@ -81,14 +81,13 @@ void DataQuality::LogIssues() const {
   }
 
   // Sort by edgecount and write to separate file
-  std::ofstream dupfile;
-  std::sort(dups.begin(), dups.end());
-  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::app);
-  dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
-  for (const auto& dupway : dups) {
-    dupfile << dupway.wayid1 << "," << dupway.wayid2 << "," << dupway.edgecount << std::endl;
+  if (duplicateways_.size() > 0) {
+    LOG_WARN("WayID1   WayID2    DuplicateEdges");
+    for (const auto& dupway : dups) {
+      LOG_WARN(std::to_string(dupway.wayid1) + "," + std::to_string(dupway.wayid2) + "," +
+               std::to_string(dupway.edgecount));
+    }
   }
-  dupfile.close();
 
   // Log the unconnected link edges
   if (unconnectedlinks_.size() > 0) {
