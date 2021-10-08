@@ -249,7 +249,7 @@ protected:
         }
         file.open(file_name, std::ofstream::out | std::ofstream::app);
         if (file.fail()) {
-            throw std::runtime_error("Cannot create log file: " + file_name);
+          throw std::runtime_error("Cannot create log file: " + file_name);
         }
         last_reopen = std::chrono::system_clock::now();
       } catch (std::exception& e) {
