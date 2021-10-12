@@ -14,6 +14,7 @@ set(sources
 
   directionsbuilder.cc
   maneuversbuilder.cc
+  markup_formatter.cc
   narrative_dictionary.cc
   narrative_builder_factory.cc
   narrativebuilder.cc

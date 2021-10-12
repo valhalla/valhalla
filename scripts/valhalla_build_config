@@ -106,6 +106,10 @@ config = {
     },
     'service': {
       'proxy': 'ipc:///tmp/odin'
+    },
+    'markup_formatter': {
+      'markup_enabled': False,
+      'phoneme_format': '<TEXTUAL_STRING> (<span class=<QUOTES>phoneme<QUOTES>>/<VERBAL_STRING>/</span>)'
     }
   },
   'meili': {
@@ -368,6 +372,10 @@ help_text = {
     },
     'service': {
       'proxy': 'IPC linux domain socket file location'
+    },
+    'markup_formatter': {
+      'markup_enabled': 'Boolean flag to use markup formatting',
+      'phoneme_format': 'The phoneme format string that will be used by street names and signs'
     }
   },
   'meili': {

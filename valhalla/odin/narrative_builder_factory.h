@@ -5,6 +5,7 @@
 #include <string>
 
 #include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/narrativebuilder.h>
 #include <valhalla/proto/options.pb.h>
 
@@ -29,7 +30,8 @@ public:
    * @return NarrativeBuilder unique pointer.
    */
   static std::unique_ptr<NarrativeBuilder> Create(const Options& options,
-                                                  const EnhancedTripLeg* trip_path);
+                                                  const EnhancedTripLeg* trip_path,
+                                                  const MarkupFormatter& markup_formatter);
 };
 
 } // namespace odin

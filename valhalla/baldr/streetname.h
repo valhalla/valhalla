@@ -4,6 +4,10 @@
 #include <memory>
 #include <string>
 
+#include <boost/optional.hpp>
+
+#include <valhalla/baldr/pronunciation.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -12,9 +16,12 @@ public:
   /**
    * Constructor.
    * @param  value  Street name string.
-   * @param  is_route_number   boolean indicating if street name is a reference route number.
+   * @param  is_route_number  boolean indicating if street name is a reference route number.
+   * @param  pronunciation  the pronunciation of this street name.
    */
-  StreetName(const std::string& value, const bool is_route_number);
+  StreetName(const std::string& value,
+             const bool is_route_number,
+             const boost::optional<baldr::Pronunciation>& pronunciation = boost::none);
 
   virtual ~StreetName();
 
@@ -25,6 +32,12 @@ public:
    * @return true if street name is a reference route number such as: I 81 South or US 322 West.
    */
   bool is_route_number() const;
+
+  /**
+   * Returns the pronunciation of this street name.
+   * @return the pronunciation of this street name.
+   */
+  const boost::optional<baldr::Pronunciation>& pronunciation() const;
 
   bool operator==(const StreetName& rhs) const;
 
@@ -45,6 +58,7 @@ public:
 protected:
   std::string value_;
   bool is_route_number_;
+  boost::optional<baldr::Pronunciation> pronunciation_;
 };
 
 } // namespace baldr
