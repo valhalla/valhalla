@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
+   * CHANGED: Requested code clean up for phonemes [PR](https://github.com/valhalla/valhalla/pull/3132) [#3356](https://github.com/valhalla/valhalla/pull/3356)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
