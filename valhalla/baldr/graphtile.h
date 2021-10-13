@@ -383,14 +383,14 @@ public:
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
-   * Convenience method to process the signs for an edge given the directed
+   * Convenience method to get the signs for an edge given the directed
    * edge index.
    * @param  idx  Directed edge or node index. Used to lookup list of signs.
    * @param  signs_on_node Are we looking for signs at the node?  These are the
    *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> ProcessSigns(const uint32_t idx, bool signs_on_node = false) const;
+  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
 
   /**
    * Convenience method to get the signs for an edge given the directed

@@ -692,7 +692,7 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
 
 // Convenience method to process the signs for an edge given the
 // directed edge or node index.
-std::vector<SignInfo> GraphTile::ProcessSigns(const uint32_t idx, bool signs_on_node) const {
+std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
@@ -729,15 +729,19 @@ std::vector<SignInfo> GraphTile::ProcessSigns(const uint32_t idx, bool signs_on_
 
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
+      // is_route_num_type indicates if this phonome is for a node or not; therefore,
+      // we only return a node phoneme when is_route_num_type and signs_on_node are both true and
+      // we only return an edge phoneme when is_route_num_type and signs_on_node are both false
       if (((signs_[found].type() == Sign::Type::kJunctionName ||
-            (signs_[found].type() == Sign::Type::kPronunciation && signs_[found].route_num_type())) &&
+            (signs_[found].type() == Sign::Type::kPronunciation &&
+             signs_[found].is_route_num_type())) &&
            signs_on_node) ||
           (((signs_[found].type() != Sign::Type::kJunctionName &&
              signs_[found].type() != Sign::Type::kPronunciation) ||
             (signs_[found].type() == Sign::Type::kPronunciation &&
-             !signs_[found].route_num_type())) &&
+             !signs_[found].is_route_num_type())) &&
            !signs_on_node))
-        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+        signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
                            signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
@@ -791,26 +795,22 @@ std::vector<SignInfo> GraphTile::GetSigns(
       const auto* text = (textlist_ + signs_[found].text_offset());
       if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
 
-        // route_num_type indicates if this phonome is for a node or not
-        if ((signs_[found].route_num_type() && signs_on_node) ||
-            (!signs_[found].route_num_type() && !signs_on_node)) {
+        // is_route_num_type indicates if this phonome is for a node or not
+        if ((signs_[found].is_route_num_type() && signs_on_node) ||
+            (!signs_[found].is_route_num_type() && !signs_on_node)) {
           size_t pos = 0;
           while (pos < strlen(text)) {
             const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(text + pos);
             pos += 3;
 
-            std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::iterator iter =
-                index_pronunciation_map.find(header.name_index_);
-
-            if (iter == index_pronunciation_map.end())
-              index_pronunciation_map.emplace(
-                  std::make_pair(header.name_index_,
-                                 std::make_pair(header.phonetic_alphabet_,
-                                                std::string((text + pos), header.length_))));
-            else {
-              if (header.phonetic_alphabet_ > (iter->second).first) {
-                iter->second = std::make_pair(header.phonetic_alphabet_,
-                                              std::string((text + pos), header.length_));
+            auto iter = index_pronunciation_map.insert(
+                std::make_pair(header.name_index_,
+                               std::make_pair(header.phonetic_alphabet_,
+                                              std::string((text + pos), header.length_))));
+            if (!iter.second) {
+              if (header.phonetic_alphabet_ > iter.first->second.first) {
+                iter.first->second = std::make_pair(header.phonetic_alphabet_,
+                                                    std::string((text + pos), header.length_));
               }
             }
 
@@ -824,7 +824,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
       // only add edge signs when asking for signs at the edges.
       if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
-        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+        signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
                            signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");

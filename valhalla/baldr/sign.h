@@ -77,7 +77,7 @@ public:
    * guidance view sign returning true indicates that we are a base image and false
    * if we are a overlay image
    */
-  bool route_num_type() const {
+  bool is_route_num_type() const {
     return route_num_type_;
   }
 

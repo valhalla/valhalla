@@ -124,7 +124,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
-    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].route_num_type(),
+    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].is_route_num_type(),
                                 signs_[i].tagged(), signs_[i].text_offset());
   }
 

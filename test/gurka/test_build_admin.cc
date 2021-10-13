@@ -279,7 +279,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     const NodeInfo* X_node = X_tile->node(X_node_id);
     EXPECT_EQ(X_node->drive_on_right(), false);
     EXPECT_EQ(X_node->named_intersection(), true);
-    EXPECT_EQ(X_tile->ProcessSigns(X_node_id.id(), true).at(0).text(), "namae wa nan desu ka");
+    EXPECT_EQ(X_tile->GetSigns(X_node_id.id(), true).at(0).text(), "namae wa nan desu ka");
     AdminInfo X_admin = X_tile->admininfo(X_node->admin_index());
     EXPECT_EQ(X_admin.state_text(), "Hyogo");
     EXPECT_EQ(X_admin.country_text(), "Japan");

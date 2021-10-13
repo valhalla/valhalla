@@ -269,7 +269,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // Get signs from the base directed edge
       if (directededge->sign()) {
-        std::vector<SignInfo> signs = tile->ProcessSigns(base_edge_id.id());
+        std::vector<SignInfo> signs = tile->GetSigns(base_edge_id.id());
         if (signs.size() == 0) {
           LOG_ERROR("Base edge should have signs, but none found");
         }
@@ -359,7 +359,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Get named signs from the base node
     if (baseni.named_intersection()) {
-      std::vector<SignInfo> signs = tile->ProcessSigns(base_node.id(), true);
+      std::vector<SignInfo> signs = tile->GetSigns(base_node.id(), true);
       if (signs.size() == 0) {
         LOG_ERROR("Base node should have signs, but none found");
       }
