@@ -109,7 +109,7 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
                                const size_t name_tokens_size,
                                const size_t key) const {
 
-  auto get_pronunciations = [](const std::vector<std::string> pronunciation_tokens, const size_t key,
+  auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens, const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) {
     linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
                                     static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
