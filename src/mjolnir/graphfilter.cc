@@ -101,7 +101,7 @@ void FilterTiles(GraphReader& reader,
 
         // Get signs from the base directed edge
         if (directededge->sign()) {
-          std::vector<SignInfo> signs = tile->ProcessSigns(edgeid.id());
+          std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
           }
@@ -174,7 +174,7 @@ void FilterTiles(GraphReader& reader,
 
         // Get named signs from the base node
         if (nodeinfo->named_intersection()) {
-          std::vector<SignInfo> signs = tile->ProcessSigns(nodeid.id(), true);
+          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(), true);
           if (signs.size() == 0) {
             LOG_ERROR("Base node should have signs, but none found");
           }

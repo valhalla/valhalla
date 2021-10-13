@@ -311,7 +311,7 @@ void validate(
 
       // Validate signs
       if (ni->named_intersection()) {
-        if (tile->ProcessSigns(i, true).size() == 0) {
+        if (tile->GetSigns(i, true).size() == 0) {
           LOG_ERROR("Node marked as having signs but none found");
         }
       }
@@ -326,7 +326,7 @@ void validate(
 
         // Validate signs
         if (de->sign()) {
-          if (tile->ProcessSigns(idx).size() == 0) {
+          if (tile->GetSigns(idx).size() == 0) {
             LOG_ERROR("Directed edge marked as having signs but none found");
           }
         }
