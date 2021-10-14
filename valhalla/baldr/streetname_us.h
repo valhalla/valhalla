@@ -7,7 +7,6 @@
 
 #include <boost/optional.hpp>
 
-#include <valhalla/baldr/pronunciation.h>
 #include <valhalla/baldr/streetname.h>
 
 namespace valhalla {

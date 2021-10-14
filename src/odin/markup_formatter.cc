@@ -106,13 +106,13 @@ std::string MarkupFormatter::FormatPhonemeElement(
   std::string phoneme_markup_string = phoneme_format();
 
   // Use the proper quotes depending on the pronunciation alphabet
-  FormatQuotes(phoneme_markup_string, pronunciation->alphabet());
+  FormatQuotes(phoneme_markup_string, pronunciation->alphabet);
 
   // Replace phrase tags with values
   boost::replace_all(phoneme_markup_string, kPhoneticAlphabetTag,
-                     PronunciationAlphabetToString(pronunciation->alphabet()));
+                     PronunciationAlphabetToString(pronunciation->alphabet));
   boost::replace_all(phoneme_markup_string, kTextualStringTag, textual_string);
-  boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value());
+  boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value);
 
   return phoneme_markup_string;
 }
