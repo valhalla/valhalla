@@ -3,7 +3,7 @@
 
 #include <boost/optional.hpp>
 
-#include "baldr/pronunciation.h"
+#include "baldr/streetname.h"
 #include "baldr/streetnames_us.h"
 #include "midgard/util.h"
 #include "proto/tripcommon.pb.h"

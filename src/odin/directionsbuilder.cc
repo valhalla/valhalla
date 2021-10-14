@@ -158,8 +158,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       maneuver_street_name->set_is_route_number(street_name->is_route_number());
       if (street_name->pronunciation()) {
         auto* pronunciation = maneuver_street_name->mutable_pronunciation();
-        pronunciation->set_alphabet(street_name->pronunciation()->alphabet());
-        pronunciation->set_value(street_name->pronunciation()->value());
+        pronunciation->set_alphabet(street_name->pronunciation()->alphabet);
+        pronunciation->set_value(street_name->pronunciation()->value);
       }
     }
 
@@ -170,8 +170,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       maneuver_begin_street_name->set_is_route_number(begin_street_name->is_route_number());
       if (begin_street_name->pronunciation()) {
         auto* pronunciation = maneuver_begin_street_name->mutable_pronunciation();
-        pronunciation->set_alphabet(begin_street_name->pronunciation()->alphabet());
-        pronunciation->set_value(begin_street_name->pronunciation()->value());
+        pronunciation->set_alphabet(begin_street_name->pronunciation()->alphabet);
+        pronunciation->set_value(begin_street_name->pronunciation()->value);
       }
     }
 
@@ -226,8 +226,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_exit_number->set_consecutive_count(exit_number.consecutive_count());
           if (exit_number.pronunciation()) {
             auto* pronunciation = trip_exit_number->mutable_pronunciation();
-            pronunciation->set_alphabet(exit_number.pronunciation()->alphabet());
-            pronunciation->set_value(exit_number.pronunciation()->value());
+            pronunciation->set_alphabet(exit_number.pronunciation()->alphabet);
+            pronunciation->set_value(exit_number.pronunciation()->value);
           }
         }
       }
@@ -241,8 +241,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_exit_onto_street->set_consecutive_count(exit_branch.consecutive_count());
           if (exit_branch.pronunciation()) {
             auto* pronunciation = trip_exit_onto_street->mutable_pronunciation();
-            pronunciation->set_alphabet(exit_branch.pronunciation()->alphabet());
-            pronunciation->set_value(exit_branch.pronunciation()->value());
+            pronunciation->set_alphabet(exit_branch.pronunciation()->alphabet);
+            pronunciation->set_value(exit_branch.pronunciation()->value);
           }
         }
       }
@@ -256,8 +256,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_exit_toward_location->set_consecutive_count(exit_toward.consecutive_count());
           if (exit_toward.pronunciation()) {
             auto* pronunciation = trip_exit_toward_location->mutable_pronunciation();
-            pronunciation->set_alphabet(exit_toward.pronunciation()->alphabet());
-            pronunciation->set_value(exit_toward.pronunciation()->value());
+            pronunciation->set_alphabet(exit_toward.pronunciation()->alphabet);
+            pronunciation->set_value(exit_toward.pronunciation()->value);
           }
         }
       }
@@ -271,8 +271,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_exit_name->set_consecutive_count(exit_name.consecutive_count());
           if (exit_name.pronunciation()) {
             auto* pronunciation = trip_exit_name->mutable_pronunciation();
-            pronunciation->set_alphabet(exit_name.pronunciation()->alphabet());
-            pronunciation->set_value(exit_name.pronunciation()->value());
+            pronunciation->set_alphabet(exit_name.pronunciation()->alphabet);
+            pronunciation->set_value(exit_name.pronunciation()->value);
           }
         }
       }
@@ -286,8 +286,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_guide_onto_street->set_consecutive_count(guide_branch.consecutive_count());
           if (guide_branch.pronunciation()) {
             auto* pronunciation = trip_guide_onto_street->mutable_pronunciation();
-            pronunciation->set_alphabet(guide_branch.pronunciation()->alphabet());
-            pronunciation->set_value(guide_branch.pronunciation()->value());
+            pronunciation->set_alphabet(guide_branch.pronunciation()->alphabet);
+            pronunciation->set_value(guide_branch.pronunciation()->value);
           }
         }
       }
@@ -301,8 +301,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_guide_toward_location->set_consecutive_count(guide_toward.consecutive_count());
           if (guide_toward.pronunciation()) {
             auto* pronunciation = trip_guide_toward_location->mutable_pronunciation();
-            pronunciation->set_alphabet(guide_toward.pronunciation()->alphabet());
-            pronunciation->set_value(guide_toward.pronunciation()->value());
+            pronunciation->set_alphabet(guide_toward.pronunciation()->alphabet);
+            pronunciation->set_value(guide_toward.pronunciation()->value);
           }
         }
       }
@@ -316,8 +316,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_junction_name->set_consecutive_count(junction_name.consecutive_count());
           if (junction_name.pronunciation()) {
             auto* pronunciation = trip_junction_name->mutable_pronunciation();
-            pronunciation->set_alphabet(junction_name.pronunciation()->alphabet());
-            pronunciation->set_value(junction_name.pronunciation()->value());
+            pronunciation->set_alphabet(junction_name.pronunciation()->alphabet);
+            pronunciation->set_value(junction_name.pronunciation()->value);
           }
         }
       }
@@ -341,8 +341,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           roundabout_exit_street_name->is_route_number());
       if (roundabout_exit_street_name->pronunciation()) {
         auto* pronunciation = maneuver_roundabout_exit_street_name->mutable_pronunciation();
-        pronunciation->set_alphabet(roundabout_exit_street_name->pronunciation()->alphabet());
-        pronunciation->set_value(roundabout_exit_street_name->pronunciation()->value());
+        pronunciation->set_alphabet(roundabout_exit_street_name->pronunciation()->alphabet);
+        pronunciation->set_value(roundabout_exit_street_name->pronunciation()->value);
       }
     }
 

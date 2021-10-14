@@ -6,10 +6,15 @@
 
 #include <boost/optional.hpp>
 
-#include <valhalla/baldr/pronunciation.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
+
+struct Pronunciation {
+  valhalla::Pronunciation_Alphabet alphabet;
+  std::string value;
+};
 
 class StreetName {
 public:

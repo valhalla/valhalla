@@ -12,7 +12,7 @@
 #include <boost/optional.hpp>
 
 #include "baldr/graphconstants.h"
-#include "baldr/pronunciation.h"
+#include "baldr/streetname.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"

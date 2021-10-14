@@ -54,7 +54,6 @@ set(sources
     location.cc
     pathlocation.cc
     predictedspeeds.cc
-    pronunciation.cc
     tilehierarchy.cc
     turn.cc
     shortcut_recovery.h
