@@ -2349,7 +2349,8 @@ bool ManeuversBuilder::IsFork(int node_index,
       uint32_t curr_lane_count = curr_edge->lane_count();
       // Going from N+1 lanes to N lanes by virtue of a deceleration/exit lane.
       if (prev_lane_count == curr_lane_count + 1) {
-        if (prev_edge->HasTurnLane(kTurnLaneSlightRight) || prev_edge->HasTurnLane(kTurnLaneSlightLeft))
+        if (prev_edge->HasTurnLane(kTurnLaneSlightRight) ||
+            prev_edge->HasTurnLane(kTurnLaneSlightLeft))
           return false;
       }
       uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
@@ -2367,7 +2368,8 @@ bool ManeuversBuilder::IsFork(int node_index,
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse())) &&
-        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+        prev_edge->IsForkForward(
+            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
         has_lane_bifurcation(prev_edge, curr_edge, xedge->lane_count()) &&
         prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
       return true;
