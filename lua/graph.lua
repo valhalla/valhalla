@@ -2091,6 +2091,11 @@ function rels_proc (kv, nokeys)
   end
 
   if (kv["type"] == "route" or kv["type"] == "restriction") then
+     if kv["restriction:probable"] then
+       if kv["restriction"] or kv["restriction:conditional"] then
+         kv["restriction:probable"] = nil
+       end
+     end
 
      local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])] or
                       restriction[restriction_prefix(kv["restriction:probable"])]
