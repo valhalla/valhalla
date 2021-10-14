@@ -13,6 +13,7 @@
 #include "odin/util.h"
 
 #include "proto/trip.pb.h"
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -25,6 +26,18 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
+
+const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
+  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
+      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
+  auto f = values.find(alphabet);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
+  return f->second;
+}
 
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -999,6 +1012,11 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
       str += "/";
     }
     str += street_name.value();
+    if (street_name.has_pronunciation()) {
+      str += "(";
+      str += street_name.pronunciation().value();
+      str += ")";
+    }
   }
   return str;
 }
@@ -1012,6 +1030,11 @@ std::string EnhancedTripLeg_Edge::SignElementsToString(
       str += "/";
     }
     str += sign_element.text();
+    if (sign_element.has_pronunciation()) {
+      str += "(";
+      str += sign_element.pronunciation().value();
+      str += ")";
+    }
   }
   return str;
 }
@@ -1243,6 +1266,14 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     param_list += street_name.value();
     param_list += "\", ";
     param_list += std::to_string(street_name.is_route_number());
+    if (street_name.has_pronunciation()) {
+      param_list += ", ";
+      param_list += "Pronunciation_Alphabet_";
+      param_list += Pronunciation_Alphabet_Name(street_name.pronunciation().alphabet());
+      param_list += ", \"";
+      param_list += street_name.pronunciation().value();
+      param_list += "\"";
+    }
     param_list += " }";
   }
   str += param_list;
@@ -1266,6 +1297,14 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
     param_list += sign_element.text();
     param_list += "\", ";
     param_list += std::to_string(sign_element.is_route_number());
+    if (sign_element.has_pronunciation()) {
+      param_list += ", ";
+      param_list += "Pronunciation_Alphabet_";
+      param_list += Pronunciation_Alphabet_Name(sign_element.pronunciation().alphabet());
+      param_list += ", \"";
+      param_list += sign_element.pronunciation().value();
+      param_list += "\"";
+    }
     param_list += " }";
   }
   str += param_list;

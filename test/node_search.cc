@@ -260,7 +260,7 @@ void graph_builder::write_tiles(uint8_t level) const {
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
       edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, 55, shape,
-                                          {std::to_string(edge_index)}, {}, 0, add);
+                                          {std::to_string(edge_index)}, {}, {}, 0, add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
 

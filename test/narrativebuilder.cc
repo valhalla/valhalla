@@ -5,6 +5,7 @@
 
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
+#include "odin/markup_formatter.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/narrativebuilder.h"
@@ -34,7 +35,7 @@ public:
   NarrativeBuilderTest(const Options& options,
                        const NarrativeDictionary& dictionary,
                        const EnhancedTripLeg* trip_path = nullptr)
-      : NarrativeBuilder(options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary, MarkupFormatter()) {
   }
 
   std::string FormRampStraightInstruction(Maneuver& maneuver) {
@@ -58,7 +59,7 @@ public:
                                                                  element_max_count, delim);
   }
 
-  std::string FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
+  std::string FormVerbalMultiCue(Maneuver& maneuver, Maneuver& next_maneuver) {
     return NarrativeBuilder::FormVerbalMultiCue(maneuver, next_maneuver);
   }
 };
@@ -278,7 +279,8 @@ void TryBuild(const Options& options,
               std::list<Maneuver>& maneuvers,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
-  std::unique_ptr<NarrativeBuilder> narrative_builder = NarrativeBuilderFactory::Create(options, etp);
+  std::unique_ptr<NarrativeBuilder> narrative_builder =
+      NarrativeBuilderFactory::Create(options, etp, MarkupFormatter());
   narrative_builder->Build(maneuvers);
 
   // Check maneuver list sizes
@@ -8978,7 +8980,7 @@ void TryFormVerbalMultiCue(NarrativeBuilderTest& nbt,
                            Maneuver current_maneuver,
                            Maneuver next_maneuver,
                            const std::string& expected) {
-  EXPECT_EQ(nbt.FormVerbalMultiCue(&current_maneuver, next_maneuver), expected);
+  EXPECT_EQ(nbt.FormVerbalMultiCue(current_maneuver, next_maneuver), expected);
 }
 
 TEST(NarrativeBuilder, TestFormVerbalMultiCue) {
