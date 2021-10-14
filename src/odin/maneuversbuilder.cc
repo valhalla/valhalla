@@ -2308,8 +2308,16 @@ bool ManeuversBuilder::IsFork(int node_index,
     // 5 lanes split into 3 lanes left and 3 lanes right
     // 6 lanes split into 3 lanes left and 3 lanes right
     // ...
-    auto has_lane_bifurcation = [](uint32_t prev_lane_count, uint32_t curr_lane_count,
+    auto has_lane_bifurcation = [](const EnhancedTripLeg_Edge* prev_edge,
+                                   const EnhancedTripLeg_Edge* curr_edge,
                                    uint32_t xedge_lane_count) -> bool {
+      uint32_t prev_lane_count = prev_edge->lane_count();
+      uint32_t curr_lane_count = curr_edge->lane_count();
+      // Going from N+1 lanes to N lanes by virtue of a deceleration/exit lane.
+      if (prev_lane_count == curr_lane_count + 1) {
+        if (prev_edge->HasTurnLane(kTurnLaneSlightRight) || prev_edge->HasTurnLane(kTurnLaneSlightLeft))
+          return false;
+      }
       uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
       if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
         return true;
@@ -2325,10 +2333,9 @@ bool ManeuversBuilder::IsFork(int node_index,
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse())) &&
-        prev_edge->IsForkForward(
-            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading())) &&
-        has_lane_bifurcation(prev_edge->lane_count(), curr_edge->lane_count(), xedge->lane_count())) {
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+        has_lane_bifurcation(prev_edge, curr_edge, xedge->lane_count()) &&
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
       return true;
     }
   }
