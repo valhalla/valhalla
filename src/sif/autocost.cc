@@ -34,7 +34,7 @@ constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a mot
 constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
-constexpr uint32_t kDefaultProbability = 0; // Default percentage of allowing probable restrictions
+constexpr uint32_t kDefaultProbability = 100; // Default percentage of allowing probable restrictions
                                             // 0% means do not include them
 
 // Default turn costs
