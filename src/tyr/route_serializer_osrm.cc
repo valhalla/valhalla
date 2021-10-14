@@ -1291,7 +1291,8 @@ std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver
   const auto& street_names = get_maneuver_street_names(maneuver);
 
   for (const auto& name : street_names) {
-    if (name.has_pronunciation()) {
+    // If name has a pronunciation and is not a route number then use it
+    if (name.has_pronunciation() && !name.is_route_number()) {
       if (!pronunciations.empty()) {
         pronunciations += "; ";
       }
