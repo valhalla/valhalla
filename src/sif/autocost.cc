@@ -30,12 +30,12 @@ namespace {
 constexpr float kDefaultServicePenalty = 75.0f; // Seconds
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
-constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
-constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseHighways = 0.5f;   // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseTolls = 0.5f;      // Default preference of using toll roads 0-1
+constexpr float kDefaultUseTracks = 0.f;      // Default preference of using tracks 0-1
+constexpr float kDefaultUseDistance = 0.f;    // Default preference of using distance vs time 0-1
 constexpr uint32_t kDefaultProbability = 100; // Default percentage of allowing probable restrictions
-                                            // 0% means do not include them
+                                              // 0% means do not include them
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -742,7 +742,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<bool>(*json_costing_options, "/include_hov2").get_value_or(false));
     pbf_costing_options->set_include_hov3(
         rapidjson::get_optional<bool>(*json_costing_options, "/include_hov3").get_value_or(false));
-  
   } else {
     SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
     // Set pbf values to defaults
