@@ -22,7 +22,6 @@ class TestBuildElevation(unittest.TestCase):
     def test_get_tiles_with_shapely(self):
         try:
             import shapely
-            pass  # not sure how to mock reading GeoJSON
         except ImportError:
             with self.assertRaises(SystemExit):
                 valhalla_build_elevation.get_tiles_with_shapely(Path("mock_dir"))
