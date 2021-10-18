@@ -25,10 +25,10 @@ class TestBuildExtract(unittest.TestCase):
 
         # test that the index has the right offsets/sizes
         exp_tuples = ((7168, 25568, 289272), (301056, 410441, 658816), (966144, 6549282, 6051288))
-        self.check_tar(TILE_PATH.joinpath('tiles.tar'), exp_tuples, tile_count * INDEX_BIN_SIZE)
+        self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
         # same for traffic.tar
         exp_tuples = ((1536, 25568, 26272), (28672, 410441, 65184), (94720, 6549282, 603808))
-        self.check_tar(TILE_PATH.joinpath('traffic.tar'), exp_tuples, tile_count * INDEX_BIN_SIZE)
+        self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
         with open(p, 'r+b') as f:

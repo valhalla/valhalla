@@ -181,7 +181,6 @@ if __name__ == '__main__':
             config = json.load(f)
     except TypeError:
         LOGGER.warning("Only inline-config will be used.")
-        pass
     
     # override with inline-config
     config.update(**json.loads(args.inline_config))
