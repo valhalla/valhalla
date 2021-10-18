@@ -1613,10 +1613,12 @@ struct OSMWay {
 
   void AddPronunciations(std::vector<std::string>& pronunciations,
                          const UniqueNames& name_offset_map,
-                         const uint32_t pronunciation_index,
+                         const uint32_t ipa_index,
+                         const uint32_t nt_sampa_index,
+                         const uint32_t katakana_index,
+                         const uint32_t jeita_index,
                          const size_t name_tokens_size,
-                         const size_t key,
-                         const baldr::PronunciationAlphabet verbal_type) const;
+                         const size_t key) const;
 
   /**
    * Sets layer index(Z-level) of the way.

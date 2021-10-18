@@ -3,7 +3,7 @@
 
 #include <boost/optional.hpp>
 
-#include "baldr/pronunciation.h"
+#include "baldr/streetname.h"
 #include "baldr/streetnames.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
@@ -56,7 +56,7 @@ std::string StreetNames::ToString(uint32_t max_count,
         (verbal_formatter) ? verbal_formatter->Format(street_name->value()) : street_name->value();
     if (street_name->pronunciation()) {
       name_string += "(";
-      name_string += street_name->pronunciation()->value();
+      name_string += street_name->pronunciation()->value;
       name_string += ")";
     }
     ++count;
