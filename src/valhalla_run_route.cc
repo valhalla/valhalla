@@ -547,9 +547,9 @@ int main(int argc, char* argv[]) {
         "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
         "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
       ("json-file", "File containing the JSON query", cxxopts::value<std::string>())
-      ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>()->default_value("false"))
-      ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>()->default_value("1"))
-      ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>()->default_value("false"))
+      ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>(match_test)->default_value("false"))
+      ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>(iterations)->default_value("1"))
+      ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>(verbose_lanes)->default_value("false"))
       ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
     // clang-format on
 
@@ -564,10 +564,6 @@ int main(int argc, char* argv[]) {
       std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
       return EXIT_SUCCESS;
     }
-
-    match_test = result["match-test"].as<bool>();
-    iterations = result["multi-run"].as<uint32_t>();
-    verbose_lanes = result["verbose-lanes"].as<bool>();
 
     if (iterations > 1) {
       multi_run = true;

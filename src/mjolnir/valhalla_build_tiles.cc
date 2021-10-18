@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("s,start", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value("initialize"))
       ("e,end", "End stage of the build pipeline", cxxopts::value<std::string>()->default_value("cleanup"))
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>());
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
     options.parse_positional({"input_files"});
@@ -95,9 +95,8 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
 
-    if (result.count("input_files")) {
-      input_files = result["input_files"].as<std::vector<std::string>>();
-    } else if (start_stage <= BuildStage::kParseNodes && end_stage >= BuildStage::kParseWays) {
+    if (!result.count("input_files") && start_stage <= BuildStage::kParseNodes &&
+        end_stage >= BuildStage::kParseWays) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }

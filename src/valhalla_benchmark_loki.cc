@@ -89,13 +89,13 @@ int ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("t,threads", "Concurrency to use.", cxxopts::value<size_t>()->default_value(std::to_string(std::max(std::thread::hardware_concurrency(), static_cast<unsigned int>(1)))))
-      ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>()->default_value("1"))
-      ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>()->default_value("false"))
-      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>())
-      ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>()->default_value("0"))
-      ("costing", "Which costing model to use.", cxxopts::value<std::string>()->default_value("auto"))
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>());
+      ("t,threads", "Concurrency to use.", cxxopts::value<size_t>(threads)->default_value(std::to_string(std::max(std::thread::hardware_concurrency(), static_cast<unsigned int>(1)))))
+      ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>(batch)->default_value("1"))
+      ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
+      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated))
+      ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
+      ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
     options.parse_positional({"input_files"});
@@ -116,14 +116,6 @@ int ParseArguments(int argc, char* argv[]) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return false;
     }
-    input_files = result["input_files"].as<std::vector<std::string>>();
-
-    threads = result["threads"].as<size_t>();
-    batch = result["batch"].as<size_t>();
-    isolated = result["reach"].as<size_t>();
-    radius = result["radius"].as<size_t>();
-    extrema = result["extrema"].as<bool>();
-    costing_str = result["costing"].as<std::string>();
 
     if (result.count("config") &&
         filesystem::is_regular_file(config_file_path =

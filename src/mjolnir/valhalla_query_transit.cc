@@ -374,15 +374,15 @@ int main(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("o_lat", "Origin latitude", cxxopts::value<float>())
-      ("o_lng", "Origin longitude", cxxopts::value<float>())
-      ("d_lat", "Destination latitude", cxxopts::value<float>())
-      ("d_lng", "Destination longitude", cxxopts::value<float>())
-      ("o,o_onestop_id", "Origin OneStop ID", cxxopts::value<std::string>())
-      ("d,d_onestop_id", "Destination OneStop ID", cxxopts::value<std::string>())
-      ("i,tripid", "Trip ID", cxxopts::value<int>()->default_value("0"))
-      ("t,time", "Time", cxxopts::value<std::string>())
-      ("c,config", "Config path", cxxopts::value<std::string>());
+      ("o_lat", "Origin latitude", cxxopts::value<float>(o_lat))
+      ("o_lng", "Origin longitude", cxxopts::value<float>(o_lng))
+      ("d_lat", "Destination latitude", cxxopts::value<float>(d_lat))
+      ("d_lng", "Destination longitude", cxxopts::value<float>(d_lng))
+      ("o,o_onestop_id", "Origin OneStop ID", cxxopts::value<std::string>(o_onestop_id))
+      ("d,d_onestop_id", "Destination OneStop ID", cxxopts::value<std::string>(d_onestop_id))
+      ("i,tripid", "Trip ID", cxxopts::value<int>(tripid)->default_value("0"))
+      ("t,time", "Time", cxxopts::value<std::string>(time))
+      ("c,config", "Config path", cxxopts::value<std::string>(config));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -397,10 +397,7 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<decltype(config)>();
-    } else {
+    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
@@ -412,14 +409,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
       }
     }
-    o_lng = result["o_lng"].as<float>();
-    o_lat = result["o_lat"].as<float>();
-    d_lng = result["d_lng"].as<float>();
-    d_lat = result["d_lat"].as<float>();
-    o_onestop_id = result["o_onestop_id"].as<std::string>();
-    d_onestop_id = result["d_onestop_id"].as<std::string>();
-    tripid = result["tripid"].as<int>();
-    time = result["time"].as<std::string>();
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;

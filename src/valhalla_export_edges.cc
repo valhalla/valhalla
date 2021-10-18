@@ -153,11 +153,11 @@ int main(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>()->default_value("\0"))
-      ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>()->default_value("\n"))
-      ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>()->default_value("false"))
-      ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>()->default_value("false"))
-      ("config", "positional argument", cxxopts::value<std::string>());
+      ("c,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"))
+      ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>(row_separator)->default_value("\n"))
+      ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>(ferries)->default_value("false"))
+      ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"))
+      ("config", "positional argument", cxxopts::value<std::string>(config));
     // clang-format on
 
     options.parse_positional({"config"});
@@ -174,18 +174,10 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-    } else {
+    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
-
-    column_separator = result["column"].as<std::string>();
-    row_separator = result["row"].as<std::string>();
-    ferries = result["ferries"].as<bool>();
-    unnamed = result["unnamed"].as<bool>();
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;

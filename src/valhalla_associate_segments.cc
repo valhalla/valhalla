@@ -946,7 +946,7 @@ void add_chunks(const bpt::ptree& pt,
 
 // args
 std::string config, tile_dir;
-unsigned int num_threads = 1;
+unsigned int num_threads;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -960,9 +960,9 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("t,osmlr-tile-dir", "Location of traffic segment tiles.", cxxopts::value<std::string>())
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>())
-      ("c,config", "Valhalla configuration file [required]", cxxopts::value<std::string>());
+      ("t,osmlr-tile-dir", "Location of traffic segment tiles.", cxxopts::value<std::string>(tile_dir))
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value("1"))
+      ("c,config", "Valhalla configuration file [required]", cxxopts::value<std::string>(config));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -982,13 +982,11 @@ bool ParseArguments(int argc, char* argv[]) {
       return false;
     }
 
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-      return true;
-    } else {
+    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
     }
+
+    return true;
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
   }

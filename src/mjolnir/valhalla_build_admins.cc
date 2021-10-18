@@ -26,7 +26,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>());
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
     options.parse_positional({"input_files"});
@@ -48,7 +48,6 @@ bool ParseArguments(int argc, char* argv[]) {
       std::cerr << "Input file is required\n" << std::endl;
       return false;
     }
-    input_files = result["input_files"].as<std::vector<std::string>>();
 
     if (result.count("config") &&
         filesystem::is_regular_file(config_file_path =

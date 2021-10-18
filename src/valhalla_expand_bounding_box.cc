@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>(config_file_path))
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
-      ("b,bounding-box", "Bounding box to expand. The format is min_x,min_y,max_x,max_y. Required", cxxopts::value<std::string>());
+      ("b,bounding-box", "Bounding box to expand. The format is min_x,min_y,max_x,max_y. Required", cxxopts::value<std::string>(bbox));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -47,9 +47,7 @@ int main(int argc, char** argv) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, pt);
-    } else if (result.count("config") &&
-               filesystem::is_regular_file(config_file_path =
-                                               result["config"].as<decltype(config_file_path)>())) {
+    } else if (result.count("config") && filesystem::is_regular_file(config_file_path)) {
       rapidjson::read_json(config_file_path, pt);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
@@ -61,7 +59,6 @@ int main(int argc, char** argv) {
       std::cerr << options.help() << std::endl;
       return EXIT_FAILURE;
     }
-    bbox = result["bounding-box"].as<std::string>();
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;

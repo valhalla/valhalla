@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>(config_file_path));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -108,7 +108,6 @@ int main(int argc, char** argv) {
       std::cout << "You must provide a config for loading and modifying tiles.\n";
       return EXIT_FAILURE;
     }
-    config_file_path = result["config"].as<std::string>();
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
