@@ -81,6 +81,30 @@ TEST_P(ProbableRestrictions, ActiveHourRestriction) {
   gurka::assert::raw::expect_path(result, {"AB", "BD", "DG", "GH", "HE", "EC", "CF"});
 }
 
+TEST_P(ProbableRestrictions, ActiveHourRestrictionWithProbability) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
+                                 {{"/date_time/type", std::to_string(GetParam())},
+                                  {"/date_time/value", "2021-04-02T14:00"},
+                                  {"/costing_options/auto/probability", "40"}});
+  gurka::assert::raw::expect_path(result, {"AB", "BD", "DG", "GI", "IJ", "JH", "HE", "EC", "CF"});
+}
+
+TEST_P(ProbableRestrictions, ActiveHourRestrictionWithHighProbability) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
+                                 {{"/date_time/type", std::to_string(GetParam())},
+                                  {"/date_time/value", "2021-04-02T14:00"},
+                                  {"/costing_options/auto/probability", "1040"}});
+  gurka::assert::raw::expect_path(result, {"AB", "BD", "DG", "GH", "HE", "EC", "CF"});
+}
+
+TEST_P(ProbableRestrictions, NoRestrictionEarlyWithLowProbability) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
+                                 {{"/date_time/type", std::to_string(GetParam())},
+                                  {"/date_time/value", "2021-04-02T06:30"},
+                                  {"/costing_options/auto/probability", "0"}});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
+}
+
 TEST_P(ProbableRestrictions, NoRestrictionsLate) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
