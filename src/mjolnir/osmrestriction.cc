@@ -104,12 +104,12 @@ uint64_t OSMRestriction::time_domain() const {
 }
 
 // Set the probability
-void OSMRestriction::set_probability(uint64_t probability) {
+void OSMRestriction::set_probability(uint8_t probability) {
   attributes_.probability_ = probability;
 }
 
 // Get the probability
-uint64_t OSMRestriction::probability() const {
+uint8_t OSMRestriction::probability() const {
   return attributes_.probability_;
 }
 

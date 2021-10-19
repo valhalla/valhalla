@@ -100,12 +100,12 @@ struct OSMRestriction {
   /**
    * Set the probability
    */
-  void set_probability(uint64_t via);
+  void set_probability(uint8_t probability);
 
   /**
    * Get the probability.
    */
-  uint64_t probability() const;
+  uint8_t probability() const;
 
   /**
    * overloaded < operator - used to sort
