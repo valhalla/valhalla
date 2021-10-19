@@ -2348,7 +2348,7 @@ bool ManeuversBuilder::IsFork(int node_index,
       uint32_t prev_lane_count = prev_edge->lane_count();
       uint32_t curr_lane_count = curr_edge->lane_count();
       // Going from N+1 lanes to N lanes by virtue of a deceleration/exit lane.
-      if (prev_lane_count == curr_lane_count + 1) {
+      if ((prev_lane_count == curr_lane_count + 1) && (curr_lane_count > 1)) {
         if (prev_edge->HasTurnLane(kTurnLaneSlightRight) ||
             prev_edge->HasTurnLane(kTurnLaneSlightLeft))
           return false;
