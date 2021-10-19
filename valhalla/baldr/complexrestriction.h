@@ -188,7 +188,7 @@ public:
    * Get the probability(percentage) for the restriction.  Range for the probability is 0 to 100
    * @return  Returns the probability(percentage) for this restriction.
    */
-  uint8_t probablity() const {
+  uint8_t probability() const {
     return probability_;
   }
 

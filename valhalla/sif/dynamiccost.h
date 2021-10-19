@@ -412,7 +412,7 @@ public:
       for (const auto& cr : restrictions) {
         if (cr->type() == baldr::RestrictionType::kNoProbable ||
             cr->type() == baldr::RestrictionType::kOnlyProbable) {
-          if (probability_ == 0 || probability_ > cr->probablity()) {
+          if (probability_ == 0 || probability_ > cr->probability()) {
             continue;
           }
         }
