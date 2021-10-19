@@ -37,7 +37,7 @@ namespace bpt = boost::property_tree;
 // args
 boost::property_tree::ptree config;
 filesystem::path traffic_tile_dir;
-unsigned int num_threads = std::thread::hardware_concurrency();
+unsigned int num_threads;
 bool summary = false;
 
 namespace {
@@ -254,10 +254,10 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>())
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
-      ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>())
+      ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
       ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
@@ -294,13 +294,7 @@ bool ParseArguments(int argc, char* argv[]) {
       return false;
     }
 
-    if (result.count("concurrency")) {
-      num_threads = result["concurrency"].as<decltype(num_threads)>();
-    }
-
-    if (result.count("summary")) {
-      summary = result["summary"].as<decltype(summary)>();
-    }
+    return true;
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";

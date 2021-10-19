@@ -89,7 +89,7 @@ int ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("t,threads", "Concurrency to use.", cxxopts::value<size_t>(threads)->default_value(std::to_string(std::max(std::thread::hardware_concurrency(), static_cast<unsigned int>(1)))))
+      ("t,threads", "Concurrency to use.", cxxopts::value<size_t>(threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
       ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>(batch)->default_value("1"))
       ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
       ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated))
