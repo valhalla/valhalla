@@ -78,7 +78,7 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
-constexpr ranged_default_t<float> kProbabilityRange{0, kDefaultProbability, 100};
+constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultProbability, 100};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
