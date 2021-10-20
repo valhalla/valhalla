@@ -77,18 +77,9 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-### [DEPRECATED] Get Valhalla from Personal Package Archive (PPA)
+### Docker
 
-NOTICE: Since we moved to cmake build systems we haven't updated our debian packaging scripts. Because of that the packages in the PPA are very very old. Once we get time to correct this we'll remove this notice but until then we recommend building from source or using docker.
-
-If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
-
-```bash
-# grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:valhalla-core/valhalla
-sudo apt-get update
-sudo apt-get install -y valhalla-bin
-```
+Checkout our `run*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
 
 ### Building from Source - Linux
 
