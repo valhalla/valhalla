@@ -917,7 +917,7 @@ protected:
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
 
-    probability_ = costing_options.probability();
+    probability_ = costing_options.restriction_probability();
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),

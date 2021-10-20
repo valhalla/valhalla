@@ -30,12 +30,12 @@ namespace {
 constexpr float kDefaultServicePenalty = 75.0f; // Seconds
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f;   // Default preference of using a motorway or trunk 0-1
-constexpr float kDefaultUseTolls = 0.5f;      // Default preference of using toll roads 0-1
-constexpr float kDefaultUseTracks = 0.f;      // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;    // Default preference of using distance vs time 0-1
-constexpr uint32_t kDefaultProbability = 100; // Default percentage of allowing probable restrictions
-                                              // 0% means do not include them
+constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
+constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
+constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
+constexpr uint32_t kDefaultRestrictionProbability = 100; // Default percentage of allowing probable
+                                                         // restrictions 0% means do not include them
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -78,7 +78,7 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
-constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultProbability, 100};
+constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -731,9 +731,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                             .get_value_or(kDefaultAutoWidth)));
 
     // probability
-    pbf_costing_options->set_probability(
+    pbf_costing_options->set_restriction_probability(
         kProbabilityRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/probability")
-                              .get_value_or(kDefaultProbability)));
+                              .get_value_or(kDefaultRestrictionProbability)));
 
     // HOT/HOV-use
     pbf_costing_options->set_include_hot(
@@ -754,7 +754,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
     pbf_costing_options->set_height(kDefaultAutoHeight);
     pbf_costing_options->set_width(kDefaultAutoWidth);
-    pbf_costing_options->set_probability(kDefaultProbability);
+    pbf_costing_options->set_restriction_probability(kDefaultRestrictionProbability);
   }
 }
 
