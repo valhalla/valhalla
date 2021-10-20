@@ -731,9 +731,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                             .get_value_or(kDefaultAutoWidth)));
 
     // probability
-    pbf_costing_options->set_restriction_probability(
-        kProbabilityRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/probability")
-                              .get_value_or(kDefaultRestrictionProbability)));
+    pbf_costing_options->set_restriction_probability(kProbabilityRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/restriction_probability")
+            .get_value_or(kDefaultRestrictionProbability)));
 
     // HOT/HOV-use
     pbf_costing_options->set_include_hot(
