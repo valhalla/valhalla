@@ -412,7 +412,9 @@ public:
       for (const auto& cr : restrictions) {
         if (cr->type() == baldr::RestrictionType::kNoProbable ||
             cr->type() == baldr::RestrictionType::kOnlyProbable) {
-          if (probability_ == 0 || probability_ > cr->probability()) {
+          // A complex restriction can not have a 0 probability set.  range is 1 to 100
+          // restriction_probability_= 0 means ignore probable restrictions
+          if (restriction_probability_ == 0 || restriction_probability_ > cr->probability()) {
             continue;
           }
         }
@@ -881,7 +883,7 @@ protected:
   uint8_t flow_mask_;
 
   // percentage of allowing probable restriction a 0 probability means do not utilize them
-  uint8_t probability_{0};
+  uint8_t restriction_probability_{0};
 
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
@@ -917,7 +919,7 @@ protected:
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
 
-    probability_ = costing_options.restriction_probability();
+    restriction_probability_ = costing_options.restriction_probability();
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
