@@ -60,7 +60,13 @@ public:
               {gurka::way_member, "EC", "to"},
               {gurka::node_member, "E", "via"},
           },
-          {{"type", "restriction"}, {"restriction:probable", "only_straight_on @ probability=100"}}}};
+          {{"type", "restriction"}, {"restriction:probable", "only_straight_on @ probability=100"}}},
+         {{
+              {gurka::way_member, "GI", "from"},
+              {gurka::way_member, "IJ", "to"},
+              {gurka::node_member, "I", "via"},
+          },
+          {{"type", "restriction"}, {"restriction:probable", "no_left_turn @ probability=0"}}}};
     map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_time_probable_restrictions",
                             {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
   }
@@ -85,7 +91,7 @@ TEST_P(ProbableRestrictions, ActiveHourRestrictionWithProbability) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", "2021-04-02T14:00"},
-                                  {"/costing_options/auto/probability", "40"}});
+                                  {"/costing_options/auto/restriction_probability", "40"}});
   gurka::assert::raw::expect_path(result, {"AB", "BD", "DG", "GI", "IJ", "JH", "HE", "EC", "CF"});
 }
 
@@ -93,7 +99,7 @@ TEST_P(ProbableRestrictions, ActiveHourRestrictionWithHighProbability) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", "2021-04-02T14:00"},
-                                  {"/costing_options/auto/probability", "1040"}});
+                                  {"/costing_options/auto/restriction_probability", "1040"}});
   gurka::assert::raw::expect_path(result, {"AB", "BD", "DG", "GH", "HE", "EC", "CF"});
 }
 
@@ -101,7 +107,7 @@ TEST_P(ProbableRestrictions, NoRestrictionEarlyWithLowProbability) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", "2021-04-02T06:30"},
-                                  {"/costing_options/auto/probability", "0"}});
+                                  {"/costing_options/auto/restriction_probability", "0"}});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
 }
 
