@@ -2185,8 +2185,12 @@ public:
         // probability=73
         std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
         if (prob_tok.size() == 2) {
-          isProbable = true;
-          restriction.set_probability(stoi(prob_tok.at(1)));
+          const auto& p = stoi(prob_tok.at(1));
+          if (p > 0) {
+            isProbable = true;
+            restriction.set_probability(p);
+          } else // A complex restriction can not have a 0 probability set.  range is 1 to 100
+            return;
         }
       } else if (tag.first == "direction") {
         direction = tag.second;
