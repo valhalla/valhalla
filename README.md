@@ -79,7 +79,7 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ### Docker
 
-Checkout our `run*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
+Checkout our `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
 
 ### Building from Source - Linux
 
