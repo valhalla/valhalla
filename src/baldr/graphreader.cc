@@ -43,9 +43,10 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
   // A lambda for loading the contents of a graph tile tar from an index file
-  auto index_loader = [this](const std::string& filename, const char* index_begin,
-                             const char* file_begin,
-                             size_t size) -> decltype(midgard::tar::contents) {
+  bool traffic_from_index = false;
+  auto index_loader = [this, &traffic_from_index](const std::string& filename,
+                                                  const char* index_begin, const char* file_begin,
+                                                  size_t size) -> decltype(midgard::tar::contents) {
     // has to be our specially named index.bin file
     if (filename != "index.bin")
       return {};
@@ -78,6 +79,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
       // load the tar
+      // TODO: use the "scan" to iterate over tar
       archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
       // map files to graph ids
       if (tiles.empty()) {
@@ -94,6 +96,12 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
             // If we end up with *no* recognizable tile files in the tarball at all,
             // checks lower down will warn on that.
           }
+        }
+      } else if (pt.get<bool>("data_processing.scan_tar", false)) {
+        checksum = 0;
+        for (const auto& kv : tiles) {
+          auto s = strlen(kv.second.first);
+          checksum += *(archive->mm.get() + strlen(kv.second.first));
         }
       }
       // couldn't load it

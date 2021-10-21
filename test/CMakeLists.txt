@@ -114,7 +114,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
 add_custom_target(build_timezones DEPENDS ${CMAKE_BINARY_DIR}/test/data/tz.sqlite)
 set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
@@ -132,16 +132,16 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
-      --with-traffic
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1,"logging":{"type":""}}}'
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
+      --with-traffic
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
-add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar)
 set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph

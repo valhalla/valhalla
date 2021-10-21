@@ -660,7 +660,6 @@ struct tar {
   };
 
   std::string tar_file;
-  bool success_index = false;
 
   // TODO:
   mem_map<char> mm;
@@ -717,7 +716,6 @@ struct tar {
           contents = from_index(name, position, mm.get(), size);
           // if it was able to intialize from an index we bail
           if (!contents.empty()) {
-            success_index = true;
             return;
           }
         }
