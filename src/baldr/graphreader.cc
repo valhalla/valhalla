@@ -75,6 +75,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     return contents;
   };
 
+  bool scan_tar = pt.get<bool>("data_processing.scan_tar", false);
+
   // if you really meant to load it
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
@@ -82,9 +84,9 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       // TODO: use the "scan" to iterate over tar
       archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
       // map files to graph ids
-      if (tiles.empty()) {
+      if (tiles.empty() || scan_tar) {
         LOG_WARN(
-            "Tile extract contained no index file, expect degraded performance for tile (re-)loading.");
+            "Tile extract contains no index file or scan_tar=True, expect degraded performance for tile (re-)loading.");
         for (const auto& c : archive->contents) {
           try {
             auto id = GraphTile::GetTileId(c.first);
@@ -97,7 +99,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
             // checks lower down will warn on that.
           }
         }
-      } else if (pt.get<bool>("data_processing.scan_tar", false)) {
+      } else if () {
         checksum = 0;
         for (const auto& kv : tiles) {
           auto s = strlen(kv.second.first);
