@@ -84,9 +84,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       // TODO: use the "scan" to iterate over tar
       archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
       // map files to graph ids
-      if (tiles.empty() || scan_tar) {
-        LOG_WARN(
-            "Tile extract contains no index file or scan_tar=True, expect degraded performance for tile (re-)loading.");
+      if (tiles.empty()) {
         for (const auto& c : archive->contents) {
           try {
             auto id = GraphTile::GetTileId(c.first);
