@@ -100,7 +100,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       } else if (scan_tar) {
         checksum = 0;
         for (const auto& kv : tiles) {
-          checksum += *(archive->mm.get() + strlen(kv.second.first));
+          checksum += *const_cast<char*>(kv.second.first);
         }
       }
       // couldn't load it
