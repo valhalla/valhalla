@@ -132,6 +132,7 @@ message CostingOptions {
   optional bool include_hov2 = 74;
   optional bool include_hov3 = 75;
   optional bool exclude_cash_only_tolls = 76;
+  optional uint32 restriction_probability = 77;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
