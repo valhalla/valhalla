@@ -129,9 +129,21 @@ message TransitPlatformInfo {
   optional string station_name = 9;        // The station name of the platform
 }
 
+message Pronunciation {
+  enum Alphabet {
+    kIpa = 1;
+    kXKatakana = 2;
+    kXJeita = 3;
+    kNtSampa = 4;
+  }
+  optional Alphabet alphabet = 1 [default = kIpa];
+  optional string value = 2;
+}
+
 message StreetName {
-  optional string value = 1;          // The actual street name value, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;  // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
+  optional bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional Pronunciation pronunciation = 3; // The pronunciation associated with this street name
 }
 
 message TurnLane {

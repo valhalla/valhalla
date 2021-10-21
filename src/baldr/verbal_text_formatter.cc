@@ -1,8 +1,9 @@
+#include <string>
+
+#include <boost/optional.hpp>
 
 #include "baldr/verbal_text_formatter.h"
 #include "midgard/util.h"
-
-#include <string>
 
 namespace valhalla {
 namespace baldr {
@@ -15,7 +16,12 @@ VerbalTextFormatter::VerbalTextFormatter(const std::string& country_code,
 VerbalTextFormatter::~VerbalTextFormatter() {
 }
 
-std::string VerbalTextFormatter::Format(const std::string& text) const {
+std::string VerbalTextFormatter::Format(const std::string& text,
+                                        const boost::optional<std::string>& markup_string) const {
+  // If markup string exists then use it
+  if (markup_string) {
+    return *markup_string;
+  }
   std::string verbal_text(text);
 
   return verbal_text;

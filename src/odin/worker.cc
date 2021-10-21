@@ -27,7 +27,8 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) : service_worker_t(config) {
+odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config)
+    : service_worker_t(config), markup_formatter_(config) {
   // signal that the worker started successfully
   started();
 }
@@ -41,7 +42,7 @@ std::string odin_worker_t::narrate(Api& request) const {
 
   // get some annotated directions
   try {
-    odin::DirectionsBuilder().Build(request);
+    odin::DirectionsBuilder().Build(request, markup_formatter_);
   } catch (...) { throw valhalla_exception_t{202}; }
 
   // serialize those to the proper format

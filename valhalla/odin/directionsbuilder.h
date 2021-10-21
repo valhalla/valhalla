@@ -5,6 +5,7 @@
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/proto/api.pb.h>
 
 namespace valhalla {
@@ -26,7 +27,7 @@ public:
    * @param api   the protobuf object containing the request, the path and a place
    *              to store the resulting directions
    */
-  static void Build(Api& api);
+  static void Build(Api& api, const MarkupFormatter& markup_formatter);
 
 protected:
   /**

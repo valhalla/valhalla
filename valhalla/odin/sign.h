@@ -4,6 +4,10 @@
 #include <cstdint>
 #include <string>
 
+#include <boost/optional.hpp>
+
+#include <valhalla/baldr/streetname.h>
+
 namespace valhalla {
 namespace odin {
 
@@ -13,8 +17,11 @@ public:
    * Constructor.
    * @param  text  Text string.
    * @param  is_route_number   boolean indicating if sign element is a reference route number.
+   * @param  pronunciation  the pronunciation of this sign.
    */
-  Sign(const std::string& text, const bool is_route_number);
+  Sign(const std::string& text,
+       const bool is_route_number,
+       const boost::optional<baldr::Pronunciation>& pronunciation = boost::none);
 
   /**
    * Returns the sign text.
@@ -40,6 +47,12 @@ public:
    */
   void set_consecutive_count(uint32_t consecutive_count);
 
+  /**
+   * Returns the pronunciation of this sign.
+   * @return the pronunciation of this sign.
+   */
+  const boost::optional<baldr::Pronunciation>& pronunciation() const;
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
 #endif
@@ -50,6 +63,7 @@ protected:
   std::string text_;
   bool is_route_number_;
   uint32_t consecutive_count_;
+  boost::optional<baldr::Pronunciation> pronunciation_;
 };
 
 } // namespace odin

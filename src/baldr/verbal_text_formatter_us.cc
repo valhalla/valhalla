@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 
+#include <boost/optional.hpp>
+
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
 #include "midgard/util.h"
@@ -16,7 +18,13 @@ VerbalTextFormatterUs::VerbalTextFormatterUs(const std::string& country_code,
 VerbalTextFormatterUs::~VerbalTextFormatterUs() {
 }
 
-std::string VerbalTextFormatterUs::Format(const std::string& text) const {
+std::string VerbalTextFormatterUs::Format(const std::string& text,
+                                          const boost::optional<std::string>& markup_string) const {
+  // If markup string exists then use it
+  if (markup_string) {
+    return VerbalTextFormatter::Format(text, markup_string);
+  }
+
   std::string verbal_text(text);
 
   verbal_text = FormInterstateTts(verbal_text);
