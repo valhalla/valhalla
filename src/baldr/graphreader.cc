@@ -99,7 +99,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
             // checks lower down will warn on that.
           }
         }
-      } else if () {
+      } else if (scan_tar) {
         checksum = 0;
         for (const auto& kv : tiles) {
           auto s = strlen(kv.second.first);
