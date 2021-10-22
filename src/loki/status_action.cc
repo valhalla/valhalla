@@ -1,11 +1,3 @@
-#include <sys/stat.h>
-#include <sys/types.h>
-#ifndef WIN32
-#include <unistd.h>
-#else
-#define stat _stat
-#endif
-
 #include "baldr/tilehierarchy.h"
 #include "config.h"
 #include "filesystem.h"
@@ -13,13 +5,6 @@
 #include "proto/status.pb.h"
 
 namespace {
-#ifdef _WIN32
-#define MTIME(st_stat) st_stat.st_mtime
-#elif __APPLE__
-#define MTIME(st_stat) st_stat.st_mtime
-#else
-#define MTIME(st_stat) st_stat.st_mtim.tv_sec
-#endif
 
 auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
   graph_tile_ptr tile = nullptr;
@@ -33,16 +18,11 @@ auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) 
   return tile;
 }
 
-int get_tile_age(const boost::property_tree::ptree& conf) {
-  // prefer tile_dir mtime over tile_extract
-  struct stat s;
-  for (const auto& m : {"tile_dir", "tile_extract"}) {
-    auto p = conf.get_optional<std::string>(m);
-    if (p && stat(p.get().c_str(), &s) == 0) {
-      return MTIME(s);
-    }
-  }
-
+time_t get_tileset_age(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
+  auto path = reader->GetTileSetLocation();
+  try {
+    return std::chrono::system_clock::to_time_t(filesystem::last_write_time(path));
+  } catch (...) {}
   return 0;
 }
 
@@ -54,7 +34,7 @@ void loki_worker_t::status(Api& request) const {
 
   auto* status = request.mutable_status();
   status->set_version(VALHALLA_VERSION);
-  status->set_tile_age(get_tile_age(config.get_child("mjolnir")));
+  status->set_tileset_age(get_tileset_age(reader));
 
   // only return more info if explicitly asked for (can be very expensive)
   // bail if we wont be getting extra info

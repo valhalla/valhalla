@@ -1,6 +1,7 @@
 #pragma once
 
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "midgard/sequence.h"
 
 #include <chrono>
@@ -14,14 +15,6 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 namespace {
-
-#ifdef _WIN32
-#define MTIME(st_stat) st_stat.st_mtime
-#elif __APPLE__
-#define MTIME(st_stat) st_stat.st_mtime
-#else
-#define MTIME(st_stat) st_stat.st_mtim.tv_sec
-#endif
 
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
@@ -287,8 +280,9 @@ protected:
                 (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
-              struct stat s;
-              if (stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
+              time_t m_time =
+                  std::chrono::system_clock::to_time_t(filesystem::last_write_time(i->path()));
+              if (last_scan <= m_time) {
                 // update the tile
                 update_count += update_tile(state, tile_id, read_tile(i->path().string()));
               }
