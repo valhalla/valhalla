@@ -2236,6 +2236,21 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
+// return the length in km for a deceleration lane as a function of the road's speed
+float get_deceleration_lane_length(float speed_kph) {
+  if (speed_kph > 112) {
+    return 0.213;
+  }
+  if (speed_kph > 96) {
+    return 0.183;
+  }
+  if (speed_kph > 80) {
+    return 0.152;
+  }
+
+  return 0.122;
+}
+
 bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const {
@@ -2342,17 +2357,37 @@ bool ManeuversBuilder::IsFork(int node_index,
     // 5 lanes split into 3 lanes left and 3 lanes right
     // 6 lanes split into 3 lanes left and 3 lanes right
     // ...
-    auto has_lane_bifurcation = [](const EnhancedTripLeg_Edge* prev_edge,
-                                   const EnhancedTripLeg_Edge* curr_edge,
-                                   uint32_t xedge_lane_count) -> bool {
+    auto has_lane_bifurcation =
+        [](EnhancedTripLeg* trip_path, int node_index, const EnhancedTripLeg_Edge* prev_edge,
+           const EnhancedTripLeg_Edge* curr_edge,
+           const std::unique_ptr<EnhancedTripLeg_IntersectingEdge>& xedge) -> bool {
       uint32_t prev_lane_count = prev_edge->lane_count();
       uint32_t curr_lane_count = curr_edge->lane_count();
-      // Going from N+1 lanes to N lanes by virtue of a deceleration/exit lane.
-      if ((prev_lane_count == curr_lane_count + 1) && (curr_lane_count > 1)) {
-        if (prev_edge->HasTurnLane(kTurnLaneSlightRight) ||
-            prev_edge->HasTurnLane(kTurnLaneSlightLeft))
+      uint32_t xedge_lane_count = xedge->lane_count();
+
+      // Going from N+1 lanes to N lanes. See if previous-lanes appear to be a
+      // deceleration lane. Iterate prev's until we've exceeded the length
+      // of a deceleration lane (as a function of speed). If the highway at
+      // that point has gone down a lane, then it is likely that prev-edge is
+      // a deceleration lane - which means this is more likely an exit than
+      // a highway bifurcation.
+      if ((curr_lane_count > 1) && (prev_lane_count == curr_lane_count + 1) &&
+          (xedge->use() == TripLeg_Use_kRampUse)) {
+        int delta = 1;
+        auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+        float deceleration_lane_length = get_deceleration_lane_length(prev_at_delta->default_speed());
+        float agg_lane_length_ = prev_at_delta->length_km();
+        while (agg_lane_length_ < deceleration_lane_length) {
+          delta++;
+          prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+          agg_lane_length_ += prev_at_delta->length_km();
+        }
+
+        if (prev_at_delta->lane_count() == curr_lane_count) {
           return false;
+        }
       }
+
       uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
       if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
         return true;
@@ -2363,14 +2398,12 @@ bool ManeuversBuilder::IsFork(int node_index,
       return false;
     };
 
-    // The curr edge and intersecting edge must be highway or ramp but not both
-    // validate lane bifurcation
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse())) &&
+        has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
         prev_edge->IsForkForward(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-        has_lane_bifurcation(prev_edge, curr_edge, xedge->lane_count()) &&
         prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
       return true;
     }
