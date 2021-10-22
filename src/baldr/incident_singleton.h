@@ -280,12 +280,15 @@ protected:
                 (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
-              time_t m_time =
-                  std::chrono::system_clock::to_time_t(filesystem::last_write_time(i->path()));
-              if (last_scan <= m_time) {
-                // update the tile
-                update_count += update_tile(state, tile_id, read_tile(i->path().string()));
-              }
+              try {
+                time_t m_time =
+                    std::chrono::system_clock::to_time_t(filesystem::last_write_time(i->path()));
+                if (last_scan <= m_time) {
+                  // update the tile
+                  update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+                }
+              } // if we couldnt get the last modified time we skip
+              catch (...) {}
             }
           } // happens when there is a file in the directory that doesnt have a tile-looking name
           catch (...) {}
