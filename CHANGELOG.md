@@ -6,6 +6,7 @@
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
    * ADDED: Added support for probabale restrictions [#3361](https://github.com/valhalla/valhalla/pull/3361)
+   * CHANGED: return "version" and "tile_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
