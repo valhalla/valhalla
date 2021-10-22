@@ -2154,7 +2154,7 @@ public:
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
-    bool isConditional = false, has_multiple_times = false;
+    bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
     std::string network, ref, name, except;
@@ -2181,6 +2181,17 @@ public:
       } else if (tag.first == "restriction:conditional") {
         isConditional = true;
         condition = tag.second;
+      } else if (tag.first == "restriction:probable") {
+        // probability=73
+        std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
+        if (prob_tok.size() == 2) {
+          const auto& p = stoi(prob_tok.at(1));
+          if (p > 0) {
+            isProbable = true;
+            restriction.set_probability(p);
+          } else // A complex restriction can not have a 0 probability set.  range is 1 to 100
+            return;
+        }
       } else if (tag.first == "direction") {
         direction = tag.second;
       } else if (tag.first == "network") {
@@ -2288,6 +2299,15 @@ public:
         from = tag.second;
       }
     } // for (const auto& tag : results)
+
+    if (isProbable) {
+      RestrictionType type = restriction.type();
+      if (type == RestrictionType::kOnlyRightTurn || type == RestrictionType::kOnlyLeftTurn ||
+          type == RestrictionType::kOnlyStraightOn)
+        restriction.set_type(RestrictionType::kOnlyProbable);
+      else
+        restriction.set_type(RestrictionType::kNoProbable);
+    }
 
     std::vector<std::string> net = GetTagTokens(network, ':');
     bool special_network = false;
@@ -2459,8 +2479,9 @@ public:
         // or
         // restriction = x with except tags; change to a complex
         // restriction with modes.
-        if (vias.size() == 0 &&
-            (isTypeRestriction || isConditional || (!isTypeRestriction && except.size()))) {
+        // if probable restriction, change to a complex restriction
+        if (vias.size() == 0 && (isTypeRestriction || isConditional || isProbable ||
+                                 (!isTypeRestriction && except.size()))) {
 
           restriction.set_via(0);
           vias.push_back(restriction.to());

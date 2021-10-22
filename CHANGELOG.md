@@ -5,6 +5,7 @@
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
+   * ADDED: Added support for probabale restrictions [#3361](https://github.com/valhalla/valhalla/pull/3361)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
