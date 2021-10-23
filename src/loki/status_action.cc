@@ -18,7 +18,7 @@ auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) 
   return tile;
 }
 
-time_t get_tileset_age(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
+time_t get_tileset_last_modified(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
   auto path = reader->GetTileSetLocation();
   try {
     return std::chrono::system_clock::to_time_t(filesystem::last_write_time(path));
@@ -34,7 +34,7 @@ void loki_worker_t::status(Api& request) const {
 
   auto* status = request.mutable_status();
   status->set_version(VALHALLA_VERSION);
-  status->set_tileset_age(get_tileset_age(reader));
+  status->set_tileset_last_modified(get_tileset_last_modified(reader));
 
   // only return more info if explicitly asked for (can be very expensive)
   // bail if we wont be getting extra info
