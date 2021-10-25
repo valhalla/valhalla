@@ -7,6 +7,7 @@
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
    * ADDED: Added support for probabale restrictions [#3361](https://github.com/valhalla/valhalla/pull/3361)
    * CHANGED: Refactored the verbal text formatter to handle logic for street name and sign [#3369](https://github.com/valhalla/valhalla/pull/3369)
+   * CHANGED: return "version" and "tileset_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
