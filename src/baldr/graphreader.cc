@@ -474,7 +474,7 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt,
                          std::unique_ptr<tile_getter_t>&& tile_getter)
-    : tile_extract_(get_extract_instance(pt)),
+    : tile_extract_(new tile_extract_t(pt)),
       tile_dir_(tile_extract_->tiles.empty() ? pt.get<std::string>("tile_dir", "") : ""),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
