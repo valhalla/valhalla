@@ -105,7 +105,32 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
   int startNodeIndex = this->getVertexIndex(start_vertex);
 
   this->setupDFSEulerCycle(extraPaths);
+  int num_out_edges = 0;
+  int num_nodes = 0;
+  for (const auto& kv : this->outEdges) {
+    num_out_edges += kv.second;
+    num_nodes += 1;
+    // std::cout << "Edge num: " + std::to_string(kv.first) + " : " + std::to_string(kv.second) <<
+    // "\n";
+  }
+  // for (const auto& kv : this->expandedAdjacencyList) {
+  //   std::cout << "Adjancent edge: " + std::to_string(kv.first) + " : ";
+  //   for (const auto& v: kv.second){
+  //     std::cout << v << ", ";
+  //   }
+  //   std::cout << "\n";
+  // }
+
+  LOG_WARN("Num of nodes: " + std::to_string(num_nodes));
+  LOG_WARN("Num of out edges: " + std::to_string(num_out_edges));
+  LOG_WARN("Start Index: " + std::to_string(startNodeIndex));
   this->dfsEulerCycle(startNodeIndex);
+
+  // for (auto x : this->reversedEulerPath){
+  //     std::cout << x << ", ";
+  //   }
+  //   std::cout << "\n";
+
   int edgeUnvisited = 0;
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
   for (auto const& v : this->outEdges) {
@@ -114,6 +139,13 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
     }
   }
   LOG_WARN("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
+  // for (const auto& kv : this->expandedAdjacencyList) {
+  //   std::cout << "Unvisited Adjancent edge: " + std::to_string(kv.first) + " : ";
+  //   for (const auto& v: kv.second){
+  //     std::cout << v << ", ";
+  //   }
+  //   std::cout << "\n";
+  // }
   return this->reversedEulerPath;
 }
 
@@ -145,10 +177,33 @@ std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList(ExtraPaths
 }
 
 void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
+  // std::vector<int> circuit;
+  // std::stack<int> current_path;
+  // int current_node = startNodeIndex;
+  // current_path.push(current_node);
+
+  // while(!current_path.empty()){
+  //   if (this->outEdges[current_node]){
+  //     current_path.push(current_node);
+  //     int next_node = this->expandedAdjacencyList[current_node].back();
+  //     this->outEdges[current_node]--;
+  //     this->expandedAdjacencyList[current_node].pop_back();
+
+  //     current_node = next_node;
+  //   } else {
+  //     circuit.push_back(current_node);
+
+  //     current_node = current_path.top();
+  //     current_path.pop();
+  //   }
+  // }
+  // this->reversedEulerPath = circuit;
+
   while (this->outEdges[startNodeIndex] != 0) {
     int nextNodeIndex =
         this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
     this->outEdges[startNodeIndex]--;
+    this->expandedAdjacencyList[startNodeIndex].pop_back();
     this->dfsEulerCycle(nextNodeIndex);
   }
   this->reversedEulerPath.push_back(startNodeIndex);
@@ -173,7 +228,7 @@ bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_verte
     return unbalancedVertices.size() == 0;
   } else {
     if (unbalancedVertices.count(start_vertex.vertex_id) &&
-        unbalancedVertices.count(end_vertex.vertex_id)) {
+        unbalancedVertices.count(end_vertex.vertex_id) && unbalancedVertices.size() == 2) {
       if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
           unbalancedVertices[end_vertex.vertex_id] == 1) {
         return true;

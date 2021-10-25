@@ -106,6 +106,9 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
                                                 const std::shared_ptr<sif::DynamicCost>& costing,
                                                 const float max_matrix_distance) {
   DistanceMatrix distanceMatrix(boost::extents[graph_ids.size()][graph_ids.size()]);
+  if (graph_ids.size() == 0) {
+    return distanceMatrix;
+  }
 
   // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
