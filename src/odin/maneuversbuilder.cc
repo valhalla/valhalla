@@ -2363,32 +2363,37 @@ bool ManeuversBuilder::IsFork(int node_index,
            const std::unique_ptr<EnhancedTripLeg_IntersectingEdge>& xedge) -> bool {
       uint32_t prev_lane_count = prev_edge->lane_count();
       uint32_t curr_lane_count = curr_edge->lane_count();
-      uint32_t xedge_lane_count = xedge->lane_count();
 
-      // Going from N+1 lanes to N lanes. See if previous-lanes appear to be a
-      // deceleration lane. Iterate prev's until we've exceeded the length
-      // of a deceleration lane (as a function of speed). If the highway at
-      // that point has gone down a lane, then it is likely that prev-edge is
-      // a deceleration lane - which means this is more likely an exit than
-      // a highway bifurcation.
+      // Going from N+1 lanes to N lanes. Is this really a highway bifurcation or
+      // just a deceleration lane?
       if ((curr_lane_count > 1) && (prev_lane_count == curr_lane_count + 1) &&
           (xedge->use() == TripLeg_Use_kRampUse)) {
+
+        // See if previous-lanes appear to be a deceleration lane. A deceleration
+        // lane will have a limited length. Iterate previous edges until we've
+        // exceeded the length of a deceleration lane. If the highway at
+        // that point has gone down a lane, then it is likely that prev-edge is
+        // a deceleration lane - which means this is more likely an exit than
+        // a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         float deceleration_lane_length = get_deceleration_lane_length(prev_at_delta->default_speed());
-        float agg_lane_length_ = prev_at_delta->length_km();
-        while (agg_lane_length_ < deceleration_lane_length) {
+        float agg_lane_length_km = prev_at_delta->length_km();
+        while (agg_lane_length_km < deceleration_lane_length) {
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-          agg_lane_length_ += prev_at_delta->length_km();
+          if (!prev_at_delta)
+            break;
+          agg_lane_length_km += prev_at_delta->length_km();
         }
 
-        if (prev_at_delta->lane_count() == curr_lane_count) {
+        if (prev_at_delta && (prev_at_delta->lane_count() == curr_lane_count)) {
           return false;
         }
       }
 
       uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
+      uint32_t xedge_lane_count = xedge->lane_count();
       if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
         return true;
       } else if ((prev_lane_count > 2) && (curr_lane_count == post_split_min_count) &&
