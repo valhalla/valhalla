@@ -92,7 +92,7 @@ std::string serializeStatus(const Api& request) {
 
   status_doc.AddMember("version", rapidjson::Value().SetString(request.status().version(), alloc),
                        alloc);
-  status_doc.AddMember("tileset_age",
+  status_doc.AddMember("tileset_last_modified",
                        rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
 
   if (request.status().has_has_tiles())
