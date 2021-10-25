@@ -5,6 +5,9 @@
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
+   * ADDED: Added support for probabale restrictions [#3361](https://github.com/valhalla/valhalla/pull/3361)
+   * CHANGED: Refactored the verbal text formatter to handle logic for street name and sign [#3369](https://github.com/valhalla/valhalla/pull/3369)
+   * CHANGED: return "version" and "tileset_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
    * CHANGED: de-singleton tile_extract by introducing an optional index.bin file created by valhalla_build_extract [#3281](https://github.com/valhalla/valhalla/pull/3281)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4

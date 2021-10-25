@@ -19,13 +19,7 @@ VerbalTextFormatterUsTx::VerbalTextFormatterUsTx(const std::string& country_code
 VerbalTextFormatterUsTx::~VerbalTextFormatterUsTx() {
 }
 
-std::string VerbalTextFormatterUsTx::Format(const std::string& text,
-                                            const boost::optional<std::string>& markup_string) const {
-  // If markup string exists then use it
-  if (markup_string) {
-    return VerbalTextFormatter::Format(text, markup_string);
-  }
-
+std::string VerbalTextFormatterUsTx::Format(const std::string& text) const {
   std::string verbal_text(text);
   verbal_text = FormFmTts(verbal_text);
   verbal_text = FormRmTts(verbal_text);

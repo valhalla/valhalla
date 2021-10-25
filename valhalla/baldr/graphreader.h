@@ -881,6 +881,30 @@ public:
   }
 
   /**
+   * Returns the location of the tile extract
+   * @return  Returns the tile extract file path.
+   */
+  const std::string& tile_extract() const {
+    static std::string empty_str;
+    if (tile_extract_->tiles.empty())
+      return empty_str;
+    return tile_extract_->archive->tar_file;
+  }
+
+  /**
+   * Returns the tilesets location whether thats a tile_dir or a tile_extract. Purely url
+   * based configurations will return the url but if they have file storage they return
+   * tile_dir
+   */
+  const std::string& GetTileSetLocation() const {
+    if (!tile_extract_->tiles.empty())
+      return tile_extract();
+    if (!tile_dir_.empty())
+      return tile_dir_;
+    return tile_url_;
+  }
+
+  /**
    * Given an input bounding box, the reader will query the tile set to find the minimum
    * bounding box which entirely encloses all the edges who have begin nodes in the input
    * bounding box. If there is no data enclosed in the region the bounding box will have
