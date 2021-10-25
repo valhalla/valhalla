@@ -6,6 +6,9 @@
 
 #include <boost/optional.hpp>
 
+#include <valhalla/odin/markup_formatter.h>
+#include <valhalla/odin/sign.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -23,15 +26,37 @@ public:
   virtual ~VerbalTextFormatter();
 
   /**
+   * Returns a text-to-speech formatted string based on the specified street name.
+   *
+   * @param  street_name  the source street name to transform.
+   * @param  markup_formatter  the optional markup formatter that could be used.
+   *
+   * @return a text-to-speech formatted string based on the specified street name and markup
+   * formatter.
+   */
+  virtual std::string Format(const std::unique_ptr<baldr::StreetName>& street_name,
+                             const odin::MarkupFormatter* markup_formatter = nullptr) const;
+
+  /**
+   * Returns a text-to-speech formatted string based on the specified sign.
+   *
+   * @param  sign  the source sign to transform.
+   * @param  markup_formatter  the optional markup formatter that could be used.
+   *
+   * @return a text-to-speech formatted string based on the specified sign and markup
+   * formatter.
+   */
+  virtual std::string Format(const odin::Sign& sign,
+                             const odin::MarkupFormatter* markup_formatter = nullptr) const;
+
+  /**
    * Returns a text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
-   * @param  markup_string  the optional markup string that should be used.
    *
    * @return a text-to-speech formatted string based on the specified text.
    */
-  virtual std::string Format(const std::string& text,
-                             const boost::optional<std::string>& markup_string = boost::none) const;
+  virtual std::string Format(const std::string& text) const;
 
 protected:
   virtual std::string ProcessNumberSplitMatch(const std::smatch& m) const;

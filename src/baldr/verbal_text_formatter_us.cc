@@ -18,13 +18,7 @@ VerbalTextFormatterUs::VerbalTextFormatterUs(const std::string& country_code,
 VerbalTextFormatterUs::~VerbalTextFormatterUs() {
 }
 
-std::string VerbalTextFormatterUs::Format(const std::string& text,
-                                          const boost::optional<std::string>& markup_string) const {
-  // If markup string exists then use it
-  if (markup_string) {
-    return VerbalTextFormatter::Format(text, markup_string);
-  }
-
+std::string VerbalTextFormatterUs::Format(const std::string& text) const {
   std::string verbal_text(text);
 
   verbal_text = FormInterstateTts(verbal_text);

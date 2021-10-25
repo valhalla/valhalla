@@ -398,11 +398,8 @@ std::string Signs::ListToString(const std::vector<Sign>& signs,
     }
 
     // Concatenate exit text and update count
-    sign_string += (verbal_formatter)
-                       ? verbal_formatter->Format(sign.text(),
-                                                  ((markup_formatter) ? markup_formatter->Format(sign)
-                                                                      : boost::none))
-                       : sign.text();
+    sign_string +=
+        (verbal_formatter) ? verbal_formatter->Format(sign, markup_formatter) : sign.text();
     ++count;
   }
 

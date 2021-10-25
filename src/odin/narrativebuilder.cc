@@ -4452,10 +4452,9 @@ std::string NarrativeBuilder::FormStreetNames(const StreetNames& street_names,
     }
 
     // Append next name to string
-    street_names_string +=
-        (verbal_formatter)
-            ? verbal_formatter->Format(street_name->value(), markup_formatter_.Format(street_name))
-            : street_name->value();
+    street_names_string += (verbal_formatter)
+                               ? verbal_formatter->Format(street_name, &markup_formatter_)
+                               : street_name->value();
     ++count;
   }
 
