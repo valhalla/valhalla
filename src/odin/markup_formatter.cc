@@ -49,7 +49,7 @@ void MarkupFormatter::set_markup_enabled(bool markup_enabled) {
 }
 
 boost::optional<std::string>
-MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) const {
+MarkupFormatter::FormatPhonemeElement(const std::unique_ptr<baldr::StreetName>& street_name) const {
   // Check if markup is enabled
   if (markup_enabled()) {
 
@@ -66,7 +66,7 @@ MarkupFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name) c
   return boost::none;
 }
 
-boost::optional<std::string> MarkupFormatter::Format(const Sign& sign) const {
+boost::optional<std::string> MarkupFormatter::FormatPhonemeElement(const Sign& sign) const {
   // Check if markup is enabled
   if (markup_enabled()) {
 

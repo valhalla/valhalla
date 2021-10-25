@@ -37,7 +37,7 @@ public:
    * @param  street_name  the street name record to format.
    * @return the street name with phoneme markup if it exists.
    */
-  boost::optional<std::string> Format(const std::unique_ptr<baldr::StreetName>& street_name) const;
+  boost::optional<std::string> FormatPhonemeElement(const std::unique_ptr<baldr::StreetName>& street_name) const;
 
   /**
    * Return the sign with phoneme markup if it exists.
@@ -45,7 +45,7 @@ public:
    * @param  sign  the sign record to format.
    * @return the sign with phoneme markup if it exists.
    */
-  boost::optional<std::string> Format(const Sign& sign) const;
+  boost::optional<std::string> FormatPhonemeElement(const Sign& sign) const;
 
 protected:
   /**
