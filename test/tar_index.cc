@@ -12,8 +12,9 @@ public:
   using vb::GraphReader::tile_extract_;
 };
 
-auto config_tar = test::make_config("test/data/utrecht_tiles");
-auto config_dir = test::make_config("test/data/utrecht_tiles", {}, {"mjolnir.tile_extract"});
+auto config_tar = test::make_config("test/data/utrecht_tiles",
+                                    {{"mjolnir.tile_extract", "test/data/utrecht_tiles/tiles.tar"}});
+auto config_dir = test::make_config("test/data/utrecht_tiles");
 
 TEST(TarIndexer, TestTrafficTar) {
   // read the tile headers from tar & dir tiles and memcmp them
