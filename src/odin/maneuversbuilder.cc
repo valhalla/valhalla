@@ -2236,7 +2236,14 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
-// return the length in km for a deceleration lane as a function of the road's speed
+// return the length in km for a deceleration lane as a function of the road's speed.
+//
+//    speed (mph)   |   decel lane length
+// -----------------|--------------------
+//        >70       |        700 ft
+//       60-70      |        600 ft
+//       50-60      |        500 ft
+//        <50       |        400 ft
 float get_deceleration_lane_length(float speed_kph) {
   if (speed_kph > 112) {
     return 0.213;
@@ -2365,16 +2372,16 @@ bool ManeuversBuilder::IsFork(int node_index,
       uint32_t curr_lane_count = curr_edge->lane_count();
 
       // Going from N+1 lanes to N lanes. Is this really a highway bifurcation or
-      // just a deceleration lane?
+      // just a deceleration lane for an exit?
       if ((curr_lane_count > 1) && (prev_lane_count == curr_lane_count + 1) &&
           (xedge->use() == TripLeg_Use_kRampUse)) {
 
-        // See if previous-lanes appear to be a deceleration lane. A deceleration
-        // lane will have a limited length. Iterate previous edges until we've
-        // exceeded the length of a deceleration lane. If the highway at
-        // that point has gone down a lane, then it is likely that prev-edge is
-        // a deceleration lane - which means this is more likely an exit than
-        // a highway bifurcation.
+        // Determine if this lane split is a deceleration lane forking onto an
+        // exit. A deceleration lane will have a predictable length. Iterate previous
+        // edges until we've exceeded the length of a deceleration lane. If the
+        // highway at that point has gone down a lane, then it is likely that
+        // prev-edge is a deceleration lane - which means this is more likely
+        // an exit than a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         float deceleration_lane_length = get_deceleration_lane_length(prev_at_delta->default_speed());
