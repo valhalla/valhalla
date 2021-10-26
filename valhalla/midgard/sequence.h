@@ -659,9 +659,9 @@ struct tar {
     }
   };
 
+  // all of the info about which tar is memory mapped and where each file within
+  // the tar is found in the map
   std::string tar_file;
-
-  // TODO:
   mem_map<char> mm;
   using entry_name_t = std::string;
   using entry_location_t = std::pair<const char*, size_t>;

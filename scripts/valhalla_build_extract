@@ -99,7 +99,7 @@ def write_index_to_tar(tar_fp_: Path):
 
 def create_extracts(config_: dict, do_traffic: bool):
     """Actually creates the tar ball. Break out of main function for testability."""
-    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", 'nodirectory.foo'))
+    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", '/dev/null'))
     extract_fp: Path = Path(config_["mjolnir"].get("tile_extract") or tiles_fp.parent.joinpath('tiles.tar'))
     traffic_fp: Path = Path(config_["mjolnir"].get("traffic_extract") or tiles_fp.parent.joinpath('traffic.tar'))
 
@@ -117,10 +117,12 @@ def create_extracts(config_: dict, do_traffic: bool):
     index_fd = BytesIO(b'0' * index_size)
     index_fd.seek(0)
 
-    # first add the index file, then the tile dir to the tarfile
+    # first add the index file, then the sorted tiles to the tarfile
+    # TODO: come up with a smarter strategy to cluster the tiles in the tar
     with tarfile.open(extract_fp, 'w') as tar:
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
-        tar.add(str(tiles_fp), recursive=True, arcname='')
+        for t in sorted(tiles_fp.rglob('*.gph')):
+            tar.add(str(t.resolve()), arcname=str(t.relative_to(tiles_fp)))
 
     write_index_to_tar(extract_fp)
 
