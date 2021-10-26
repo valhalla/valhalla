@@ -646,7 +646,7 @@ protected:
   const Options& options_;
   const EnhancedTripLeg* trip_path_;
   const NarrativeDictionary& dictionary_;
-  MarkupFormatter markup_formatter_; // No ref - need our own copy
+  MarkupFormatter markup_formatter_; // No ref - need our own non-const copy
   bool articulated_preposition_enabled_;
 };
 

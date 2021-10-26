@@ -34,12 +34,10 @@ public:
    * Returns a Texas, US text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
-   * @param  markup_string  the optional markup string that should be used.
    *
    * @return a Texas, US text-to-speech formatted string based on the specified text.
    */
-  std::string Format(const std::string& text,
-                     const boost::optional<std::string>& markup_string = boost::none) const override;
+  std::string Format(const std::string& text) const override;
 
 protected:
   std::string FormFmTts(const std::string& source) const;
