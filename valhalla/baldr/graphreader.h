@@ -946,6 +946,7 @@ protected:
     std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
     std::shared_ptr<midgard::tar> archive;
     std::shared_ptr<midgard::tar> traffic_archive;
+    uint64_t checksum;
   };
   std::shared_ptr<const tile_extract_t> tile_extract_;
   static std::shared_ptr<const GraphReader::tile_extract_t>

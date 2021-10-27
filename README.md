@@ -223,6 +223,9 @@ valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-ex
 #TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 #tar it up for running the server
+#either run this to build a tile index for faster graph loading times
+valhalla_build_extract -c valhalla.json -v
+#or simply tar up the tiles
 find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
 
 #grab the demos repo and open up the point and click routing sample

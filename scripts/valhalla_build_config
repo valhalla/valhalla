@@ -51,7 +51,8 @@ config = {
       'use_direction_on_ways': False,
       'allow_alt_name': False,
       'use_urban_tag': False,
-      'use_rest_area': False
+      'use_rest_area': False,
+      'scan_tar': False
     },
     'logging': {
       'type': 'std_out',
@@ -317,7 +318,8 @@ help_text = {
       'use_direction_on_ways': 'bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase',
       'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase',
       'use_urban_tag': 'bool indicating whether or not to use the urban area tag on the ways or to utilize the getDensity function within the graph enhancer phase',
-      'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways'
+      'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways',
+      'scan_tar': 'bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',
