@@ -2384,9 +2384,9 @@ bool ManeuversBuilder::IsFork(int node_index,
         // an exit than a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-        float deceleration_lane_length = get_deceleration_lane_length(prev_at_delta->default_speed());
+        float deceleration_lane_length_km = get_deceleration_lane_length(prev_at_delta->default_speed());
         float agg_lane_length_km = prev_at_delta->length_km();
-        while (agg_lane_length_km < deceleration_lane_length) {
+        while (agg_lane_length_km < deceleration_lane_length_km) {
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
           if (!prev_at_delta)
