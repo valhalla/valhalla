@@ -154,6 +154,7 @@ protected:
    */
   template <const ExpansionType expansion_direction>
   bool Expand(baldr::GraphReader& graphreader,
+              graph_tile_ptr& potential_tile,
               const baldr::GraphId& node,
               sif::BDEdgeLabel& pred,
               const uint32_t pred_idx,
@@ -173,6 +174,7 @@ protected:
   //
   template <const ExpansionType expansion_direction>
   inline bool ExpandInner(baldr::GraphReader& graphreader,
+                          graph_tile_ptr& potential_tile,
                           const sif::BDEdgeLabel& pred,
                           const baldr::DirectedEdge* opp_pred_edge,
                           const baldr::NodeInfo* nodeinfo,
@@ -188,6 +190,7 @@ protected:
    * @param time_info    What time is it when we start the route
    */
   void SetOrigin(baldr::GraphReader& graphreader,
+                 graph_tile_ptr& potential_tile,
                  valhalla::Location& origin,
                  const baldr::TimeInfo& time_info);
 
@@ -198,6 +201,7 @@ protected:
    * @param time_info    What time is it when we end the route
    */
   void SetDestination(baldr::GraphReader& graphreader,
+                      graph_tile_ptr& potential_tile,
                       const valhalla::Location& dest,
                       const baldr::TimeInfo& time_info);
 

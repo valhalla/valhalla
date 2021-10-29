@@ -168,6 +168,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 //
 template <const ExpansionType expansion_direction>
 inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
+                                            graph_tile_ptr& potential_tile,
                                             const sif::BDEdgeLabel& pred,
                                             const baldr::DirectedEdge* opp_pred_edge,
                                             const baldr::NodeInfo* nodeinfo,
@@ -183,9 +184,10 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
   graph_tile_ptr t2 = nullptr;
   baldr::GraphId opp_edge_id;
-  const auto get_opp_edge_data = [&t2, &opp_edge_id, &graphreader, &meta, &tile]() {
+  const auto get_opp_edge_data = [&t2, &opp_edge_id, &graphreader, &potential_tile, &meta, &tile]() {
     // Get end node tile, opposing edge Id, and opposing directed edge.
-    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+    t2 = meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode(), potential_tile)
+                                  : tile;
     if (t2 == nullptr) {
       return false;
     }
@@ -370,6 +372,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
 template <const ExpansionType expansion_direction>
 bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
+                                graph_tile_ptr& potential_tile,
                                 const baldr::GraphId& node,
                                 sif::BDEdgeLabel& pred,
                                 const uint32_t pred_idx,
@@ -379,7 +382,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   constexpr bool FORWARD = expansion_direction == ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  graph_tile_ptr tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node, potential_tile);
   if (tile == nullptr) {
     return false;
   }
@@ -405,11 +408,11 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // is labelled
     pred.set_deadend(true);
     // Check if edge is null before using it (can happen with regional data sets)
-    return opp_edge &&
-           ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                            {opp_edge, opp_edge_id,
-                                             edgestatus.GetPtr(opp_edge_id, tile)},
-                                            shortcuts, tile, offset_time);
+    return opp_edge && ExpandInner<expansion_direction>(graphreader, potential_tile, pred,
+                                                        opp_pred_edge, nodeinfo, pred_idx,
+                                                        {opp_edge, opp_edge_id,
+                                                         edgestatus.GetPtr(opp_edge_id, tile)},
+                                                        shortcuts, tile, offset_time);
   }
 
   bool disable_uturn = false;
@@ -428,8 +431,8 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
     disable_uturn =
         (pred.opp_local_idx() != meta.edge->localedgeidx() &&
-         ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          shortcuts, tile, offset_time)) ||
+         ExpandInner<expansion_direction>(graphreader, potential_tile, pred, opp_pred_edge, nodeinfo,
+                                          pred_idx, meta, shortcuts, tile, offset_time)) ||
         disable_uturn;
   }
 
@@ -443,7 +446,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
            hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
-          !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+          !(trans_tile = graphreader.GetGraphTile(trans->endnode(), potential_tile))) {
         continue;
       }
 
@@ -456,8 +459,9 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
       // expand the edges from this node at this level
       for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
         disable_uturn =
-            ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, trans_node, pred_idx,
-                                             trans_meta, trans_shortcuts, trans_tile, offset_time) ||
+            ExpandInner<expansion_direction>(graphreader, potential_tile, pred, opp_pred_edge,
+                                             trans_node, pred_idx, trans_meta, trans_shortcuts,
+                                             trans_tile, offset_time) ||
             disable_uturn;
       }
     }
@@ -475,8 +479,8 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
     // Expand the uturn possiblity
     disable_uturn =
-        ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                         uturn_meta, shortcuts, tile, offset_time) ||
+        ExpandInner<expansion_direction>(graphreader, potential_tile, pred, opp_pred_edge, nodeinfo,
+                                         pred_idx, uturn_meta, shortcuts, tile, offset_time) ||
         disable_uturn;
   }
 
@@ -529,8 +533,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // PathLocation using edges.front here means we are only setting the
   // heuristics to one of them alternate paths using the other correlated
   // points to may be harder to find
-  SetOrigin(graphreader, origin, forward_time_info);
-  SetDestination(graphreader, destination, reverse_time_info);
+  baldr::graph_tile_ptr origin_potential_tile = nullptr;
+  baldr::graph_tile_ptr destination_potential_tile = nullptr;
+  SetOrigin(graphreader, origin_potential_tile, origin, forward_time_info);
+  SetDestination(graphreader, destination_potential_tile, destination, reverse_time_info);
 
   // Update hierarchy limits
   if (!ignore_hierarchy_limits_)
@@ -717,7 +723,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
       if (cost_threshold_ != std::numeric_limits<float>::max() &&
           fwd_pred.predecessor() != kInvalidLabel) {
-        const auto tile = graphreader.GetGraphTile(fwd_pred.endnode());
+        const auto tile = graphreader.GetGraphTile(fwd_pred.endnode(), origin_potential_tile);
         if (tile != nullptr) {
           // Estimate lower bound cost for the shortest path that goes through the current edge.
           float route_lower_bound =
@@ -735,8 +741,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
 
       // Expand from the end node in forward direction.
-      Expand<ExpansionType::forward>(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx,
-                                     nullptr, forward_time_info, invariant);
+      Expand<ExpansionType::forward>(graphreader, origin_potential_tile, fwd_pred.endnode(), fwd_pred,
+                                     forward_pred_idx, nullptr, forward_time_info, invariant);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -757,7 +763,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
-      const auto rev_pred_tile = graphreader.GetGraphTile(rev_pred.opp_edgeid());
+      const auto rev_pred_tile =
+          graphreader.GetGraphTile(rev_pred.opp_edgeid(), destination_potential_tile);
       if (rev_pred_tile == nullptr) {
         continue;
       }
@@ -767,7 +774,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // for bidirectional astar: https://repub.eur.nl/pub/16100/ei2009-10.pdf .
       if (cost_threshold_ != std::numeric_limits<float>::max() &&
           rev_pred.predecessor() != kInvalidLabel) {
-        const auto tile = graphreader.GetGraphTile(rev_pred.endnode());
+        const auto tile = graphreader.GetGraphTile(rev_pred.endnode(), destination_potential_tile);
         if (tile != nullptr) {
           // Estimate lower bound cost for the shortest path that goes through the current edge.
           float route_lower_bound =
@@ -785,8 +792,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
 
       // Expand from the end node in reverse direction.
-      Expand<ExpansionType::reverse>(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
-                                     opp_pred_edge, reverse_time_info, invariant);
+      Expand<ExpansionType::reverse>(graphreader, destination_potential_tile, rev_pred.endnode(),
+                                     rev_pred, reverse_pred_idx, opp_pred_edge, reverse_time_info,
+                                     invariant);
     }
   }
   return {}; // If we are here the route failed
@@ -931,6 +939,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
 // Add edges at the origin to the forward adjacency list.
 void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
+                                   graph_tile_ptr& potential_tile,
                                    valhalla::Location& origin,
                                    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
@@ -954,7 +963,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid, potential_tile);
     if (tile == nullptr) {
       continue;
     }
@@ -962,7 +971,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode(), potential_tile);
     if (!endtile) {
       continue;
     }
@@ -1024,6 +1033,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
 // Add destination edges to the reverse path adjacency list.
 void BidirectionalAStar::SetDestination(GraphReader& graphreader,
+                                        graph_tile_ptr& potential_tile,
                                         const valhalla::Location& dest,
                                         const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
@@ -1047,7 +1057,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       continue;
     }
     // Get the directed edge
-    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid, potential_tile);
     if (tile == nullptr) {
       continue;
     }
