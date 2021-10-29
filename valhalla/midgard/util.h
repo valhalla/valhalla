@@ -285,13 +285,17 @@ void trim_shape(float start,
  * @param shape  Shape / polyline geometry.
  * @param sample_distance Distance to sample when computing heading.
  * @param forward Boolean value whether to test in forward or reverse direction.
+ * @param first_segment_index Index into the shape pointing to the first stopping point.
+ * @param last_segment_index Index into the shape pointing to the last stopping point.
  * @return Returns the angle in degrees relative to N.
  */
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward);
+                    bool forward,
+                    size_t first_segment_index = 0,
+                    size_t last_segment_index = std::numeric_limits<size_t>::max());
 
 // useful in converting from one iteratable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
