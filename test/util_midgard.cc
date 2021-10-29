@@ -630,12 +630,12 @@ TEST(UtilMidgard, TestTangentAngleOnSegment) {
 
   float expected = shape[1].Heading(shape[2]);
   // calculate the angle taking into account only second and third points on the curve
-  float tang = tangent_angle(1, 1, 2, shape[1], shape, kTestDistance, true);
+  float tang = tangent_angle(1, shape[1], shape, kTestDistance, true, 1, 2);
   EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
 
   expected = shape[1].Heading(shape[0]);
   // calculate the angle taking into account only first and second points on the curve
-  tang = tangent_angle(1, 0, 1, shape[1], shape, kTestDistance, false);
+  tang = tangent_angle(1, shape[1], shape, kTestDistance, false, 0, 1);
   EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
 }
 

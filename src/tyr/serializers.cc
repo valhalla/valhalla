@@ -72,10 +72,10 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 
     const auto& start = shape[begin_index];
     float forward_heading =
-        midgard::tangent_angle(begin_index, begin_index, end_index, start, shape, 20.f, true);
+        midgard::tangent_angle(begin_index, start, shape, 20.f, true, begin_index, end_index);
     const auto& end = shape[end_index];
     float reverse_heading =
-        midgard::tangent_angle(end_index, begin_index, end_index, end, shape, 20.f, false);
+        midgard::tangent_angle(end_index, end, shape, 20.f, false, begin_index, end_index);
 
     std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
     lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
