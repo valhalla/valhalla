@@ -67,11 +67,15 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     const FormOfWay fow = road_class_to_fow(edge);
     const auto frc = static_cast<uint8_t>(edge.road_class());
 
-    const auto& start = shape[edge.begin_shape_index()];
+    const auto begin_index = edge.begin_shape_index();
+    const auto end_index = edge.end_shape_index();
+
+    const auto& start = shape[begin_index];
     float forward_heading =
-        midgard::tangent_angle(edge.begin_shape_index(), start, shape, 20.f, true);
-    const auto& end = shape[edge.end_shape_index()];
-    float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
+        midgard::tangent_angle(begin_index, begin_index, end_index, start, shape, 20.f, true);
+    const auto& end = shape[end_index];
+    float reverse_heading =
+        midgard::tangent_angle(end_index, begin_index, end_index, end, shape, 20.f, false);
 
     std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
     lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,

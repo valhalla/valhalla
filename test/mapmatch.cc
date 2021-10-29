@@ -1442,9 +1442,9 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   const auto& matches = response.get_child("matchings");
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
-      "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//8iGw==",
-      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOduyULYiKJAAAV//0iGQ==",
+      "CwOdxCULYCKKAAAN//8iGg==",
+      "CwOdySULXyKLAAAf//EiGw==",
       "CwOd1yULWCKLAQBV/84iGw==",
   };
   for (const auto& match : matches) {
@@ -1464,9 +1464,9 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   tyr::actor_t actor(conf, true);
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
-      "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//8iGw==",
-      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOduyULYiKJAAAV//0iGQ==",
+      "CwOdxCULYCKKAAAN//8iGg==",
+      "CwOdySULXyKLAAAf//EiGw==",
       "CwOd1yULWCKLAQBV/84iGw==",
   };
   std::vector<std::string> references;
