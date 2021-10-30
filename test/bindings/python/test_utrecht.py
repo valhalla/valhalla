@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from io import StringIO
 import json
 import os
 from pathlib import Path
 import re
 import unittest
-from unittest.mock import patch
 from valhalla import Actor, get_config
 
 
