@@ -1,7 +1,19 @@
 from pathlib import Path
 from typing import Union
 
-from .valhalla_build_config import config as default_config, sanitize_config
+from .valhalla_build_config import config as default_config, Optional
+
+
+def _sanitize_config(dict_: dict = None) -> dict:
+    """remove the "Optional" values from the config."""
+    int_dict_ = dict_.copy()
+    for k, v in int_dict_.items():
+        if isinstance(v, Optional):
+            del dict_[k]
+        elif isinstance(v, dict):
+            _sanitize_config(v)
+    
+    return dict_
 
 
 def get_config(tile_dir: Union[str, Path], tile_extract: Union[str, Path] = "valhalla_tiles.tar") -> dict:
@@ -12,7 +24,7 @@ def get_config(tile_dir: Union[str, Path], tile_extract: Union[str, Path] = "val
     :param tile_extract: The file path (with .tar extension) of the tile extract, if present.
     """
 
-    config = sanitize_config(default_config.copy())
+    config = _sanitize_config(default_config.copy())
 
     tile_dir = Path(tile_dir)
     tile_extract = Path(tile_extract)

@@ -587,20 +587,9 @@ def override_config(args_: dict, leaves_: list, config_: dict):
         v = config_
         for k in keys[:-1]:
             v = v[k]
-        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
-        sanitize_config(v)
-
-
-def sanitize_config(dict_: dict = None) -> dict:
-    """remove the "Optional" values from the config."""
-    int_dict_ = dict_.copy()
-    for k, v in int_dict_.items():
-        if isinstance(v, Optional):
-            del dict_[k]
-        elif isinstance(v, dict):
-            sanitize_config(v)
-    
-    return dict_
+        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))        
+        if isinstance(v[keys[-1]], type(Optional())):
+            del v[keys[-1]]
 
 
 # set up available program options

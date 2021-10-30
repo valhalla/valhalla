@@ -25,7 +25,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
     rapidjson::read_json(config, pt);
 
     boost::optional<boost::property_tree::ptree&> logging_subtree =
-        pt.get_child_optional("tyr.logging");
+        pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
       auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                      std::unordered_map<std::string, std::string>>(

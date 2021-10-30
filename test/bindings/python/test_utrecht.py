@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from io import StringIO
 import json
 import os
 from pathlib import Path
 import re
 import unittest
+from unittest.mock import patch
 from valhalla import Actor, get_config
 
 
@@ -46,10 +48,11 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(config['mjolnir']['tile_extract'], str(self.extract_path.resolve()))
     
     def test_config_actor(self):
-        config = get_config(self.tiles_path, self.extract_path)
+        # shouldn't load the extract, but we cant test that from python
+        config = get_config(self.tiles_path)
         with open(self.config_path, 'w') as f:
             json.dump(config, f, indent=2)
-        
+            
         actor = Actor(str(self.config_path))
         self.assertIn('tileset_last_modified', actor.status())
     

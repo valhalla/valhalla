@@ -7,6 +7,8 @@ except ModuleNotFoundError:
     from python_valhalla import _Actor
 
 
+# TODO: wasteful for dict input/output; more reasonable would be to extend
+#   the Actor's action C++ interfaces with a JSON arg
 def dict_or_str(func):
     def wrapped(*args):
         # /status doesn't take any parameters
