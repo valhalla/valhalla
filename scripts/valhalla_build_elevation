@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 from collections import namedtuple
 from functools import partial
 import gzip
@@ -9,10 +10,9 @@ import logging
 from math import ceil, floor
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool as ThreadPool
-from threading import Lock
 from pathlib import Path
 import sys
-from typing import List
+from typing import List, Iterable
 from urllib import request
 from urllib.error import URLError
 
@@ -30,16 +30,22 @@ parser = argparse.ArgumentParser(description=description)
 method = parser.add_mutually_exclusive_group()
 method.add_argument(
     "-g",
-    "--geojson-input-dir",
+    "--from-geojson",
     help="Absolute or relative path to directory with .geojson files used "
     "as input to tile intersection. Requires shapely.",
     type=Path,
 )
 method.add_argument(
     "-b",
-    "--bbox",
+    "--from-bbox",
     help="Bounding box coordinates in the format 'minX,minY,maxX,maxY'.",
     type=str,
+)
+method.add_argument(
+    "-t",
+    "--from-tiles",
+    help="Only download tiles covered by the Valhalla graph.",
+    action="store_true"
 )
 parser.add_argument(
     "-c",
@@ -48,7 +54,10 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
-    "-p", "--parallelism", help="Number of processing units to use.", type=int
+    "-p", "--parallelism",
+    help="Number of processing units to use.",
+    type=int,
+    default=cpu_count()
 )
 parser.add_argument(
     "-d",
@@ -63,14 +72,9 @@ parser.add_argument(
     action="count",
     default=0,
 )
-parser.add_argument(
-    "-o",
-    "--output",
-    help="Instead of downloading intersecting tiles, their filenames will be written to specified file",
-    type=Path
-)
 
 Tile = namedtuple("Tile", ["name", "dir"])
+LOCAL_SIZE = 1
 
 
 def get_tile_info(
@@ -89,40 +93,9 @@ def get_tile_info(
     return Tile(tile_name, dir_name)
 
 
-def get_tiles_with_shapely(input_dir: Path) -> List[Tile]:
-    try:
-        from shapely.geometry import Polygon, box
-    except ImportError:
-        LOGGER.critical(
-            "Could not import shapely. Please install shapely or use the --bbox option instead."
-        )
-        sys.exit(1)
-
-    tile_infos = []
-    for coords in get_outer_rings(input_dir):
-        poly = Polygon(coords)
-        for rect in grid_from_bounds(poly.bounds):
-            if poly.intersects(box(*rect)):
-                s, w, *_ = rect
-                tile_infos.append(get_tile_info(s, w))
-
-    return tile_infos
-
-
-def get_outer_rings(input_dir: Path) -> List:
-    for file in input_dir.glob("*.geojson"):
-        with open(file) as f:
-            geojson = json.load(f)
-        for feature in geojson["features"]:
-            if feature["geometry"]["type"] == "Polygon":
-                yield feature["geometry"]["coordinates"][0]  # outer ring only
-            if feature["geometry"]["type"] == "MultiPolygon":
-                for single_polygon in feature["geometry"]["coordinates"]:
-                    yield single_polygon[0]  # outer ring only
-
-
 def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
     """Creates a regular grid of size 1x1 within specified bounds"""
+    # expand bbox by snapping to a 1 x 1 degree grid
     # loop through x and y range and create the grid
     min_x, min_y = [floor(x) for x in bounds[:2]]
     max_x, max_y = [ceil(x) for x in bounds[-2:]]
@@ -131,14 +104,56 @@ def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
             yield [x, y, x + 1, y + 1]
 
 
+def get_tiles_with_geojson(input_dir: Path) -> List[Tile]:
+    try:
+        from shapely.geometry import Polygon, box
+    except ImportError:
+        LOGGER.critical(
+            "Could not import shapely. Please install shapely or use another download method instead."
+        )
+        sys.exit(1)
+
+    if not input_dir.is_dir() or not len(list(input_dir.glob('*.geojson'))) > 0:
+        LOGGER.critical(f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}")
+        sys.exit(1)
+
+    def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
+        for file in input_dir.glob("*.geojson"):
+            with open(file) as f:
+                geojson = json.load(f)
+            for feature in geojson["features"]:
+                if feature["geometry"]["type"] == "Polygon":
+                    yield Polygon(feature["geometry"]["coordinates"][0])
+                if feature["geometry"]["type"] == "MultiPolygon":
+                    for single_polygon in feature["geometry"]["coordinates"]:
+                        yield Polygon(single_polygon[0])
+
+    tile_infos = []
+    for poly in get_outer_rings(input_dir):
+        for rect in grid_from_bounds(poly.bounds):
+            if poly.intersects(box(*rect)):
+                s, w, *_ = rect
+                tile_infos.append(get_tile_info(s, w))
+
+    return tile_infos
+
+
 def get_tiles_with_bbox(bbox_str: str) -> List[Tile]:
     try:
-        bbox = [float(x) for x in bbox_str.split(",")]
+        bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
         LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
         sys.exit(1)
 
-    if not bbox_is_valid(bbox):
+    # validate bbox
+    if (
+        min_x > max_x
+        or min_x < -180
+        or max_x > 180
+        or min_y > max_y
+        or min_y < -90
+        or max_y > 90
+    ):
         LOGGER.critical(f"Bbox invalid: {bbox}")
         sys.exit(1)
 
@@ -152,25 +167,29 @@ def get_tiles_with_bbox(bbox_str: str) -> List[Tile]:
     return tile_infos
 
 
-def bbox_is_valid(bbox):
-    min_x, min_y, max_x, max_y = bbox
-    if (
-        min_x > max_x
-        or min_x < -180
-        or max_x > 180
-        or min_y > max_y
-        or min_y < -90
-        or max_y > 90
-    ):
-        return False
+def get_tiles_with_graph(graph_dir: Path) -> List[Tile]:
+    if not graph_dir.is_dir():
+        LOGGER.critical(f"Graph directory {graph_dir.resolve()} does not exist.")
+        sys.exit(1)
 
-    return True
+    tiles = []
+    local_dir = graph_dir.joinpath('1')
+    tile_width = int(360 / LOCAL_SIZE)
+    for tile_fp in local_dir.rglob('*.gph'):
+        # turn the path into a tile ID
+        tile_id = int(str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, ''))
+        s, w = (tile_id % tile_width) * LOCAL_SIZE - 180, int(tile_id / tile_width) * LOCAL_SIZE - 90
+
+        tiles.append(get_tile_info(s, w))
+
+    return tiles
 
 
 def download(tile: Tile, output_dir, decompress):
     dest_directory = Path(output_dir, tile.dir)
-    Path.mkdir(dest_directory, parents=True, exist_ok=True)
-    filepath = Path(dest_directory, tile.name + (".gz" if not decompress else ""))
+    dest_directory.mkdir(parents=True, exist_ok=True)
+
+    filepath = dest_directory.joinpath(tile.name + (".gz" if not decompress else ""))
     if filepath.is_file():
         return False
 
@@ -186,12 +205,11 @@ def download(tile: Tile, output_dir, decompress):
                     f.write(gz.read())
             else:
                 f.write(res.read())
-            LOGGER.info(f"Successfully downloaded tile {tile.name}")
+            LOGGER.debug(f"Successfully downloaded tile {tile.name}")
 
         return True
     except URLError as e:
-        LOGGER.critical(f"Download failed: {e.reason}")
-
+        LOGGER.critical(f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}")
         return False
 
 
@@ -209,32 +227,23 @@ if __name__ == "__main__":
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    LOGGER.debug(f"Initiating {sys.argv[0]}")
-
-    tiles: List[Tile]
-
-    if args.geojson_input_dir:
-        tiles = get_tiles_with_shapely(args.geojson_input_dir)
-    elif args.bbox:
-        tiles = get_tiles_with_bbox(args.bbox)
+    if args.from_geojson:
+        tiles = get_tiles_with_geojson(args.from_geojson)
+    elif args.from_bbox:
+        tiles = get_tiles_with_bbox(args.from_bbox)
+    elif args.from_tiles:
+        tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
     else:
-        LOGGER.critical("either --bbox or --geojson-input-dir needs to be specified.")
+        LOGGER.critical("No download method specified.")
         sys.exit(1)
-    LOGGER.debug("Tiles calculated.")
 
-    if args.output:
-        with open(args.output, mode="w") as fh:
-            for tile in tiles:
-                fh.write(tile.name + "\n")
-        LOGGER.debug(f"Tile names written to {args.output}")
+    LOGGER.debug(sorted(tiles, key=lambda x: x.name))
 
-    else:
-        # create the threadpool and download
-        LOGGER.debug("Starting downloads.")
-        pool = ThreadPool(args.parallelism or cpu_count())
-        results = pool.imap_unordered(
-            partial(download, output_dir=elevation_fp, decompress=args.decompress), tiles
-        )
+    # create the threadpool and download
+    pool = ThreadPool(args.parallelism)
+    results = pool.imap_unordered(
+        partial(download, output_dir=elevation_fp, decompress=args.decompress), tiles
+    )
 
-        sum_downloaded = list(filter(lambda res: res is True, results))
-        LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles. Exiting.")
+    sum_downloaded = list(filter(lambda res: res is True, results))
+    LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles. Exiting.")

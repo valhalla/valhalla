@@ -11,6 +11,7 @@ if (Python_FOUND)
         utrecht_tiles
         ${VALHALLA_SOURCE_DIR}/test/scripts/test_valhalla_build_config.py
         ${VALHALLA_SOURCE_DIR}/test/scripts/test_valhalla_build_extract.py
+        ${VALHALLA_SOURCE_DIR}/test/scripts/test_valhalla_build_elevation.py
       VERBATIM)
   add_custom_target(run-scripts DEPENDS scripts.log)
   set_target_properties(run-scripts PROPERTIES FOLDER "Scripts")
