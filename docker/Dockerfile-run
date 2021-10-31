@@ -45,7 +45,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libboost-program-options1.71.0 libcurl4 libczmq4 libluajit-5.1-2 \
       libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3.8-minimal python-is-python3 \
+      curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \
     cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
     rm -rf /var/lib/apt/lists/*

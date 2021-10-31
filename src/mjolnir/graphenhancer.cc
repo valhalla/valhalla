@@ -1620,7 +1620,8 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update the named flag
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
+        std::vector<uint8_t> types;
+        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(types, false);
         directededge.set_named(names.size() > 0);
 
         // Speed assignment
@@ -1631,8 +1632,9 @@ void enhance(const boost::property_tree::ptree& pt,
         uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder->directededge(nodeinfo.edge_index() + k);
+          std::vector<uint8_t> types;
           if (ConsistentNames(country_code, names,
-                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes())) {
+                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes(types, false))) {
             directededge.set_name_consistency(k, true);
           }
         }

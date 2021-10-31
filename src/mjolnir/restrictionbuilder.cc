@@ -247,6 +247,7 @@ ComplexRestrictionBuilder CreateComplexRestriction(const OSMRestriction& restric
   complex_restriction.set_to_id(to);
   complex_restriction.set_type(restriction.type());
   complex_restriction.set_modes(restriction.modes());
+  complex_restriction.set_probability(restriction.probability());
 
   TimeDomain td = TimeDomain(restriction.time_domain());
   if (td.td_value()) {
@@ -445,8 +446,9 @@ void build(const std::string& complex_restriction_from_file,
                 GraphId from = tmp_ids.back();
                 GraphId to = tmp_ids.front();
 
-                if (restriction.type() >= RestrictionType::kOnlyRightTurn &&
-                    restriction.type() <= RestrictionType::kOnlyStraightOn) {
+                if ((restriction.type() >= RestrictionType::kOnlyRightTurn &&
+                     restriction.type() <= RestrictionType::kOnlyStraightOn) ||
+                    restriction.type() == RestrictionType::kOnlyProbable) {
                   if (to.Tile_Base() == tile_id) {
                     DirectedEdge& edge = tilebuilder.directededge_builder(to.id());
                     edge.complex_restriction(true);
@@ -478,8 +480,9 @@ void build(const std::string& complex_restriction_from_file,
               };
 
               if (tmp_ids.size() > 1 && tmp_ids.back().Tile_Base() == tile_id) {
-                if (restriction.type() >= RestrictionType::kOnlyRightTurn &&
-                    restriction.type() <= RestrictionType::kOnlyStraightOn) {
+                if ((restriction.type() >= RestrictionType::kOnlyRightTurn &&
+                     restriction.type() <= RestrictionType::kOnlyStraightOn) ||
+                    restriction.type() == RestrictionType::kOnlyProbable) {
                   while (tmp_ids.size() > 1) {
                     auto last_edge_id = tmp_ids.front();
                     auto last_tile = tile;
@@ -634,8 +637,9 @@ void build(const std::string& complex_restriction_from_file,
                     }
                   };
 
-                  if (restriction.type() < RestrictionType::kOnlyRightTurn ||
-                      restriction.type() > RestrictionType::kOnlyStraightOn) {
+                  if ((restriction.type() < RestrictionType::kOnlyRightTurn ||
+                       restriction.type() > RestrictionType::kOnlyStraightOn) &&
+                      restriction.type() != RestrictionType::kOnlyProbable) {
                     addForwardRestriction(tmp_ids);
                   } else {
                     while (tmp_ids.size() > 1) {
