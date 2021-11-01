@@ -311,16 +311,16 @@ TEST(Instructions, validate_exit_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the I 66 East exit on the left toward Washington.", "",
-                    "Take the Interstate 66 East exit on the left.",
-                    "Take the Interstate 66 East exit on the left toward Washington.", "");
+                    "Keep left to take I 66 East toward Washington.", "",
+                    "Keep left to take Interstate 66 East.",
+                    "Keep left to take Interstate 66 East toward Washington.", "");
 
   // Test exit left on left driving side
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8.",
-                    "Take exit 8 onto A120(W)|A120(W).", "");
+                    "Keep left to take exit 8 onto A120(W)|A120(W).", "", "Keep left to take exit 8.",
+                    "Keep left to take exit 8 onto A120(W)|A120(W).", "");
 
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA
@@ -540,10 +540,10 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the PA 39 West/Hersheypark Drive exit toward Attractions.", "",
-                    "Take the Pennsylvania 39 West exit.",
-                    "Take the Pennsylvania 39 West, Hersheypark Drive exit toward Attractions.",
-                    "Continue for a half mile.");
+                    "Keep right to take PA 39 West/Hersheypark Drive toward Attractions.", "",
+                    "Keep right to take Pennsylvania 39 West.",
+                    "Keep right to take Pennsylvania 39 West, Hersheypark Drive toward Attractions.",
+                    "");
 }
 
 } // namespace
