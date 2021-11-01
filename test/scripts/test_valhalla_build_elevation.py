@@ -20,7 +20,7 @@ class TestBuildElevation(unittest.TestCase):
     def test_get_tiles_with_graph(self):
         # gets the tile covering Utrecht
         tiles = valhalla_build_elevation.get_tiles_with_graph(TILE_DIR)
-        self.assertEqual(tiles, [Tile('N52E005.hgt', 'N52')])
+        self.assertEqual(tiles, set([Tile('N52E005.hgt', 'N52')]))
 
     def test_get_tiles_with_geojson(self):
         # create 1 polygon with 3 height & width, should leave out tile (3,3)
@@ -51,7 +51,7 @@ class TestBuildElevation(unittest.TestCase):
 
     def test_get_tiles_with_bbox(self):
         bbox = "0.90,0.12,3.56,3.12"
-        expected_tiles = [
+        expected_tiles = set([
             Tile("N00E000.hgt", "N00"),
             Tile("N01E000.hgt", "N01"),
             Tile("N02E000.hgt", "N02"),
@@ -68,7 +68,7 @@ class TestBuildElevation(unittest.TestCase):
             Tile("N01E003.hgt", "N01"),
             Tile("N02E003.hgt", "N02"),
             Tile("N03E003.hgt", "N03"),
-        ]
+        ])
         tiles = valhalla_build_elevation.get_tiles_with_bbox(bbox)
         self.assertEqual(tiles, expected_tiles)
 

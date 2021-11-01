@@ -12,7 +12,7 @@ from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
 import sys
-from typing import List, Iterable
+from typing import List, Iterable, Set
 from urllib import request
 from urllib.error import URLError
 
@@ -74,7 +74,7 @@ parser.add_argument(
 )
 
 Tile = namedtuple("Tile", ["name", "dir"])
-LOCAL_SIZE = 1
+LOCAL_SIZE = 0.25
 
 
 def get_tile_info(
@@ -104,7 +104,7 @@ def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
             yield [x, y, x + 1, y + 1]
 
 
-def get_tiles_with_geojson(input_dir: Path) -> List[Tile]:
+def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
     try:
         from shapely.geometry import Polygon, box
     except ImportError:
@@ -128,17 +128,17 @@ def get_tiles_with_geojson(input_dir: Path) -> List[Tile]:
                     for single_polygon in feature["geometry"]["coordinates"]:
                         yield Polygon(single_polygon[0])
 
-    tile_infos = []
+    tile_infos = set()
     for poly in get_outer_rings(input_dir):
         for rect in grid_from_bounds(poly.bounds):
             if poly.intersects(box(*rect)):
                 s, w, *_ = rect
-                tile_infos.append(get_tile_info(s, w))
+                tile_infos.add(get_tile_info(s, w))
 
     return tile_infos
 
 
-def get_tiles_with_bbox(bbox_str: str) -> List[Tile]:
+def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
     try:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
@@ -159,30 +159,30 @@ def get_tiles_with_bbox(bbox_str: str) -> List[Tile]:
 
     LOGGER.debug(f"Received valid bbox: {bbox}")
 
-    tile_infos = []
+    tile_infos = set()
     for grid in grid_from_bounds(bbox):
         s, w = grid[:2]
-        tile_infos.append(get_tile_info(s, w))
+        tile_infos.add(get_tile_info(s, w))
 
     return tile_infos
 
 
-def get_tiles_with_graph(graph_dir: Path) -> List[Tile]:
+def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     if not graph_dir.is_dir():
         LOGGER.critical(f"Graph directory {graph_dir.resolve()} does not exist.")
         sys.exit(1)
 
-    tiles = []
-    local_dir = graph_dir.joinpath('1')
+    tile_infos = set()
+    local_dir = graph_dir.joinpath('2')
     tile_width = int(360 / LOCAL_SIZE)
     for tile_fp in local_dir.rglob('*.gph'):
         # turn the path into a tile ID
         tile_id = int(str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, ''))
-        s, w = (tile_id % tile_width) * LOCAL_SIZE - 180, int(tile_id / tile_width) * LOCAL_SIZE - 90
+        s, w = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(int(tile_id / tile_width) * LOCAL_SIZE - 90)
 
-        tiles.append(get_tile_info(s, w))
+        tile_infos.add(get_tile_info(s, w))
 
-    return tiles
+    return tile_infos
 
 
 def download(tile: Tile, output_dir, decompress):
