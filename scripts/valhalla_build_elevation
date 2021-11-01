@@ -132,8 +132,8 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
     for poly in get_outer_rings(input_dir):
         for rect in grid_from_bounds(poly.bounds):
             if poly.intersects(box(*rect)):
-                s, w, *_ = rect
-                tile_infos.add(get_tile_info(s, w))
+                tile_x, tile_y, *_ = rect
+                tile_infos.add(get_tile_info(tile_x, tile_y))
 
     return tile_infos
 
@@ -161,8 +161,8 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
 
     tile_infos = set()
     for grid in grid_from_bounds(bbox):
-        s, w = grid[:2]
-        tile_infos.add(get_tile_info(s, w))
+        tile_x, tile_y = grid[:2]
+        tile_infos.add(get_tile_info(tile_x, tile_y))
 
     return tile_infos
 
@@ -178,9 +178,9 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     for tile_fp in local_dir.rglob('*.gph'):
         # turn the path into a tile ID
         tile_id = int(str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, ''))
-        s, w = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(int(tile_id / tile_width) * LOCAL_SIZE - 90)
+        tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(int(tile_id / tile_width) * LOCAL_SIZE - 90)
 
-        tile_infos.add(get_tile_info(s, w))
+        tile_infos.add(get_tile_info(tile_x, tile_y))
 
     return tile_infos
 
