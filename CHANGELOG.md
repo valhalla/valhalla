@@ -13,6 +13,7 @@
    * CHANGED: Refactored the verbal text formatter to handle logic for street name and sign [#3369](https://github.com/valhalla/valhalla/pull/3369)
    * CHANGED: return "version" and "tileset_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
    * CHANGED: de-singleton tile_extract by introducing an optional index.bin file created by valhalla_build_extract [#3281](https://github.com/valhalla/valhalla/pull/3281)
+   * CHANGED: implement valhalla_build_elevation in python and add more --from-geojson & --from-graph options [#3318](https://github.com/valhalla/valhalla/pull/3318)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
