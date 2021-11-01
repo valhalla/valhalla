@@ -250,7 +250,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "reclassify_links": true,
         "shortcuts": true,
         "tile_dir": "%%",
-        "tile_extract": "%%/tiles.tar",
+        "tile_extract": "",
         "timezone": "%%/tz_world.sqlite",
         "traffic_extract": "%%/traffic.tar",
         "transit_dir": "%%/transit",
@@ -267,12 +267,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
       },
       "service_limits": {
         "auto": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
-        },
-        "auto_shorter": {
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
@@ -299,12 +293,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "centroid": {
           "max_distance": 200000.0,
           "max_locations": 5
-        },
-        "hov": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
         },
         "isochrone": {
           "max_contours": 4,

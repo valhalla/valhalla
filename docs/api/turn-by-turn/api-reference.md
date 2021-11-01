@@ -72,7 +72,7 @@ Valhalla's routing service uses dynamic, run-time costing to generate the route 
 | `bus` | Standard costing for bus routes. Bus costing inherits the auto costing behaviors, but checks for bus access on the roads. |
 |**BETA** `bikeshare` | A combination of pedestrian and bicycle. Use bike share station(`amenity:bicycle_rental`) to change the travel mode |
 | `truck` | Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads. |
-| `hov` | Standard costing for high-occupancy vehicle (HOV) routes. HOV costing inherits the auto costing behaviors, but checks for HOV lane access on the roads and favors those roads.|
+| `hov` | DEPRECATED: use `auto` cost with HOV costing options.|
 | `taxi` | Standard costing for taxi routes. Taxi costing inherits the auto costing behaviors, but checks for taxi lane access on the roads and favors those roads.|
 | `motor_scooter` | Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. |
 |**BETA** `motorcycle` | Standard costing for travel by motorcycle.  This costing model provides options to tune the route to take roadways (road touring) vs. tracks and trails (adventure motorcycling).|
@@ -114,15 +114,19 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
-| `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck`, `hov` & `taxi`.
+| `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`.
 ###### Other costing options
-The following options are available for `auto`, `bus`, `hov`, `taxi`, and `truck` costing methods.
+The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
 | `height` | The height of the vehicle (in meters). |
 | `width` | The width of the vehicle (in meters). |
 | `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
 
 The following options are available for `truck` costing.
 
@@ -351,8 +355,8 @@ Each maneuver includes:
 | `verbal_transition_alert_instruction` | Text suitable for use as a verbal alert in a navigation application. The transition alert instruction will prepare the user for the forthcoming transition. For example: "Turn right onto North Prince Street". |
 | `verbal_pre_transition_instruction` | Text suitable for use as a verbal message immediately prior to the maneuver transition. For example "Turn right onto North Prince Street, U.S. 2 22". |
 | `verbal_post_transition_instruction` | Text suitable for use as a verbal message immediately after the maneuver transition. For example "Continue on U.S. 2 22 for 3.9 miles". |
-| `street_names` | List of street names that are consistent along the entire maneuver. |
-| `begin_street_names` | When present, these are the street names at the beginning of the maneuver (if they are different than the names that are consistent along the entire maneuver). |
+| `street_names` | List of street names that are consistent along the entire nonobvious maneuver. |
+| `begin_street_names` | When present, these are the street names at the beginning (transition point) of the nonobvious maneuver (if they are different than the names that are consistent along the entire nonobvious maneuver). |
 | `time` | Estimated time along the maneuver in seconds. |
 | `length` | Maneuver length in the units specified. |
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |

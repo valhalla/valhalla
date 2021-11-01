@@ -9,8 +9,10 @@
 #include <vector>
 
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 
 #include "baldr/graphconstants.h"
+#include "baldr/streetname.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -1188,7 +1190,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if ((maneuver.street_names().empty() && !maneuver.internal_intersection()) ||
       UsableInternalIntersectionName(maneuver, node_index)) {
     maneuver.set_street_names(
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList()));
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name()));
   }
 
   // Update the internal turn count
@@ -1247,29 +1249,47 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->has_sign()) {
     // Exit number
     for (const auto& exit_number : prev_edge->sign().exit_numbers()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(exit_number.has_pronunciation(),
+                               baldr::Pronunciation{exit_number.pronunciation().alphabet(),
+                                                    exit_number.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_exit_number_list()
-          ->emplace_back(exit_number.text(), exit_number.is_route_number());
+          ->emplace_back(exit_number.text(), exit_number.is_route_number(), pronunciation);
     }
 
     // Exit branch
     for (const auto& exit_onto_street : prev_edge->sign().exit_onto_streets()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(exit_onto_street.has_pronunciation(),
+                               baldr::Pronunciation{exit_onto_street.pronunciation().alphabet(),
+                                                    exit_onto_street.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_exit_branch_list()
-          ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number());
+          ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number(), pronunciation);
     }
 
     // Exit toward
     for (const auto& exit_toward_location : prev_edge->sign().exit_toward_locations()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(exit_toward_location.has_pronunciation(),
+                               baldr::Pronunciation{exit_toward_location.pronunciation().alphabet(),
+                                                    exit_toward_location.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_exit_toward_list()
-          ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number());
+          ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number(),
+                         pronunciation);
     }
 
     // Exit name
     for (const auto& exit_name : prev_edge->sign().exit_names()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(exit_name.has_pronunciation(),
+                               baldr::Pronunciation{exit_name.pronunciation().alphabet(),
+                                                    exit_name.pronunciation().value()});
       maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(exit_name.text(),
-                                                                       exit_name.is_route_number());
+                                                                       exit_name.is_route_number(),
+                                                                       pronunciation);
     }
   }
 
@@ -1357,7 +1377,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   if (!curr_edge->IsHighway() && !curr_edge->internal_intersection() &&
       (curr_edge->name_size() > 1)) {
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
     std::unique_ptr<StreetNames> common_base_names =
         curr_edge_names->FindCommonBaseNames(maneuver.street_names());
     if (curr_edge_names->size() > common_base_names->size()) {
@@ -1385,23 +1405,37 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   if (curr_edge->has_sign()) {
     // Guide branch
     for (const auto& guide_onto_street : curr_edge->sign().guide_onto_streets()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(guide_onto_street.has_pronunciation(),
+                               baldr::Pronunciation{guide_onto_street.pronunciation().alphabet(),
+                                                    guide_onto_street.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_guide_branch_list()
-          ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number());
+          ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number(),
+                         pronunciation);
     }
 
     // Guide toward
     for (const auto& guide_toward_location : curr_edge->sign().guide_toward_locations()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(guide_toward_location.has_pronunciation(),
+                               baldr::Pronunciation{guide_toward_location.pronunciation().alphabet(),
+                                                    guide_toward_location.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_guide_toward_list()
-          ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number());
+          ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number(),
+                         pronunciation);
     }
 
     // Junction name
     for (const auto& junction_name : curr_edge->sign().junction_names()) {
+      boost::optional<baldr::Pronunciation> pronunciation =
+          boost::make_optional(junction_name.has_pronunciation(),
+                               baldr::Pronunciation{junction_name.pronunciation().alphabet(),
+                                                    junction_name.pronunciation().value()});
       maneuver.mutable_signs()
           ->mutable_junction_name_list()
-          ->emplace_back(junction_name.text(), junction_name.is_route_number());
+          ->emplace_back(junction_name.text(), junction_name.is_route_number(), pronunciation);
     }
   }
 
@@ -2102,7 +2136,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   /////////////////////////////////////////////////////////////////////////////
   // Determine previous edge names and common base names
   std::unique_ptr<StreetNames> prev_edge_names =
-      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+      StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
   std::unique_ptr<StreetNames> common_base_names =
       prev_edge_names->FindCommonBaseNames(maneuver.street_names());
 
@@ -2442,10 +2476,10 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
 
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
 
     // Process common base names
     std::unique_ptr<StreetNames> common_base_names =
@@ -2481,10 +2515,10 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), prev_edge->name());
 
     std::unique_ptr<StreetNames> curr_edge_names =
-        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+        StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->name());
 
     // Process common base names
     std::unique_ptr<StreetNames> common_base_names =
@@ -3029,7 +3063,8 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
       curr_man->mutable_signs()
           ->mutable_exit_branch_list()
           ->emplace_back(next_man->street_names().front()->value(),
-                         next_man->street_names().front()->is_route_number());
+                         next_man->street_names().front()->is_route_number(),
+                         next_man->street_names().front()->pronunciation());
     }
 
     // on to the next maneuver...

@@ -77,18 +77,9 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-### [DEPRECATED] Get Valhalla from Personal Package Archive (PPA)
+### Docker
 
-NOTICE: Since we moved to cmake build systems we haven't updated our debian packaging scripts. Because of that the packages in the PPA are very very old. Once we get time to correct this we'll remove this notice but until then we recommend building from source or using docker.
-
-If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
-
-```bash
-# grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:valhalla-core/valhalla
-sudo apt-get update
-sudo apt-get install -y valhalla-bin
-```
+Checkout our `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
 
 ### Building from Source - Linux
 
@@ -103,7 +94,7 @@ sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov
 #if you plan to compile with data building support, see below for more info
 sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin
 source /etc/lsb-release
-if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
+if [[ $(python3 -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
 ```
@@ -232,6 +223,9 @@ valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-ex
 #TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 #tar it up for running the server
+#either run this to build a tile index for faster graph loading times
+valhalla_build_extract -c valhalla.json -v
+#or simply tar up the tiles
 find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
 
 #grab the demos repo and open up the point and click routing sample
@@ -249,7 +243,7 @@ curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.
 
 ## Contributing
 
-We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub. We organize one hour each week to discuss open pull requests where everyone is welcome to join, see [our wiki](https://github.com/valhalla/valhalla/wiki/Open-Review-Days).
 
 If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11.  We use `clang-format` v7.0 to format the code. We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 

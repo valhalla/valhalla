@@ -127,6 +127,24 @@ inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
                            " Unhandled NodeType: " + std::to_string(num));
 }
 
+inline Pronunciation_Alphabet
+GetTripPronunciationAlphabet(const valhalla::baldr::PronunciationAlphabet pronunciation_alphabet) {
+  switch (pronunciation_alphabet) {
+    case baldr::PronunciationAlphabet::kNone:
+    case baldr::PronunciationAlphabet::kIpa:
+      return Pronunciation_Alphabet_kIpa;
+    case baldr::PronunciationAlphabet::kXKatakana:
+      return Pronunciation_Alphabet_kXKatakana;
+    case baldr::PronunciationAlphabet::kXJeita:
+      return Pronunciation_Alphabet_kXJeita;
+    case baldr::PronunciationAlphabet::kNtSampa:
+      return Pronunciation_Alphabet_kNtSampa;
+  }
+  auto num = static_cast<uint8_t>(pronunciation_alphabet);
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled PronunciationAlphabet: " + std::to_string(num));
+}
+
 // Associate cycle lane values to TripLeg proto
 constexpr TripLeg_CycleLane kTripLegCycleLane[] = {TripLeg_CycleLane_kNoCycleLane,
                                                    TripLeg_CycleLane_kShared,
