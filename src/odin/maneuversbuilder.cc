@@ -2258,6 +2258,11 @@ float get_deceleration_lane_length(float speed_kph) {
   return 0.122;
 }
 
+// This is a new idea... see usage.
+bool is_nearly_straight(uint32_t turn_degree) {
+  return ((turn_degree > 357) || (turn_degree < 3));
+}
+
 bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const {
@@ -2384,7 +2389,9 @@ bool ManeuversBuilder::IsFork(int node_index,
         // an exit than a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-        float deceleration_lane_length_km = get_deceleration_lane_length(prev_at_delta->default_speed());
+        float kt = prev_at_delta->speed();
+        float deceleration_lane_length_km =
+            get_deceleration_lane_length(prev_at_delta->default_speed());
         float agg_lane_length_km = prev_at_delta->length_km();
         while (agg_lane_length_km < deceleration_lane_length_km) {
           delta++;
@@ -2412,12 +2419,19 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
-         (xedge->IsHighway() && curr_edge->IsRampUse())) &&
-        has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
-        prev_edge->IsForkForward(
-            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
-      return true;
+         (xedge->IsHighway() && curr_edge->IsRampUse()))) {
+
+      // If the ramp is actually a straight, announce the turn
+      if (is_nearly_straight(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
+        return true;
+      }
+
+      if (has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
+          prev_edge->IsForkForward(
+              GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+          prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
+        return true;
+      }
     }
   }
 
