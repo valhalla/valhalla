@@ -8,7 +8,6 @@
 
 using namespace valhalla;
 
-
 //------------------------------------------------------------------
 // We detect the deceleration lane and do not call out "Keep left to stay on A92."
 //------------------------------------------------------------------
@@ -52,7 +51,8 @@ TEST(ForkTest, StandardDecelerationLaneDontCallKeepLeft) {
   const gurka::nodes nodes;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   gurka::map map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/ForkTest", {});
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
@@ -60,24 +60,19 @@ TEST(ForkTest, StandardDecelerationLaneDontCallKeepLeft) {
   EXPECT_EQ(result.directions().routes(0).legs_size(), 1);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 2);
 
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, 0, "Drive east on A92.",
+      "Drive east. Then, in 900 meters, You will arrive at your destination.", "",
+      "Drive east on A92. Then, in 900 meters, You will arrive at your destination.",
+      "Continue for 900 meters.");
 
- gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 0,
-                                          "Drive east on A92.",
-                                          "Drive east. Then, in 900 meters, You will arrive at your destination.",
-                                          "",
-                                          "Drive east on A92. Then, in 900 meters, You will arrive at your destination.",
-                                          "Continue for 900 meters.");
-
-  gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 1,
-                                          "You have arrived at your destination.",
-                                          "",
-                                          "You will arrive at your destination.",
-                                          "You have arrived at your destination.",
-                                          "");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1,
+                                                            "You have arrived at your destination.",
+                                                            "",
+                                                            "You will arrive at your destination.",
+                                                            "You have arrived at your destination.",
+                                                            "");
 }
-
 
 //------------------------------------------------------------------
 // The deceleration lane is too short. Have to call out "Keep right".
@@ -122,7 +117,8 @@ TEST(ForkTest, DecelerationLaneTooShort) {
   const gurka::nodes nodes;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   gurka::map map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/ForkTest", {});
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
@@ -131,30 +127,23 @@ TEST(ForkTest, DecelerationLaneTooShort) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 3);
 
   gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 0,
-                                          "Drive east on D4.",
-                                          "Drive east. Then Keep right to stay on D4.",
-                                          "",
-                                          "Drive east on D4. Then Keep right to stay on D4.",
-                                          "Continue for 200 meters.");
+      expect_instructions_at_maneuver_index(result, 0, "Drive east on D4.",
+                                            "Drive east. Then Keep right to stay on D4.", "",
+                                            "Drive east on D4. Then Keep right to stay on D4.",
+                                            "Continue for 200 meters.");
 
-  gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 1,
-                                          "Keep right to stay on D4.",
-                                          "",
-                                          "Keep right to stay on D4.",
-                                          "Keep right to stay on D4. Then You will arrive at your destination.",
-                                          "Continue for 100 meters.");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, 1, "Keep right to stay on D4.", "", "Keep right to stay on D4.",
+      "Keep right to stay on D4. Then You will arrive at your destination.",
+      "Continue for 100 meters.");
 
-  gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 2,
-                                          "You have arrived at your destination.",
-                                          "",
-                                          "You will arrive at your destination.",
-                                          "You have arrived at your destination.",
-                                          "");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 2,
+                                                            "You have arrived at your destination.",
+                                                            "",
+                                                            "You will arrive at your destination.",
+                                                            "You have arrived at your destination.",
+                                                            "");
 }
-
 
 //------------------------------------------------------------------
 // The deceleration lane is too long. Have to call out "Keep right".
@@ -199,7 +188,8 @@ TEST(ForkTest, DecelerationLaneTooLong) {
   const gurka::nodes nodes;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   gurka::map map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/ForkTest", {});
-  std::shared_ptr<baldr::GraphReader> reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::shared_ptr<baldr::GraphReader> reader =
+      test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
@@ -208,26 +198,20 @@ TEST(ForkTest, DecelerationLaneTooLong) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver_size(), 3);
 
   gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 0,
-                                          "Drive east on D4.",
-                                          "Drive east. Then Keep right to stay on D4.",
-                                          "",
-                                          "Drive east on D4. Then Keep right to stay on D4.",
-                                          "Continue for 400 meters.");
+      expect_instructions_at_maneuver_index(result, 0, "Drive east on D4.",
+                                            "Drive east. Then Keep right to stay on D4.", "",
+                                            "Drive east on D4. Then Keep right to stay on D4.",
+                                            "Continue for 400 meters.");
 
-  gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 1,
-                                          "Keep right to stay on D4.",
-                                          "",
-                                          "Keep right to stay on D4.",
-                                          "Keep right to stay on D4. Then You will arrive at your destination.",
-                                          "Continue for 100 meters.");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, 1, "Keep right to stay on D4.", "", "Keep right to stay on D4.",
+      "Keep right to stay on D4. Then You will arrive at your destination.",
+      "Continue for 100 meters.");
 
-  gurka::assert::raw::
-    expect_instructions_at_maneuver_index(result, 2,
-                                          "You have arrived at your destination.",
-                                          "",
-                                          "You will arrive at your destination.",
-                                          "You have arrived at your destination.",
-                                          "");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 2,
+                                                            "You have arrived at your destination.",
+                                                            "",
+                                                            "You will arrive at your destination.",
+                                                            "You have arrived at your destination.",
+                                                            "");
 }
