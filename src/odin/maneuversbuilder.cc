@@ -2376,12 +2376,7 @@ bool ManeuversBuilder::IsFork(int node_index,
       if ((curr_lane_count > 1) && (prev_lane_count == curr_lane_count + 1) &&
           (xedge->use() == TripLeg_Use_kRampUse)) {
 
-        // Determine if this lane split is a deceleration lane forking onto an
-        // exit. A deceleration lane will have a predictable length. Iterate previous
-        // edges until we've exceeded the length of a deceleration lane. If the
-        // highway at that point has gone down a lane, then it is likely that
-        // prev-edge is a deceleration lane - which means this is more likely
-        // an exit than a highway bifurcation.
+        // Determine if this lane split is a deceleration lane forking onto an exit.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         float standard_deceleration_lane_length_km =
@@ -2398,8 +2393,9 @@ bool ManeuversBuilder::IsFork(int node_index,
           if (!prev_at_delta)
             break;
 
-          bool extra_lane = (prev_at_delta->lane_count() == curr_lane_count + 1);
-          if (!extra_lane)
+          // See if the extra lane continues. If it goes away, break;
+          bool extra_lane_continues = (prev_at_delta->lane_count() == curr_lane_count + 1);
+          if (!extra_lane_continues)
             break;
 
           // aggregate (possible decel lane) length
@@ -2408,7 +2404,9 @@ bool ManeuversBuilder::IsFork(int node_index,
             break;
         }
 
-        // see if we're within 25% tolerance of a standard deceleration lane length
+        // see if we're within 25% tolerance of a standard deceleration lane length.
+        // if so, we consider this fork a deceleration lane and we don not consider
+        // this a lane bifurcation.
         if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
             (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
           return false;
@@ -2429,7 +2427,7 @@ bool ManeuversBuilder::IsFork(int node_index,
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse())) &&
-         has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
+        has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
         prev_edge->IsForkForward(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
         prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
