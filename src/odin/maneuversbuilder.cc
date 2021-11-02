@@ -2258,11 +2258,6 @@ float get_deceleration_lane_length(float speed_kph) {
   return 0.122;
 }
 
-// This is a new idea... see usage.
-bool is_nearly_straight(uint32_t turn_degree) {
-  return ((turn_degree > 357) || (turn_degree < 3));
-}
-
 bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const {
@@ -2389,7 +2384,8 @@ bool ManeuversBuilder::IsFork(int node_index,
         // an exit than a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-        float standard_deceleration_lane_length_km = get_deceleration_lane_length(prev_at_delta->default_speed());
+        float standard_deceleration_lane_length_km =
+            get_deceleration_lane_length(prev_at_delta->default_speed());
         float tol = 0.25 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
 
@@ -2433,13 +2429,6 @@ bool ManeuversBuilder::IsFork(int node_index,
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse()))) {
-
-      // If the ramp is actually a straight, announce the turn
-      // needs work
-//      if (is_nearly_straight(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
-//        return true;
-//      }
-
       if (has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
           prev_edge->IsForkForward(
               GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
