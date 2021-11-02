@@ -2405,8 +2405,8 @@ bool ManeuversBuilder::IsFork(int node_index,
         }
 
         // see if we're within 25% tolerance of a standard deceleration lane length.
-        // if so, we consider this fork a deceleration lane and we don not consider
-        // this a lane bifurcation.
+        // if so, we consider this fork as preceded by a deceleration lane leading to
+        // a fork/exit and we do not consider this a lane bifurcation.
         if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
             (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
           return false;
