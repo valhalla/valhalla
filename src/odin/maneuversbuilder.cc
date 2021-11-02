@@ -2428,13 +2428,12 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
-         (xedge->IsHighway() && curr_edge->IsRampUse()))) {
-      if (has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
-          prev_edge->IsForkForward(
-              GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-          prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
-        return true;
-      }
+         (xedge->IsHighway() && curr_edge->IsRampUse())) &&
+         has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
+        prev_edge->IsForkForward(
+            GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
+      return true;
     }
   }
 
