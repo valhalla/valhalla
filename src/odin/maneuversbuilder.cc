@@ -2389,19 +2389,32 @@ bool ManeuversBuilder::IsFork(int node_index,
         // an exit than a highway bifurcation.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-        float kt = prev_at_delta->speed();
-        float deceleration_lane_length_km =
-            get_deceleration_lane_length(prev_at_delta->default_speed());
+        float standard_deceleration_lane_length_km = get_deceleration_lane_length(prev_at_delta->default_speed());
+        float tol = 0.25 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
-        while (agg_lane_length_km < deceleration_lane_length_km) {
+
+        // iterate backwards until:
+        // 1) the extra lane goes away, or
+        // 2) we've exceeded a reasonable length for a deceleration lane
+        while (true) {
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
           if (!prev_at_delta)
             break;
+
+          bool extra_lane = (prev_at_delta->lane_count() == curr_lane_count + 1);
+          if (!extra_lane)
+            break;
+
+          // aggregate (possible decel lane) length
           agg_lane_length_km += prev_at_delta->length_km();
+          if (agg_lane_length_km < standard_deceleration_lane_length_km + tol)
+            break;
         }
 
-        if (prev_at_delta && (prev_at_delta->lane_count() == curr_lane_count)) {
+        // see if we're within 25% tolerance of a standard deceleration lane length
+        if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
+            (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
           return false;
         }
       }
@@ -2422,9 +2435,10 @@ bool ManeuversBuilder::IsFork(int node_index,
          (xedge->IsHighway() && curr_edge->IsRampUse()))) {
 
       // If the ramp is actually a straight, announce the turn
-      if (is_nearly_straight(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
-        return true;
-      }
+      // needs work
+//      if (is_nearly_straight(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
+//        return true;
+//      }
 
       if (has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
           prev_edge->IsForkForward(
