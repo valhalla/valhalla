@@ -67,7 +67,9 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   // and we can expand from the start of a complex restriction because only the end would mark a
   // potential stopping point (maybe a path followed the restriction)
 
-  // seed the expansion with a place to start expanding from
+  // seed the expansion with a place to start expanding from, set the number of labels we want to use
+  // we're finding nodes here so we'll double it assuming we queue less edges than nodes we see
+  max_reserved_labels_count_ = max_reach * 2;
   Clear();
   graph_tile_ptr tile, start_tile = reader.GetGraphTile(edge_id);
   if ((tile = start_tile) &&

@@ -232,6 +232,39 @@ TEST(Isochrones, LongEdge) {
   EXPECT_EQ(within(point_type(interpolated.x(), interpolated.y()), polygon), true);
 }
 
+class IsochroneTest : public thor::Isochrone {
+public:
+  explicit IsochroneTest(const boost::property_tree::ptree& config = {}) : Isochrone(config) {
+  }
+
+  void Clear() {
+    Isochrone::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(bdedgelabels_.capacity(), 0);
+      EXPECT_EQ(mmedgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(bdedgelabels_.capacity(), max_reserved_labels_count_);
+      EXPECT_LE(mmedgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(Isochrones, test_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  IsochroneTest isochrone(config);
+  isochrone.Clear();
+}
+
+TEST(Isochrones, test_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  IsochroneTest isochrone(config);
+  isochrone.Clear();
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
