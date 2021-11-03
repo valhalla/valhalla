@@ -1007,10 +1007,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // setting this edge as reached
     if (expansion_callback_) {
-      EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(edgeid);
-      auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
-      expansion_callback_(graphreader, edgeid, "bidirectional_astar", "r", fwd_pred.cost().secs,
-                          fwd_pred.path_distance(), fwd_pred.cost().cost);
+      expansion_callback_(graphreader, edgeid, "bidirectional_astar", "r", cost.secs, edge.distance(),
+                          cost.cost);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -1103,10 +1101,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
     if (expansion_callback_) {
-      EdgeStatusInfo rev_edge_status = edgestatus_reverse_.Get(edgeid);
-      auto rev_pred = edgelabels_reverse_[rev_edge_status.index()];
-      expansion_callback_(graphreader, edgeid, "bidirectional_astar", "r", rev_pred.cost().secs,
-                          rev_pred.path_distance(), rev_pred.cost().cost);
+      expansion_callback_(graphreader, edgeid, "bidirectional_astar", "r", cost.secs, edge.distance(),
+                          cost.cost);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

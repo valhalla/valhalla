@@ -129,41 +129,36 @@ std::string thor_worker_t::expansion(Api& request) {
           .PushBack(Value{}.SetInt(static_cast<uint64_t>(edgeid)), a);
   };
 
-  if (exp_action == Options::route) {
-    // tell all the algorithms how to track expansion
-    for (auto* alg : std::vector<PathAlgorithm*>{
-             &multi_modal_astar,
-             &timedep_forward,
-             &timedep_reverse,
-             &bidir_astar,
-             &bss_astar,
-         }) {
-      alg->set_track_expansion(track_expansion);
-    }
-
-    // track the expansion
-    try {
-      route(request);
-    } catch (...) {
-      // we swallow exceptions because we actually want to see what the heck the expansion did
-      // anyway
-    }
-
-    // tell all the algorithms to stop tracking the expansion
-    for (auto* alg : std::vector<PathAlgorithm*>{
-             &multi_modal_astar,
-             &timedep_forward,
-             &timedep_reverse,
-             &bidir_astar,
-             &bss_astar,
-         }) {
-      alg->set_track_expansion(nullptr);
-    }
-  } else {
-    isochrone_gen.set_track_expansion(track_expansion);
-    isochrones(request);
-    isochrone_gen.set_track_expansion(nullptr);
+  // tell all the algorithms how to track expansion
+  for (auto* alg : std::vector<PathAlgorithm*>{
+           &multi_modal_astar,
+           &timedep_forward,
+           &timedep_reverse,
+           &bidir_astar,
+           &bss_astar,
+       }) {
+    alg->set_track_expansion(track_expansion);
   }
+  isochrone_gen.set_track_expansion(track_expansion);
+
+  try {
+    // track the expansion
+    if (exp_action == Options::route) {
+      route(request);
+    } else if (exp_action == Options::isochrone) {
+      isochrones(request);
+    }
+  } catch (...) {
+    // we swallow exceptions because we actually want to see what the heck the expansion did
+    // anyway
+  }
+
+  // tell all the algorithms to stop tracking the expansion
+  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_astar, &timedep_forward, &timedep_reverse,
+                                               &bidir_astar, &bss_astar}) {
+    alg->set_track_expansion(nullptr);
+  }
+  isochrone_gen.set_track_expansion(nullptr);
 
   // serialize it
   return to_string(dom, 5);

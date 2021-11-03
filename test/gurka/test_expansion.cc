@@ -31,70 +31,19 @@ protected:
     expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/expansion");
   }
 
-  // common method can't deal with arrays of strings
-  std::string build_local_req(rapidjson::Document& doc,
-                              rapidjson::MemoryPoolAllocator<>& allocator,
-                              const std::vector<std::string>& waypoints,
-                              const std::string& costing,
-                              const std::string& action,
-                              bool skip_opps,
-                              const std::vector<std::string> props) {
-    std::vector<midgard::PointLL> lls;
-    lls.reserve(waypoints.size());
-    for (const auto& p : waypoints) {
-      lls.push_back(expansion_map.nodes.at(p));
-    }
-
-    rapidjson::Value locations(rapidjson::kArrayType);
-    for (const auto& ll : lls) {
-      rapidjson::Value p(rapidjson::kObjectType);
-      p.AddMember("lon", ll.lng(), allocator);
-      p.AddMember("lat", ll.lat(), allocator);
-      locations.PushBack(p, allocator);
-    }
-
-    if (props.size()) {
-      rapidjson::Value exp_props(rapidjson::kArrayType);
-      for (const auto& prop : props) {
-        rapidjson::Value p(prop.c_str(), allocator);
-        exp_props.PushBack(p, allocator);
-      }
-      doc.AddMember("expansion_props", exp_props, allocator);
-    }
-
-    if (action == "isochrone") {
-      rapidjson::Value contours(rapidjson::kArrayType);
-      rapidjson::Value cont(rapidjson::kObjectType);
-      cont.AddMember("time", 1.0, allocator);
-      contours.PushBack(cont, allocator);
-      doc.AddMember("contours", contours, allocator);
-    }
-
-    doc.AddMember("locations", locations, allocator);
-    doc.AddMember("costing", costing, allocator);
-    doc.AddMember("action", action, allocator);
-    if (skip_opps) {
-      doc.AddMember("skip_opposites", rapidjson::Value().SetBool(skip_opps), allocator);
-    }
-
-    rapidjson::StringBuffer sb;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-    doc.Accept(writer);
-    auto s = sb.GetString();
-    return s;
-  }
-
   void check_result(const std::string& action,
                     const std::vector<std::string>& waypoints,
                     bool skip_opps,
-                    unsigned exp_feats) {
-    rapidjson::Document doc;
-    doc.SetObject();
-    const auto req =
-        build_local_req(doc, doc.GetAllocator(), waypoints, "auto", action, skip_opps, GetParam());
+                    unsigned exp_feats,
+                    std::vector<std::string> props = {},
+                    std::unordered_map<std::string, std::string> options = {}) {
+    options.insert({{"/skip_opposites", skip_opps ? "true" : "false"}, {"/action", action}});
+    for (uint8_t i = 0; i < props.size(); i++) {
+      options.emplace("/expansion_props/" + std::to_string(i), props[i]);
+    }
 
     std::string res;
-    auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr, &res);
+    auto api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options);
 
     // get the MultiLineString feature
     rapidjson::Document res_doc;
@@ -105,56 +54,50 @@ protected:
 
     auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
     ASSERT_EQ(coords_size, exp_feats);
-    for (const auto& prop : GetParam()) {
+    for (const auto& prop : props) {
       ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
     }
   }
 };
 
 gurka::map ExpansionTest::expansion_map = {};
+const std::unordered_map<std::string, std::string> isochrone_options = {{"/contours/0/time", "1"},
+                                                                        {"/contours/1/time", "2"}};
+
+// TODO: tons of " C++ exception with description "IsObject()" thrown in the test body."
 
 TEST_P(ExpansionTest, Isochrone) {
   // test Dijkstra expansion
   // 11 because there's a one-way
-  check_result("isochrone", {"A"}, false, 11);
+  check_result("isochrone", {"A"}, false, 11, GetParam(), isochrone_options);
 }
 
 TEST_P(ExpansionTest, IsochroneNoOpposites) {
   // test Dijkstra expansion and skip collecting more expensive opposite edges
-  check_result("isochrone", {"A"}, true, 6);
+  check_result("isochrone", {"A"}, true, 6, GetParam(), isochrone_options);
 }
 
 TEST_P(ExpansionTest, Routing) {
   // test AStar expansion
-  check_result("route", {"E", "H"}, false, 23);
+  check_result("route", {"E", "H"}, false, 23, GetParam());
 }
 
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
-  check_result("route", {"E", "H"}, true, 16);
+  check_result("route", {"E", "H"}, true, 16, GetParam());
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
-  rapidjson::Document doc;
-  doc.SetObject();
-  const auto req = build_local_req(doc, doc.GetAllocator(), {"A"}, "auto", "locate", false, {});
-
   try {
-    auto api = gurka::do_action(Options::expansion, expansion_map, req, nullptr);
+    check_result("route", {"E", "H"}, true, 16);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 144); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
 
 TEST_F(ExpansionTest, UnsupportedPropType) {
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  const auto req =
-      build_local_req(doc, doc.GetAllocator(), {"A"}, "auto", "isochrone", false, {"valhalla"});
-
   try {
-    auto api = gurka::do_action(Options::expansion, expansion_map, req);
+    check_result("route", {"E", "H"}, true, 16);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 168); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };

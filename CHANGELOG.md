@@ -14,6 +14,7 @@
    * CHANGED: return "version" and "tileset_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
    * CHANGED: de-singleton tile_extract by introducing an optional index.bin file created by valhalla_build_extract [#3281](https://github.com/valhalla/valhalla/pull/3281)
    * CHANGED: implement valhalla_build_elevation in python and add more --from-geojson & --from-graph options [#3318](https://github.com/valhalla/valhalla/pull/3318)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
@@ -23,7 +24,7 @@
    * FIXED: Fix factors passed to `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
    * FIXED: Fix TransitionCostReverse usage [#3260](https://github.com/valhalla/valhalla/pull/3260)
    * FIXED: Fix Tagged Value Support in EdgeInfo [#3262](https://github.com/valhalla/valhalla/issues/3262)
-   * FIXED: TransitionCostReverse fix: revert internal_turn change [#3271](https://github.com/valhalla/valhalla/issues/3271)
+   * FIXED: TransitionCostReverse fix: revert internal_turn change [ #3271](https://github.com/valhalla/valhalla/issues/3271)
    * FIXED: Optimize tiles usage in reach-based pruning [#3294](https://github.com/valhalla/valhalla/pull/3294)
    * FIXED: Slip lane detection: track visited nodes to avoid infinite loops [#3297](https://github.com/valhalla/valhalla/pull/3297)
    * FIXED: Fix distance value in a 0-length road [#3185](https://github.com/valhalla/valhalla/pull/3185)
@@ -40,7 +41,6 @@
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
-   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
    * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3236](https://github.com/valhalla/valhalla/pull/3236)
    * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3237](https://github.com/valhalla/valhalla/pull/3237)
    * CHANGED: Move pre-defined algorithm-based factors inside `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
@@ -112,7 +112,6 @@
    * ADDED: Allow going through accessible `barrier=bollard` and penalize routing through it, when the access is private [#3175](https://github.com/valhalla/valhalla/pull/3175)
    * ADDED: Add country code to incident metadata [#3169](https://github.com/valhalla/valhalla/pull/3169)
    * CHANGED: Use distance instead of time to check limited sharing criteria [#3183](https://github.com/valhalla/valhalla/pull/3183)
-   * ADDED: Added vehicle width and height as an option for auto (and derived: taxi, bus, hov) profile (https://github.com/valhalla/valhalla/pull/3179) 
    * ADDED: Introduced a new via_waypoints array on the leg in the osrm route serializer that describes where a particular waypoint from the root-level array matches to the route. [#3189](https://github.com/valhalla/valhalla/pull/3189)
    * ADDED: Added vehicle width and height as an option for auto (and derived: taxi, bus, hov) profile (https://github.com/valhalla/valhalla/pull/3179)
    * ADDED: Support for statsd integration for basic error and requests metrics [#3191](https://github.com/valhalla/valhalla/pull/3191)

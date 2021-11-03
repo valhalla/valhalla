@@ -54,9 +54,9 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
 
 std::string build_valhalla_request(const std::string& location_type,
                                    const std::vector<midgard::PointLL>& waypoints,
-                                   const std::string& costing,
-                                   const std::unordered_map<std::string, std::string>& options,
-                                   const std::string& stop_type) {
+                                   const std::string& costing = "auto",
+                                   const std::unordered_map<std::string, std::string>& options = {},
+                                   const std::string& stop_type = "break") {
 
   rapidjson::Document doc;
   doc.SetObject();

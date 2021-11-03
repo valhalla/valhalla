@@ -110,9 +110,9 @@ std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
  */
 std::string build_valhalla_request(const std::string& location_type,
                                    const std::vector<midgard::PointLL>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break");
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type);
 } // namespace detail
 
 /**
