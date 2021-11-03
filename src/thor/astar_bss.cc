@@ -30,11 +30,10 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
 AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      travel_type_(0) {
 }
 
 // Destructor

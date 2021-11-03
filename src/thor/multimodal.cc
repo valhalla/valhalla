@@ -42,11 +42,10 @@ constexpr uint32_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
-    : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kPedestrian), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kPedestrian), travel_type_(0) {
 }
 
 // Destructor

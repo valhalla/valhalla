@@ -110,10 +110,6 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
-  uint32_t max_reserved_labels_count_;
-
-  // if `true` clean reserved memory for edge labels
-  bool clear_reserved_memory_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;

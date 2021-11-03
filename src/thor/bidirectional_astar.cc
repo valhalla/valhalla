@@ -50,10 +50,9 @@ namespace thor {
 
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count",
-                                                                       kInitialEdgeLabelCountBD)),
-      extended_search_(config.get<bool>("extended_search", false)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCountBD),
+                    config.get<bool>("clear_reserved_memory", false)),
+      extended_search_(config.get<bool>("extended_search", false)) {
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
