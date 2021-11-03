@@ -1,9 +1,7 @@
-import logging
 import tarfile
 import unittest
 from pathlib import Path
 import struct
-from unittest.mock import MagicMock
 
 import valhalla_build_extract
 
