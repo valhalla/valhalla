@@ -2375,9 +2375,10 @@ bool ManeuversBuilder::IsFork(int node_index,
         // Determine if this lane split is a deceleration lane forking onto an exit.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+        auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
-        float tol = 0.3 * standard_deceleration_lane_length_km;
+        float tol = 0.25 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
 
         // iterate backwards until:
@@ -2386,17 +2387,24 @@ bool ManeuversBuilder::IsFork(int node_index,
         while (true) {
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-          if (!prev_at_delta)
+          // prev_at_delta is null when we cannot walk backwards any further
+          // (e.g., we've hit the beginning of the route). If this occurs
+          // set agg_lane_length_km to 0.0 to ensure we do not consider
+          // this a deceleration lane.
+          if (!prev_at_delta) {
+            agg_lane_length_km = 0.0;
             break;
+          }
 
-          // See if the extra lane continues. If it goes away, break;
-          bool extra_lane_continues = (prev_at_delta->lane_count() == curr_lane_count + 1);
-          if (!extra_lane_continues)
+          // See if the extra lane goes away.
+          auto prev_at_delta_lane_count = prev_at_delta->lane_count();
+          bool extra_lane_goes_away = (prev_at_delta_lane_count < orig_prev_at_delta_lane_count);
+          if (extra_lane_goes_away)
             break;
 
           // aggregate (possible decel lane) length
           agg_lane_length_km += prev_at_delta->length_km();
-          if (agg_lane_length_km < standard_deceleration_lane_length_km + tol)
+          if (agg_lane_length_km > standard_deceleration_lane_length_km + tol)
             break;
         }
 
