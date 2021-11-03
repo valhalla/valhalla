@@ -37,13 +37,38 @@ protected:
                     unsigned exp_feats,
                     std::vector<std::string> props = {},
                     std::unordered_map<std::string, std::string> options = {}) {
-    options.insert({{"/skip_opposites", skip_opps ? "true" : "false"}, {"/action", action}});
-    for (uint8_t i = 0; i < props.size(); i++) {
-      options.emplace("/expansion_props/" + std::to_string(i), props[i]);
+    // keep the request open-end so we can add stuff and close in the end
+    std::string req = R"({"costing":"auto","skip_opposites":)";
+    req += skip_opps ? "true," : "false,";
+    req += (boost::format(R"("action":"%s",)") % action).str();
+    if (action == "isochrone") {
+      req +=
+          (boost::format(
+               R"("locations":[{"lat":%s,"lon":%s}],"contours":[{"time":1},{"time":2}],"expansion_props":[)") %
+           std::to_string(expansion_map.nodes.at(waypoints.at(0)).lat()) %
+           std::to_string(expansion_map.nodes.at(waypoints.at(0)).lng()))
+              .str();
+    } else if (action == "route") {
+      req += (boost::format(
+                  R"("locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"expansion_props":[)") %
+              std::to_string(expansion_map.nodes.at(waypoints.at(0)).lat()) %
+              std::to_string(expansion_map.nodes.at(waypoints.at(0)).lng()) %
+              std::to_string(expansion_map.nodes.at(waypoints.at(1)).lat()) %
+              std::to_string(expansion_map.nodes.at(waypoints.at(1)).lng()))
+                 .str();
+    } else {
+      req += R"("expansion_props":[)";
     }
+    for (uint8_t i = 0; i < props.size(); i++) {
+      req += (boost::format(R"("%s")") % props[i]).str();
+      if (i != props.size() - 1) {
+        req += ",";
+      }
+    }
+    req += "]}";
 
     std::string res;
-    auto api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options);
+    auto api = gurka::do_action(Options::expansion, expansion_map, req, {}, &res);
 
     // get the MultiLineString feature
     rapidjson::Document res_doc;
@@ -89,7 +114,7 @@ TEST_P(ExpansionTest, RoutingNoOpposites) {
 
 TEST_F(ExpansionTest, UnsupportedAction) {
   try {
-    check_result("route", {"E", "H"}, true, 16);
+    check_result("status", {"E", "H"}, true, 16);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 144); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -97,7 +122,7 @@ TEST_F(ExpansionTest, UnsupportedAction) {
 
 TEST_F(ExpansionTest, UnsupportedPropType) {
   try {
-    check_result("route", {"E", "H"}, true, 16);
+    check_result("route", {"E", "H"}, true, 16, {"foo", "bar"});
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 168); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };

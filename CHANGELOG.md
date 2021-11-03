@@ -24,7 +24,7 @@
    * FIXED: Fix factors passed to `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
    * FIXED: Fix TransitionCostReverse usage [#3260](https://github.com/valhalla/valhalla/pull/3260)
    * FIXED: Fix Tagged Value Support in EdgeInfo [#3262](https://github.com/valhalla/valhalla/issues/3262)
-   * FIXED: TransitionCostReverse fix: revert internal_turn change [ #3271](https://github.com/valhalla/valhalla/issues/3271)
+   * FIXED: TransitionCostReverse fix: revert internal_turn change [#3271](https://github.com/valhalla/valhalla/issues/3271)
    * FIXED: Optimize tiles usage in reach-based pruning [#3294](https://github.com/valhalla/valhalla/pull/3294)
    * FIXED: Slip lane detection: track visited nodes to avoid infinite loops [#3297](https://github.com/valhalla/valhalla/pull/3297)
    * FIXED: Fix distance value in a 0-length road [#3185](https://github.com/valhalla/valhalla/pull/3185)
@@ -41,8 +41,6 @@
 
 * **Enhancement**
    * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
-   * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3236](https://github.com/valhalla/valhalla/pull/3236)
-   * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3237](https://github.com/valhalla/valhalla/pull/3237)
    * CHANGED: Move pre-defined algorithm-based factors inside `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
    * ADDED: Reject alternatives with too long detours [#3238](https://github.com/valhalla/valhalla/pull/3238)
    * ADDED: Added info to /status endpoint [#3008](https://github.com/valhalla/valhalla/pull/3008)

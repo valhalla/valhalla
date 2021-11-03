@@ -846,6 +846,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // should the expansion track opposites?
+  bool skip_opps = rapidjson::get<bool>(doc, "/skip_opposites", false);
   options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", false));
 
   // get the contours in there
