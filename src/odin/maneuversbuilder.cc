@@ -2249,7 +2249,7 @@ float get_deceleration_lane_length(float speed_kph) {
     return 1000;
   }
   if (speed_kph > 96) {
-    return 0.183;
+    return 1000;
   }
   if (speed_kph > 80) {
     return 0.152;
