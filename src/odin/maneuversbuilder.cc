@@ -2246,7 +2246,7 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
 //        <50       |        400 ft
 float get_deceleration_lane_length(float speed_kph) {
   if (speed_kph > 112) {
-    return 0.213;
+    return 1000;
   }
   if (speed_kph > 96) {
     return 0.183;
