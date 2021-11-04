@@ -2237,10 +2237,10 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
 }
 
 // Return the length in km for a deceleration lane as a function of the road's speed.
-// This data comes from a few sources that weren't exactly in agreement. After studying
-// their data I realized they were both (nearly) linear, so this routine boils both sources
+// This data comes from a few sources that were similar. After studying their data
+// I realized they were both (nearly) linear, so this routine boils both sources
 // down to an equation for a line (with bounds on x). Note that deceleration lane lengths
-// can vary, so I advise using a tolerance, e.g., "is this lane within 25% of the expected
+// can vary, so I advise using a tolerance, e.g., "is this lane within 10% of the expected
 // deceleration lane length?".
 float get_deceleration_lane_length(float speed_kph) {
   if (speed_kph > 110) {
