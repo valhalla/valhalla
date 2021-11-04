@@ -181,7 +181,6 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;

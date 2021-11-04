@@ -15,6 +15,7 @@
    * CHANGED: return "version" and "tileset_age" on parameterless /status call [#3367](https://github.com/valhalla/valhalla/pull/3367)
    * CHANGED: de-singleton tile_extract by introducing an optional index.bin file created by valhalla_build_extract [#3281](https://github.com/valhalla/valhalla/pull/3281)
    * CHANGED: implement valhalla_build_elevation in python and add more --from-geojson & --from-graph options [#3318](https://github.com/valhalla/valhalla/pull/3318)
+   * ADDED: Add boolean parameter to clear memory for edge labels from thor. [#2789](https://github.com/valhalla/valhalla/pull/2789)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

@@ -101,7 +101,6 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::MMEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;
