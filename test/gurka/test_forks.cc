@@ -223,27 +223,34 @@ TEST(ForkTest, DecelerationLaneTooShort) {
 }
 
 //------------------------------------------------------------------
-// The deceleration lane is too long. Have to call out "Keep right".
+// The deceleration lane is too long (so not really a deceleration lane).
+// Have to call out "Keep right".
 //------------------------------------------------------------------
 TEST(ForkTest, DecelerationLaneTooLong) {
   constexpr double gridsize = 10;
 
   const std::string ascii_map = R"(
-    A-------B-----------------------------C----------------------------------------------------------D
-                                                 E
-                                                    F
+    Z------------A-----------------B-----------------C----------------D
+                                                            E
+                                                               F
   )";
 
   const gurka::ways ways =
       {// we start out with two lanes
-       {"AB",
+       {"ZA",
         {{"highway", "motorway"},
          {"oneway", "yes"},
          {"lanes", "2"},
          {"name", "D4"},
          {"maxspeed", "120"}}},
-       // BC just "grew" a third lane.  length = 300 m.
-       // This is too long to be considered a standard deceleration lane.
+       // grow a lane
+       {"AB",
+        {{"highway", "motorway"},
+         {"oneway", "yes"},
+         {"lanes", "3"},
+         {"name", "D4"},
+         {"maxspeed", "120"}}},
+       // AB & BC combined are too long to be considered a deceleration lane
        {"BC",
         {{"highway", "motorway"},
          {"oneway", "yes"},
