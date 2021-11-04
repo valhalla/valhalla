@@ -2236,12 +2236,12 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
-// return the length in km for a deceleration lane as a function of the road's speed.
-// this data comes from a few sources that weren't quite in agreement. After studying
-// the data I realized they were both (nearly) linear, so this routine boils down to the
-// equation for a line (with bounds on x). Note that deceleration lane lengths can vary,
-// so I advise using a tolerance, e.g., "is this lane within 25% of the expected decel
-// lane length?".
+// Return the length in km for a deceleration lane as a function of the road's speed.
+// This data comes from a few sources that weren't exactly in agreement. After studying
+// their data I realized they were both (nearly) linear, so this routine boils both sources
+// down to an equation for a line (with bounds on x). Note that deceleration lane lengths
+// can vary, so I advise using a tolerance, e.g., "is this lane within 25% of the expected
+// deceleration lane length?".
 float get_deceleration_lane_length(float speed_kph) {
   if (speed_kph > 110) {
     return 0.204;
@@ -2378,7 +2378,7 @@ bool ManeuversBuilder::IsFork(int node_index,
         auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
-        float tol = 0.25 * standard_deceleration_lane_length_km;
+        float tol = 0.1 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
 
         // iterate backwards until:
@@ -2402,13 +2402,15 @@ bool ManeuversBuilder::IsFork(int node_index,
           if (extra_lane_goes_away)
             break;
 
-          // aggregate (possible decel lane) length
+          // aggregate (possible deceleration lane) length.
           agg_lane_length_km += prev_at_delta->length_km();
+
+          // if we've exceeded the standard length for a deceleration lane, we're done.
           if (agg_lane_length_km > standard_deceleration_lane_length_km + tol)
             break;
         }
 
-        // see if we're within 25% tolerance of a standard deceleration lane length.
+        // see if we're within tolerance of a standard deceleration lane length.
         // if so, we consider this fork as preceded by a deceleration lane leading to
         // a fork/exit and we do not consider this a lane bifurcation.
         if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
