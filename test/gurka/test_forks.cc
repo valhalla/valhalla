@@ -113,9 +113,17 @@ TEST(ForkTest, StandardDecelerationLaneDontCallKeepRight) {
          {"maxspeed", "120"}}},
        // this ramp forms a small angle ~15 deg
        {"CE",
-        {{"highway", "motorway_link"}, {"oneway", "yes"}, {"lanes", "2"}, {"name", "D5"}, {"driving_side", "left"}}},
+        {{"highway", "motorway_link"},
+         {"oneway", "yes"},
+         {"lanes", "2"},
+         {"name", "D5"},
+         {"driving_side", "left"}}},
        {"EF",
-        {{"highway", "motorway_link"}, {"oneway", "yes"}, {"lanes", "2"}, {"name", "D5"}, {"driving_side", "left"}}}};
+        {{"highway", "motorway_link"},
+         {"oneway", "yes"},
+         {"lanes", "2"},
+         {"name", "D5"},
+         {"driving_side", "left"}}}};
 
   const gurka::nodes nodes;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -301,8 +309,7 @@ TEST(ForkTest, RouteStartsOnPossibleDecelLane) {
   )";
 
   const gurka::ways ways =
-    {
-       // BC is three lanes. it is long enough to be considered a deceleration
+      {// BC is three lanes. it is long enough to be considered a deceleration
        // lane, but the route starts at B so we cannot assess with certainty
        // that it is one.
        {"BC",
@@ -340,11 +347,10 @@ TEST(ForkTest, RouteStartsOnPossibleDecelLane) {
                                             "Drive east on D4. Then Keep left to stay on D4.",
                                             "Continue for 200 meters.");
 
-  gurka::assert::raw::
-      expect_instructions_at_maneuver_index(result, 1, "Keep left to stay on D4.",
-                                            "", "Keep left to stay on D4.",
-                                            "Keep left to stay on D4.",
-                                            "Continue for 600 meters.");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Keep left to stay on D4.", "",
+                                                            "Keep left to stay on D4.",
+                                                            "Keep left to stay on D4.",
+                                                            "Continue for 600 meters.");
 
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, 2,
                                                             "You have arrived at your destination.",
