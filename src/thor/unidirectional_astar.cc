@@ -19,11 +19,10 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 template <const ExpansionType expansion_direction, const bool FORWARD>
 UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      access_mode_{kAutoAccess} {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      travel_type_(0), access_mode_{kAutoAccess} {
 }
 
 // Default constructor
@@ -39,8 +38,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
   edgelabels_.clear();
