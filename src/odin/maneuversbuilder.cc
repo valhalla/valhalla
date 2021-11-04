@@ -2236,26 +2236,22 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
-// return the length in km for a deceleration lane as a function of the road's speed.
-//
-//    speed (mph)   |   decel lane length
-// -----------------|--------------------
-//        >70       |        700 ft
-//       60-70      |        600 ft
-//       50-60      |        500 ft
-//        <50       |        400 ft
+// Return the length in km for a deceleration lane as a function of the road's speed.
+// This data comes from a few sources that were similar. After studying their data
+// I realized they were both (nearly) linear, so this routine boils both sources
+// down to an equation for a line (with bounds on x). Note that deceleration lane lengths
+// can vary, so I advise using a tolerance, e.g., "is this lane within 10% of the expected
+// deceleration lane length?".
 float get_deceleration_lane_length(float speed_kph) {
-  if (speed_kph > 112) {
-    return 0.213;
-  }
-  if (speed_kph > 96) {
-    return 0.183;
-  }
-  if (speed_kph > 80) {
-    return 0.152;
+  if (speed_kph > 110) {
+    return 0.204;
   }
 
-  return 0.122;
+  if (speed_kph < 30) {
+    return 0.060;
+  }
+
+  return 0.0022254 * speed_kph - 0.0472;
 }
 
 bool ManeuversBuilder::IsFork(int node_index,
@@ -2379,9 +2375,10 @@ bool ManeuversBuilder::IsFork(int node_index,
         // Determine if this lane split is a deceleration lane forking onto an exit.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+        auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
-        float tol = 0.25 * standard_deceleration_lane_length_km;
+        float tol = 0.1 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
 
         // iterate backwards until:
@@ -2390,21 +2387,30 @@ bool ManeuversBuilder::IsFork(int node_index,
         while (true) {
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
-          if (!prev_at_delta)
+          // prev_at_delta is null when we cannot walk backwards any further
+          // (e.g., we've hit the beginning of the route). If this occurs
+          // set agg_lane_length_km to 0.0 to ensure we do not consider
+          // this a deceleration lane.
+          if (!prev_at_delta) {
+            agg_lane_length_km = 0.0;
+            break;
+          }
+
+          // See if the extra lane goes away.
+          auto prev_at_delta_lane_count = prev_at_delta->lane_count();
+          bool extra_lane_goes_away = (prev_at_delta_lane_count < orig_prev_at_delta_lane_count);
+          if (extra_lane_goes_away)
             break;
 
-          // See if the extra lane continues. If it goes away, break;
-          bool extra_lane_continues = (prev_at_delta->lane_count() == curr_lane_count + 1);
-          if (!extra_lane_continues)
-            break;
-
-          // aggregate (possible decel lane) length
+          // aggregate (possible deceleration lane) length.
           agg_lane_length_km += prev_at_delta->length_km();
-          if (agg_lane_length_km < standard_deceleration_lane_length_km + tol)
+
+          // if we've exceeded the standard length for a deceleration lane, we're done.
+          if (agg_lane_length_km > standard_deceleration_lane_length_km + tol)
             break;
         }
 
-        // see if we're within 25% tolerance of a standard deceleration lane length.
+        // see if we're within tolerance of a standard deceleration lane length.
         // if so, we consider this fork as preceded by a deceleration lane leading to
         // a fork/exit and we do not consider this a lane bifurcation.
         if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
