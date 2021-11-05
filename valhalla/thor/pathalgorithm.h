@@ -32,8 +32,10 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm()
-      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_() {
+  PathAlgorithm(uint32_t max_reserved_labels_count, bool clear_reserved_memory)
+      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_(),
+        max_reserved_labels_count_(max_reserved_labels_count),
+        clear_reserved_memory_(clear_reserved_memory) {
   }
 
   PathAlgorithm(const PathAlgorithm&) = delete;
@@ -142,6 +144,11 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question

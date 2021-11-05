@@ -50,8 +50,8 @@ namespace thor {
 
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count",
-                                                                       kInitialEdgeLabelCountBD)),
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCountBD),
+                    config.get<bool>("clear_reserved_memory", false)),
       extended_search_(config.get<bool>("extended_search", false)) {
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
@@ -71,18 +71,18 @@ BidirectionalAStar::~BidirectionalAStar() {
 
 // Clear the temporary information generated during path construction.
 void BidirectionalAStar::Clear() {
-  if (edgelabels_forward_.size() > max_reserved_labels_count_) {
-    // reduce edge labels capacity
-    edgelabels_forward_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_forward_.size() > reservation) {
+    edgelabels_forward_.resize(reservation);
     edgelabels_forward_.shrink_to_fit();
   }
-  edgelabels_forward_.clear();
-  if (edgelabels_reverse_.size() > max_reserved_labels_count_) {
-    // reduce edge labels capacity
-    edgelabels_reverse_.resize(max_reserved_labels_count_);
+  if (edgelabels_reverse_.size() > reservation) {
+    edgelabels_reverse_.resize(reservation);
     edgelabels_reverse_.shrink_to_fit();
   }
+  edgelabels_forward_.clear();
   edgelabels_reverse_.clear();
+
   adjacencylist_forward_.clear();
   adjacencylist_reverse_.clear();
   edgestatus_forward_.clear();

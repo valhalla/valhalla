@@ -30,10 +30,10 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
 AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)) {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      travel_type_(0) {
 }
 
 // Destructor
@@ -43,10 +43,12 @@ AStarBSSAlgorithm::~AStarBSSAlgorithm() {
 // Clear the temporary information generated during path construction.
 void AStarBSSAlgorithm::Clear() {
   // Reduce edge labels capacity if it's more than limit
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
+
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   edgelabels_.clear();
