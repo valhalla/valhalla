@@ -2240,15 +2240,29 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
 // This data comes from a few sources that were similar. After studying their data
 // I realized they were both (nearly) linear, so this routine boils both sources
 // down to an equation for a line (with bounds on x). Note that deceleration lane lengths
-// can vary, so I advise using a tolerance, e.g., "is this lane within 10% of the expected
-// deceleration lane length?".
+// can vary, so I advise using a tolerance, e.g., "is this lane within some percentage
+// of the expected deceleration lane length?".
 float get_deceleration_lane_length(float speed_kph) {
-  if (speed_kph < 30) {
-    return 0.060;
+  if (speed_kph < 80) {
+    return 0.1;
   }
 
-  return 0.0016599 * speed_kph - 0.0100849;
+  return 0.00141994 * speed_kph + 0.03509388;
 }
+
+
+//FILE * fout;
+//
+//static class filer {
+//public:
+//  filer() {
+//    fout = fopen("decel.log", "w");
+//  }
+//  ~filer() {
+//    fclose(fout);
+//  }
+//} ___;
+
 
 bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
@@ -2376,7 +2390,7 @@ bool ManeuversBuilder::IsFork(int node_index,
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
-        constexpr float pct_tol = 0.30;
+        constexpr float pct_tol = 0.35;
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
         float tol = pct_tol * standard_deceleration_lane_length_km;
@@ -2385,8 +2399,8 @@ bool ManeuversBuilder::IsFork(int node_index,
 //        printf("prev-at-delta(%d) begin: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->begin_shape_index()].lat(), shape[prev_at_delta->begin_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
 //        printf("  prev-at-delta(%d) end: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->end_shape_index()].lat(), shape[prev_at_delta->end_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
 
-//        uint32_t end_decel_lane_shape_idx = prev_edge->end_shape_index();
-//        uint32_t start_decel_lane_shape_idx = end_decel_lane_shape_idx;
+        uint32_t end_decel_lane_shape_idx = prev_edge->end_shape_index();
+        uint32_t start_decel_lane_shape_idx = end_decel_lane_shape_idx;
 
         //printf("prev at delta end node: %.6f, %.6f\n", shape[prev_at_delta->end_shape_index()].lat(), shape[prev_at_delta->end_shape_index()].lng());
 
@@ -2463,20 +2477,62 @@ bool ManeuversBuilder::IsFork(int node_index,
 
         static double n;
         static double Sx, Sy, Sxx, Syy, Sxy;
-#endif
+
+        static int curr_detected, orig_detected, dynamic_detected, orig_wins, curr_wins;
+
+        float orig_decel_length_km = get_deceleration_lane_length_orig(prev_edge->default_speed());
+        float orig_tol = pct_tol * orig_decel_length_km;
+
+        bool orig_would_see_as_decel_lane = ((agg_lane_length_km < orig_decel_length_km + orig_tol) &&
+            (agg_lane_length_km > orig_decel_length_km - orig_tol));
+
+        bool curr_would_see_as_decel_lane = ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
+            (agg_lane_length_km > standard_deceleration_lane_length_km - tol));
+
+        if (curr_would_see_as_decel_lane)
+          curr_detected++;
+        if (orig_would_see_as_decel_lane)
+          orig_detected++;
+
+        if (orig_would_see_as_decel_lane && !curr_would_see_as_decel_lane) {
+          orig_wins++;
+          printf("----------------------------------------------------\n");
+          printf("ALERT (BAD): orig sees as decel lane, curr does not\n");
+          printf("Decel lane length: %.6f\n", agg_lane_length_km);
+          printf("Speed: %.1f\n", prev_edge->default_speed());
+          printf("orig figures:\n");
+          printf("min: %.6f\n", orig_decel_length_km - orig_tol);
+          printf("mid: %.6f\n", orig_decel_length_km);
+          printf("max: %.6f\n", orig_decel_length_km + orig_tol);
+          printf("curr figures:\n");
+          printf("min: %.6f\n", standard_deceleration_lane_length_km - tol);
+          printf("mid: %.6f\n", standard_deceleration_lane_length_km);
+          printf("max: %.6f\n", standard_deceleration_lane_length_km + tol);
+          printf("Start decel lane: %.6f, %.6f\n", shape[start_decel_lane_shape_idx].lat(), shape[start_decel_lane_shape_idx].lng());
+          printf("  End decel lane: %.6f, %.6f\n", shape[end_decel_lane_shape_idx].lat(), shape[end_decel_lane_shape_idx].lng());
+          printf("DD: %.6f,%.6f;%.6f,%.6f\n", shape[start_decel_lane_shape_idx].lng(), shape[start_decel_lane_shape_idx].lat(), shape[end_decel_lane_shape_idx].lng(), shape[end_decel_lane_shape_idx].lat());
+        }
+        else if (!orig_would_see_as_decel_lane && curr_would_see_as_decel_lane) {
+          curr_wins++;
+          printf("----------------------------------------------------\n");
+          printf("GOOD: current sees as decel lane, orig does not\n");
+        }
+        else {
+//          printf("GOOD: they are the same\n");
+        }
 
         // see if we're within tolerance of a standard deceleration lane length.
         // if so, we consider this fork as preceded by a deceleration lane leading to
         // a fork/exit and we do not consider this a lane bifurcation.
-        if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
-            (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
-
-#if 0
+        if ((prev_at_delta->default_speed() >= 80) && (curr_would_see_as_decel_lane || orig_would_see_as_decel_lane)) {
           // number of samples
           n++;
 
           double x = prev_at_delta->default_speed();
           double y = agg_lane_length_km;
+
+          fprintf(fout, "%.1f, %.6f\n", x, y);
+
           Sx += x;
           Sxx += (x*x);
           Sy += y;
@@ -2486,9 +2542,23 @@ bool ManeuversBuilder::IsFork(int node_index,
           double m = (n*Sxy - Sx*Sy) / (n*Sxx - Sx*Sx);
           double b = (Sy - m * Sx) / n;
 
-          printf("y = *%.8f * x  + %.8f\n", m, b);
+          printf("y = %.8f * x  + %.8f\n", m, b);
+
+          double dyn_val = x * m + b;
+          double dyn_tol = pct_tol * dyn_val;
+          bool dyn_would_see_as_decel_lane = ((agg_lane_length_km < dyn_val + dyn_tol) &&
+            (agg_lane_length_km > dyn_val - dyn_tol));
+
+          if (dyn_would_see_as_decel_lane)
+            dynamic_detected++;
+
+          printf("orig_detected: %d, curr_detected: %d, dyn_detected: %d\n", orig_detected, curr_detected, dynamic_detected);
+          printf("orig_wins: %d, curr_wins: %d\n", orig_wins, curr_wins);
+
 #endif
 
+        if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
+          (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
           return false;
         }
       }
