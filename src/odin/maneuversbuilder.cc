@@ -2376,7 +2376,7 @@ bool ManeuversBuilder::IsFork(int node_index,
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
-        constexpr float pct_tol = 0.35;
+        constexpr float pct_tol = 0.30;
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
         float tol = pct_tol * standard_deceleration_lane_length_km;
