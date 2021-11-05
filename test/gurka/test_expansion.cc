@@ -35,8 +35,8 @@ protected:
                     const std::vector<std::string>& waypoints,
                     bool skip_opps,
                     unsigned exp_feats,
-                    std::vector<std::string> props = {},
-                    std::unordered_map<std::string, std::string> options = {}) {
+                    const std::vector<std::string> props = {},
+                    const std::unordered_map<std::string, std::string> options = {}) {
     // keep the request open-end so we can add stuff and close in the end
     std::string req = R"({"costing":"auto","skip_opposites":)";
     req += skip_opps ? "true," : "false,";
