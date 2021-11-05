@@ -2243,15 +2243,11 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
 // can vary, so I advise using a tolerance, e.g., "is this lane within 10% of the expected
 // deceleration lane length?".
 float get_deceleration_lane_length(float speed_kph) {
-  if (speed_kph > 110) {
-    return 0.204;
-  }
-
   if (speed_kph < 30) {
     return 0.060;
   }
 
-  return 0.0022254 * speed_kph - 0.0472;
+  return 0.0016599 * speed_kph - 0.0100849;
 }
 
 bool ManeuversBuilder::IsFork(int node_index,
@@ -2364,6 +2360,9 @@ bool ManeuversBuilder::IsFork(int node_index,
         [](EnhancedTripLeg* trip_path, int node_index, const EnhancedTripLeg_Edge* prev_edge,
            const EnhancedTripLeg_Edge* curr_edge,
            const std::unique_ptr<EnhancedTripLeg_IntersectingEdge>& xedge) -> bool {
+
+//      std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path->shape());
+
       uint32_t prev_lane_count = prev_edge->lane_count();
       uint32_t curr_lane_count = curr_edge->lane_count();
 
@@ -2373,20 +2372,36 @@ bool ManeuversBuilder::IsFork(int node_index,
           (xedge->use() == TripLeg_Use_kRampUse)) {
 
         // Determine if this lane split is a deceleration lane forking onto an exit.
+        // Note: prev_at_delta with delta==1 is the same as prev_edge.
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
+        constexpr float pct_tol = 0.35;
         float standard_deceleration_lane_length_km =
             get_deceleration_lane_length(prev_at_delta->default_speed());
-        float tol = 0.15 * standard_deceleration_lane_length_km;
+        float tol = pct_tol * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
+
+//        printf("prev-at-delta(%d) begin: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->begin_shape_index()].lat(), shape[prev_at_delta->begin_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
+//        printf("  prev-at-delta(%d) end: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->end_shape_index()].lat(), shape[prev_at_delta->end_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
+
+//        uint32_t end_decel_lane_shape_idx = prev_edge->end_shape_index();
+//        uint32_t start_decel_lane_shape_idx = end_decel_lane_shape_idx;
+
+        //printf("prev at delta end node: %.6f, %.6f\n", shape[prev_at_delta->end_shape_index()].lat(), shape[prev_at_delta->end_shape_index()].lng());
 
         // iterate backwards until:
         // 1) the extra lane goes away, or
         // 2) we've exceeded a reasonable length for a deceleration lane
         while (true) {
+//          start_decel_lane_shape_idx = prev_at_delta->begin_shape_index();
+
           delta++;
           prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+
+//          printf("prev-at-delta(%d) begin: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->begin_shape_index()].lat(), shape[prev_at_delta->begin_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
+//          printf("  prev-at-delta(%d) end: %.6f, %.6f, lanes=%d, length=%.3f\n", delta, shape[prev_at_delta->end_shape_index()].lat(), shape[prev_at_delta->end_shape_index()].lng(), prev_at_delta->lane_count(), prev_at_delta->length_km());
+
           // prev_at_delta is null when we cannot walk backwards any further
           // (e.g., we've hit the beginning of the route). If this occurs
           // set agg_lane_length_km to 0.0 to ensure we do not consider
@@ -2410,11 +2425,70 @@ bool ManeuversBuilder::IsFork(int node_index,
             break;
         }
 
+#if 0
+        if (agg_lane_length_km > (standard_deceleration_lane_length_km + tol)) {
+          double pct = (agg_lane_length_km - standard_deceleration_lane_length_km) / standard_deceleration_lane_length_km;
+          if (std::fabs(pct - pct_tol) < 0.05) {
+            printf("\n");
+            printf("Road speed: %.1f km/h\n", prev_at_delta->default_speed());
+            printf("Decel lane is a bit longer than tol, %.1f %% more at %.3f km\n", 100 * pct, agg_lane_length_km);
+            printf("Min:                      %.3f\n", standard_deceleration_lane_length_km - tol);
+            printf("Deceleration lane length: %.3f\n", agg_lane_length_km);
+            printf("Max:                      %.3f\n", standard_deceleration_lane_length_km + tol);
+            printf("Start decel lane: %.6f, %.6f\n", shape[start_decel_lane_shape_idx].lat(), shape[start_decel_lane_shape_idx].lng());
+            printf("  End decel lane: %.6f, %.6f\n", shape[end_decel_lane_shape_idx].lat(), shape[end_decel_lane_shape_idx].lng());
+            printf("prev_edge begin: %.6f, %.6f\n", shape[prev_edge->begin_shape_index()].lat(), shape[prev_edge->begin_shape_index()].lng());
+            printf("  prev_edge end: %.6f, %.6f\n", shape[prev_edge->end_shape_index()].lat(), shape[prev_edge->end_shape_index()].lng());
+            printf("curr_edge begin: %.6f, %.6f\n", shape[curr_edge->begin_shape_index()].lat(), shape[curr_edge->begin_shape_index()].lng());
+            printf("  curr_edge end: %.6f, %.6f\n", shape[curr_edge->end_shape_index()].lat(), shape[curr_edge->end_shape_index()].lng());
+          }
+        }
+        else if (agg_lane_length_km < (standard_deceleration_lane_length_km - tol)) {
+          double pct = (standard_deceleration_lane_length_km - agg_lane_length_km) / standard_deceleration_lane_length_km;
+          if (std::fabs(pct - pct_tol) < 0.05) {
+            printf("\n");
+            printf("Road speed: %.1f km/h\n", prev_at_delta->default_speed());
+            printf("Decel lane is a bit shorter than tol, %.1f %% more at %.3f km\n", 100 * pct, agg_lane_length_km);
+            printf("Min:                      %.3f\n", standard_deceleration_lane_length_km - tol);
+            printf("Deceleration lane length: %.3f\n", agg_lane_length_km);
+            printf("Max:                      %.3f\n", standard_deceleration_lane_length_km + tol);
+            printf("Start decel lane: %.6f, %.6f\n", shape[start_decel_lane_shape_idx].lat(), shape[start_decel_lane_shape_idx].lng());
+            printf("  End decel lane: %.6f, %.6f\n", shape[end_decel_lane_shape_idx].lat(), shape[end_decel_lane_shape_idx].lng());
+            printf("prev_edge begin: %.6f, %.6f\n", shape[prev_edge->begin_shape_index()].lat(), shape[prev_edge->begin_shape_index()].lng());
+            printf("  prev_edge end: %.6f, %.6f\n", shape[prev_edge->end_shape_index()].lat(), shape[prev_edge->end_shape_index()].lng());
+            printf("curr_edge begin: %.6f, %.6f\n", shape[curr_edge->begin_shape_index()].lat(), shape[curr_edge->begin_shape_index()].lng());
+            printf("  curr_edge end: %.6f, %.6f\n", shape[curr_edge->end_shape_index()].lat(), shape[curr_edge->end_shape_index()].lng());
+          }
+        }
+
+        static double n;
+        static double Sx, Sy, Sxx, Syy, Sxy;
+#endif
+
         // see if we're within tolerance of a standard deceleration lane length.
         // if so, we consider this fork as preceded by a deceleration lane leading to
         // a fork/exit and we do not consider this a lane bifurcation.
         if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
             (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
+
+#if 0
+          // number of samples
+          n++;
+
+          double x = prev_at_delta->default_speed();
+          double y = agg_lane_length_km;
+          Sx += x;
+          Sxx += (x*x);
+          Sy += y;
+          Syy += (y*y);
+          Sxy += (x*y);
+
+          double m = (n*Sxy - Sx*Sy) / (n*Sxx - Sx*Sx);
+          double b = (Sy - m * Sx) / n;
+
+          printf("y = *%.8f * x  + %.8f\n", m, b);
+#endif
+
           return false;
         }
       }
