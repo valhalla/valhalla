@@ -35,50 +35,32 @@ protected:
                     const std::vector<std::string>& waypoints,
                     bool skip_opps,
                     unsigned exp_feats,
-                    const std::vector<std::string>& props = {},
-                    const std::unordered_map<std::string, std::string>& options = {}) {
-    // keep the request open-end so we can add stuff and close in the end
-    std::string req = R"({"costing":"auto","skip_opposites":)";
-    req += skip_opps ? "true," : "false,";
-    req += (boost::format(R"("action":"%s",)") % action).str();
-    if (action == "isochrone") {
-      req +=
-          (boost::format(
-               R"("locations":[{"lat":%s,"lon":%s}],"contours":[{"time":1},{"time":2}],"expansion_props":[)") %
-           std::to_string(expansion_map.nodes.at(waypoints.at(0)).lat()) %
-           std::to_string(expansion_map.nodes.at(waypoints.at(0)).lng()))
-              .str();
-    } else if (action == "route") {
-      req += (boost::format(
-                  R"("locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"expansion_props":[)") %
-              std::to_string(expansion_map.nodes.at(waypoints.at(0)).lat()) %
-              std::to_string(expansion_map.nodes.at(waypoints.at(0)).lng()) %
-              std::to_string(expansion_map.nodes.at(waypoints.at(1)).lat()) %
-              std::to_string(expansion_map.nodes.at(waypoints.at(1)).lng()))
-                 .str();
-    } else {
-      req += R"("expansion_props":[)";
-    }
-    for (uint8_t i = 0; i < props.size(); i++) {
-      req += (boost::format(R"("%s")") % props[i]).str();
-      if (i != props.size() - 1) {
-        req += ",";
-      }
-    }
-    req += "]}";
+                    const std::vector<std::string>& props = {}) {
 
+    std::unordered_map<std::string, std::string> options = {{"/skip_opposites",
+                                                             skip_opps ? "1" : "0"},
+                                                            {"/action", action}};
+    for (uint8_t i = 0; i < props.size(); i++) {
+      options.insert({{"/expansion_props/" + std::to_string(i), props[i]}});
+    }
+    if (action == "isochrone") {
+      options.insert({{"/contours/0/time", "1"}, {"/contours/1/time", "2"}});
+    }
+
+    // get the response
     std::string res;
-    auto api = gurka::do_action(Options::expansion, expansion_map, req, {}, &res);
+    auto api =
+        gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
 
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
     auto feat = res_doc["features"][0].GetObject();
-
     ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("MultiLineString"));
 
     auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
     ASSERT_EQ(coords_size, exp_feats);
+
     for (const auto& prop : props) {
       ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
     }
@@ -86,20 +68,18 @@ protected:
 };
 
 gurka::map ExpansionTest::expansion_map = {};
-const std::unordered_map<std::string, std::string> isochrone_options = {{"/contours/0/time", "1"},
-                                                                        {"/contours/1/time", "2"}};
 
 // TODO: tons of " C++ exception with description "IsObject()" thrown in the test body."
 
 TEST_P(ExpansionTest, Isochrone) {
   // test Dijkstra expansion
   // 11 because there's a one-way
-  check_result("isochrone", {"A"}, false, 11, GetParam(), isochrone_options);
+  check_result("isochrone", {"A"}, false, 11, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneNoOpposites) {
   // test Dijkstra expansion and skip collecting more expensive opposite edges
-  check_result("isochrone", {"A"}, true, 6, GetParam(), isochrone_options);
+  check_result("isochrone", {"A"}, true, 6, GetParam());
 }
 
 TEST_P(ExpansionTest, Routing) {
