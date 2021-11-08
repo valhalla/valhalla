@@ -448,8 +448,7 @@ protected:
   uint64_t lon_offset7_ : 4; // Longitude offset 7th digit of precision
   uint64_t access_ : 12;     // Access through the node - bit field
 
-  uint64_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
-  uint64_t edge_count_ : 7;     // Number of outbound edges (on this level)
+  uint64_t edge_index_ : 28;    // Index within the node's tile of its first outbound directed edge
   uint64_t admin_index_ : 12;   // Index into this tile's administrative information list
   uint64_t timezone_ : 9;       // Time zone
   uint64_t intersection_ : 4;   // Intersection type (see graphconstants.h)
@@ -469,8 +468,9 @@ protected:
   uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
   uint64_t tagged_access_ : 1;       // Was access initially tagged?
   uint64_t private_access_ : 1;      // Is the access private?
+  uint64_t edge_count_ : 7;          // Number of outbound edges (on this level)
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
-  uint64_t spare2_ : 17;
+  uint64_t spare2_ : 10;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

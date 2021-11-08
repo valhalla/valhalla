@@ -28,8 +28,8 @@ public:
    */
   EdgeLabel()
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
-        edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
-        endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
+        edgeid_(baldr::kInvalidGraphId), mode_(0), endnode_(baldr::kInvalidGraphId),
+        classification_(0), shortcut_(0), opp_index_(0), opp_local_idx_(0), use_(0), dest_only_(0),
         origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
         has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
         cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
@@ -71,12 +71,11 @@ public:
             const InternalTurn internal_turn,
             const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
-        edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
-        mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
-        use_(static_cast<uint32_t>(edge->use())),
+        edgeid_(edgeid), mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
-        deadend_(edge->deadend()),
+        opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
+        use_(static_cast<uint32_t>(edge->use())), dest_only_(edge->destonly()), origin_(0),
+        toll_(edge->toll()), not_thru_(edge->not_thru()), deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
@@ -414,9 +413,7 @@ protected:
    *                 for edge transition costing and Uturn detection.
    * mode_:          Current transport mode.
    */
-  uint64_t edgeid_ : 46;
-  uint64_t opp_index_ : 7;
-  uint64_t opp_local_idx_ : 7;
+  uint64_t edgeid_ : 60;
   uint64_t mode_ : 4;
 
   /**
@@ -435,10 +432,13 @@ protected:
    * closure_pruning_:    Was closure pruning active on prior edge?
    * has_measured_speed_: Do we have any of the measured speed types set?
    */
-  uint64_t endnode_ : 46;
-  uint64_t use_ : 6;
+  uint64_t endnode_ : 60;
   uint64_t classification_ : 3;
   uint64_t shortcut_ : 1;
+
+  uint64_t opp_index_ : 7;
+  uint64_t opp_local_idx_ : 7;
+  uint64_t use_ : 6;
   uint64_t dest_only_ : 1;
   uint64_t origin_ : 1;
   uint64_t toll_ : 1;
@@ -447,6 +447,7 @@ protected:
   uint64_t on_complex_rest_ : 1;
   uint64_t closure_pruning_ : 1;
   uint64_t has_measured_speed_ : 1;
+  uint64_t spare1 : 36;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
