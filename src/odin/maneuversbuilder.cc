@@ -2236,22 +2236,35 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
-// Return the length in km for a deceleration lane as a function of the road's speed.
-// This data comes from a few sources that were similar. After studying their data
-// I realized they were both (nearly) linear, so this routine boils both sources
-// down to an equation for a line (with bounds on x). Note that deceleration lane lengths
-// can vary, so I advise using a tolerance, e.g., "is this lane within 10% of the expected
-// deceleration lane length?".
-float get_deceleration_lane_length(float speed_kph) {
-  if (speed_kph > 110) {
-    return 0.204;
+// Return the (min,max) length in km for a deceleration lane as a function of the road's
+// speed.
+//
+// This equation started out as an approximation based on a couple research papers
+// I found online. However, that equation wasn't quite catching faster-roadways with
+// longer deceleration lanes. So I gave it a buffer and empirically derived the equation
+// below by running ~100 long routes all over the world, grabbing the real world road
+// speed (x) and deceleration lane lengths (y). I plotted all the gathered points and
+// observed a the trend is linear. I then ran these points through a linear regression
+// which resulted in the equation below. It is also important to mention that the
+// deceleration lane length can vary quite a bit. Using the same data, the deceleration
+// lane length can vary by as much as 40% compared to the value returned by this equation.
+// However, a tolerance of 35% catches all but the extreme outliers.
+std::pair<float, float> get_deceleration_lane_length(float speed_kph) {
+  float length;
+
+  // Below 80 kph I found that decel lanes are all roughly this length
+  if (speed_kph < 80) {
+    length = 0.1;
+  } else {
+    length = 0.00141994 * speed_kph + 0.03509388;
   }
 
-  if (speed_kph < 30) {
-    return 0.060;
-  }
+  // Empirically derived to catch all but the most extreme outliers.
+  constexpr float pct_tol = 0.35;
 
-  return 0.0022254 * speed_kph - 0.0472;
+  float tol = length * pct_tol;
+
+  return std::make_pair<float, float>(length - tol, length + tol);
 }
 
 bool ManeuversBuilder::IsFork(int node_index,
@@ -2376,9 +2389,9 @@ bool ManeuversBuilder::IsFork(int node_index,
         int delta = 1;
         auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
         auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
-        float standard_deceleration_lane_length_km =
+        float min_deceleration_lane_length_km, max_deceleration_lane_length_km;
+        std::tie(min_deceleration_lane_length_km, max_deceleration_lane_length_km) =
             get_deceleration_lane_length(prev_at_delta->default_speed());
-        float tol = 0.30 * standard_deceleration_lane_length_km;
         float agg_lane_length_km = prev_at_delta->length_km();
 
         // iterate backwards until:
@@ -2406,15 +2419,15 @@ bool ManeuversBuilder::IsFork(int node_index,
           agg_lane_length_km += prev_at_delta->length_km();
 
           // if we've exceeded the standard length for a deceleration lane, we're done.
-          if (agg_lane_length_km > standard_deceleration_lane_length_km + tol)
+          if (agg_lane_length_km > max_deceleration_lane_length_km)
             break;
         }
 
         // see if we're within tolerance of a standard deceleration lane length.
         // if so, we consider this fork as preceded by a deceleration lane leading to
         // a fork/exit and we do not consider this a lane bifurcation.
-        if ((agg_lane_length_km < standard_deceleration_lane_length_km + tol) &&
-            (agg_lane_length_km > standard_deceleration_lane_length_km - tol)) {
+        if ((agg_lane_length_km < max_deceleration_lane_length_km) &&
+            (agg_lane_length_km > min_deceleration_lane_length_km)) {
           return false;
         }
       }
