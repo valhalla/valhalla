@@ -34,8 +34,8 @@ enum class WalkingVia {
 class ComplexRestriction {
 public:
   ComplexRestriction()
-      : from_graphid_(kInvalidGraphId), has_dt_(0), to_graphid_(kInvalidGraphId), type_(0), modes_(0),
-        via_count_(0) {
+      : from_graphid_(kInvalidGraphId), to_graphid_(kInvalidGraphId), has_dt_(0), modes_(0),
+        via_count_(0), type_(0) {
   }
 
   /**
@@ -210,29 +210,32 @@ public:
 
 protected:
   // From graph Id plus begin date time information (if applicable)
-  uint64_t from_graphid_ : 46; // From Graph Id
-  uint64_t has_dt_ : 1;        // bit indicating if we have dt time information
-  uint64_t begin_day_dow_ : 5; // begin day or dow enum i.e. 1st Sunday
+  uint64_t from_graphid_ : 60; // From Graph Id
   uint64_t begin_month_ : 4;   // begin month
-  uint64_t begin_week_ : 3;    // which begin week does this start.  i.e. 1st week in Oct
-  uint64_t begin_hrs_ : 5;     // begin hours
 
   // To graph Id plus end date time information (if applicable)
-  uint64_t to_graphid_ : 46; // To graph Id
+  uint64_t to_graphid_ : 60; // To graph Id
+  uint64_t end_month_ : 4;   // end month
+
+  // third uint64_t
+  uint64_t has_dt_ : 1;        // bit indicating if we have dt time information
+  uint64_t begin_day_dow_ : 5; // begin day or dow enum i.e. 1st Sunday
+  uint64_t begin_week_ : 3;    // which begin week does this start.  i.e. 1st week in Oct
+  uint64_t begin_hrs_ : 5;     // begin hours
+  uint64_t begin_mins_ : 6;    // begin minutes
   uint64_t dt_type_ : 1;     // type of date time restriction: YMD = 0 or nth dow = 1
   uint64_t end_day_dow_ : 5; // end day or dow enum i.e. last Sunday
-  uint64_t end_month_ : 4;   // end month
   uint64_t end_week_ : 3;    // which end week does this end.  i.e. last week in Oct
-  uint64_t end_hrs_ : 5;     // end hours
+  uint64_t end_hrs_ : 5;     // end hours //34
+  uint64_t end_mins_ : 6;    // end minutes
+  uint64_t modes_ : 12;      // Mode(s) this access restriction applies to
+  uint64_t via_count_ : 5;   // size of via list.
+  uint64_t dow_ : 7;         // day of week for this restriction
 
   // Restriction data
+  // fourth uint64_t
   uint64_t type_ : 4;       // Restriction type
-  uint64_t modes_ : 12;     // Mode(s) this access restriction applies to
-  uint64_t via_count_ : 5;  // size of via list.
-  uint64_t dow_ : 7;        // day of week for this restriction
-  uint64_t begin_mins_ : 6; // begin minutes
-  uint64_t end_mins_ : 6;   // end minutes
-  uint64_t spare_ : 24;
+  uint64_t spare_ : 60;
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?

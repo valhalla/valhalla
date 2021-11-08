@@ -1100,12 +1100,11 @@ public:
 
 protected:
   // 1st 8-byte word
-  uint64_t endnode_ : 46;      // End node of the directed edge
-  uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
-  uint64_t opp_index_ : 7;     // Opposing directed edge index
+  uint64_t endnode_ : 60;      // End node of the directed edge
   uint64_t forward_ : 1;       // Is the edge info forward or reverse
   uint64_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
   uint64_t ctry_crossing_ : 1; // Does the edge cross into new country
+  uint32_t link_ : 1;          // *link tag - Ramp or turn channel. Used in costing.
 
   // 2nd 8 byte word
   uint64_t edgeinfo_offset_ : 25;    // Offset to edge data
@@ -1184,14 +1183,16 @@ protected:
   StopOrLine stopimpact_;
 
   // Local edge index, opposing local index, shortcut info
-  uint32_t localedgeidx_ : 7;  // Index of the edge on the local level
-  uint32_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
-  uint32_t shortcut_ : 7;      // Shortcut edge (mask)
-  uint32_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
-  uint32_t is_shortcut_ : 1;   // True if this edge is a shortcut
-  uint32_t speed_type_ : 1;    // Speed type (used in setting default speeds)
-  uint32_t named_ : 1;         // 1 if this edge has names, 0 if unnamed
-  uint32_t link_ : 1;          // *link tag - Ramp or turn channel. Used in costing.
+  uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
+  uint64_t opp_index_ : 7;     // Opposing directed edge index
+  uint64_t localedgeidx_ : 7;  // Index of the edge on the local level
+  uint64_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
+  uint64_t shortcut_ : 7;      // Shortcut edge (mask)
+  uint64_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
+  uint64_t is_shortcut_ : 1;   // True if this edge is a shortcut
+  uint64_t speed_type_ : 1;    // Speed type (used in setting default speeds)
+  uint64_t named_ : 1;         // 1 if this edge has names, 0 if unnamed
+  uint64_t spare_ : 18;
 };
 
 /**

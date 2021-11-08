@@ -62,12 +62,11 @@ public:
   bool operator<(const AccessRestriction& other) const;
 
 protected:
-  uint64_t edgeindex_ : 22; // Directed edge index. Max index is:
-                            // kMaxTileEdgeCount in nodeinfo.h: 22 bits.
+  uint64_t edgeindex_ : 29; // Directed edge index. Max index is:
+                            // kMaxTileEdgeCount in nodeinfo.h: 22 bits > 29 Bits.
   uint64_t type_ : 6;       // Access type
   uint64_t modes_ : 12;     // Mode(s) this access restriction applies to
-  uint64_t spare_ : 24;
-
+  uint64_t spare_ : 17;
   uint64_t value_; // Value for this restriction. Can take on
                    // different meanings per type
 };
