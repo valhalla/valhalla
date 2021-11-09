@@ -2244,7 +2244,7 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
 // longer deceleration lanes. So I gave it a buffer and empirically derived the equation
 // below by running ~100 long routes all over the world, grabbing the real world road
 // speed (x) and deceleration lane lengths (y). I plotted all the gathered points and
-// observed a the trend is linear. I then ran these points through a linear regression
+// observed a linear trend. I then ran these points through a linear regression
 // which resulted in the equation below. It is also important to mention that the
 // deceleration lane length can vary quite a bit. Using the same data, the deceleration
 // lane length can vary by as much as 40% compared to the value returned by this equation.
@@ -2440,6 +2440,7 @@ bool ManeuversBuilder::IsFork(int node_index,
                  (xedge_lane_count == post_split_min_count)) {
         return true;
       }
+
       return false;
     };
 
