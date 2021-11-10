@@ -1143,50 +1143,46 @@ void service_worker_t::set_interrupt(const std::function<void()>* interrupt_func
   interrupt = interrupt_function;
 }
 void service_worker_t::cleanup() {
-  // sends metrics to statsd server over udp
   if (statsd_client) {
+    // sends metrics to statsd server over udp
     statsd_client->flush();
   }
 }
 void service_worker_t::enqueue_statistics(Api& api) const {
   // nothing to do without stats
-  if (!api.has_info() || api.info().statistics().empty())
+  if (!statsd_client || !api.has_info() || api.info().statistics().empty())
     return;
 
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
     float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
-
-    if (statsd_client) {
-      switch (stat.type()) {
-        case count:
-          statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,
-                               statsd_client->tags);
-          break;
-        case gauge:
-          statsd_client->gauge(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
-                               statsd_client->tags);
-          break;
-        case timing:
-          statsd_client->timing(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
-                                statsd_client->tags);
-          break;
-        case set:
-          statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+    switch (stat.type()) {
+      case count:
+        statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,
                              statsd_client->tags);
-          break;
-      }
+        break;
+      case gauge:
+        statsd_client->gauge(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                             statsd_client->tags);
+        break;
+      case timing:
+        statsd_client->timing(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                              statsd_client->tags);
+        break;
+      case set:
+        statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
+                           statsd_client->tags);
+        break;
     }
   }
 
   // before we are done with the request, if this was not an error we log it was ok
   if (!api.info().error()) {
     const auto& action = Options_Action_Enum_Name(api.options().action());
-    if (statsd_client) {
-      statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
-    }
+    statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
   }
 }
+
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
   // we copy the captures that could go out of scope
   auto start = std::chrono::steady_clock::now();
