@@ -290,6 +290,10 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAtEndOfPolyline(const std::vector<GeoPoi
                     pt1->lat() + ((pt0->lat() - pt1->lat()) * pct));
         return ll.Heading(pts[idx1]);
       } else {
+        if (pt0 == pts.begin()) {
+          break;
+        }
+
         d += seglength;
         pt1--;
         pt0--;
