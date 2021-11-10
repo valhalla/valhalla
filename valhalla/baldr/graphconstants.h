@@ -171,7 +171,7 @@ constexpr uint8_t kMcn = 8; // Part of mountain bicycle network
 constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
+constexpr uint32_t kMaxEdgeInfoOffset = 268435455; // 2^25 bytes>  2^28 bytes
 
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters

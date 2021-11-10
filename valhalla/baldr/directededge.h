@@ -1140,7 +1140,12 @@ protected:
   uint32_t link_ : 1;          // *link tag - Ramp or turn channel. Used in costing.
 
   // 2nd 8 byte word
-  uint64_t edgeinfo_offset_ : 25;    // Offset to edge data
+  uint64_t restrictions_ : 8;        // Restrictions - mask of local edge indexes at the end node
+  uint64_t opp_index_ : 7;           // Opposing directed edge index
+  uint64_t localedgeidx_ : 7;        // Index of the edge on the local level
+  uint64_t is_shortcut_ : 1;         // True if this edge is a shortcut
+  uint64_t speed_type_ : 1;          // Speed type (used in setting default speeds)
+  uint64_t named_ : 1;               // 1 if this edge has names, 0 if unnamed
   uint64_t access_restriction_ : 12; // General restriction or access condition (per mode)
   uint64_t start_restriction_ : 12;  // Complex restriction (per mode) starts on this directed edge
   uint64_t end_restriction_ : 12;    // Complex restriction (per mode) ends on this directed edge
@@ -1220,16 +1225,11 @@ protected:
   StopOrLine stopimpact_;
 
   // Local edge index, opposing local index, shortcut info
-  uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
-  uint64_t opp_index_ : 7;     // Opposing directed edge index
-  uint64_t localedgeidx_ : 7;  // Index of the edge on the local level
+  uint64_t edgeinfo_offset_ : 29; // Offset to edge data
   uint64_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
   uint64_t shortcut_ : 7;      // Shortcut edge (mask)
   uint64_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
-  uint64_t is_shortcut_ : 1;   // True if this edge is a shortcut
-  uint64_t speed_type_ : 1;    // Speed type (used in setting default speeds)
-  uint64_t named_ : 1;         // 1 if this edge has names, 0 if unnamed
-  uint64_t spare_ : 18;
+  uint64_t spare_ : 14;
 };
 
 /**
