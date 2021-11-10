@@ -1070,9 +1070,24 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
   // Get incoming and outgoing bearing. For the incoming heading, use the
   // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
   // turn degrees between Valhalla and OSRM
-  uint32_t idx = maneuver.begin_path_index();
-  uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
-  uint32_t out_brg = maneuver.begin_heading();
+  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(etp->shape());
+  uint32_t max_idx = shape.size() - 1;
+  uint32_t begin_idx = maneuver.begin_shape_index();
+
+  uint32_t in_brg = 0;
+  if (begin_idx != 0) {
+    PointLL a = shape[begin_idx-1];
+    PointLL b = shape[begin_idx];
+    in_brg = a.Heading(b);
+  }
+
+  uint32_t out_brg = 0;
+  if (begin_idx != max_idx) {
+    PointLL a = shape[begin_idx];
+    PointLL b = shape[begin_idx+1];
+    out_brg = a.Heading(b);
+  }
+
   osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
   osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
 
@@ -1088,6 +1103,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
   }
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
+  uint32_t idx = maneuver.begin_path_index();
   std::string maneuver_type;
   if (depart_maneuver) {
     maneuver_type = "depart";
