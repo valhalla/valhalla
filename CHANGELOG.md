@@ -4,6 +4,7 @@
    * FIXED: Fix precision losses while encoding-decoding distance parameter in openlr [#3374](https://github.com/valhalla/valhalla/pull/3374)
    * FIXED: Fix bearing calculation for openlr records [#3379](https://github.com/valhalla/valhalla/pull/3379)
    * FIXED: Some refactoring that was proposed for the PR 3379 [3381](https://github.com/valhalla/valhalla/pull/3381)
+   * FIXED: Avoid calling out "keep left/right" when passing an exit [3349](https://github.com/valhalla/valhalla/pull/3349)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
