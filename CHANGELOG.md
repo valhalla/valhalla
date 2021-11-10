@@ -26,7 +26,6 @@
    * FIXED: Fix total_run_stat.sh script. [#3511](https://github.com/valhalla/valhalla/pull/3511)
    
 * **Enhancement**
-   * ADDED: Ondemand elevation tile fetching [#3391(https://github.com/valhalla/valhalla/pull/3391)
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
@@ -63,6 +62,11 @@
    * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: Add JSON generator to conan [#3493)(https://github.com/valhalla/valhalla/pull/3493)
+   
+   * CHANGED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
+   * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457)(https://github.com/valhalla/valhalla/pull/3457)
+   * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

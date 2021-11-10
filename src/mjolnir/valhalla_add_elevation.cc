@@ -2,14 +2,13 @@
 #include <iostream>
 #include <vector>
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphtile.h"
-#include "mjolnir/elevationbuilder.h"
-
+#include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "mjolnir/elevationbuilder.h"
 
 namespace bpo = boost::program_options;
 
@@ -21,12 +20,12 @@ enum Input { CONFIG, TILES };
 
 /*
  * This service downloads elevations from remote storage for each provided tile.
- * First it checks if tile available locally in case they are not
- * it tries to download elevations from a remote storage.
- * Remote storage address should be given in configuration file.
+ * First it checks if the elevation tiles are available locally and
+ * in case they are not it tries to download them from a remote storage.
+ * Remote storage address should be given in a configuration file.
  * Service's input parameters
  * - config - stays for path to configuration file
- * - tiles - stays for the path to tile files(at most 16 can be fed).
+ * - tiles - stays for the path to a tile file.
  * */
 
 std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char** argv) {
@@ -59,7 +58,6 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
     return {};
   }
 
-  // Print out help or version and return
   if (vm.count("help")) {
     std::cout << options << "\n";
     return {};
@@ -94,8 +92,11 @@ std::unordered_set<std::string> get_valid_tile_paths(std::vector<std::string>&& 
 
 int main(int argc, char** argv) {
   auto params = parse_arguments(argc, argv);
-  if (std::get<Input::CONFIG>(params).empty() || std::get<Input::TILES>(params).empty())
+  if (std::get<Input::CONFIG>(params).empty() || std::get<Input::TILES>(params).empty()) {
+    std::cerr << "Invalid input " << (std::get<Input::CONFIG>(params).empty() ? "config" : "tile")
+              << " was not provided\n\n";
     return EXIT_FAILURE;
+  }
 
   if (!filesystem::exists(std::get<Input::CONFIG>(params)) ||
       !filesystem::is_regular_file(std::get<Input::CONFIG>(params))) {
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   rapidjson::read_json(std::get<Input::CONFIG>(params), pt);
   for (const auto& tile : tiles) {
-    if (!ElevationBuilder::load_tile_elevations(tile, pt))
+    if (!ElevationBuilder::add_elevations(tile, pt))
       std::cerr << "Failed to load elevations for tile " << tile << std::endl;
   }
 

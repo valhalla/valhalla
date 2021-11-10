@@ -1,10 +1,11 @@
-#include "mjolnir/util.h"
+#include "mjolnir/elevationbuilder.h"
 
-#include <boost/format.hpp>
+#include <deque>
 #include <future>
-#include <set>
 #include <thread>
 #include <utility>
+
+#include <boost/format.hpp>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -14,13 +15,10 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
-
-#include "mjolnir/elevationbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-
-#include <deque>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -34,50 +32,14 @@ constexpr double POSTING_INTERVAL = 60;
 // Do not compute grade for intervals less than 10 meters.
 constexpr double kMinimumInterval = 10.0f;
 
-typedef std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, float, float, float, float>>
-    cache_t;
+using cache_t =
+    std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, float, float, float, float>>;
 
-std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
-  valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
-                                                  true);
-  tilebuilder.header_builder().set_has_elevation(true);
-  uint32_t count = tilebuilder.header()->directededgecount();
-  std::unordered_set<uint32_t> cache;
-  cache.reserve(2 * count);
-  std::unordered_set<PointLL> result;
-  for (uint32_t i = 0; i < count; ++i) {
-    // Get a writeable reference to the directed edge
-    const DirectedEdge& directededge = tilebuilder.directededge_builder(i);
-    // Get the edge info offset
-    uint32_t edge_info_offset = directededge.edgeinfo_offset();
-    // Check if this edge has been cached (based on edge info offset)
-    if (cache.count(edge_info_offset))
-      continue;
-
-    cache.insert(edge_info_offset);
-    // Get the shape and length
-    auto shape = tilebuilder.edgeinfo(&directededge).shape();
-    auto length = directededge.length();
-    if (!directededge.tunnel() && directededge.use() != Use::kFerry) {
-      // Evenly sample the shape. If it is really short or a bridge just do both ends
-      std::vector<PointLL> resampled;
-      if (length < POSTING_INTERVAL * 3 || directededge.bridge()) {
-        resampled = {shape.front(), shape.back()};
-      } else {
-        resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
-      }
-      for (auto&& el : resampled)
-        result.insert(std::move(el));
-    }
-  }
-  return result;
-}
-
-void add_elevations_to(GraphReader& graphreader,
-                       std::mutex& graphreader_mutex,
-                       cache_t& cache,
-                       const std::unique_ptr<valhalla::skadi::sample>& sample,
-                       GraphId& tile_id) {
+void add_elevations_to_tile(GraphReader& graphreader,
+                            std::mutex& graphreader_lck,
+                            cache_t& cache,
+                            const std::unique_ptr<valhalla::skadi::sample>& sample,
+                            GraphId& tile_id) {
   // Get the tile. Serialize the entire tile?
   GraphTileBuilder tilebuilder(graphreader.tile_dir(), tile_id, true);
 
@@ -170,20 +132,20 @@ void add_elevations_to(GraphReader& graphreader,
 
   // Check if we need to clear the tile cache
   if (graphreader.OverCommitted()) {
-    graphreader_mutex.lock();
+    graphreader_lck.lock();
     graphreader.Trim();
-    graphreader_mutex.unlock();
+    graphreader_lck.unlock();
   }
 }
 
 /**
  * Adds elevation to a set of tiles. Each thread pulls a tile of the queue
  */
-void add_elevation(const boost::property_tree::ptree& pt,
-                   std::deque<GraphId>& tilequeue,
-                   std::mutex& lock,
-                   const std::unique_ptr<valhalla::skadi::sample>& sample,
-                   std::promise<uint32_t>& /*result*/) {
+void apply_elevations_to_tiles(const boost::property_tree::ptree& pt,
+                               std::deque<GraphId>& tilequeue,
+                               std::mutex& lock,
+                               const std::unique_ptr<valhalla::skadi::sample>& sample,
+                               std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -204,7 +166,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
     tilequeue.pop_front();
     lock.unlock();
 
-    add_elevations_to(graphreader, lock, geo_attribute_cache, sample, tile_id);
+    add_elevations_to_tile(graphreader, lock, geo_attribute_cache, sample, tile_id);
   }
 }
 
@@ -213,8 +175,8 @@ void add_elevation(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
-bool ElevationBuilder::load_tile_elevations(const std::string& tile,
-                                            const boost::property_tree::ptree& pt) {
+bool ElevationBuilder::add_elevations(const std::string& tile,
+                                      const boost::property_tree::ptree& pt) {
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
@@ -236,9 +198,9 @@ bool ElevationBuilder::load_tile_elevations(const std::string& tile,
   }
 
   std::unique_ptr<skadi::sample> sample = std::make_unique<skadi::sample>(pt);
-  std::mutex graphreader_mutex;
+  std::mutex graphreader_lck;
   cache_t cache;
-  add_elevations_to(reader, graphreader_mutex, cache, sample, tile_id);
+  add_elevations_to_tile(reader, graphreader_lck, cache, sample, tile_id);
   return true;
 }
 
@@ -285,8 +247,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(add_elevation, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(sample), std::ref(results.back())));
+    thread.reset(new std::thread(apply_elevations_to_tiles, std::cref(pt), std::ref(tilequeue),
+                                 std::ref(lock), std::ref(sample), std::ref(results.back())));
   }
 
   // Wait for threads to finish

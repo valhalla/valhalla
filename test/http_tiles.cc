@@ -19,7 +19,6 @@ using namespace valhalla;
 
 zmq::context_t context;
 const std::string tile_remote_address{"127.0.0.1:48004"};
-std::unordered_map<std::string, double> method_exec_time;
 
 std::string get_tile_url() {
   std::ostringstream oss;

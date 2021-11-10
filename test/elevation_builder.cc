@@ -1,5 +1,3 @@
-
-
 #include "test.h"
 
 #include <algorithm>
@@ -206,7 +204,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   std::vector<std::string> src_elevations;
   std::unordered_set<std::string> seen;
-  for (auto&& coord : coords_storage) {
+  for (const auto& coord : coords_storage) {
     auto elev = TestableSample::get_hgt_file_name(TestableSample::get_tile_index(coord));
     if (!seen.count(elev)) {
       seen.insert(elev);
@@ -214,13 +212,15 @@ TEST(ElevationBuilder, test_loaded_elevations) {
     }
   }
 
+  ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
+
   parallel_call<std::string>(save_file, src_elevations, src_path);
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   std::unordered_set<std::string> dst_elevations;
   for (const auto& tile : params.m_test_tile_names) {
-    (void)valhalla::mjolnir::ElevationBuilder::load_tile_elevations(params.m_test_tile_names.front(),
-                                                                    config);
+    (void)valhalla::mjolnir::ElevationBuilder::add_elevations(params.m_test_tile_names.front(),
+                                                              config);
 
     ASSERT_TRUE(filesystem::exists(dst_dir));
     const auto& elev_paths = get_files(dst_dir, true);

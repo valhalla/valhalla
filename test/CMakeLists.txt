@@ -281,19 +281,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
         DEPENDS ${destination}
-        COMMENT "symbolic link resources folder from ${source} => ${destination}"
-)
-
-set (source "${CMAKE_BINARY_DIR}/test/data/utrecht_tiles")
-set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
-add_custom_command(
-        TARGET utrecht_tiles POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
-        DEPENDS ${destination}
-        COMMENT "symbolic link resources folder from ${source} => ${destination}"
+        COMMENT "tiles copied from ${source} to ${destination}"
 )
 
 ## Test run targets

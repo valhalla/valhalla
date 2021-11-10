@@ -40,7 +40,7 @@ public:
   template <class coord_t> double get(const coord_t& coord);
 
   /**
-   * Get a single sample from the remote source
+   * Get a single sample from a remote source
    * @param coord the single posting at which to sample the datasource
    */
   template <class coord_t> double get_from_remote(const coord_t& coord);
@@ -96,7 +96,7 @@ private:
   template <class coord_t> double get_from_cache(const coord_t& coord);
 
   std::string url_;
-  std::string remote_path_;
+  std::string remote_path_; // used for testing only
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   std::unordered_set<std::string> st_;
   std::mutex st_lck_;
