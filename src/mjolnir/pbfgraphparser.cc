@@ -1415,16 +1415,36 @@ public:
       } else {
         results = empty_node_results_;
       }
+      bool is_bss = false;
 
       for (auto& key_value : *results) {
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
-          // Create a new node and set its attributes
-          OSMNode n{osmid};
-          n.set_latlng(lng, lat);
-          n.set_type(NodeType::kBikeShare);
-          bss_nodes_->push_back(n);
-          return; // we are done.
+          std::cout << "bss !!! " << std::endl;
+          is_bss = true;
         }
+      }
+      if (is_bss) {
+        // Create a new node and set its attributes
+        OSMNode n{osmid};
+        n.set_latlng(lng, lat);
+        n.set_type(NodeType::kBikeShare);
+        for (auto& key_value : *results) {
+          if (key_value.first == "name" ) {
+            n.set_name_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
+          }
+          if (key_value.first == "network" ) {
+            n.set_bss_network_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
+          }
+          if (key_value.first == "ref" ) {
+            n.set_ref_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_ref_count;;
+          }
+          std::cout << "bss value???? : " << key_value.first << "  " <<  key_value.second << std::endl;
+        }
+        bss_nodes_->push_back(n);
+        return; // we are done.
       }
       return; // not found
     }

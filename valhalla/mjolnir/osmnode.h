@@ -67,6 +67,14 @@ struct OSMNode {
   uint32_t ref_pronunciation_katakana_index_;
   uint32_t ref_pronunciation_jeita_index_;
 
+  // bss information
+  uint32_t bss_capacity_index_;
+  uint32_t bss_name_index_;
+  uint32_t bss_network_index_;
+  uint32_t bss_operator_index_;
+  uint32_t bss_ref_index_;
+  uint32_t bss_source_index_;
+
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
   uint32_t lat7_;
@@ -661,6 +669,17 @@ struct OSMNode {
    */
   bool cash_only_toll() const {
     return cash_only_toll_;
+  }
+
+  void set_bss_network_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss network index");
+    }
+    bss_network_index_ = index;
+  }
+
+  uint32_t bss_network_index() const {
+    return bss_network_index_;
   }
 };
 
