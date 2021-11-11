@@ -1076,7 +1076,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   uint32_t in_brg = 0;
   if (begin_idx != 0) {
-    PointLL a = shape[begin_idx-1];
+    PointLL a = shape[begin_idx - 1];
     PointLL b = shape[begin_idx];
     in_brg = a.Heading(b);
   }
@@ -1084,7 +1084,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
   uint32_t out_brg = 0;
   if (begin_idx != max_idx) {
     PointLL a = shape[begin_idx];
-    PointLL b = shape[begin_idx+1];
+    PointLL b = shape[begin_idx + 1];
     out_brg = a.Heading(b);
   }
 
