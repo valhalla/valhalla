@@ -14,6 +14,9 @@ RUN mkdir build
 WORKDIR /usr/local/src/valhalla/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 RUN make all -j$(nproc)
+RUN make utrecht_tiles
+RUN make -j$(nproc) tests
+RUN make -j$(nproc) check
 RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
