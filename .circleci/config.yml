@@ -25,6 +25,7 @@ jobs:
           name: Build Valhalla Docker Images
           command: |
             docker build --pull -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+            docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
             if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
               docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
             fi
