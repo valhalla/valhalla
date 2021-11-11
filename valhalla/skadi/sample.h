@@ -100,6 +100,7 @@ private:
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   std::unordered_set<std::string> st_;
   std::mutex st_lck_;
+  std::uint32_t num_threads_{1};
 };
 
 } // namespace skadi

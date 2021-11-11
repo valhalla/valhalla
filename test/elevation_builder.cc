@@ -23,7 +23,8 @@ void parallel_call(const std::function<void(const std::string&, const T&)>& func
                        std::function<void(const std::string&, const T&)>(),
                    std::vector<std::string> st = {},
                    const std::string& path = {},
-                   const T& param = {});
+                   const T& param = {},
+                   std::uint32_t num_threads = 1);
 std::vector<std::string> get_files(const std::string& root_dir, bool full_path = false);
 void clear(const std::string& path);
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
@@ -69,10 +70,55 @@ struct TestableSample : public valhalla::skadi::sample {
 };
 
 std::string remove_pattern(const std::string& dir, const std::string& filepath) {
+  if (dir.empty() || filepath.empty())
+    return filepath;
+
   auto pos = filepath.find(dir);
   if (pos == std::string::npos)
     return filepath;
   return filepath.substr(pos + dir.size());
+}
+
+TEST(ElevationBuilder, remove_pattern_valid_input) {
+  struct test_desc {
+    std::string path;
+    std::string remove_pattern;
+    std::string res;
+  };
+  std::vector<test_desc> tests =
+      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/0/003/196.gp"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/305.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/305.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/2/000/818/660.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp", "",
+        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp"},
+       {"", "/valhalla-internal/build/test/data/utrecht_tiles", ""},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph", "/tmp",
+        "/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph"}};
+
+  for (const auto& test : tests)
+    EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
+}
+
+TEST(ElevationBuilder, remove_pattern_invalid_input) {
+  struct test_desc {
+    std::string path;
+    std::string remove_pattern;
+    std::string res;
+  };
+
+  std::vector<test_desc> tests =
+      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", "1", "96.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/3o5.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/3o5.gph"},
+       {"$", "/valhalla-internal/build/test/data/utrecht_tiles", "$"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", ""}};
+
+  for (const auto& test : tests)
+    EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
 }
 
 std::vector<std::string> get_files(const std::string& root_dir, bool full_path) {
@@ -98,6 +144,20 @@ bool save_file(const std::string& fpath, const std::string& data) {
   file << (data.empty() ? fpath : data) << std::endl;
   file.close();
   return true;
+}
+
+TEST(ElevationBuilder, save_file_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  std::size_t cnt{1};
+  for (const auto& test : tests) {
+    EXPECT_TRUE(save_file(test));
+    EXPECT_EQ(get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+  }
+
+  clear("/tmp/save_file_input/");
 }
 
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
@@ -141,11 +201,12 @@ template <typename T>
 void parallel_call(const std::function<void(const std::string&, const T&)>& func,
                    std::vector<std::string> st,
                    const std::string& path,
-                   const T& param) {
+                   const T& param,
+                   std::uint32_t num_threads) {
   if (!func || st.empty())
     return;
 
-  std::uint32_t size = std::max(1U, std::thread::hardware_concurrency());
+  std::uint32_t size = std::max(1U, std::min(std::thread::hardware_concurrency(), num_threads));
   std::vector<std::thread> threads;
   threads.reserve(size);
   std::mutex m;
@@ -183,6 +244,21 @@ void clear(const std::string& path) {
   }
 }
 
+TEST(ElevationBuilder, clear) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  for (const auto& test : tests)
+    (void)save_file(test);
+
+  EXPECT_FALSE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+
+  clear("/tmp/save_file_input/");
+
+  EXPECT_TRUE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+}
+
 TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& config = test::
       make_config("test/data",
@@ -191,7 +267,8 @@ TEST(ElevationBuilder, test_loaded_elevations) {
                    {"additional_data.elevation_url_gz", "false"},
                    {"mjolnir.tile_dir", "test/data/tile_src"},
                    {"additional_data.elevation_dir", elevation_local_src},
-                   {"additional_data.elevation", "test/data/elevation_dst/"}});
+                   {"additional_data.elevation", "test/data/elevation_dst/"},
+                   {"mjolnir.concurrency", "5"}});
 
   const auto& tile_dir = config.get<std::string>("mjolnir.tile_dir");
   ElevationDownloadTestData params{tile_dir};
@@ -214,7 +291,8 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
-  parallel_call<std::string>(save_file, src_elevations, src_path);
+  parallel_call<std::string>(save_file, src_elevations, src_path, {},
+                             config.get<std::uint32_t>("mjolnir.concurrency", 1));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   std::unordered_set<std::string> dst_elevations;
