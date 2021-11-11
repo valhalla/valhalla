@@ -803,6 +803,50 @@ void expect_steps(valhalla::Api& raw_result,
 
   EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
 }
+
+void expect_bearings(valhalla::Api& raw_result,
+                  const std::vector<std::pair<uint32_t, uint32_t>>& expected_bearings,
+                  const std::string& route_name) {
+
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
+  if (result.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
+
+  EXPECT_TRUE(result.HasMember(route_name));
+  EXPECT_TRUE(result[route_name].IsArray());
+  EXPECT_EQ(result[route_name].Size(), 1);
+
+  EXPECT_TRUE(result[route_name][0].IsObject());
+  EXPECT_TRUE(result[route_name][0].HasMember("legs"));
+  EXPECT_TRUE(result[route_name][0]["legs"].IsArray());
+
+  std::vector<std::pair<uint32_t, uint32_t>> actual_bearings;
+  for (auto leg_iter = result[route_name][0]["legs"].Begin();
+       leg_iter != result[route_name][0]["legs"].End(); ++leg_iter) {
+    EXPECT_TRUE(leg_iter->IsObject());
+    EXPECT_TRUE(leg_iter->HasMember("steps"));
+    EXPECT_TRUE(leg_iter->FindMember("steps")->value.IsArray());
+    for (auto step_iter = leg_iter->FindMember("steps")->value.Begin();
+         step_iter != leg_iter->FindMember("steps")->value.End(); ++step_iter) {
+
+      // If we're on the last leg, append the last step, otherwise skip it, because it'll
+      // exist on the first step of the next leg
+      if (leg_iter == result[route_name][0]["legs"].End() ||
+          step_iter != leg_iter->FindMember("steps")->value.End()) {
+        EXPECT_TRUE(step_iter->IsObject());
+        auto maneuver = step_iter->FindMember("maneuver")->value.GetObject();
+        auto bearing_before = maneuver.FindMember("bearing_before")->value.GetInt();
+        auto bearing_after = maneuver.FindMember("bearing_after")->value.GetInt();
+        actual_bearings.push_back(std::make_pair<uint32_t, uint32_t>(bearing_before, bearing_after));
+        printf("heading: %u, %u\n", bearing_before, bearing_after);
+      }
+    }
+  }
+
+  EXPECT_EQ(actual_bearings, expected_bearings) << "Actual headings didn't match expected headings";
+}
+
 /**
  * Tests if the result, which may be comprised of multiple routes,
  * have summaries that match the expected_summaries.

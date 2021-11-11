@@ -205,6 +205,10 @@ void expect_steps(valhalla::Api& raw_result,
                   bool dedupe = true,
                   const std::string& route_name = "routes");
 
+void expect_bearings(valhalla::Api& raw_result,
+                     const std::vector<std::pair<uint32_t, uint32_t>>& expected_bearings,
+                     const std::string& route_name = "routes");
+
 /**
  * Tests if the result, which may be comprised of multiple routes,
  * have summaries that match the expected_summaries.

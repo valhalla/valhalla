@@ -270,6 +270,11 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
+
+  // pairs of <before_bearing, after_bearing> for each maneuver
+  std::vector<std::pair<uint32_t, uint32_t>> expected_bearings = { {0, 90}, {90, 163}, {163, 211}, {329, 31}, {31, 0} };
+  gurka::assert::osrm::expect_bearings(result, expected_bearings);
+
   int maneuver_index = 2;
 
   // Verify the enter_roundabout instructions
