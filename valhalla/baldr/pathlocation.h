@@ -35,7 +35,8 @@ public:
              const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
-             const unsigned int inbound_reach = 0);
+             const unsigned int inbound_reach = 0,
+             const float projected_heading = 0.f);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -56,6 +57,8 @@ public:
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge
     unsigned int inbound_reach;
+    // the heading of the projected point in the direction
+    float projected_heading;
   };
 
   // list of edges this location appears on within the graph
