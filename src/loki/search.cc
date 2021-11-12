@@ -333,13 +333,18 @@ struct bin_handler_t {
           continue;
 
         if (costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+          auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
-          PathLocation::PathEdge
-              path_edge{other_id,      1,    node_ll, distance, PathLocation::NONE, reach.outbound,
-                        reach.inbound, angle};
+          PathLocation::PathEdge path_edge{other_id,
+                                           1,
+                                           node_ll,
+                                           distance,
+                                           PathLocation::NONE,
+                                           reach.outbound,
+                                           reach.inbound,
+                                           opp_angle};
           // angle is 180 degrees opposite direction of the one above
-          if (heading_filter(location, std::fmod(angle + 180.f, 360.f)) ||
-              layer_filter(location, layer)) {
+          if (heading_filter(location, opp_angle) || layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
