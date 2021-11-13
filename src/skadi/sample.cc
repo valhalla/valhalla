@@ -79,7 +79,7 @@ private:
   format_t format;
   valhalla::midgard::mem_map<char> data;
   int usages;
-  char* unpacked;
+  const char* unpacked;
 
 public:
   cache_item_t() : format(format_t::UNKNOWN), usages(0), unpacked(nullptr) {
@@ -111,17 +111,17 @@ public:
     return usages;
   }
 
-  inline char* get_unpacked() {
+  inline const char* get_unpacked() {
     return unpacked;
   }
 
-  inline char* detach_unpacked() {
+  inline const char* detach_unpacked() {
     auto rv = unpacked;
     unpacked = nullptr;
     return rv;
   }
 
-  bool unpack(char* unpacked) {
+  bool unpack(const char* unpacked) {
     this->unpacked = unpacked;
 
     if (format == format_t::GZIP) {
@@ -154,7 +154,8 @@ public:
       size_t dest_size = HGT_BYTES;
       size_t result;
       do {
-        result = LZ4F_decompress(decode, this->unpacked, &dest_size, data.get(), &src_size, &options);
+        result = LZ4F_decompress(decode, const_cast<char*>(this->unpacked), &dest_size, data.get(),
+                                 &src_size, &options);
         if (LZ4F_isError(result)) {
           LOG_WARN("Corrupt lz4 elevation data");
           format = format_t::UNKNOWN;

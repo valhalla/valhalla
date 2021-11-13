@@ -103,6 +103,10 @@ TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
 
+TEST(Sample, getlz4) {
+  _get("test/data/samplelz4");
+};
+
 struct testable_sample_t : public skadi::sample {
   testable_sample_t(const std::string& dir) : sample(dir) {
     {
