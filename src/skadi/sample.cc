@@ -14,8 +14,8 @@
 #include <unordered_set>
 
 #include <boost/optional.hpp>
-#include <sys/stat.h>
 #include <lz4frame.h>
+#include <sys/stat.h>
 
 #include "baldr/compression_utils.h"
 #include "filesystem.h"
@@ -62,7 +62,7 @@ int16_t flip(int16_t value) {
 
 uint64_t file_size(const std::string& file_name) {
   // TODO: detect gzip and actually validate the uncompressed size?
-  struct stat s{};
+  struct stat s {};
   int rc = stat(file_name.c_str(), &s);
   return rc == 0 ? s.st_size : -1;
 }
@@ -160,7 +160,7 @@ public:
           format = format_t::UNKNOWN;
           return false;
         }
-      } while (result != 0 );
+      } while (result != 0);
     } else {
       LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;
@@ -358,7 +358,7 @@ tile_data cache_t::source(uint16_t index) {
 
   // we have it raw or we don't
   if (item.get_format() == format_t::RAW) {
-      return {this, index, false, (const int16_t*)item.get_data()};
+    return {this, index, false, (const int16_t*)item.get_data()};
   }
 
   // we were able to load it but the format wasn't RAW, which only leaves compressed formats
