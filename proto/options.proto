@@ -180,7 +180,7 @@ message Options {
     repeated LatLng coords = 1;
   }
 
-  enum ExpansionProps {
+  enum ExpansionProperties {
     costs = 0;
     durations = 1;
     distances = 2;
@@ -237,5 +237,5 @@ message Options {
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   optional Action expansion_action = 48;                                  // Meta action for /expansion endpoint
   optional bool skip_opposites = 49;                                      // Whether to return opposite edges encountered during expansion
-  repeated ExpansionProps expansion_props = 50;                           // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+  repeated ExpansionProperties expansion_properties = 50;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
 }

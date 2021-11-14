@@ -833,12 +833,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // expansion response properties
-  auto exp_props_req = rapidjson::get_child_optional(doc, "/expansion_props");
-  auto* exp_props_pbf = options.mutable_expansion_props();
-  Options::ExpansionProps exp_prop;
+  auto exp_props_req = rapidjson::get_child_optional(doc, "/expansion_properties");
+  auto* exp_props_pbf = options.mutable_expansion_properties();
+  Options::ExpansionProperties exp_prop;
   if (exp_props_req && exp_props_req->IsArray()) {
     for (const auto& prop : exp_props_req->GetArray()) {
-      if (!valhalla::Options_ExpansionProps_Enum_Parse(std::string(prop.GetString()), &exp_prop)) {
+      if (!valhalla::Options_ExpansionProperties_Enum_Parse(std::string(prop.GetString()),
+                                                            &exp_prop)) {
         throw valhalla_exception_t(168, std::string(prop.GetString()));
       }
       exp_props_pbf->Add(exp_prop);

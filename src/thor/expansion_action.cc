@@ -13,7 +13,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
-// indices correspond to Options::ExpansionProps enum
+// indices correspond to Options::ExpansionProperties enum
 const std::string kPropPaths[5] = {"/features/0/properties/costs", "/features/0/properties/durations",
                                    "/features/0/properties/distances",
                                    "/features/0/properties/statuses",
@@ -28,7 +28,7 @@ std::string thor_worker_t::expansion(Api& request) {
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
   std::unordered_set<baldr::GraphId> opp_edges;
-  std::unordered_set<Options::ExpansionProps> exp_props;
+  std::unordered_set<Options::ExpansionProperties> exp_props;
 
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize() ? options.generalize() : 10.f;
@@ -37,15 +37,14 @@ std::string thor_worker_t::expansion(Api& request) {
   Document dom;
   dom.SetObject();
   // set algorithm to Dijkstra, will be overwritten by other algos
-  SetValueByPointer(dom, "/properties/algorithm", "unidirectional_dijkstra");
   SetValueByPointer(dom, "/type", "FeatureCollection");
   SetValueByPointer(dom, "/features/0/type", "Feature");
   SetValueByPointer(dom, "/features/0/geometry/type", "MultiLineString");
   SetValueByPointer(dom, "/features/0/geometry/coordinates", Value(kArrayType));
   SetValueByPointer(dom, "/features/0/properties", Value(kObjectType));
-  for (const auto& prop : options.expansion_props()) {
+  for (const auto& prop : options.expansion_properties()) {
     rapidjson::Pointer(kPropPaths[prop]).Set(dom, Value(kArrayType));
-    exp_props.insert(static_cast<Options_ExpansionProps>(prop));
+    exp_props.insert(static_cast<Options_ExpansionProperties>(prop));
   }
 
   // a lambda that the path algorithm can call to add stuff to the dom
@@ -97,33 +96,32 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (algorithm)
-      SetValueByPointer(dom, "/properties/algorithm", algorithm);
-    if (exp_props.count(Options_ExpansionProps_durations)) {
-      Pointer(kPropPaths[Options_ExpansionProps_durations])
+    SetValueByPointer(dom, "/properties/algorithm", algorithm);
+    if (exp_props.count(Options_ExpansionProperties_durations)) {
+      Pointer(kPropPaths[Options_ExpansionProperties_durations])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<uint64_t>(duration)), a);
     }
-    if (exp_props.count(Options_ExpansionProps_distances)) {
-      Pointer(kPropPaths[Options_ExpansionProps_distances])
+    if (exp_props.count(Options_ExpansionProperties_distances)) {
+      Pointer(kPropPaths[Options_ExpansionProperties_distances])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(distance), a);
     }
-    if (exp_props.count(Options_ExpansionProps_costs)) {
-      Pointer(kPropPaths[Options_ExpansionProps_costs])
+    if (exp_props.count(Options_ExpansionProperties_costs)) {
+      Pointer(kPropPaths[Options_ExpansionProperties_costs])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<uint64_t>(cost)), a);
     }
-    if (exp_props.count(Options_ExpansionProps_statuses))
-      Pointer(kPropPaths[Options_ExpansionProps_statuses])
+    if (exp_props.count(Options_ExpansionProperties_statuses))
+      Pointer(kPropPaths[Options_ExpansionProperties_statuses])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetString(status, a), a);
-    if (exp_props.count(Options_ExpansionProps_edge_ids))
-      Pointer(kPropPaths[Options_ExpansionProps_edge_ids])
+    if (exp_props.count(Options_ExpansionProperties_edge_ids))
+      Pointer(kPropPaths[Options_ExpansionProperties_edge_ids])
           .Get(dom)
           ->GetArray()
           .PushBack(Value{}.SetInt(static_cast<uint64_t>(edgeid)), a);

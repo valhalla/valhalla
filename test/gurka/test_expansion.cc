@@ -41,7 +41,7 @@ protected:
                                                              skip_opps ? "1" : "0"},
                                                             {"/action", action}};
     for (uint8_t i = 0; i < props.size(); i++) {
-      options.insert({{"/expansion_props/" + std::to_string(i), props[i]}});
+      options.insert({{"/expansion_properties/" + std::to_string(i), props[i]}});
     }
     if (action == "isochrone") {
       options.insert({{"/contours/0/time", "1"}, {"/contours/1/time", "2"}});

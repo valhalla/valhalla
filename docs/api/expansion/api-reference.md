@@ -1,6 +1,6 @@
-# Expansion service API reference
+# Expansion service API reference (BETA)
 
-Routing algorithms find the best path by _expanding_ their search from start nodes/edges across the routing network until the destination is reached (unidirectional) or both search branches meet (bidirectional).
+Routing algorithms find the best path by _expanding_ their search from start nodes/edges across the routing network until the destination is reached (unidirectional) or both search branches meet (bidirectional). This service could be subject to change in terms of API until we remove the BETA label.
 
 The expansion service wraps the `route` and `isochrone` services and returns a GeoJSON with all network edges (way segments) the underlying routing algorithm visited during the expansion with relevant properties for each edge (e.g. `duration` & `distance`). A top-level `algorithm` propertry informs about the used algorithm: unidirectional & bidirectional A* (for `route`) and unidirectional Dijkstra (for `isochrone`).
 
