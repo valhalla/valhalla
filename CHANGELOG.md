@@ -17,8 +17,8 @@
    * CHANGED: de-singleton tile_extract by introducing an optional index.bin file created by valhalla_build_extract [#3281](https://github.com/valhalla/valhalla/pull/3281)
    * CHANGED: implement valhalla_build_elevation in python and add more --from-geojson & --from-graph options [#3318](https://github.com/valhalla/valhalla/pull/3318)
    * ADDED: Add boolean parameter to clear memory for edge labels from thor. [#2789](https://github.com/valhalla/valhalla/pull/2789)
-   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
    * CHANGED: Do not create statsd client in workers if it is not configured [#3394](https://github.com/valhalla/valhalla/pull/3394)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
