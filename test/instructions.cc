@@ -321,7 +321,6 @@ TEST(Instructions, validate_exit_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8.",
                     "Take exit 8 onto A120(W)|A120(W).", "");
-
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
