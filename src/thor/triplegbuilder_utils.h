@@ -41,7 +41,7 @@ struct MultimodalBuilder {
              const AttributesController& controller,
              GraphReader& graphreader) {
 
-    AddBssNode(trip_node, node, startnode, directededge, start_tile, graphtile, mode_costing, controller);
+    AddBssNode(trip_node, node, directededge, start_tile, graphtile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
@@ -52,7 +52,7 @@ private:
    *
    * @param trip_node
    * @param node
-   * @param startnode
+   * @param directed_edge
    * @param start_tile
    * @param graphtile
    * @param mode_costing
@@ -60,7 +60,6 @@ private:
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId& gid,
                   const DirectedEdge* directededge,
                   graph_tile_ptr start_tile,
                   graph_tile_ptr graphtile,

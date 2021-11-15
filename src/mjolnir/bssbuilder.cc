@@ -17,6 +17,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/graphconstants.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
@@ -282,11 +283,6 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
   for (auto it = new_connections.begin(); it != new_connections.end(); std::advance(it, 4)) {
     size_t edge_index = tilebuilder_local.directededges().size();
-    std::cout << "-------------------------------" << std::endl;
-    std::cout << it->osm_node.bss_network_index() << std::endl;
-    std::cout << osm_data.node_names.name(it->osm_node.bss_network_index()) << std::endl;
-    std::cout << it->osm_node.name_index() << std::endl;
-    std::cout << osm_data.node_names.name(it->osm_node.name_index()) << std::endl;
 
     NodeInfo new_bss_node{tile.header()->base_ll(),
                           it->bss_ll,
@@ -308,13 +304,17 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
     tilebuilder_local.nodes().emplace_back(std::move(new_bss_node));
 
+    auto encode_tag = [](TaggedValue tag) {
+      return std::string(1, static_cast<std::string::value_type>(tag));
+    };
+
     const std::vector<std::string> bss_tagged_values {
-        std::string("3") + osm_data.node_names.name(it->osm_node.name_index()),
-        std::string("4") + osm_data.node_names.name(it->osm_node.bss_ref_index()),
-        std::string("5") + osm_data.node_names.name(it->osm_node.bss_network_index()),
-        std::string("6") + osm_data.node_names.name(it->osm_node.bss_capacity_index()),
-        std::string("7") + osm_data.node_names.name(it->osm_node.bss_source_index()),
-        std::string("8") + osm_data.node_names.name(it->osm_node.bss_operator_index())
+        encode_tag(TaggedValue::kBssName) + osm_data.node_names.name(it->osm_node.name_index()),
+        encode_tag(TaggedValue::kBssRef) + osm_data.node_names.name(it->osm_node.bss_ref_index()),
+        encode_tag(TaggedValue::kBssNetwork) + osm_data.node_names.name(it->osm_node.bss_network_index()),
+        encode_tag(TaggedValue::kBssCapacity) + osm_data.node_names.name(it->osm_node.bss_capacity_index()),
+        encode_tag(TaggedValue::kBssSource) + osm_data.node_names.name(it->osm_node.bss_source_index()),
+        encode_tag(TaggedValue::kBssOperator) + osm_data.node_names.name(it->osm_node.bss_operator_index())
     };
 
     for (int j = 0; j < 4; j++) {

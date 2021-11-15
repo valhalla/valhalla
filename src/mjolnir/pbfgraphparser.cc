@@ -1417,12 +1417,13 @@ public:
       }
       bool is_bss = false;
 
-      for (auto& key_value : *results) {
-        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
-          std::cout << "bss !!! " << std::endl;
-          is_bss = true;
-        }
+      if (results.has_value()){
+          auto search = results->find("amenity");
+          if (search != results->end() && search->second == "bicycle_rental"){
+              is_bss = true;
+          }
       }
+
       if (is_bss) {
         // Create a new node and set its attributes
         OSMNode n{osmid};
@@ -1453,7 +1454,6 @@ public:
             n.set_bss_operator_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
           }
-          std::cout << "bss value???? : " << key_value.first << "  " <<  key_value.second << std::endl;
         }
         bss_nodes_->push_back(n);
         return; // we are done.

@@ -671,6 +671,10 @@ struct OSMNode {
     return cash_only_toll_;
   }
 
+  /**
+   * Sets the index for bss network.
+   * @param  idx  Index for the bss network.
+   */
   void set_bss_network_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss network index");
@@ -678,10 +682,18 @@ struct OSMNode {
     bss_network_index_ = index;
   }
 
+  /**
+   * Get the bss network index.
+   * @return  Returns the index for the bss network.
+   */
   uint32_t bss_network_index() const {
     return bss_network_index_;
   }
 
+  /**
+   * Sets the index for bss capacity.
+   * @param  idx  Index for the bss capacity.
+   */
   void set_bss_capacity_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss capacity index");
@@ -689,10 +701,18 @@ struct OSMNode {
     bss_capacity_index_ = index;
   }
 
+  /**
+   * Get the bss capacity index.
+   * @return  Returns the index for the bss capacity.
+   */
   uint32_t bss_capacity_index() const {
     return bss_capacity_index_;
   }
 
+  /**
+   * Sets the index for bss name.
+   * @param  idx  Index for the bss name.
+   */
   void set_bss_name_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss name index");
@@ -700,10 +720,18 @@ struct OSMNode {
     bss_name_index_ = index;
   }
 
+  /**
+   * Get the bss name index.
+   * @return  Returns the index for the bss name.
+   */
   uint32_t bss_name_index() const {
     return bss_name_index_;
   }
 
+  /**
+   * Sets the index for bss operator.
+   * @param  idx  Index for the bss operator.
+   */
   void set_bss_operator_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss operator index");
@@ -711,10 +739,18 @@ struct OSMNode {
     bss_operator_index_ = index;
   }
 
+  /**
+   * Get the bss operator index.
+   * @return  Returns the index for the bss operator.
+   */
   uint32_t bss_operator_index() const {
     return bss_operator_index_;
   }
 
+  /**
+   * Sets the index for bss ref.
+   * @param  idx  Index for the bss ref.
+   */
   void set_bss_ref_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss ref index");
@@ -722,10 +758,18 @@ struct OSMNode {
     bss_ref_index_ = index;
   }
 
+  /**
+   * Get the bss ref index.
+   * @return  Returns the index for the bss ref.
+   */
   uint32_t bss_ref_index() const {
     return bss_ref_index_;
   }
 
+  /**
+   * Sets the index for bss source.
+   * @param  idx  Index for the bss source.
+   */
   void set_bss_source_index(const uint32_t index) {
     if (index > kMaxNodeNameIndex) {
       throw std::runtime_error("OSMNode: exceeded maximum bss source index");
@@ -733,6 +777,10 @@ struct OSMNode {
     bss_source_index_ = index;
   }
 
+  /**
+   * Get the bss source index.
+   * @return  Returns the index for the bss source.
+   */
   uint32_t bss_source_index() const {
     return bss_source_index_;
   }
