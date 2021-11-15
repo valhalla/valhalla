@@ -11,8 +11,10 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <fstream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
@@ -489,6 +491,62 @@ inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const 
   if (stat(p.c_str(), &s) != 0)
     throw std::runtime_error("could not stat " + p.string());
   return std::chrono::system_clock::from_time_t(FS_MTIME(s));
+}
+
+inline std::string generate_tmp_suffix() {
+  std::stringstream ss;
+  ss << ".tmp_" << std::this_thread::get_id() << "_"
+     << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return ss.str();
+}
+
+// template <typename T>
+// inline bool save(const std::string& fpath, const T& data) {
+inline bool save(const std::string& fpath, const std::vector<char>& data) {
+  if (fpath.empty())
+    return false;
+
+  auto dir = filesystem::path(fpath);
+  dir.replace_filename("");
+
+  filesystem::path tmp_location;
+  if (!filesystem::create_directories(dir))
+    return false;
+
+  // Technically this is a race condition but its super unlikely (famous last words)
+  while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    tmp_location = fpath + generate_tmp_suffix();
+
+  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  file.write(data.data(), data.size());
+  file.close();
+
+  if (file.fail()) {
+    filesystem::remove(tmp_location);
+    throw std::runtime_error("Failed to save data into " + fpath);
+  }
+
+  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+    filesystem::remove(tmp_location);
+    throw std::runtime_error("Failed to save data into " + fpath);
+  }
+
+  return true;
+}
+
+inline void clear(const std::string& path) {
+  if (!filesystem::exists(path))
+    return;
+
+  if (!filesystem::is_directory(path)) {
+    filesystem::remove(path);
+    return;
+  }
+
+  for (filesystem::recursive_directory_iterator i(path), end; i != end; ++i) {
+    if (filesystem::exists(i->path()))
+      filesystem::remove_all(i->path());
+  }
 }
 
 } // namespace filesystem

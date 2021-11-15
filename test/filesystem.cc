@@ -270,6 +270,36 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   }
 }
 
+TEST(ElevationBuilder, clear) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  for (const auto& test : tests)
+    (void)filesystem::save(test);
+
+  EXPECT_FALSE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+
+  filesystem::clear("/tmp/save_file_input/");
+
+  EXPECT_TRUE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+}
+
+TEST(ElevationBuilder, save_file_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  std::size_t cnt{1};
+  valhalla::baldr::curl_tile_getter_t tile_getter{1, "", false};
+  for (const auto& test : tests) {
+    EXPECT_TRUE(tile_getter.save(test));
+    EXPECT_EQ(get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+  }
+
+  filesystem::clear("/tmp/save_file_input/");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

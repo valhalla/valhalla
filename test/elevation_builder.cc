@@ -26,10 +26,10 @@ void parallel_call(const std::function<void(const std::string&, const T&)>& func
                    const T& param = {},
                    std::uint32_t num_threads = 1);
 std::vector<std::string> get_files(const std::string& root_dir, bool full_path = false);
-void clear(const std::string& path);
+// void clear(const std::string& path);
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
 std::string remove_pattern(const std::string& root_dir, const std::string& filepath);
-bool save_file(const std::string& fpath, const std::string& data = {});
+// bool save_file(const std::string& fpath, const std::string& data = {});
 
 // meters to resample shape to.
 // see elevationbuilder.cc for details
@@ -133,32 +133,18 @@ std::vector<std::string> get_files(const std::string& root_dir, bool full_path) 
   return files;
 }
 
-bool save_file(const std::string& fpath, const std::string& data) {
-  auto dir = filesystem::path(fpath);
-  dir.replace_filename("");
-
-  if (!filesystem::create_directories(dir))
-    return false;
-
-  std::ofstream file(fpath, std::ios::out | std::ios::binary | std::ios::ate);
-  file << (data.empty() ? fpath : data) << std::endl;
-  file.close();
-  return true;
-}
-
-TEST(ElevationBuilder, save_file_input) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
-                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
-                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
-
-  std::size_t cnt{1};
-  for (const auto& test : tests) {
-    EXPECT_TRUE(save_file(test));
-    EXPECT_EQ(get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
-  }
-
-  clear("/tmp/save_file_input/");
-}
+// bool save_file(const std::string& fpath, const std::string& data) {
+//  auto dir = filesystem::path(fpath);
+//  dir.replace_filename("");
+//
+//  if (!filesystem::create_directories(dir))
+//    return false;
+//
+//  std::ofstream file(fpath, std::ios::out | std::ios::binary | std::ios::ate);
+//  file << (data.empty() ? fpath : data) << std::endl;
+//  file.close();
+//  return true;
+//}
 
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
   valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
@@ -231,34 +217,6 @@ void parallel_call(const std::function<void(const std::string&, const T&)>& func
   std::for_each(std::begin(threads), std::end(threads), [](auto& thread) { thread.join(); });
 }
 
-void clear(const std::string& path) {
-  if (!filesystem::exists(path))
-    return;
-  if (!filesystem::is_directory(path)) {
-    filesystem::remove(path);
-    return;
-  }
-  for (filesystem::recursive_directory_iterator i(path), end; i != end; ++i) {
-    if (filesystem::exists(i->path()))
-      filesystem::remove_all(i->path());
-  }
-}
-
-TEST(ElevationBuilder, clear) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
-                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
-                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
-
-  for (const auto& test : tests)
-    (void)save_file(test);
-
-  EXPECT_FALSE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
-
-  clear("/tmp/save_file_input/");
-
-  EXPECT_TRUE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
-}
-
 TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& config = test::
       make_config("test/data",
@@ -291,7 +249,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
-  parallel_call<std::string>(save_file, src_elevations, src_path, {},
+  parallel_call<std::string>(filesystem::save, src_elevations, src_path, {},
                              config.get<std::uint32_t>("mjolnir.concurrency", 1));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
@@ -309,7 +267,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
     ASSERT_FALSE(elev_paths.empty())
         << "FAIL to load any elevations for tile " << params.m_test_tile_names.front();
 
-    clear(dst_dir);
+    filesystem::clear(dst_dir);
   }
 
   for (const auto& elev : src_elevations) {
@@ -320,7 +278,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
         << elev << " NOT FOUND";
   }
 
-  clear(src_path);
+  filesystem::clear(src_path);
 }
 
 } // namespace

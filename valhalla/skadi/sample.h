@@ -83,8 +83,6 @@ protected:
    */
   void add_single_tile(const std::string& path);
 
-  std::string make_single_point_url(const std::string& tile_url, const std::string& fname);
-
   cache_t* cache_;
   friend cache_t;
 
@@ -94,9 +92,9 @@ private:
    * @param coord the single posting at which to sample the datasource
    */
   template <class coord_t> double get_from_cache(const coord_t& coord);
+  bool store(const std::string& elev, const std::vector<char>& raw_data);
 
   std::string url_;
-  std::string remote_path_; // used for testing only
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   std::unordered_set<std::string> st_;
   std::mutex st_lck_;

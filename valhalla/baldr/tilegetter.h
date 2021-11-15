@@ -36,6 +36,11 @@ public:
    * */
   virtual response_t get(const std::string& url) = 0;
 
+  virtual std::string make_single_point_url(const std::string& tile_url,
+                                            const std::string& fname) const = 0;
+  virtual void set_path_pattern(const std::string& pattern) = 0;
+  virtual void set_remote_path(const std::string& path) = 0;
+
   /**
    * Whether tiles are with .gz extension.
    */

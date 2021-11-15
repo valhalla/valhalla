@@ -89,43 +89,6 @@ std::vector<std::string> get_files(const std::string& root_dir) {
   return files;
 }
 
-std::string generate_tmp_suffix() {
-  std::stringstream ss;
-  ss << ".tmp_" << std::this_thread::get_id() << "_"
-     << std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  return ss.str();
-}
-
-void save_to(const std::vector<char>& tile_data, const std::string& fpath) {
-  // At first we save tile to a temporary file and then move it
-  // so we can avoid cases when another thread could read partially written file.
-  auto dir = filesystem::path(fpath);
-  dir.replace_filename("");
-
-  filesystem::path tmp_location;
-  if (filesystem::create_directories(dir)) {
-    // Technically this is a race condition but its super unlikely (famous last words)
-    while (tmp_location.string().empty() || filesystem::exists(tmp_location))
-      tmp_location = fpath + generate_tmp_suffix();
-    std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
-    file.write(tile_data.data(), tile_data.size());
-    file.close();
-
-    if (file.fail()) {
-      LOG_ERROR("Failed to save data into " + fpath);
-      filesystem::remove(tmp_location);
-      return;
-    }
-
-    if (std::rename(tmp_location.c_str(), fpath.c_str())) {
-      LOG_ERROR("Failed to save data into " + fpath);
-      filesystem::remove(tmp_location);
-    }
-  } else {
-    LOG_ERROR("Failed to create directory " + dir.string());
-  }
-}
-
 int16_t flip(int16_t value) {
   return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
 }
@@ -390,7 +353,6 @@ struct cache_t {
   }
 
   tile_data source(uint16_t index);
-  bool store(const std::vector<char>& data, const std::string& elev);
 };
 
 tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
@@ -416,22 +378,6 @@ tile_data& tile_data::operator=(const tile_data& other) {
   if (c && reusable)
     c->increment_usages(index);
   return *this;
-}
-
-bool cache_t::store(const std::vector<char>& raw_data, const std::string& elev) {
-  auto fpath = data_source + elev;
-  if (filesystem::exists(fpath))
-    return true;
-
-  auto data = cache_item_t::parse_hgt_name(elev);
-  if (!data || data->second == format_t::UNKNOWN)
-    return false;
-
-  if (data->first >= cache.size())
-    return false;
-
-  save_to(raw_data, fpath);
-  return cache[data->first].init(fpath, data->second);
 }
 
 tile_data cache_t::source(uint16_t index) {
@@ -509,7 +455,6 @@ sample::sample(const boost::property_tree::ptree& pt)
     : sample(pt.get<std::string>("additional_data.elevation", "")) {
   url_ = pt.get<std::string>("additional_data.elevation_url", "");
   // this line used only for testing check for more details elevation_builder.cc
-  remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
 
   auto max_concurrent_users = pt.get<size_t>("mjolnir.max_concurrent_reader_users", 1);
   remote_loader_ =
@@ -517,6 +462,9 @@ sample::sample(const boost::property_tree::ptree& pt)
                                                   pt.get<std::string>("mjolnir.user_agent", ""),
                                                   pt.get<bool>("additional_data.elevation_url_gz",
                                                                false));
+  remote_loader_->set_remote_path(pt.get<std::string>("additional_data.elevation_dir", ""));
+  remote_loader_->set_path_pattern(kDataPathPattern);
+
   num_threads_ = pt.get<std::uint32_t>("mjolnir.concurrency", 1);
 }
 
@@ -607,13 +555,30 @@ template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
   return tile.get(u, v);
 }
 
+bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
+  auto fpath = cache_->data_source + elev;
+  if (filesystem::exists(fpath))
+    return true;
+
+  auto data = cache_item_t::parse_hgt_name(elev);
+  if (!data || data->second == format_t::UNKNOWN)
+    return false;
+
+  if (data->first >= cache_->cache.size())
+    return false;
+
+  if (!filesystem::save(fpath, raw_data))
+    return false;
+  return cache_->cache[data->first].init(fpath, data->second);
+}
+
 template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   if (url_.empty() || !remote_loader_)
     return get_no_data_value();
 
   auto index = get_tile_index(coord);
   auto elev = get_hgt_file_name(index);
-  auto uri = make_single_point_url(url_, elev);
+  auto uri = remote_loader_->make_single_point_url(url_, elev);
 
   {
     std::lock_guard<std::mutex> _(st_lck_);
@@ -626,6 +591,7 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   LOG_INFO("Start loading data from remote server address: " + uri);
   int repeat{3};
   auto result = remote_loader_->get(uri);
+  /// TODO(kormulev): move this logic to tile_getter_t
   while (repeat-- > 0 && result.status_ != baldr::tile_getter_t::status_code_t::SUCCESS) {
     result = remote_loader_->get(uri);
   }
@@ -635,7 +601,7 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
     return get_no_data_value();
   }
 
-  if (!cache_->store(result.bytes_, elev)) {
+  if (!store(elev, result.bytes_)) {
     LOG_WARN("Fail to save data loaded from remote server address: " + uri);
     return get_no_data_value();
   }
@@ -688,12 +654,6 @@ std::string sample::get_hgt_file_name(uint16_t index) {
   name.append(".hgt");
 
   return name;
-}
-
-std::string sample::make_single_point_url(const std::string& tile_url, const std::string& fname) {
-  auto id_pos = tile_url.find(kDataPathPattern);
-  return tile_url.substr(0, id_pos) + remote_path_ + fname +
-         tile_url.substr(id_pos + std::strlen(kDataPathPattern));
 }
 
 // explicit instantiations for templated get
