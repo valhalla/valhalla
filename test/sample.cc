@@ -2,7 +2,6 @@
 #include "pixels.h"
 
 #include "baldr/compression_utils.h"
-#include "baldr/curl_tilegetter.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
@@ -201,6 +200,21 @@ TEST(Sample, hgt_file_name) {
   const auto amsterdam_index =
       testable_sample_t::get_tile_index(midgard::PointLL{4.898484, 52.380697});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
+}
+
+TEST(Sample, store) {
+  // make sure there is no data there
+  { std::ofstream file("test/data/sample/N00/N00E005.hgt", std::ios::binary | std::ios::trunc); }
+  skadi::sample s("test/data/sample");
+
+  EXPECT_TRUE(s.store("test/data/sample/N00/N00E005.hgt", {}));
+  EXPECT_TRUE(s.store("/etc/store/N00/N00E005.hgt.gz", {}));
+
+  // can be archived only with ".gz" format.
+  EXPECT_FALSE(s.store("test/data/sample/N00/N00E005.hgt.tar", {}));
+
+  // empty file
+  EXPECT_FALSE(s.store("test/data/sample/N00/N00E006.hgt", {}));
 }
 
 } // namespace

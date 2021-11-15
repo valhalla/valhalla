@@ -40,22 +40,6 @@ const constexpr char* kDataPathPattern = "{DataPath}";
 // macro is faster than inline function for this...
 #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
 
-// std::vector<std::string> get_files(const std::string& root_dir) {
-//  std::vector<std::string> files;
-//  if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
-//    for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-//      if (i->is_regular_file() || i->is_symlink()) {
-//        files.push_back(i->path().string());
-//      }
-//    }
-//  }
-//  // couldn't get data
-//  if (files.empty()) {
-//    LOG_WARN(root_dir + " currently has no elevation tiles");
-//  }
-//  return files;
-//}
-
 int16_t flip(int16_t value) {
   return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
 }

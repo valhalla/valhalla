@@ -505,8 +505,6 @@ inline std::string generate_tmp_suffix() {
  * @brief Saves data to the path.
  * @attention Will replace the contents in case if fpath already exists.
  * */
-// template <typename T>
-// inline bool save(const std::string& fpath, const T& data) {
 inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
   if (fpath.empty())
     return false;
@@ -542,19 +540,19 @@ inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
 /**
  * @brief Removes all the content of the directory.
  * */
-inline void clear(const std::string& dir) {
+inline bool clear(const std::string& dir) {
   if (!filesystem::exists(dir))
-    return;
+    return false;
 
-  if (!filesystem::is_directory(dir)) {
-    filesystem::remove(dir);
-    return;
-  }
+  if (!filesystem::is_directory(dir))
+    return filesystem::remove(dir);
 
   for (filesystem::recursive_directory_iterator i(dir), end; i != end; ++i) {
     if (filesystem::exists(i->path()))
       filesystem::remove_all(i->path());
   }
+
+  return true;
 }
 
 /**

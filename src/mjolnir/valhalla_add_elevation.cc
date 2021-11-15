@@ -19,7 +19,7 @@ using namespace valhalla::mjolnir;
 enum Input { CONFIG, TILES };
 
 /*
- * This service downloads elevations from remote storage for each provided tile.
+ * This program downloads elevations from remote storage for each provided tile.
  * First it checks if the elevation tiles are available locally and
  * in case they are not it tries to download them from a remote storage.
  * Remote storage address should be given in a configuration file.

@@ -18,17 +18,14 @@
 
 namespace {
 
-template <typename T>
-void parallel_call(const std::function<bool(const std::string&, const T&)>& func =
-                       std::function<bool(const std::string&, const T&)>(),
-                   std::vector<std::string> st = {},
-                   const std::string& path = {},
-                   const T& param = {},
-                   std::uint32_t num_threads = 1);
-// void clear(const std::string& path);
+// template <typename T>
+// void parallel_call(const std::function<bool(const std::string&, const T&)>& func =
+//                       std::function<bool(const std::string&, const T&)>(),
+//                   std::vector<std::string> st = {},
+//                   const std::string& path = {},
+//                   const T& param = {},
+//                   std::uint32_t num_threads = 1);
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
-std::string remove_pattern(const std::string& root_dir, const std::string& filepath);
-// bool save_file(const std::string& fpath, const std::string& data = {});
 
 // meters to resample shape to.
 // see elevationbuilder.cc for details
@@ -105,39 +102,39 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
   return result;
 }
 
-template <typename T>
-void parallel_call(const std::function<bool(const std::string&, const T&)>& func,
-                   std::vector<std::string> st,
-                   const std::string& path,
-                   const T& param,
-                   std::uint32_t num_threads) {
-  if (!func || st.empty())
-    return;
-
-  std::uint32_t size = std::max(1U, std::min(std::thread::hardware_concurrency(), num_threads));
-  std::vector<std::thread> threads;
-  threads.reserve(size);
-  std::mutex m;
-  for (std::size_t i = 0; i < size; ++i) {
-    threads.emplace_back([&]() {
-      while (!st.empty()) {
-        m.lock();
-        if (st.empty()) {
-          m.unlock();
-          return;
-        }
-
-        auto fname = st.back();
-        st.pop_back();
-        m.unlock();
-
-        (void)func(path + fname, param);
-      }
-    });
-  }
-
-  std::for_each(std::begin(threads), std::end(threads), [](auto& thread) { thread.join(); });
-}
+// template <typename T>
+// void parallel_call(const std::function<bool(const std::string&, const T&)>& func,
+//                   std::vector<std::string> st,
+//                   const std::string& path,
+//                   const T& param,
+//                   std::uint32_t num_threads) {
+//  if (!func || st.empty())
+//    return;
+//
+//  std::uint32_t size = std::max(1U, std::min(std::thread::hardware_concurrency(), num_threads));
+//  std::vector<std::thread> threads;
+//  threads.reserve(size);
+//  std::mutex m;
+//  for (std::size_t i = 0; i < size; ++i) {
+//    threads.emplace_back([&]() {
+//      while (!st.empty()) {
+//        m.lock();
+//        if (st.empty()) {
+//          m.unlock();
+//          return;
+//        }
+//
+//        auto fname = st.back();
+//        st.pop_back();
+//        m.unlock();
+//
+//        (void)func(path + fname, param);
+//      }
+//    });
+//  }
+//
+//  std::for_each(std::begin(threads), std::end(threads), [](auto& thread) { thread.join(); });
+//}
 
 TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& config = test::
@@ -171,8 +168,11 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
-  parallel_call<std::vector<char>>(filesystem::save, src_elevations, src_path, {},
-                                   config.get<std::uint32_t>("mjolnir.concurrency", 1));
+  //  parallel_call<std::vector<char>>(filesystem::save, src_elevations, src_path, {},
+  //                                   config.get<std::uint32_t>("mjolnir.concurrency", 1));
+
+  for (const auto& elev : src_elevations)
+    EXPECT_TRUE(filesystem::save(src_path + elev));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   std::unordered_set<std::string> dst_elevations;
@@ -186,18 +186,16 @@ TEST(ElevationBuilder, test_loaded_elevations) {
     for (const auto& elev : elev_paths)
       dst_elevations.insert(elev);
 
-    ASSERT_FALSE(elev_paths.empty())
-        << "FAIL to load any elevations for tile " << params.m_test_tile_names.front();
+    ASSERT_FALSE(elev_paths.empty());
 
     filesystem::clear(dst_dir);
   }
 
   for (const auto& elev : src_elevations) {
-    EXPECT_TRUE(std::find_if(std::begin(dst_elevations), std::end(dst_elevations),
-                             [&elev](const auto& file) {
-                               return file.find(elev) != std::string::npos;
-                             }) != std::end(dst_elevations))
-        << elev << " NOT FOUND";
+    EXPECT_TRUE(
+        std::find_if(std::begin(dst_elevations), std::end(dst_elevations), [&elev](const auto& file) {
+          return file.find(elev) != std::string::npos;
+        }) != std::end(dst_elevations));
   }
 
   filesystem::clear(src_path);

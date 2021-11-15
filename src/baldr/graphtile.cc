@@ -30,15 +30,6 @@ namespace {
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 constexpr float COMPRESSION_HINT = 3.5f;
 
-// std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr::GraphId& graphid)
-// {
-//  auto id_pos = tile_url.find(valhalla::baldr::GraphTile::kTilePathPattern);
-//  return tile_url.substr(0, id_pos) +
-//         valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
-//                                                valhalla::baldr::SUFFIX_NON_COMPRESSED, false) +
-//         tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
-//}
-
 // the point of this function is to avoid race conditions for writing a tile between threads
 // so the easiest thing to do is just use the thread id to differentiate
 std::string GenerateTmpSuffix() {
@@ -218,7 +209,6 @@ void store(const std::string& cache_location,
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
     auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
     filesystem::save(disk_location, raw_data);
-    //    SaveTileToFile(result.bytes_, disk_location);
   }
 }
 
@@ -231,7 +221,6 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  //  auto uri = MakeSingleTileUrl(tile_url, graphid);
   auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
                                                       valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
   tile_getter->set_path_pattern(valhalla::baldr::GraphTile::kTilePathPattern);

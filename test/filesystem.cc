@@ -271,7 +271,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
 }
 
 TEST(ElevationBuilder, clear_valid_input) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
 
@@ -280,9 +280,14 @@ TEST(ElevationBuilder, clear_valid_input) {
 
   EXPECT_FALSE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 
-  filesystem::clear("/tmp/save_file_input/");
+  EXPECT_TRUE(filesystem::clear("/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"));
+  EXPECT_TRUE(filesystem::clear("/tmp/save_file_input/"));
 
   EXPECT_TRUE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
+}
+
+TEST(ElevationBuilder, clear_invalid_input) {
+  EXPECT_FALSE(filesystem::clear(".foobar"));
 }
 
 TEST(ElevationBuilder, substr_front_valid_input) {
@@ -339,6 +344,13 @@ TEST(ElevationBuilder, save_file_valid_input) {
   }
 
   filesystem::clear("/tmp/save_file_input/");
+}
+
+TEST(ElevationBuilder, save_file_invalid_input) {
+  std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/", "foo", "bar"};
+
+  for (const auto& test : tests)
+    EXPECT_FALSE(filesystem::save(test));
 }
 
 TEST(ElevationBuilder, get_files_valid_input) {
