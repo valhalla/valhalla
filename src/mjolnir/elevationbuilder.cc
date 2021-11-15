@@ -35,11 +35,11 @@ constexpr double kMinimumInterval = 10.0f;
 using cache_t =
     std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, float, float, float, float>>;
 
-void add_elevations_to_tile(GraphReader& graphreader,
-                            std::mutex& graphreader_lck,
-                            cache_t& cache,
-                            const std::unique_ptr<valhalla::skadi::sample>& sample,
-                            GraphId& tile_id) {
+void add_elevations_to_single_tile(GraphReader& graphreader,
+                                   std::mutex& graphreader_lck,
+                                   cache_t& cache,
+                                   const std::unique_ptr<valhalla::skadi::sample>& sample,
+                                   GraphId& tile_id) {
   // Get the tile. Serialize the entire tile?
   GraphTileBuilder tilebuilder(graphreader.tile_dir(), tile_id, true);
 
@@ -141,11 +141,11 @@ void add_elevations_to_tile(GraphReader& graphreader,
 /**
  * Adds elevation to a set of tiles. Each thread pulls a tile of the queue
  */
-void apply_elevations_to_tiles(const boost::property_tree::ptree& pt,
-                               std::deque<GraphId>& tilequeue,
-                               std::mutex& lock,
-                               const std::unique_ptr<valhalla::skadi::sample>& sample,
-                               std::promise<uint32_t>& /*result*/) {
+void add_elevations_to_multiple_tiles(const boost::property_tree::ptree& pt,
+                                      std::deque<GraphId>& tilequeue,
+                                      std::mutex& lock,
+                                      const std::unique_ptr<valhalla::skadi::sample>& sample,
+                                      std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -166,7 +166,7 @@ void apply_elevations_to_tiles(const boost::property_tree::ptree& pt,
     tilequeue.pop_front();
     lock.unlock();
 
-    add_elevations_to_tile(graphreader, lock, geo_attribute_cache, sample, tile_id);
+    add_elevations_to_single_tile(graphreader, lock, geo_attribute_cache, sample, tile_id);
   }
 }
 
@@ -200,7 +200,7 @@ bool ElevationBuilder::add_elevations(const std::string& tile,
   std::unique_ptr<skadi::sample> sample = std::make_unique<skadi::sample>(pt);
   std::mutex graphreader_lck;
   cache_t cache;
-  add_elevations_to_tile(reader, graphreader_lck, cache, sample, tile_id);
+  add_elevations_to_single_tile(reader, graphreader_lck, cache, sample, tile_id);
   return true;
 }
 
@@ -247,7 +247,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(apply_elevations_to_tiles, std::cref(pt), std::ref(tilequeue),
+    thread.reset(new std::thread(add_elevations_to_multiple_tiles, std::cref(pt), std::ref(tilequeue),
                                  std::ref(lock), std::ref(sample), std::ref(results.back())));
   }
 

@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <thread>
 #include <vector>
 
 #ifdef _WIN32
@@ -506,7 +507,7 @@ inline std::string generate_tmp_suffix() {
  * */
 // template <typename T>
 // inline bool save(const std::string& fpath, const T& data) {
-inline bool save(const std::string& fpath, const std::vector<char>& data) {
+inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
   if (fpath.empty())
     return false;
 
@@ -527,12 +528,12 @@ inline bool save(const std::string& fpath, const std::vector<char>& data) {
 
   if (file.fail()) {
     filesystem::remove(tmp_location);
-    throw std::runtime_error("Failed to save data into " + fpath);
+    return false;
   }
 
   if (std::rename(tmp_location.c_str(), fpath.c_str())) {
     filesystem::remove(tmp_location);
-    throw std::runtime_error("Failed to save data into " + fpath);
+    return false;
   }
 
   return true;

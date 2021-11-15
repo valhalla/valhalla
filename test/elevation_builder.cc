@@ -19,8 +19,8 @@
 namespace {
 
 template <typename T>
-void parallel_call(const std::function<void(const std::string&, const T&)>& func =
-                       std::function<void(const std::string&, const T&)>(),
+void parallel_call(const std::function<bool(const std::string&, const T&)>& func =
+                       std::function<bool(const std::string&, const T&)>(),
                    std::vector<std::string> st = {},
                    const std::string& path = {},
                    const T& param = {},
@@ -106,7 +106,7 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
 }
 
 template <typename T>
-void parallel_call(const std::function<void(const std::string&, const T&)>& func,
+void parallel_call(const std::function<bool(const std::string&, const T&)>& func,
                    std::vector<std::string> st,
                    const std::string& path,
                    const T& param,
@@ -131,7 +131,7 @@ void parallel_call(const std::function<void(const std::string&, const T&)>& func
         st.pop_back();
         m.unlock();
 
-        (void)func(std::move(path + fname), param);
+        (void)func(path + fname, param);
       }
     });
   }
@@ -171,8 +171,8 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
-  parallel_call<std::string>(filesystem::save, src_elevations, src_path, {},
-                             config.get<std::uint32_t>("mjolnir.concurrency", 1));
+  parallel_call<std::vector<char>>(filesystem::save, src_elevations, src_path, {},
+                                   config.get<std::uint32_t>("mjolnir.concurrency", 1));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   std::unordered_set<std::string> dst_elevations;
@@ -210,9 +210,6 @@ public:
   void SetUp() override {
     valhalla::test_tile_server_t server;
     server.set_url("127.0.0.1:38004");
-    server.set_result_endpoint("ipc:///tmp/http_test_result_endpoint_elev");
-    server.set_request_interrupt("ipc:///tmp/http_test_request_interrupt_elev");
-    server.set_proxy_endpoint("ipc:///tmp/http_test_proxy_endpoint_elev");
     server.start(src_dir, context);
   }
 

@@ -102,23 +102,26 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
 namespace valhalla {
 // static
 void test_tile_server_t::start(const std::string& tile_source_dir, zmq::context_t& context) {
+  // change these to tcp://known.ip.address.with:port if you want to do this across machines
+  std::string result_endpoint{"ipc:///tmp/http_test_result_endpoint" + m_url};
+  std::string request_interrupt{"ipc:///tmp/http_test_request_interrupt" + m_url};
+  std::string proxy_endpoint{"ipc:///tmp/http_test_proxy_endpoint" + m_url};
   // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "tcp://" + m_url, m_proxy_endpoint + "_upstream",
-                              m_result_endpoint, m_request_interrupt, false)));
+  std::thread server(std::bind(&http_server_t::serve,
+                               http_server_t(context, "tcp://" + m_url, proxy_endpoint + "_upstream",
+                                             result_endpoint, request_interrupt, false)));
   server.detach();
 
   // load balancer for file serving
-  std::thread file_proxy(std::bind(&proxy_t::forward, proxy_t(context, m_proxy_endpoint + "_upstream",
-                                                              m_proxy_endpoint + "_downstream")));
+  std::thread file_proxy(std::bind(&proxy_t::forward, proxy_t(context, proxy_endpoint + "_upstream",
+                                                              proxy_endpoint + "_downstream")));
   file_proxy.detach();
 
   // file serving thread
   std::thread file_worker(
       std::bind(&worker_t::work,
-                worker_t(context, m_proxy_endpoint + "_downstream", "ipc:///dev/null",
-                         m_result_endpoint, m_request_interrupt,
+                worker_t(context, proxy_endpoint + "_downstream", "ipc:///dev/null", result_endpoint,
+                         request_interrupt,
                          std::bind(&disk_work, std::placeholders::_1, std::placeholders::_2,
                                    std::placeholders::_3, tile_source_dir))));
   file_worker.detach();
