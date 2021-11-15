@@ -308,10 +308,20 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
     tilebuilder_local.nodes().emplace_back(std::move(new_bss_node));
 
+    const std::vector<std::string> bss_tagged_values {
+        std::string("3") + osm_data.node_names.name(it->osm_node.name_index()),
+        std::string("4") + osm_data.node_names.name(it->osm_node.bss_ref_index()),
+        std::string("5") + osm_data.node_names.name(it->osm_node.bss_network_index()),
+        std::string("6") + osm_data.node_names.name(it->osm_node.bss_capacity_index()),
+        std::string("7") + osm_data.node_names.name(it->osm_node.bss_source_index()),
+        std::string("8") + osm_data.node_names.name(it->osm_node.bss_operator_index())
+    };
+
     for (int j = 0; j < 4; j++) {
       auto& bss_to_waynode = *(it + j);
       bss_to_waynode.bss_node_id = new_bss_node_graphid;
-      bool added;
+      bss_to_waynode.tagged_values.insert(bss_to_waynode.tagged_values.end(), bss_tagged_values.begin(), bss_tagged_values.end());
+      bool added{false};
       auto directededge =
           make_directed_edge(bss_to_waynode.way_node_id, bss_to_waynode.shape, bss_to_waynode,
                              !bss_to_waynode.is_forward_from_waynode, 0);

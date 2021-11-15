@@ -40,7 +40,8 @@ struct MultimodalBuilder {
              const mode_costing_t& mode_costing,
              const AttributesController& controller,
              GraphReader& graphreader) {
-    AddBssNode(trip_node, node, startnode, mode_costing, controller);
+
+    AddBssNode(trip_node, node, startnode, directededge, start_tile, graphtile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
@@ -59,22 +60,52 @@ private:
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId&,
+                  const GraphId& gid,
+                  const DirectedEdge* directededge,
+                  graph_tile_ptr start_tile,
+                  graph_tile_ptr graphtile,
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
+
+
     auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
     auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
 
     if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
+
+      EdgeInfo edgeinfo = start_tile->edgeinfo(directededge);
+      auto taggedValue = edgeinfo.GetTags();
+
       auto* bss_station_info = trip_node->mutable_bss_info();
       // TODO: import more BSS data, can be used to display capacity in real time
-      bss_station_info->set_name("BSS 42");
-      bss_station_info->set_ref("BSS 42 ref");
-      bss_station_info->set_capacity("42");
-      bss_station_info->set_network("universe");
-      bss_station_info->set_operator_("Douglas");
+      auto tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssName);
+      if(tag_range.first != tag_range.second){
+          bss_station_info->set_name(tag_range.first->second);
+      }
+      tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssCapacity);
+      if(tag_range.first != tag_range.second){
+          bss_station_info->set_capacity(tag_range.first->second);
+      }
+      tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssOperator);
+      if(tag_range.first != tag_range.second){
+          bss_station_info->set_operator_(tag_range.first->second);
+      }
+      tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssNetwork);
+      if(tag_range.first != tag_range.second){
+          bss_station_info->set_network(tag_range.first->second);
+      }
+      tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssRef);
+      if(tag_range.first != tag_range.second){
+          bss_station_info->set_ref(tag_range.first->second);
+      }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      std::cout << bss_station_info->capacity() << std::endl;
+      std::cout << bss_station_info->network() << std::endl;
+      std::cout << bss_station_info->name() << std::endl;
+      std::cout << bss_station_info->ref() << std::endl;
+      std::cout << bss_station_info->operator_() << std::endl;
     }
   }
 

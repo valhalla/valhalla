@@ -1430,16 +1430,28 @@ public:
         n.set_type(NodeType::kBikeShare);
         for (auto& key_value : *results) {
           if (key_value.first == "name" ) {
-            n.set_name_index(osmdata_.node_names.index(key_value.second));
+            n.set_bss_name_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
           }
-          if (key_value.first == "network" ) {
+          else if (key_value.first == "network" ) {
             n.set_bss_network_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
           }
-          if (key_value.first == "ref" ) {
-            n.set_ref_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_ref_count;;
+          else if (key_value.first == "ref" ) {
+            n.set_bss_ref_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
+          }
+          else if (key_value.first == "capacity" ) {
+            n.set_bss_capacity_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
+          }
+          else if (key_value.first == "source" ) {
+            n.set_bss_source_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
+          }
+          else if (key_value.first == "operator" ) {
+            n.set_bss_operator_index(osmdata_.node_names.index(key_value.second));
+            ++osmdata_.node_name_count;
           }
           std::cout << "bss value???? : " << key_value.first << "  " <<  key_value.second << std::endl;
         }

@@ -681,6 +681,61 @@ struct OSMNode {
   uint32_t bss_network_index() const {
     return bss_network_index_;
   }
+
+  void set_bss_capacity_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss capacity index");
+    }
+    bss_capacity_index_ = index;
+  }
+
+  uint32_t bss_capacity_index() const {
+    return bss_capacity_index_;
+  }
+
+  void set_bss_name_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss name index");
+    }
+    bss_name_index_ = index;
+  }
+
+  uint32_t bss_name_index() const {
+    return bss_name_index_;
+  }
+
+  void set_bss_operator_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss operator index");
+    }
+    bss_operator_index_ = index;
+  }
+
+  uint32_t bss_operator_index() const {
+    return bss_operator_index_;
+  }
+
+  void set_bss_ref_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss ref index");
+    }
+    bss_ref_index_ = index;
+  }
+
+  uint32_t bss_ref_index() const {
+    return bss_ref_index_;
+  }
+
+  void set_bss_source_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss source index");
+    }
+    bss_source_index_ = index;
+  }
+
+  uint32_t bss_source_index() const {
+    return bss_source_index_;
+  }
 };
 
 } // namespace mjolnir
