@@ -270,7 +270,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   }
 }
 
-TEST(ElevationBuilder, clear) {
+TEST(ElevationBuilder, clear_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
@@ -278,23 +278,76 @@ TEST(ElevationBuilder, clear) {
   for (const auto& test : tests)
     (void)filesystem::save(test);
 
-  EXPECT_FALSE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+  EXPECT_FALSE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 
   filesystem::clear("/tmp/save_file_input/");
 
-  EXPECT_TRUE(get_files("/tmp/save_file_input/utrecht_tiles").empty());
+  EXPECT_TRUE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 }
 
-TEST(ElevationBuilder, save_file_input) {
+TEST(ElevationBuilder, substr_front_valid_input) {
+    struct test_desc {
+        std::string path;
+        std::string remove_pattern;
+        std::string res;
+    };
+    std::vector<test_desc> tests = {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp",
+                                     "/valhalla-internal/build/test/data/utrecht_tiles", "/0/003/196.gp"},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/305.gph",
+                                     "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/305.gph"},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
+                                     "/valhalla-internal/build/test/data/utrecht_tiles", "/2/000/818/660.gph"},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp",
+                                     "","/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp"},
+                                    {"", "/valhalla-internal/build/test/data/utrecht_tiles", ""},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
+                                     "/tmp", "/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph"}};
+
+    for ( const auto &test : tests)
+        EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
+}
+
+TEST(ElevationBuilder, substr_front_invalid_input) {
+    struct test_desc {
+        std::string path;
+        std::string remove_pattern;
+        std::string res;
+    };
+
+    std::vector<test_desc> tests = {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", "1", "96.gph"},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/3o5.gph",
+                                     "/valhalla-internal/build/test/data/utrecht_tiles","/1/051/3o5.gph"},
+                                    {"$", "/valhalla-internal/build/test/data/utrecht_tiles", "$"},
+                                    {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph",
+                                     "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", ""}};
+
+    for (const auto& test : tests)
+        EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
+}
+
+TEST(ElevationBuilder, save_file_valid_input) {
+    std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+    std::size_t cnt{1};
+    for (const auto& test : tests) {
+        EXPECT_TRUE(filesystem::save(test));
+        EXPECT_EQ(get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+    }
+
+    filesystem::clear("/tmp/save_file_input/");
+}
+
+TEST(ElevationBuilder, get_files_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
 
   std::size_t cnt{1};
-  valhalla::baldr::curl_tile_getter_t tile_getter{1, "", false};
   for (const auto& test : tests) {
-    EXPECT_TRUE(tile_getter.save(test));
-    EXPECT_EQ(get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+    EXPECT_TRUE(filesystem::save(test));
+    EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 
   filesystem::clear("/tmp/save_file_input/");

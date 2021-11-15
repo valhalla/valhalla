@@ -25,7 +25,6 @@ void parallel_call(const std::function<void(const std::string&, const T&)>& func
                    const std::string& path = {},
                    const T& param = {},
                    std::uint32_t num_threads = 1);
-std::vector<std::string> get_files(const std::string& root_dir, bool full_path = false);
 // void clear(const std::string& path);
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
 std::string remove_pattern(const std::string& root_dir, const std::string& filepath);
@@ -47,7 +46,7 @@ struct ElevationDownloadTestData {
 
   void load_tiles() {
     std::unordered_set<std::string> seen;
-    for (auto&& ftile : get_files(m_dir_dst)) {
+    for (auto&& ftile : filesystem::get_files(m_dir_dst)) {
       if (ftile.find("gph") != std::string::npos && !seen.count(ftile)) {
         seen.insert(ftile);
         m_test_tile_names.push_back(std::move(ftile));
@@ -68,83 +67,6 @@ struct TestableSample : public valhalla::skadi::sample {
     return valhalla::skadi::sample::get_hgt_file_name(index);
   }
 };
-
-std::string remove_pattern(const std::string& dir, const std::string& filepath) {
-  if (dir.empty() || filepath.empty())
-    return filepath;
-
-  auto pos = filepath.find(dir);
-  if (pos == std::string::npos)
-    return filepath;
-  return filepath.substr(pos + dir.size());
-}
-
-TEST(ElevationBuilder, remove_pattern_valid_input) {
-  struct test_desc {
-    std::string path;
-    std::string remove_pattern;
-    std::string res;
-  };
-  std::vector<test_desc> tests =
-      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp",
-        "/valhalla-internal/build/test/data/utrecht_tiles", "/0/003/196.gp"},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/305.gph",
-        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/305.gph"},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
-        "/valhalla-internal/build/test/data/utrecht_tiles", "/2/000/818/660.gph"},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp", "",
-        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp"},
-       {"", "/valhalla-internal/build/test/data/utrecht_tiles", ""},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph", "/tmp",
-        "/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph"}};
-
-  for (const auto& test : tests)
-    EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
-}
-
-TEST(ElevationBuilder, remove_pattern_invalid_input) {
-  struct test_desc {
-    std::string path;
-    std::string remove_pattern;
-    std::string res;
-  };
-
-  std::vector<test_desc> tests =
-      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", "1", "96.gph"},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/3o5.gph",
-        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/3o5.gph"},
-       {"$", "/valhalla-internal/build/test/data/utrecht_tiles", "$"},
-       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph",
-        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", ""}};
-
-  for (const auto& test : tests)
-    EXPECT_EQ(remove_pattern(test.remove_pattern, test.path), test.res);
-}
-
-std::vector<std::string> get_files(const std::string& root_dir, bool full_path) {
-  std::vector<std::string> files;
-  for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-    if (i->is_regular_file() || i->is_symlink()) {
-      auto file_path = full_path ? i->path().string() : remove_pattern(root_dir, i->path().string());
-      files.push_back(file_path);
-    }
-  }
-
-  return files;
-}
-
-// bool save_file(const std::string& fpath, const std::string& data) {
-//  auto dir = filesystem::path(fpath);
-//  dir.replace_filename("");
-//
-//  if (!filesystem::create_directories(dir))
-//    return false;
-//
-//  std::ofstream file(fpath, std::ios::out | std::ios::binary | std::ios::ate);
-//  file << (data.empty() ? fpath : data) << std::endl;
-//  file.close();
-//  return true;
-//}
 
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
   valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
@@ -259,7 +181,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
                                                               config);
 
     ASSERT_TRUE(filesystem::exists(dst_dir));
-    const auto& elev_paths = get_files(dst_dir, true);
+    const auto& elev_paths = filesystem::get_files(dst_dir, true);
 
     for (const auto& elev : elev_paths)
       dst_elevations.insert(elev);
