@@ -784,19 +784,15 @@ TEST(GraphParser, TestImportBssNode) {
     EdgeInfo edgeinfo = local_tile->edgeinfo(directededge);
     auto taggedValue = edgeinfo.GetTags();
 
-    auto findTag = [&taggedValue](valhalla::baldr::TaggedValue tag, const std::string& value) {
-      auto search = taggedValue.equal_range(tag);
-      ASSERT_NE(search.first, search.second)
-          << "BSS Tag " << static_cast<uint8_t>(tag) << " not found in EdgeInfo";
-      auto find = std::find_if(search.first, search.second,
-                               [&value](const auto& v) { return v.second == value; });
-      ASSERT_NE(find, search.second);
-    };
+    auto search = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
+    ASSERT_NE(search.first, search.second) << "BSS Tag TaggedValue::kBssInfo not found in EdgeInfo";
+    valhalla::BikeShareStationInfo bss_station_info;
+    bss_station_info.ParseFromString(search.first->second);
 
-    findTag(valhalla::baldr::TaggedValue::kBssRef, "2");
-    findTag(valhalla::baldr::TaggedValue::kBssNetwork, "Atac Bikesharing");
-    findTag(valhalla::baldr::TaggedValue::kBssCapacity, "13");
-    findTag(valhalla::baldr::TaggedValue::kBssOperator, "ATAC");
+    ASSERT_EQ(bss_station_info.ref(), "2");
+    ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
+    ASSERT_EQ(bss_station_info.capacity(), "13");
+    ASSERT_EQ(bss_station_info.operator_(), "ATAC");
   };
 
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();

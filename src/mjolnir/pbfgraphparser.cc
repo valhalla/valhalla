@@ -26,6 +26,7 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "mjolnir/timeparsing.h"
+#include <valhalla/proto/directions.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1429,27 +1430,27 @@ public:
         OSMNode n{osmid};
         n.set_latlng(lng, lat);
         n.set_type(NodeType::kBikeShare);
+        valhalla::BikeShareStationInfo bss_info;
+
         for (auto& key_value : *results) {
           if (key_value.first == "name") {
-            n.set_bss_name_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
+            bss_info.set_name(key_value.second);
           } else if (key_value.first == "network") {
-            n.set_bss_network_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
+            bss_info.set_network(key_value.second);
           } else if (key_value.first == "ref") {
-            n.set_bss_ref_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
+            bss_info.set_ref(key_value.second);
           } else if (key_value.first == "capacity") {
-            n.set_bss_capacity_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
-          } else if (key_value.first == "source") {
-            n.set_bss_source_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
+            bss_info.set_capacity(key_value.second);
           } else if (key_value.first == "operator") {
-            n.set_bss_operator_index(osmdata_.node_names.index(key_value.second));
-            ++osmdata_.node_name_count;
+            bss_info.set_operator_(key_value.second);
           }
         }
+
+        std::string buffer;
+        bss_info.SerializeToString(&buffer);
+        n.set_bss_info_index(osmdata_.node_names.index(buffer));
+        ++osmdata_.node_name_count;
+
         bss_nodes_->push_back(n);
         return; // we are done.
       }
@@ -1465,12 +1466,10 @@ public:
     // for then it must be in another pbf file. so we need to move on to the next waynode that could
     // possibly actually be in this pbf file
     if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
-      current_way_node_index_ =
-          way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                    [](const OSMWayNode& a, const OSMWayNode& b) {
-                                      return a.node.osmid_ <= b.node.osmid_;
-                                    },
-                                    current_way_node_index_);
+      current_way_node_index_ = way_nodes_->find_first_of(
+          OSMWayNode{{osmid}},
+          [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ <= b.node.osmid_; },
+          current_way_node_index_);
     }
 
     // if this nodes id is less than the waynode we are looking for then we know its a node we can

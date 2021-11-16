@@ -308,25 +308,12 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
       return std::string(1, static_cast<std::string::value_type>(tag));
     };
 
-    const std::vector<std::string>
-        bss_tagged_values{encode_tag(TaggedValue::kBssName) +
-                              osm_data.node_names.name(it->osm_node.name_index()),
-                          encode_tag(TaggedValue::kBssRef) +
-                              osm_data.node_names.name(it->osm_node.bss_ref_index()),
-                          encode_tag(TaggedValue::kBssNetwork) +
-                              osm_data.node_names.name(it->osm_node.bss_network_index()),
-                          encode_tag(TaggedValue::kBssCapacity) +
-                              osm_data.node_names.name(it->osm_node.bss_capacity_index()),
-                          encode_tag(TaggedValue::kBssSource) +
-                              osm_data.node_names.name(it->osm_node.bss_source_index()),
-                          encode_tag(TaggedValue::kBssOperator) +
-                              osm_data.node_names.name(it->osm_node.bss_operator_index())};
-
     for (int j = 0; j < 4; j++) {
       auto& bss_to_waynode = *(it + j);
       bss_to_waynode.bss_node_id = new_bss_node_graphid;
-      bss_to_waynode.tagged_values.insert(bss_to_waynode.tagged_values.end(),
-                                          bss_tagged_values.begin(), bss_tagged_values.end());
+      bss_to_waynode.tagged_values.push_back(encode_tag(TaggedValue::kBssInfo) +
+                                             osm_data.node_names.name(it->osm_node.bss_info_index()));
+
       bool added{false};
       auto directededge =
           make_directed_edge(bss_to_waynode.way_node_id, bss_to_waynode.shape, bss_to_waynode,
