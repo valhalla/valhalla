@@ -752,7 +752,7 @@ TEST(GraphParser, TestImportBssNode) {
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, pronunciation_file, tiles);
 
-  BssBuilder::Build(conf, bss_nodes_file);
+  BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
   auto local_level = TileHierarchy::levels().back().level;
 
