@@ -765,8 +765,8 @@ TEST(GraphParser, TestImportBssNode) {
   EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 4)
       << "The bike share node must have 4 outbound edges";
 
-  auto check_edge_attribute = [](const DirectedEdge* directededge, uint16_t forwardaccess,
-                                 uint16_t reverseaccess) {
+  auto check_edge_attribute = [&local_tile](const DirectedEdge* directededge, uint16_t forwardaccess,
+                                            uint16_t reverseaccess) {
     EXPECT_TRUE(directededge->bss_connection())
         << "The bike share node's edges is not a bss connection";
     EXPECT_TRUE(directededge->forwardaccess() & forwardaccess)
@@ -780,6 +780,23 @@ TEST(GraphParser, TestImportBssNode) {
     EXPECT_EQ(directededge->classification(), RoadClass::kResidential)
         << "The edges' road calss is incorrect";
     EXPECT_EQ(directededge->use(), Use::kRoad) << "The edges' use is incorrect";
+
+    EdgeInfo edgeinfo = local_tile->edgeinfo(directededge);
+    auto taggedValue = edgeinfo.GetTags();
+
+    auto findTag = [&taggedValue](valhalla::baldr::TaggedValue tag, const std::string& value) {
+      auto search = taggedValue.equal_range(tag);
+      ASSERT_NE(search.first, search.second)
+          << "BSS Tag " << static_cast<uint8_t>(tag) << " not found in EdgeInfo";
+      auto find = std::find_if(search.first, search.second,
+                               [&value](const auto& v) { return v.second == value; });
+      ASSERT_NE(find, search.second);
+    };
+
+    findTag(valhalla::baldr::TaggedValue::kBssRef, "2");
+    findTag(valhalla::baldr::TaggedValue::kBssNetwork, "Atac Bikesharing");
+    findTag(valhalla::baldr::TaggedValue::kBssCapacity, "13");
+    findTag(valhalla::baldr::TaggedValue::kBssOperator, "ATAC");
   };
 
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();
