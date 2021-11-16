@@ -360,16 +360,17 @@ inline std::string to_string(Use u) {
 enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kLayer = 1,
   kPronunciation = 2,
+  kBssName = 3,
+  kBssRef = 4,
+  kBssNetwork = 5,
+  kBssCapacity = 6,
+  kBssSource = 7,
+  kBssOperator = 8,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),
   kBridge = static_cast<uint8_t>('2'),
-  kBssName = static_cast<uint8_t>('3'),
-  kBssRef = static_cast<uint8_t>('4'),
-  kBssNetwork = static_cast<uint8_t>('5'),
-  kBssCapacity = static_cast<uint8_t>('6'),
-  kBssSource = static_cast<uint8_t>('7'),
-  kBssOperator = static_cast<uint8_t>('8'),
+
 };
 
 enum class PronunciationAlphabet : uint8_t {
