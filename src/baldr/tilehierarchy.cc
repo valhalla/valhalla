@@ -6,23 +6,42 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
+// # level 0:  180
+// # level 1:  90
+// # level 2:  45
+// # level 3:  22.5
+// # level 4:  11.25
+// # level 5:  5.625
+// # level 6:  2.8125
+// # level 7:  1.40625
+// # level 8:  0.703125
+// # level 9:  0.3515625
+// # level 10: 0.17578125
+// # level 11: 0.087890625
+// # level 12: 0.0439453125
+// # level 13: 0.02197265625
+
 const std::vector<TileLevel>& TileHierarchy::levels() {
   // Static tile levels
   static const std::vector<TileLevel> levels_ = {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 4,
+                                                 //  4,
+                                                 5.625, //  NDS Level 5
+                                                 // 2.8125, //  NDS Level 6
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 1,
+                                                 //  1,
+                                                 1.40625, // NDS Level 7
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 .25,
+                                                 //  .25,
+                                                 0.02197265625, // NDS Level 13
                                                  static_cast<unsigned short>(kBinsDim)}},
   };
 
@@ -34,7 +53,8 @@ const TileLevel& TileHierarchy::GetTransitLevel() {
   static const TileLevel transit_level_ =
       {3, stringToRoadClass("ServiceOther"), "transit",
        midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                        .25,
+                                        // .25,
+                                        0.02197265625,
                                         static_cast<unsigned short>(kBinsDim)}};
 
   return transit_level_;
