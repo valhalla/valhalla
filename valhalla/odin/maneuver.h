@@ -375,6 +375,9 @@ public:
   bool has_long_street_name() const;
   void set_long_street_name(bool has_long_street_name);
 
+  BikeShareStationInfo bss_info() const;
+  void set_bss_info(const BikeShareStationInfo& bss_info);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -446,6 +449,9 @@ protected:
   bool has_collapsed_small_end_ramp_fork_;
   bool has_collapsed_merge_maneuver_;
   bool has_long_street_name_;
+
+  // Bss support
+  BikeShareStationInfo bss_info_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

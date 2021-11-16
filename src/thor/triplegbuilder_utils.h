@@ -99,12 +99,6 @@ private:
       }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
-      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-      std::cout << bss_station_info->capacity() << std::endl;
-      std::cout << bss_station_info->network() << std::endl;
-      std::cout << bss_station_info->name() << std::endl;
-      std::cout << bss_station_info->ref() << std::endl;
-      std::cout << bss_station_info->operator_() << std::endl;
     }
   }
 
