@@ -66,7 +66,6 @@ private:
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
 
-
     auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
     auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
 
@@ -78,24 +77,24 @@ private:
       auto* bss_station_info = trip_node->mutable_bss_info();
       // TODO: import more BSS data, can be used to display capacity in real time
       auto tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssName);
-      if(tag_range.first != tag_range.second){
-          bss_station_info->set_name(tag_range.first->second);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->set_name(tag_range.first->second);
       }
       tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssCapacity);
-      if(tag_range.first != tag_range.second){
-          bss_station_info->set_capacity(tag_range.first->second);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->set_capacity(tag_range.first->second);
       }
       tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssOperator);
-      if(tag_range.first != tag_range.second){
-          bss_station_info->set_operator_(tag_range.first->second);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->set_operator_(tag_range.first->second);
       }
       tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssNetwork);
-      if(tag_range.first != tag_range.second){
-          bss_station_info->set_network(tag_range.first->second);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->set_network(tag_range.first->second);
       }
       tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssRef);
-      if(tag_range.first != tag_range.second){
-          bss_station_info->set_ref(tag_range.first->second);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->set_ref(tag_range.first->second);
       }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);

@@ -1417,11 +1417,11 @@ public:
       }
       bool is_bss = false;
 
-      if (results.has_value()){
-          auto search = results->find("amenity");
-          if (search != results->end() && search->second == "bicycle_rental"){
-              is_bss = true;
-          }
+      if (results.has_value()) {
+        auto search = results->find("amenity");
+        if (search != results->end() && search->second == "bicycle_rental") {
+          is_bss = true;
+        }
       }
 
       if (is_bss) {
@@ -1430,27 +1430,22 @@ public:
         n.set_latlng(lng, lat);
         n.set_type(NodeType::kBikeShare);
         for (auto& key_value : *results) {
-          if (key_value.first == "name" ) {
+          if (key_value.first == "name") {
             n.set_bss_name_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
-          }
-          else if (key_value.first == "network" ) {
+          } else if (key_value.first == "network") {
             n.set_bss_network_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
-          }
-          else if (key_value.first == "ref" ) {
+          } else if (key_value.first == "ref") {
             n.set_bss_ref_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
-          }
-          else if (key_value.first == "capacity" ) {
+          } else if (key_value.first == "capacity") {
             n.set_bss_capacity_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
-          }
-          else if (key_value.first == "source" ) {
+          } else if (key_value.first == "source") {
             n.set_bss_source_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
-          }
-          else if (key_value.first == "operator" ) {
+          } else if (key_value.first == "operator") {
             n.set_bss_operator_index(osmdata_.node_names.index(key_value.second));
             ++osmdata_.node_name_count;
           }
