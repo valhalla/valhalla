@@ -67,7 +67,6 @@ template <class coord_t> struct closest_first_generator_t {
     auto x = (seed.first - tiles.TileBounds().minx()) / tiles.TileBounds().Width() * subcols;
     auto y = (seed.second - tiles.TileBounds().miny()) / tiles.TileBounds().Height() * subrows;
     int64_t subdivision = static_cast<int64_t>(y) * subcols + static_cast<int64_t>(x);
-    LOG_INFO("closest_first_generator_t : subdivision: " + std::to_string(subdivision));
     queued.emplace(subdivision);
     queue.emplace(std::make_pair(0, subdivision));
     neighbors(subdivision);

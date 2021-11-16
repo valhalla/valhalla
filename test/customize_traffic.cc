@@ -76,6 +76,13 @@ void customize_traffic_fake(const boost::property_tree::ptree& config, const int
       current->breakpoint1 = 255;
       current->overall_encoded_speed = speed >> 1;
       current->encoded_speed1 = speed >> 1;
+    } 
+    // create blockage
+    else if (index % 100000 == 0) { 
+      auto speed = static_cast<int>(graph_tile->GetSpeed(edge, 255, 1) * 0);
+      current->breakpoint1 = 255;
+      current->overall_encoded_speed = speed >> 1;
+      current->encoded_speed1 = speed >> 1;
     }
   };
   test::customize_live_traffic_data(config, generate_traffic);
