@@ -1444,6 +1444,8 @@ public:
           } else if (key_value.first == "operator") {
             bss_info.set_operator_(key_value.second);
           }
+
+          bss_info.set_osm_node_id(std::to_string(osmid));
         }
 
         std::string buffer;
