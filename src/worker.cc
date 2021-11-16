@@ -1132,8 +1132,10 @@ struct statsd_client_t : public Statsd::StatsdClient {
   std::vector<std::string> tags;
 };
 
-service_worker_t::service_worker_t(const boost::property_tree::ptree& config)
-    : interrupt(nullptr), statsd_client(new statsd_client_t(config)) {
+service_worker_t::service_worker_t(const boost::property_tree::ptree& conf) : interrupt(nullptr) {
+  if (conf.count("statsd")) {
+    statsd_client = std::make_unique<statsd_client_t>(conf);
+  }
 }
 service_worker_t::~service_worker_t() {
 }
@@ -1141,18 +1143,19 @@ void service_worker_t::set_interrupt(const std::function<void()>* interrupt_func
   interrupt = interrupt_function;
 }
 void service_worker_t::cleanup() {
-  // sends metrics to statsd server over udp
-  statsd_client->flush();
+  if (statsd_client) {
+    // sends metrics to statsd server over udp
+    statsd_client->flush();
+  }
 }
 void service_worker_t::enqueue_statistics(Api& api) const {
   // nothing to do without stats
-  if (!api.has_info() || api.info().statistics().empty())
+  if (!statsd_client || !api.has_info() || api.info().statistics().empty())
     return;
 
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
     float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
-
     switch (stat.type()) {
       case count:
         statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,
@@ -1176,10 +1179,10 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   // before we are done with the request, if this was not an error we log it was ok
   if (!api.info().error()) {
     const auto& action = Options_Action_Enum_Name(api.options().action());
-
     statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
   }
 }
+
 midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api& api) const {
   // we copy the captures that could go out of scope
   auto start = std::chrono::steady_clock::now();
@@ -1196,8 +1199,10 @@ midgard::Finally<std::function<void()>> service_worker_t::measure_scope_time(Api
 }
 
 void service_worker_t::started() {
-  statsd_client->count("none.info." + service_name() + ".worker_started", 1, 1.f,
-                       statsd_client->tags);
+  if (statsd_client) {
+    statsd_client->count("none.info." + service_name() + ".worker_started", 1, 1.f,
+                         statsd_client->tags);
+  }
 }
 
 } // namespace valhalla
