@@ -59,6 +59,7 @@ void test_request(const std::string& request,
                   const std::vector<std::string>& expected_route,
                   // We mark only the maneuvers that are RentBike and ReturnBike
                   const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
+                  const std::map<size_t, std::string>& expected_bss_osm_node_id = {},
                   const boost::optional<const std::string&>& expected_shape = {}) {
 
   route_tester tester;
@@ -98,6 +99,11 @@ void test_request(const std::string& request,
       } else {
         EXPECT_EQ(m.bss_maneuver_type(), it->second)
             << "BSS maneuver type at " + std::to_string(idx) + " is incorrect";
+      }
+      auto search = expected_bss_osm_node_id.find(idx);
+      if (search != expected_bss_osm_node_id.end()) {
+        EXPECT_EQ(m.bss_info().osm_node_id(), search->second)
+            << "bss_info.osm_node_id at " + std::to_string(idx) + " is incorrect";
       }
       travel_modes.push_back(m.travel_mode());
       std::string name;
@@ -150,8 +156,10 @@ TEST(AstarBss, test_With_Mode_Changes) {
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
                             {9, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+  const std::map<size_t, std::string>& expected_bss_osm_node_id{{2, "5882629462"}, {9, "6438006191"}};
 
-  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver);
+  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
+               expected_bss_osm_node_id);
 }
 
 /*
@@ -232,8 +240,11 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{1, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
                             {10, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+  const std::map<size_t, std::string>& expected_bss_osm_node_id{{1, "6440839676"},
+                                                                {10, "6438006191"}};
 
-  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver);
+  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
+               expected_bss_osm_node_id);
 }
 
 // When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
@@ -332,10 +343,14 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
                             {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
+  const std::map<size_t, std::string>& expected_bss_osm_node_id{{2, "5882629462"},
+                                                                {11, "6389594181"}};
+
   std::string expected_shape =
       "e~le|A_ldoCyD~IoAtCkArC]z@kBpEeAsAdArAjBqE\\{@jAsCad@ai@yAgBo@iCuF_Ua@_B[uAyQgz@i@cCwAt@mg@bXyt@b`@yCvAyBqH{EgLiCvEoD|G{\\`r@wFqHoPqTy@gAyAkBe@o@i@q@{D_CeB{@wCfC{XfVt@jCjA~Dn@xB?lBcA|BV\\f@r@wBlE";
 
-  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver, expected_shape);
+  test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
+               expected_bss_osm_node_id, expected_shape);
 }
 
 class AstarBSSTest : public thor::AStarBSSAlgorithm {
