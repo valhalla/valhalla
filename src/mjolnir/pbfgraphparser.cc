@@ -1418,46 +1418,43 @@ public:
       }
       bool is_bss = false;
 
-      if (results.has_value()) {
-        auto search = results->find("amenity");
-        if (search != results->end() && search->second == "bicycle_rental") {
-          is_bss = true;
-        }
+      // bail if there is nothing bike related
+      Tags::const_iterator found;
+      if (!results.has_value() || (found = results->find("amenity")) == results->end() ||
+          found->second != "bicycle_rental") {
+        return;
       }
 
-      if (is_bss) {
-        // Create a new node and set its attributes
-        OSMNode n{osmid};
-        n.set_latlng(lng, lat);
-        n.set_type(NodeType::kBikeShare);
-        valhalla::BikeShareStationInfo bss_info;
+      // Create a new node and set its attributes
+      OSMNode n{osmid};
+      n.set_latlng(lng, lat);
+      n.set_type(NodeType::kBikeShare);
+      valhalla::BikeShareStationInfo bss_info;
 
-        for (auto& key_value : *results) {
-          if (key_value.first == "name") {
-            bss_info.set_name(key_value.second);
-          } else if (key_value.first == "network") {
-            bss_info.set_network(key_value.second);
-          } else if (key_value.first == "ref") {
-            bss_info.set_ref(key_value.second);
-          } else if (key_value.first == "capacity") {
-            auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
-            if (capacity > 0) {
-              bss_info.set_capacity(capacity);
-            }
-          } else if (key_value.first == "operator") {
-            bss_info.set_operator_(key_value.second);
+      for (auto& key_value : *results) {
+        if (key_value.first == "name") {
+          bss_info.set_name(key_value.second);
+        } else if (key_value.first == "network") {
+          bss_info.set_network(key_value.second);
+        } else if (key_value.first == "ref") {
+          bss_info.set_ref(key_value.second);
+        } else if (key_value.first == "capacity") {
+          auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
+          if (capacity > 0) {
+            bss_info.set_capacity(capacity);
           }
+        } else if (key_value.first == "operator") {
+          bss_info.set_operator_(key_value.second);
         }
-
-        std::string buffer;
-        bss_info.SerializeToString(&buffer);
-        n.set_bss_info_index(osmdata_.node_names.index(buffer));
-        ++osmdata_.node_name_count;
-
-        bss_nodes_->push_back(n);
-        return; // we are done.
       }
-      return; // not found
+
+      std::string buffer;
+      bss_info.SerializeToString(&buffer);
+      n.set_bss_info_index(osmdata_.node_names.index(buffer));
+      ++osmdata_.node_name_count;
+
+      bss_nodes_->push_back(n);
+      return; // we are done.
     }
 
     // if we found all of the node ids we were looking for already we can bail
