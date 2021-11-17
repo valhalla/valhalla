@@ -1416,7 +1416,6 @@ public:
       } else {
         results = empty_node_results_;
       }
-      bool is_bss = false;
 
       // bail if there is nothing bike related
       Tags::const_iterator found;
