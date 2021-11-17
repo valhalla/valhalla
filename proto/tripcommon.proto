@@ -120,7 +120,6 @@ message BikeShareStationInfo {
   optional string operator = 5;
   optional float rent_cost = 6;
   optional float return_cost = 7;
-  optional string osm_node_id = 8;
 }
 
 message TransitPlatformInfo {

@@ -1446,8 +1446,6 @@ public:
           }
         }
 
-        bss_info.set_osm_node_id(std::to_string(osmid));
-
         std::string buffer;
         bss_info.SerializeToString(&buffer);
         n.set_bss_info_index(osmdata_.node_names.index(buffer));
