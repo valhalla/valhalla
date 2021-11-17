@@ -789,7 +789,6 @@ TEST(GraphParser, TestImportBssNode) {
     valhalla::BikeShareStationInfo bss_station_info;
     bss_station_info.ParseFromString(search.first->second);
 
-    ASSERT_EQ(bss_station_info.osm_node_id(), "1633926270");
     ASSERT_EQ(bss_station_info.ref(), "2");
     ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
     ASSERT_EQ(bss_station_info.capacity(), "13");
