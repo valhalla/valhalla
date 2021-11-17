@@ -1440,7 +1440,10 @@ public:
           } else if (key_value.first == "ref") {
             bss_info.set_ref(key_value.second);
           } else if (key_value.first == "capacity") {
-            bss_info.set_capacity(key_value.second);
+            auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
+            if (capacity > 0) {
+              bss_info.set_capacity(capacity);
+            }
           } else if (key_value.first == "operator") {
             bss_info.set_operator_(key_value.second);
           }

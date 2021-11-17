@@ -791,7 +791,7 @@ TEST(GraphParser, TestImportBssNode) {
 
     ASSERT_EQ(bss_station_info.ref(), "2");
     ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
-    ASSERT_EQ(bss_station_info.capacity(), "13");
+    ASSERT_EQ(bss_station_info.capacity(), 13);
     ASSERT_EQ(bss_station_info.operator_(), "ATAC");
   };
 
