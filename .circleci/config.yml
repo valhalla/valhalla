@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
 
