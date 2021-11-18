@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
+#include <valhalla/mjolnir/osmdata.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -17,7 +18,9 @@ public:
    * @param pt   Property tree containing the hierarchy configuration
    *             and other configuration needed to build bss.
    */
-  static void Build(const boost::property_tree::ptree& pt, const std::string& bss_nodes_bin);
+  static void Build(const boost::property_tree::ptree& pt,
+                    const OSMData& osmdata,
+                    const std::string& bss_nodes_bin);
 };
 
 } // namespace mjolnir

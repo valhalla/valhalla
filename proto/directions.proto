@@ -184,6 +184,7 @@ message DirectionsLeg {
     repeated GuidanceView guidance_views = 35;                   // List of guidance views
     optional BssManeuverType bss_maneuver_type = 36;
     optional string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
+    optional BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
   }
 
   optional uint64 trip_id = 1;
