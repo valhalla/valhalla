@@ -27,21 +27,20 @@ const std::vector<TileLevel>& TileHierarchy::levels() {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 //  4,
-                                                 5.625, //  NDS Level 5
-                                                 // 2.8125, //  NDS Level 6
+                                                 4,
+                                                 //  5.625, //  NDS Level 5
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 //  1,
-                                                 1.40625, // NDS Level 7
+                                                 1,
+                                                 //  1.40625, // NDS Level 7
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 //  .25,
-                                                 0.02197265625, // NDS Level 13
+                                                 .25,
+                                                 //  0.02197265625, // NDS Level 13
                                                  static_cast<unsigned short>(kBinsDim)}},
   };
 
@@ -53,8 +52,8 @@ const TileLevel& TileHierarchy::GetTransitLevel() {
   static const TileLevel transit_level_ =
       {3, stringToRoadClass("ServiceOther"), "transit",
        midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                        // .25,
-                                        0.02197265625,
+                                        .25,
+                                        // 0.02197265625,
                                         static_cast<unsigned short>(kBinsDim)}};
 
   return transit_level_;

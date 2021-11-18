@@ -73,7 +73,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // something to measure the closest possible point of a subdivision from the given seed point
-  double dist(int32_t sub) {
+  double dist(int64_t sub) {
     auto x = sub % subcols;
     auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
     auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
