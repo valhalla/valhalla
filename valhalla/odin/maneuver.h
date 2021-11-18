@@ -375,7 +375,7 @@ public:
   bool has_long_street_name() const;
   void set_long_street_name(bool has_long_street_name);
 
-  BikeShareStationInfo bss_info() const;
+  const BikeShareStationInfo& bss_info() const;
   void set_bss_info(const BikeShareStationInfo& bss_info);
 
 #ifdef LOGGING_LEVEL_TRACE

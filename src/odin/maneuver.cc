@@ -1119,7 +1119,7 @@ void Maneuver::set_long_street_name(bool has_long_street_name) {
   has_long_street_name_ = has_long_street_name;
 }
 
-BikeShareStationInfo Maneuver::bss_info() const {
+const BikeShareStationInfo& Maneuver::bss_info() const {
   return bss_info_;
 }
 
