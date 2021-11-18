@@ -44,7 +44,7 @@ TEST(Filesystem, regular_file) {
 }
 
 void try_mkdir(const std::string& p) {
-  ASSERT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory";
+  ASSERT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory " << p;
 }
 
 TEST(Filesystem, recursive_directory_listing) {
@@ -270,7 +270,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   }
 }
 
-TEST(ElevationBuilder, clear_valid_input) {
+TEST(Filesystem, clear_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
@@ -286,11 +286,11 @@ TEST(ElevationBuilder, clear_valid_input) {
   EXPECT_TRUE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 }
 
-TEST(ElevationBuilder, clear_invalid_input) {
+TEST(Filesystem, clear_invalid_input) {
   EXPECT_FALSE(filesystem::clear(".foobar"));
 }
 
-TEST(ElevationBuilder, substr_front_valid_input) {
+TEST(Filesystem, substr_front_valid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -313,7 +313,7 @@ TEST(ElevationBuilder, substr_front_valid_input) {
     EXPECT_EQ(filesystem::substr_front(test.remove_pattern, test.path), test.res);
 }
 
-TEST(ElevationBuilder, substr_front_invalid_input) {
+TEST(Filesystem, substr_front_invalid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -332,7 +332,7 @@ TEST(ElevationBuilder, substr_front_invalid_input) {
     EXPECT_EQ(filesystem::substr_front(test.remove_pattern, test.path), test.res);
 }
 
-TEST(ElevationBuilder, save_file_valid_input) {
+TEST(Filesystem, save_file_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
@@ -346,15 +346,15 @@ TEST(ElevationBuilder, save_file_valid_input) {
   filesystem::clear("/tmp/save_file_input/");
 }
 
-TEST(ElevationBuilder, save_file_invalid_input) {
-  std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/", "foo", "bar"};
+TEST(Filesystem, save_file_invalid_input) {
+  std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/"};
 
   for (const auto& test : tests)
-    EXPECT_FALSE(filesystem::save(test));
+    EXPECT_FALSE(filesystem::save(test)) << "FAILED " << test;
 }
 
-TEST(ElevationBuilder, get_files_valid_input) {
-  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+TEST(Filesystem, get_files_valid_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
 

@@ -203,18 +203,46 @@ TEST(Sample, hgt_file_name) {
 }
 
 TEST(Sample, store) {
-  // make sure there is no data there
-  { std::ofstream file("test/data/sample/N00/N00E005.hgt", std::ios::binary | std::ios::trunc); }
+  // create tiles
+  std::vector<int16_t> tile(3601 * 3601, 0);
+  for (const auto& p : pixels) {
+    tile[p.first] = p.second;
+  }
+  std::ofstream file("test/data/sample/N00/N00E005.hgt", std::ios::binary | std::ios::trunc);
+  file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
+             sizeof(int16_t) * tile.size());
+
+  // input for gzip
+  auto src_func = [&tile](z_stream& s) -> int {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    return Z_FINISH;
+  };
+
+  // output for gzip
+  std::vector<char> dst_buffer(13000, 0);
+  std::ofstream gzfile("test/data/samplegz/N00/N00E005.hgt.gz", std::ios::binary | std::ios::trunc);
+  auto dst_func = [&dst_buffer, &gzfile](z_stream& s) -> void {
+    // move these bytes to their final resting place
+    auto chunk = s.total_out - gzfile.tellp();
+    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), chunk);
+    // if more input is coming
+    if (s.avail_in > 0) {
+      s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
+      s.avail_out = dst_buffer.size();
+    }
+  };
+
   skadi::sample s("test/data/sample");
 
-  EXPECT_TRUE(s.store("test/data/sample/N00/N00E005.hgt", {}));
-  EXPECT_TRUE(s.store("/etc/store/N00/N00E005.hgt.gz", {}));
+  EXPECT_TRUE(s.store("/N00/N00E005.hgt", {}));
+  EXPECT_TRUE(s.store("/N00/N00E005.hgt.gz", {}));
 
   // can be archived only with ".gz" format.
-  EXPECT_FALSE(s.store("test/data/sample/N00/N00E005.hgt.tar", {}));
+  EXPECT_FALSE(s.store("/N00/N00E005.hgt.tar", {}));
 
   // empty file
-  EXPECT_FALSE(s.store("test/data/sample/N00/N00E006.hgt", {}));
+  EXPECT_FALSE(s.store("/N00/N00E006.hgt", {}));
 }
 
 } // namespace

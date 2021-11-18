@@ -14,8 +14,7 @@ public:
   /**
    * Add elevation information to the graph tiles.
    */
-  static void Build(const boost::property_tree::ptree& pt);
-  static bool add_elevations(const std::string& tile, const boost::property_tree::ptree& pt);
+  static void Build(const boost::property_tree::ptree& pt, const std::string& tile = {});
 };
 
 } // namespace mjolnir

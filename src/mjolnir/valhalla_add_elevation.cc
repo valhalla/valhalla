@@ -112,10 +112,8 @@ int main(int argc, char** argv) {
 
   boost::property_tree::ptree pt;
   rapidjson::read_json(std::get<Input::CONFIG>(params), pt);
-  for (const auto& tile : tiles) {
-    if (!ElevationBuilder::add_elevations(tile, pt))
-      std::cerr << "Failed to load elevations for tile " << tile << std::endl;
-  }
+  for (const auto& tile : tiles)
+    ElevationBuilder::Build(pt, tile);
 
   return EXIT_SUCCESS;
 }
