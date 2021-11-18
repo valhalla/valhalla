@@ -6,6 +6,7 @@
    * FIXED: Some refactoring that was proposed for the PR 3379 [3381](https://github.com/valhalla/valhalla/pull/3381)
    * FIXED: Avoid calling out "keep left/right" when passing an exit [3349](https://github.com/valhalla/valhalla/pull/3349)
    * FIXED: Fix iterator decrement beyond begin() in GeoPoint::HeadingAtEndOfPolyline() method [#3393](https://github.com/valhalla/valhalla/pull/3393)
+   * FIXED: Add string for Use:kPedestrianCrossing to fix null output in to_string(Use). [#3416](https://github.com/valhalla/valhalla/pull/3416)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
