@@ -236,9 +236,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD
-                       ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
-                       : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
+  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week,
+                                                flow_sources, pred.cost().secs)
+                           : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
 
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)

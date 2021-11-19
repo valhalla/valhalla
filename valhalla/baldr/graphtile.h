@@ -535,13 +535,19 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
+   * @param  travel_time_seconds  Seconds elapsed from the original node to the current edge. Be
+   * careful when setting the value in reverse direction algorithms to use proper one. It affects the
+   * percentage of live-traffic usage on the edge. The bigger travel_time_seconds is set the less
+   * percentage is taken. Currently this parameter is set to 0 when building a route with reverse and
+   * bidirectional a*.
    * @return Returns the speed for the edge.
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
-                           uint8_t* flow_sources = nullptr) const {
+                           uint8_t* flow_sources = nullptr,
+                           const uint32_t travel_time_seconds = 0) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
@@ -549,37 +555,47 @@ public:
     *flow_sources = kNoFlowMask;
 
     // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
+    //               the request is not for "now"
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+
+    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
+    // route live-traffic gives more information about current congestion situation. But the further
+    // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
+    // Want to have a smooth decrease function.
+    float live_traffic_multiplier = 1. - std::min(travel_time_seconds * LIVE_SPEED_FADE, 1.);
+
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
       if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        // Live speed covers entire edge, can return early here
         if (live_speed.breakpoint1 == 255) {
-          return partial_live_speed;
-        }
+          partial_live_pct = 1.;
+        } else {
 
-        // Since live speed didn't cover the entire edge, lets calculate the coverage
-        // to facilitate blending with other sources for uncovered part
-        partial_live_pct =
-            (
-                // First section
-                (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
-                // Second section
-                + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (live_speed.breakpoint2 - live_speed.breakpoint1)
-                       : 0)
-                // Third section
-                + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (255 - live_speed.breakpoint2)
-                       : 0)) /
-            255.0;
+          // Since live speed didn't cover the entire edge, lets calculate the coverage
+          // to facilitate blending with other sources for uncovered part
+          partial_live_pct =
+              (
+                  // First section
+                  (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1
+                                                                          : 0)
+                  // Second section
+                  + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (live_speed.breakpoint2 - live_speed.breakpoint1)
+                         : 0)
+                  // Third section
+                  + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (255 - live_speed.breakpoint2)
+                         : 0)) /
+              255.0;
+        }
+        partial_live_pct *= live_traffic_multiplier;
       }
     }
 

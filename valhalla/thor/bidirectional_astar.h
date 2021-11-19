@@ -132,6 +132,8 @@ protected:
   // these locations has pruning turned off (pruning is off if starting from a closed or not_thru
   // edge)
   bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
+  // If false take speeds depending on time at recosting stage
+  bool invariant_recosting_;
 
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward

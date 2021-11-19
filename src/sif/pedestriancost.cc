@@ -340,7 +340,8 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
                         const uint32_t seconds,
-                        uint8_t& flow_sources) const override;
+                        uint8_t& flow_sources,
+                        const uint32_t) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -674,7 +675,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
                               const uint32_t seconds,
-                              uint8_t& flow_sources) const {
+                              uint8_t& flow_sources,
+                              const uint32_t) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {

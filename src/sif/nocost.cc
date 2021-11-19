@@ -142,7 +142,8 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr&,
                         const uint32_t,
-                        uint8_t&) const override {
+                        uint8_t&,
+                        const uint32_t) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 

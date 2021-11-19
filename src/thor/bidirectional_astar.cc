@@ -52,7 +52,8 @@ namespace thor {
 BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCountBD),
                     config.get<bool>("clear_reserved_memory", false)),
-      extended_search_(config.get<bool>("extended_search", false)) {
+      extended_search_(config.get<bool>("extended_search", false)),
+      invariant_recosting_(config.get<bool>("invariant_recosting", true)) {
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
@@ -1270,7 +1271,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // recost edges in final path; ignore access restrictions
     try {
       sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
-                          time_info, invariant, true);
+                          time_info, invariant && invariant_recosting_, true);
     } catch (const std::exception& e) {
       LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
       continue;
