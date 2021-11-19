@@ -274,12 +274,15 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 set (source "${CMAKE_BINARY_DIR}/test/data/utrecht_tiles")
 set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
+set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
 add_custom_command(
         TARGET utrecht_tiles POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
         DEPENDS ${destination}
         COMMENT "tiles copied from ${source} to ${destination}"
 )

@@ -242,7 +242,11 @@ TEST(Sample, store) {
   EXPECT_FALSE(s.store("/N00/N00E005.hgt.tar", {}));
 
   // empty file
-  EXPECT_FALSE(s.store("/N00/N00E006.hgt", {}));
+  EXPECT_FALSE(s.store("/N00/N00E009.hgt", {}));
+
+  filesystem::remove("test/data/sample/N00/N00E009.hgt");
+  filesystem::remove("test/data/sample/N00/N00E005.hgt");
+  filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
 }
 
 } // namespace

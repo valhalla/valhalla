@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <deque>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -13,11 +14,13 @@
 #include "midgard/pointll.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "pixels.h"
 #include "skadi/sample.h"
 #include "tile_server.h"
 
 namespace {
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
+void create_fake_tile(std::string tile_path);
 
 // meters to resample shape to.
 // see elevationbuilder.cc for details
@@ -153,6 +156,24 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   }
 
   filesystem::clear(src_path);
+}
+
+TEST(ElevationBuilder, get_tile_ids) {
+  auto config = test::make_config("test/data", {}, {});
+
+  // check if config contain tile_dir (originall it does not)
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+
+  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+
+  // check if tile is from the specified tile_dir (it is not)
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
+  EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+
+  // check if we can create tileset based on the tiles from tile_dir specified above
+  auto test_result = valhalla::mjolnir::get_tile_ids(config, "");
+  EXPECT_FALSE(test_result.empty());
 }
 
 } // namespace

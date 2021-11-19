@@ -1,6 +1,5 @@
 #include "mjolnir/elevationbuilder.h"
 
-#include <deque>
 #include <future>
 #include <thread>
 #include <utility>
@@ -8,7 +7,6 @@
 #include <boost/format.hpp>
 
 #include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
@@ -34,37 +32,6 @@ constexpr double kMinimumInterval = 10.0f;
 
 using cache_t =
     std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, float, float, float, float>>;
-
-std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt, const std::string& tile) {
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
-  if (!tile.empty()) {
-    auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-    if (!tile_dir || !filesystem::exists(*tile_dir)) {
-      LOG_WARN("Tile storage directory does not exist");
-      return tilequeue;
-    }
-
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
-    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
-    if (!reader.DoesTileExist(local_tile_id)) {
-      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
-      return tilequeue;
-    }
-
-    tilequeue.push_back(tile_id);
-  } else {
-    // Create a randomized queue of tiles (at all levels) to work from
-    auto tileset = reader.GetTileSet();
-    for (const auto& id : tileset) {
-      tilequeue.emplace_back(id);
-    }
-    std::random_device rd;
-    std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
-  }
-
-  return tilequeue;
-}
 
 void add_elevations_to_single_tile(GraphReader& graphreader,
                                    std::mutex& graphreader_lck,
@@ -246,6 +213,37 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt, const std::s
   }
 
   LOG_INFO("Finished loading elevations");
+}
+
+std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt, const std::string& tile) {
+  std::deque<GraphId> tilequeue;
+  GraphReader reader(pt.get_child("mjolnir"));
+  if (!tile.empty()) {
+    auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
+    if (!tile_dir || !filesystem::exists(*tile_dir)) {
+      LOG_WARN("Tile storage directory does not exist");
+      return tilequeue;
+    }
+
+    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
+    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
+    if (!reader.DoesTileExist(local_tile_id)) {
+      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
+      return tilequeue;
+    }
+
+    tilequeue.push_back(tile_id);
+  } else {
+    // Create a randomized queue of tiles (at all levels) to work from
+    auto tileset = reader.GetTileSet();
+    for (const auto& id : tileset) {
+      tilequeue.emplace_back(id);
+    }
+    std::random_device rd;
+    std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
+  }
+
+  return tilequeue;
 }
 
 } // namespace mjolnir
