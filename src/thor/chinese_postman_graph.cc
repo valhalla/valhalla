@@ -110,26 +110,25 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
   for (const auto& kv : this->outEdges) {
     num_out_edges += kv.second;
     num_nodes += 1;
-    // std::cout << "Edge num: " + std::to_string(kv.first) + " : " + std::to_string(kv.second) <<
-    // "\n";
+    std::cout << "Edge num: " + std::to_string(kv.first) + " : " + std::to_string(kv.second) << "\n";
   }
-  // for (const auto& kv : this->expandedAdjacencyList) {
-  //   std::cout << "Adjancent edge: " + std::to_string(kv.first) + " : ";
-  //   for (const auto& v: kv.second){
-  //     std::cout << v << ", ";
-  //   }
-  //   std::cout << "\n";
-  // }
+  for (const auto& kv : this->expandedAdjacencyList) {
+    std::cout << "Adjancent edge: " + std::to_string(kv.first) + " : ";
+    for (const auto& v : kv.second) {
+      std::cout << v << ", ";
+    }
+    std::cout << "\n";
+  }
 
-  LOG_WARN("Num of nodes: " + std::to_string(num_nodes));
-  LOG_WARN("Num of out edges: " + std::to_string(num_out_edges));
-  LOG_WARN("Start Index: " + std::to_string(startNodeIndex));
+  std::cout << ("Num of nodes: " + std::to_string(num_nodes));
+  std::cout << ("Num of out edges: " + std::to_string(num_out_edges));
+  std::cout << ("Start Index: " + std::to_string(startNodeIndex));
   this->dfsEulerCycle(startNodeIndex);
 
-  // for (auto x : this->reversedEulerPath){
-  //     std::cout << x << ", ";
-  //   }
-  //   std::cout << "\n";
+  for (auto x : this->reversedEulerPath) {
+    std::cout << x << ", ";
+  }
+  std::cout << "\n";
 
   int edgeUnvisited = 0;
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
@@ -138,14 +137,14 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
       edgeUnvisited++;
     }
   }
-  LOG_WARN("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
-  // for (const auto& kv : this->expandedAdjacencyList) {
-  //   std::cout << "Unvisited Adjancent edge: " + std::to_string(kv.first) + " : ";
-  //   for (const auto& v: kv.second){
-  //     std::cout << v << ", ";
-  //   }
-  //   std::cout << "\n";
-  // }
+  std::cout << ("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
+  for (const auto& kv : this->expandedAdjacencyList) {
+    std::cout << "Unvisited Adjancent edge: " + std::to_string(kv.first) + " : ";
+    for (const auto& v : kv.second) {
+      std::cout << v << ", ";
+    }
+    std::cout << "\n";
+  }
   return this->reversedEulerPath;
 }
 
