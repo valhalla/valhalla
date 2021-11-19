@@ -10,6 +10,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+using polygon_type = boost::geometry::model::polygon<point_type>;
+
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
 sqlite3* GetDBHandle(const std::string& database) {
 
@@ -37,7 +39,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll,
                         GraphTileBuilder& graphtile) {
   uint32_t index = 0;
@@ -45,9 +47,6 @@ uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_ty
   for (const auto& poly : polys) {
     if (boost::geometry::covered_by(p, poly.second)) {
       const auto& admin = graphtile.admins_builder(poly.first);
-      if (!admin.state_offset())
-        index = poly.first;
-      else
         return poly.first;
     }
   }
@@ -56,7 +55,7 @@ uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_ty
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
@@ -68,9 +67,9 @@ uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_ty
 }
 
 // Get the timezone polys from the db
-std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                                   const AABB2<PointLL>& aabb) {
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
+                                                         const AABB2<PointLL>& aabb) {
+  std::multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -127,7 +126,7 @@ void GetData(sqlite3* db_handle,
              sqlite3_stmt* stmt,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
-             std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+             std::multimap<uint32_t, multi_polygon_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names) {
   uint32_t result = 0;
@@ -197,13 +196,13 @@ void GetData(sqlite3* db_handle,
 }
 
 // Get the admin polys that intersect with the tile bounding box.
-std::unordered_multimap<uint32_t, multi_polygon_type>
+std::multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+  std::multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -224,17 +223,35 @@ GetAdminInfo(sqlite3* db_handle,
   sql += std::to_string(aabb.maxy()) + "));";
   GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
+  // If the state query yields a single result and the bounding box is entirely contained within
+  // the polygon we can return. TODO - this must have both a state and country field.
+  bool skip_country = false;
+  if (polys.size() == 1) {
+    // Turn aabb into a polygon and check if within poly
+    polygon_type polygon;
+    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.miny()));
+    boost::geometry::append(polygon.outer(), point_type(aabb.maxx(), aabb.miny()));
+    boost::geometry::append(polygon.outer(), point_type(aabb.maxx(), aabb.maxy()));
+    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.maxy()));
+    // TODO - does the polygon have to be explicitly closed
+    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.miny()));
+
+    skip_country = boost::geometry::within(polygon, polys.begin()->second);
+  }
+
   // country query
-  sql =
-      "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
-  sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
-  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
+  if (!skip_country) {
+    sql =
+        "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
+    sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+    sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+    sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
+    sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+    sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+    sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+    sql += std::to_string(aabb.maxy()) + "));";
+    GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
+  }
 
   if (stmt) { // just in case something bad happened.
     sqlite3_finalize(stmt);
