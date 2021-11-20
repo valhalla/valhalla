@@ -60,8 +60,8 @@ protected:
 
 gurka::map SmallRouteSpeedTest::map = {};
 uint32_t SmallRouteSpeedTest::current_ = 0, SmallRouteSpeedTest::historical_max_ = 0,
-    SmallRouteSpeedTest::historical_min_ = 0,
-         SmallRouteSpeedTest::constrained_ = 0, SmallRouteSpeedTest::freeflow_ = 0;
+         SmallRouteSpeedTest::historical_min_ = 0, SmallRouteSpeedTest::constrained_ = 0,
+         SmallRouteSpeedTest::freeflow_ = 0;
 
 TEST_F(SmallRouteSpeedTest, LiveTrafficSpeed) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
@@ -93,17 +93,19 @@ TEST_F(SmallRouteSpeedTest, LiveTrafficSpeed) {
       EXPECT_EQ(speed, highway_speed);
 
       speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 1000, false,
-                               flow_sources, 0);
+                             flow_sources, 0);
       EXPECT_EQ(speed, current_);
 
-      speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 0, false, flow_sources, 360);
+      speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 0, false,
+                             flow_sources, 360);
       EXPECT_EQ(speed, int(historical_max_ * 0.1 + current_ * 0.9));
 
-      speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 0, false, flow_sources, 2400);
+      speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 0, false,
+                             flow_sources, 2400);
       EXPECT_EQ(speed, int(historical_max_ * 0.666 + current_ * 0.333 + 0.1));
 
       speed = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kPredictedFlowMask, 0, false,
-                               flow_sources, 1000);
+                             flow_sources, 1000);
       EXPECT_EQ(speed, int(historical_max_ * 0.277 + current_ * 0.722));
 
       speed = tile->GetSpeed(&e, baldr::kPredictedFlowMask, 0);
@@ -154,8 +156,8 @@ TEST_F(SmallRouteSpeedTest, HistoricalTrafficSpeed) {
                                   60 * 60 * 12, false, flow_sources, 360);
       EXPECT_EQ(historical, int(constrained_ * 0.1 + current_ * 0.9));
 
-      historical = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kFreeFlowMask,
-                                  60 * 60 * 19, false, flow_sources, 360);
+      historical = tile->GetSpeed(&e, baldr::kCurrentFlowMask | baldr::kFreeFlowMask, 60 * 60 * 19,
+                                  false, flow_sources, 360);
       EXPECT_EQ(historical, int(freeflow_ * 0.1 + current_ * 0.9));
 
       historical = tile->GetSpeed(&e, baldr::kFreeFlowMask, 60 * 60 * 19);

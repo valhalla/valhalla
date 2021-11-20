@@ -495,8 +495,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         uint8_t& flow_sources,
                         const int64_t seconds_from_now) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed =
-      tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources, seconds_from_now);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources, seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[final_speed];
 
