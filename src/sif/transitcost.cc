@@ -173,7 +173,7 @@ public:
                         const graph_tile_ptr&,
                         const uint32_t,
                         uint8_t&,
-                        const uint32_t) const override {
+                        const int64_t) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 

@@ -317,7 +317,7 @@ public:
                         const graph_tile_ptr&,
                         const uint32_t,
                         uint8_t&,
-                        const uint32_t) const override;
+                        const int64_t) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -600,7 +600,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const graph_tile_ptr&,
                            const uint32_t,
                            uint8_t&,
-                           const uint32_t) const {
+                           const int64_t) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
