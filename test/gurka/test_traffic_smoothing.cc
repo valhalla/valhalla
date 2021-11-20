@@ -479,13 +479,23 @@ TEST_F(TrafficSmoothing, RecostingWithPredictiveTraffic) {
   }
 }
 
-TEST_F(TrafficSmoothing, LiveAndPredictiveMixBidirectionalAstar) {
+TEST_F(TrafficSmoothing, LiveAndPredictiveMix) {
   std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
 
   {
     auto result =
         gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    gurka::assert::raw::expect_path_length(result, 170, 0.1);
+    // the first edge has live speed (52), second has a mix of live (52) and predictive
+    // traffic (smth between 19 and 31), last has only predictive traffic (smth between 19 and 31).
+    gurka::assert::raw::expect_eta(result, 21211, 5500);
+  }
+
+  {
+    auto result =
+        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 1, "current"));
+    EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
     gurka::assert::raw::expect_path_length(result, 170, 0.1);
     // the first edge has live speed (52), second has a mix of live (52) and predictive
     // traffic (smth between 19 and 31), last has only predictive traffic (smth between 19 and 31).
