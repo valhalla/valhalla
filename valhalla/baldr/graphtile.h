@@ -535,9 +535,9 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
-   * @param  travel_time_seconds  Seconds elapsed from the original node to the current edge. Be
-   * careful when setting the value in reverse direction algorithms to use proper one. It affects the
-   * percentage of live-traffic usage on the edge. The bigger travel_time_seconds is set the less
+   * @param  seconds_from_now  In how many seconds from now the edge is passed. Be
+   * careful when setting the value in reverse direction algorithms to use proper value. It affects
+   * the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the less
    * percentage is taken. Currently this parameter is set to 0 when building a route with reverse and
    * bidirectional a*.
    * @return Returns the speed for the edge.
@@ -547,15 +547,13 @@ public:
                            uint32_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
-                           const uint32_t travel_time_seconds = 0) const {
+                           const int64_t seconds_from_now = 0) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now"
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
 
@@ -564,7 +562,10 @@ public:
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
     // Want to have a smooth decrease function.
-    float live_traffic_multiplier = 1. - std::min(travel_time_seconds * LIVE_SPEED_FADE, 1.);
+    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
+    if (seconds_from_now < 0) {
+      live_traffic_multiplier = 0;
+    }
 
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;

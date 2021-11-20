@@ -235,9 +235,11 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   }
 
   // Compute the cost to the end of this edge
+  const int64_t seconds_from_now =
+      int64_t(time_info.seconds_from_now) * (time_info.negative_seconds_from_now ? -1 : 1);
   uint8_t flow_sources;
   auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week,
-                                                flow_sources, pred.cost().secs)
+                                                flow_sources, seconds_from_now)
                            : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
 
   sif::Cost transition_cost =
@@ -457,9 +459,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, endpoint);
-  // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
-  // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, startpoint, endpoint, time_info.second_of_week);
+  SetOrigin(graphreader, startpoint, endpoint, time_info);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -636,7 +636,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     GraphReader& graphreader,
     const valhalla::Location& origin,
     const valhalla::Location& destination,
-    const uint32_t seconds_of_week) {
+    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -713,7 +713,10 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (endtile == nullptr) {
         continue;
       }
-      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+      const int64_t seconds_from_now =
+          int64_t(time_info.seconds_from_now) * (time_info.negative_seconds_from_now ? -1 : 1);
+      cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources,
+                                seconds_from_now) *
              (1.0f - edge.percent_along());
       dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
     } else {
@@ -723,7 +726,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+      cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
              edge.percent_along();
       dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
@@ -753,11 +756,15 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
             // remaining must be zero.
             GraphId id(dest_path_edge.graph_id());
             const DirectedEdge* dest_edge = tile->directededge(id);
+            const int64_t seconds_from_now =
+                int64_t(time_info.seconds_from_now) * (time_info.negative_seconds_from_now ? -1 : 1);
             Cost remainder_cost =
-                FORWARD ? costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                              (1.0f - dest_path_edge.percent_along())
-                        : costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                              (dest_path_edge.percent_along());
+                FORWARD
+                    ? costing_->EdgeCost(dest_edge, tile, time_info.second_of_week, flow_sources,
+                                         seconds_from_now) *
+                          (1.0f - dest_path_edge.percent_along())
+                    : costing_->EdgeCost(dest_edge, tile, time_info.second_of_week, flow_sources) *
+                          (dest_path_edge.percent_along());
             // Remove the cost of the final "unused" part of the destination edge
             cost -= remainder_cost;
             // Add back in the edge score/penalty to account for destination edges
