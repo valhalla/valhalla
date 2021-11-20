@@ -1388,7 +1388,7 @@ void TripLegBuilder::Build(
 
   // check if we should use static time or offset time as the path lengthens
   const bool invariant =
-      options.has_date_time_type() && options.date_time_type() == Options::invariant;
+      (options.has_date_time_type() && options.date_time_type() == Options::invariant && options.invariant_postprocess());
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -1495,6 +1495,8 @@ void TripLegBuilder::Build(
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+
+
 
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
