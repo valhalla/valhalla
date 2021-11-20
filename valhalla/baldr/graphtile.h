@@ -597,6 +597,9 @@ public:
               255.0;
         }
         partial_live_pct *= live_traffic_multiplier;
+        if (partial_live_pct == 1.) {
+          return partial_live_speed;
+        }
       }
     }
 
