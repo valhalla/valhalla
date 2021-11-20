@@ -88,7 +88,8 @@ protected:
     })";
     return (boost::format(query_pattern_with_speeds) % std::to_string(map.nodes.at(from).lat()) %
             std::to_string(map.nodes.at(from).lng()) % std::to_string(map.nodes.at(to).lat()) %
-            std::to_string(map.nodes.at(to).lng()) % speed_types % std::to_string(invariant_postprocess) % date_time_type % date_time_value)
+            std::to_string(map.nodes.at(to).lng()) % speed_types %
+            std::to_string(invariant_postprocess) % date_time_type % date_time_value)
         .str();
   }
 
@@ -103,8 +104,8 @@ uint32_t TrafficSmoothing::current = 0, TrafficSmoothing::historical = 0,
 TEST_F(TrafficSmoothing, LiveTrafficOneEdge) {
   std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
 
-  auto result =
-      gurka::do_action(valhalla::Options::route, map, make_request("A", "B", speeds, false, 3, "current"));
+  auto result = gurka::do_action(valhalla::Options::route, map,
+                                 make_request("A", "B", speeds, false, 3, "current"));
   EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   gurka::assert::raw::expect_path_length(result, 50, 0.1);
   gurka::assert::raw::expect_eta(result, 3461, 10);
@@ -130,8 +131,8 @@ TEST_F(TrafficSmoothing, LiveMixedWithPredictive) {
   std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
 
   {
-    auto result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, "current"));
+    auto result = gurka::do_action(valhalla::Options::route, map,
+                                   make_request("A", "C", speeds, false, 3, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
     gurka::assert::raw::expect_path_length(result, 110, 0.1);
     // one should have live traffic, the second mixes live and predictive.
@@ -142,8 +143,8 @@ TEST_F(TrafficSmoothing, LiveMixedWithPredictive) {
 
   {
     // the same test but date_time_type is 0 (aka depart_at=now)
-    auto result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 0, "current"));
+    auto result = gurka::do_action(valhalla::Options::route, map,
+                                   make_request("A", "C", speeds, false, 0, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
     gurka::assert::raw::expect_path_length(result, 110, 0.1);
     gurka::assert::raw::expect_eta(result, 12650, 3500);
@@ -176,13 +177,13 @@ TEST_F(TrafficSmoothing, LiveSmoothing10MinutesBefore) {
   auto date_time = date_time_in_N_minutes(-10);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "C", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // predicted traffic is used on the first edge. Route through it will take ~1.36, live traffic
@@ -195,12 +196,12 @@ TEST_F(TrafficSmoothing, LiveSmoothing30MinutesBefore) {
   auto date_time = date_time_in_N_minutes(-30);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "C", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // predicted traffic is used on the first edge. Route through it will take ~1.36, live traffic
@@ -214,13 +215,13 @@ TEST_F(TrafficSmoothing, LiveSmoothingWeekBefore) {
   auto date_time = date_time_in_N_minutes(-60 * 24 * 7);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "C", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // too long time ago, live traffic doesn't apply to the time.
@@ -232,12 +233,12 @@ TEST_F(TrafficSmoothing, CurrentVsDateTime) {
   auto date_time = date_time_in_N_minutes(0);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
-    auto date_time_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto date_time_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float date_time_eta = calculate_eta(date_time_result);
 
-    auto current_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, "current"));
+    auto current_result = gurka::do_action(valhalla::Options::route, map,
+                                           make_request("A", "C", speeds, false, 3, "current"));
     const float current_eta = calculate_eta(current_result);
 
     // too long time ago, live traffic doesn't apply to the time.
@@ -249,13 +250,13 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn10Minutes) {
   auto date_time = date_time_in_N_minutes(10);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "B", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "B", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "B", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "B", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // 90% of live-traffic is taken on the edge.
@@ -264,18 +265,17 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn10Minutes) {
   }
 }
 
-
 TEST_F(TrafficSmoothing, LiveSmoothingIn2Hours) {
   auto date_time = date_time_in_N_minutes(2 * 60);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "C", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // live traffic is not used in 2 hours
@@ -287,13 +287,13 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn3Days) {
   auto date_time = date_time_in_N_minutes(60 * 24 * 3);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "C", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "C", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "C", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // live traffic is not used in 3 days
@@ -305,13 +305,13 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn3DaysBidir) {
   auto date_time = date_time_in_N_minutes(60 * 24 * 3);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "D", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "D", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     // live traffic is not used in 3 days
@@ -323,13 +323,13 @@ TEST_F(TrafficSmoothing, LiveSmoothing6HoursBeforeBidir) {
   auto date_time = date_time_in_N_minutes(-60 * 60 * 6);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "D", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "D", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     EXPECT_EQ(predicted_eta, live_eta);
@@ -340,13 +340,13 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn90MinutesBidir) {
   auto date_time = date_time_in_N_minutes(90);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "D", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "D", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     EXPECT_EQ(predicted_eta, live_eta);
@@ -356,22 +356,22 @@ TEST_F(TrafficSmoothing, LiveSmoothingIn90MinutesBidir) {
 TEST_F(TrafficSmoothing, LiveSmoothingBidir) {
   auto date_time = date_time_in_N_minutes(6);
   std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-  auto predicted_result =
-      gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+  auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                           make_request("A", "D", speeds, false, 3, date_time));
   const float predicted_eta = calculate_eta(predicted_result);
 
   speeds += ",\"current\"";
-  auto live_result =
-      gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+  auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                      make_request("A", "D", speeds, false, 3, date_time));
   const float live_eta = calculate_eta(live_result);
 
   auto earlier_date_time = date_time_in_N_minutes(-6);
-  auto earlier_result =
-      gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, earlier_date_time));
+  auto earlier_result = gurka::do_action(valhalla::Options::route, map,
+                                         make_request("A", "D", speeds, false, 3, earlier_date_time));
   const float earlier_eta = calculate_eta(earlier_result);
 
-  auto no_recosting_result =
-      gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, true, 3, date_time));
+  auto no_recosting_result = gurka::do_action(valhalla::Options::route, map,
+                                              make_request("A", "D", speeds, true, 3, date_time));
   const float no_recosting_eta = calculate_eta(no_recosting_result);
 
   // live traffic is used on a vast majority of the first edge
@@ -385,22 +385,22 @@ TEST_F(TrafficSmoothing, LiveSmoothing90MinutesBeforeBidir) {
   auto date_time = date_time_in_N_minutes(-90);
   {
     std::string speeds = "\"freeflow\",\"constrained\",\"predicted\"";
-    auto predicted_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto predicted_result = gurka::do_action(valhalla::Options::route, map,
+                                             make_request("A", "D", speeds, false, 3, date_time));
     const float predicted_eta = calculate_eta(predicted_result);
 
     speeds += ",\"current\"";
-    auto live_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, date_time));
+    auto live_result = gurka::do_action(valhalla::Options::route, map,
+                                        make_request("A", "D", speeds, false, 3, date_time));
     const float live_eta = calculate_eta(live_result);
 
     auto later_date_time = date_time_in_N_minutes(90);
-    auto later_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, later_date_time));
+    auto later_result = gurka::do_action(valhalla::Options::route, map,
+                                         make_request("A", "D", speeds, false, 3, later_date_time));
     const float later_eta = calculate_eta(later_result);
 
-    auto no_recosting_result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, true, 3, date_time));
+    auto no_recosting_result = gurka::do_action(valhalla::Options::route, map,
+                                                make_request("A", "D", speeds, true, 3, date_time));
     const float no_recosting_eta = calculate_eta(no_recosting_result);
 
     // live traffic is used on a vast majority of the second edge
@@ -483,8 +483,8 @@ TEST_F(TrafficSmoothing, LiveAndPredictiveMix) {
   std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
 
   {
-    auto result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 3, "current"));
+    auto result = gurka::do_action(valhalla::Options::route, map,
+                                   make_request("A", "D", speeds, false, 3, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     gurka::assert::raw::expect_path_length(result, 170, 0.1);
     // the first edge has live speed (52), second has a mix of live (52) and predictive
@@ -493,8 +493,8 @@ TEST_F(TrafficSmoothing, LiveAndPredictiveMix) {
   }
 
   {
-    auto result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, false, 1, "current"));
+    auto result = gurka::do_action(valhalla::Options::route, map,
+                                   make_request("A", "D", speeds, false, 1, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
     gurka::assert::raw::expect_path_length(result, 170, 0.1);
     // the first edge has live speed (52), second has a mix of live (52) and predictive
@@ -503,8 +503,8 @@ TEST_F(TrafficSmoothing, LiveAndPredictiveMix) {
   }
 
   {
-    auto result =
-        gurka::do_action(valhalla::Options::route, map, make_request("A", "D", speeds, true, 3, "current"));
+    auto result = gurka::do_action(valhalla::Options::route, map,
+                                   make_request("A", "D", speeds, true, 3, "current"));
     EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     gurka::assert::raw::expect_path_length(result, 170, 0.1);
     // all edges have current live speed - 52

@@ -123,9 +123,9 @@ void recost_forward(baldr::GraphReader& reader,
     uint8_t flow_sources;
     const int64_t seconds_from_now =
         int64_t(offset_time.seconds_from_now) * (offset_time.negative_seconds_from_now ? -1 : 1);
-    cost += transition_cost + costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources,
-                                               seconds_from_now) *
-                                  edge_pct;
+    cost += transition_cost +
+            costing.EdgeCost(edge, tile, offset_time.second_of_week, flow_sources, seconds_from_now) *
+                edge_pct;
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label
