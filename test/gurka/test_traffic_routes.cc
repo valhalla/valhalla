@@ -15,7 +15,7 @@ std::string date_time_in_N_minutes(const int minutes) {
   return iso_dt.str();
 }
 
-const float calculate_eta(const valhalla::Api& result) {
+float calculate_eta(const valhalla::Api& result) {
   EXPECT_EQ(result.trip().routes_size(), 1);
   double eta_sec = 0;
   for (const auto& leg : result.directions().routes(0).legs()) {
@@ -73,8 +73,8 @@ protected:
     });
   }
 
-  std::string make_request(std::string from,
-                           std::string to,
+  std::string make_request(const std::string& from,
+                           const std::string& to,
                            std::string speed_types,
                            bool invariant_postprocess,
                            int date_time_type,
@@ -243,6 +243,27 @@ TEST_F(TrafficSmoothing, CurrentVsDateTime) {
 
     // too long time ago, live traffic doesn't apply to the time.
     EXPECT_EQ(date_time_eta, current_eta);
+  }
+}
+
+TEST_F(TrafficSmoothing, CheckIfCurrentTimeChanges) {
+  auto date_time = date_time_in_N_minutes(0);
+  {
+    std::string speeds = "\"freeflow\",\"constrained\",\"predicted\",\"current\"";
+    const float base_eta =
+        calculate_eta(gurka::do_action(valhalla::Options::route, map,
+                                       make_request("A", "D", speeds, false, 3, date_time)));
+    sleep(70);
+    const float ten_seconds_ago_bidir_eta =
+        calculate_eta(gurka::do_action(valhalla::Options::route, map,
+                                       make_request("A", "D", speeds, false, 3, date_time)));
+
+    const float ten_seconds_ago_timedep_eta =
+        calculate_eta(gurka::do_action(valhalla::Options::route, map,
+                                       make_request("A", "D", speeds, false, 1, date_time)));
+
+    EXPECT_EQ(ten_seconds_ago_bidir_eta, ten_seconds_ago_timedep_eta);
+    EXPECT_GE(ten_seconds_ago_bidir_eta - base_eta, 2340);
   }
 }
 

@@ -720,7 +720,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   options.set_use_timestamps(
       rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
 
-  // Option to use invariant time through the route
+  // Option to use invariant time after a route is built, on recosting or leg building stages.
   options.set_invariant_postprocess(
       rapidjson::get_optional<bool>(doc, "/invariant_postprocess").get_value_or(true));
 
