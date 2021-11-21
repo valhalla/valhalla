@@ -132,11 +132,19 @@ float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward) {
+                    bool forward,
+                    size_t first_segment_index,
+                    size_t last_segment_index) {
+  assert(!shape.empty());
+  assert(index < shape.size());
+  first_segment_index = std::min(first_segment_index, index);
+  last_segment_index = std::min(std::max(last_segment_index, index), shape.size() - 1);
   // depending on if we are going forward or backward we choose a different increment
   auto increment = forward ? -1 : 1;
-  auto first_end = forward ? shape.cbegin() : shape.cend() - 1;
-  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
+  auto first_end =
+      forward ? (shape.cbegin() + first_segment_index) : (shape.cbegin() + last_segment_index);
+  auto second_end =
+      forward ? (shape.cbegin() + last_segment_index) : (shape.cbegin() + first_segment_index);
 
   // u and v will be points we move along the shape until we have enough distance between them or
   // run out of points

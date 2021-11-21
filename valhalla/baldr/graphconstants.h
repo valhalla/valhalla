@@ -338,6 +338,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+      {static_cast<uint8_t>(Use::kPedestrianCrossing), "pedestrian_crossing"},
       {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
       {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
       {static_cast<uint8_t>(Use::kOther), "other"},
@@ -359,11 +360,24 @@ inline std::string to_string(Use u) {
 
 enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kLayer = 1,
+  kPronunciation = 2,
+  kBssInfo = 3,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),
   kBridge = static_cast<uint8_t>('2'),
+
 };
+
+enum class PronunciationAlphabet : uint8_t {
+  kNone = 0,
+  kIpa = 1,
+  kXKatakana = 2,
+  kXJeita = 3,
+  kNtSampa = 4
+};
+// must start at 1 due to nulls
+enum class Language : uint8_t { kNone = 1 };
 
 // Speed type
 enum class SpeedType : uint8_t {
@@ -540,7 +554,9 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6,
   kNoEntry = 7,
   kNoExit = 8,
-  kNoTurn = 9
+  kNoTurn = 9,
+  kOnlyProbable = 10,
+  kNoProbable = 11
 };
 
 // Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
@@ -553,7 +569,7 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8,
+  kDestinationAllowed = 8
 };
 
 // Minimum meters offset from start/end of shape for finding heading

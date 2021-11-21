@@ -40,7 +40,8 @@ struct MultimodalBuilder {
              const mode_costing_t& mode_costing,
              const AttributesController& controller,
              GraphReader& graphreader) {
-    AddBssNode(trip_node, node, startnode, mode_costing, controller);
+
+    AddBssNode(trip_node, node, directededge, start_tile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
@@ -51,28 +52,32 @@ private:
    *
    * @param trip_node
    * @param node
-   * @param startnode
+   * @param directed_edge
    * @param start_tile
-   * @param graphtile
    * @param mode_costing
    * @param controller
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId&,
+                  const DirectedEdge* directededge,
+                  graph_tile_ptr start_tile,
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
+
     auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
     auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
 
     if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
+
+      EdgeInfo edgeinfo = start_tile->edgeinfo(directededge);
+      auto taggedValue = edgeinfo.GetTags();
+
       auto* bss_station_info = trip_node->mutable_bss_info();
       // TODO: import more BSS data, can be used to display capacity in real time
-      bss_station_info->set_name("BSS 42");
-      bss_station_info->set_ref("BSS 42 ref");
-      bss_station_info->set_capacity("42");
-      bss_station_info->set_network("universe");
-      bss_station_info->set_operator_("Douglas");
+      auto tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssInfo);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->ParseFromString(tag_range.first->second);
+      }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
     }

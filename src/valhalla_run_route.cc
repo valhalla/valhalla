@@ -361,12 +361,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
                                        PathStatistics& data,
-                                       bool verbose_lanes) {
+                                       bool verbose_lanes,
+                                       valhalla::odin::MarkupFormatter& markup_formatter) {
   // TEMPORARY? Change to PathLocation...
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
-  DirectionsBuilder::Build(api);
+  DirectionsBuilder::Build(api, markup_formatter);
   const auto& trip_directions = api.directions().routes(0).legs(0);
   EnhancedTripLeg etl(*api.mutable_trip()->mutable_routes(0)->mutable_legs(0));
   std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
@@ -655,6 +656,7 @@ int main(int argc, char* argv[]) {
   MultiModalPathAlgorithm mm(pt.get_child("thor"));
   TimeDepForward timedep_forward(pt.get_child("thor"));
   TimeDepReverse timedep_reverse(pt.get_child("thor"));
+  MarkupFormatter markup_formatter(pt);
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);
@@ -721,7 +723,8 @@ int main(int argc, char* argv[]) {
 
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      const auto& trip_directions = DirectionsTest(request, origin, dest, data, verbose_lanes);
+      const auto& trip_directions =
+          DirectionsTest(request, origin, dest, data, verbose_lanes, markup_formatter);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 

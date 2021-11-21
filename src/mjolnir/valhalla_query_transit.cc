@@ -38,7 +38,11 @@ Transit read_pbf(const std::string& file_name) {
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3018000
   cs.SetTotalBytesLimit(limit);
+#else
+  cs.SetTotalBytesLimit(limit, limit);
+#endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
