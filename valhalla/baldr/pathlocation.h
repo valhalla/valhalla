@@ -57,8 +57,8 @@ public:
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge
     unsigned int inbound_reach;
-    // the heading of the projected point in the direction
-    float projected_heading;
+    // the heading of the projected point
+    float heading;
   };
 
   // list of edges this location appears on within the graph
@@ -165,6 +165,7 @@ public:
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
+      edge->set_heading(e.heading);
     }
 
     auto* filtered_edges = l->mutable_filtered_edges();

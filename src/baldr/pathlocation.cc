@@ -11,10 +11,9 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
                                  const unsigned int inbound_reach,
-                                 const float projected_heading)
+                                 const float heading)
     : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
-      outbound_reach(outbound_reach), inbound_reach(inbound_reach),
-      projected_heading(projected_heading) {
+      outbound_reach(outbound_reach), inbound_reach(inbound_reach), heading(heading) {
 }
 bool PathLocation::PathEdge::begin_node() const {
   return percent_along == 0.f;

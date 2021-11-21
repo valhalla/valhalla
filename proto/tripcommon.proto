@@ -44,6 +44,7 @@ message Location {
     repeated string names = 10;
     optional int32 outbound_reach = 11;
     optional int32 inbound_reach = 12;
+    optional float heading = 13;
   }
 
   message SearchFilter {
