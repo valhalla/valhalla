@@ -635,6 +635,10 @@ public:
     return mutable_node_->has_bss_info();
   }
 
+  const BikeShareStationInfo& GetBssInfo() const {
+    return mutable_node_->bss_info();
+  }
+
   bool HasIntersectingEdges() const;
 
   bool HasIntersectingEdgeNameConsistency() const;

@@ -340,7 +340,10 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Build bike share stations
   if (start_stage <= BuildStage::kBss && BuildStage::kBss <= end_stage) {
-    BssBuilder::Build(config, bss_nodes_bin);
+    if (start_stage == BuildStage::kBss) {
+      osm_data.read_from_unique_names_file(tile_dir);
+    }
+    BssBuilder::Build(config, osm_data, bss_nodes_bin);
   }
 
   // Builds additional hierarchies if specified within config file. Connections

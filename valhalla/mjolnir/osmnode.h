@@ -67,6 +67,9 @@ struct OSMNode {
   uint32_t ref_pronunciation_katakana_index_;
   uint32_t ref_pronunciation_jeita_index_;
 
+  // bss information
+  uint32_t bss_info_;
+
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
   uint32_t lat7_;
@@ -661,6 +664,25 @@ struct OSMNode {
    */
   bool cash_only_toll() const {
     return cash_only_toll_;
+  }
+
+  /**
+   * Sets the index for bss informations.
+   * @param  idx  Index for the bss informations.
+   */
+  void set_bss_info_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss informations index");
+    }
+    bss_info_ = index;
+  }
+
+  /**
+   * Get the bss informations index.
+   * @return  Returns the index for the bss informations.
+   */
+  uint32_t bss_info_index() const {
+    return bss_info_;
   }
 };
 

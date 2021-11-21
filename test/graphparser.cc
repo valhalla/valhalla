@@ -752,7 +752,7 @@ TEST(GraphParser, TestImportBssNode) {
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, pronunciation_file, tiles);
 
-  BssBuilder::Build(conf, bss_nodes_file);
+  BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
   auto local_level = TileHierarchy::levels().back().level;
 
@@ -765,8 +765,8 @@ TEST(GraphParser, TestImportBssNode) {
   EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 4)
       << "The bike share node must have 4 outbound edges";
 
-  auto check_edge_attribute = [](const DirectedEdge* directededge, uint16_t forwardaccess,
-                                 uint16_t reverseaccess) {
+  auto check_edge_attribute = [&local_tile](const DirectedEdge* directededge, uint16_t forwardaccess,
+                                            uint16_t reverseaccess) {
     EXPECT_TRUE(directededge->bss_connection())
         << "The bike share node's edges is not a bss connection";
     EXPECT_TRUE(directededge->forwardaccess() & forwardaccess)
@@ -780,6 +780,19 @@ TEST(GraphParser, TestImportBssNode) {
     EXPECT_EQ(directededge->classification(), RoadClass::kResidential)
         << "The edges' road calss is incorrect";
     EXPECT_EQ(directededge->use(), Use::kRoad) << "The edges' use is incorrect";
+
+    EdgeInfo edgeinfo = local_tile->edgeinfo(directededge);
+    auto taggedValue = edgeinfo.GetTags();
+
+    auto search = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
+    ASSERT_NE(search.first, search.second) << "BSS Tag TaggedValue::kBssInfo not found in EdgeInfo";
+    valhalla::BikeShareStationInfo bss_station_info;
+    bss_station_info.ParseFromString(search.first->second);
+
+    ASSERT_EQ(bss_station_info.ref(), "2");
+    ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
+    ASSERT_EQ(bss_station_info.capacity(), 13);
+    ASSERT_EQ(bss_station_info.operator_(), "ATAC");
   };
 
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();
