@@ -87,7 +87,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.0) {
           snapped_node = opp_edge->endnode();
         }
-        correlated.edges.emplace_back(edgeid, dist, point, sq_distance, 0.f);
+        correlated.edges.emplace_back(edgeid, dist, point, sq_distance);
       }
     }
 
@@ -106,7 +106,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.0) {
           snapped_node = edge->endnode();
         }
-        correlated.edges.emplace_back(opp_edgeid, dist, point, sq_distance, 0.f);
+        correlated.edges.emplace_back(opp_edgeid, dist, point, sq_distance);
       }
     }
 

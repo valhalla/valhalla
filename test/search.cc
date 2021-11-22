@@ -208,7 +208,7 @@ void search(valhalla::baldr::Location location,
   for (const auto& expected_edge : expected_edges) {
     answer.edges.emplace_back(
         PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along, expected_point,
-                               expected_point.Distance(location.latlng_), 0.f, expected_edge.sos});
+                               expected_point.Distance(location.latlng_), expected_edge.sos});
   }
   // note that this just checks that p has the edges that answer has
   // p can have more edges than answer has and that wont fail this check!
@@ -256,18 +256,18 @@ TEST(Search, test_edge_search) {
 
   // snap to node searches
   search({a.second}, true, a.second,
-         {PE{{t, l, 2}, 0, a.second, 0, 0.f, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, 0.f, S::NONE},
-          PE{{t, l, 4}, 0, a.second, 0, 0.f, S::NONE}});
+         {PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+          PE{{t, l, 4}, 0, a.second, 0, S::NONE}});
   search({d.second}, true, d.second,
-         {PE{{t, l, 7}, 0, d.second, 0, 0.f, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, 0.f, S::NONE},
-          PE{{t, l, 9}, 0, d.second, 0, 0.f, S::NONE}});
+         {PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE},
+          PE{{t, l, 9}, 0, d.second, 0, S::NONE}});
   // snap to end of edge degenerates to node searches
   search({{d.second.first + .049, d.second.second}}, true, d.second,
          {
-             PE{{t, l, 7}, 0, d.second, 0, 0.f, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, 0.f, S::NONE},
-             PE{{t, l, 9}, 0, d.second, 0, 0.f, S::NONE}, // leaving edges
-             PE{{t, l, 0}, 1, d.second, 0, 0.f, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, 0.f, S::NONE},
-             PE{{t, l, 6}, 1, d.second, 0, 0.f, S::NONE} // arriving edges
+             PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE},
+             PE{{t, l, 9}, 0, d.second, 0, S::NONE}, // leaving edges
+             PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE},
+             PE{{t, l, 6}, 1, d.second, 0, S::NONE} // arriving edges
          });
 
   // regression test for #2023, displace the point beyond search_cutoff but within node_snap_tolerance
@@ -276,113 +276,103 @@ TEST(Search, test_edge_search) {
   near_node.search_cutoff_ = 1.0;
   near_node.node_snap_tolerance_ = 2.0;
   search(near_node, true, a.second,
-         {PE{{t, l, 2}, 0, a.second, 0, 0.f, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, 0.f, S::NONE},
-          PE{{t, l, 4}, 0, a.second, 0, 0.f, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1, a.second, 0, 0.f, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, 0.f, S::NONE}},
+         {PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+          PE{{t, l, 4}, 0, a.second, 0, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, S::NONE},
+          PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}},
          true);
 
   // snap to node as through location should be all edges
   Location x{a.second, Location::StopType::THROUGH};
   search(x, true, a.second,
-         {PE{{t, l, 2}, 0, a.second, 0, 0.f, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, 0.f, S::NONE},
-          PE{{t, l, 4}, 0, a.second, 0, 0.f, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1, a.second, 0, 0.f, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, 0.f, S::NONE}},
+         {PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+          PE{{t, l, 4}, 0, a.second, 0, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, S::NONE},
+          PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}},
          true);
   // with a heading should just be a single outgoing
   x.heading_ = 180;
-  search(x, true, a.second, {PE{{t, l, 4}, 0, a.second, 0, 0.f, S::NONE}}, true);
+  search(x, true, a.second, {PE{{t, l, 4}, 0, a.second, 0, S::NONE}}, true);
 
   // mid point search
   auto answer = a.second.PointAlongSegment(d.second);
   search({a.second.PointAlongSegment(d.second)}, false, a.second.PointAlongSegment(d.second),
-         {PE{{t, l, 3}, .5f, answer, 0, 0.f, S::NONE}, PE{{t, l, 8}, .5f, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 3}, .5f, answer, 0, S::NONE}, PE{{t, l, 8}, .5f, answer, 0, S::NONE}});
 
   // set a point 40% along the edge runs with the shape direction
   answer = a.second.PointAlongSegment(d.second, .4f);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
   x = {answer};
   search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // with heading
   x.heading_ = 90;
-  search(x, false, answer, {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::NONE}});
+  search(x, false, answer, {PE{{t, l, 3}, ratio, answer, 0, S::NONE}});
   x.heading_ = 0;
   search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
   x.heading_ = 269;
-  search(x, false, answer, {PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+  search(x, false, answer, {PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // check for side of street by offsetting the test point from the line orthogonally
   auto ortho = (d.second - a.second).GetPerpendicular(true).Normalize() * .01;
   PointLL test{answer.first + ortho.x(), answer.second + ortho.y()};
   search({test}, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::RIGHT},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::LEFT}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
   // try getting side of street by setting the display ll instead
   x = {answer};
   x.display_latlng_ = test;
   search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::RIGHT},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::LEFT}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
   // try display ll on the other side
   x.display_latlng_ = PointLL{answer.first - ortho.x(), answer.second - ortho.y()};
   search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::LEFT},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::RIGHT}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::LEFT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::RIGHT}});
 
   // try nuking display ll by setting it farther away than street_side_max_distance
   x.display_latlng_ = PointLL{answer.first - 5 * ortho.x(), answer.second - 5 * ortho.y()};
   search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // check that the side of street tolerance works
   Location sst_huge(test);
   sst_huge.street_side_tolerance_ = 2000;
   search(sst_huge, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // we only want opposite driving side, tiles are left hand driving
   search({test, ST::BREAK, 0, 0, 0, PS::OPPOSITE}, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, 0.f, S::RIGHT}}, true);
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}}, true);
 
   // we only want same driving side, tiles are left hand driving
   search({test, ST::BREAK, 0, 0, 0, PS::SAME}, false, answer,
-         {PE{{t, l, 8}, 1.f - ratio, answer, 0, 0.f, S::LEFT}}, true);
+         {PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}}, true);
 
   // set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.PointAlongSegment(d.second, .4f);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
   search({answer}, false, answer,
-         {PE{{t, l, 0}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 7}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 0}, ratio, answer, 0, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::NONE}});
 
   // check for side of street by offsetting the test point from the line orthogonally
   ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, false, answer,
-         {PE{{t, l, 0}, ratio, answer, 0, 0.f, S::LEFT},
-          PE{{t, l, 7}, 1.f - ratio, answer, 0, 0.f, S::RIGHT}});
+         {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}});
 
   // check that the side of street tolerance works
   sst_huge.latlng_ = test;
   search(sst_huge, false, answer,
-         {PE{{t, l, 0}, ratio, answer, 0, 0.f, S::NONE},
-          PE{{t, l, 7}, 1.f - ratio, answer, 0, 0.f, S::NONE}});
+         {PE{{t, l, 0}, ratio, answer, 0, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::NONE}});
 
   // we only want opposite driving side, tiles are left hand driving
   search({test, ST::BREAK, 0, 0, 0, PS::OPPOSITE}, false, answer,
-         {PE{{t, l, 7}, 1.f - ratio, answer, 0, 0.f, S::RIGHT}}, true);
+         {PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}}, true);
 
   // we only want same driving side, tiles are left hand driving
   search({test, ST::BREAK, 0, 0, 0, PS::SAME}, false, answer,
-         {PE{{t, l, 0}, ratio, answer, 0, 0.f, S::LEFT}}, true);
+         {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}}, true);
 
   // TODO: add more tests
 }

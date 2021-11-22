@@ -92,7 +92,7 @@ TEST_F(PathlocationSerialization, TestEdges) {
   GraphReader reader(PathlocationSerialization::map.config.get_child("mjolnir"));
   auto id = *reader.GetTileSet().begin();
   PathLocation loc(PointLL{2, 13}, Location::StopType::BREAK);
-  loc.edges.emplace_back(PathLocation::PathEdge{id, 0, PointLL{50, 50}, 10, 0.f});
+  loc.edges.emplace_back(PathLocation::PathEdge{id, 0, PointLL{50, 50}, 10});
 
   valhalla::Location pbfloc;
   PathLocation::toPBF(loc, &pbfloc, reader);
@@ -100,7 +100,7 @@ TEST_F(PathlocationSerialization, TestEdges) {
   EXPECT_EQ(pbfloc.filtered_edges_size(), 0);
 
   loc.edges.clear();
-  loc.filtered_edges.emplace_back(PathLocation::PathEdge{++id, 1, PointLL{50, 50}, 10, 0.f});
+  loc.filtered_edges.emplace_back(PathLocation::PathEdge{++id, 1, PointLL{50, 50}, 10});
   pbfloc.Clear();
   PathLocation::toPBF(loc, &pbfloc, reader);
   EXPECT_EQ(pbfloc.path_edges_size(), 0);
