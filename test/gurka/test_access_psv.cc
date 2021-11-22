@@ -18,9 +18,9 @@ TEST(Standalone, AccessPsvWay) {
 
   const std::string ascii_map = R"(
                
-        A---B---C---D---E
-                |       |
-                F-------G
+        A---B---C---D---E---I---J
+                |       |       |
+                F-------G-------K
                 |
                 H
     )";
@@ -40,6 +40,10 @@ TEST(Standalone, AccessPsvWay) {
            {"bus", "no"},
        }},
       {"FH", {{"highway", "primary"}}},
+      {"EI", {{"highway", "bus_guideway"}}},
+      {"IJ", {{"highway", "primary"}}},
+      {"GK", {{"highway", "primary"}}},
+      {"JK", {{"highway", "primary"}}},
 
   };
 
@@ -53,6 +57,14 @@ TEST(Standalone, AccessPsvWay) {
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CF", "FH"});
     else
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "FG", "FH"});
+  }
+  for (auto& c : costing) {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c);
+
+    if (c == "bus")
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EI"});
+    else
+      gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "GK", "KJ", "JI"});
   }
 }
 
