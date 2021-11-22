@@ -8,12 +8,13 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const double percent_along,
                                  const midgard::PointLL& projected,
                                  const double score,
+                                 const float projected_heading,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
-                                 const unsigned int inbound_reach,
-                                 const float heading)
+                                 const unsigned int inbound_reach)
     : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
-      outbound_reach(outbound_reach), inbound_reach(inbound_reach), heading(heading) {
+      outbound_reach(outbound_reach), inbound_reach(inbound_reach),
+      projected_heading(projected_heading) {
 }
 bool PathLocation::PathEdge::begin_node() const {
   return percent_along == 0.f;

@@ -33,10 +33,10 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
+             const float projected_heading,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
-             const unsigned int inbound_reach = 0,
-             const float projected_heading = 0.f);
+             const unsigned int inbound_reach = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -58,7 +58,7 @@ public:
     // minimum number of nodes that can reach this edge
     unsigned int inbound_reach;
     // the heading of the projected point
-    float heading;
+    float projected_heading;
   };
 
   // list of edges this location appears on within the graph
@@ -165,7 +165,7 @@ public:
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
-      edge->set_heading(e.heading);
+      edge->set_heading(e.projected_heading);
     }
 
     auto* filtered_edges = l->mutable_filtered_edges();
