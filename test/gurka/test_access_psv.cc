@@ -41,9 +41,9 @@ TEST(Standalone, AccessPsvWay) {
        }},
       {"FH", {{"highway", "primary"}}},
       {"EI", {{"highway", "bus_guideway"}}},
-      {"IJ", {{"highway", "primary"}}},
+      {"JI", {{"highway", "primary"}}},
       {"GK", {{"highway", "primary"}}},
-      {"JK", {{"highway", "primary"}}},
+      {"KJ", {{"highway", "primary"}}},
 
   };
 
