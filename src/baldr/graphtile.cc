@@ -217,7 +217,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        tile_getter_t* tile_getter,
                                        const std::string& cache_location) {
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 

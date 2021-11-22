@@ -439,7 +439,7 @@ sample::sample(const std::string& data_source) {
   cache_->cache.resize(TILE_COUNT);
 
   // check the directory for files that look like what we need
-  auto files = filesystem::get_files(data_source, true);
+  auto files = filesystem::get_files(data_source);
   for (const auto& f : files) {
     // make sure its a valid index
     auto data = cache_item_t::parse_hgt_name(f);

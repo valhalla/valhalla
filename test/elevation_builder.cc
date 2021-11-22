@@ -20,6 +20,105 @@
 namespace {
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
 void create_fake_tile(std::string tile_path);
+std::vector<std::string> full_to_relative_path(const std::string& root_dir,
+                                               std::vector<std::string>&& paths) {
+  if (root_dir.empty() || paths.empty())
+    return paths;
+
+  std::vector<std::string> res;
+  res.reserve(paths.size());
+  for (auto&& path : paths) {
+    auto pos = path.rfind(root_dir);
+    if (pos == std::string::npos) {
+      res.push_back(std::move(path));
+      continue;
+    }
+
+    res.push_back(std::move(path.substr(pos + root_dir.size())));
+  }
+
+  return res;
+}
+
+TEST(Filesystem, full_to_relative_path_valid_input) {
+  struct test_desc {
+    std::string path;
+    std::string remove_pattern;
+    std::string res;
+  };
+  std::vector<test_desc> tests =
+      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/0/003/196.gp"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/305.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/305.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/2/000/818/660.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp", "",
+        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp"},
+       {"", "/valhalla-internal/build/test/data/utrecht_tiles", ""},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph", "/tmp",
+        "/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph"}};
+
+  for (const auto& test : tests)
+    EXPECT_EQ(full_to_relative_path(test.remove_pattern, {test.path}).front(), test.res);
+}
+
+TEST(Filesystem, full_to_relative_path_invalid_input) {
+  struct test_desc {
+    std::string path;
+    std::string remove_pattern;
+    std::string res;
+  };
+
+  std::vector<test_desc> tests =
+      {{"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", "1", "96.gph"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/3o5.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/3o5.gph"},
+       {"$", "/valhalla-internal/build/test/data/utrecht_tiles", "$"},
+       {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph",
+        "/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gph", ""}};
+
+  for (const auto& test : tests)
+    EXPECT_EQ(full_to_relative_path(test.remove_pattern, {test.path}).front(), test.res);
+}
+
+/**
+ * @brief Removes all the content of the directory.
+ * */
+inline bool clear(const std::string& dir) {
+  if (!filesystem::exists(dir))
+    return false;
+
+  if (!filesystem::is_directory(dir))
+    return filesystem::remove(dir);
+
+  for (filesystem::recursive_directory_iterator i(dir), end; i != end; ++i) {
+    if (filesystem::exists(i->path()))
+      filesystem::remove_all(i->path());
+  }
+
+  return true;
+}
+
+TEST(Filesystem, clear_valid_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  for (const auto& test : tests)
+    (void)filesystem::save(test);
+
+  EXPECT_FALSE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
+
+  EXPECT_TRUE(clear("/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"));
+  EXPECT_TRUE(clear("/tmp/save_file_input/"));
+
+  EXPECT_TRUE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
+}
+
+TEST(Filesystem, clear_invalid_input) {
+  EXPECT_FALSE(clear(".foobar"));
+}
 
 // meters to resample shape to.
 // see elevationbuilder.cc for details
@@ -36,7 +135,7 @@ struct ElevationDownloadTestData {
   }
 
   void load_tiles() {
-    for (auto&& ftile : filesystem::get_files(m_dir_dst)) {
+    for (auto&& ftile : full_to_relative_path(m_dir_dst, filesystem::get_files(m_dir_dst))) {
       if (ftile.find("gph") != std::string::npos && !m_test_tile_names.count(ftile))
         m_test_tile_names.insert(std::move(ftile));
     }
@@ -162,14 +261,14 @@ TEST(ElevationBuilder, test_loaded_elevations) {
                                                get_tile_ids(config, params.m_test_tile_names));
 
     ASSERT_TRUE(filesystem::exists(dst_dir));
-    const auto& elev_paths = filesystem::get_files(dst_dir, true);
+    const auto& elev_paths = filesystem::get_files(dst_dir);
 
     ASSERT_FALSE(elev_paths.empty());
 
     for (const auto& elev : elev_paths)
       dst_elevations.insert(elev);
 
-    filesystem::clear(dst_dir);
+    clear(dst_dir);
   }
 
   for (const auto& elev : src_elevations) {
@@ -179,7 +278,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
         }) != std::end(dst_elevations));
   }
 
-  filesystem::clear(src_path);
+  clear(src_path);
 }
 
 // TEST(ElevationBuilder, get_tile_ids) {
