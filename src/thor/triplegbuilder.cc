@@ -1387,9 +1387,8 @@ void TripLegBuilder::Build(
   const auto forward_time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
 
   // check if we should use static time or offset time as the path lengthens
-  const bool invariant = options.has_date_time_type() &&
-                         options.date_time_type() == Options::invariant &&
-                         options.invariant_postprocess();
+  const bool invariant =
+      options.has_date_time_type() && options.date_time_type() == Options::invariant;
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
