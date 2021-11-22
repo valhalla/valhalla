@@ -494,6 +494,7 @@ inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const 
   return std::chrono::system_clock::from_time_t(FS_MTIME(s));
 }
 
+// TODO(Neyromancer): move from here
 inline std::string generate_tmp_suffix() {
   std::stringstream ss;
   ss << ".tmp_" << std::this_thread::get_id() << "_"
@@ -540,6 +541,7 @@ inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
 /**
  * @brief Removes all the content of the directory.
  * */
+/// TODO(Neyromacner) remove this method from here. substitute clear with remote where it appears
 inline bool clear(const std::string& dir) {
   if (!filesystem::exists(dir))
     return false;
@@ -559,6 +561,7 @@ inline bool clear(const std::string& dir) {
  * @brief Cut off the pattern from the src. Return the part of the str that is remained
  * after cutting off pattern from the original src.
  * */
+// TODO(Neyromancer): Remove form here and correct or mayber i don't need it at all
 inline std::string substr_front(const std::string& pattern, const std::string& src) {
   if (pattern.empty() || src.empty())
     return src;
@@ -576,6 +579,7 @@ inline std::string substr_front(const std::string& pattern, const std::string& s
  * @return
  *  - in case of errors or invalid parameters empty container will be returned.
  * */
+// TODO(Neyromancer): make it return only absolute paths
 inline std::vector<std::string> get_files(const std::string& root_dir, bool full_path = false) {
   std::vector<std::string> files;
   for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {

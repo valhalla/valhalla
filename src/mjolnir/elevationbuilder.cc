@@ -168,12 +168,27 @@ void add_elevations_to_multiple_tiles(const boost::property_tree::ptree& pt,
   }
 }
 
+std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt) {
+  std::deque<GraphId> tilequeue;
+  GraphReader reader(pt.get_child("mjolnir"));
+  // Create a randomized queue of tiles (at all levels) to work from
+  auto tileset = reader.GetTileSet();
+  for (const auto& id : tileset)
+    tilequeue.emplace_back(id);
+
+  std::random_device rd;
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
+
+  return tilequeue;
+}
+
 } // namespace
 
 namespace valhalla {
 namespace mjolnir {
 
-void ElevationBuilder::Build(const boost::property_tree::ptree& pt, const std::string& tile) {
+void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
+                             std::deque<baldr::GraphId> tile_ids) {
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !filesystem::exists(*elevation)) {
     LOG_INFO("Elevation storage directory does not exist");
@@ -181,17 +196,11 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt, const std::s
   }
 
   std::unique_ptr<skadi::sample> sample = std::make_unique<skadi::sample>(pt);
-  uint32_t nthreads{1};
-  auto tile_ids = get_tile_ids(pt, tile);
+  std::uint32_t nthreads =
+      std::max(static_cast<std::uint32_t>(1),
+               pt.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   if (tile_ids.empty()) {
-    LOG_INFO("Failed to get any elevations");
-    return;
-  }
-
-  if (tile.empty()) {
-    nthreads =
-        std::max(static_cast<std::uint32_t>(1),
-                 pt.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+    tile_ids = get_tile_ids(pt);
     sample.reset(new skadi::sample(*elevation));
   }
 
@@ -213,37 +222,6 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt, const std::s
   }
 
   LOG_INFO("Finished loading elevations");
-}
-
-std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt, const std::string& tile) {
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
-  if (!tile.empty()) {
-    auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-    if (!tile_dir || !filesystem::exists(*tile_dir)) {
-      LOG_WARN("Tile storage directory does not exist");
-      return tilequeue;
-    }
-
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
-    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
-    if (!reader.DoesTileExist(local_tile_id)) {
-      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
-      return tilequeue;
-    }
-
-    tilequeue.push_back(tile_id);
-  } else {
-    // Create a randomized queue of tiles (at all levels) to work from
-    auto tileset = reader.GetTileSet();
-    for (const auto& id : tileset) {
-      tilequeue.emplace_back(id);
-    }
-    std::random_device rd;
-    std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
-  }
-
-  return tilequeue;
 }
 
 } // namespace mjolnir

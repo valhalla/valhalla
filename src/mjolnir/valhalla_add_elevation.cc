@@ -1,10 +1,12 @@
 #include <cstdlib>
+#include <deque>
 #include <iostream>
 #include <vector>
 
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
@@ -90,6 +92,33 @@ std::unordered_set<std::string> get_valid_tile_paths(std::vector<std::string>&& 
   return st;
 }
 
+std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
+                                 const std::unordered_set<std::string>& tiles) {
+  if (tiles.empty())
+    return {};
+
+  auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
+  if (!tile_dir || !filesystem::exists(*tile_dir)) {
+    LOG_WARN("Tile storage directory does not exist");
+    return {};
+  }
+
+  std::deque<GraphId> tilequeue;
+  GraphReader reader(pt.get_child("mjolnir"));
+  std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
+    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
+    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
+    if (!reader.DoesTileExist(local_tile_id)) {
+      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
+      return;
+    }
+
+    tilequeue.push_back(tile_id);
+  });
+
+  return tilequeue;
+}
+
 int main(int argc, char** argv) {
   auto params = parse_arguments(argc, argv);
   if (std::get<Input::CONFIG>(params).empty() || std::get<Input::TILES>(params).empty()) {
@@ -112,8 +141,7 @@ int main(int argc, char** argv) {
 
   boost::property_tree::ptree pt;
   rapidjson::read_json(std::get<Input::CONFIG>(params), pt);
-  for (const auto& tile : tiles)
-    ElevationBuilder::Build(pt, tile);
+  ElevationBuilder::Build(pt, get_tile_ids(pt, tiles));
 
   return EXIT_SUCCESS;
 }

@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <deque>
 #include <string>
-#include <thread>
 #include <unordered_set>
 
 #include <prime_server/prime_server.hpp>
@@ -37,17 +36,14 @@ struct ElevationDownloadTestData {
   }
 
   void load_tiles() {
-    std::unordered_set<std::string> seen;
     for (auto&& ftile : filesystem::get_files(m_dir_dst)) {
-      if (ftile.find("gph") != std::string::npos && !seen.count(ftile)) {
-        seen.insert(ftile);
-        m_test_tile_names.push_back(std::move(ftile));
-      }
+      if (ftile.find("gph") != std::string::npos && !m_test_tile_names.count(ftile))
+        m_test_tile_names.insert(std::move(ftile));
     }
   }
 
   std::vector<valhalla::baldr::GraphId> m_test_tile_ids;
-  std::vector<std::string> m_test_tile_names;
+  std::unordered_set<std::string> m_test_tile_names;
   std::string m_dir_dst;
 };
 
@@ -97,6 +93,33 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
   return result;
 }
 
+std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
+                                 const std::unordered_set<std::string>& tiles) {
+  if (tiles.empty())
+    return {};
+
+  auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
+  if (!tile_dir || !filesystem::exists(*tile_dir)) {
+    LOG_WARN("Tile storage directory does not exist");
+    return {};
+  }
+
+  std::deque<GraphId> tilequeue;
+  GraphReader reader(pt.get_child("mjolnir"));
+  std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
+    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
+    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
+    if (!reader.DoesTileExist(local_tile_id)) {
+      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
+      return;
+    }
+
+    tilequeue.push_back(tile_id);
+  });
+
+  return tilequeue;
+}
+
 TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& config = test::
       make_config("test/data",
@@ -135,7 +158,8 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   std::unordered_set<std::string> dst_elevations;
   for (const auto& tile : params.m_test_tile_names) {
-    valhalla::mjolnir::ElevationBuilder::Build(config, params.m_test_tile_names.front());
+    valhalla::mjolnir::ElevationBuilder::Build(config,
+                                               get_tile_ids(config, params.m_test_tile_names));
 
     ASSERT_TRUE(filesystem::exists(dst_dir));
     const auto& elev_paths = filesystem::get_files(dst_dir, true);
@@ -158,23 +182,23 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   filesystem::clear(src_path);
 }
 
-TEST(ElevationBuilder, get_tile_ids) {
-  auto config = test::make_config("test/data", {}, {});
-
-  // check if config contain tile_dir (originall it does not)
-  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-
-  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
-
-  // check if tile is from the specified tile_dir (it is not)
-  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
-  EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-
-  // check if we can create tileset based on the tiles from tile_dir specified above
-  auto test_result = valhalla::mjolnir::get_tile_ids(config, "");
-  EXPECT_FALSE(test_result.empty());
-}
+// TEST(ElevationBuilder, get_tile_ids) {
+//  auto config = test::make_config("test/data", {}, {});
+//
+//  // check if config contain tile_dir (originall it does not)
+//  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+//
+//  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+//
+//  // check if tile is from the specified tile_dir (it is not)
+//  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+//  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
+//  EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
+//
+//  // check if we can create tileset based on the tiles from tile_dir specified above
+//  auto test_result = valhalla::mjolnir::get_tile_ids(config, "");
+//  EXPECT_FALSE(test_result.empty());
+//}
 
 } // namespace
 
