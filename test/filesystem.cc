@@ -302,7 +302,11 @@ TEST(Filesystem, get_files_valid_input) {
     EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 
+  if (filesystem::create_directories("/tmp/save_file_invalid"))
+    EXPECT_TRUE(filesystem::get_files("/tmp/save_file_invalid").empty());
+
   filesystem::remove_all("/tmp/save_file_input/");
+  filesystem::remove_all("/tmp/save_file_invalid/");
 }
 
 } // namespace

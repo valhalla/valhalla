@@ -509,7 +509,7 @@ inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
   if (!filesystem::create_directories(dir))
     return false;
 
-  std::function<std::string(void)> generate_tmp_suffix = []() -> std::string {
+  auto generate_tmp_suffix = []() -> std::string {
     std::stringstream ss;
     ss << ".tmp_" << std::this_thread::get_id() << "_"
        << std::chrono::high_resolution_clock::now().time_since_epoch().count();

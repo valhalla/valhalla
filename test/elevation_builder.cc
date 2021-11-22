@@ -13,17 +13,26 @@
 #include "midgard/pointll.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/valhalla_add_elevation_utils.h"
 #include "pixels.h"
 #include "skadi/sample.h"
 #include "tile_server.h"
 
 namespace {
+// meters to resample shape to.
+// see elevationbuilder.cc for details
+constexpr double POSTING_INTERVAL = 60;
+const std::string src_dir{"test/data/"};
+const std::string elevation_local_src{"elevation_src"};
+const std::string src_path = src_dir + elevation_local_src;
+
+zmq::context_t context;
+
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
-void create_fake_tile(std::string tile_path);
 std::vector<std::string> full_to_relative_path(const std::string& root_dir,
                                                std::vector<std::string>&& paths) {
   if (root_dir.empty() || paths.empty())
-    return paths;
+    return std::move(paths);
 
   std::vector<std::string> res;
   res.reserve(paths.size());
@@ -34,7 +43,7 @@ std::vector<std::string> full_to_relative_path(const std::string& root_dir,
       continue;
     }
 
-    res.push_back(std::move(path.substr(pos + root_dir.size())));
+    res.push_back(path.substr(pos + root_dir.size()));
   }
 
   return res;
@@ -51,6 +60,13 @@ TEST(Filesystem, full_to_relative_path_valid_input) {
         "/valhalla-internal/build/test/data/utrecht_tiles", "/0/003/196.gp"},
        {"/valhalla-internal/build/test/data/utrecht_tiles/1/051/305.gph",
         "/valhalla-internal/build/test/data/utrecht_tiles", "/1/051/305.gph"},
+       {"/utrecht_tiles/build/test/data/utrecht_tiles/1/051/305.gph", "utrecht_tiles",
+        "/1/051/305.gph"},
+       {"/utrecht_tiles/utrecht_tiles/utrecht_tiles/utrecht_tiles/utrecht_tiles/1/051/305.gph",
+        "utrecht_tiles", "/1/051/305.gph"},
+       {"/utrecht_tiles/build/test/data/utrecht_tiles/1/051/305.gph", "data",
+        "/utrecht_tiles/1/051/305.gph"},
+       {"/data/build/test/data/utrecht_tiles/1/051/305.gph", "data", "/utrecht_tiles/1/051/305.gph"},
        {"/valhalla-internal/build/test/data/utrecht_tiles/2/000/818/660.gph",
         "/valhalla-internal/build/test/data/utrecht_tiles", "/2/000/818/660.gph"},
        {"/valhalla-internal/build/test/data/utrecht_tiles/0/003/196.gp", "",
@@ -120,15 +136,6 @@ TEST(Filesystem, clear_invalid_input) {
   EXPECT_FALSE(clear(".foobar"));
 }
 
-// meters to resample shape to.
-// see elevationbuilder.cc for details
-constexpr double POSTING_INTERVAL = 60;
-const std::string src_dir{"test/data/"};
-const std::string elevation_local_src{"elevation_src"};
-const std::string src_path = src_dir + elevation_local_src;
-
-zmq::context_t context;
-
 struct ElevationDownloadTestData {
   ElevationDownloadTestData(const std::string& dir_dst) : m_dir_dst{dir_dst} {
     load_tiles();
@@ -156,6 +163,9 @@ struct TestableSample : public valhalla::skadi::sample {
 };
 
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
+  if (tile_dir.empty() || tile.empty())
+    return {};
+
   valhalla::mjolnir::GraphTileBuilder tilebuilder(tile_dir, GraphTile::GetTileId(tile_dir + tile),
                                                   true);
   tilebuilder.header_builder().set_has_elevation(true);
@@ -185,38 +195,41 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
       } else {
         resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
       }
+
       for (auto&& el : resampled)
         result.insert(std::move(el));
     }
   }
+
   return result;
 }
 
-std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
-                                 const std::unordered_set<std::string>& tiles) {
-  if (tiles.empty())
-    return {};
+TEST(ElevationBuilder, get_coord) {
+  EXPECT_TRUE(get_coord("test/data/elevationbuild/tile_dir", "").empty());
+  EXPECT_TRUE(get_coord("", "/0/003/196.gph").empty());
+  EXPECT_FALSE(get_coord("test/data/elevationbuild/tile_dir", "/0/003/196.gph").empty());
+}
 
-  auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
-    LOG_WARN("Tile storage directory does not exist");
-    return {};
-  }
+TEST(ElevationBuilder, get_tile_ids) {
+  auto config = test::make_config("test/data", {}, {});
 
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
-  std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
-    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
-    if (!reader.DoesTileExist(local_tile_id)) {
-      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
-      return;
-    }
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {}).empty());
 
-    tilequeue.push_back(tile_id);
-  });
+  config.erase("mjolnir.tile_dir");
+  // check if config contains tile_dir
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
 
-  return tilequeue;
+  // check if config contains elevation dir
+  config.erase("additional_data.elevation");
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
+
+  config.put<std::string>("additional_data.elevation", "test/data/elevation_dst/");
+  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+  // check if tile is from the specified tile_dir (it is not)
+  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
+
+  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
+  EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
 }
 
 TEST(ElevationBuilder, test_loaded_elevations) {
@@ -255,21 +268,21 @@ TEST(ElevationBuilder, test_loaded_elevations) {
     EXPECT_TRUE(filesystem::save(src_path + elev));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
+  valhalla::mjolnir::ElevationBuilder::Build(config,
+                                             valhalla::mjolnir::get_tile_ids(config,
+                                                                             params
+                                                                                 .m_test_tile_names));
+
+  ASSERT_TRUE(filesystem::exists(dst_dir));
+
+  const auto& elev_paths = filesystem::get_files(dst_dir);
+  ASSERT_FALSE(elev_paths.empty());
+
   std::unordered_set<std::string> dst_elevations;
-  for (const auto& tile : params.m_test_tile_names) {
-    valhalla::mjolnir::ElevationBuilder::Build(config,
-                                               get_tile_ids(config, params.m_test_tile_names));
+  for (const auto& elev : elev_paths)
+    dst_elevations.insert(elev);
 
-    ASSERT_TRUE(filesystem::exists(dst_dir));
-    const auto& elev_paths = filesystem::get_files(dst_dir);
-
-    ASSERT_FALSE(elev_paths.empty());
-
-    for (const auto& elev : elev_paths)
-      dst_elevations.insert(elev);
-
-    clear(dst_dir);
-  }
+  clear(dst_dir);
 
   for (const auto& elev : src_elevations) {
     EXPECT_TRUE(
@@ -280,24 +293,6 @@ TEST(ElevationBuilder, test_loaded_elevations) {
 
   clear(src_path);
 }
-
-// TEST(ElevationBuilder, get_tile_ids) {
-//  auto config = test::make_config("test/data", {}, {});
-//
-//  // check if config contain tile_dir (originall it does not)
-//  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-//
-//  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
-//
-//  // check if tile is from the specified tile_dir (it is not)
-//  EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-//  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
-//  EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, "/0/003/196.gph").empty());
-//
-//  // check if we can create tileset based on the tiles from tile_dir specified above
-//  auto test_result = valhalla::mjolnir::get_tile_ids(config, "");
-//  EXPECT_FALSE(test_result.empty());
-//}
 
 } // namespace
 
