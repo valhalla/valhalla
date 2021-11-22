@@ -415,6 +415,10 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     // Bss maneuver type
     trip_maneuver->set_bss_maneuver_type(maneuver.bss_maneuver_type());
 
+    // Bss info
+    auto* trip_bss_info = trip_maneuver->mutable_bss_info();
+    trip_bss_info->CopyFrom(maneuver.bss_info());
+
     // Travel type
     switch (maneuver.travel_mode()) {
       case TripLeg_TravelMode_kDrive: {
