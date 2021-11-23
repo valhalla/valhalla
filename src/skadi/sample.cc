@@ -410,8 +410,7 @@ sample::sample(const boost::property_tree::ptree& pt)
   remote_loader_ =
       std::make_unique<baldr::curl_tile_getter_t>(max_concurrent_users,
                                                   pt.get<std::string>("mjolnir.user_agent", ""),
-                                                  pt.get<bool>("additional_data.elevation_url_gz",
-                                                               false));
+                                                  false);
 
   // this line used only for testing check for more details elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
