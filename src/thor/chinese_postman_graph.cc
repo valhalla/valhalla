@@ -106,6 +106,7 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
 
   this->setupDFSEulerCycle(extraPaths);
   this->dfsEulerCycle(startNodeIndex);
+
   int edgeUnvisited = 0;
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
   for (auto const& v : this->outEdges) {
@@ -113,7 +114,6 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
       edgeUnvisited++;
     }
   }
-  LOG_WARN("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
   return this->reversedEulerPath;
 }
 
@@ -149,6 +149,7 @@ void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
     int nextNodeIndex =
         this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
     this->outEdges[startNodeIndex]--;
+    this->expandedAdjacencyList[startNodeIndex].pop_back();
     this->dfsEulerCycle(nextNodeIndex);
   }
   this->reversedEulerPath.push_back(startNodeIndex);
@@ -173,7 +174,7 @@ bool ChinesePostmanGraph::isIdealGraph(CPVertex start_vertex, CPVertex end_verte
     return unbalancedVertices.size() == 0;
   } else {
     if (unbalancedVertices.count(start_vertex.vertex_id) &&
-        unbalancedVertices.count(end_vertex.vertex_id)) {
+        unbalancedVertices.count(end_vertex.vertex_id) && unbalancedVertices.size() == 2) {
       if (unbalancedVertices[start_vertex.vertex_id] == -1 &&
           unbalancedVertices[end_vertex.vertex_id] == 1) {
         return true;

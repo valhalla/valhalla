@@ -231,7 +231,34 @@ void test_request(const gurka::map& map,
   exclude_rings.push_back(exclude_ring);
 
   // build request manually for now
-  auto lls = {map.nodes.at(start_node), map.nodes.at(end_node)};
+  // If statements below can be put as a function
+  std::vector<midgard::PointLL> lls;
+  if (start_node.size() == 1) {
+    lls.push_back(map.nodes.at(start_node));
+  } else if (start_node.size() == 2) {
+    auto sn0 = map.nodes.at(std::string(1, start_node.at(0)));
+    auto sn1 = map.nodes.at(std::string(1, start_node.at(1)));
+    auto sn_lat = sn0.lat() + (sn1.lat() - sn0.lat()) / 2.0;
+    auto sn_lng = sn0.lng() + (sn1.lng() - sn0.lng()) / 2.0;
+    auto sn = PointLL(sn_lng, sn_lat);
+
+    lls.push_back(sn);
+  }
+  if (end_node.size() == 1) {
+    lls.push_back(map.nodes.at(end_node));
+  } else if (end_node.size() == 2) {
+    auto en0 = map.nodes.at(std::string(1, end_node.at(0)));
+    auto en1 = map.nodes.at(std::string(1, end_node.at(1)));
+    auto en_lat = en0.lat() + (en1.lat() - en0.lat()) / 2.0;
+    auto en_lng = en0.lng() + (en1.lng() - en0.lng()) / 2.0;
+    auto en = PointLL(en_lng, en_lat);
+
+    lls.push_back(en);
+  }
+
+  if (lls.size() != 2) {
+    throw std::logic_error("There must be 2 elements.");
+  }
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -410,9 +437,8 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
                {"CG", "GH", "HF", "FC", "CG", "GH"});
 
   // A more complex example, non-ideal graph
-  // test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "D",
-  //              {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD",
-  //               "DE", "EA", "AC", "CD"});
+  test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "F", "E",
+               {"FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE", "EA", "AC", "CD", "DE"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
@@ -427,6 +453,16 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
                {"EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AF"});
   test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "C",
                {"AC", "CD", "DE", "EA", "AB", "BC"});
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanMiddleEdge) {
+
+  // create a chinese polygon (prwu)
+  test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "AB", "AB",
+               {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
+
+  // test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "B",
+  //              {"FD", "DE", "EA", "AF", "FE"});
 }
 
 TEST_P(ChinesePostmanTest, TestRoute) {
