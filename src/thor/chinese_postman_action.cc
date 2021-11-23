@@ -246,13 +246,11 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
       eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
     } else {
       // Find the edges for path through outside polygon
-      std::cout << "Find path for " << *it << " to " << *(it + 1) << ": ";
       auto a = G.getCPVertex(*it);
       auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options,
                                         costing_str, costing);
 
       for (auto edge_graph_id : fullRoute) {
-        std::cout << edge_graph_id << ", ";
         eulerPathEdgeGraphIDs.push_back(edge_graph_id);
       }
     }
@@ -459,10 +457,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   }
   // Start build path here
   LOG_DEBUG("Building full path");
-  std::cout << "\nedgeGraphIds\n";
-  for (auto e : edgeGraphIds) {
-    std::cout << e << ", ";
-  }
   bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
   std::vector<PathInfo> path =

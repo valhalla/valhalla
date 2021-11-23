@@ -105,30 +105,7 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
   int startNodeIndex = this->getVertexIndex(start_vertex);
 
   this->setupDFSEulerCycle(extraPaths);
-  int num_out_edges = 0;
-  int num_nodes = 0;
-  for (const auto& kv : this->outEdges) {
-    num_out_edges += kv.second;
-    num_nodes += 1;
-    std::cout << "Edge num: " + std::to_string(kv.first) + " : " + std::to_string(kv.second) << "\n";
-  }
-  for (const auto& kv : this->expandedAdjacencyList) {
-    std::cout << "Adjancent edge: " + std::to_string(kv.first) + " : ";
-    for (const auto& v : kv.second) {
-      std::cout << v << ", ";
-    }
-    std::cout << "\n";
-  }
-
-  std::cout << ("Num of nodes: " + std::to_string(num_nodes)) << std::endl;
-  std::cout << ("Num of out edges: " + std::to_string(num_out_edges)) << std::endl;
-  std::cout << ("Start Index: " + std::to_string(startNodeIndex)) << std::endl;
   this->dfsEulerCycle(startNodeIndex);
-
-  for (auto x : this->reversedEulerPath) {
-    std::cout << x << ", ";
-  }
-  std::cout << "\n";
 
   int edgeUnvisited = 0;
   // Check if there is unvisited edges (this means, the graph is not strongly connected)
@@ -136,14 +113,6 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
     if (v.second != 0) {
       edgeUnvisited++;
     }
-  }
-  std::cout << ("Unvisited edges (ignored): " + std::to_string(edgeUnvisited)) << std::endl;
-  for (const auto& kv : this->expandedAdjacencyList) {
-    std::cout << "Unvisited Adjancent edge: " + std::to_string(kv.first) + " : ";
-    for (const auto& v : kv.second) {
-      std::cout << v << ", ";
-    }
-    std::cout << "\n";
   }
   return this->reversedEulerPath;
 }
@@ -176,28 +145,6 @@ std::map<int, std::vector<int>> ChinesePostmanGraph::getAdjacencyList(ExtraPaths
 }
 
 void ChinesePostmanGraph::dfsEulerCycle(int startNodeIndex) {
-  // std::vector<int> circuit;
-  // std::stack<int> current_path;
-  // int current_node = startNodeIndex;
-  // current_path.push(current_node);
-
-  // while(!current_path.empty()){
-  //   if (this->outEdges[current_node]){
-  //     current_path.push(current_node);
-  //     int next_node = this->expandedAdjacencyList[current_node].back();
-  //     this->outEdges[current_node]--;
-  //     this->expandedAdjacencyList[current_node].pop_back();
-
-  //     current_node = next_node;
-  //   } else {
-  //     circuit.push_back(current_node);
-
-  //     current_node = current_path.top();
-  //     current_path.pop();
-  //   }
-  // }
-  // this->reversedEulerPath = circuit;
-
   while (this->outEdges[startNodeIndex] != 0) {
     int nextNodeIndex =
         this->expandedAdjacencyList[startNodeIndex][this->outEdges[startNodeIndex] - 1];
