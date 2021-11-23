@@ -20,9 +20,8 @@ TEST(Sample, test_make_single_point_url) {
 
     // clang-form off
     valhalla::baldr::curl_tile_getter_t tile_getter{1, "", false};
-    tile_getter.set_path_pattern("{DataPath}");
     for (auto &&test : tests) {
-        EXPECT_EQ(test.result, tile_getter.test_make_single_point_url(test.url,
+        EXPECT_EQ(test.result, tile_getter.make_single_point_url(test.url,
             sample::get_hgt_file_name(sample::get_tile_index(test.point))));
     }
     // clang-format on

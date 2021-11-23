@@ -50,35 +50,10 @@ public:
     interrupt_ = interrupt;
   }
 
-  void set_path_pattern(const std::string& pattern) override {
-    path_pattern_ = pattern;
-  }
-
-  void set_remote_path(const std::string& path) override {
-    remote_path_ = path;
-  }
-
-  /**
-   * @brief Build uri address to make remote call
-   * @name[in] tile_url Base url address
-   * @name[in] fname File to call for
-   * @return full uri address
-   */
-  std::string make_single_point_url(const std::string& tile_url,
-                                    const std::string& fname) const override {
-    auto id_pos = tile_url.find(path_pattern_);
-    return tile_url.substr(0, id_pos) + remote_path_ + fname +
-           tile_url.substr(id_pos + path_pattern_.size());
-  }
-
 private:
   curler_pool_t curlers_;
   const bool gzipped_;
   const interrupt_t* interrupt_ = nullptr;
-
-  std::string path_pattern_;
-  /// TODO(kormulev): try to remove this logic from tests if possible. see tests for acquiring tiles
-  std::string remote_path_;
 };
 
 } // namespace baldr

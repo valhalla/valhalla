@@ -36,11 +36,6 @@ public:
    * */
   virtual response_t get(const std::string& url) = 0;
 
-  virtual std::string make_single_point_url(const std::string& tile_url,
-                                            const std::string& fname) const = 0;
-  virtual void set_path_pattern(const std::string& pattern) = 0;
-  virtual void set_remote_path(const std::string& path) = 0;
-
   /**
    * Whether tiles are with .gz extension.
    */
@@ -61,6 +56,22 @@ public:
 
   virtual ~tile_getter_t() = default;
 };
+
+/**
+ * @brief Build uri address to make remote call
+ * @name[in] tile_url Base url address
+ * @name[in] fname File to call for
+ * @name[in] remote_path This parameter is used only in testing
+ * @return full uri address
+ */
+inline std::string make_single_point_url(const std::string& tile_url,
+                                         const std::string& fname,
+                                         const std::string& remote_path = {}) {
+  static const std::string path_pattern{"{tilePath}"};
+  auto id_pos = tile_url.find(path_pattern);
+  return tile_url.substr(0, id_pos) + remote_path + fname +
+         tile_url.substr(id_pos + path_pattern.size());
+}
 
 } // namespace baldr
 } // namespace valhalla

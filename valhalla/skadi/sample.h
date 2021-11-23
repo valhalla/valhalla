@@ -105,6 +105,8 @@ private:
   std::unordered_set<std::string> st_;
   std::mutex st_lck_;
   std::uint32_t num_threads_{1};
+  // This parameter is used only in tests
+  std::string remote_path_;
 };
 
 } // namespace skadi

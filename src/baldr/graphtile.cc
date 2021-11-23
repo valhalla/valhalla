@@ -223,8 +223,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
 
   auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
                                                       valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
-  tile_getter->set_path_pattern(valhalla::baldr::GraphTile::kTilePathPattern);
-  auto result = tile_getter->get(tile_getter->make_single_point_url(tile_url, fname));
+  auto result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }

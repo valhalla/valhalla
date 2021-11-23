@@ -35,7 +35,6 @@ constexpr int16_t NO_DATA_HIGH = 16384;
 constexpr int16_t NO_DATA_LOW = -16384;
 constexpr size_t TILE_COUNT = 180 * 360;
 constexpr int8_t UNPACKED_TILES_COUNT = 50;
-const constexpr char* kDataPathPattern = "{DataPath}";
 
 // macro is faster than inline function for this...
 #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
@@ -415,9 +414,7 @@ sample::sample(const boost::property_tree::ptree& pt)
                                                                false));
 
   // this line used only for testing check for more details elevation_builder.cc
-  remote_loader_->set_remote_path(pt.get<std::string>("additional_data.elevation_dir", ""));
-  remote_loader_->set_path_pattern(kDataPathPattern);
-
+  remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
   num_threads_ = pt.get<std::uint32_t>("mjolnir.concurrency", 1);
 }
 
@@ -532,7 +529,7 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
 
   auto index = get_tile_index(coord);
   auto elev = get_hgt_file_name(index);
-  auto uri = remote_loader_->make_single_point_url(url_, elev);
+  auto uri = baldr::make_single_point_url(url_, elev, remote_path_);
 
   {
     std::lock_guard<std::mutex> _(st_lck_);

@@ -236,7 +236,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   const auto& config = test::
       make_config("test/data",
                   {{"additional_data.elevation_url",
-                    "127.0.0.1:38004/route-tile/v1/{DataPath}?version=%version&access_token=%token"},
+                    "127.0.0.1:38004/route-tile/v1/{tilePath}?version=%version&access_token=%token"},
                    {"additional_data.elevation_url_gz", "false"},
                    {"mjolnir.tile_dir", "test/data/tile_src"},
                    {"additional_data.elevation_dir", elevation_local_src},
