@@ -90,6 +90,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fixed_t{edge.percent_along, 5}},
             {"distance", json::fixed_t{edge.distance, 1}},
+            {"heading", json::fixed_t{edge.projected_heading, 1}},
             {"outbound_reach", static_cast<int64_t>(edge.outbound_reach)},
             {"inbound_reach", static_cast<int64_t>(edge.inbound_reach)},
             {"edge_id", edge.id.json()},
