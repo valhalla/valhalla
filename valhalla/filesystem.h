@@ -544,7 +544,6 @@ inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
  * @return
  *  - in case of errors or invalid parameters empty container will be returned.
  * */
-// TODO(Neyromancer): make it return only absolute paths
 inline std::vector<std::string> get_files(const std::string& root_dir) {
   std::vector<std::string> files;
   for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {

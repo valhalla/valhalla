@@ -22,7 +22,7 @@ using namespace valhalla::mjolnir;
 enum Input { CONFIG, TILES };
 
 /*
- * This program downloads elevations from remote storage for each provided tile.
+ * This tool downloads elevations from remote storage for each provided tile.
  * First it checks if the elevation tiles are available locally and
  * in case they are not it tries to download them from a remote storage.
  * Remote storage address should be given in a configuration file.
@@ -36,7 +36,7 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
   std::vector<std::string> tiles;
   bpo::options_description options(
       " Usage: valhalla_add_elevation [options]\n"
-      "valhalla_add_elevation is a service for loading elevations for a provided tile. "
+      "valhalla_add_elevation is a tool for loading elevations for a provided tile. "
       "The service checks if required elevations stored locally if they are not "
       "it tries to establish connection to the remote storage(based on the information from configuration file)"
       "and loads required elevations.\n");
@@ -44,9 +44,10 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
       "config,c", boost::program_options::value<std::string>(&config_path),
-      "Path to the json configuration file.")
-      // positional arguments
-      ("tiles,t", boost::program_options::value<std::vector<std::string>>(&tiles)->multitoken());
+      "Path to the json configuration file.")("tiles,t",
+                                              boost::program_options::value<std::vector<std::string>>(
+                                                  &tiles)
+                                                  ->multitoken());
 
   bpo::positional_options_description pos_options;
   pos_options.add("tiles", 16);

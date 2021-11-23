@@ -74,7 +74,6 @@ public:
 
   bool init(const std::string& path, format_t format) {
     auto size = file_size(path);
-
     if (format == format_t::RAW && size != HGT_BYTES) {
       return false;
     }
@@ -412,7 +411,7 @@ sample::sample(const boost::property_tree::ptree& pt)
                                                   pt.get<std::string>("mjolnir.user_agent", ""),
                                                   false);
 
-  // this line used only for testing check for more details elevation_builder.cc
+  // this line used only for testing, for more details check elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
   num_threads_ = pt.get<std::uint32_t>("mjolnir.concurrency", 1);
 }
