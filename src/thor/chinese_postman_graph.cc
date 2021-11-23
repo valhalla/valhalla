@@ -120,9 +120,9 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
     std::cout << "\n";
   }
 
-  std::cout << ("Num of nodes: " + std::to_string(num_nodes));
-  std::cout << ("Num of out edges: " + std::to_string(num_out_edges));
-  std::cout << ("Start Index: " + std::to_string(startNodeIndex));
+  std::cout << ("Num of nodes: " + std::to_string(num_nodes)) << std::endl;
+  std::cout << ("Num of out edges: " + std::to_string(num_out_edges)) << std::endl;
+  std::cout << ("Start Index: " + std::to_string(startNodeIndex)) << std::endl;
   this->dfsEulerCycle(startNodeIndex);
 
   for (auto x : this->reversedEulerPath) {
@@ -137,7 +137,7 @@ std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex star
       edgeUnvisited++;
     }
   }
-  std::cout << ("Unvisited edges (ignored): " + std::to_string(edgeUnvisited));
+  std::cout << ("Unvisited edges (ignored): " + std::to_string(edgeUnvisited)) << std::endl;
   for (const auto& kv : this->expandedAdjacencyList) {
     std::cout << "Unvisited Adjancent edge: " + std::to_string(kv.first) + " : ";
     for (const auto& v : kv.second) {

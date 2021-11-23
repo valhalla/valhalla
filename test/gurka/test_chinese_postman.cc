@@ -458,11 +458,11 @@ TEST_P(ChinesePostmanTest, DISABLED_TestChinesePostmanOutsidePolygon) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanMiddleEdge) {
 
   // create a chinese polygon (prwu)
-  // test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "AB", "AB",
-  //              {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
+  test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "AB", "AB",
+               {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
 
-  test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "B",
-               {"FD", "DE", "EA", "AF", "FE"});
+  // test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "B",
+  //              {"FD", "DE", "EA", "AF", "FE"});
 }
 
 TEST_P(ChinesePostmanTest, DISABLED_TestRoute) {
