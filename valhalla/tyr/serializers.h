@@ -129,6 +129,7 @@ valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,

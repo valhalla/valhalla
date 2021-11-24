@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -66,11 +67,15 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     const FormOfWay fow = road_class_to_fow(edge);
     const auto frc = static_cast<uint8_t>(edge.road_class());
 
-    const auto& start = shape[edge.begin_shape_index()];
+    const auto begin_index = edge.begin_shape_index();
+    const auto end_index = edge.end_shape_index();
+
+    const auto& start = shape[begin_index];
     float forward_heading =
-        midgard::tangent_angle(edge.begin_shape_index(), start, shape, 20.f, true);
-    const auto& end = shape[edge.end_shape_index()];
-    float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
+        midgard::tangent_angle(begin_index, start, shape, 20.f, true, begin_index, end_index);
+    const auto& end = shape[end_index];
+    float reverse_heading =
+        midgard::tangent_angle(end_index, end, shape, 20.f, false, begin_index, end_index);
 
     std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
     lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
@@ -83,10 +88,37 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
-std::string serializeStatus(const Api&) {
-  // TODO: once we decide on what's in the status message we'll fill out the proto message in
-  // loki/thor/odin and we'll serialize it here
-  return "{}";
+std::string serializeStatus(const Api& request) {
+
+  rapidjson::Document status_doc;
+  status_doc.SetObject();
+  auto& alloc = status_doc.GetAllocator();
+
+  status_doc.AddMember("version", rapidjson::Value().SetString(request.status().version(), alloc),
+                       alloc);
+  status_doc.AddMember("tileset_last_modified",
+                       rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
+
+  if (request.status().has_has_tiles())
+    status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
+                         alloc);
+  if (request.status().has_has_admins())
+    status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                         alloc);
+  if (request.status().has_has_timezones())
+    status_doc.AddMember("has_timezones",
+                         rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
+  if (request.status().has_has_live_traffic())
+    status_doc.AddMember("has_live_traffic",
+                         rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+
+  rapidjson::Document bbox_doc;
+  if (request.status().has_bbox()) {
+    bbox_doc.Parse(request.status().bbox());
+    rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
+  }
+
+  return rapidjson::to_string(status_doc);
 }
 
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
@@ -157,13 +189,12 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    uint32_t waypoint_index = location.shape_index();
-    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+    if (location.waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
       waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
     } else {
-      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
     }
     waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
@@ -173,7 +204,7 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
   }
 
   return waypoint;
@@ -197,16 +228,40 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   auto waypoints = json::array({});
   // For multi-route the same waypoints are used for all routes.
-  const auto& legs = trip.routes(0).legs();
-  for (const auto& leg : legs) {
-    for (const auto& location : leg.location()) {
-      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+  for (const auto& leg : trip.routes(0).legs()) {
+    for (int i = 0; i < leg.location_size(); ++i) {
+      // we skip the first location of legs > 0 because that would duplicate waypoints
+      if (i == 0 && !waypoints->empty()) {
         continue;
       }
-      waypoints->emplace_back(waypoint(location, false));
+      waypoints->emplace_back(waypoint(leg.location(i), false));
     }
   }
   return waypoints;
+}
+
+/*
+ * This function takes any waypoints (excluding origin and destination) and gets
+ * the associated leg shape index (geometry index) from the location.  We use
+ * that geometry index to calculate the distance_from_leg_start.
+ * Then we serialize the via_waypoints object.
+ *
+ */
+json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
+  // Create a vector of indexes based on the number of locations.
+  auto via_waypoints = json::array({});
+  // only loop thru the locations that are not origin or destinations
+  for (const auto& loc : leg.location()) {
+    // Only create via_waypoints object if the locations are via or through types
+    if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
+      auto via_waypoint = json::map({});
+      via_waypoint->emplace("geometry_index", static_cast<uint64_t>(loc.leg_shape_index()));
+      via_waypoint->emplace("distance_from_start", json::fixed_t{loc.distance_from_leg_origin(), 3});
+      via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(loc.original_index()));
+      via_waypoints->emplace_back(via_waypoint);
+    }
+  }
+  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,

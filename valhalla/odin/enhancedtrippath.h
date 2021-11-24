@@ -137,8 +137,8 @@ public:
     return mutable_edge_->name();
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::TaggedName>& tagged_name() const {
-    return mutable_edge_->tagged_name();
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TaggedValue>& tagged_value() const {
+    return mutable_edge_->tagged_value();
   }
 
   float length_km() const {
@@ -633,6 +633,10 @@ public:
 
   bool HasBssInfo() const {
     return mutable_node_->has_bss_info();
+  }
+
+  const BikeShareStationInfo& GetBssInfo() const {
+    return mutable_node_->bss_info();
   }
 
   bool HasIntersectingEdges() const;

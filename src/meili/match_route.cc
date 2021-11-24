@@ -234,7 +234,12 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         // we modify the first segment of the new_segments accordingly to replace the previous
         // one in the route.
         new_segments.front().source = route.back().source;
-        new_segments.front().first_match_idx = route.back().first_match_idx;
+        // Prefer first_match_idx from previous segments but do not replace valid value with invalid.
+        if (route.back().first_match_idx != -1)
+          new_segments.front().first_match_idx = route.back().first_match_idx;
+        // Prefer last_match_idx from new segments but do not replace valid value with invalid.
+        if (new_segments.front().last_match_idx == -1)
+          new_segments.front().last_match_idx = route.back().last_match_idx;
         route.pop_back();
       }
 

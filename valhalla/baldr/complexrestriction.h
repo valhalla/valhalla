@@ -58,7 +58,7 @@ public:
    * Get the number of vias.
    * @return  Returns the number of vias
    */
-  uint64_t via_count() const {
+  uint8_t via_count() const {
     return via_count_;
   }
 
@@ -74,7 +74,7 @@ public:
    * Get the modes impacted by the restriction.
    * @return  Returns the access modes
    */
-  uint64_t modes() const {
+  uint16_t modes() const {
     return modes_;
   }
 
@@ -91,7 +91,7 @@ public:
    * Get the begin day or dow for the restriction.
    * @return  Returns the begin day or dow for this restriction.
    */
-  uint64_t begin_day_dow() const {
+  uint8_t begin_day_dow() const {
     return begin_day_dow_;
   }
 
@@ -99,7 +99,7 @@ public:
    * Get the begin month for the restriction.
    * @return  Returns the begin month for this restriction.
    */
-  uint64_t begin_month() const {
+  uint8_t begin_month() const {
     return begin_month_;
   }
 
@@ -107,7 +107,7 @@ public:
    * Get the begin week for the restriction.
    * @return  Returns the begin week for this restriction.
    */
-  uint64_t begin_week() const {
+  uint8_t begin_week() const {
     return begin_week_;
   }
 
@@ -115,7 +115,7 @@ public:
    * Get the begin hours for the restriction.
    * @return  Returns the begin hours for this restriction.
    */
-  uint64_t begin_hrs() const {
+  uint8_t begin_hrs() const {
     return begin_hrs_;
   }
 
@@ -132,7 +132,7 @@ public:
    * Get the end day or dow for the restriction.
    * @return  Returns the end day or dow for this restriction.
    */
-  uint64_t end_day_dow() const {
+  uint8_t end_day_dow() const {
     return end_day_dow_;
   }
 
@@ -140,7 +140,7 @@ public:
    * Get the end month for the restriction.
    * @return  Returns the end month for this restriction.
    */
-  uint64_t end_month() const {
+  uint8_t end_month() const {
     return end_month_;
   }
 
@@ -148,7 +148,7 @@ public:
    * Get the end week for the restriction.
    * @return  Returns the end week for this restriction.
    */
-  uint64_t end_week() const {
+  uint8_t end_week() const {
     return end_week_;
   }
 
@@ -156,7 +156,7 @@ public:
    * Get the end hours for the restriction.
    * @return  Returns the end hours for this restriction.
    */
-  uint64_t end_hrs() const {
+  uint8_t end_hrs() const {
     return end_hrs_;
   }
 
@@ -164,7 +164,7 @@ public:
    * Get the dow mask.  indicates days of week to apply the restriction
    * @return  Returns the day of week - This is a mask (e.g., Mo-Fr = 62).
    */
-  uint64_t dow() const {
+  uint8_t dow() const {
     return dow_;
   }
 
@@ -172,7 +172,7 @@ public:
    * Get the begin minutes for the restriction.
    * @return  Returns the begin minutes for this restriction.
    */
-  uint64_t begin_mins() const {
+  uint8_t begin_mins() const {
     return begin_mins_;
   }
 
@@ -180,8 +180,16 @@ public:
    * Get the end minutes for the restriction.
    * @return  Returns the end minutes for this restriction.
    */
-  uint64_t end_mins() const {
+  uint8_t end_mins() const {
     return end_mins_;
+  }
+
+  /**
+   * Get the probability(percentage) for the restriction.  Range for the probability is 0 to 100
+   * @return  Returns the probability(percentage) for this restriction.
+   */
+  uint8_t probability() const {
+    return probability_;
   }
 
   /**
@@ -226,13 +234,14 @@ protected:
   uint64_t end_hrs_ : 5;     // end hours
 
   // Restriction data
-  uint64_t type_ : 4;       // Restriction type
-  uint64_t modes_ : 12;     // Mode(s) this access restriction applies to
-  uint64_t via_count_ : 5;  // size of via list.
-  uint64_t dow_ : 7;        // day of week for this restriction
-  uint64_t begin_mins_ : 6; // begin minutes
-  uint64_t end_mins_ : 6;   // end minutes
-  uint64_t spare_ : 24;
+  uint64_t type_ : 4;        // Restriction type
+  uint64_t modes_ : 12;      // Mode(s) this access restriction applies to
+  uint64_t via_count_ : 5;   // size of via list.
+  uint64_t dow_ : 7;         // day of week for this restriction
+  uint64_t begin_mins_ : 6;  // begin minutes
+  uint64_t end_mins_ : 6;    // end minutes
+  uint64_t probability_ : 7; // used for probable restrictions.
+  uint64_t spare_ : 17;
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?

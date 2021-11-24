@@ -19,11 +19,10 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 template <const ExpansionType expansion_direction, const bool FORWARD>
 UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      access_mode_{kAutoAccess} {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      travel_type_(0), access_mode_{kAutoAccess} {
 }
 
 // Default constructor
@@ -39,8 +38,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
   edgelabels_.clear();
@@ -207,11 +207,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     opp_edge = t2->directededge(opp_edge_id);
   }
 
+  /*
+   * NOTE:
+   * When bidirectional a* degenerates to unidirectional, in practice we probably
+   * need to handle these same problems with the destination edge and
+   * path_distance.. probably.. but did not check
+   */
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   uint8_t restriction_idx = kInvalidRestriction;
-  bool const is_dest =
-      destinations_percent_along_.find(meta.edge_id) != destinations_percent_along_.cend();
+  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
+  const bool is_dest = dest_edge != destinations_percent_along_.end();
   if (FORWARD) {
     if (!costing_->Allowed(meta.edge, is_dest, pred, tile, meta.edge_id, time_info.local_time,
                            nodeinfo->timezone(), restriction_idx) ||
@@ -234,18 +240,19 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                        ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
                        : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
 
-  auto transition_cost =
+  sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
+                                                opp_pred_edge,
+                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
+
   Cost newcost = pred.cost() + edge_cost;
   newcost += transition_cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
-  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
-  if (dest_edge != destinations_percent_along_.end()) {
+  if (is_dest) {
     // Adapt cost to potentially not using the entire destination edge
     newcost -= edge_cost * (FORWARD ? (1.0f - dest_edge->second) : dest_edge->second);
 
@@ -288,7 +295,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // end node of the directed edge.
   float dist = 0.0f;
   float sortcost = newcost.cost;
-  if (dest_edge == destinations_percent_along_.end()) {
+  if (!is_dest) {
     graph_tile_ptr t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
@@ -305,8 +312,15 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                              (pred.not_thru_pruning() || !meta.edge->not_thru()),
                              (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, meta.edge),
+                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                              restriction_idx);
+    // TODO: the BDEdgeLabel constructor doesnt have a way to set the path distance and the distance
+    //  so we work around it by using the update function. in the future we could just make edge
+    //  labels simple structs with public access
+    auto path_distance = static_cast<uint32_t>(
+        pred.path_distance() + meta.edge->length() * (is_dest ? dest_edge->second : 1.f) + .5f);
+    edgelabels_.back().Update(pred_idx, newcost, sortcost, transition_cost, path_distance,
+                              restriction_idx);
     *meta.edge_status = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   } else {
@@ -434,8 +448,8 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
-  auto startpoint = FORWARD ? origin : destination;
-  auto endpoint = FORWARD ? destination : origin;
+  auto& startpoint = FORWARD ? origin : destination;
+  auto& endpoint = FORWARD ? destination : origin;
 
   // Get time information for forward
   auto time_info = TimeInfo::make(startpoint, graphreader, &tz_cache_);
@@ -480,11 +494,20 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_[predindex];
-    if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
+    auto maybe_dest = destinations_percent_along_.find(pred.edgeid());
+    if (maybe_dest != destinations_percent_along_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(FORWARD ? pred.edgeid() : pred.opp_edgeid(), origin, destination)) {
+          // so this is the the portion of the edge from the origin but doesnt account for how
+          // far along the destination is along the edge so we need to subtract off the part after
+          // the dest
+          auto edge_length = graphreader.directededge(pred.edgeid())->length();
+          auto path_distance = static_cast<uint32_t>(
+              std::max(0.f, pred.path_distance() - (1.f - maybe_dest->second) * edge_length) + .5f);
+          pred.Update(pred.predecessor(), pred.cost(), pred.sortcost(), pred.transition_cost(),
+                      path_distance, pred.restriction_idx());
           return {FormPath(predindex)};
         }
       } else {
@@ -621,25 +644,47 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                   has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
-  // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
+  /**
+   * Consider the route from 1 to 2 on the following graph:
+   *
+   * 1          2
+   * A----------B
+   *
+   * Here both locations get both directions of the edge AB, but it doesnt make sense to use all of
+   * these candidates in practice. The edge candidate for the origin which are at 100% along the edge
+   * amount to no distance traveled. Similarly the edge candidate for the destination at 0% along
+   * would result in an edge with no distance traveled. In other words when its a node snap, you want
+   * to use only those edge candidates that are leaving the origin and those that are arriving at the
+   * destination. In addition to the node snapping, this route is trivial because it consists of one
+   * edge.
+   *
+   * Now consider the route from 1 to 2 on the following graph:
+   *            2
+   * A----------B
+   *            1
+   * In this case the edge candidates for both locations are node snapped to B meaning both locations
+   * get both directions of AB again but this time they are on the same node. We can call this route
+   * super-trivial because its not just a single edge its actually a single node. In both SetOrigin
+   * and in SetDestination we try to remove edge candidates that are superfluous as described above.
+   * SetDestination happens first and trivially removes the edge candidate for 2 that travels from B
+   * back to A. This means the destination now can only be reached via the edge traveling from A to B.
+   * However that edge candidate of 1 is 100% along that edge and would be trivially removed, since
+   * its a node snap that is arriving at the origin rather than leaving it. So here in SetOrigin we
+   * add a bit more complicated logic to say that if this case occurs, allow that edge to be used
+   */
+
+  // its super trivial if both are node snapped to the same end of the same edge
+  // note the check for node snapping is in the if below and not in this lambda
+  auto super_trivial = [this](const valhalla::Location::PathEdge& edge) {
     auto p = destinations_percent_along_.find(edge.graph_id());
-    if (p != destinations_percent_along_.end()) {
-      for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edge.graph_id()) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return p != destinations_percent_along_.end() && edge.percent_along() == p->second;
   };
 
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.path_edges()) {
-    // If origin is at a node - skip any inbound edge (dist = 1) unless the
-    // destination is also at the same end node (trivial path).
-    if (has_other_edges && (FORWARD ? edge.end_node() : edge.begin_node()) &&
-        !trivial_at_node(edge)) {
+    // If this is a node snap and we have other candidates that we can skip this unless its the one we
+    // need for super trivial route
+    if ((FORWARD ? edge.end_node() : edge.begin_node()) && has_other_edges && !super_trivial(edge)) {
       continue;
     }
 
@@ -739,7 +784,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     uint32_t idx = edgelabels_.size();
     if (FORWARD) {
       uint32_t path_distance =
-          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()) + .5f);
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, {}, directededge, cost, sortcost, dist, mode_,
                              Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -748,7 +793,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
        * same time - so we need to update immediately after to set path_distance */
       edge_label.Update(kInvalidLabel, cost, sortcost, {}, path_distance, kInvalidRestriction);
       // Set the origin flag
-      edgelabels_.push_back(edge_label);
+      edgelabels_.emplace_back(std::move(edge_label));
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
                                mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),

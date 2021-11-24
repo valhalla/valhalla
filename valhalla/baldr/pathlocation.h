@@ -35,7 +35,8 @@ public:
              const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
-             const unsigned int inbound_reach = 0);
+             const unsigned int inbound_reach = 0,
+             const float projected_heading = -1);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -56,6 +57,8 @@ public:
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge
     unsigned int inbound_reach;
+    // the heading of the projected point
+    float projected_heading;
   };
 
   // list of edges this location appears on within the graph
@@ -125,6 +128,9 @@ public:
     }
     l->set_heading_tolerance(pl.heading_tolerance_);
     l->set_node_snap_tolerance(pl.node_snap_tolerance_);
+    if (pl.preferred_layer_) {
+      l->set_preferred_layer(*pl.preferred_layer_);
+    }
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
@@ -159,6 +165,7 @@ public:
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
+      edge->set_heading(e.projected_heading);
     }
 
     auto* filtered_edges = l->mutable_filtered_edges();
@@ -254,6 +261,9 @@ public:
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
+    }
+    if (loc.has_preferred_layer()) {
+      l.preferred_layer_ = loc.preferred_layer();
     }
     return l;
   }

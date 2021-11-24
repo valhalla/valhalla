@@ -21,6 +21,12 @@ constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 
+struct tile_index_entry {
+  uint64_t offset;  // byte offset from the beginning of the tar
+  uint32_t tile_id; // just level and tileindex hence fitting in 32bits
+  uint32_t size;    // size of the tile in bytes
+};
+
 } // namespace
 
 namespace valhalla {
@@ -36,27 +42,71 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
 }
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  // A lambda for loading the contents of a graph tile tar from an index file
+  bool traffic_from_index = false;
+  auto index_loader = [this, &traffic_from_index](const std::string& filename,
+                                                  const char* index_begin, const char* file_begin,
+                                                  size_t size) -> decltype(midgard::tar::contents) {
+    // has to be our specially named index.bin file
+    if (filename != "index.bin")
+      return {};
+
+    // get the info
+    decltype(midgard::tar::contents) contents;
+    auto entry_size = sizeof(tile_index_entry);
+    auto entries = midgard::iterable_t<tile_index_entry>(reinterpret_cast<tile_index_entry*>(
+                                                             const_cast<char*>(index_begin)),
+                                                         size / sizeof(tile_index_entry));
+    for (const auto& entry : entries) {
+      auto inserted = contents.insert(
+          std::make_pair(std::to_string(entry.tile_id),
+                         std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
+      if (!traffic_from_index) {
+        tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                      std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
+                                            entry.size));
+      } else {
+        traffic_tiles.emplace(std::piecewise_construct, std::forward_as_tuple(entry.tile_id),
+                              std::forward_as_tuple(const_cast<char*>(file_begin + entry.offset),
+                                                    entry.size));
+      }
+    }
+    // hand it back to the tar parser
+    return contents;
+  };
+
+  bool scan_tar = pt.get<bool>("data_processing.scan_tar", false);
+
   // if you really meant to load it
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
       // load the tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+      // TODO: use the "scan" to iterate over tar
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
       // map files to graph ids
-      for (auto& c : archive->contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {
-          // It's possible to put non-tile files inside the tarfile.  As we're only
-          // parsing the file *name* as a GraphId here, we will just silently skip
-          // any file paths that can't be parsed by GraphId::GetTileId()
-          // If we end up with *no* recognizable tile files in the tarball at all,
-          // checks lower down will warn on that.
+      if (tiles.empty()) {
+        for (const auto& c : archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // It's possible to put non-tile files inside the tarfile.  As we're only
+            // parsing the file *name* as a GraphId here, we will just silently skip
+            // any file paths that can't be parsed by GraphId::GetTileId()
+            // If we end up with *no* recognizable tile files in the tarball at all,
+            // checks lower down will warn on that.
+          }
+        }
+      } else if (scan_tar) {
+        checksum = 0;
+        for (const auto& kv : tiles) {
+          checksum += *const_cast<char*>(kv.second.first);
         }
       }
       // couldn't load it
       if (tiles.empty()) {
         LOG_WARN("Tile extract contained no usuable tiles");
+        archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
         LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
@@ -73,23 +123,30 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
   if (pt.get_optional<std::string>("traffic_extract")) {
     try {
       // load the tar
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
-      // map files to graph ids
-      for (auto& c : traffic_archive->contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {
-          // It's possible to put non-tile files inside the tarfile.  As we're only
-          // parsing the file *name* as a GraphId here, we will just silently skip
-          // any file paths that can't be parsed by GraphId::GetTileId()
-          // If we end up with *no* recognizable tile files in the tarball at all,
-          // checks lower down will warn on that.
+      traffic_from_index = true;
+      traffic_archive.reset(
+          new midgard::tar(pt.get<std::string>("traffic_extract"), true, index_loader));
+      if (traffic_tiles.empty()) {
+        LOG_WARN(
+            "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
+        // map files to graph ids
+        for (auto& c : traffic_archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // It's possible to put non-tile files inside the tarfile.  As we're only
+            // parsing the file *name* as a GraphId here, we will just silently skip
+            // any file paths that can't be parsed by GraphId::GetTileId()
+            // If we end up with *no* recognizable tile files in the tarball at all,
+            // checks lower down will warn on that.
+          }
         }
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
         LOG_WARN("Traffic tile extract contained no usuable tiles");
+        archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
         LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
@@ -104,13 +161,6 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       LOG_WARN("Traffic tile extract could not be loaded");
     }
   }
-}
-
-std::shared_ptr<const GraphReader::tile_extract_t>
-GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
-  static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(
-      new GraphReader::tile_extract_t(pt));
-  return tile_extract;
 }
 
 // ----------------------------------------------------------------------------
@@ -424,7 +474,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt,
                          std::unique_ptr<tile_getter_t>&& tile_getter)
-    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
+    : tile_extract_(new tile_extract_t(pt)),
+      tile_dir_(tile_extract_->tiles.empty() ? pt.get<std::string>("tile_dir", "") : ""),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
       tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {

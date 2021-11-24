@@ -113,7 +113,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index,
-                    const graph_tile_ptr& tile,
+                    const graph_tile_ptr& end_node_tile,
                     const valhalla::baldr::DirectedEdge& de) {
   const uint64_t current_incident_id =
       valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
@@ -133,7 +133,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
-    std::string country_code_iso_2 = country_code_from_edge(tile, de);
+    std::string country_code_iso_2 = country_code_from_edge(end_node_tile, de);
     if (!country_code_iso_2.empty()) {
       new_incident->mutable_metadata()->set_iso_3166_1_alpha2(country_code_iso_2.c_str());
     }
@@ -176,6 +176,7 @@ valhalla::TripLeg_Closure* fetch_or_create_closure_annotation(TripLeg& leg) {
  */
 void SetShapeAttributes(const AttributesController& controller,
                         const graph_tile_ptr& tile,
+                        const graph_tile_ptr& end_node_tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
@@ -265,7 +266,7 @@ void SetShapeAttributes(const AttributesController& controller,
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(incidents.tile, leg, &incident, shape_begin, tile, *edge);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin, end_node_tile, *edge);
         continue;
       }
 
@@ -384,7 +385,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents.tile, leg, incident, i, tile, *edge);
+        UpdateIncident(incidents.tile, leg, incident, i, end_node_tile, *edge);
       }
     }
 
@@ -414,49 +415,42 @@ void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
                           [&edge_id](const valhalla::Location::PathEdge& e) {
                             return e.graph_id() == edge_id;
                           });
-  if (pos == location->path_edges().end()) {
-    location->mutable_path_edges()->Clear();
-  } else if (location->path_edges_size() > 1) {
+  if (pos == location->path_edges().end())
+    throw std::logic_error("Could not find matching edge candidate");
+
+  if (location->path_edges_size() > 1) {
     location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
     location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
   }
 }
 
 /**
- *
+ * Copy the subset of options::location into the tripleg::locations and remove edge candidates
+ * that werent removed during the construction of the route
  */
 void CopyLocations(TripLeg& trip_path,
                    const valhalla::Location& origin,
-                   const std::list<valhalla::Location>& throughs,
+                   const std::vector<valhalla::Location>& intermediates,
                    const valhalla::Location& dest,
                    const std::vector<PathInfo>::const_iterator path_begin,
                    const std::vector<PathInfo>::const_iterator path_end) {
   // origin
   trip_path.add_location()->CopyFrom(origin);
-  auto pe = path_begin;
-  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
-
-  // throughs
-  for (const auto& through : throughs) {
-    // copy
-    valhalla::Location* tp_through = trip_path.add_location();
-    tp_through->CopyFrom(through);
-    // id set
-    std::unordered_set<uint64_t> ids;
-    for (const auto& e : tp_through->path_edges()) {
-      ids.insert(e.graph_id());
+  RemovePathEdges(&*trip_path.mutable_location()->rbegin(), path_begin->edgeid);
+  // intermediates
+  for (const auto& intermediate : intermediates) {
+    valhalla::Location* tp_intermediate = trip_path.add_location();
+    tp_intermediate->CopyFrom(intermediate);
+    // we can grab the right edge index in the path because we temporarily set it for trimming
+    if (!intermediate.has_leg_shape_index()) {
+      throw std::logic_error("leg_shape_index not set for intermediate location");
     }
-    // find id
-    auto found = std::find_if(pe, path_end, [&ids](const PathInfo& pi) {
-      return ids.find(pi.edgeid) != ids.end();
-    });
-    pe = found;
-    RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
+    RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
+                    (path_begin + intermediate.leg_shape_index())->edgeid);
   }
-
   // destination
   trip_path.add_location()->CopyFrom(dest);
-  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), (path_end - 1)->edgeid);
+  RemovePathEdges(&*trip_path.mutable_location()->rbegin(), std::prev(path_end)->edgeid);
 }
 
 /**
@@ -484,84 +478,97 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
+// Populate the specified sign element with the specified sign attributes including pronunciation
+// attributes if they exist
+void PopulateSignElement(
+    uint32_t sign_index,
+    const SignInfo& sign,
+    const std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& pronunciations,
+    valhalla::TripSignElement* sign_element) {
+  sign_element->set_text(sign.text());
+  sign_element->set_is_route_number(sign.is_route_num());
+
+  // Assign pronunciation alphabet and value if they exist
+  std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+      pronunciations.find(sign_index);
+  if (iter != pronunciations.end()) {
+    auto* pronunciation = sign_element->mutable_pronunciation();
+    pronunciation->set_alphabet(GetTripPronunciationAlphabet(
+        static_cast<valhalla::baldr::PronunciationAlphabet>((iter->second).first)));
+    pronunciation->set_value((iter->second).second);
+  }
+}
+
 // Walk the edge_signs, add sign information onto the trip_sign, honoring which to
 // add per the attributes-controller.
 void AddSignInfo(const AttributesController& controller,
                  const std::vector<SignInfo>& edge_signs,
+                 const std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& pronunciations,
                  valhalla::TripSign* trip_sign) {
 
   if (!edge_signs.empty()) {
+    uint32_t sign_index = 0;
     for (const auto& sign : edge_signs) {
       switch (sign.type()) {
         case valhalla::baldr::Sign::Type::kExitNumber: {
           if (controller.attributes.at(kEdgeSignExitNumber)) {
-            auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
-            trip_sign_exit_number->set_text(sign.text());
-            trip_sign_exit_number->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_numbers()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitBranch: {
           if (controller.attributes.at(kEdgeSignExitBranch)) {
-            auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
-            trip_sign_exit_onto_street->set_text(sign.text());
-            trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitToward: {
           if (controller.attributes.at(kEdgeSignExitToward)) {
-            auto* trip_sign_exit_toward_location = trip_sign->mutable_exit_toward_locations()->Add();
-            trip_sign_exit_toward_location->set_text(sign.text());
-            trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitName: {
           if (controller.attributes.at(kEdgeSignExitName)) {
-            auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
-            trip_sign_exit_name->set_text(sign.text());
-            trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_exit_names()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideBranch: {
           if (controller.attributes.at(kEdgeSignGuideBranch)) {
-            auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
-            trip_sign_guide_onto_street->set_text(sign.text());
-            trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guide_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideToward: {
           if (controller.attributes.at(kEdgeSignGuideToward)) {
-            auto* trip_sign_guide_toward_location =
-                trip_sign->mutable_guide_toward_locations()->Add();
-            trip_sign_guide_toward_location->set_text(sign.text());
-            trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guide_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
           if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
-            auto* trip_sign_guidance_view_junction =
-                trip_sign->mutable_guidance_view_junctions()->Add();
-            trip_sign_guidance_view_junction->set_text(sign.text());
-            trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guidance_view_junctions()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
           if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
-            auto* trip_sign_guidance_view_signboard =
-                trip_sign->mutable_guidance_view_signboards()->Add();
-            trip_sign_guidance_view_signboard->set_text(sign.text());
-            trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
+            PopulateSignElement(sign_index, sign, pronunciations,
+                                trip_sign->mutable_guidance_view_signboards()->Add());
           }
           break;
         }
         default: { break; }
       }
+      ++sign_index;
     }
   }
 }
@@ -578,8 +585,7 @@ void AddSignInfo(const AttributesController& controller,
  *                         on the local hierarchy.
  */
 void AddTripIntersectingEdge(const AttributesController& controller,
-                             valhalla::baldr::GraphReader& graphreader,
-                             graph_tile_ptr& graphtile,
+                             const graph_tile_ptr& graphtile,
                              const DirectedEdge* directededge,
                              const DirectedEdge* prev_de,
                              uint32_t local_edge_index,
@@ -659,13 +665,12 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the sign info for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeSignInfo)) {
     if (intersecting_de->sign()) {
-      GraphId beginnode = graphreader.GetBeginNodeId(intersecting_de, graphtile);
-      valhalla::baldr::graph_tile_ptr t2 = graphreader.GetGraphTile(beginnode);
-      size_t edge_idx = intersecting_de - t2->directededge(0);
-      std::vector<SignInfo> edge_signs = t2->GetSigns(edge_idx);
+      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+      std::vector<SignInfo> edge_signs =
+          graphtile->GetSigns(intersecting_de - graphtile->directededge(0), pronunciations);
       if (!edge_signs.empty()) {
         valhalla::TripSign* sign = intersecting_edge->mutable_sign();
-        AddSignInfo(controller, edge_signs, sign);
+        AddSignInfo(controller, edge_signs, pronunciations, sign);
       }
     }
   }
@@ -684,7 +689,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr& start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
@@ -731,7 +736,7 @@ void AddIntersectingEdges(const AttributesController& controller,
     }
 
     // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+    AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
                             intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
   }
 
@@ -755,7 +760,7 @@ void AddIntersectingEdges(const AttributesController& controller,
           continue;
         }
 
-        AddTripIntersectingEdge(controller, graphreader, start_tile, directededge, prev_de,
+        AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2);
       }
@@ -808,23 +813,47 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    auto names_and_types = edgeinfo.GetNamesAndTypes();
+    std::vector<uint8_t> types;
+    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
+    std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
+        edgeinfo.GetPronunciationsMap();
+    uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
+      if (types.at(name_index) != 0) {
+        // Skip the tagged names
+        name_index++;
+        continue;
+      }
+
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
+      // Assign name and type
       trip_edge_name->set_value(name_and_type.first);
       trip_edge_name->set_is_route_number(name_and_type.second);
+      std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+          pronunciations.find(name_index);
+
+      // Assign pronunciation alphabet and value if one exists
+      if (iter != pronunciations.end()) {
+        auto* pronunciation = trip_edge_name->mutable_pronunciation();
+        pronunciation->set_alphabet(GetTripPronunciationAlphabet(
+            static_cast<valhalla::baldr::PronunciationAlphabet>((iter->second).first)));
+        pronunciation->set_value((iter->second).second);
+      }
+
+      name_index++;
     }
   }
 
   // Add tagged names to the edge if requested
-  if (controller.attributes.at(kEdgeTaggedNames)) {
-    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
-    trip_edge->mutable_tagged_name()->Reserve(tagged_names_and_types.size());
-    for (const auto& tagged_name_and_type : tagged_names_and_types) {
-      auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
-      trip_edge_tag_name->set_value(tagged_name_and_type.first);
-      trip_edge_tag_name->set_type(static_cast<TaggedName_Type>(tagged_name_and_type.second));
+  if (controller.attributes.at(kEdgeTaggedValues)) {
+    const auto& tagged_values_and_types = edgeinfo.GetTags();
+    trip_edge->mutable_tagged_value()->Reserve(tagged_values_and_types.size());
+    for (const auto& tagged_value_and_type : tagged_values_and_types) {
+      auto* trip_edge_tag_name = trip_edge->mutable_tagged_value()->Add();
+      trip_edge_tag_name->set_value(tagged_value_and_type.second);
+      trip_edge_tag_name->set_type(
+          static_cast<TaggedValue_Type>(static_cast<uint8_t>(tagged_value_and_type.first)));
     }
   }
 
@@ -835,32 +864,35 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
-    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx, pronunciations);
     if (!edge_signs.empty()) {
       valhalla::TripSign* sign = trip_edge->mutable_sign();
-      AddSignInfo(controller, edge_signs, sign);
+      AddSignInfo(controller, edge_signs, pronunciations, sign);
     }
   }
 
   // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs
-    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
+    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, pronunciations, true);
     if (!node_signs.empty()) {
       valhalla::TripSign* trip_sign = trip_edge->mutable_sign();
+      uint32_t sign_index = 0;
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
           case valhalla::baldr::Sign::Type::kJunctionName: {
             if (controller.attributes.at(kEdgeSignJunctionName)) {
-              auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
-              trip_sign_junction_name->set_text(sign.text());
-              trip_sign_junction_name->set_is_route_number(sign.is_route_num());
+              PopulateSignElement(sign_index, sign, pronunciations,
+                                  trip_sign->mutable_junction_names()->Add());
             }
             break;
           }
           default:
             break;
         }
+        ++sign_index;
       }
     }
   }
@@ -1331,11 +1363,11 @@ void TripLegBuilder::Build(
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,
     valhalla::Location& dest,
-    const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
+    const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
+    const std::vector<valhalla::Location>& intermediates) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1346,7 +1378,7 @@ void TripLegBuilder::Build(
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  CopyLocations(trip_path, origin, through_loc, dest, path_begin, path_end);
+  CopyLocations(trip_path, origin, intermediates, dest, path_begin, path_end);
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
@@ -1446,6 +1478,13 @@ void TripLegBuilder::Build(
 
   // prepare to make some edges!
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
+
+  // we track the intermediate locations while we iterate so we can update their shape index
+  // from the edge index that we assigned to them earlier in route_action
+  auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
+  double total_distance = 0;
+
+  // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
@@ -1538,10 +1577,12 @@ void TripLegBuilder::Build(
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
-    // Process the shape for edges where a route discontinuity occurs
+    // Some edges at the beginning and end of the path and at intermediate locations will need trimmed
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
-    if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
+    auto trimming = edge_trimming.end();
+    if (!edge_trimming.empty() &&
+        (trimming = edge_trimming.find(edge_index)) != edge_trimming.end()) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
@@ -1549,51 +1590,44 @@ void TripLegBuilder::Build(
       }
 
       // Grab the edge begin and end info
-      auto& edge_begin_info = edge_trimming->at(edge_index).first;
-      auto& edge_end_info = edge_trimming->at(edge_index).second;
+      const auto& edge_begin_info = trimming->second.first;
+      const auto& edge_end_info = trimming->second.second;
 
+      // Start by assuming no trimming
+      double begin_trim_dist = 0, end_trim_dist = 1;
+      auto begin_trim_vrt = edge_shape.front(), end_trim_vrt = edge_shape.back();
+
+      // Trimming needed
+      if (edge_begin_info.trim) {
+        begin_trim_dist = edge_begin_info.distance_along;
+        begin_trim_vrt = edge_begin_info.vertex;
+      }
       // Handle partial shape for first edge
-      if (is_first_edge && !edge_begin_info.trim) {
-        edge_begin_info.trim = true;
-        edge_begin_info.distance_along = start_pct;
-        edge_begin_info.vertex = start_vrt;
-      } // No trimming needed
-      else if (!edge_begin_info.trim) {
-        edge_begin_info.distance_along = 0;
-        edge_begin_info.vertex = edge_shape.front();
+      else if (is_first_edge && !edge_begin_info.trim) {
+        begin_trim_dist = start_pct;
+        begin_trim_vrt = start_vrt;
       }
 
-      // Handle partial shape for last edge
-      if (is_last_edge && !edge_end_info.trim) {
-        edge_end_info.trim = true;
-        edge_end_info.distance_along = end_pct;
-        edge_end_info.vertex = end_vrt;
-      } // No trimming needed
-      else if (!edge_end_info.trim) {
-        edge_end_info.distance_along = 1;
-        edge_end_info.vertex = edge_shape.back();
+      // Trimming needed
+      if (edge_end_info.trim) {
+        end_trim_dist = edge_end_info.distance_along;
+        end_trim_vrt = edge_end_info.vertex;
+      } // Handle partial shape for last edge
+      else if (is_last_edge && !edge_end_info.trim) {
+        end_trim_dist = end_pct;
+        end_trim_vrt = end_vrt;
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
-      trim_start_pct = edge_begin_info.distance_along;
-      trim_end_pct = edge_end_info.distance_along;
+      trim_start_pct = begin_trim_dist;
+      trim_end_pct = end_trim_dist;
 
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
-      trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
-                 edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
+      trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
+                 end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      // TODO: uncommment correct removal of redundant shape after odin can handle uturns
-      // trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !edge_begin_info.trim,
-                        edge_shape.end());
-
-      // If edge_begin_info.trim and is not the first edge then increment begin_index since
-      // the previous end shape index should not equal the current begin shape index because
-      // of discontinuity
-      if (edge_begin_info.trim && !is_first_edge) {
-        ++begin_index;
-      }
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -1628,10 +1662,32 @@ void TripLegBuilder::Build(
     trip_edge->set_source_along_edge(trim_start_pct);
     trip_edge->set_target_along_edge(trim_end_pct);
 
+    // We need the total offset from the beginning of leg for the intermediate locations
+    auto previous_total_distance = total_distance;
+    total_distance += directededge->length() * (trim_end_pct - trim_start_pct);
+
+    // If we are at a node or if we hit the edge index that matches our through location edge index,
+    // we need to reset to the shape index then increment the iterator
+    if (intermediate_itr != trip_path.mutable_location()->end() &&
+        intermediate_itr->leg_shape_index() == edge_index) {
+      intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
+      intermediate_itr->set_distance_from_leg_origin(total_distance);
+      // NOTE:
+      // So for intermediate locations that dont have any trimming we know they occur at the node
+      // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
+      // So here we need to set this one as if it were at the end of the previous edge in the path
+      if (trimming == edge_trimming.end() &&
+          (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
+        intermediate_itr->set_leg_shape_index(begin_index);
+        intermediate_itr->set_distance_from_leg_origin(previous_total_distance);
+      }
+      ++intermediate_itr;
+    }
+
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
       float km =
-          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.001f);
+          std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.0f);
       trip_edge->set_length_km(km);
     }
 
@@ -1645,8 +1701,10 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
-                       trim_start_pct, trim_end_pct, edge_seconds,
+    graph_tile_ptr end_node_tile = graphtile;
+    graphreader.GetGraphTile(directededge->endnode(), end_node_tile);
+    SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
+                       trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested

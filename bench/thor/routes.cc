@@ -395,16 +395,19 @@ int main(int argc, char** argv) {
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]).find("--planet-path=") != std::string::npos) {
       planet_path = std::string(argv[i]).substr(strlen("--planet-path="));
+      std::cerr << "Registered planet_path = " << planet_path << std::endl;
     } else if (std::string(argv[i]).find("--num-routes=") != std::string::npos) {
       num_routes = std::atoi(argv[i] + strlen("--num-routes="));
       if (num_routes == 0) {
-        std::cerr << "num-routes must be > 0";
+        std::cerr << "num-routes must be > 0" << std::endl;
         return 1;
+      } else {
+        std::cerr << "Registered num_routes = " << num_routes << std::endl;
       }
     }
   }
 
-  if (planet_path.empty() && num_routes > 0) {
+  if (!planet_path.empty() && num_routes > 0) {
     ::benchmark::RegisterBenchmark("BM_GlobalFixedRandom", BM_GlobalFixedRandom<thor::TimeDepForward>,
                                    planet_path)
         ->Unit(benchmark::kMillisecond)

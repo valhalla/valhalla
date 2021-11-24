@@ -129,7 +129,10 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
-      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange} {
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
+      exclude_unpaved_(false),
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
+                                                                                      false} {
 }
 
 DynamicCost::DynamicCost(const CostingOptions& options,
@@ -254,9 +257,13 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
 }
 
 // Relax hierarchy limits.
-void DynamicCost::RelaxHierarchyLimits(const float factor, const float expansion_within_factor) {
+void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
+  // since bidirectional A* does about half the expansion we can do half the relaxation here
+  const float relax_factor = using_bidirectional ? 8.f : 16.f;
+  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
+
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(factor, expansion_within_factor);
+    hierarchy.Relax(relax_factor, expansion_within_factor);
   }
 }
 
@@ -425,6 +432,12 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
         rapidjson::get<float>(value, "/use_rail_ferry", base_cfg.use_rail_ferry_.def)));
   }
 
+  pbf_costing_options->set_exclude_unpaved(
+      rapidjson::get<bool>(value, "/exclude_unpaved", base_cfg.exclude_unpaved_));
+
+  pbf_costing_options->set_exclude_cash_only_tolls(
+      rapidjson::get<bool>(value, "/exclude_cash_only_tolls", base_cfg.exclude_cash_only_tolls_));
+
   // service_penalty
   pbf_costing_options->set_service_penalty(base_cfg.service_penalty_(
       rapidjson::get<float>(value, "/service_penalty", base_cfg.service_penalty_.def)));
@@ -444,6 +457,14 @@ void ParseBaseCostOptions(const rapidjson::Value& value,
   // closure_factor
   pbf_costing_options->set_closure_factor(base_cfg.closure_factor_(
       rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
+
+  // HOT/HOV
+  pbf_costing_options->set_include_hot(
+      rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
+  pbf_costing_options->set_include_hov2(
+      rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
+  pbf_costing_options->set_include_hov3(
+      rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
 }
 
 void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
@@ -479,6 +500,13 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
   pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
 
   pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
+
+  pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
+  pbf_costing_options->set_exclude_cash_only_tolls(shared_opts.exclude_cash_only_tolls_);
+
+  pbf_costing_options->set_include_hot(shared_opts.include_hot_);
+  pbf_costing_options->set_include_hov2(shared_opts.include_hov2_);
+  pbf_costing_options->set_include_hov3(shared_opts.include_hov3_);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -534,10 +562,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case bus: {
       sif::ParseBusCostOptions(doc, key, costing_options);
-      break;
-    }
-    case hov: {
-      sif::ParseHOVCostOptions(doc, key, costing_options);
       break;
     }
     case taxi: {

@@ -1639,7 +1639,13 @@ TEST(BiDiAstar, test_recost_path) {
   vt::BidirectionalAStar astar;
 
   // hack hierarchy limits to allow to go through the shortcut
-  mode_costing[int(travel_mode)]->RelaxHierarchyLimits(0.f, 0.f);
+  {
+    auto& hierarchy_limits =
+        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
+    for (auto& hierarchy : hierarchy_limits) {
+      hierarchy.Relax(0.f, 0.f);
+    }
+  }
   const auto path =
       astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
           .front();
@@ -1672,6 +1678,39 @@ TEST(BiDiAstar, test_recost_path) {
     EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
                 get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
   }
+}
+
+class BiAstarTest : public thor::BidirectionalAStar {
+public:
+  explicit BiAstarTest(const boost::property_tree::ptree& config = {}) : BidirectionalAStar(config) {
+  }
+
+  void Clear() {
+    BidirectionalAStar::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_forward_.capacity(), 0);
+      EXPECT_EQ(edgelabels_reverse_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_forward_.capacity(), max_reserved_labels_count_);
+      EXPECT_LE(edgelabels_reverse_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(BiDiAstar, test_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  BiAstarTest astar(config);
+  astar.Clear();
+}
+
+TEST(BiDiAstar, test_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  BiAstarTest astar(config);
+  astar.Clear();
 }
 
 class AstarTestEnv : public ::testing::Environment {

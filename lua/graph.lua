@@ -372,10 +372,13 @@ separated = {
 
 oneway = {
 ["no"] = "false",
+["false"] = "false",
 ["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
-["1"] = "true"
+["1"] = "true",
+["reversible"] = "false",
+["alternating"] = "false"
 }
 
 bridge = {
@@ -816,6 +819,34 @@ function normalize_measurement(measurement)
   return nil
 end
 
+-- Returns true if the only payment types present are cash. Example payment kv's look like:
+-- payment:cash=yes
+-- payment:credit_cards=no
+-- There can be multiple payment types on a given way/node. This routine determines
+-- if the payment types on the way/node are all cash types. There are (at the moment) 60
+-- types of payments, but only three are cash: cash, notes, coins.
+-- Examining the types of values you might find for 'payment:coins' the predominant
+-- usages are 'yes' and 'no'. However, there are also some values like '$0.35' and 'euro'.
+-- Hence, this routine considers ~'NO' an affirmative value.
+function is_cash_only_payment(kv)
+  local allows_cash_payment = false
+  local allows_noncash_payment = false
+  for key, value in pairs(kv) do
+    if string.sub(key, 1, 8) == "payment:" then
+      local payment_type = string.sub(key, 9, -1)
+      local is_cash_payment_type = payment_type == "cash" or payment_type == "notes" or payment_type == "coins"
+      if (is_cash_payment_type == true and allows_cash_payment == false) then
+        allows_cash_payment = string.upper(value) ~= "NO"
+      end
+      if (is_cash_payment_type == false and allows_noncash_payment == false) then
+        allows_noncash_payment = string.upper(value) ~= "NO"
+      end
+    end
+  end
+
+  return allows_cash_payment == true and allows_noncash_payment == false
+end
+
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 
@@ -1039,6 +1070,7 @@ function filter_tags_generic(kv)
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
     else
+      -- by returning 1 we will toss this way
       return 1
     end
   end
@@ -1618,20 +1650,17 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
+  kv["hov_tag"] = "true"
   if (kv["hov"] and kv["hov"] == "no") then
-    kv["hov_tag"] = "false"
     kv["hov_forward"] = "false"
     kv["hov_backward"] = "false"
   else
     kv["hov_forward"] = kv["auto_forward"]
     kv["hov_backward"] = kv["auto_backward"]
-
   end
 
   -- hov restrictions
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
-
-    kv["hov_tag"] = "true"
 
     local only_hov_allowed = kv["hov"] == "designated"
     if only_hov_allowed then
@@ -1645,6 +1674,10 @@ function filter_tags_generic(kv)
     end
 
     if only_hov_allowed then
+      -- If we get here we know the way is a true hov-lane (not mixed).
+      -- As a result, none of the following costings can use it.
+      -- (Okay, that's not exactly true, we do some wizardry in some of the
+      -- costings to allow hov under certain conditions.)
       if (kv["auto_tag"] == nil) then
         kv["auto_forward"] = "false"
         kv["auto_backward"] = "false"
@@ -1663,6 +1696,25 @@ function filter_tags_generic(kv)
       if (kv["bike_tag"] == nil) then
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
+      end
+
+      -- I want to be strict with the "hov:minimum" tag: I will only accept the
+      -- values 2 or 3. We want to be strict because routing onto an HOV lane
+      -- without the correct number of occupants is illegal.
+      if (kv["hov:minimum"] == "2") then
+        kv["hov_type"] = "HOV2";
+      elseif (kv["hov:minimum"] == "3") then
+        kv["hov_type"] = "HOV3";
+      end
+
+      -- HOV lanes are sometimes time-conditional and can change direction. We avoid
+      -- these. Also, we expect "hov_type" to be set.
+      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or kv["oneway"] == "false" or
+            kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil or kv["hov_type"] == nil
+
+      if avoid_these_hovs then
+        kv["hov_forward"] = "false"
+        kv["hov_backward"] = "false"
       end
     end
   end
@@ -1939,39 +1991,12 @@ function nodes_proc (kv, nokeys)
     kv["border_control"] = "true"
   elseif kv["barrier"] == "toll_booth" then
     kv["toll_booth"] = "true"
+    if is_cash_only_payment(kv) then
+      kv["cash_only_toll"] = "true"
+    end
   elseif kv["highway"] == "toll_gantry" then
     kv["toll_gantry"] = "true"
   end
-
-  local coins = toll[kv["payment:coins"]] or "false"
-  local notes = toll[kv["payment:notes"]] or "false"
-
-  --assume cash for toll, toll:*, and fee
-  local cash =  toll[kv["toll"]] or toll[kv["toll:hgv"]] or toll[kv["toll:bicycle"]] or toll[kv["toll:hov"]] or
-                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or
-                toll[kv["toll:motorcycle"]] or toll[kv["payment:cash"]] or toll[kv["fee"]] or "false"
-
-  local etc = toll[kv["payment:e_zpass"]] or toll[kv["payment:e_zpass:name"]] or
-              toll[kv["payment:pikepass"]] or toll[kv["payment:via_verde"]] or "false"
-
-  local cash_payment = 0
-
-  if (cash == "true" or (coins == "true" and notes == "true")) then
-    cash_payment = 3
-  elseif coins == "true" then
-    cash_payment = 1
-  elseif notes == "true" then
-    cash_payment = 2
-  end
-
-  local etc_payment = 0
-
-  if etc == "true" then
-    etc_payment = 4
-  end
-
-  --store a mask denoting payment type
-  kv["payment_mask"] = bit.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
@@ -1990,6 +2015,32 @@ function nodes_proc (kv, nokeys)
 
     if kv["public_transport"] == nil and kv["name"] then
        kv["junction"] = "named"
+    end
+  end
+
+  if kv["highway"] == "stop" then
+    if kv["direction"] == "both" then
+      kv["forward_stop"] = "true"
+      kv["backward_stop"] = "true"
+    elseif kv["direction"] == "forward" then
+      kv["forward_stop"] = "true"
+    elseif kv["direction"] == "backward" or kv["direction"] == "reverse" then
+      kv["backward_stop"] = "true"
+    elseif kv["direction"] ~= nil and kv["stop"] == nil then
+      kv["highway"] = nil
+    end
+  end
+
+  if kv["highway"] == "give_way" then
+    if kv["direction"] == "both" then
+      kv["forward_yield"] = "true"
+      kv["backward_yield"] = "true"
+    elseif kv["direction"] == "forward" then
+      kv["forward_yield"] = "true"
+    elseif kv["direction"] == "backward" or kv["direction"] == "reverse" then
+      kv["backward_yield"] = "true"
+    elseif kv["direction"] ~= nil and kv["give_way"] == nil then
+      kv["highway"] = nil
     end
   end
 
@@ -2040,8 +2091,14 @@ function rels_proc (kv, nokeys)
   end
 
   if (kv["type"] == "route" or kv["type"] == "restriction") then
+     if kv["restriction:probable"] then
+       if kv["restriction"] or kv["restriction:conditional"] then
+         kv["restriction:probable"] = nil
+       end
+     end
 
-     local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])]
+     local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])] or
+                      restriction[restriction_prefix(kv["restriction:probable"])]
 
      local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
                            restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
@@ -2054,11 +2111,13 @@ function rels_proc (kv, nokeys)
        restrict = restrict_type
      end
 
-     if kv["type"] == "restriction" or kv["restriction:conditional"] then
+     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"] then
 
        if restrict ~= nil then
 
          kv["restriction:conditional"] = restriction_suffix(kv["restriction:conditional"])
+         kv["restriction:probable"] = restriction_suffix(kv["restriction:probable"])
+
          kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
          kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
          kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]

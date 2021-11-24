@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_ODIN_SERVICE_H__
 #define __VALHALLA_ODIN_SERVICE_H__
 
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/worker.h>
 
@@ -20,10 +21,22 @@ public:
                                                 void* request_info,
                                                 const std::function<void()>& interupt) override;
 #endif
-  virtual void cleanup() override;
 
-  void narrate(Api& request) const;
+  /**
+   * Creates maneuvers and narrative for the path and serializes the entire response to bytes
+   * @param request   the request with the filled out trip
+   * @return a string of bytes representing the payload, depends on request.options.format
+   */
+  std::string narrate(Api& request) const;
   void status(Api& request) const;
+
+protected:
+  MarkupFormatter markup_formatter_;
+
+private:
+  std::string service_name() const override {
+    return "odin";
+  }
 };
 } // namespace odin
 } // namespace valhalla

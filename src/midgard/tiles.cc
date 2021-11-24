@@ -1,7 +1,6 @@
 #include <array>
 #include <cmath>
 #include <queue>
-#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -11,31 +10,32 @@
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 
+#include <robin_hood.h>
+
 namespace {
 
 // this is modified to include all pixels that are intersected by the floating point line
 // at each step it decides to either move in the x or y direction based on which pixels midpoint
 // forms a smaller triangle with the line. to avoid edge cases we allow set_pixel to make the
 // the loop bail if we leave the valid drawing region
-void bresenham_line(float x0,
-                    float y0,
-                    float x1,
-                    float y1,
+void bresenham_line(double x0,
+                    double y0,
+                    double x1,
+                    double y1,
                     const std::function<bool(int32_t, int32_t)>& set_pixel) {
   // this one for sure
   bool outside = set_pixel(std::floor(x0), std::floor(y0));
   // steps in the proper direction and constants for shoelace formula
-  float sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
-  float sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
+  double sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
+  double sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
   // keep going until we make it to the ending pixel
   while (std::floor(x) != std::floor(x1) || std::floor(y) != std::floor(y1)) {
-    float tx = std::abs(dx * (y - y0) - dy * ((x + sx) - x0));
-    float ty = std::abs(dx * ((y + sy) - y0) - dy * (x - x0));
+    double tx = std::abs(dx * (y - y0) - dy * ((x + sx) - x0));
+    double ty = std::abs(dx * ((y + sy) - y0) - dy * (x - x0));
     // less error moving in the x
-    if (tx < ty) {
+    if (tx < ty || (tx == ty && y0 == y1)) {
       x += sx;
-    }
-    // less error moving in the y
+    } // less error moving in the y
     else {
       y += sy;
     }
@@ -52,14 +52,18 @@ void bresenham_line(float x0,
 template <class coord_t> struct closest_first_generator_t {
   valhalla::midgard::Tiles<coord_t> tiles;
   coord_t seed;
-  std::unordered_set<int32_t> queued;
+  robin_hood::unordered_set<int32_t> queued;
   int32_t subcols, subrows;
   using best_t = std::pair<double, int32_t>;
-  std::set<best_t, std::function<bool(const best_t&, const best_t&)>> queue;
+  std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>>
+      queue;
+
+  // re-usable, pre-allocated vector used by dist
+  std::vector<coord_t> corners;
 
   closest_first_generator_t(const valhalla::midgard::Tiles<coord_t>& tiles, const coord_t& seed)
       : tiles(tiles), seed(seed), queued(100), queue([](const best_t& a, const best_t& b) {
-          return a.first == b.first ? a.second < b.second : a.first < b.first;
+          return a.first == b.first ? b.second < a.second : b.first < a.first;
         }) {
     // what global subdivision are we starting in
     // TODO: worry about wrapping around valid range
@@ -71,6 +75,8 @@ template <class coord_t> struct closest_first_generator_t {
     queued.emplace(subdivision);
     queue.emplace(std::make_pair(0, subdivision));
     neighbors(subdivision);
+    constexpr int max_tested_corners = 8;
+    corners.reserve(max_tested_corners);
   }
 
   // something to measure the closest possible point of a subdivision from the given seed point
@@ -82,7 +88,11 @@ template <class coord_t> struct closest_first_generator_t {
     auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
     auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
     auto distance = std::numeric_limits<double>::max();
-    std::list<coord_t> corners{{x0, y0}, {x1, y0}, {x0, y1}, {x1, y1}};
+    corners.clear();
+    corners.emplace_back(x0, y0);
+    corners.emplace_back(x1, y0);
+    corners.emplace_back(x0, y1);
+    corners.emplace_back(x1, y1);
     if (x0 < seed.first && x1 > seed.first) {
       corners.emplace_back(seed.first, y0);
       corners.emplace_back(seed.first, y1);
@@ -101,7 +111,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // something to add the neighbors of a given subdivision
-  const std::list<std::pair<int, int>> neighbor_offsets{{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
+  const std::array<std::pair<int, int>, 4> neighbor_offsets = {{{0, -1}, {-1, 0}, {1, 0}, {0, 1}}};
   void neighbors(int32_t s) {
     // walk over all adjacent subdivisions in row major order
     auto x = s % subcols;
@@ -135,8 +145,8 @@ template <class coord_t> struct closest_first_generator_t {
     if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");
     }
-    auto best = *queue.cbegin();
-    queue.erase(queue.cbegin());
+    auto best = queue.top();
+    queue.pop();
     // add its neighbors
     neighbors(best.second);
     // return it
@@ -242,7 +252,7 @@ std::vector<int32_t> Tiles<coord_t>::TileList(const Ellipse<coord_t>& e) const {
   check_queue.push(tileid);
 
   // Record any tiles added to the check_queue
-  std::unordered_set<int32_t> checked_tiles;
+  robin_hood::unordered_set<int32_t> checked_tiles;
   checked_tiles.insert(tileid);
 
   // Successively check a tile from the queue - if tile bounds are not outside the ellipse then
@@ -300,7 +310,7 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity
     // Mark this tile Id with the current color and find all its
     // accessible neighbors
     tile.second = color;
-    std::unordered_set<uint32_t> checklist{tile.first};
+    robin_hood::unordered_set<uint32_t> checklist{tile.first};
     while (!checklist.empty()) {
       uint32_t next_tile = *checklist.begin();
       checklist.erase(checklist.begin());

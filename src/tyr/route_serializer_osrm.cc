@@ -197,7 +197,7 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
-std::string guide_destinations(const valhalla::TripSign& sign);
+std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
@@ -405,7 +405,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_shape_index(index);
+    locs.Mutable(index)->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
@@ -501,21 +501,28 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
+        std::string sign_text;
+        if (intersecting_edge->has_sign()) {
+          const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+          // I've looked at the results from guide_destinations(), destinations(), and
+          // exit_destinations(). exit_destinations() does not contain rest-area names.
+          // guide_destinations() and destinations() return the same string value for
+          // the rest area name. So I've decided to use guide_destinations().
+          sign_text = destinations(trip_leg_sign);
+        }
+
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
-          if (intersecting_edge->has_sign()) {
-            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
-            // I've looked at the results from guide_destinations(), destinations(), and
-            // exit_destinations(). exit_destinations() doe not contain rest-area names.
-            // guide_destinations() and destinations() return the same string value for
-            // the rest area name. So I've decided to use guide_destinations().
-            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
-            rest_stop->emplace("name", guide_destinations_str);
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
           }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
           rest_stop->emplace("type", std::string("service_area"));
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         }
@@ -572,10 +579,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
-      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
-          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+      if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
+          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
           }
         }
       }
@@ -1242,18 +1249,23 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            " Unhandled travel_mode: " + std::to_string(num));
 }
 
+const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>&
+get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
+  return ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
+              ? maneuver.roundabout_exit_street_names()
+              : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                        : maneuver.street_name());
+}
+
 // Get the names and ref names
 std::pair<std::string, std::string>
 names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
-  // Roundabouts need to use the roundabout_exit_street_names
-  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
-  // TODO: in the future we may switch to use both
-  auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
-                           ? maneuver.roundabout_exit_street_names()
-                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
-                                                                     : maneuver.street_name();
+  const auto& street_names = get_maneuver_street_names(maneuver);
 
   for (const auto& name : street_names) {
     // Check if the name is a ref
@@ -1271,6 +1283,24 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   }
 
   return std::make_pair(names, refs);
+}
+// Get the pronunciations string
+std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  std::string pronunciations;
+
+  const auto& street_names = get_maneuver_street_names(maneuver);
+
+  for (const auto& name : street_names) {
+    // If name has a pronunciation and is not a route number then use it
+    if (name.has_pronunciation() && !name.is_route_number()) {
+      if (!pronunciations.empty()) {
+        pronunciations += "; ";
+      }
+      pronunciations += name.pronunciation().value();
+    }
+  }
+
+  return pronunciations;
 }
 
 // Serialize each leg
@@ -1290,6 +1320,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   // Iterate through the legs in DirectionsLeg and TripLeg
   int leg_index = 0;
   auto leg = legs.begin();
+
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
@@ -1306,6 +1337,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     std::string drive_side = "right";
     std::string name = "";
     std::string ref = "";
+    std::string pronunciation = "";
     std::string mode = "";
     std::string prev_mode = "";
     bool rotary = false;
@@ -1338,6 +1370,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
+        pronunciation = get_pronunciations(maneuver);
         mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -1374,6 +1407,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
+      }
+      if (!pronunciation.empty()) {
+        step->emplace("pronunciation", pronunciation);
       }
 
       // Check if speed limits were requested
@@ -1517,6 +1553,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     if (path_leg.has_shape_attributes()) {
       output_leg->emplace("annotation", serialize_annotations(path_leg));
     }
+
+    // Add via waypoints to the leg
+    output_leg->emplace("via_waypoints", osrm::intermediate_waypoints(path_leg));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);

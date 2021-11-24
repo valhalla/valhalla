@@ -29,10 +29,10 @@ namespace {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
-    {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
-    {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},     {"taxi", 43200.0f},
+    {"auto", 43200.0f},      {"auto_shorter", 43200.0f},  {"bicycle", 7200.0f},
+    {"bus", 43200.0f},       {"motor_scooter", 14400.0f}, {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f}, {"transit", 14400.0f},       {"truck", 43200.0f},
+    {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -127,6 +127,70 @@ TEST(TimeDepPaths, test_arrive_by_paths) {
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto","date_time":{"type":2,"value":"2018-06-28T07:00"}})";
   try_path(reader, loki_worker, false, test_request1, 1);
+}
+
+class TimeDepForwardTest : public thor::TimeDepForward {
+public:
+  explicit TimeDepForwardTest(const boost::property_tree::ptree& config = {})
+      : TimeDepForward(config) {
+  }
+
+  void Clear() {
+    TimeDepForward::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(TimeDepPaths, test_forward_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  TimeDepForwardTest time_dep(config);
+  time_dep.Clear();
+}
+
+TEST(TimeDepPaths, test_forward_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  TimeDepForwardTest time_dep(config);
+  time_dep.Clear();
+}
+
+class TimeDepReverseTest : public thor::TimeDepReverse {
+public:
+  explicit TimeDepReverseTest(const boost::property_tree::ptree& config = {})
+      : TimeDepReverse(config) {
+  }
+
+  void Clear() {
+    TimeDepReverse::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(TimeDepPaths, test_reverse_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  TimeDepReverseTest time_dep(config);
+  time_dep.Clear();
+}
+
+TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  TimeDepReverseTest time_dep(config);
+  time_dep.Clear();
 }
 
 int main(int argc, char* argv[]) {

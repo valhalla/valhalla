@@ -44,6 +44,7 @@ message Location {
     repeated string names = 10;
     optional int32 outbound_reach = 11;
     optional int32 inbound_reach = 12;
+    optional float heading = 13;
   }
 
   message SearchFilter {
@@ -85,6 +86,8 @@ message Location {
   repeated PathEdge filtered_edges = 23;
   optional uint32 original_index = 24;
   optional LatLng projected_ll = 25;
+  optional uint32 leg_shape_index = 35;
+  optional double distance_from_leg_origin = 36;
 
   //more inputs
   optional PreferredSide preferred_side = 26 [default = either];
@@ -92,9 +95,10 @@ message Location {
   optional uint32 search_cutoff = 28;
   optional uint32 street_side_tolerance = 29;
   optional uint32 route_index = 30;
-  optional uint32 shape_index = 31;
+  optional uint32 waypoint_index = 31;
   optional SearchFilter search_filter = 32;
   optional uint32 street_side_max_distance = 33;
+  optional int32 preferred_layer = 34;
 }
 
 message TransitEgressInfo {
@@ -107,6 +111,16 @@ message TransitStationInfo {
   optional string onestop_id = 1;        // Unique transitland ID
   optional string name = 2;              // The name of the station
   optional LatLng ll = 3;                // Latitude, longitude of the station
+}
+
+message BikeShareStationInfo {
+  optional string name = 1;
+  optional string ref = 2;
+  optional uint32 capacity = 3;
+  optional string network = 4;
+  optional string operator = 5;
+  optional float rent_cost = 6;
+  optional float return_cost = 7;
 }
 
 message TransitPlatformInfo {
@@ -126,9 +140,21 @@ message TransitPlatformInfo {
   optional string station_name = 9;        // The station name of the platform
 }
 
+message Pronunciation {
+  enum Alphabet {
+    kIpa = 1;
+    kXKatakana = 2;
+    kXJeita = 3;
+    kNtSampa = 4;
+  }
+  optional Alphabet alphabet = 1 [default = kIpa];
+  optional string value = 2;
+}
+
 message StreetName {
-  optional string value = 1;          // The actual street name value, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;  // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
+  optional bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
+  optional Pronunciation pronunciation = 3; // The pronunciation associated with this street name
 }
 
 message TurnLane {
@@ -153,10 +179,14 @@ enum RoadClass {
   kServiceOther = 7;
 }
 
-message TaggedName {
+message TaggedValue {
   enum Type {
-    kTunnel = 1;
-    kBridge = 2;
+    kLayer = 1;
+    kBssInfo = 3;
+    // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
+    // see https://github.com/valhalla/valhalla/issues/3262
+    kTunnel = 49; // static_cast<uint8_t>('1')
+    kBridge = 50; // static_cast<uint8_t>('2')
   }
   optional string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
   optional Type type = 2;      // The type of tagged name (tunnel or bridge)

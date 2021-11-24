@@ -321,8 +321,10 @@ void FormTilesInNewLevel(GraphReader& reader,
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   edgeinfo.GetNames(), edgeinfo.GetNames(true), edgeinfo.GetTypes(),
-                                   added, diff_names);
+                                   edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
+                                   edgeinfo.GetTaggedValues(true), edgeinfo.GetTypes(), added,
+                                   diff_names);
+
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

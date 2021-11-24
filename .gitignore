@@ -34,6 +34,7 @@ genfiles/
 locales/*.UTF-8
 !locales/merge-en.sh
 py-compile
+__pycache__
 *.la
 *.o
 .deps/
@@ -59,6 +60,9 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+
+# clangd
+.cache/
 
 # documentation
 site/

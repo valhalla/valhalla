@@ -285,13 +285,17 @@ void trim_shape(float start,
  * @param shape  Shape / polyline geometry.
  * @param sample_distance Distance to sample when computing heading.
  * @param forward Boolean value whether to test in forward or reverse direction.
+ * @param first_segment_index Index into the shape pointing to the first stopping point.
+ * @param last_segment_index Index into the shape pointing to the last stopping point.
  * @return Returns the angle in degrees relative to N.
  */
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward);
+                    bool forward,
+                    size_t first_segment_index = 0,
+                    size_t last_segment_index = std::numeric_limits<size_t>::max());
 
 // useful in converting from one iteratable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
@@ -420,7 +424,7 @@ public:
   using iterator = T*;
   iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
   }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(end - first) {
+  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
   }
   T* begin() {
     return head;
@@ -428,7 +432,16 @@ public:
   T* end() {
     return tail;
   }
+  const T* begin() const {
+    return head;
+  }
+  const T* end() const {
+    return tail;
+  }
   T& operator[](size_t index) {
+    return *(head + index);
+  }
+  const T& operator[](size_t index) const {
     return *(head + index);
   }
   size_t size() const {
@@ -678,20 +691,21 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-template <typename clock_t = std::chrono::steady_clock> struct scoped_timer {
-  using duration_t = typename clock_t::duration;
-  const std::function<void(const duration_t&)> callback;
-  const std::chrono::time_point<clock_t> start;
+template <typename T> struct Finally {
+  T t;
+  explicit Finally(T t) : t(t){};
+  Finally() = delete;
+  Finally(Finally&& f) = default;
+  Finally(const Finally&) = delete;
+  Finally& operator=(const Finally&) = delete;
+  Finally& operator=(Finally&&) = delete;
+  ~Finally() {
+    t();
+  };
+};
 
-  scoped_timer(const std::function<void(const duration_t&)>& finished_callback)
-      : callback(finished_callback), start(clock_t::now()) {
-  }
-  scoped_timer(std::function<void(const duration_t&)>&& finished_callback)
-      : callback(finished_callback), start(clock_t::now()) {
-  }
-  ~scoped_timer() {
-    callback(clock_t::now() - start);
-  }
+template <typename T> Finally<T> make_finally(T t) {
+  return Finally<T>{t};
 };
 
 } // namespace midgard

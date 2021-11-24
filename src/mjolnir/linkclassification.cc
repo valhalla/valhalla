@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "baldr/graphid.h"
+#include "baldr/json.h"
 #include "midgard/util.h"
 
 #include "mjolnir/util.h"
@@ -45,45 +46,6 @@ struct LinkGraphNode {
   }
 };
 
-// Test if the set of edges can be classified as a turn channel. Total length
-// must be less than kMaxTurnChannelLength and there cannot be any exit signs.
-bool IsTurnChannel(sequence<OSMWay>& ways,
-                   sequence<Edge>& edges,
-                   sequence<OSMWayNode>& way_nodes,
-                   std::vector<uint32_t>& linkedgeindexes) {
-  // Method to get the shape for an edge - since LL is stored as a pair of
-  // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::list<PointLL> shape;
-    for (size_t i = 0; i < count; ++i) {
-      auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.latlng());
-    }
-    return shape;
-  };
-
-  // Iterate through the link edges. Check if total length exceeds the
-  // maximum turn channel length or an exit sign exists.
-  float total_length = 0.0f;
-  for (auto idx : linkedgeindexes) {
-    // Get the shape and length of the edge
-    sequence<Edge>::iterator element = edges[idx];
-    auto edge = *element;
-    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-    total_length += valhalla::midgard::length(shape);
-    if (total_length > kMaxTurnChannelLength) {
-      return false;
-    }
-
-    // Can not be bidirectional
-    OSMWay way = *ways[edge.wayindex_];
-    if (way.auto_forward() && way.auto_backward()) {
-      return false;
-    }
-  }
-  return true;
-}
-
 inline bool IsDriveableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
          (edge.attributes.driveableforward || edge.attributes.driveablereverse) &&
@@ -103,6 +65,44 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
     }
   }
   return bestrc;
+}
+
+struct Data {
+  Data(const std::string& nodes_file,
+       const std::string& edges_file,
+       const std::string& ways_file,
+       const std::string& way_nodes_file,
+       const OSMData& osmdata)
+      : nodes(nodes_file, false), edges(edges_file, false), ways(ways_file, false),
+        way_nodes(way_nodes_file, false), osmdata(osmdata) {
+  }
+
+  sequence<Node> nodes;
+  sequence<Edge> edges;
+  sequence<OSMWay> ways;
+  sequence<OSMWayNode> way_nodes;
+  const OSMData& osmdata;
+};
+
+std::vector<PointLL> EdgeShape(Data& data, const Edge& edge) {
+  size_t idx = edge.llindex_;
+  const size_t count = edge.attributes.llcount;
+  std::vector<PointLL> shape;
+  for (size_t i = 0; i < count; ++i) {
+    auto node = (*data.way_nodes[idx++]).node;
+    shape.emplace_back(node.latlng());
+  }
+  return shape;
+}
+
+float CalcEdgesLength(Data& data, const std::vector<uint32_t>& edges) {
+  float total_length = 0.0f;
+  for (auto idx : edges) {
+    Edge edge = *data.edges[idx];
+    auto shape = EdgeShape(data, edge);
+    total_length += valhalla::midgard::length(shape);
+  }
+  return total_length;
 }
 
 // Form a list of all nodes - sorted by highest classification of non-link
@@ -141,22 +141,6 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
 }
 
 // Helper structure that contains all osm data we need in one place
-struct Data {
-  Data(const std::string& nodes_file,
-       const std::string& edges_file,
-       const std::string& ways_file,
-       const std::string& way_nodes_file,
-       const OSMData& osmdata)
-      : nodes(nodes_file, false), edges(edges_file, false), ways(ways_file, false),
-        way_nodes(way_nodes_file, false), osmdata(osmdata) {
-  }
-
-  sequence<Node> nodes;
-  sequence<Edge> edges;
-  sequence<OSMWay> ways;
-  sequence<OSMWayNode> way_nodes;
-  const OSMData& osmdata;
-};
 
 // Way tags that are used to determine correct link class
 struct WayTags {
@@ -439,6 +423,318 @@ struct LinkGraphBuilder {
   }
 };
 
+#ifdef LOGGING_LEVEL_DEBUG
+json::MapPtr
+LineStringFeature(Data& data, const std::vector<uint32_t>& nodes, std::string color = "") {
+  auto feature = json::map({});
+  feature->emplace("type", std::string("Feature"));
+  auto properties = json::map({});
+  if (color.size()) {
+    properties->emplace("stroke", color);
+  }
+  feature->emplace("properties", properties);
+  {
+    auto geojson = json::map({});
+    auto coords = json::array({});
+    coords->reserve(nodes.size());
+    for (auto i : nodes) {
+      auto p = (*data.nodes[i]).node.latlng();
+      coords->emplace_back(json::array({json::fixed_t{p.lng(), 6}, json::fixed_t{p.lat(), 6}}));
+    }
+    geojson->emplace("type", std::string("LineString"));
+    geojson->emplace("coordinates", std::move(coords));
+
+    feature->emplace("geometry", std::move(geojson));
+  }
+
+  return feature;
+}
+
+json::MapPtr PointFeature(Data& data, uint32_t node, std::string color = "") {
+  auto feature = json::map({});
+  feature->emplace("type", std::string("Feature"));
+  auto properties = json::map({});
+  if (color.size()) {
+    properties->emplace("marker-color", color);
+  }
+  feature->emplace("properties", properties);
+  {
+    auto geometry = json::map({});
+    geometry->emplace("type", std::string("Point"));
+
+    auto p = (*data.nodes[node]).node.latlng();
+    auto coords = json::array({json::fixed_t{p.lng(), 6}, json::fixed_t{p.lat(), 6}});
+    geometry->emplace("coordinates", std::move(coords));
+
+    feature->emplace("geometry", std::move(geometry));
+  }
+
+  return feature;
+}
+
+std::string VisualizeIntersection(
+    Data& data,
+    const std::vector<std::tuple<std::vector<uint32_t>, uint32_t, std::string>>& colored_lines,
+    uint32_t intersection_node) {
+  auto res = json::map({});
+  res->emplace("type", std::string("FeatureCollection"));
+
+  auto features = json::array({});
+  for (const auto& line : colored_lines) {
+    features->emplace_back(LineStringFeature(data, std::get<0>(line), std::get<2>(line)));
+    features->emplace_back(PointFeature(data, std::get<1>(line), std::get<2>(line)));
+  }
+  features->emplace_back(PointFeature(data, intersection_node));
+  res->emplace("features", std::move(features));
+
+  std::ostringstream ss;
+  ss << *res;
+  return ss.str();
+}
+#endif
+
+struct RoadName {
+  uint64_t way_id;
+  std::vector<std::string> names;
+  std::vector<std::string> ref;
+
+  RoadName(Data& data, const Edge& edge) {
+    OSMWay way = data.ways[edge.wayindex_];
+    names = GetTagTokens(data.osmdata.name_offset_map.name(way.name_index()));
+    ref = GetTagTokens(data.osmdata.name_offset_map.name(way.ref_index()));
+    way_id = way.way_id();
+  }
+
+  bool operator==(const RoadName& rhs) const {
+    return way_id == rhs.way_id || Equal(names, rhs.names) || Equal(ref, rhs.ref);
+  }
+  bool operator!=(const RoadName& rhs) const {
+    return !(*this == rhs);
+  }
+
+private:
+  static bool Equal(const std::vector<std::string>& lhs, const std::vector<std::string>& rhs) {
+    return lhs.size() && rhs.size() && lhs[0].size() && rhs[0].size() && lhs[0] == rhs[0];
+  }
+};
+
+bool IsEdgeDriveableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
+  bool right_direction = true;
+  if (forward) {
+    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveableforward) ||
+                      (edge.targetnode_ == from_node && edge.attributes.driveablereverse);
+  } else {
+    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveablereverse) ||
+                      (edge.targetnode_ == from_node && edge.attributes.driveableforward);
+  }
+  return right_direction;
+}
+
+uint32_t EndNode(uint32_t from_node, const Edge& edge) {
+  return from_node == edge.sourcenode_ ? edge.targetnode_ : edge.sourcenode_;
+}
+
+// returns nodes of the path
+std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
+                                            size_t start_edge_idx,
+                                            bool forward,
+                                            double length_stop_threshold,
+                                            Data& data) {
+  Edge start_edge = *data.edges[start_edge_idx];
+  uint32_t node = EndNode(start_node, start_edge);
+  Edge prev_edge = start_edge;
+  bool next_found = false;
+  std::vector<uint32_t> nodes{start_node, node};
+  std::unordered_set<size_t> visited_nodes{start_node, node};
+  double current_length = length(EdgeShape(data, start_edge));
+
+  auto next = [&](const std::pair<Edge, size_t>& edge) {
+    next_found = true;
+    node = EndNode(node, edge.first);
+    visited_nodes.insert(node);
+    prev_edge = edge.first;
+    nodes.push_back(node);
+    current_length += length(EdgeShape(data, edge.first));
+  };
+
+  // traverse edges until length limit is reached
+  while (current_length < length_stop_threshold) {
+    next_found = false;
+    auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
+    std::vector<std::pair<Edge, size_t>> candidates;
+
+    // looking for a non link edge with right direction
+    for (const auto& node_edge : bundle.node_edges) {
+      const Edge& edge = node_edge.first;
+      if (!edge.attributes.link && IsEdgeDriveableInDirection(node, edge, forward) &&
+          visited_nodes.find(EndNode(node, node_edge.first)) == visited_nodes.end()) {
+        candidates.push_back(node_edge);
+      }
+    }
+
+    if (candidates.size() == 1) {
+      next(candidates[0]);
+    } else if (candidates.size() > 1) {
+      // if there more than 1 candidate filter them by road name
+      std::vector<std::pair<Edge, size_t>> name_candidates;
+      for (const auto& edge : candidates) {
+        if (RoadName(data, prev_edge) == RoadName(data, edge.first)) {
+          name_candidates.push_back(edge);
+        }
+      }
+
+      if (name_candidates.size()) {
+        next(name_candidates[0]);
+      }
+      // TODO(merkispavel): check cases when there are more than 1 road name match
+      // maybe add filtering by heading, require abs(prev_heading-next_heading) < 90
+      if (name_candidates.size() > 1) {
+        LOG_DEBUG("[IsSlipLane] More than one name candidates while traversing");
+      }
+    }
+
+    if (!next_found) {
+      break;
+    }
+  }
+
+  return nodes;
+}
+
+struct SlipLaneInput {
+  static constexpr size_t kInvalidEdge = std::numeric_limits<size_t>::max();
+
+  uint32_t first_node;
+  uint32_t last_node;
+  size_t fork_edge = kInvalidEdge;
+  size_t merge_edge = kInvalidEdge;
+
+  bool Valid() const {
+    return fork_edge != kInvalidEdge && merge_edge != kInvalidEdge;
+  }
+};
+
+// A - first_node
+// E - last_node
+// AB - fork_edge
+// DE - merge_edge
+// A-F-E - link_edges(slip lane)
+//   C____D___E___
+//  |        /
+//  |      ^
+//  B     /
+//  |   F
+//  | /
+//  A
+//  |
+// The idea is to check whether edges fit "triangle" pattern, i.e
+// when there another two ways from A to E:
+// - A-F-E though the slip lane
+// - A-B-C-D-E through the intersection C
+// e.g https://www.openstreetmap.org/way/5277672
+bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
+  // traversing from fork_edge(AB) in forward direction hoping to reach the intersection(C)
+  auto forward_nodes =
+      GoTowardsIntersection(input.first_node, input.fork_edge, true, traverse_threshold, data);
+  // traversing from merge_edge(ED) in reverse direction hoping to reach the intersection(C)
+  auto reverse_nodes =
+      GoTowardsIntersection(input.last_node, input.merge_edge, false, traverse_threshold, data);
+
+  // check if two directions intersect
+  boost::optional<uint32_t> intersection_node;
+  for (auto node : reverse_nodes) {
+    if (std::find(forward_nodes.begin(), forward_nodes.end(), node) != forward_nodes.end()) {
+      intersection_node = node;
+      break;
+    }
+  }
+
+  if (intersection_node) {
+    LOG_DEBUG("\n" + VisualizeIntersection(data,
+                                           {{forward_nodes, input.first_node, "#ff0000"},
+                                            {reverse_nodes, input.last_node, "#0000ff"}},
+                                           *intersection_node));
+  }
+
+  return intersection_node.is_initialized();
+}
+
+SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edges) {
+  auto edge_heading = [&](uint32_t from_node, const Edge& edge) -> double {
+    auto shape = EdgeShape(data, edge);
+    if (edge.sourcenode_ == from_node)
+      return shape[0].Heading(shape[1]);
+    return shape[shape.size() - 1].Heading(shape[shape.size() - 2]);
+  };
+
+  // finds neighbour edge with min absolute heading delta
+  auto find_closest_neighbour_edge = [&](uint32_t node, const Edge& edge, bool forward) -> size_t {
+    double min_angle_delta = 360;
+    size_t best_edge_idx = SlipLaneInput::kInvalidEdge;
+    double origin_heading = edge_heading(node, edge);
+    auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
+    for (auto to : bundle.node_edges) {
+      if (to.first.attributes.link || !IsEdgeDriveableInDirection(node, to.first, forward))
+        continue;
+
+      double neighbour_heading = edge_heading(node, to.first);
+      double abs_delta = std::abs(origin_heading - neighbour_heading);
+      double delta = std::min(abs_delta, 360 - abs_delta);
+      if (delta < min_angle_delta) {
+        min_angle_delta = delta;
+        best_edge_idx = to.second;
+      }
+    }
+    return best_edge_idx;
+  };
+
+  SlipLaneInput res;
+  // link_edges store link sequence in reverse order
+  // so first link edge is actually the last in the list
+  Edge first_link_edge = *data.edges[link_edges.back()];
+  res.first_node = first_link_edge.attributes.driveableforward ? first_link_edge.sourcenode_
+                                                               : first_link_edge.targetnode_;
+  res.fork_edge = find_closest_neighbour_edge(res.first_node, first_link_edge, true);
+
+  Edge last_link_edge = *data.edges[link_edges.front()];
+  res.last_node = last_link_edge.attributes.driveableforward ? last_link_edge.targetnode_
+                                                             : last_link_edge.sourcenode_;
+  res.merge_edge = find_closest_neighbour_edge(res.last_node, last_link_edge, false);
+  return res;
+}
+
+// Test if the set of edges can be classified as a turn channel.
+bool IsTurnChannel(Data& data, const std::vector<uint32_t>& link_edges) {
+  bool bidirectional = std::any_of(link_edges.begin(), link_edges.end(), [&](uint32_t edge_idx) {
+    Edge edge = *data.edges[edge_idx];
+    OSMWay way = *data.ways[edge.wayindex_];
+    return way.auto_forward() && way.auto_backward();
+  });
+  // turn channel can not be bidirectional
+  if (bidirectional)
+    return false;
+
+  float total_length = CalcEdgesLength(data, link_edges);
+  if (total_length < kMaxTurnChannelLength)
+    return true;
+
+  // length is greater than threshold so we need further analysis
+  SlipLaneInput input = GetSlipLaneInput(data, link_edges);
+  if (input.Valid()) {
+#ifdef LOGGING_LEVEL_DEBUG
+    uint64_t way_id = (*data.ways[(*data.edges[link_edges[0]]).wayindex_]).way_id();
+    LOG_DEBUG("Link edges with way_id=" + std::to_string(way_id));
+#endif
+
+    // in most cases slip lane and its detour fit right triangle with ~90 degree angle at the
+    // intersection so traverse_threshold=total_length(i.e slip lane length) is enough for such cases:
+    // hypotenuse(slip lane) length is always greater than leg length
+    // but we need greater threshold for the intersections with sharp angles
+    return IsSlipLane(data, input, 2 * total_length);
+  }
+  return false;
+}
+
 /*
  * Reclassify links in the acyclic link graph. We maintain a queue of leaf nodes. On each step take
  * some leaf node from the queue, build a link chain, determine the final road class for the whole
@@ -545,7 +841,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
       bool turn_channel = false;
       if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
                                   !has_exit && ends_have_non_link)) {
-        turn_channel = IsTurnChannel(data.ways, data.edges, data.way_nodes, link_edges);
+        turn_channel = IsTurnChannel(data, link_edges);
       }
 
       // Reclassify link edges to the new classification.

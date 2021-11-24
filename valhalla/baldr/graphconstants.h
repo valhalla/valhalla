@@ -41,7 +41,6 @@ constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
-constexpr uint16_t kSpareAccess = 2048; // Unused so far
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
@@ -339,6 +338,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+      {static_cast<uint8_t>(Use::kPedestrianCrossing), "pedestrian_crossing"},
       {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
       {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
       {static_cast<uint8_t>(Use::kOther), "other"},
@@ -358,10 +358,26 @@ inline std::string to_string(Use u) {
   return i->second;
 }
 
-enum class TaggedName : uint8_t { // must start at 1 due to nulls
-  kTunnel = 1,
-  kBridge = 2
+enum class TaggedValue : uint8_t { // must start at 1 due to nulls
+  kLayer = 1,
+  kPronunciation = 2,
+  kBssInfo = 3,
+  // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
+  // see https://github.com/valhalla/valhalla/issues/3262
+  kTunnel = static_cast<uint8_t>('1'),
+  kBridge = static_cast<uint8_t>('2'),
+
 };
+
+enum class PronunciationAlphabet : uint8_t {
+  kNone = 0,
+  kIpa = 1,
+  kXKatakana = 2,
+  kXJeita = 3,
+  kNtSampa = 4
+};
+// must start at 1 due to nulls
+enum class Language : uint8_t { kNone = 1 };
 
 // Speed type
 enum class SpeedType : uint8_t {
@@ -538,7 +554,9 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6,
   kNoEntry = 7,
   kNoExit = 8,
-  kNoTurn = 9
+  kNoTurn = 9,
+  kOnlyProbable = 10,
+  kNoProbable = 11
 };
 
 // Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
@@ -551,7 +569,7 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8,
+  kDestinationAllowed = 8
 };
 
 // Minimum meters offset from start/end of shape for finding heading
@@ -616,6 +634,20 @@ constexpr uint8_t kDefaultFlowMask =
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+
+// There is only 1 bit to store these values, do not exceed the value 1.
+enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };
+
+inline std::string to_string(HOVEdgeType h) {
+  static const std::unordered_map<uint8_t, std::string> HOVEdgeTypeStrings =
+      {{static_cast<uint8_t>(HOVEdgeType::kHOV2), "HOV-2"},
+       {static_cast<uint8_t>(HOVEdgeType::kHOV3), "HOV-3"}};
+  auto i = HOVEdgeTypeStrings.find(static_cast<uint8_t>(h));
+  if (i == HOVEdgeTypeStrings.cend()) {
+    return "null";
+  }
+  return i->second;
+}
 
 } // namespace baldr
 } // namespace valhalla

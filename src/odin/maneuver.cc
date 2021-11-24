@@ -1119,6 +1119,14 @@ void Maneuver::set_long_street_name(bool has_long_street_name) {
   has_long_street_name_ = has_long_street_name;
 }
 
+const BikeShareStationInfo& Maneuver::bss_info() const {
+  return bss_info_;
+}
+
+void Maneuver::set_bss_info(const BikeShareStationInfo& bss_info) {
+  bss_info_ = bss_info;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;

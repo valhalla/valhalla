@@ -9,6 +9,7 @@
 #include "baldr/turnlanes.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
+#include "odin/markup_formatter.h"
 
 #include "proto/api.pb.h"
 #include "proto/directions.pb.h"
@@ -94,7 +95,8 @@ void test_turn_lanes(const std::string& filename,
   request.ParseFromString(path_bytes);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();

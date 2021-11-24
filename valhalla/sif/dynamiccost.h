@@ -204,7 +204,8 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & access_mask_) || ignore_access_;
+    return ((node->access() & access_mask_) || ignore_access_) &&
+           !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
   /**
@@ -409,6 +410,15 @@ public:
       // Iterate through the restrictions
       const EdgeLabel* first_pred = &pred;
       for (const auto& cr : restrictions) {
+        if (cr->type() == baldr::RestrictionType::kNoProbable ||
+            cr->type() == baldr::RestrictionType::kOnlyProbable) {
+          // A complex restriction can not have a 0 probability set.  range is 1 to 100
+          // restriction_probability_= 0 means ignore probable restrictions
+          if (restriction_probability_ == 0 || restriction_probability_ > cr->probability()) {
+            continue;
+          }
+        }
+
         // Walk the via list, move to the next restriction if the via edge
         // Ids do not match the path for this restriction.
         bool match = true;
@@ -595,7 +605,7 @@ public:
    * @param  has_left     Did we make a left (left or sharp left)
    * @param  has_right    Did we make a right (right or sharp right)
    * @param  penalize_internal_uturns   Do we want to penalize uturns on a short, internal edge
-   * @param  internal_turn              Did we make an turn on a short internal edge.
+   * @param  internal_turn              Did we make an internal turn on the previous edge.
    * @param  seconds      Time.
    */
   inline void AddUturnPenalty(const uint32_t idx,
@@ -719,9 +729,9 @@ public:
   std::vector<HierarchyLimits>& GetHierarchyLimits();
 
   /**
-   * Relax hierarchy limits.
+   * Relax hierarchy limits using pre-defined algorithm-cased factors.
    */
-  void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
+  void RelaxHierarchyLimits(const bool using_bidirectional);
 
   /**
    * Checks if we should exclude or not.
@@ -872,6 +882,9 @@ protected:
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
 
+  // percentage of allowing probable restriction a 0 probability means do not utilize them
+  uint8_t restriction_probability_{0};
+
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
   bool shortest_;
@@ -886,6 +899,16 @@ protected:
 
   // Should we penalize uturns on short internal edges?
   bool penalize_uturns_;
+
+  bool exclude_unpaved_{false};
+
+  bool exclude_cash_only_tolls_{false};
+
+  // HOT/HOV flags
+  bool include_hot_{false};
+  bool include_hov2_{false};
+  bool include_hov3_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -895,6 +918,8 @@ protected:
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
+
+    restriction_probability_ = costing_options.restriction_probability();
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
@@ -967,6 +992,10 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+
+    exclude_unpaved_ = costing_options.exclude_unpaved();
+
+    exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
   /**
@@ -1070,6 +1099,14 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_living_streets_;
 
   ranged_default_t<float> closure_factor_;
+
+  bool exclude_unpaved_;
+
+  bool exclude_cash_only_tolls_ = false;
+
+  bool include_hot_ = false;
+  bool include_hov2_ = false;
+  bool include_hov3_ = false;
 };
 
 /**

@@ -13,6 +13,13 @@
   },
   "tags": [
     {
+      "key": "layer",
+      "object_types": [
+        "way"
+      ],
+      "description": "Relative Z-level"
+    },
+    {
       "key": "ISO3166-1",
       "object_types": [
         "relation"
@@ -260,6 +267,13 @@
         "way"
       ],
       "description": "Alternative name for the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name for the way, frequently used when a street has another official or locally preferred name"
     },
     {
       "key": "area",
@@ -1562,8 +1576,22 @@
       ]
     },
     {
+      "key": "destination:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the toward location. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
       "key": "destination:backward",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:backward:pronunciation",
       "object_types": [
         "way"
       ]
@@ -1576,8 +1604,22 @@
       ]
     },
     {
+      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:forward:pronunciation",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "destination:ref",
       "description": "Branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
@@ -1590,6 +1632,13 @@
       ]
     },
     {
+      "key": "destination:ref:to:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the toward route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "destination:street",
       "description": "Branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
@@ -1597,8 +1646,22 @@
       ]
     },
     {
+      "key": "destination:street:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "destination:street:to",
       "description": "Toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:to:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
@@ -2495,6 +2558,20 @@
     },
     {
       "key": "highway",
+      "value": "stop",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
+      "value": "give_way",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
+      "key": "highway",
       "value": "trunk",
       "object_types": [
         "way"
@@ -2768,6 +2845,13 @@
       "description": "Allows access for hov."
     },
     {
+      "key": "payment:*",
+      "object_types": [
+        "node"
+      ],
+      "description": "Payment keys/values (for tolls)."
+    },
+    {
       "key": "impassable",
       "value": "yes",
       "object_types": [
@@ -2781,7 +2865,14 @@
       "object_types": [
         "way"
       ],
-      "description": "International Route network and number."
+      "description": "International route network and number."
+    },
+    {
+      "key": "int_ref:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the international route network and number."
     },
     {
       "key": "junction",
@@ -2802,6 +2893,13 @@
     {
       "key": "junction:ref",
       "description": "Junction/exit number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:ref:pronunciation",
+      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
@@ -4094,12 +4192,42 @@
       "description": "The name of the feature, street names, river names, POI names etc."
     },
     {
+      "key": "name:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc."
+    },
+    {
+      "key": "tunnel:name",
+      "object_types": [
+        "way"
+      ],
+      "description": "The tunnel name of the way."
+    },
+    {
+      "key": "tunnel:name:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name of the way."
+    },
+    {
       "key": "name:en",
       "object_types": [
         "way",
         "relation"
       ],
       "description": "The english name of the feature"
+    },
+    {
+      "key": "name:en:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the english name of the feature"
     },
     {
       "key": "ncn",
@@ -4162,6 +4290,21 @@
       "description": "Official name for a country used in that country if it differs from what is in the name tag"
     },
     {
+      "key": "official_name:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name for a country used in that country if it differs from what is in the name tag"
+    },
+   {
+      "key": "access",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the access on the way can change conditionally."
+    },
+    {
       "key": "oneway",
       "value": "-1",
       "object_types": [
@@ -4192,6 +4335,30 @@
         "way"
       ],
       "description": "Sets reverse flag to true for all types of routing."
+    },
+   {
+      "key": "oneway",
+      "value": "reversible",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
+    },
+   {
+      "key": "oneway",
+      "value": "conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change conditionally."
+    },
+    {
+      "key": "oneway",
+      "value": "alternating",
+      "object_types": [
+        "way"
+      ],
+      "description": "Indicates the travel direction on the way can change."
     },
     {
       "key": "oneway:bicycle",
@@ -4813,6 +4980,14 @@
         "relation"
       ],
       "description": "Route network and number.  Junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
+    },
+    {
+      "key": "ref:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
     },
     {
       "key": "restriction",
@@ -6513,6 +6688,46 @@
         "node"
       ],
       "description": "Traffic signal direction."
+    },
+    {
+      "key": "direction",
+      "value": "forward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "backward",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "direction",
+      "value": "both",
+      "object_types": [
+        "node"
+      ],
+      "description": "stop or give_way sign direction."
+    },
+    {
+      "key": "stop",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the stop signs at the minor roads."
+    },
+    {
+      "key": "give_way",
+      "value": "minor",
+      "object_types": [
+        "node"
+      ],
+      "description": "used to set the give_way signs at the minor roads."
     },
     {
       "key": "tunnel",

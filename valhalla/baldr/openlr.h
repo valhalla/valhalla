@@ -52,23 +52,23 @@ integer2decimal(const std::int32_t value) { // p. 45 Equation 2: Transformation 
 }
 
 inline std::int32_t
-bearing2integer(const float value) { // p. 48 Equation 6: Calculation of the bearing value (Binary)
-  return static_cast<std::int32_t>(value / 11.25f);
+bearing2integer(const double value) { // p. 48 Equation 6: Calculation of the bearing value (Binary)
+  return static_cast<std::int32_t>(value / 11.25);
 }
 
-inline float integer2bearing(
+inline double integer2bearing(
     const std::int32_t value) { // p. 48 Equation 6: Calculation of the bearing value (Binary)
-  return value * 11.25f + 11.25f / 2.f;
+  return value * 11.25 + 11.25 / 2.;
 }
 
 inline std::int32_t
-distance2integer(const float value) { // p. 48 Equation 7: Calculation of the DNP value (Binary)
-  return static_cast<std::int32_t>(value / 58.6f);
+distance2integer(const double value) { // p. 48 Equation 7: Calculation of the DNP value (Binary)
+  return static_cast<std::int32_t>(value / 58.6);
 }
 
-inline float integer2distance(
+inline double integer2distance(
     const std::uint32_t value) { // p. 48 Equation 7: Calculation of the DNP value (Binary)
-  return value * 58.6f;
+  return value * 58.6;
 }
 
 } // namespace
@@ -126,11 +126,11 @@ struct LocationReferencePoint {
    */
   LocationReferencePoint(double longitude,
                          double latitude,
-                         float bearing,
+                         double bearing,
                          unsigned char frc,
                          FormOfWay fow,
                          LocationReferencePoint* prev,
-                         float distance = 0.f,
+                         double distance = 0.,
                          unsigned char lfrcnp = 0)
       : longitude(!prev ? integer2decimal(decimal2integer(longitude))
                         : prev->longitude +
@@ -154,8 +154,8 @@ struct LocationReferencePoint {
 
   double longitude;
   double latitude;
-  float bearing;        // 5.2.4. Bearing
-  float distance;       // 5.2.5. Distance to next LR-point
+  double bearing;       // 5.2.4. Bearing
+  double distance;      // 5.2.5. Distance to next LR-point
   unsigned char frc;    // 5.2.2. Functional Road Class: 0 – Main road,  1 – First class road, ...
   unsigned char lfrcnp; // 5.2.6. Lowest FRC to next LR-point
   FormOfWay fow;        // 5.2.3. Form of way
@@ -349,9 +349,9 @@ struct OpenLr {
     return {lrps.back().longitude, lrps.back().latitude};
   }
 
-  float getLength() const {
+  double getLength() const {
     return std::accumulate(std::next(lrps.begin()), std::prev(lrps.end()), lrps[0].distance,
-                           [](float distance, const LocationReferencePoint& lrp) {
+                           [](double distance, const LocationReferencePoint& lrp) {
                              return distance + lrp.distance;
                            });
   }

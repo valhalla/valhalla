@@ -28,17 +28,16 @@ namespace {
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
 
 /**
- * Check if the paths meet at opposing edges (but not at a node). If so, add a route discontinuity
+ * Check if the paths meet at opposing edges (but not at a node). If so, add an intermediate location
  * so that the shape / distance along the path is adjusted at the location.
  */
-void via_discontinuity(
-    GraphReader& reader,
-    const valhalla::Location& loc,
+bool intermediate_loc_edge_trimming(
+    valhalla::Location& loc,
     const GraphId& in,
     const GraphId& out,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& vias,
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
     const size_t path_index,
-    const bool flip_index) {
+    const bool arrive_by) {
   // Find the path edges within the locations.
   auto in_pe =
       std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
@@ -48,36 +47,57 @@ void via_discontinuity(
                    [&out](const valhalla::Location::PathEdge& e) { return e.graph_id() == out; });
 
   // Could not find the edges. This seems like it should not happen. Log a warning
-  // and do not add a discontinuity.
+  // and do not insert an intermediate location.
   if (in_pe == loc.path_edges().end() || out_pe == loc.path_edges().end()) {
-    LOG_WARN("Could not find connecting edges within via_discontinuity");
-    return;
+    LOG_WARN("Could not find connecting edges within the intermediate loc edge trimming");
+    return false;
   }
 
-  // Do not add a discontinuity if the connections are at a graph node we dont need to signal a
-  // discontinuity.
+  // Just set the edge index on the location for now then in triplegbuilder set to the shape index
+  loc.set_leg_shape_index(path_index + (arrive_by ? 1 : 0));
+  // If the intermediate point is at a node we dont need to trim the edge we just set the edge index
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
-    return;
+    // In this case we won't add a duplicate edge so we cant increment for arrive by
+    loc.set_leg_shape_index(path_index);
+    return true;
   }
 
-  // Add a discontinuity if the edges are opposing
-  GraphId in_edge_id(in_pe->graph_id());
-  GraphId out_edge_id(out_pe->graph_id());
-  GraphId opp_edge_id = reader.GetOpposingEdgeId(in_edge_id);
-  if (opp_edge_id == out_edge_id) {
-    PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
-    double dist_along = in_pe->percent_along();
+  // So what we are doing below is we are telling tripleg builder how to trim the two edges that come
+  // together at an intermediate location. There are two cases, one where the route keeps going on the
+  // same edge and one where the route does a uturn onto to opposing edge. In both cases we get two
+  // edges in the final route just for simplicities sake. We could technically only do two when its
+  // the uturn case. The way we do this is we specify a way to trim the shape of each edge. We use the
+  // lat lon of the intermediate location to fix the geometry and we use the distance along to tell
+  // trip leg builder how to cut the shape. We have to have at least one cut on each edge on either
+  // side of the intermediate location. If we have multiple intermediate locations on a single edge we
+  // will need to cut the edge based on the previous intermediate location we processed.
 
-    // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
-    // from 0 to dist_along. Set the first
-    vias.insert(
-        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+  PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
+  double dist_along = in_pe->percent_along();
 
-    // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
-    // 1-dist along to 1
-    vias.insert({path_index + (flip_index ? 0 : 1),
-                 {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
+  // Cut the first edges end off back to where the location lands along it
+  auto inserted = edge_trimming.insert(
+      {path_index + (arrive_by ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
+  // If it was already there we need to update it, should only happen for depart at (left to right)
+  if (!inserted.second) {
+    inserted.first->second.second = EdgeTrimmingInfo{true, snap_ll, dist_along};
   }
+
+  // We need to use the distance along from the edge exiting the intermediate location to handle the
+  // case when its a uturn at a via using the opposing edge that came into the via. Basically we need
+  // to invert the distance along because we inverted the direction we are traveling along the edge.
+  // This is handled automatically by using the correct exiting edge
+  dist_along = out_pe->percent_along();
+
+  // Cut the second edges beginning off up to where the location lands along it
+  inserted = edge_trimming.insert(
+      {path_index + (arrive_by ? 0 : 1), {{true, snap_ll, dist_along}, {false, PointLL(), 1.0}}});
+  // If it was already there we need to update it, should only happen for arrive by (right to left)
+  if (!inserted.second) {
+    inserted.first->second.first = EdgeTrimmingInfo{true, snap_ll, dist_along};
+  }
+
+  return false;
 }
 
 inline bool is_through_point(const valhalla::Location& l) {
@@ -157,7 +177,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  measure_scope_time(request, "thor_worker_t::expansion");
+  measure_scope_time(request);
 
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
@@ -245,6 +265,9 @@ std::string thor_worker_t::expansion(Api& request) {
 }
 
 void thor_worker_t::centroid(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
@@ -267,7 +290,7 @@ void thor_worker_t::centroid(Api& request) {
     auto* route = request.mutable_trip()->mutable_routes()->Add();
     auto& leg = *route->mutable_legs()->Add();
     thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                                *origin, dest, {}, leg, {"centroid"}, interrupt, nullptr);
+                                *origin, dest, leg, {"centroid"}, interrupt);
 
     // TODO: set the time at the destination if time dependent
 
@@ -278,7 +301,7 @@ void thor_worker_t::centroid(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::route");
+  auto _ = measure_scope_time(request);
 
   parse_locations(request);
   parse_filter_attributes(request);
@@ -403,10 +426,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     path_algorithm->Clear();
     cost->set_pass(1);
-    // since bidir does about half the expansion we can do half the relaxation here
-    float relax_factor = path_algorithm == &bidir_astar ? 8.f : 16.f;
-    float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
-    cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+    const bool using_bd = path_algorithm == &bidir_astar;
+    cost->RelaxHierarchyLimits(using_bd);
     cost->set_allow_destination_only(true);
     cost->set_allow_conditional_destination(true);
     path_algorithm->set_not_thru_pruning(false);
@@ -425,7 +446,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   // Things we'll need
   TripRoute* route = nullptr;
   GraphId first_edge;
-  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
@@ -466,37 +487,47 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // Merge through legs by updating the time and splicing the lists
       if (!temp_path.empty()) {
         auto offset = path.back().elapsed_cost;
-        std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_cost += offset; });
+        auto distance_offset = path.back().path_distance;
+        // NOTE: This will not work for all algorithms.  At this point, path_distance
+        // is not correct across the board so do not rely on it downstream.
+        std::for_each(temp_path.begin(), temp_path.end(), [offset, distance_offset](PathInfo& i) {
+          i.elapsed_cost += offset;
+          i.path_distance += distance_offset;
+        });
+
+        // When stitching routes at an intermediate location we need to store information about where
+        // along the edge it happened so triplegbuilder can properly cut the shape where the location
+        // was and store that info to be serialized int he output
+        auto at_node =
+            intermediate_loc_edge_trimming(*destination, path.back().edgeid, temp_path.front().edgeid,
+                                           edge_trimming, temp_path.size(), true);
+
         // Connects via the same edge so we only need it once
-        if (path.back().edgeid == temp_path.front().edgeid) {
+        if (path.back().edgeid == temp_path.front().edgeid && at_node) {
           path.pop_back();
-        } // Connects on a different edge and is a via location
-        else if (destination->type() == valhalla::Location::kVia) {
-          // Insert a route discontinuity if the paths meet at opposing edges and not
-          // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-          via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
-                            temp_path.size(), true);
         }
+
         path.insert(path.end(), temp_path.begin(), temp_path.end());
       }
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
       if (is_break_point(*origin)) {
-        // Move destination back to the last break and collect the throughs
-        std::list<valhalla::Location> throughs;
+        // Move destination back to the last break
+        std::vector<valhalla::Location> intermediates;
         while (!is_break_point(*destination)) {
-          throughs.push_back(*destination);
+          destination->set_leg_shape_index(path.size() - destination->leg_shape_index());
+          intermediates.push_back(*destination);
           --destination;
         }
 
-        // We have to flip the via indices because we built them in backwards order
-        std::remove_reference<decltype(vias)>::type flipped;
-        flipped.reserve(vias.size());
-        for (const auto& kv : vias)
+        // We have to flip the intermediate loc indices because we built them in backwards order
+        std::remove_reference<decltype(edge_trimming)>::type flipped;
+        flipped.reserve(edge_trimming.size());
+        for (const auto& kv : edge_trimming) {
           flipped.emplace(path.size() - kv.first, kv.second);
-        vias.swap(flipped);
+        }
+        edge_trimming.swap(flipped);
 
         // Form output information based on path edges
         if (trip.routes_size() == 0 || options.alternates() > 0) {
@@ -505,9 +536,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                              *origin, *destination, throughs, leg, algorithms, interrupt, &vias);
+                              *origin, *destination, leg, algorithms, interrupt, edge_trimming,
+                              intermediates);
         path.clear();
-        vias.clear();
+        edge_trimming.clear();
       }
     }
 
@@ -547,7 +579,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // over from the beginning doing all the legs over
         route = nullptr;
         first_edge = {};
-        vias.clear();
+        edge_trimming.clear();
         path.clear();
         algorithms.clear();
         trip.mutable_routes()->Clear();
@@ -569,7 +601,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // Things we'll need
   TripRoute* route = nullptr;
   GraphId last_edge;
-  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
@@ -590,7 +622,6 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       remove_path_edges(*origin,
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
-
     // Get best path and keep it
     auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
     if (temp_paths.empty())
@@ -610,17 +641,24 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // Merge through legs by updating the time and splicing the lists
       if (!path.empty()) {
         auto offset = path.back().elapsed_cost;
-        std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_cost += offset; });
+        auto distance_offset = path.back().path_distance;
+        std::for_each(temp_path.begin(), temp_path.end(), [offset, distance_offset](PathInfo& i) {
+          i.elapsed_cost += offset;
+          i.path_distance += distance_offset;
+        });
+
+        // When stitching routes at an intermediate location we need to store information about where
+        // along the edge it happened so triplegbuilder can properly cut the shape where the location
+        // was and store that info to be serialized int he output
+        auto at_node =
+            intermediate_loc_edge_trimming(*origin, path.back().edgeid, temp_path.front().edgeid,
+                                           edge_trimming, path.size() - 1, false);
+
         // Connects via the same edge so we only need it once
-        if (path.back().edgeid == temp_path.front().edgeid) {
+        if (path.back().edgeid == temp_path.front().edgeid && at_node) {
           path.pop_back();
-        } else if (origin->type() == valhalla::Location::kVia) {
-          // Insert a route discontinuity if the paths meet at opposing edges and not
-          // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-          via_discontinuity(*reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
-                            path.size() - 1, false);
         }
+
         path.insert(path.end(), temp_path.begin(), temp_path.end());
       } // Didnt need to merge
       else {
@@ -630,24 +668,23 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
       if (is_break_point(*destination)) {
-        // Move origin back to the last break and collect the throughs
-        std::list<valhalla::Location> throughs;
+        // Move origin back to the last break
         while (!is_break_point(*origin)) {
-          throughs.push_front(*origin);
           --origin;
         }
 
-        // Form output information based on path edges. vias are a route discontinuity map
+        // Form output information based on path edges.
         if (trip.routes_size() == 0 || options.alternates() > 0) {
           route = trip.mutable_routes()->Add();
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
-                                    path.end(), *origin, *destination, throughs, leg, algorithms,
-                                    interrupt, &vias);
+                                    path.end(), *origin, *destination, leg, algorithms, interrupt,
+                                    edge_trimming, {std::next(origin), destination});
+
         path.clear();
-        vias.clear();
+        edge_trimming.clear();
       }
     }
 
@@ -686,7 +723,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         // over from the beginning doing all the legs over
         route = nullptr;
         last_edge = {};
-        vias.clear();
+        edge_trimming.clear();
         path.clear();
         algorithms.clear();
         trip.mutable_routes()->Clear();
