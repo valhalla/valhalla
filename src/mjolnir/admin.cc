@@ -58,8 +58,7 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
-                        const PointLL& ll) {
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys, const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {

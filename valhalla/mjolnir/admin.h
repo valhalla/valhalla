@@ -49,8 +49,7 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
  * @param  polys      unordered map of polys.
  * @param  ll         point that needs to be checked.
  */
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
-                        const PointLL& ll);
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys, const PointLL& ll);
 
 /**
  * Get the timezone polys from the db
