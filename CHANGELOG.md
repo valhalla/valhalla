@@ -21,6 +21,7 @@
    * CHANGED: Do not create statsd client in workers if it is not configured [#3394](https://github.com/valhalla/valhalla/pull/3394)
    * ADDED: Import of Bike Share Stations information in BSS Connection edges [#3411](https://github.com/valhalla/valhalla/pull/3411)
    * ADDED: Add heading to PathEdge to be able to return it on /locate [#3399](https://github.com/valhalla/valhalla/pull/3399)
+   * ADDED: Add Chinese Postman Problem solver [#3428](https://github.com/valhalla/valhalla/pull/3428)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
