@@ -26,7 +26,7 @@ void loki_worker_t::init_chinese_postman(Api& request) {
 }
 void loki_worker_t::chinese_postman(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "loki_worker_t::chinese_postman");
+  auto _ = measure_scope_time(request);
 
   init_chinese_postman(request);
   auto& options = *request.mutable_options();

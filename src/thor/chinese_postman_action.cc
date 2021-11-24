@@ -270,7 +270,7 @@ int getCPVertexIndex(baldr::GraphId graph_id, std::vector<baldr::GraphId> cp_ver
 
 void thor_worker_t::chinese_postman(Api& request) {
   // time this whole method and save that statistic
-  auto _ = measure_scope_time(request, "thor_worker_t::isochrones");
+  auto _ = measure_scope_time(request);
 
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
@@ -475,8 +475,9 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto& leg = *route->mutable_legs()->Add();
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias; // Empty
   TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                        originLocation, destinationLocation, throughs, leg, algorithms, interrupt,
-                        &vias);
+                        originLocation, destinationLocation, leg, algorithms, interrupt);
+  // thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
+  //                               *origin, dest, leg, {"centroid"}, interrupt);
 }
 
 } // namespace thor
