@@ -47,6 +47,9 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
   for (const auto& poly : polys) {
     if (boost::geometry::covered_by(p, poly.second)) {
       const auto& admin = graphtile.admins_builder(poly.first);
+      if (!admin.state_offset())
+        index = poly.first;
+      else
         return poly.first;
     }
   }
@@ -223,35 +226,17 @@ GetAdminInfo(sqlite3* db_handle,
   sql += std::to_string(aabb.maxy()) + "));";
   GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
-  // If the state query yields a single result and the bounding box is entirely contained within
-  // the polygon we can return. TODO - this must have both a state and country field.
-  bool skip_country = false;
-  if (polys.size() == 1) {
-    // Turn aabb into a polygon and check if within poly
-    polygon_type polygon;
-    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.miny()));
-    boost::geometry::append(polygon.outer(), point_type(aabb.maxx(), aabb.miny()));
-    boost::geometry::append(polygon.outer(), point_type(aabb.maxx(), aabb.maxy()));
-    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.maxy()));
-    // TODO - does the polygon have to be explicitly closed
-    boost::geometry::append(polygon.outer(), point_type(aabb.minx(), aabb.miny()));
-
-    skip_country = boost::geometry::within(polygon, polys.begin()->second);
-  }
-
   // country query
-  if (!skip_country) {
-    sql =
-        "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
-    sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-    sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-    sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
-    sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-    sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-    sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-    sql += std::to_string(aabb.maxy()) + "));";
-    GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
-  }
+  sql =
+      "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
+  sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
+  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + "));";
+  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
   if (stmt) { // just in case something bad happened.
     sqlite3_finalize(stmt);
