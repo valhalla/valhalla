@@ -253,7 +253,7 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_type(valhalla::Location::kVia);
         } // other actions let you specify whatever type of stop you want
         else if (stop_type_json) {
-          Location::Type type = Location::kBreak;
+          valhalla::Location::Type type = valhalla::Location::kBreak;
           Location_Type_Enum_Parse(*stop_type_json, &type);
           location->set_type(type);
         } // and if you didnt set it it defaulted to break which is not the default for trace_route
