@@ -240,6 +240,9 @@ if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
  add_definitions(-DENABLE_THREAD_SAFE_TILE_REF_COUNT)
 endif ()
 
+# # ## add subdirectory for microtar
+# add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+
 ## libvalhalla
 add_subdirectory(src)
 
@@ -280,7 +283,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
   valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds)
+  valhalla_assign_speeds valhalla_update_live_traffic)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -315,6 +318,13 @@ if(ENABLE_DATA_TOOLS)
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
+
+  # Target-specific depedencies for valhalla_update_live_traffic
+  add_library(microtar
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+  target_include_directories(valhalla_update_live_traffic  PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  target_link_libraries(valhalla_update_live_traffic microtar)
 
   # Target-specific depedencies
   find_package(GEOS)
