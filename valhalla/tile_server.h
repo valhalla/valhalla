@@ -8,7 +8,7 @@ struct context_t;
 
 namespace valhalla {
 class test_tile_server_t {
-  std::string m_url{"127.0.0.1:8004"};
+  std::string m_url{"*:8004"};
 
 public:
   void start(const std::string& tile_source_dir, zmq::context_t& context);
