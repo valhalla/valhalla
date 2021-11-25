@@ -121,11 +121,16 @@ int main(int argc, char** argv) {
                       filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
-    ways_file << way.first;
+    // ways_file << way.first;
+    // for (auto edge : way.second) {
+    //   ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
+    // }
+    // ways_file << std::endl;
+
     for (auto edge : way.second) {
-      ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
+      ways_file << way.first << " " << (uint32_t)edge.forward << " " << (uint64_t)edge.edgeid
+                << std::endl;
     }
-    ways_file << std::endl;
   }
   ways_file.close();
 
