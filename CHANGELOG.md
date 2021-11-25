@@ -21,7 +21,7 @@
    * CHANGED: Do not create statsd client in workers if it is not configured [#3394](https://github.com/valhalla/valhalla/pull/3394)
    * ADDED: Import of Bike Share Stations information in BSS Connection edges [#3411](https://github.com/valhalla/valhalla/pull/3411)
    * ADDED: Add heading to PathEdge to be able to return it on /locate [#3399](https://github.com/valhalla/valhalla/pull/3399)
-   * ADDED: Correct ETA calculation. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
+   * ADDED: Add `prioritize_bidirectional` option for fast work and correct ETA calculation for `depart_at` date_time type. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

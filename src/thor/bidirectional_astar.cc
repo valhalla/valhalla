@@ -507,8 +507,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
 
-  // Set invariant true for bidirectional a*, change it when the algo allows varying time.
-  bool invariant = true;
+  // we use a non varying time for all time dependent routes until we can figure out how to vary the
+  // time during the path computation in the bidirectional algorithm
+  bool invariant = options.has_date_time_type();
   // Get time information for forward and backward searches
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
