@@ -339,7 +339,7 @@ tile_data cache_t::source(uint16_t index) {
   // if we don't have anything maybe it's lazy loaded
   auto& item = cache[index];
   if (item.get_data() == nullptr) {
-    auto f = data_source + sample::get_hgt_file_name(index);
+    auto f = data_source + get_hgt_file_name(index);
     item.init(f, format_t::RAW);
   }
 
@@ -417,37 +417,12 @@ sample::sample(const boost::property_tree::ptree& pt)
 }
 
 sample::sample(const std::string& data_source) {
-  cache_ = new cache_t();
-  cache_->data_source = data_source;
-
-  // messy but needed
-  while (!cache_->data_source.empty() &&
-         cache_->data_source.back() == filesystem::path::preferred_separator) {
-    cache_->data_source.pop_back();
-  }
-
-  // If data_source is empty, do not allocate/resize mapped cache.
-  if (data_source.empty()) {
-    LOG_DEBUG("No elevation data_source was provided");
-    return;
-  }
-  cache_->cache.resize(TILE_COUNT);
-
-  // check the directory for files that look like what we need
-  auto files = filesystem::get_files(data_source);
-  for (const auto& f : files) {
-    // make sure its a valid index
-    auto data = cache_item_t::parse_hgt_name(f);
-    if (data && data->second != format_t::UNKNOWN) {
-      if (!cache_->cache[data->first].init(f, data->second)) {
-        LOG_WARN("Corrupt elevation data: " + f);
-      }
-    }
-  }
+  // cache initialization logic moved to different a method
+  // to make future constructor merging easier, see sample.h
+  cache_initialisation(data_source);
 }
 
 sample::~sample() {
-  delete cache_;
 }
 
 template <class coord_t> double sample::get(const coord_t& coord, tile_data& tile) {
@@ -517,10 +492,18 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
 
   if (!filesystem::save(fpath, raw_data))
     return false;
+
+  // TODO(kormulev): должна быть синхронной
   auto res = cache_->cache[data->first].init(fpath, data->second);
   return res;
 }
 
+/*
+ * 1. сделать линейную структуру
+ * 2. блокировать одну из 2х тред запрашивающих тот же элевейшен тайл пока
+ * предыдущая треда скачивает этот тайл.
+ *
+ * */
 template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   if (url_.empty() || !remote_loader_)
     return get_no_data_value();
@@ -560,10 +543,6 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   return res;
 }
 
-double sample::get_no_data_value() {
-  return NO_DATA_VALUE;
-}
-
 template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
   auto lon = std::floor(coord.first);
   auto lat = std::floor(coord.second);
@@ -572,32 +551,6 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 
 void sample::add_single_tile(const std::string& path) {
   cache_->cache.front().init(path, format_t::RAW);
-}
-
-std::string sample::get_hgt_file_name(uint16_t index) {
-  auto x = (index % 360) - 180;
-  auto y = (index / 360) - 90;
-
-  std::string name(y < 0 ? "/S" : "/N");
-  y = std::abs(y);
-  if (y < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(y));
-  name.append(name);
-
-  name.append(x < 0 ? "W" : "E");
-  x = std::abs(x);
-  if (x < 100) {
-    name.push_back('0');
-  }
-  if (x < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(x));
-  name.append(".hgt");
-
-  return name;
 }
 
 // explicit instantiations for templated get
@@ -639,6 +592,66 @@ template uint16_t
 sample::get_tile_index<std::pair<float, float>>(const std::pair<float, float>& coord);
 template uint16_t sample::get_tile_index<midgard::PointLL>(const midgard::PointLL& coord);
 template uint16_t sample::get_tile_index<midgard::Point2>(const midgard::Point2& coord);
+
+std::string get_hgt_file_name(uint16_t index) {
+  auto x = (index % 360) - 180;
+  auto y = (index / 360) - 90;
+
+  std::string name(y < 0 ? "/S" : "/N");
+  y = std::abs(y);
+  if (y < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(y));
+  name.append(name);
+
+  name.append(x < 0 ? "W" : "E");
+  x = std::abs(x);
+  if (x < 100) {
+    name.push_back('0');
+  }
+  if (x < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(x));
+  name.append(".hgt");
+
+  return name;
+}
+
+void sample::cache_initialisation(const std::string& data_source) {
+  cache_ = std::make_unique<cache_t>();
+  cache_->data_source = data_source;
+
+  // messy but needed
+  while (cache_->data_source.size() &&
+         cache_->data_source.back() == filesystem::path::preferred_separator) {
+    cache_->data_source.pop_back();
+  }
+
+  // If data_source is empty, do not allocate/resize mapped cache.
+  if (cache_->data_source.empty()) {
+    LOG_DEBUG("No elevation data_source was provided");
+    return;
+  }
+  cache_->cache.resize(TILE_COUNT);
+
+  // check the directory for files that look like what we need
+  auto files = filesystem::get_files(cache_->data_source);
+  for (const auto& f : files) {
+    // make sure its a valid index
+    auto data = cache_item_t::parse_hgt_name(f);
+    if (data && data->second != format_t::UNKNOWN) {
+      if (!cache_->cache[data->first].init(f, data->second)) {
+        LOG_WARN("Corrupt elevation data: " + f);
+      }
+    }
+  }
+}
+
+double get_no_data_value() {
+  return NO_DATA_VALUE;
+}
 
 } // namespace skadi
 } // namespace valhalla

@@ -19,12 +19,12 @@ namespace {
 TEST(Sample, no_data) {
   // check the no data value
   skadi::sample s("test/data/this_is_not_a_directory");
-  EXPECT_EQ(skadi::sample::get_no_data_value(), -32768) << "No data value should be -32768";
+  EXPECT_EQ(skadi::get_no_data_value(), -32768) << "No data value should be -32768";
 
-  EXPECT_EQ(s.get(std::make_pair(0.0, 0.0)), skadi::sample::get_no_data_value())
+  EXPECT_EQ(s.get(std::make_pair(0.0, 0.0)), skadi::get_no_data_value())
       << "Asked for point with no data should be no data value";
 
-  EXPECT_EQ(s.get(std::make_pair(200.0, 200.0)), skadi::sample::get_no_data_value())
+  EXPECT_EQ(s.get(std::make_pair(200.0, 200.0)), skadi::get_no_data_value())
       << "Asked for point outside of valid range";
 }
 
@@ -100,8 +100,7 @@ void _get(const std::string& location) {
   double riemann_sum = 0;
   auto heights = s.get_all(postings);
   for (const auto height : heights) {
-    EXPECT_NE(height, skadi::sample::get_no_data_value())
-        << "Should have heights for all of these points";
+    EXPECT_NE(height, skadi::get_no_data_value()) << "Should have heights for all of these points";
     riemann_sum += height;
   }
   EXPECT_NEAR(riemann_sum, 1675, 100) << "Area under discretized curve isn't right";
@@ -135,9 +134,6 @@ struct testable_sample_t : public skadi::sample {
   static uint16_t get_tile_index(const PointLL& coord) {
     return skadi::sample::get_tile_index(coord);
   }
-  static std::string get_hgt_file_name(uint16_t index) {
-    return skadi::sample::get_hgt_file_name(index);
-  }
 };
 
 TEST(Sample, edges) {
@@ -155,14 +151,14 @@ TEST(Sample, edges) {
 
   // check 0 pixels
   v = s.get(std::make_pair(-180.f + n, -89.f - n * 5));
-  EXPECT_EQ(v, skadi::sample::get_no_data_value()) << "Wrong value at location";
+  EXPECT_EQ(v, skadi::get_no_data_value()) << "Wrong value at location";
 }
 
 TEST(Sample, lazy_load) {
   // make sure there is no data there
   { std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc); }
   skadi::sample s("test/data/sample");
-  EXPECT_EQ(s.get(std::make_pair(0.503915, 0.678783)), skadi::sample::get_no_data_value())
+  EXPECT_EQ(s.get(std::make_pair(0.503915, 0.678783)), skadi::get_no_data_value())
       << "Asked for point with no data should be no data value";
 
   // put data there
@@ -184,22 +180,22 @@ TEST(Sample, hgt_file_name) {
   // (There was a bug where the 16-bit index was converted to a signed value and would be invalid)
   const auto long_island_index =
       testable_sample_t::get_tile_index(midgard::PointLL{-73.512143, 40.646556});
-  ASSERT_EQ(testable_sample_t::get_hgt_file_name(long_island_index), "/N40/N40W074.hgt");
+  ASSERT_EQ(valhalla::skadi::get_hgt_file_name(long_island_index), "/N40/N40W074.hgt");
 
   const auto equador_index =
       testable_sample_t::get_tile_index(midgard::PointLL{-78.504476, -0.212297});
-  ASSERT_EQ(testable_sample_t::get_hgt_file_name(equador_index), "/S01/S01W079.hgt");
+  ASSERT_EQ(valhalla::skadi::get_hgt_file_name(equador_index), "/S01/S01W079.hgt");
 
   const auto brisbane_index =
       testable_sample_t::get_tile_index(midgard::PointLL{152.967888, -27.533658});
-  ASSERT_EQ(testable_sample_t::get_hgt_file_name(brisbane_index), "/S28/S28E152.hgt");
+  ASSERT_EQ(valhalla::skadi::get_hgt_file_name(brisbane_index), "/S28/S28E152.hgt");
 
   const auto tokyo_index = testable_sample_t::get_tile_index(midgard::PointLL{139.737345, 35.628096});
-  ASSERT_EQ(testable_sample_t::get_hgt_file_name(tokyo_index), "/N35/N35E139.hgt");
+  ASSERT_EQ(valhalla::skadi::get_hgt_file_name(tokyo_index), "/N35/N35E139.hgt");
 
   const auto amsterdam_index =
       testable_sample_t::get_tile_index(midgard::PointLL{4.898484, 52.380697});
-  ASSERT_EQ(testable_sample_t::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
+  ASSERT_EQ(valhalla::skadi::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
 }
 
 TEST(Sample, store) {

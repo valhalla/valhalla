@@ -157,9 +157,6 @@ struct TestableSample : public valhalla::skadi::sample {
   static uint16_t get_tile_index(const PointLL& coord) {
     return valhalla::skadi::sample::get_tile_index(coord);
   }
-  static std::string get_hgt_file_name(uint16_t index) {
-    return valhalla::skadi::sample::get_hgt_file_name(index);
-  }
 };
 
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile) {
@@ -254,7 +251,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   std::vector<std::string> src_elevations;
   std::unordered_set<std::string> seen;
   for (const auto& coord : coords_storage) {
-    auto elev = TestableSample::get_hgt_file_name(TestableSample::get_tile_index(coord));
+    auto elev = valhalla::skadi::get_hgt_file_name(TestableSample::get_tile_index(coord));
     if (!seen.count(elev)) {
       seen.insert(elev);
       src_elevations.push_back(std::move(elev));

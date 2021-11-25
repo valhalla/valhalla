@@ -199,10 +199,9 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
   std::uint32_t nthreads =
       std::max(static_cast<std::uint32_t>(1),
                pt.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  if (tile_ids.empty()) {
+
+  if (tile_ids.empty())
     tile_ids = get_tile_ids(pt);
-    sample.reset(new skadi::sample(*elevation));
-  }
 
   std::vector<std::shared_ptr<std::thread>> threads(nthreads);
 
