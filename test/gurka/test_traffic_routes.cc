@@ -187,32 +187,13 @@ TEST_F(TrafficSmoothing, RecostingTrafficForBidirectionalAstar) {
   }
 }
 
-TEST_F(TrafficSmoothing, TimeOffsetIsSigned) {
-  std::string speeds = "\"predicted\"";
-  for (bool prioritize_bidirectional : {
-           true, // bidirectional part, recosting
-           false // time dependent algo
-       }) {
-    const float earlier_eta =
-        calculate_eta(gurka::do_action(valhalla::Options::route, map,
-                                       make_request("A", "D", speeds, prioritize_bidirectional, 1,
-                                                    date_time_in_N_minutes(-90))));
-    const float later_eta =
-        calculate_eta(gurka::do_action(valhalla::Options::route, map,
-                                       make_request("A", "D", speeds, prioritize_bidirectional, 1,
-                                                    date_time_in_N_minutes(90))));
-    EXPECT_NE(later_eta, earlier_eta);
-  }
-}
-
 TEST_F(TrafficSmoothing, LiveOnButNotUsed) {
   std::vector<int> minutes_from_now{
       -60 * 24 * 7, // week before
       -60 * 7,      // 7 hours before
-      -10, // 10 minutes before now. predicted traffic is used on the first edge, it will take ~1.36h
-      70,  // 1 hr 10 minutes
-      2 * 60,     // in 2 hours
-      60 * 24 * 3 // in 3 days
+      70,           // 1 hr 10 minutes
+      2 * 60,       // in 2 hours
+      60 * 24 * 3   // in 3 days
   };
 
   for (int minute : minutes_from_now) {

@@ -143,7 +143,7 @@ public:
                         const graph_tile_ptr&,
                         const uint32_t,
                         uint8_t&,
-                        const int64_t) const override {
+                        const uint64_t) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 
