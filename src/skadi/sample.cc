@@ -153,15 +153,19 @@ public:
       size_t src_size = data.size();
       size_t dest_size = HGT_BYTES;
       size_t result;
+
       do {
         result = LZ4F_decompress(decode, const_cast<char*>(this->unpacked), &dest_size, data.get(),
                                  &src_size, &options);
         if (LZ4F_isError(result)) {
+          LZ4F_freeDecompressionContext(decode);
           LOG_WARN("Corrupt lz4 elevation data");
           format = format_t::UNKNOWN;
           return false;
         }
       } while (result != 0);
+
+      LZ4F_freeDecompressionContext(decode);
     } else {
       LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;
