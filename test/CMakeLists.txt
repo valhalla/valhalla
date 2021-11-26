@@ -265,7 +265,7 @@ add_custom_command(OUTPUT test/data/sample/N00
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N00
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N40
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplegz/N40
-  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplelz/N40
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplelz4/N40
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/service
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Creating test directories")

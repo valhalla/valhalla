@@ -8,7 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <list>
-#include <lz4.h>
+#include <lz4frame.h>
 
 #include "test.h"
 
@@ -71,9 +71,13 @@ TEST(Sample, create_tile) {
   EXPECT_TRUE(baldr::deflate(src_func, dst_func)) << "Can't write gzipped elevation tile";
 
   // lz4 it
+  std::vector<char> lz4_buffer(tile.size() * sizeof(int16_t) * 2, 0);
+  size_t out_bytes = LZ4F_compressFrame(lz4_buffer.data(), lz4_buffer.size(), static_cast<const void*>(tile.data()),
+                    sizeof(int16_t) * tile.size(), NULL);
+  EXPECT_TRUE(!LZ4F_isError(out_bytes) && out_bytes > 0) << "Can't write lz4 elevation tile";
+
   std::ofstream lzfile("test/data/samplelz4/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
-  LZ4_compress_fast(static_cast<const char*>(static_cast<void*>(tile.data())), dst_buffer.data(),
-                    sizeof(int16_t) * tile.size(), dst_buffer.size(), 0);
+  lzfile.write(static_cast<const char*>(static_cast<void*>(lz4_buffer.data())), out_bytes);
 }
 
 void _get(const std::string& location) {
