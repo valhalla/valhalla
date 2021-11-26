@@ -236,9 +236,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week,
-                                                flow_sources, time_info.seconds_from_now)
-                           : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
+  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                           : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources);
 
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
@@ -711,8 +710,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (endtile == nullptr) {
         continue;
       }
-      cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources,
-                                time_info.seconds_from_now) *
+      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
              (1.0f - edge.percent_along());
       dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
     } else {
@@ -722,8 +720,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
-             edge.percent_along();
+      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
       dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
 
@@ -752,13 +749,11 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
             // remaining must be zero.
             GraphId id(dest_path_edge.graph_id());
             const DirectedEdge* dest_edge = tile->directededge(id);
-            Cost remainder_cost =
-                FORWARD
-                    ? costing_->EdgeCost(dest_edge, tile, time_info.second_of_week, flow_sources,
-                                         time_info.seconds_from_now) *
-                          (1.0f - dest_path_edge.percent_along())
-                    : costing_->EdgeCost(dest_edge, tile, time_info.second_of_week, flow_sources) *
-                          (dest_path_edge.percent_along());
+            Cost remainder_cost = FORWARD
+                                      ? costing_->EdgeCost(dest_edge, tile, time_info, flow_sources) *
+                                            (1.0f - dest_path_edge.percent_along())
+                                      : costing_->EdgeCost(dest_edge, tile, time_info, flow_sources) *
+                                            (dest_path_edge.percent_along());
             // Remove the cost of the final "unused" part of the destination edge
             cost -= remainder_cost;
             // Add back in the edge score/penalty to account for destination edges

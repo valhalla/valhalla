@@ -134,16 +134,15 @@ public:
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge    Pointer to a directed edge.
-   * @param   tile    Graph tile.
-   * @param   seconds Time of week in seconds.
+   * @param   edge      Pointer to a directed edge.
+   * @param   tile      Graph tile.
+   * @param   time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr&,
-                        const uint32_t,
-                        uint8_t&,
-                        const uint64_t) const override {
+                        const baldr::TimeInfo&,
+                        uint8_t&) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 

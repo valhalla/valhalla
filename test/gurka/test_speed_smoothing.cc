@@ -20,7 +20,6 @@ protected:
                                 {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             });
     map.config.put("mjolnir.traffic_extract", "test/data/small_route_speeds/traffic.tar");
-    map.config.put("thor.invariant_recosting", false);
 
     // add live traffic
     test::build_live_traffic_data(map.config);

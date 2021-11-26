@@ -535,11 +535,11 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
-   * @param  seconds_from_now  Absolute number of seconds from now till the moment the edge is passed.
-   * Be careful when setting the value in reverse direction algorithms to use proper value. It affects
-   * the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the less
-   * percentage is taken. Currently this parameter is set to 0 when building a route with reverse and
-   * bidirectional a*.
+   * @param  seconds_from_now   Absolute number of seconds from now till the moment the edge is
+   * passed. Be careful when setting the value in reverse direction algorithms to use proper value. It
+   * affects the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the
+   * less percentage is taken. Currently this parameter is set to 0 when building a route with reverse
+   * and bidirectional a*.
    * @return Returns the speed for the edge.
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,

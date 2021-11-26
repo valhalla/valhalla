@@ -11,6 +11,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/logging.h>
@@ -273,16 +274,15 @@ public:
    * the time (seconds) to traverse the edge.
    * @param   edge    Pointer to a directed edge.
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
-   * @param   seconds Seconds of week for historical speed lookup
+   * @param  time_info Time info about edge passing, uses second_of_week for historical speed lookup
+   * and seconds_from_now for live-traffic smoothing.
    * @param   flow_sources  Which speed sources were used in this speed calculation.
-   * @param   seconds_from_now   In how many seconds from now the edge will be passed, absolute value.
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
-                        uint8_t& flow_sources,
-                        const uint64_t seconds_from_now = 0) const = 0;
+                        const baldr::TimeInfo& time_info,
+                        uint8_t& flow_sources) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
