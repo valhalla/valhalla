@@ -17,7 +17,9 @@ TEST(Standalone, AccessPsvWay) {
   constexpr double gridsize_metres = 10;
 
   const std::string ascii_map = R"(
-               
+                            L
+                            |
+                            |
         A---B---C---D---E---I---J
                 |       |       |
                 F-------G-------K
@@ -41,10 +43,10 @@ TEST(Standalone, AccessPsvWay) {
        }},
       {"FH", {{"highway", "primary"}}},
       {"EI", {{"highway", "bus_guideway"}}},
-      {"JI", {{"highway", "primary"}}},
+      {"JI", {{"highway", "busway"}}},
       {"GK", {{"highway", "primary"}}},
       {"KJ", {{"highway", "primary"}}},
-
+      {"LI", {{"highway", "primary"}}},
   };
 
   const auto layout =
@@ -58,13 +60,22 @@ TEST(Standalone, AccessPsvWay) {
     else
       gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "FG", "FH"});
   }
+
   for (auto& c : costing) {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, c);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "J"}, c);
 
     if (c == "bus")
-      gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EI"});
+      gurka::assert::raw::expect_path(result, {"DE", "EI", "JI"});
     else
-      gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EG", "GK", "KJ", "JI"});
+      gurka::assert::raw::expect_path(result, {"DE", "EG", "GK", "KJ"});
+  }
+
+  for (auto& c : costing) {
+    if (c == "bus")
+      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "L"}, c));
+    else
+      EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "L"}, c),
+                   std::runtime_error);
   }
 }
 
