@@ -77,6 +77,7 @@ public:
     if (format == format_t::RAW && size != HGT_BYTES) {
       return false;
     }
+
     this->format = format;
     data.map(path, size, POSIX_MADV_SEQUENTIAL, true);
     return true;
@@ -302,32 +303,19 @@ struct cache_t {
     cache[index].get_usages()--;
   }
 
+  std::size_t size() const noexcept {
+    return cache.size();
+  }
+
+  bool insert(int pos, const std::string& path, format_t format);
+
   tile_data source(uint16_t index);
 };
 
-tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
-    : c(c), data(data), index(index), reusable(reusable) {
-  if (reusable)
-    c->increment_usages(index);
-}
-
-tile_data::~tile_data() {
-  if (reusable)
-    c->decrement_usages(index);
-}
-
-tile_data& tile_data::operator=(const tile_data& other) {
-  if (c && reusable)
-    c->decrement_usages(index);
-
-  c = other.c;
-  data = other.data;
-  index = other.index;
-  reusable = other.reusable;
-
-  if (c && reusable)
-    c->increment_usages(index);
-  return *this;
+bool cache_t::insert(int pos, const std::string& path, format_t format) {
+  if (pos >= cache.size())
+    return false;
+  return cache[pos].init(path, format);
 }
 
 tile_data cache_t::source(uint16_t index) {
@@ -375,9 +363,9 @@ tile_data cache_t::source(uint16_t index) {
 
   if (reusable.size() >= UNPACKED_TILES_COUNT) {
     for (auto i : reusable) {
-      if (cache[i].get_usages() <= 0) {
+      if (item.get_usages() <= 0) {
         reusable.erase(i);
-        unpacked = cache[i].detach_unpacked();
+        unpacked = item.detach_unpacked();
         break;
       }
     }
@@ -401,6 +389,31 @@ tile_data cache_t::source(uint16_t index) {
   return rv;
 }
 
+tile_data::tile_data(cache_t* c, uint16_t index, bool reusable, const int16_t* data)
+    : c(c), data(data), index(index), reusable(reusable) {
+  if (reusable)
+    c->increment_usages(index);
+}
+
+tile_data::~tile_data() {
+  if (reusable)
+    c->decrement_usages(index);
+}
+
+tile_data& tile_data::operator=(const tile_data& other) {
+  if (c && reusable)
+    c->decrement_usages(index);
+
+  c = other.c;
+  data = other.data;
+  index = other.index;
+  reusable = other.reusable;
+
+  if (c && reusable)
+    c->increment_usages(index);
+  return *this;
+}
+
 sample::sample(const boost::property_tree::ptree& pt)
     : sample(pt.get<std::string>("additional_data.elevation", "")) {
   url_ = pt.get<std::string>("additional_data.elevation_url", "");
@@ -413,7 +426,6 @@ sample::sample(const boost::property_tree::ptree& pt)
 
   // this line used only for testing, for more details check elevation_builder.cc
   remote_path_ = pt.get<std::string>("additional_data.elevation_dir", "");
-  num_threads_ = pt.get<std::uint32_t>("mjolnir.concurrency", 1);
 }
 
 sample::sample(const std::string& data_source) {
@@ -469,6 +481,7 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
 }
 
 template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
+  std::lock_guard<std::mutex> _(cache_lck);
   auto tile = cache_->source(get_tile_index(coord));
   if (!tile)
     return get_no_data_value();
@@ -479,6 +492,7 @@ template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
 }
 
 bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
+  // data_source never changes so we do not lock it. it is set only in sample constructor
   auto fpath = cache_->data_source + elev;
   if (filesystem::exists(fpath))
     return true;
@@ -487,23 +501,17 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   if (!data || data->second == format_t::UNKNOWN)
     return false;
 
-  if (data->first >= cache_->cache.size())
+  // cache size is always the same.
+  if (data->first >= cache_->size())
     return false;
 
   if (!filesystem::save(fpath, raw_data))
     return false;
 
-  // TODO(kormulev): должна быть синхронной
-  auto res = cache_->cache[data->first].init(fpath, data->second);
-  return res;
+  std::lock_guard<std::mutex> _(cache_lck);
+  return cache_->insert(data->first, fpath, data->second);
 }
 
-/*
- * 1. сделать линейную структуру
- * 2. блокировать одну из 2х тред запрашивающих тот же элевейшен тайл пока
- * предыдущая треда скачивает этот тайл.
- *
- * */
 template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   if (url_.empty() || !remote_loader_)
     return get_no_data_value();
@@ -513,11 +521,9 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   auto uri = baldr::make_single_point_url(url_, elev, remote_path_);
 
   {
-    std::lock_guard<std::mutex> _(st_lck_);
+    std::shared_lock<std::shared_timed_mutex> _(st_lck);
     if (st_.count(uri))
       return get_from_cache(coord);
-
-    st_.insert(uri);
   }
 
   LOG_INFO("Start loading data from remote server address: " + uri);
@@ -533,6 +539,10 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
     return get_no_data_value();
   }
 
+  {
+    std::lock_guard<std::shared_timed_mutex> _(st_lck);
+    st_.insert(uri);
+  }
   auto res = get_from_cache(coord);
   if (res == get_no_data_value()) {
     LOG_WARN("Fail to load data from remote server address: " + uri);
@@ -550,7 +560,8 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 }
 
 void sample::add_single_tile(const std::string& path) {
-  cache_->cache.front().init(path, format_t::RAW);
+  std::lock_guard<std::mutex> _(cache_lck);
+  cache_->insert(0, path, format_t::RAW);
 }
 
 // explicit instantiations for templated get
@@ -619,6 +630,7 @@ std::string get_hgt_file_name(uint16_t index) {
   return name;
 }
 
+// we don't need lock as this method is called in constructor only
 void sample::cache_initialisation(const std::string& data_source) {
   cache_ = std::make_unique<cache_t>();
   cache_->data_source = data_source;
@@ -642,7 +654,7 @@ void sample::cache_initialisation(const std::string& data_source) {
     // make sure its a valid index
     auto data = cache_item_t::parse_hgt_name(f);
     if (data && data->second != format_t::UNKNOWN) {
-      if (!cache_->cache[data->first].init(f, data->second)) {
+      if (!cache_->insert(data->first, f, data->second)) {
         LOG_WARN("Corrupt elevation data: " + f);
       }
     }

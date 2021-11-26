@@ -134,6 +134,10 @@ struct testable_sample_t : public skadi::sample {
   static uint16_t get_tile_index(const PointLL& coord) {
     return skadi::sample::get_tile_index(coord);
   }
+
+  bool store(const std::string& path, const std::vector<char>& raw_data) {
+    return skadi::sample::store(path, raw_data);
+  }
 };
 
 TEST(Sample, edges) {
@@ -229,7 +233,7 @@ TEST(Sample, store) {
     }
   };
 
-  skadi::sample s("test/data/sample");
+  testable_sample_t s("test/data/sample");
 
   EXPECT_TRUE(s.store("/N00/N00E005.hgt", {}));
   EXPECT_TRUE(s.store("/N00/N00E005.hgt.gz", {}));

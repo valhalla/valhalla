@@ -2,6 +2,7 @@
 #define __VALHALLA_SAMPLE_H__
 
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -52,13 +53,6 @@ public:
    */
   template <class coords_t> std::vector<double> get_all(const coords_t& coords);
 
-  /**
-   * @brief Add tile to cache and store it in local filesystem.
-   * @param[in] path path to the tile
-   * @param[in] raw_data Data to store.
-   */
-  bool store(const std::string& path, const std::vector<char>& raw_data);
-
 protected:
   /**
    * Get a single sample from the datasource
@@ -93,6 +87,13 @@ protected:
    */
   template <class coord_t> double get_from_cache(const coord_t& coord);
 
+  /**
+   * @brief Add tile to cache and store it in local filesystem.
+   * @param[in] path path to the tile
+   * @param[in] raw_data Data to store.
+   */
+  bool store(const std::string& path, const std::vector<char>& raw_data);
+
   friend cache_t;
   std::unique_ptr<cache_t> cache_;
 
@@ -103,11 +104,11 @@ private:
    */
   void cache_initialisation(const std::string& source_path);
 
+  std::mutex cache_lck;
   std::string url_;
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   std::unordered_set<std::string> st_;
-  std::mutex st_lck_;
-  std::uint32_t num_threads_{1};
+  std::shared_timed_mutex st_lck;
   // This parameter is used only in tests
   std::string remote_path_;
 };
