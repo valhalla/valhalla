@@ -12,10 +12,16 @@ endif()
 add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
+  )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
@@ -24,6 +30,7 @@ target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test GEOS::GEOS)
 endif()
+
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
