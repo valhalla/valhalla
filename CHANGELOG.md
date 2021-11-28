@@ -8,6 +8,7 @@
    * FIXED: Fix iterator decrement beyond begin() in GeoPoint::HeadingAtEndOfPolyline() method [#3393](https://github.com/valhalla/valhalla/pull/3393)
    * FIXED: Add string for Use:kPedestrianCrossing to fix null output in to_string(Use). [#3416](https://github.com/valhalla/valhalla/pull/3416)
    * FIXED: Remove simple restrictions check for pedestrian cost calculation. [#3423](https://github.com/valhalla/valhalla/pull/3423)
+   * FIXED: Parse "highway=busway" OSM tag: https://wiki.openstreetmap.org/wiki/Tag:highway%3Dbusway [#3413](https://github.com/valhalla/valhalla/pull/3413)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
