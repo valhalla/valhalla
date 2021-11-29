@@ -481,7 +481,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
-    for (const auto& key : {"/units", "/narrative", "/format", "/language"}) {
+    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/directions_type"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
