@@ -792,8 +792,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost cost = costing->EdgeCost(directededge, tile, time_info, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -874,9 +873,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost cost =
-          costing->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
+                  edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 

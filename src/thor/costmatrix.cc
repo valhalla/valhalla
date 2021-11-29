@@ -302,9 +302,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost newcost =
-          pred.cost() + tc + costing_->EdgeCost(directededge, tile, time_info, flow_sources);
+      Cost newcost = pred.cost() + tc +
+                     costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -587,8 +586,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
       // we can properly recover elapsed time on the reverse path.
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, tile, time_info, flow_sources);
+      Cost newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
 
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,
@@ -708,8 +707,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost edgecost = costing_->EdgeCost(directededge, tile, time_info, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -794,8 +792,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       uint8_t flow_sources;
-      baldr::TimeInfo time_info = TimeInfo::invalid();
-      Cost edgecost = costing_->EdgeCost(directededge, tile, time_info, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 

@@ -365,7 +365,7 @@ TEST_F(RouteWithTraffic, LiveOnButNotUsed) {
   for (int minute : minutes_from_now) {
     auto date_time = date_time_in_N_minutes(minute);
     std::vector<std::string> speed_sets = {"\"predicted\"", "\"predicted\",\"current\""};
-    std::vector<float> etas;
+    std::vector<double> etas;
     for (const auto& speeds : speed_sets) {
       for (bool prioritize_bidirectional : {true, false}) {
         auto result = gurka::do_action(valhalla::Options::route, map,
@@ -413,14 +413,14 @@ TEST_F(RouteWithTraffic, LiveTrafficUsedIntheNearestHour) {
             gurka::do_action(valhalla::Options::route, map,
                              make_route_request(map, "A", "D", speeds, prioritize_bidirectional,
                                                 date_time_type, date_time));
-        const float predicted_eta = calculate_eta(predicted_result);
+        const double predicted_eta = calculate_eta(predicted_result);
 
         speeds += ",\"current\"";
         auto live_result =
             gurka::do_action(valhalla::Options::route, map,
                              make_route_request(map, "A", "D", speeds, prioritize_bidirectional,
                                                 date_time_type, date_time));
-        const float live_eta = calculate_eta(live_result);
+        const double live_eta = calculate_eta(live_result);
 
         // live traffic is used, it is much faster then predicted
         EXPECT_LE(live_eta, predicted_eta);
@@ -508,5 +508,118 @@ TEST_F(RouteWithTraffic, ConstrainedAndFreeflowTraffic) {
     auto result = gurka::do_action(valhalla::Options::route, map,
                                    make_route_request(map, "A", "D", speeds, true, 3, date_time));
     gurka::assert::raw::expect_eta(result, eta, 1);
+  }
+}
+
+std::string make_mapmatch_request(const gurka::map& map,
+                                  const std::string& from,
+                                  const std::string& to,
+                                  std::string speed_types,
+                                  std::string date_time_value) {
+  const std::string query_pattern_with_speeds = R"({
+      "shape":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"speed_types":[%s]}},
+      "date_time":{"value":"%s","type":"1"}
+    })";
+  return (boost::format(query_pattern_with_speeds) % std::to_string(map.nodes.at(from).lat()) %
+          std::to_string(map.nodes.at(from).lng()) % std::to_string(map.nodes.at(to).lat()) %
+          std::to_string(map.nodes.at(to).lng()) % speed_types % date_time_value)
+      .str();
+}
+
+class MapMatchWithTraffic : public ::testing::Test {
+protected:
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+      A----B-----C-------D
+    )";
+
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                              {"BC", {{"highway", "primary"}}},
+                              {"CD", {{"highway", "primary"}}}};
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mapmatch_traffic_depends_on_time",
+                            {
+                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                            });
+    map.config.put("mjolnir.traffic_extract",
+                   "test/data/mapmatch_traffic_depends_on_time/traffic.tar");
+    test::build_live_traffic_data(map.config);
+    test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                      valhalla::baldr::TrafficSpeed* traffic_speed) {
+      traffic_speed->overall_encoded_speed = 2 >> 1;
+      traffic_speed->encoded_speed1 = 2 >> 1;
+      traffic_speed->breakpoint1 = 255;
+    });
+
+    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+      // speeds for every 5 min bucket of the week
+      std::array<float, kBucketsPerWeek> historical;
+      historical.fill(6);
+      return historical;
+    });
+  }
+
+  static gurka::map map;
+};
+
+gurka::map MapMatchWithTraffic::map = {};
+
+TEST_F(MapMatchWithTraffic, OneEdgeLiveTrafficETA) {
+  std::string speeds = "\"predicted\",\"current\"";
+  auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                 make_mapmatch_request(map, "A", "B", speeds, "current"));
+  gurka::assert::raw::expect_path_length(result, 0.5, 0.1);
+  // live traffic only is used (2km/h)
+  gurka::assert::raw::expect_eta(result, 900, 0.01);
+}
+
+TEST_F(MapMatchWithTraffic, LiveMixedWithPredictedOnTheFirstEdge) {
+  std::string speeds = "\"predicted\",\"current\"";
+  auto date_time = date_time_in_N_minutes(40);
+  auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                 make_mapmatch_request(map, "A", "B", speeds, date_time));
+  gurka::assert::raw::expect_path_length(result, 0.5, 0.1);
+  // 66% of predicted, 33% of live traffic
+  gurka::assert::raw::expect_eta(result, 450, 0.01);
+}
+
+TEST_F(MapMatchWithTraffic, PredictedUsedAfterALongTimeOfTheRoute) {
+  std::string speeds = "\"predicted\",\"current\"";
+
+  auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                 make_mapmatch_request(map, "A", "D", speeds, "current"));
+  gurka::assert::raw::expect_path_length(result, 1.9, 0.01);
+  // live traffic is mixed with predicted on the last edges
+  gurka::assert::raw::expect_eta(result, 2340, 1);
+}
+
+TEST_F(MapMatchWithTraffic, PredictedUsedIn10Hours) {
+  std::string speeds = "\"predicted\",\"current\"";
+
+  auto date_time = date_time_in_N_minutes(60 * 10);
+  auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                 make_mapmatch_request(map, "A", "D", speeds, date_time));
+  // predicted only is used (6km/h)
+  gurka::assert::raw::expect_eta(result, 1140, 1);
+}
+
+TEST_F(MapMatchWithTraffic, DateTimeSnap) {
+  std::string speeds = "\"predicted\",\"current\"";
+  // live traffic is used in different proportions on the edges, because of time
+  {
+    auto date_time = date_time_in_N_minutes(30);
+    auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                   make_mapmatch_request(map, "A", "D", speeds, date_time));
+    gurka::assert::raw::expect_eta(result, 1566, 1);
+  }
+
+  {
+    auto date_time = date_time_in_N_minutes(-30);
+    auto result = gurka::do_action(valhalla::Options::trace_route, map,
+                                   make_mapmatch_request(map, "A", "D", speeds, date_time));
+    // live traffic is used more often (2 km/h instead of 6km/h for predicted)
+    gurka::assert::raw::expect_eta(result, 2610, 1);
   }
 }
