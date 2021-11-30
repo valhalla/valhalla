@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include <baldr/time_info.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -146,7 +147,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader,
                  const valhalla::Location& origin,
                  const valhalla::Location& destination,
-                 const uint32_t seconds_of_week);
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Set the destination edge(s).
