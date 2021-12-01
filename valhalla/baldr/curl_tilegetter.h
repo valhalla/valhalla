@@ -3,7 +3,6 @@
 #include <string>
 #include <utility>
 
-#include "filesystem.h"
 #include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/tilegetter.h>
 

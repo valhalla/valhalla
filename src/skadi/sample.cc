@@ -77,7 +77,6 @@ public:
     if (format == format_t::RAW && size != HGT_BYTES) {
       return false;
     }
-
     this->format = format;
     data.map(path, size, POSIX_MADV_SEQUENTIAL, true);
     return true;
@@ -303,6 +302,8 @@ struct cache_t {
     cache[index].get_usages()--;
   }
 
+  // no need for synchronization as size is constant(set in constructor
+  // and never change after thatn)
   std::size_t size() const noexcept {
     return cache.size();
   }
@@ -315,6 +316,8 @@ struct cache_t {
 bool cache_t::insert(int pos, const std::string& path, format_t format) {
   if (pos >= cache.size())
     return false;
+
+  std::lock_guard<std::recursive_mutex> lock(mutex);
   return cache[pos].init(path, format);
 }
 
@@ -363,14 +366,13 @@ tile_data cache_t::source(uint16_t index) {
 
   if (reusable.size() >= UNPACKED_TILES_COUNT) {
     for (auto i : reusable) {
-      if (item.get_usages() <= 0) {
+      if (cache[i].get_usages() <= 0) {
         reusable.erase(i);
-        unpacked = item.detach_unpacked();
+        unpacked = cache[i].detach_unpacked();
         break;
       }
     }
   }
-
   if (!unpacked) {
     unpacked = (char*)malloc(HGT_BYTES);
   }
