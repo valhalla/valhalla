@@ -29,7 +29,6 @@ const std::string& PronunciationAlphabetToString(valhalla::Pronunciation_Alphabe
     throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
   return f->second;
 }
-
 } // namespace
 
 namespace valhalla {
