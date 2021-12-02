@@ -1290,7 +1290,7 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
     if (sign_element.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += Pronunciation_Alphabet_Name(sign_element.pronunciation().alphabet());
+      param_list += PronunciationAlphabetToString(sign_element.pronunciation().alphabet());
       param_list += ", \"";
       param_list += sign_element.pronunciation().value();
       param_list += "\"";
