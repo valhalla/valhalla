@@ -14,7 +14,9 @@
 
 #include "proto/trip.pb.h"
 #include "proto/tripcommon.pb.h"
+#ifdef LOGGING_LEVEL_TRACE
 #include "proto_conversions.h"
+#endif
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -27,6 +29,7 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
+} // namespace
 
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -1258,7 +1261,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     if (street_name.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += Pronunciation_Alphabet_Name(street_name.pronunciation().alphabet());
+      param_list += PronunciationAlphabetToString(street_name.pronunciation().alphabet());
       param_list += ", \"";
       param_list += street_name.pronunciation().value();
       param_list += "\"";

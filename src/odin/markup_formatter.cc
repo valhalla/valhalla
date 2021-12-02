@@ -8,6 +8,7 @@
 
 #include "odin/markup_formatter.h"
 #include "proto/tripcommon.pb.h"
+#include "proto_conversions.h"
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";
@@ -17,18 +18,6 @@ constexpr auto kVerbalStringTag = "<VERBAL_STRING>";
 
 constexpr auto KSingleQuotes = "'";
 constexpr auto KDoubleQuotes = "\"";
-
-const std::string& PronunciationAlphabetToString(valhalla::Pronunciation_Alphabet alphabet) {
-  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
-      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "ipa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "x-katakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "x-jeita"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "nt-sampa"}};
-  auto f = values.find(alphabet);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
-  return f->second;
-}
 } // namespace
 
 namespace valhalla {
