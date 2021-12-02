@@ -351,7 +351,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
-  if (origin.has_date_time() && options.date_time_type() != Options::invariant) {
+  if (origin.has_date_time() && options.date_time_type() != Options::invariant &&
+      !options.prioritize_bidirectional()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
