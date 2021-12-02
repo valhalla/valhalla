@@ -205,8 +205,6 @@ int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree)
   return path_xedge_turn_degree_delta;
 }
 
-} // namespace
-
 namespace valhalla {
 namespace odin {
 
