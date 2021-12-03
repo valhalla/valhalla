@@ -15,7 +15,6 @@ namespace mjolnir {
 // Forward declaration
 struct OSMPronunciation;
 
-
 // OSM way
 struct OSMWay {
   OSMWay() {

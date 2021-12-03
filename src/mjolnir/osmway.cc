@@ -1,7 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
-#include "mjolnir/util.h"
 #include "mjolnir/osmpronunciation.h"
+#include "mjolnir/util.h"
 
 #include "midgard/logging.h"
 #include <boost/algorithm/string.hpp>

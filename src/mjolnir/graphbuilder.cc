@@ -27,8 +27,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
-#include "mjolnir/util.h"
 #include "mjolnir/osmpronunciation.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
