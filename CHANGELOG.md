@@ -24,7 +24,6 @@
    * ADDED: Import of Bike Share Stations information in BSS Connection edges [#3411](https://github.com/valhalla/valhalla/pull/3411)
    * ADDED: Add heading to PathEdge to be able to return it on /locate [#3399](https://github.com/valhalla/valhalla/pull/3399)
    * ADDED: Add `prioritize_bidirectional` option for fast work and correct ETA calculation for `depart_at` date_time type. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
-   * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3434](https://github.com/valhalla/valhalla/pull/3434)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
