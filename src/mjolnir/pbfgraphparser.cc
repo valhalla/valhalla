@@ -1419,7 +1419,7 @@ public:
 
       // bail if there is nothing bike related
       Tags::const_iterator found;
-      if (!results.is_initialized() || (found = results->find("amenity")) == results->end() ||
+      if (!results || (found = results->find("amenity")) == results->end() ||
           found->second != "bicycle_rental") {
         return;
       }
