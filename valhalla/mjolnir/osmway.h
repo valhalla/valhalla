@@ -7,13 +7,11 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmpronunciation.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
-
-// Forward declaration
-struct OSMPronunciation;
 
 // OSM way
 struct OSMWay {
