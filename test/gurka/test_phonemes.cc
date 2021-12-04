@@ -516,7 +516,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-         // this probably be ASSERT_NE(name_index, 0) ?
+        // this probably be ASSERT_NE(name_index, 0) ?
         if (name_index != 1 && name_index != 2)
           EXPECT_EQ(iter, name_pronunciations.end());
       } else {
@@ -648,7 +648,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     ASSERT_EQ(names_and_types.size(), 3);
 
-
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
@@ -721,7 +720,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::vector<uint8_t> types;
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     ASSERT_EQ(names_and_types.size(), 1);
-
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
@@ -913,7 +911,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     ASSERT_EQ(names_and_types.size(), 7);
 
-
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
@@ -1012,7 +1009,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << "Extra key. This should not happen.";
 
-        ++sign_index;
+      ++sign_index;
     }
 
     node_id = DB_edge->endnode();
@@ -1120,7 +1117,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
       ASSERT_EQ(names_and_types.size(), 4);
 
-
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
           edgeinfo.GetPronunciationsMap();
       uint8_t name_index = 0;
@@ -1197,7 +1193,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
 
       ASSERT_EQ(names_and_types.size(), 3);
-
 
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
           edgeinfo.GetPronunciationsMap();
@@ -1300,7 +1295,6 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
     std::vector<uint8_t> types;
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
     ASSERT_EQ(names_and_types.size(), 5);
-
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
