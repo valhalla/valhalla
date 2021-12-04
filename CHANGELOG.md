@@ -28,7 +28,6 @@
    * CHANGED: Move header to .cc to fix compilation errors  [#3436](https://github.com/valhalla/valhalla/pull/3436)
    * CHANGED: Minor fix for headers  [#3436](https://github.com/valhalla/valhalla/pull/3436)
 
-
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
 * **Bug Fix**
