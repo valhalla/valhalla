@@ -26,6 +26,8 @@
    * ADDED: Add `prioritize_bidirectional` option for fast work and correct ETA calculation for `depart_at` date_time type. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
    * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3434](https://github.com/valhalla/valhalla/pull/3434)
    * CHANGED: Move header to .cc to fix compilation errors  [#3436](https://github.com/valhalla/valhalla/pull/3436)
+   * CHANGED: Minor fix for headers  [#3436](https://github.com/valhalla/valhalla/pull/3436)
+
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
