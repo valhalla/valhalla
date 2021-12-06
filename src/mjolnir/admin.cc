@@ -10,8 +10,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-using polygon_type = boost::geometry::model::polygon<point_type>;
-
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
 sqlite3* GetDBHandle(const std::string& database) {
 
