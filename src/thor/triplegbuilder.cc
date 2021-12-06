@@ -797,7 +797,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const graph_tile_ptr& graphtile,
-                          const uint32_t second_of_week,
+                          const baldr::TimeInfo& time_info,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
@@ -921,7 +921,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // can also call externally
     uint8_t flow_sources;
     auto speed = directededge->length() /
-                 costing->EdgeCost(directededge, graphtile, second_of_week, flow_sources).secs * 3.6;
+                 costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs * 3.6;
     trip_edge->set_speed(speed);
   }
 
@@ -1187,7 +1187,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
     const TransitDeparture* transit_departure =
         graphtile->GetTransitDeparture(directededge->lineid(), trip_id,
-                                       second_of_week % kSecondsPerDay);
+                                       time_info.second_of_week % kSecondsPerDay);
 
     if (transit_departure) {
 
@@ -1570,7 +1570,7 @@ void TripLegBuilder::Build(
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
+                    time_info, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->restriction_index);
 
     // some information regarding shape/length trimming

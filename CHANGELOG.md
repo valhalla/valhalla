@@ -7,6 +7,8 @@
    * FIXED: Avoid calling out "keep left/right" when passing an exit [3349](https://github.com/valhalla/valhalla/pull/3349)
    * FIXED: Fix iterator decrement beyond begin() in GeoPoint::HeadingAtEndOfPolyline() method [#3393](https://github.com/valhalla/valhalla/pull/3393)
    * FIXED: Add string for Use:kPedestrianCrossing to fix null output in to_string(Use). [#3416](https://github.com/valhalla/valhalla/pull/3416)
+   * FIXED: Remove simple restrictions check for pedestrian cost calculation. [#3423](https://github.com/valhalla/valhalla/pull/3423)
+   * FIXED: Parse "highway=busway" OSM tag: https://wiki.openstreetmap.org/wiki/Tag:highway%3Dbusway [#3413](https://github.com/valhalla/valhalla/pull/3413)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -21,6 +23,8 @@
    * CHANGED: Do not create statsd client in workers if it is not configured [#3394](https://github.com/valhalla/valhalla/pull/3394)
    * ADDED: Import of Bike Share Stations information in BSS Connection edges [#3411](https://github.com/valhalla/valhalla/pull/3411)
    * ADDED: Add heading to PathEdge to be able to return it on /locate [#3399](https://github.com/valhalla/valhalla/pull/3399)
+   * ADDED: Add `prioritize_bidirectional` option for fast work and correct ETA calculation for `depart_at` date_time type. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
+   * CHANGED: Minor fix for headers  [#3436](https://github.com/valhalla/valhalla/pull/3436)
    * CHANGED: Use std::multimap for polygons returned for admin and timezone queries. Improves performance when building tiles. [#3427](https://github.com/valhalla/valhalla/pull/3427)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
