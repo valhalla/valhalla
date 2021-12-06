@@ -2,7 +2,7 @@
 
 Valhalla's routing service (a.k.a. turn-by-turn), is an open-source routing service that lets you integrate routing and navigation into a web or mobile application.
 
-[View an interactive demo](http://valhalla.github.io/demos/routing)
+[View an interactive demo](https://valhalla.openstreetmap.de)
 
 The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
 
