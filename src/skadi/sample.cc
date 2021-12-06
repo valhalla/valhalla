@@ -376,7 +376,7 @@ tile_data cache_t::source(uint16_t index) {
   }
 
   // item in cache is already unpacked
-  auto unpacked = item.get_unpacked();
+  const char* unpacked = item.get_unpacked();
   if (unpacked) {
     auto rv = tile_data(this, index, true, (const int16_t*)unpacked);
     mutex.unlock();
