@@ -27,10 +27,6 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/)
 
-## Demo Server
-
-[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph on https://valhalla.openstreetmap.de wih an [open-source web app](https://github.com/gis-ops/valhalla-app). The HTTP API is accessible on the same domain, simply append the appropriate endpoint path, e.g. https://valhalla.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
-
 ## Overview
 
 There are several key features that we hope can differentiate the Valhalla project from other routing and network analysis engines. They are:
@@ -41,6 +37,10 @@ There are several key features that we hope can differentiate the Valhalla proje
 - C++ based API. Should allow for cross compilation of the various pieces to enable routing on offline portable devices.
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
+
+## Demo Server
+
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph on https://valhalla.openstreetmap.de wih an [open-source web app](https://github.com/gis-ops/valhalla-app). The HTTP API is accessible on the same domain, simply append the appropriate endpoint path, e.g. https://valhalla.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
 
 ## Platform Compatibility
 
