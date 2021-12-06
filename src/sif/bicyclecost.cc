@@ -308,14 +308,14 @@ public:
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge      Pointer to a directed edge.
-   * @param   tile      Current tile.
-   * @param   seconds   Time of week in seconds.
+   * @param   edge       Pointer to a directed edge.
+   * @param   tile       Current tile.
+   * @param   time_info  Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr&,
-                        const uint32_t,
+                        const baldr::TimeInfo&,
                         uint8_t&) const override;
 
   /**
@@ -597,7 +597,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const graph_tile_ptr&,
-                           const uint32_t,
+                           const baldr::TimeInfo&,
                            uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {

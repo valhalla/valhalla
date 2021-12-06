@@ -171,7 +171,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge*,
                         const graph_tile_ptr&,
-                        const uint32_t,
+                        const baldr::TimeInfo&,
                         uint8_t&) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }

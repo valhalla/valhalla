@@ -71,7 +71,8 @@ TEST(Traffic, BasicUpdates) {
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
-    gurka::assert::raw::expect_eta(result, 150.0177);
+    // live-traffic is mixed with default traffic
+    gurka::assert::raw::expect_eta(result, 153.27858, 0.5);
   }
 
   std::cout << "[          ] Next, set the speed to the highest possible to ensure nothing breaks"
@@ -116,8 +117,10 @@ TEST(Traffic, BasicUpdates) {
     auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
+    // BD is excluded
     gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
-    gurka::assert::raw::expect_eta(result, 180., 0.01);
+    // live-traffic is mixed with default traffic.
+    gurka::assert::raw::expect_eta(result, 184.5, 0.5);
   }
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"D", "B"}, "auto",

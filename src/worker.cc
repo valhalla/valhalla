@@ -720,6 +720,10 @@ void from_json(rapidjson::Document& doc, Options& options) {
   options.set_use_timestamps(
       rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
 
+  // Option to prioritize bidirectional a* over timedependent forward when depart_at is set.
+  options.set_prioritize_bidirectional(
+      rapidjson::get_optional<bool>(doc, "/prioritize_bidirectional").get_value_or(false));
+
   // Throw an error if use_timestamps is set to true but there are no timestamps in the
   // trace (or no durations present)
   if (options.use_timestamps()) {
