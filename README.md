@@ -27,6 +27,10 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/)
 
+## Demo Server
+
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph on https://valhalla.openstreetmap.de wih an [open-source web app](https://github.com/gis-ops/valhalla-app). The HTTP API is accessible on the same domain, simply append the appropriate endpoint path, e.g. https://valhalla.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+
 ## Overview
 
 There are several key features that we hope can differentiate the Valhalla project from other routing and network analysis engines. They are:
@@ -81,9 +85,40 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 Checkout our `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
 
-### Building from Source - Linux
+### Build Configuration
 
 Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
+
+Important build options include:
+
+| Option | Behavior |
+|--------|----------|
+| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
+| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
+| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
+| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
+| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
+| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
+| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
+| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
+| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
+| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
+
+For more build options run the interactive GUI or have a look at the root's [`CmakeLists.txt`](./CMakeLists.txt):
+
+```bash
+cd build
+cmake ..
+ccmake ..
+```
+
+If you're building on Apple Silicon and use the Rosetta terminal (see below), you might need to additionally specify the appropriate options:
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
+```
+
+### Building from Source - Linux
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
@@ -97,6 +132,15 @@ source /etc/lsb-release
 if [[ $(python3 -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
+```
+
+Now you can build and install Valhalla, e.g. 
+
+```bash
+# will build to ./build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+make -C build -j$(nproc)
+sudo make -C build install
 ```
 
 ### Building from Source - MacOS
@@ -142,46 +186,14 @@ git clone --recurse-submodules https://github.com/valhalla/valhalla.git
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
-After getting the dependencies install it with:
+After getting the dependencies install it with e.g.:
 
 ```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
-sudo make install
+# will build to ./build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+make -C build -j$(sysctl -n hw.physicalcpu)
+sudo make -C build install
 ```
-
-In `Rosetta Terminal` use these flags for cmake:
-
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
-```
-
-Important build options include:
-
-| Option | Behavior |
-|--------|----------|
-| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
-| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
-| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
-| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
-| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
-| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
-| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
-| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
-| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
-| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
-
-For more build options run the interactive GUI:
-
-```bash
-cd build
-cmake ..
-ccmake ..
-```
-
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 ### Building from Source - Windows
 
@@ -240,6 +252,8 @@ curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.
 
 #HAVE FUN!
 ```
+
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 ## Contributing
 
