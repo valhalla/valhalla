@@ -1259,7 +1259,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     if (street_name.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += PronunciationAlphabetToString(street_name.pronunciation().alphabet());
+      param_list += PronunciationAlphabet_Enum_Name(street_name.pronunciation().alphabet());
       param_list += ", \"";
       param_list += street_name.pronunciation().value();
       param_list += "\"";
@@ -1290,7 +1290,7 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
     if (sign_element.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += PronunciationAlphabetToString(sign_element.pronunciation().alphabet());
+      param_list += PronunciationAlphabet_Enum_Name(sign_element.pronunciation().alphabet());
       param_list += ", \"";
       param_list += sign_element.pronunciation().value();
       param_list += "\"";

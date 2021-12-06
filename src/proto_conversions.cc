@@ -305,7 +305,7 @@ const std::string& FilterAction_Enum_Name(const FilterAction action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-const std::string& PronunciationAlphabetToString(valhalla::Pronunciation_Alphabet alphabet) {
+const std::string& PronunciationAlphabet_Enum_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "ipa"},
              {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "x-katakana"},

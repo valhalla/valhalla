@@ -99,7 +99,7 @@ std::string MarkupFormatter::FormatPhonemeElement(
 
   // Replace phrase tags with values
   boost::replace_all(phoneme_markup_string, kPhoneticAlphabetTag,
-                     PronunciationAlphabetToString(pronunciation->alphabet));
+                     PronunciationAlphabet_Enum_Name(pronunciation->alphabet));
   boost::replace_all(phoneme_markup_string, kTextualStringTag, textual_string);
   boost::replace_all(phoneme_markup_string, kVerbalStringTag, pronunciation->value);
 
