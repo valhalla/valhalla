@@ -470,7 +470,7 @@ void BuildTileSet(const std::string& ways_file,
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
-      std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
+      std::multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
 
@@ -484,7 +484,7 @@ void BuildTileSet(const std::string& ways_file,
       }
 
       bool tile_within_one_tz = false;
-      std::unordered_multimap<uint32_t, multi_polygon_type> tz_polys;
+      std::multimap<uint32_t, multi_polygon_type> tz_polys;
       if (tz_db_handle) {
         tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
         if (tz_polys.size() == 1) {
