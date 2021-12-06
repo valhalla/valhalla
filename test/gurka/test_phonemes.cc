@@ -394,7 +394,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
   }
@@ -426,7 +426,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++sign_index;
     }
@@ -448,9 +448,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-        if (name_index != 0)
-          // Whats the point of this? this will always be true
-          EXPECT_EQ(iter, name_pronunciations.end());
+        ASSERT_NE(name_index, 1);
       } else {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 1);
@@ -459,7 +457,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -489,13 +487,13 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         else if (sign_index == 1)
           EXPECT_EQ(signs.at(sign_index).text(), "destination2");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation3") {
         EXPECT_EQ(signs.at(sign_index).text(), "destination3");
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
 
@@ -516,9 +514,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-        // this probably be ASSERT_NE(name_index, 0) ?
-        if (name_index != 1 && name_index != 2)
-          EXPECT_EQ(iter, name_pronunciations.end());
+        ASSERT_NE(name_index, 0);
       } else {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 0);
@@ -527,7 +523,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -557,14 +553,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         else if (sign_index == 2)
           EXPECT_EQ(signs.at(sign_index).text(), "destination3");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation2") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination2");
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
 
@@ -585,9 +581,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-        // ASSERT_NE instead?
-        if (name_index != 0)
-          EXPECT_EQ(iter, name_pronunciations.end());
+        EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation2") {
           EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
@@ -598,7 +592,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -627,7 +621,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         if (sign_index == 0)
           EXPECT_EQ(signs.at(sign_index).text(), "destination1");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation2") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination2");
@@ -639,7 +633,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
 
@@ -660,8 +654,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-        if (name_index != 0)
-          EXPECT_EQ(iter, name_pronunciations.end());
+        EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation2:x-jeita") {
           EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
@@ -672,7 +665,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -700,7 +693,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         if (sign_index == 1)
           EXPECT_EQ(signs.at(sign_index).text(), "destination2");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation1") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination1");
@@ -712,7 +705,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
 
@@ -733,8 +726,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           name_pronunciations.find(name_index);
       if (iter == name_pronunciations.end()) {
-        if (name_index != 0)
-          EXPECT_EQ(iter, name_pronunciations.end());
+        EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation1:x-katakana") {
           EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
@@ -745,7 +737,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -773,7 +765,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         if (sign_index == 2)
           EXPECT_EQ(signs.at(sign_index).text(), "destination3");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation1") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination1");
@@ -785,7 +777,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
   }
@@ -814,14 +806,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         else if (sign_index == 2)
           EXPECT_EQ(signs.at(sign_index).text(), "destination3");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation1") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination1");
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
   }
@@ -850,14 +842,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         else if (sign_index == 2)
           EXPECT_EQ(signs.at(sign_index).text(), "destination3");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation2:x-jeita") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination2");
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
   }
@@ -884,7 +876,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         if (sign_index == 0)
           EXPECT_EQ(signs.at(sign_index).text(), "destination1");
         else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       } else if ((iter->second).second == "destination:pronunciation3:x-katakana") {
 
         EXPECT_EQ(signs.at(sign_index).text(), "destination3");
@@ -896,7 +888,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
       ++sign_index;
     }
   }
@@ -924,6 +916,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(name_index);
       if (iter == pronunciations.end()) {
+        // all should have a pronunctiation
         EXPECT_NE(iter, pronunciations.end());
       } else {
 
@@ -958,7 +951,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
@@ -1007,7 +1000,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
       ++sign_index;
     }
@@ -1054,7 +1047,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
       ++sign_index;
     }
@@ -1102,7 +1095,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
       ++sign_index;
     }
@@ -1147,7 +1140,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
         ++name_index;
       }
@@ -1181,7 +1174,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
       ++sign_index;
     }
@@ -1206,8 +1199,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
             pronunciations.find(name_index);
         if (iter == pronunciations.end()) {
-          if (name_index != 0 && name_index != 1)
-            EXPECT_EQ(iter, pronunciations.end());
+          ASSERT_NE(name_index, 2);
         } else {
           EXPECT_EQ(name_index, 2);
           if ((iter->second).second == "name:pronunciation3") {
@@ -1215,7 +1207,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kIpa));
           } else
-            FAIL() << (iter->second).second << "Extra key. This should not happen.";
+            FAIL() << (iter->second).second << " Extra key. This should not happen.";
         }
         ++name_index;
       }
@@ -1248,7 +1240,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(static_cast<int>((iter->second).first),
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
-        FAIL() << (iter->second).second << "Extra key. This should not happen.";
+        FAIL() << (iter->second).second << " Extra key. This should not happen.";
 
       ++sign_index;
     }
@@ -1310,6 +1302,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
           pronunciations.find(name_index);
 
       if (iter == pronunciations.end()) {
+        // all should have a pronunciation
         EXPECT_NE(iter, pronunciations.end());
       } else {
         if ((iter->second).second == "name:pronunciation:nt-sampa") {
@@ -1337,7 +1330,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
-          FAIL() << (iter->second).second << "Extra key. This should not happen.";
+          FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
       ++name_index;
     }
