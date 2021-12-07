@@ -1,4 +1,5 @@
 #include "baldr/graphconstants.h"
+#include "midgard/util.h"
 #include "mjolnir/osmway.h"
 #include "mjolnir/uniquenames.h"
 #include <iostream>
@@ -6,6 +7,7 @@
 #include "test.h"
 
 using namespace std;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
@@ -20,7 +22,7 @@ void TestKeyTypeValue(const std::string& pronunciation,
 
   size_t pos = 0;
   while (pos < strlen(p)) {
-    const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(p + pos);
+    const auto header = unaligned_read<linguistic_text_header_t>(p + pos);
     pos += 3;
     EXPECT_EQ(header.name_index_, expected_key);
     EXPECT_EQ(static_cast<PronunciationAlphabet>(header.phonetic_alphabet_), expected_type);
