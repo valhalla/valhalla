@@ -10,8 +10,6 @@ This is an example of isochrones showing the travel times by driving from a loca
 
 ![Isochrones for travel times by walking in Lancaster, PA](../images/isochrone.png)
 
-You can find an interactive demo here: https://valhalla.openstreetmap.de.
-
 ## Inputs of the Isochrone service
 
 An isochrone request run locally takes the form of `localhost:8002/isochrone?json={}`, where the JSON inputs inside the `{}` includes an array of at least one location and options for the [route costing model](../turn-by-turn/api-reference.md#costing-models).
