@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -8,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -707,6 +709,14 @@ template <typename T> struct Finally {
 template <typename T> Finally<T> make_finally(T t) {
   return Finally<T>{t};
 };
+
+template <typename T>
+typename std::enable_if<std::is_trivially_copy_assignable<T>::value, T>::type
+unaligned_read(const void* ptr) {
+  T r;
+  std::memcpy(&r, ptr, sizeof(T));
+  return r;
+}
 
 } // namespace midgard
 } // namespace valhalla

@@ -800,7 +800,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
             (!signs_[found].is_route_num_type() && !signs_on_node)) {
           size_t pos = 0;
           while (pos < strlen(text)) {
-            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(text + pos);
+            const auto header = midgard::unaligned_read<linguistic_text_header_t>(text + pos);
             pos += 3;
 
             auto iter = index_pronunciation_map.insert(
