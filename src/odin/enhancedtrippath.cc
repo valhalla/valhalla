@@ -29,7 +29,6 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
-} // namespace
 
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -204,6 +203,8 @@ int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree)
   }
   return path_xedge_turn_degree_delta;
 }
+  
+} // namespace
 
 namespace valhalla {
 namespace odin {
