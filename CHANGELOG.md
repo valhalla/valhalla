@@ -25,6 +25,8 @@
    * ADDED: Add heading to PathEdge to be able to return it on /locate [#3399](https://github.com/valhalla/valhalla/pull/3399)
    * ADDED: Add `prioritize_bidirectional` option for fast work and correct ETA calculation for `depart_at` date_time type. Smoothly stop using live-traffic [#3398](https://github.com/valhalla/valhalla/pull/3398)
    * CHANGED: Minor fix for headers  [#3436](https://github.com/valhalla/valhalla/pull/3436)
+   * CHANGED: Use std::multimap for polygons returned for admin and timezone queries. Improves performance when building tiles. [#3427](https://github.com/valhalla/valhalla/pull/3427)
+   * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3438](https://github.com/valhalla/valhalla/pull/3438)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
