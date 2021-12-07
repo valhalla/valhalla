@@ -28,6 +28,7 @@
    * CHANGED: Minor fix for headers  [#3436](https://github.com/valhalla/valhalla/pull/3436)
    * CHANGED: Use std::multimap for polygons returned for admin and timezone queries. Improves performance when building tiles. [#3427](https://github.com/valhalla/valhalla/pull/3427)
    * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3438](https://github.com/valhalla/valhalla/pull/3438)
+   * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
