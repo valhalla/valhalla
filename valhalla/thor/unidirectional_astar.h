@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include <baldr/time_info.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>

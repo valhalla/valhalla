@@ -470,7 +470,7 @@ void BuildTileSet(const std::string& ways_file,
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
-      std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
+      std::multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
 
@@ -484,7 +484,7 @@ void BuildTileSet(const std::string& ways_file,
       }
 
       bool tile_within_one_tz = false;
-      std::unordered_multimap<uint32_t, multi_polygon_type> tz_polys;
+      std::multimap<uint32_t, multi_polygon_type> tz_polys;
       if (tz_db_handle) {
         tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
         if (tz_polys.size() == 1) {
@@ -1449,19 +1449,25 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
   ////////////////////////////////////////////////////////////////////////////
   // NUMBER
   // Exit sign number
+  bool has_phoneme = false;
   if (way.junction_ref_index() != 0) {
     sign_names = GetTagTokens(osmdata.name_offset_map.name(way.junction_ref_index()));
+    has_phoneme = get_pronunciations(osmdata, sign_names.size(),
+                                     pronunciation.junction_ref_pronunciation_ipa_index(),
+                                     pronunciation.junction_ref_pronunciation_nt_sampa_index(),
+                                     pronunciation.junction_ref_pronunciation_katakana_index(),
+                                     pronunciation.junction_ref_pronunciation_jeita_index(),
+                                     ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens,
+                                     add_ipa, add_nt_sampa, add_katakana, add_jeita);
   } else if (node.has_ref() && !fork && ramp) {
     sign_names = GetTagTokens(osmdata.node_names.name(node.ref_index()));
+    has_phoneme = get_pronunciations(osmdata, sign_names.size(), node.ref_pronunciation_ipa_index(),
+                                     node.ref_pronunciation_nt_sampa_index(),
+                                     node.ref_pronunciation_katakana_index(),
+                                     node.ref_pronunciation_jeita_index(), ipa_tokens,
+                                     nt_sampa_tokens, katakana_tokens, jeita_tokens, add_ipa,
+                                     add_nt_sampa, add_katakana, add_jeita, true);
   }
-
-  auto has_phoneme = get_pronunciations(osmdata, sign_names.size(),
-                                        pronunciation.junction_ref_pronunciation_ipa_index(),
-                                        pronunciation.junction_ref_pronunciation_nt_sampa_index(),
-                                        pronunciation.junction_ref_pronunciation_katakana_index(),
-                                        pronunciation.junction_ref_pronunciation_jeita_index(),
-                                        ipa_tokens, nt_sampa_tokens, katakana_tokens, jeita_tokens,
-                                        add_ipa, add_nt_sampa, add_katakana, add_jeita);
 
   add_sign_info(sign_names, Sign::Type::kExitNumber, false /* is_route_number */, has_phoneme);
   sign_names.clear();
