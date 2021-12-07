@@ -16,6 +16,14 @@ from typing import List, Iterable, Set
 from urllib import request
 from urllib.error import URLError
 
+
+# hack so ArgumentParser can accept negative numbers
+# see https://github.com/valhalla/valhalla/issues/3426
+for i, arg in enumerate(sys.argv):
+    if not len(arg) > 1:
+        continue
+    if (arg[0] == '-') and arg[1].isdigit(): sys.argv[i] = ' ' + arg
+
 description = """Downloads Tilezen's elevation tiles that either intersect with features in all .geojson files in
               --input-geojson-dir or that intersect with --bbox. NOTE: geojson method requires shapely.
               """
