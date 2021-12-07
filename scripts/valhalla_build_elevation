@@ -47,9 +47,7 @@ method.add_argument(
     "-b",
     "--from-bbox",
     help="Bounding box coordinates in the format 'minX,minY,maxX,maxY'.",
-    # type=bbox_parser,
-    action='store',
-    default=[-1, -2, -3, -4]
+    type=str,
 )
 method.add_argument(
     "-t",
