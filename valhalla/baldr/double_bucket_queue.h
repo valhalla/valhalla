@@ -140,7 +140,7 @@ public:
     if (prevbucket != newbucket) {
       // Add label to newbucket and remove from previous bucket
       newbucket.push_back(label);
-      prevbucket.erase(std::remove(prevbucket.begin(), prevbucket.end(), label));
+      std::remove(prevbucket.begin(), prevbucket.end(), label);
     }
   }
 
