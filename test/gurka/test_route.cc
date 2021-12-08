@@ -832,7 +832,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
                             {"DA", {{"highway", "primary"}}},
                             {"AY", {{"highway", "primary"}}},
                             {"YZ", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_swap_dest_only");
 
   // Notes on this test:
   // * We want the first leg to choose bidir A*:
