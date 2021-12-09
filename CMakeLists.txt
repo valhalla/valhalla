@@ -316,7 +316,7 @@ if(ENABLE_DATA_TOOLS)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
-  # Target-specific depedencies
+  # Target-specific dependencies
   find_package(GEOS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics

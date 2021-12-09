@@ -14,6 +14,7 @@
 #include <unordered_set>
 
 #include <boost/optional.hpp>
+#include <lz4frame.h>
 #include <sys/stat.h>
 
 #include "baldr/compression_utils.h"
@@ -61,7 +62,7 @@ int16_t flip(int16_t value) {
 
 uint64_t file_size(const std::string& file_name) {
   // TODO: detect gzip and actually validate the uncompressed size?
-  struct stat s;
+  struct stat s {};
   int rc = stat(file_name.c_str(), &s);
   return rc == 0 ? s.st_size : -1;
 }
@@ -71,7 +72,7 @@ uint64_t file_size(const std::string& file_name) {
 namespace valhalla {
 namespace skadi {
 
-enum class format_t { UNKNOWN = 0, RAW = 1, GZIP = 2 };
+enum class format_t { UNKNOWN = 0, RAW = 1, GZIP = 2, LZ4 = 3 };
 
 class cache_item_t {
 private:
@@ -94,7 +95,7 @@ public:
       return false;
     }
     this->format = format;
-    data.map(path, size, POSIX_MADV_SEQUENTIAL);
+    data.map(path, size, POSIX_MADV_SEQUENTIAL, true);
     return true;
   }
 
@@ -122,35 +123,76 @@ public:
 
   bool unpack(const char* unpacked) {
     this->unpacked = unpacked;
-    // for setting where to read compressed data from
-    auto src_func = [this](z_stream& s) -> void {
-      s.next_in = static_cast<Byte*>(static_cast<void*>(data.get()));
-      s.avail_in = static_cast<unsigned int>(data.size());
-    };
 
-    // for setting where to write the uncompressed data to
-    auto dst_func = [this](z_stream& s) -> int {
-      s.next_out = (Byte*)(this->unpacked);
-      s.avail_out = HGT_BYTES;
-      return Z_FINISH; // we know the output will hold all the input
-    };
+    if (format == format_t::GZIP) {
+      // for setting where to read compressed data from
+      auto src_func = [this](z_stream& s) -> void {
+        s.next_in = static_cast<Byte*>(static_cast<void*>(data.get()));
+        s.avail_in = static_cast<unsigned int>(data.size());
+      };
 
-    // we have to unzip it
-    if (!baldr::inflate(src_func, dst_func)) {
-      LOG_WARN("Corrupt compressed elevation data");
+      // for setting where to write the uncompressed data to
+      auto dst_func = [this](z_stream& s) -> int {
+        s.next_out = (Byte*)(this->unpacked);
+        s.avail_out = HGT_BYTES;
+        return Z_FINISH; // we know the output will hold all the input
+      };
+
+      // we have to unzip it
+      if (!baldr::inflate(src_func, dst_func)) {
+        LOG_WARN("Corrupt gzip elevation data");
+        format = format_t::UNKNOWN;
+        return false;
+      }
+    } else if (format == format_t::LZ4) {
+      LZ4F_decompressionContext_t decode;
+      LZ4F_decompressOptions_t options;
+      LZ4F_createDecompressionContext(&decode, LZ4F_VERSION);
+
+      // Take these two values locally, since LZ4F_decompress expects pointers...
+      size_t src_size = data.size();
+      size_t dest_size = HGT_BYTES;
+      size_t result;
+
+      do {
+        result = LZ4F_decompress(decode, const_cast<char*>(this->unpacked), &dest_size, data.get(),
+                                 &src_size, &options);
+        if (LZ4F_isError(result)) {
+          LZ4F_freeDecompressionContext(decode);
+          LOG_WARN("Corrupt lz4 elevation data");
+          format = format_t::UNKNOWN;
+          return false;
+        }
+      } while (result != 0);
+
+      LZ4F_freeDecompressionContext(decode);
+    } else {
+      LOG_WARN("Corrupt elevation data of unknown type");
       format = format_t::UNKNOWN;
       return false;
     }
+
     return true;
   }
 
   static boost::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
     std::smatch m;
-    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
+    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.(gz|lz4))?$");
     if (std::regex_search(name, m, e)) {
-      // enum class format_t{ UNKNOWN = 0, GZIP = 1, RAW = 3 };
-      format_t fmt =
-          m[5].length() ? (m[5] == ".gz" ? format_t::GZIP : format_t::UNKNOWN) : format_t::RAW;
+      // enum class format_t{ UNKNOWN = 0, GZIP = 1, RAW = 3, LZ4 = 4 };
+      format_t fmt;
+      if (m[5].matched) {
+        if (m[5] == ".gz") {
+          fmt = format_t::GZIP;
+        } else if (m[5] == ".lz4") {
+          fmt = format_t::LZ4;
+        } else {
+          fmt = format_t::UNKNOWN;
+        }
+      } else {
+        fmt = format_t::RAW;
+      }
+
       auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
       auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
@@ -190,7 +232,7 @@ public:
     return *this;
   }
 
-  inline operator bool() const {
+  inline explicit operator bool() const {
     return data != nullptr;
   }
 
@@ -302,29 +344,29 @@ tile_data& tile_data::operator=(const tile_data& other) {
 }
 
 tile_data cache_t::source(uint16_t index) {
-  // bail if its out of bounds
+  // bail if it's out of bounds
   if (index >= TILE_COUNT) {
-    return tile_data();
+    return {};
   }
 
-  // if we dont have anything maybe its lazy loaded
+  // if we don't have anything maybe it's lazy loaded
   auto& item = cache[index];
   if (item.get_data() == nullptr) {
     auto f = data_source + sample::get_hgt_file_name(index);
     item.init(f, format_t::RAW);
   }
 
-  // it wasnt in cache and when we tried to load it the file was of unknown type
+  // it wasn't in cache and when we tried to load it the file was of unknown type
   if (item.get_format() == format_t::UNKNOWN) {
-    return tile_data();
+    return {};
   }
 
-  // we have it raw or we dont
+  // we have it raw or we don't
   if (item.get_format() == format_t::RAW) {
-    return tile_data(this, index, false, (const int16_t*)item.get_data());
+    return {this, index, false, (const int16_t*)item.get_data()};
   }
 
-  // we were able to load it but the format wasnt RAW, which only leaves the GZIP format
+  // we were able to load it but the format wasn't RAW, which only leaves compressed formats
   mutex.lock();
   auto it = pending_tiles.find(index);
   if (it != pending_tiles.end()) {
@@ -353,6 +395,7 @@ tile_data cache_t::source(uint16_t index) {
       }
     }
   }
+
   if (!unpacked) {
     unpacked = (char*)malloc(HGT_BYTES);
   }
@@ -376,7 +419,7 @@ sample::sample(const std::string& data_source) {
   cache_->data_source = data_source;
 
   // messy but needed
-  while (cache_->data_source.size() &&
+  while (!cache_->data_source.empty() &&
          cache_->data_source.back() == filesystem::path::preferred_separator) {
     cache_->data_source.pop_back();
   }

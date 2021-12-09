@@ -8,6 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <list>
+#include <lz4frame.h>
 
 #include "test.h"
 
@@ -40,6 +41,7 @@ TEST(Sample, create_tile) {
   for (const auto& p : pixels) {
     tile[p.first] = p.second;
   }
+
   std::ofstream file("test/data/sample/N40/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
@@ -67,6 +69,16 @@ TEST(Sample, create_tile) {
 
   // gzip it
   EXPECT_TRUE(baldr::deflate(src_func, dst_func)) << "Can't write gzipped elevation tile";
+
+  // lz4 it
+  std::vector<char> lz4_buffer(tile.size() * sizeof(int16_t) * 2, 0);
+  size_t out_bytes =
+      LZ4F_compressFrame(lz4_buffer.data(), lz4_buffer.size(), static_cast<const void*>(tile.data()),
+                         sizeof(int16_t) * tile.size(), NULL);
+  EXPECT_TRUE(!LZ4F_isError(out_bytes) && out_bytes > 0) << "Can't write lz4 elevation tile";
+
+  std::ofstream lzfile("test/data/samplelz4/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
+  lzfile.write(static_cast<const char*>(static_cast<void*>(lz4_buffer.data())), out_bytes);
 }
 
 void _get(const std::string& location) {
@@ -101,6 +113,10 @@ TEST(Sample, get) {
 
 TEST(Sample, getgz) {
   _get("test/data/samplegz");
+};
+
+TEST(Sample, getlz4) {
+  _get("test/data/samplelz4");
 };
 
 struct testable_sample_t : public skadi::sample {

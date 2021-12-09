@@ -234,6 +234,6 @@ message Options {
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  optional Ring chinese_polygon = 48;                                     // Rings/polygon to be inspected with chinese postman
-
+  optional bool prioritize_bidirectional = 48 [default = false];          // Prioritize bidirectional a* when depart_at date_time.type is specified
+  optional Ring chinese_polygon = 49;                                     // Rings/polygon to be inspected with chinese postman
 }
