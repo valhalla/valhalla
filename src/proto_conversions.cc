@@ -305,18 +305,6 @@ const std::string& FilterAction_Enum_Name(const FilterAction action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-const std::string& PronunciationAlphabet_Enum_Name(valhalla::Pronunciation_Alphabet alphabet) {
-  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
-      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "ipa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "x-katakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "x-jeita"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "nt-sampa"}};
-  auto f = values.find(alphabet);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
-  return f->second;
-}
-
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
   static const std::unordered_map<std::string, DirectionsType> types{
       {"none", DirectionsType::none},

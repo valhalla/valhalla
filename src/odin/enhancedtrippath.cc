@@ -14,9 +14,6 @@
 
 #include "proto/trip.pb.h"
 #include "proto/tripcommon.pb.h"
-#ifdef LOGGING_LEVEL_TRACE
-#include "proto_conversions.h"
-#endif
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -29,6 +26,18 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
+
+const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
+  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
+      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
+  auto f = values.find(alphabet);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
+  return f->second;
+}
 
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -1260,7 +1269,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     if (street_name.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += PronunciationAlphabet_Enum_Name(street_name.pronunciation().alphabet());
+      param_list += Pronunciation_Alphabet_Name(street_name.pronunciation().alphabet());
       param_list += ", \"";
       param_list += street_name.pronunciation().value();
       param_list += "\"";
@@ -1291,7 +1300,7 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
     if (sign_element.has_pronunciation()) {
       param_list += ", ";
       param_list += "Pronunciation_Alphabet_";
-      param_list += PronunciationAlphabet_Enum_Name(sign_element.pronunciation().alphabet());
+      param_list += Pronunciation_Alphabet_Name(sign_element.pronunciation().alphabet());
       param_list += ", \"";
       param_list += sign_element.pronunciation().value();
       param_list += "\"";
