@@ -330,14 +330,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (accuracy) {
           location->set_accuracy(*accuracy);
         }
-        auto time = rapidjson::get_optional<unsigned int>(r_loc, "/time");
-        if (time) {
-          location->set_time(*time);
-        }
-        auto rank_candidates = rapidjson::get_optional<bool>(r_loc, "/rank_candidates");
-        if (rank_candidates) {
-          location->set_rank_candidates(*rank_candidates);
-        }
+        auto time = rapidjson::get<double>(r_loc, "/time", -1);
+        location->set_time(time);
+        auto rank_candidates = rapidjson::get<bool>(r_loc, "/rank_candidates", true);
+        location->set_skip_ranking_candidates(!rank_candidates);
         auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
         valhalla::Location::PreferredSide side;
         if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
