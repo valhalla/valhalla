@@ -134,7 +134,6 @@ jobs:
     executor: macos
     steps:
       - checkout
-      - install_conan
       - install_macos_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
