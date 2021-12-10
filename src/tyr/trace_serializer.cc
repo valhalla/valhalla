@@ -148,8 +148,8 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_surface()) {
         edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
-      if (edge.has_drive_on_right()) {
-        edge_map->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
+      if (edge.has_drive_on_left()) {
+        edge_map->emplace("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
       if (edge.has_internal_intersection()) {
         edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
