@@ -162,14 +162,13 @@ if (NOT Boost_Found)
     OPTIONS boost:header_only=True)
   conan_cmake_autodetect(settings)
   conan_cmake_install(PATH_OR_REFERENCE .
-                      INSTALL_DIR ${VALHALLA_SOURCE_DIR}/test_conan
                       REMOTE conancenter
                       SETTINGS ${settings}
                       OUTPUT_QUIET)
 
   find_package(Boost ${boost_VERSION})
-  add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 endif()
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
@@ -254,9 +253,6 @@ if(ENABLE_SERVICES)
     INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
 endif()
 
-set(BOOST_ROOT ${VALHALLA_SOURCE_DIR}/third_party)
-find_package(Boost 1.51 REQUIRED)
-add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)

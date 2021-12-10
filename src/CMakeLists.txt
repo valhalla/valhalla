@@ -99,7 +99,7 @@ function(valhalla_module)
        ${VALHALLA_BINARY_DIR}
        ${VALHALLA_BINARY_DIR}/valhalla)
   
-  target_link_libraries(${library} Boost::headers)
+  target_link_libraries(${library} Boost::boost)
 
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
