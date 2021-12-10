@@ -103,6 +103,10 @@ jobs:
         displayName: 'Download Ninja'
 
       - script: |
+          pip install conan
+        displayName: Install conan
+
+      - script: |
           SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
           pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
           for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x

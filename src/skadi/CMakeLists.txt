@@ -19,5 +19,5 @@ valhalla_module(NAME skadi
       ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
   DEPENDS
     valhalla::baldr
-    Boost::boost
+    Boost::headers
     ZLIB::ZLIB)

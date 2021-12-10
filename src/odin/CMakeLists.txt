@@ -41,5 +41,5 @@ valhalla_module(NAME odin
   DEPENDS
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::boost
+    Boost::headers
     libprime_server)

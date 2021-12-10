@@ -133,6 +133,44 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
+# try to find an installed boost
+set(boost_VERSION "1.71")
+find_package(Boost ${boost_VERSION} QUIET)
+if (NOT Boost_Found)
+  # bail if there's no conan installed
+  message(STATUS "No compatible boost version detected, using conan...")
+  find_program(conan_FOUND conan)
+  if (NOT conan_FOUND)
+    message(FATAL_ERROR "conan needs to be installed for boost, see docs.conan.io/en/latest/installation.html.")
+  endif()
+
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(STATUS "Valhalla: Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/0.17.0/conan.cmake"
+                  "${CMAKE_BINARY_DIR}/conan.cmake"
+                  EXPECTED_HASH SHA256=3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef
+                  TLS_VERIFY ON)
+  endif()
+
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+  include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+  conan_cmake_configure(REQUIRES boost/${boost_VERSION}.0
+    GENERATORS cmake_find_package
+    OPTIONS boost:header_only=True)
+  conan_cmake_autodetect(settings)
+  conan_cmake_install(PATH_OR_REFERENCE .
+                      INSTALL_DIR ${VALHALLA_SOURCE_DIR}/test_conan
+                      REMOTE conancenter
+                      SETTINGS ${settings}
+                      OUTPUT_QUIET)
+
+  find_package(Boost ${boost_VERSION})
+  add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+endif()
+
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
   if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
@@ -219,7 +257,6 @@ endif()
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
   find_package(LuaJIT)
@@ -228,13 +265,7 @@ if(ENABLE_DATA_TOOLS)
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 ## Top level executables
-elseif(ENABLE_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
-## Header only boost for the library without mjolnir
-elseif(NOT Boost_FOUND)
-  find_package(Boost 1.51 REQUIRED)
 endif()
-add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
  add_definitions(-DENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -291,7 +322,7 @@ if(ENABLE_TOOLS)
     add_executable(${program} ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
-    target_link_libraries(${program} Boost::program_options valhalla)
+    target_link_libraries(${program} valhalla)
     target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
@@ -307,7 +338,7 @@ if(ENABLE_DATA_TOOLS)
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
-    target_link_libraries(${program} Boost::program_options valhalla)
+    target_link_libraries(${program} valhalla)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
@@ -332,7 +363,7 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program} valhalla)
     target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
