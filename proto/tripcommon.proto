@@ -78,7 +78,7 @@ message Location {
   optional uint32 minimum_reachability = 17;
   optional uint32 radius = 18;
   optional uint32 accuracy = 19;
-  optional double time = 20 [default = -1.0];
+  optional double time = 20;
   optional bool skip_ranking_candidates = 21 [default = false];
 
   //outputs

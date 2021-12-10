@@ -664,6 +664,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
       sll->mutable_ll()->set_lng(ll.lng());
       // set type to via by default
       sll->set_type(valhalla::Location::kVia);
+      sll->set_time(-1);
     }
     // first and last always get type break
     if (options.shape_size()) {
