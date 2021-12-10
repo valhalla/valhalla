@@ -49,13 +49,13 @@ message Location {
 
   message SearchFilter {
     // frc
-    optional RoadClass min_road_class = 1 [default = kServiceOther]; // lowest road class to allow in loki results
-    optional RoadClass max_road_class = 2 [default = kMotorway]; // highest road class to allow in loki results
+    optional RoadClass min_road_class = 1; // lowest road class to allow in loki results (default kServiceOther)
+    optional RoadClass max_road_class = 2; // highest road class to allow in loki results (default = kMotorway)
     // form of way
     optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
     optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
     optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results (default false)
-    optional bool exclude_closures  = 6 [default = true]; // whether to exclude roads marked as closed due to traffic
+    optional bool exclude_closures  = 6;// whether to exclude roads marked as closed due to traffic (default true)
   }
 
   //inputs

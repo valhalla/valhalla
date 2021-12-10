@@ -361,20 +361,21 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_street_side_max_distance(*street_side_max_distance);
         }
 
+        boost::optional<bool> exclude_closures;
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
           // search_filter.min_road_class
           auto min_road_class =
-              rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
+              rapidjson::get<std::string>(*search_filter, "/min_road_class", "service_other");
           valhalla::RoadClass min_rc;
-          if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
+          if (RoadClass_Enum_Parse(min_road_class, &min_rc)) {
             location->mutable_search_filter()->set_min_road_class(min_rc);
           }
           // search_filter.max_road_class
           auto max_road_class =
-              rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
+              rapidjson::get<std::string>(*search_filter, "/max_road_class", "motorway");
           valhalla::RoadClass max_rc;
-          if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
+          if (RoadClass_Enum_Parse(max_road_class, &max_rc)) {
             location->mutable_search_filter()->set_max_road_class(max_rc);
           }
           // search_filter.exclude_tunnel
@@ -386,13 +387,10 @@ void parse_locations(const rapidjson::Document& doc,
           // search_filter.exclude_ramp
           location->mutable_search_filter()->set_exclude_ramp(
               rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
+          // search_filter.exclude_closures
+          exclude_closures = rapidjson::get<bool>(*search_filter, "/exclude_closures", true);
         }
 
-        // search_filter.exclude_closures must always be set because ignore_closures overrides it
-        // so if only ignore_closures is set we still need to set the search filter
-        auto exclude_closures =
-            search_filter ? rapidjson::get_optional<bool>(*search_filter, "/exclude_closures")
-                          : boost::none;
         // bail if you specified both of these, too confusing to work out how to use both at once
         if (ignore_closures && exclude_closures) {
           throw valhalla_exception_t{143};
@@ -400,7 +398,13 @@ void parse_locations(const rapidjson::Document& doc,
         // do we actually want to filter closures on THIS location
         // NOTE: that ignore_closures takes precedence
         location->mutable_search_filter()->set_exclude_closures(
-            ignore_closures ? !(*ignore_closures) : exclude_closures ? *exclude_closures : true);
+            ignore_closures ? !(*ignore_closures) : (exclude_closures ? *exclude_closures : true));
+        if (!location->search_filter().has_min_road_class()) {
+          location->mutable_search_filter()->set_min_road_class(valhalla::kServiceOther);
+        }
+        if (!location->search_filter().has_max_road_class()) {
+          location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
+        }
         // set exclude_closures_disabled if any of the locations has the
         // search_filter.exclude_closures set as false
         if (!location->search_filter().exclude_closures()) {
