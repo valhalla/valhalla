@@ -238,6 +238,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "import_bike_share_stations": false,
         "include_bicycle": true,
         "include_driveways": true,
+        "include_constructions": true,
         "include_driving": true,
         "include_pedestrian": true,
         "logging": {

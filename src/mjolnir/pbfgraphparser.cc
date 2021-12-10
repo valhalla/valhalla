@@ -161,6 +161,7 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
+    include_constructions_ = pt.get<bool>("include_constructions", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -413,6 +414,9 @@ public:
           break;
         case Use::kOther:
           way_.set_use(Use::kOther);
+          break;
+        case Use::kConstruction:
+          way_.set_use(Use::kConstruction);
           break;
         case Use::kRoad:
         default:
@@ -1685,17 +1689,22 @@ public:
       return;
     }
 
-    // Throw away driveways if include_driveways_ is false
-    Tags::const_iterator driveways;
     try {
-      if (!include_driveways_ && (driveways = results.find("use")) != results.end() &&
-          static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+      // Throw away use if include_driveways_ is false
+      Tags::const_iterator use;
+      if (!include_driveways_ && (use = results.find("use")) != results.end() &&
+          static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
 
-        // only private driveways.
+        // only private use.
         Tags::const_iterator priv;
         if ((priv = results.find("private")) != results.end() && priv->second == "true") {
           return;
         }
+      }
+      // Throw away constructions if include_constructions_ is false
+      if (!include_constructions_ && (use = results.find("use")) != results.end() &&
+          static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
+        return;
       }
     } catch (const std::invalid_argument& arg) {
       LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid_));
@@ -2900,6 +2909,9 @@ public:
 
   // Configuration option to include driveways
   bool include_driveways_;
+
+  // Configuration option to include roads under construction
+  bool include_constructions_;
 
   // Configuration option indicating whether or not to infer internal intersections during the graph
   // enhancer phase or use the internal_intersection key from the pbf

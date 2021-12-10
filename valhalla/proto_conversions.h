@@ -227,6 +227,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kPlatformConnectionUse;
     case baldr::Use::kTransitConnection:
       return TripLeg_Use_kTransitConnectionUse;
+    case baldr::Use::kConstruction:
+      return TripLeg_Use_kConstructionUse;
       // Should not see other values
     default:
       // TODO should we throw a runtime error?

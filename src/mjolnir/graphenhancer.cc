@@ -862,7 +862,8 @@ uint32_t GetDensity(GraphReader& reader,
           // Exclude non-roads (parking, walkways, ferries, etc.)
           if (directededge->is_road() || directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-              directededge->use() == Use::kEmergencyAccess) {
+              directededge->use() == Use::kEmergencyAccess ||
+              directededge->use() == Use::kConstruction) {
             roadlengths += directededge->length();
           }
         }

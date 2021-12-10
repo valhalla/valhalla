@@ -26,7 +26,6 @@ highway = {
 ["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
 ["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["construction"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "true"},
 ["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
 ["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
@@ -851,12 +850,15 @@ end
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 
-  if (kv["highway"] == "construction" or kv["highway"] == "proposed") then
+  if (kv["highway"] == "construction" and kv["construction"] == nil) or kv["highway"] == "proposed" then
     return 1
   end
 
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
+  if kv["highway"] == "construction" then
+    forward = highway[kv["construction"]]
+  end
   local ferry = kv["route"] == "ferry"
   local rail = kv["route"] == "shuttle_train"
   local access = access[kv["access"]]
@@ -1404,17 +1406,20 @@ function filter_tags_generic(kv)
    end
 
   --set a few flags
-  local road_class = road_class[kv["highway"]]
-
-  if kv["highway"] == nil and ferry then
-    road_class = 2 --TODO:  can we weight based on ferry types?
-  elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
-    road_class = 2 --TODO:  can we weight based on rail types?
-  elseif road_class == nil then --service and other = 7
-    road_class = 7
+  local rc = road_class[kv["highway"]]
+  if kv["highway"] == "construction" then
+    rc = road_class[kv["construction"]]
   end
 
-  kv["road_class"] = road_class
+  if kv["highway"] == nil and ferry then
+    rc = 2 --TODO:  can we weight based on ferry types?
+  elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
+    rc = 2 --TODO:  can we weight based on rail types?
+  elseif rc == nil then --service and other = 7
+    rc = 7
+  end
+
+  kv["road_class"] = rc
 
   kv["default_speed"] = default_speed[kv["road_class"]]
 
@@ -1426,7 +1431,9 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] then
-     if kv["highway"] == "track" then
+     if kv["highway"] == "construction" then
+        use = 55
+     elseif kv["highway"] == "track" then
         use = 3
      elseif kv["highway"] == "living_street" then
         use = 10
@@ -1467,7 +1474,8 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  if (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+  -- do not change 'construction' use
+  if use ~= 55 and (kv["access"] == "emergency" or kv["emergency"] == "yes") and
       kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
       kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
       kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
@@ -1574,7 +1582,12 @@ function filter_tags_generic(kv)
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
 
-  if kv["highway"] and string.find(kv["highway"], "_link") then --*_link
+  local highway_type = kv["highway"]
+  if kv["highway"] == "construction" then
+    highway_type = kv["construction"]
+  end
+
+  if highway_type and string.find(highway_type, "_link") then --*_link
      kv["link"] = "true"  --do we need to add more?  turnlane?
      kv["link_type"] = kv["link_type"]
   end

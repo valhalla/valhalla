@@ -60,6 +60,7 @@ message TripLeg {
     kEgressConnectionUse = 52;   // Connection between transit station and transit egress
     kPlatformConnectionUse = 53; // Connection between transit station and transit platform
     kTransitConnectionUse = 54;  // Connection between road network and transit egress
+    kConstructionUse = 55;          // Road under construction
   }
 
   enum Surface {

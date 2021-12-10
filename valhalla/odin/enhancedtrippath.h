@@ -393,6 +393,7 @@ public:
   bool IsEgressConnectionUse() const;
   bool IsPlatformConnectionUse() const;
   bool IsTransitConnectionUse() const;
+  bool IsConstructionUse() const;
 
   bool IsTransitConnection() const;
 
