@@ -15,7 +15,7 @@ commands:
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
   install_conan:
     steps:
-      - run: pip install conan
+      - run: apt-get update && apt-get install python3-pip && pip install conan
 
 jobs:
   build-docker-images:
