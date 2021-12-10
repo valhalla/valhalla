@@ -10,9 +10,9 @@ message Contour {
 }
 
 enum ShapeMatch {
-  edge_walk = 0;
-  map_snap = 1;
-  walk_or_snap = 2;
+  walk_or_snap = 0;
+  edge_walk = 1;
+  map_snap = 2;
 }
 
 enum FilterAction {
@@ -21,14 +21,14 @@ enum FilterAction {
 }
 
 enum DirectionsType {
-  none = 0;
-  maneuvers = 1;
-  instructions = 2;
+  instructions = 0;
+  none = 1;
+  maneuvers = 2;
 }
 
 enum ShapeFormat {
-  polyline5 = 0;
-  polyline6 = 1;
+  polyline6 = 0;
+  polyline5 = 1;
   geojson = 2;
 }
 
