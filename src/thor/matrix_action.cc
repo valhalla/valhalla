@@ -62,8 +62,8 @@ std::string thor_worker_t::matrix(Api& request) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
       switch (mode) {
-        case TravelMode::kPedestrian:
-        case TravelMode::kBicycle:
+        case travel_mode_t::kPedestrian:
+        case travel_mode_t::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
           if (options.sources().size() > kCostMatrixThreshold &&
@@ -73,7 +73,7 @@ std::string thor_worker_t::matrix(Api& request) {
             time_distances = timedistancematrix();
           }
           break;
-        case TravelMode::kPublicTransit:
+        case travel_mode_t::kPublicTransit:
           time_distances = timedistancematrix();
           break;
         default:

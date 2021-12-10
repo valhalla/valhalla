@@ -140,6 +140,22 @@ message TransitPlatformInfo {
   optional string station_name = 9;        // The station name of the platform
 }
 
+message TransitRouteInfo {
+  optional string onestop_id = 1;
+  optional uint32 block_id = 2;
+  optional uint32 trip_id = 3;
+  optional string short_name = 4;
+  optional string long_name = 5;
+  optional string headsign = 6;
+  optional uint32 color = 7;
+  optional uint32 text_color = 8;
+  optional string description = 9;
+  optional string operator_onestop_id = 10;
+  optional string operator_name = 11;
+  optional string operator_url = 12;
+  repeated TransitPlatformInfo transit_stops = 13;
+}
+
 message Pronunciation {
   enum Alphabet {
     kIpa = 1;
@@ -190,4 +206,45 @@ message TaggedValue {
   }
   optional string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
   optional Type type = 2;      // The type of tagged name (tunnel or bridge)
+}
+
+enum TravelMode {
+  kDrive = 0;
+  kPedestrian = 1;
+  kBicycle = 2;
+  kTransit = 3;
+}
+
+// TODO: review and update as needed
+enum VehicleType {
+  kCar = 0;
+  kMotorcycle = 1;
+  kAutoBus = 2;
+  kTractorTrailer = 3;
+  kMotorScooter = 4;
+}
+
+// TODO: review and update as needed
+enum PedestrianType {
+  kFoot = 0;
+  kWheelchair = 1;
+  kSegway = 2;
+}
+
+enum BicycleType {
+  kRoad = 0;
+  kCross = 1;
+  kHybrid = 2;
+  kMountain = 3;
+}
+
+enum TransitType {
+  kTram = 0;
+  kMetro = 1;
+  kRail = 2;
+  kBus = 3;
+  kFerry = 4;
+  kCableCar = 5;
+  kGondola = 6;
+  kFunicular = 7;
 }

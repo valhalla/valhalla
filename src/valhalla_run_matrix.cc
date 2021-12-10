@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find path locations (loki) for sources and targets

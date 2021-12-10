@@ -17,8 +17,8 @@ constexpr uint32_t kMaxMatrixIterations = 2000000;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
-int GetThreshold(const TravelMode mode, const int n) {
-  return (mode == TravelMode::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
+int GetThreshold(const travel_mode_t mode, const int n) {
+  return (mode == travel_mode_t::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
@@ -35,8 +35,9 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix()
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), source_count_(0), remaining_sources_(0),
-      target_count_(0), remaining_targets_(0), current_cost_threshold_(0), targets_{new TargetMap} {
+    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
+      remaining_sources_(0), target_count_(0), remaining_targets_(0),
+      current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -45,14 +46,14 @@ CostMatrix::~CostMatrix() {
 float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
@@ -91,7 +92,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const travel_mode_t mode,
     const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;

@@ -400,7 +400,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
     // Turn lanes
     // Only for driving and no start/end maneuvers
-    if ((maneuver.travel_mode() == valhalla::DirectionsLeg_TravelMode_kDrive) &&
+    if ((maneuver.travel_mode() == valhalla::TravelMode::kDrive) &&
         !((maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStart) ||
           (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartRight) ||
           (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartLeft) ||

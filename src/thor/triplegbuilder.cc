@@ -1030,14 +1030,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Override bicycle mode with pedestrian if dismount flag or steps
     if (directededge->dismount() || directededge->use() == Use::kSteps) {
       if (controller.attributes.at(kEdgeTravelMode)) {
-        trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian);
+        trip_edge->set_travel_mode(valhalla::TravelMode::kPedestrian);
       }
       if (controller.attributes.at(kEdgePedestrianType)) {
-        trip_edge->set_pedestrian_type(TripLeg_PedestrianType::TripLeg_PedestrianType_kFoot);
+        trip_edge->set_pedestrian_type(valhalla::PedestrianType::kFoot);
       }
     } else {
       if (controller.attributes.at(kEdgeTravelMode)) {
-        trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kBicycle);
+        trip_edge->set_travel_mode(valhalla::TravelMode::kBicycle);
       }
       if (controller.attributes.at(kEdgeBicycleType)) {
         trip_edge->set_bicycle_type(GetTripLegBicycleType(travel_type));
@@ -1045,21 +1045,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   } else if (mode == sif::TravelMode::kDrive) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kDrive);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kDrive);
     }
     if (controller.attributes.at(kEdgeVehicleType)) {
       trip_edge->set_vehicle_type(GetTripLegVehicleType(travel_type));
     }
   } else if (mode == sif::TravelMode::kPedestrian) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kPedestrian);
     }
     if (controller.attributes.at(kEdgePedestrianType)) {
       trip_edge->set_pedestrian_type(GetTripLegPedestrianType(travel_type));
     }
   } else if (mode == sif::TravelMode::kPublicTransit) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kTransit);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kTransit);
     }
   }
 
@@ -1173,7 +1173,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Process transit information
   if (trip_id && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
-    TripLeg_TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
+    TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
 
     // Set block_id if requested
     if (controller.attributes.at(kEdgeTransitRouteInfoBlockId)) {
