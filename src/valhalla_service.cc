@@ -22,6 +22,8 @@ using namespace prime_server;
 
 #include "midgard/logging.h"
 
+#include <boost/version.hpp>
+
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"

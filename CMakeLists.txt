@@ -251,9 +251,12 @@ if(ENABLE_SERVICES)
   set_target_properties(libprime_server PROPERTIES
     INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
-    INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
+    INTERFACE_COMPILE_DEFINITIONS HAVE_HTsTP)
 endif()
 
+set(BOOST_ROOT ${VALHALLA_SOURCE_DIR}/third_party)
+find_package(Boost 1.51 REQUIRED)
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
@@ -264,7 +267,10 @@ if(ENABLE_DATA_TOOLS)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
+<<<<<<< HEAD
 ## Top level executables
+=======
+>>>>>>> 0045fca73bbdb2fb1a2dff0748c79b9d9081ee40
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
