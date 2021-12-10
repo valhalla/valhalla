@@ -33,6 +33,7 @@
    * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3438](https://github.com/valhalla/valhalla/pull/3438)
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
+   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
@@ -80,7 +81,6 @@
    * ADDED: testing infrastructure for scripts and valhalla_build_config tests [#3308](https://github.com/valhalla/valhalla/pull/3308)
    * ADDED: Shape points and information about where intermediate locations are placed along the legs of a route [#3274](https://github.com/valhalla/valhalla/pull/3274)
    * CHANGED: Improved existing hov lane transition test case to make more realistic [#3330](https://github.com/valhalla/valhalla/pull/3330)
-   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and vendor all header-only boost libs. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * CHANGED: Update python usage in all scripts to python3 [#3337](https://github.com/valhalla/valhalla/pull/3337)
    * ADDED: Added `exclude_cash_only_tolls` request parameter [#3341](https://github.com/valhalla/valhalla/pull/3341)
    * CHANGED: Update api-reference for street_names [#3342](https://github.com/valhalla/valhalla/pull/3342)
