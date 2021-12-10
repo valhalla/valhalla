@@ -44,6 +44,7 @@ message Location {
     repeated string names = 10;
     optional int32 outbound_reach = 11;
     optional int32 inbound_reach = 12;
+    optional float heading = 13;
   }
 
   message SearchFilter {
@@ -112,6 +113,16 @@ message TransitStationInfo {
   optional LatLng ll = 3;                // Latitude, longitude of the station
 }
 
+message BikeShareStationInfo {
+  optional string name = 1;
+  optional string ref = 2;
+  optional uint32 capacity = 3;
+  optional string network = 4;
+  optional string operator = 5;
+  optional float rent_cost = 6;
+  optional float return_cost = 7;
+}
+
 message TransitPlatformInfo {
   enum Type {
     kStop = 0;
@@ -171,6 +182,7 @@ enum RoadClass {
 message TaggedValue {
   enum Type {
     kLayer = 1;
+    kBssInfo = 3;
     // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
     // see https://github.com/valhalla/valhalla/issues/3262
     kTunnel = 49; // static_cast<uint8_t>('1')

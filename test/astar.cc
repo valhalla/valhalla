@@ -1680,6 +1680,39 @@ TEST(BiDiAstar, test_recost_path) {
   }
 }
 
+class BiAstarTest : public thor::BidirectionalAStar {
+public:
+  explicit BiAstarTest(const boost::property_tree::ptree& config = {}) : BidirectionalAStar(config) {
+  }
+
+  void Clear() {
+    BidirectionalAStar::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_forward_.capacity(), 0);
+      EXPECT_EQ(edgelabels_reverse_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_forward_.capacity(), max_reserved_labels_count_);
+      EXPECT_LE(edgelabels_reverse_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(BiDiAstar, test_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  BiAstarTest astar(config);
+  astar.Clear();
+}
+
+TEST(BiDiAstar, test_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  BiAstarTest astar(config);
+  astar.Clear();
+}
+
 class AstarTestEnv : public ::testing::Environment {
 public:
   void SetUp() override {

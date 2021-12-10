@@ -1389,11 +1389,19 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) &&
       maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
+    if (node->HasBssInfo()) {
+      auto bss_info = node->GetBssInfo();
+      maneuver.set_bss_info(bss_info);
+    }
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
       (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) &&
       maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
+    if (node->HasBssInfo()) {
+      auto bss_info = node->GetBssInfo();
+      maneuver.set_bss_info(bss_info);
+    }
   }
 
   // Set the verbal text formatter
@@ -2236,6 +2244,37 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   return false;
 }
 
+// Return the (min,max) length in km for a deceleration lane as a function of the road's
+// speed.
+//
+// This equation started out as an approximation based on a couple research papers
+// I found online. However, that equation wasn't quite catching faster-roadways with
+// longer deceleration lanes. So I gave it a buffer and empirically derived the equation
+// below by running ~100 long routes all over the world, grabbing the real world road
+// speed (x) and deceleration lane lengths (y). I plotted all the gathered points and
+// observed a linear trend. I then ran these points through a linear regression
+// which resulted in the equation below. It is also important to mention that the
+// deceleration lane length can vary quite a bit. Using the same data, the deceleration
+// lane length can vary by as much as 40% compared to the value returned by this equation.
+// However, a tolerance of 35% catches all but the extreme outliers.
+std::pair<float, float> get_deceleration_lane_length(float speed_kph) {
+  float length;
+
+  // Below 80 kph I found that decel lanes are all roughly this length
+  if (speed_kph < 80) {
+    length = 0.1;
+  } else {
+    length = 0.00141994 * speed_kph + 0.03509388;
+  }
+
+  // Empirically derived to catch all but the most extreme outliers.
+  constexpr float pct_tol = 0.35;
+
+  float tol = length * pct_tol;
+
+  return std::make_pair<float, float>(length - tol, length + tol);
+}
+
 bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const {
@@ -2342,27 +2381,84 @@ bool ManeuversBuilder::IsFork(int node_index,
     // 5 lanes split into 3 lanes left and 3 lanes right
     // 6 lanes split into 3 lanes left and 3 lanes right
     // ...
-    auto has_lane_bifurcation = [](uint32_t prev_lane_count, uint32_t curr_lane_count,
-                                   uint32_t xedge_lane_count) -> bool {
+    auto has_lane_bifurcation =
+        [](EnhancedTripLeg* trip_path, int node_index, const EnhancedTripLeg_Edge* prev_edge,
+           const EnhancedTripLeg_Edge* curr_edge,
+           const std::unique_ptr<EnhancedTripLeg_IntersectingEdge>& xedge) -> bool {
+      uint32_t prev_lane_count = prev_edge->lane_count();
+      uint32_t curr_lane_count = curr_edge->lane_count();
+
+      // Going from N+1 lanes to N lanes. Is this really a highway bifurcation or
+      // just a deceleration lane for an exit?
+      if ((curr_lane_count > 1) && (prev_lane_count == curr_lane_count + 1) &&
+          (xedge->use() == TripLeg_Use_kRampUse)) {
+
+        // Determine if this lane split is a deceleration lane forking onto an exit.
+        int delta = 1;
+        auto prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+        auto orig_prev_at_delta_lane_count = prev_at_delta->lane_count();
+        float min_deceleration_lane_length_km, max_deceleration_lane_length_km;
+        std::tie(min_deceleration_lane_length_km, max_deceleration_lane_length_km) =
+            get_deceleration_lane_length(prev_at_delta->default_speed());
+        float agg_lane_length_km = prev_at_delta->length_km();
+
+        // iterate backwards until:
+        // 1) the extra lane goes away, or
+        // 2) we've exceeded a reasonable length for a deceleration lane
+        while (true) {
+          delta++;
+          prev_at_delta = trip_path->GetPrevEdge(node_index, delta);
+          // prev_at_delta is null when we cannot walk backwards any further
+          // (e.g., we've hit the beginning of the route). If this occurs
+          // set agg_lane_length_km to 0.0 to ensure we do not consider
+          // this a deceleration lane.
+          if (!prev_at_delta) {
+            agg_lane_length_km = 0.0;
+            break;
+          }
+
+          // See if the extra lane goes away.
+          auto prev_at_delta_lane_count = prev_at_delta->lane_count();
+          bool extra_lane_goes_away = (prev_at_delta_lane_count < orig_prev_at_delta_lane_count);
+          if (extra_lane_goes_away)
+            break;
+
+          // aggregate (possible deceleration lane) length.
+          agg_lane_length_km += prev_at_delta->length_km();
+
+          // if we've exceeded the standard length for a deceleration lane, we're done.
+          if (agg_lane_length_km > max_deceleration_lane_length_km)
+            break;
+        }
+
+        // see if we're within tolerance of a standard deceleration lane length.
+        // if so, we consider this fork as preceded by a deceleration lane leading to
+        // a fork/exit and we do not consider this a lane bifurcation.
+        if ((agg_lane_length_km < max_deceleration_lane_length_km) &&
+            (agg_lane_length_km > min_deceleration_lane_length_km)) {
+          return false;
+        }
+      }
+
       uint32_t post_split_min_count = (prev_lane_count + 1) / 2;
+      uint32_t xedge_lane_count = xedge->lane_count();
       if ((prev_lane_count == 2) && (curr_lane_count == 1) && (xedge_lane_count == 1)) {
         return true;
       } else if ((prev_lane_count > 2) && (curr_lane_count == post_split_min_count) &&
                  (xedge_lane_count == post_split_min_count)) {
         return true;
       }
+
       return false;
     };
 
-    // The curr edge and intersecting edge must be highway or ramp but not both
-    // validate lane bifurcation
     if (prev_edge->IsHighway() &&
         ((curr_edge->IsHighway() && (xedge->use() == TripLeg_Use_kRampUse)) ||
          (xedge->IsHighway() && curr_edge->IsRampUse())) &&
+        has_lane_bifurcation(trip_path_, node_index, prev_edge, curr_edge, xedge) &&
         prev_edge->IsForkForward(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading())) &&
-        has_lane_bifurcation(prev_edge->lane_count(), curr_edge->lane_count(), xedge->lane_count())) {
+        prev_edge->IsForkForward(GetTurnDegree(prev_edge->end_heading(), xedge->begin_heading()))) {
       return true;
     }
   }

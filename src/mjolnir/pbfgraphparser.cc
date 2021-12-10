@@ -26,6 +26,7 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "mjolnir/timeparsing.h"
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1416,17 +1417,43 @@ public:
         results = empty_node_results_;
       }
 
+      // bail if there is nothing bike related
+      Tags::const_iterator found;
+      if (!results.has_value() || (found = results->find("amenity")) == results->end() ||
+          found->second != "bicycle_rental") {
+        return;
+      }
+
+      // Create a new node and set its attributes
+      OSMNode n{osmid};
+      n.set_latlng(lng, lat);
+      n.set_type(NodeType::kBikeShare);
+      valhalla::BikeShareStationInfo bss_info;
+
       for (auto& key_value : *results) {
-        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
-          // Create a new node and set its attributes
-          OSMNode n{osmid};
-          n.set_latlng(lng, lat);
-          n.set_type(NodeType::kBikeShare);
-          bss_nodes_->push_back(n);
-          return; // we are done.
+        if (key_value.first == "name") {
+          bss_info.set_name(key_value.second);
+        } else if (key_value.first == "network") {
+          bss_info.set_network(key_value.second);
+        } else if (key_value.first == "ref") {
+          bss_info.set_ref(key_value.second);
+        } else if (key_value.first == "capacity") {
+          auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
+          if (capacity > 0) {
+            bss_info.set_capacity(capacity);
+          }
+        } else if (key_value.first == "operator") {
+          bss_info.set_operator_(key_value.second);
         }
       }
-      return; // not found
+
+      std::string buffer;
+      bss_info.SerializeToString(&buffer);
+      n.set_bss_info_index(osmdata_.node_names.index(buffer));
+      ++osmdata_.node_name_count;
+
+      bss_nodes_->push_back(n);
+      return; // we are done.
     }
 
     // if we found all of the node ids we were looking for already we can bail
@@ -1873,7 +1900,7 @@ public:
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
-    if (use_direction_on_ways_ && way_.int_ref_index()) {
+    if (way_.int_ref_index()) {
       std::string tmp = osmdata_.name_offset_map.name(way_.ref_index());
 
       std::vector<std::string> rs = GetTagTokens(tmp);
@@ -1904,9 +1931,7 @@ public:
 
     // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
     // don't add dups.
-    if (use_direction_on_ways_) {
-      MergeRefPronunciations();
-    }
+    MergeRefPronunciations();
 
     // Process mtb tags.
     auto mtb_scale = results.find("mtb:scale");

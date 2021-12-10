@@ -46,21 +46,21 @@ Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
       max_reserved_labels_count_(
           config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      multipath_(false) {
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), multipath_(false) {
 }
 
 // Clear the temporary information generated during path construction.
 void Dijkstras::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
-  if (bdedgelabels_.size() > max_reserved_labels_count_) {
-    bdedgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (bdedgelabels_.size() > reservation) {
+    bdedgelabels_.resize(reservation);
     bdedgelabels_.shrink_to_fit();
   }
   bdedgelabels_.clear();
-
-  if (mmedgelabels_.size() > max_reserved_labels_count_) {
-    mmedgelabels_.resize(max_reserved_labels_count_);
+  if (mmedgelabels_.size() > reservation) {
+    mmedgelabels_.resize(reservation);
     mmedgelabels_.shrink_to_fit();
   }
   mmedgelabels_.clear();
@@ -213,17 +213,15 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     if (FORWARD) {
       transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-      newcost = pred.cost() +
-                costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
+      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, pred.has_measured_speed(),
                                           pred.internal_turn());
-      newcost = pred.cost() +
-                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
-                transition_cost;
+      newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -794,7 +792,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -875,7 +873,7 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();

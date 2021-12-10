@@ -2754,6 +2754,13 @@
     },
     {
       "key": "highway",
+      "value": "busway",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "highway",
       "value": "crossing",
       "object_types": [
         "node"
