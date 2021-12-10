@@ -267,10 +267,6 @@ if(ENABLE_DATA_TOOLS)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
-<<<<<<< HEAD
-## Top level executables
-=======
->>>>>>> 0045fca73bbdb2fb1a2dff0748c79b9d9081ee40
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
