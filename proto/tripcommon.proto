@@ -158,10 +158,10 @@ message TransitRouteInfo {
 
 message Pronunciation {
   enum Alphabet {
-    kIpa = 1;
-    kXKatakana = 2;
-    kXJeita = 3;
-    kNtSampa = 4;
+    kIpa = 0;
+    kXKatakana = 1;
+    kXJeita = 2;
+    kNtSampa = 3;
   }
   optional Alphabet alphabet = 1 [default = kIpa];
   optional string value = 2;
