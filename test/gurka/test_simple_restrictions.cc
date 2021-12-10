@@ -96,6 +96,11 @@ TEST_F(SimpleRestrictions, IgnoreRestriction) {
   gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
   gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
 }
+TEST_F(SimpleRestrictions, IgnoreRestrictionPedestrian) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "pedestrian");
+  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
+  gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
+}
 
 TEST_F(SimpleRestrictions, IgnoreRestrictionMatching) {
   auto result =

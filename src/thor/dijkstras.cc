@@ -213,17 +213,15 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     if (FORWARD) {
       transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-      newcost = pred.cost() +
-                costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
+      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, pred.has_measured_speed(),
                                           pred.internal_turn());
-      newcost = pred.cost() +
-                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
-                transition_cost;
+      newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -794,7 +792,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -875,7 +873,7 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();

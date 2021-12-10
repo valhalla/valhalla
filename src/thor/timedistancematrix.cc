@@ -109,7 +109,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     uint8_t flow_sources;
     Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) +
+                   costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) +
                    transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -271,8 +271,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get cost. Use the opposing edge for EdgeCost.
     uint8_t flow_sources;
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
@@ -463,7 +462,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                 (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -516,7 +515,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, TimeInfo::invalid(), flow_sources) *
                 edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 

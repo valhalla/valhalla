@@ -316,7 +316,7 @@ gurka::map AlgorithmTest::map = {};
 uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
          AlgorithmTest::freeflow = 0;
 
-uint32_t speed_from_edge(const valhalla::Api& api) {
+uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
   uint32_t kmh = -1;
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
@@ -328,7 +328,7 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1)
+    if (kmh != -1 && compare_with_previous_edge)
       EXPECT_EQ(kmh, new_kmh);
     kmh = new_kmh;
   }
@@ -403,7 +403,9 @@ TEST_F(AlgorithmTest, Bidir) {
                                  {"/date_time/value", "2020-10-30T09:00"},
                                  {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
-    EXPECT_EQ(speed_from_edge(api), current);
+    // Because of live-traffic smoothing, speed will be mixed with default edge speed in the end of
+    // the route.
+    EXPECT_LE(speed_from_edge(api, false), current);
   }
 
   {
@@ -830,7 +832,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
                             {"DA", {{"highway", "primary"}}},
                             {"AY", {{"highway", "primary"}}},
                             {"YZ", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_swap_dest_only");
 
   // Notes on this test:
   // * We want the first leg to choose bidir A*:
