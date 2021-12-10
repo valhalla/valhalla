@@ -1286,7 +1286,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
     auto edgeinfo = tile->edgeinfo(AB_edge);
     std::vector<uint8_t> types;
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
-    ASSERT_EQ(names_and_types.size(), 5);
+    ASSERT_EQ(names_and_types.size(), 6);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();

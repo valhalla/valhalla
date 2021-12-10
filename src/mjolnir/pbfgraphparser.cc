@@ -1900,7 +1900,7 @@ public:
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
-    if (use_direction_on_ways_ && way_.int_ref_index()) {
+    if (way_.int_ref_index()) {
       std::string tmp = osmdata_.name_offset_map.name(way_.ref_index());
 
       std::vector<std::string> rs = GetTagTokens(tmp);
@@ -1931,9 +1931,7 @@ public:
 
     // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
     // don't add dups.
-    if (use_direction_on_ways_) {
-      MergeRefPronunciations();
-    }
+    MergeRefPronunciations();
 
     // Process mtb tags.
     auto mtb_scale = results.find("mtb:scale");
