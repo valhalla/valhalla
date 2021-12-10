@@ -507,6 +507,7 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   if (data->first >= cache_->size())
     return false;
 
+  // thread-safe by implementation
   if (!filesystem::save(fpath, raw_data))
     return false;
 
@@ -536,15 +537,15 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
     return get_no_data_value();
   }
 
-  if (!store(elev, result.bytes_)) {
-    LOG_WARN("Fail to save data loaded from remote server address: " + uri);
-    return get_no_data_value();
-  }
-
   {
     std::lock_guard<std::shared_timed_mutex> _(st_lck);
     st_.insert(uri);
+    if (!store(elev, result.bytes_)) {
+      LOG_WARN("Fail to save data loaded from remote server address: " + uri);
+      return get_no_data_value();
+    }
   }
+
   auto res = get_from_cache(coord);
   if (res == get_no_data_value()) {
     LOG_WARN("Fail to load data from remote server address: " + uri);

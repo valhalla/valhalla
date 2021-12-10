@@ -277,7 +277,7 @@ TEST(Filesystem, save_file_valid_input) {
 
   std::size_t cnt{1};
   for (const auto& test : tests) {
-    EXPECT_TRUE(filesystem::save(test));
+    EXPECT_TRUE(filesystem::save<std::string>(test));
     EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 
@@ -288,7 +288,7 @@ TEST(Filesystem, save_file_invalid_input) {
   std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/"};
 
   for (const auto& test : tests)
-    EXPECT_FALSE(filesystem::save(test)) << "FAILED " << test;
+    EXPECT_FALSE(filesystem::save<std::string>(test)) << "FAILED " << test;
 }
 
 TEST(Filesystem, get_files_valid_input) {
@@ -298,7 +298,7 @@ TEST(Filesystem, get_files_valid_input) {
 
   std::size_t cnt{1};
   for (const auto& test : tests) {
-    EXPECT_TRUE(filesystem::save(test));
+    EXPECT_TRUE(filesystem::save<std::string>(test));
     EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 

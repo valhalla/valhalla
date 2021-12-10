@@ -496,9 +496,10 @@ inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const 
 
 /**
  * @brief Saves data to the path.
- * @attention Will replace the contents in case if fpath already exists.
+ * @attention Will replace the contents in case if fpath already exists. Will create
+ * new directory if directory did not exist before hand.
  * */
-inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
+template <typename T> inline bool save(const std::string& fpath, const T& data = {}) {
   if (fpath.empty())
     return false;
 
@@ -506,7 +507,7 @@ inline bool save(const std::string& fpath, const std::vector<char>& data = {}) {
   dir.replace_filename("");
 
   filesystem::path tmp_location;
-  if (!filesystem::create_directories(dir))
+  if (!filesystem::exists(dir) && !filesystem::create_directories(dir))
     return false;
 
   auto generate_tmp_suffix = []() -> std::string {

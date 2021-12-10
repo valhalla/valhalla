@@ -6,13 +6,19 @@
 #include <string>
 #include <unordered_set>
 
+#include <cctype>
+#include <cstdio>
+
 #include <prime_server/prime_server.hpp>
 
+#include "baldr/curl_tilegetter.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 #include "mjolnir/valhalla_add_elevation_utils.h"
 #include "pixels.h"
 #include "skadi/sample.h"
@@ -25,10 +31,19 @@ constexpr double POSTING_INTERVAL = 60;
 const std::string src_dir{"test/data/"};
 const std::string elevation_local_src{"elevation_src"};
 const std::string src_path = src_dir + elevation_local_src;
+const std::string test_tile_dir{"test/data/elevationbuild"};
+const std::string pbf_dir{"test/data/elevationbuild/pbf_data/"};
 
 zmq::context_t context;
 
+/**
+ * @brief Generate coords from tile
+ *
+ * */
 std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::string& tile);
+/**
+ * @brief Contract full path to relative
+ * */
 std::vector<std::string> full_to_relative_path(const std::string& root_dir,
                                                std::vector<std::string>&& paths) {
   if (root_dir.empty() || paths.empty())
@@ -122,7 +137,7 @@ TEST(Filesystem, clear_valid_input) {
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
 
   for (const auto& test : tests)
-    (void)filesystem::save(test);
+    (void)filesystem::save<std::string>(test);
 
   EXPECT_FALSE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 
@@ -202,9 +217,9 @@ std::unordered_set<PointLL> get_coord(const std::string& tile_dir, const std::st
 }
 
 TEST(ElevationBuilder, get_coord) {
-  EXPECT_TRUE(get_coord("test/data/elevationbuild/tile_dir", "").empty());
+  EXPECT_TRUE(get_coord(test_tile_dir + "/tile_dir", "").empty());
   EXPECT_TRUE(get_coord("", "/0/003/196.gph").empty());
-  EXPECT_FALSE(get_coord("test/data/elevationbuild/tile_dir", "/0/003/196.gph").empty());
+  EXPECT_FALSE(get_coord(test_tile_dir + "/tile_dir", "/0/003/196.gph").empty());
 }
 
 TEST(ElevationBuilder, get_tile_ids) {
@@ -225,7 +240,7 @@ TEST(ElevationBuilder, get_tile_ids) {
   // check if tile is from the specified tile_dir (it is not)
   EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
 
-  config.put<std::string>("mjolnir.tile_dir", "test/data/elevationbuild/tile_dir");
+  config.put<std::string>("mjolnir.tile_dir", test_tile_dir + "/tile_dir");
   EXPECT_FALSE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
 }
 
@@ -261,7 +276,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
   for (const auto& elev : src_elevations)
-    EXPECT_TRUE(filesystem::save(src_path + elev));
+    EXPECT_TRUE(filesystem::save<std::string>(src_path + elev));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   valhalla::mjolnir::ElevationBuilder::Build(config,
@@ -288,6 +303,226 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   }
 
   clear(src_path);
+}
+
+/************************************************************************
+ * Validate that downloaded elevation tiles were not changed during loading
+ * and that they applied correctly. Compare hash-sum of the tiles
+ * with applied offline generated elevation tiles and online loaded.
+ * ************************************************************************/
+
+/**
+ *
+ * @brief Extract file name from url.
+ * */
+std::string filename(const std::string& url) {
+  auto it = url.rfind('/');
+  if (it == std::string::npos)
+    return {};
+  return url.substr(it);
+}
+
+/**
+ * @brief Download file from passed url and return full path to the loaded file.
+ * @param[in] url url to follow to download file.
+ * @param[in] path path where to save downloaded file.
+ * @return - full path to the downloaded file.
+ * */
+std::string download(const std::string& url, const std::string& path) {
+  curl_tile_getter_t tile_getter(3, "", false);
+  std::int8_t repeat{3};
+  auto result = tile_getter.get(url);
+  while (--repeat > 0 && result.status_ != tile_getter_t::status_code_t::SUCCESS)
+    result = tile_getter.get(url);
+
+  if (result.status_ != tile_getter_t::status_code_t::SUCCESS)
+    return {};
+
+  auto full_path = path + filename(url);
+  if (!filesystem::save(full_path, result.bytes_))
+    return {};
+
+  return full_path;
+}
+
+void generate_tiles(const std::string& dst_dir) {
+  const std::string pbf_url{"https://download.geofabrik.de/europe/cyprus-latest.osm.pbf"};
+  auto full_path = download(pbf_url, pbf_dir);
+
+  ASSERT_TRUE(filesystem::is_regular_file(full_path));
+
+  const valhalla::mjolnir::BuildStage start_stage{valhalla::mjolnir::BuildStage::kInitialize};
+  const valhalla::mjolnir::BuildStage end_stage{valhalla::mjolnir::BuildStage::kCleanup};
+  const auto& config = test::make_config("test/data", {{"mjolnir.tile_dir", dst_dir}}, {});
+
+  ASSERT_TRUE(valhalla::mjolnir::build_tile_set(config, {full_path}, start_stage, end_stage));
+
+  ASSERT_TRUE(filesystem::exists(dst_dir));
+  ASSERT_FALSE(filesystem::is_empty(dst_dir));
+}
+
+#define STR_VALUE(val) #val
+#define STR(name) STR_VALUE(name)
+
+#define PATH_LEN 256
+#define MD5_LEN 32
+
+std::string generate_hash(const std::string& file_name) {
+  char md5_sum[MD5_LEN + 1];
+#define MD5SUM_CMD_FMT "md5sum %." STR(PATH_LEN) "s 2>/dev/null"
+  char cmd[PATH_LEN + sizeof(MD5SUM_CMD_FMT)];
+  sprintf(cmd, MD5SUM_CMD_FMT, file_name.c_str());
+#undef MD5SUM_CMD_FMT
+
+  FILE* p = popen(cmd, "r");
+  if (p == NULL)
+    return 0;
+
+  int i, ch;
+  for (i = 0; i < MD5_LEN && isxdigit(ch = fgetc(p)); i++) {
+    md5_sum[i] = ch;
+  }
+
+  md5_sum[i] = '\0';
+  pclose(p);
+  return std::string(md5_sum);
+}
+
+std::string read_file(const std::string& file) {
+  std::ifstream t(file);
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  return buffer.str();
+}
+
+bool copy_files(const std::string& src,
+                const std::string& dst,
+                const std::vector<std::string>& files = {}) {
+  if (files.empty() || !filesystem::exists(src) || !filesystem::exists(dst))
+    return false;
+
+  for (const auto& file : files) {
+    if (!filesystem::is_regular_file(file))
+      continue;
+
+    (void)filesystem::save(dst + full_to_relative_path(src, {file}).front(), read_file(file));
+  }
+
+  return !filesystem::is_empty(dst);
+}
+
+/**
+ * @brief Copy contents of src dir into dst dir.
+ * */
+bool copy(const std::string& src, const std::string& dst) {
+  if (!filesystem::exists(src) || !filesystem::exists(dst))
+    return false;
+
+  if (filesystem::is_directory(src) && filesystem::is_empty(src))
+    return false;
+  return copy_files(src, dst, filesystem::get_files(src));
+}
+
+std::unordered_map<std::string, std::string> caclculate_dirhash(const std::string& dst) {
+  std::unordered_map<std::string, std::string> res;
+  for (const auto& file : filesystem::get_files(dst))
+    res[filesystem::path(file).filename().string()] = generate_hash(file);
+
+  return res;
+}
+
+void store_elevation(const std::string& elev) {
+  filesystem::save<std::string>(elev);
+  valhalla::midgard::sequence<int16_t> s(elev, true);
+  for (size_t i = 0; i < 3601 * 2; ++i)
+    s.push_back(((i / 3601 + 1) & 0xFF) << 8);
+  for (size_t i = 0; i < 3601 * (3601 - 2); ++i)
+    s.push_back(((-32768 & 0xFF) << 8) | ((-32768 >> 8) & 0xFF));
+}
+
+bool build_elevations(const std::string& offline_dir, const std::string& src_path) {
+  ElevationDownloadTestData params{offline_dir};
+  std::unordered_set<PointLL> coords_storage;
+  for (const auto& tile : params.m_test_tile_names) {
+    for (const auto& coord : get_coord(offline_dir, tile)) {
+      coords_storage.insert(coord);
+    }
+  }
+
+  std::vector<std::string> src_elevations;
+  std::unordered_set<std::string> seen;
+  for (const auto& coord : coords_storage) {
+    auto elev = valhalla::skadi::get_hgt_file_name(TestableSample::get_tile_index(coord));
+    if (!seen.count(elev)) {
+      seen.insert(elev);
+      store_elevation(src_path + elev);
+    }
+  }
+
+  return true;
+}
+
+void apply_elevations(const std::string& tile_dir,
+                      const std::string& elevation_path,
+                      const std::string& url = {},
+                      const std::string& remote_path = {}) {
+  ElevationDownloadTestData params{tile_dir};
+  auto config = test::make_config("test/data", {{"mjolnir.tile_dir", tile_dir},
+                                                {"additional_data.elevation", elevation_path},
+                                                {"mjolnir.concurrency", "5"}});
+
+  if (!url.empty()) {
+    config.put("additional_data.elevation_url", url);
+    config.put("additional_data.elevation_dir", remote_path);
+  }
+
+  valhalla::mjolnir::ElevationBuilder::Build(config,
+                                             valhalla::mjolnir::get_tile_ids(config,
+                                                                             params
+                                                                                 .m_test_tile_names));
+}
+
+TEST(ElevationBuilder, compare_applied_elevations) {
+  const std::string tile_dst{test_tile_dir + "/tiles_from_pbf"};
+  ASSERT_TRUE(filesystem::create_directories(tile_dst));
+  generate_tiles(tile_dst);
+
+  const std::string offline_dir{test_tile_dir + "/offline_test_dir/"};
+  ASSERT_TRUE(filesystem::create_directories(offline_dir));
+
+  const std::string online_dir{test_tile_dir + "/online_test_dir/"};
+  ASSERT_TRUE(filesystem::create_directories(online_dir));
+
+  ASSERT_TRUE(copy(tile_dst, offline_dir)) << "Failed to copy files to " << offline_dir;
+  ASSERT_TRUE(copy(tile_dst, online_dir)) << "Failed to copy files to " << online_dir;
+
+  std::unordered_map<std::string, std::string> original_filename_hash = caclculate_dirhash(tile_dst);
+  std::unordered_map<std::string, std::string> offline_filename_hash =
+      caclculate_dirhash(offline_dir);
+  ASSERT_EQ(original_filename_hash, offline_filename_hash);
+
+  std::unordered_map<std::string, std::string> online_filename_hash = caclculate_dirhash(online_dir);
+  ASSERT_EQ(original_filename_hash, online_filename_hash);
+
+  build_elevations(offline_dir, src_path);
+  apply_elevations(offline_dir, src_path);
+  auto offline_filename_hash_with_elevations = caclculate_dirhash(offline_dir);
+  ASSERT_NE(offline_filename_hash_with_elevations, offline_filename_hash);
+
+  auto url{"127.0.0.1:38004/route-tile/v1/{tilePath}?version=%version&access_token=%token"};
+  auto elev_storage_dir{"test/data/elevation_dst/"};
+  apply_elevations(online_dir, elev_storage_dir, url, elevation_local_src);
+  auto online_filename_hash_with_elevations = caclculate_dirhash(online_dir);
+  ASSERT_NE(online_filename_hash_with_elevations, online_filename_hash);
+
+  ASSERT_EQ(online_filename_hash_with_elevations, offline_filename_hash_with_elevations);
+
+  clear(src_path);
+  clear(elev_storage_dir);
+  clear(online_dir);
+  clear(offline_dir);
+  clear(tile_dst);
+  clear(pbf_dir);
 }
 
 } // namespace
