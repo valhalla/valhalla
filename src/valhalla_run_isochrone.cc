@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
   // Get the costing method - pass the JSON configuration
   valhalla::TripLeg trip_path;
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations

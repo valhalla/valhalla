@@ -298,8 +298,8 @@ public:
   bool has_collapsed_merge_maneuver() const;
   void set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuver);
 
-  TripLeg_TravelMode travel_mode() const;
-  void set_travel_mode(TripLeg_TravelMode travel_mode);
+  TravelMode travel_mode() const;
+  void set_travel_mode(TravelMode travel_mode);
 
   bool rail() const;
   void set_rail(bool rail);
@@ -307,17 +307,17 @@ public:
   bool bus() const;
   void set_bus(bool bus);
 
-  TripLeg_VehicleType vehicle_type() const;
-  void set_vehicle_type(TripLeg_VehicleType vehicle_type);
+  VehicleType vehicle_type() const;
+  void set_vehicle_type(VehicleType vehicle_type);
 
-  TripLeg_PedestrianType pedestrian_type() const;
-  void set_pedestrian_type(TripLeg_PedestrianType pedestrian_type);
+  PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(PedestrianType pedestrian_type);
 
-  TripLeg_BicycleType bicycle_type() const;
-  void set_bicycle_type(TripLeg_BicycleType bicycle_type);
+  BicycleType bicycle_type() const;
+  void set_bicycle_type(BicycleType bicycle_type);
 
-  TripLeg_TransitType transit_type() const;
-  void set_transit_type(TripLeg_TransitType transit_type);
+  TransitType transit_type() const;
+  void set_transit_type(TransitType transit_type);
 
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
@@ -473,15 +473,15 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TripLeg_TravelMode travel_mode_;
+  TravelMode travel_mode_;
   bool rail_;
   bool bus_;
 
   // Travel types
-  TripLeg_VehicleType vehicle_type_;
-  TripLeg_PedestrianType pedestrian_type_;
-  TripLeg_BicycleType bicycle_type_;
-  TripLeg_TransitType transit_type_;
+  VehicleType vehicle_type_;
+  PedestrianType pedestrian_type_;
+  BicycleType bicycle_type_;
+  TransitType transit_type_;
 
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
