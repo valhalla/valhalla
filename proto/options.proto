@@ -138,7 +138,7 @@ message CostingOptions {
   optional Costing costing = 90;
   optional string name = 91;
   repeated AvoidEdge exclude_edges = 92;                       // Exclude edges for any costing - derived from exclude_locations
-  optional bool filter_closures = 93 [default = true];
+  optional bool filter_closures = 93;
 }
 
 message Options {

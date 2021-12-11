@@ -218,7 +218,7 @@ void parse_locations(const rapidjson::Document& doc,
   }
 
   bool had_date_time = false;
-  bool exclude_closures_disabled = false;
+  bool filter_closures = true;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -408,7 +408,7 @@ void parse_locations(const rapidjson::Document& doc,
         // set exclude_closures_disabled if any of the locations has the
         // search_filter.exclude_closures set as false
         if (!location->search_filter().exclude_closures()) {
-          exclude_closures_disabled = true;
+          filter_closures = false;
         }
       }
       // Forward valhalla_exception_t types as-is, since they contain a more
@@ -432,11 +432,9 @@ void parse_locations(const rapidjson::Document& doc,
     // If any of the locations had search_filter.exclude_closures set to false,
     // we tell the costing to let all closed roads through, so that we can do
     // a secondary per-location filtering using loki's search_filter
-    // functionality
-    if (exclude_closures_disabled) {
-      for (auto& costing : *options.mutable_costing_options()) {
-        costing.set_filter_closures(false);
-      }
+    // functionality. Otherwise we default to skipping closed roads
+    for (auto& costing : *options.mutable_costing_options()) {
+      costing.set_filter_closures(filter_closures);
     }
   }
 }
