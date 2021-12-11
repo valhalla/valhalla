@@ -181,7 +181,7 @@ message Options {
   }
 
   optional Units units = 1;                                               // kilometers or miles
-  optional string language = 2 [default = "en-US"];                       // Based on IETF BCP 47 language tag string
+  optional string language = 2;                                           // Based on IETF BCP 47 language tag string (default "en-US")
   optional DirectionsType directions_type = 3 [default = instructions];   // Enable/disable narrative production
   optional Format format = 4 [default = json];                            // What the response format should be
   optional string id = 5;                                                 // Optional id for the request

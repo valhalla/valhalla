@@ -10,6 +10,7 @@ import os
 for root, dirs, files in os.walk(".", topdown=False):
   for name in files:
     if name.endswith('.pbf'):
+      print('Reading %s' % os.path.join(root, name))
       # read the protobuf from disk
       with open(os.path.join(root, name), 'rb') as handle:
         pbf = handle.read()
@@ -22,7 +23,9 @@ for root, dirs, files in os.walk(".", topdown=False):
       #    for n in l.node:
       #      if n.edge is not None:
       #        n.edge.drive_on_left = not n.edge.drive_on_left
-      api.options.roundabout_exits = True
+      #api.options.roundabout_exits = True
+      if not api.options.language:
+        api.options.language = 'en-US'
       # MAKE YOUR CHANGES TO THE PROTOBUF HERE ^^^^^^^
 
       # write the protobuf back to disk

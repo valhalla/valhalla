@@ -516,6 +516,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  options.set_language("en-US");
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
   if (language && odin::get_locales().find(*language) != odin::get_locales().end()) {
     options.set_language(*language);
