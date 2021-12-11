@@ -833,10 +833,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // if specified, get the denoise in there
-  auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
-  if (denoise) {
-    options.set_denoise(std::max(std::min(*denoise, 1.f), 0.f));
-  }
+  auto denoise = rapidjson::get<float>(doc, "/denoise", 1.0);
+  options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
   // if specified, get the generalize value in there
   auto generalize = rapidjson::get_optional<float>(doc, "/generalize");

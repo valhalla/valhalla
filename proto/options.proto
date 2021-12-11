@@ -203,7 +203,7 @@ message Options {
   optional double resample_distance = 21;                                 // Resampling shape at regular intervals
   repeated Contour contours = 22;                                         // List of isochrone contours
   optional bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  optional float denoise = 24 [default = 1.0];                            // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float denoise = 24;                                            // A floating point value from 0 to 1 which can be used to remove smaller contours (default 1.0)
   optional float generalize = 25;                                         // Meters used as the tolerance for Douglas-Peucker generalization
   optional bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
   repeated Location trace = 27;                                           // Trace points for map matching
