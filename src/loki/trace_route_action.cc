@@ -83,15 +83,15 @@ void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
   }
 }
 
-void check_best_paths_shape(unsigned int best_paths,
+void check_alternates_shape(unsigned int alternates,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
-                            size_t max_best_paths_shape) {
+                            size_t max_alternates_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if ((best_paths > 1) && (shape.size() > max_best_paths_shape)) {
+  if ((alternates > 1) && (shape.size() > max_alternates_shape)) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +
                                         "). The best paths shape limit is " +
-                                        std::to_string(max_best_paths_shape)};
+                                        std::to_string(max_alternates_shape)};
   }
 }
 
@@ -141,8 +141,7 @@ void loki_worker_t::init_trace(Api& request) {
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (options.shape_match() == ShapeMatch::map_snap) {
-    check_best_paths(options.best_paths(), max_best_paths);
-    check_best_paths_shape(options.best_paths(), options.shape(), max_best_paths_shape);
+    check_alternates_shape(options.alternates() + 1, options.shape(), max_trace_alternates_shape);
   }
 
   // Validate optional trace options

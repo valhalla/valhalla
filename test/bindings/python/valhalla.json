@@ -189,8 +189,8 @@
       "min_resample": 10.0
     },
     "trace": {
-      "max_best_paths": 4,
-      "max_best_paths_shape": 100,
+      "max_alternates": 3,
+      "max_alternates_shape": 100,
       "max_distance": 200000.0,
       "max_gps_accuracy": 100.0,
       "max_search_radius": 100.0,

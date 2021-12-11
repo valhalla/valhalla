@@ -143,8 +143,10 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   // If more alternates are requested than we support we cap it
-  if (options.alternates() > max_alternates)
+  if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
+  if (options.action() == Options::trace_attributes && options.alternates() > max_trace_alternates)
+    options.set_alternates(max_trace_alternates);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -238,8 +240,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   default_breakage_distance = config.get<float>("meili.default.breakage_distance");
   max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
-  max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
-  max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
+  max_trace_alternates = config.get<unsigned int>("service_limits.trace.max_alternates");
+  max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
 

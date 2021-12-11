@@ -208,7 +208,7 @@ message Options {
   optional bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
   repeated Location trace = 27;                                           // Trace points for map matching
   optional ShapeMatch shape_match = 28 [default = walk_or_snap];          // The matching algorithm based on the type of input
-  optional uint32 best_paths = 29 [default = 1];                          // The number of top k paths
+  //deprecated = 29;
   optional float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
   optional float search_radius = 31;                                      // The search radius associated with the supplied trace points
   optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points

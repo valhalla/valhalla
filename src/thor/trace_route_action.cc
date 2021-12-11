@@ -191,8 +191,9 @@ thor_worker_t::map_match(Api& request) {
   }
 
   // we don't allow multi path for trace route at the moment, discontinuities force multi route
-  int topk =
-      request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
+  int topk = request.options().action() == Options::trace_attributes
+                 ? request.options().alternates() + 1
+                 : 1;
   auto topk_match_results = matcher->OfflineMatch(trace, topk);
 
   // Process each score/match result

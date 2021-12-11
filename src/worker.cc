@@ -861,12 +861,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  // if specified, get the best_paths in there
-  auto best_paths = rapidjson::get_optional<uint32_t>(doc, "/best_paths");
-  if (best_paths) {
-    options.set_best_paths(*best_paths);
-  }
-
   // if specified, get the trace gps_accuracy value in there
   auto gps_accuracy = rapidjson::get_optional<float>(doc, "/trace_options/gps_accuracy");
   if (gps_accuracy) {
@@ -921,9 +915,12 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  // deprecated best_paths for map matching top k
+  auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
+
   // how many alternates are desired, default to none and if its multi point its also none
-  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", 0));
-  if (options.locations_size() > 2)
+  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", best_paths - 1));
+  if (options.action() != Options::trace_attributes && options.locations_size() > 2)
     options.set_alternates(0);
 
   // whether to return guidance_views, default false
