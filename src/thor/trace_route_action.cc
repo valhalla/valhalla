@@ -126,15 +126,6 @@ void thor_worker_t::trace_route(Api& request) {
       // clang-format on
       break;
   }
-
-  // log admin areas
-  if (!options.do_not_track()) {
-    for (const auto& route : request.trip().routes()) {
-      for (const auto& leg : route.legs()) {
-        log_admin(leg);
-      }
-    }
-  }
 }
 
 /*

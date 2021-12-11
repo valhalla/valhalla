@@ -739,9 +739,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  // TODO: remove this?
-  options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
-
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
