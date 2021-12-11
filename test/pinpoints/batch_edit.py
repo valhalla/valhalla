@@ -17,11 +17,12 @@ for root, dirs, files in os.walk(".", topdown=False):
       api.ParseFromString(pbf)
 
       # MAKE YOUR CHANGES TO THE PROTOBUF HERE vvvvvvv
-      for r in api.trip.routes:
-        for l in r.legs:
-          for n in l.node:
-            if n.edge is not None:
-              n.edge.drive_on_left = not n.edge.drive_on_left
+      #for r in api.trip.routes:
+      #  for l in r.legs:
+      #    for n in l.node:
+      #      if n.edge is not None:
+      #        n.edge.drive_on_left = not n.edge.drive_on_left
+      api.options.roundabout_exits = True
       # MAKE YOUR CHANGES TO THE PROTOBUF HERE ^^^^^^^
 
       # write the protobuf back to disk
