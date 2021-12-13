@@ -80,7 +80,7 @@ class TestBindings(unittest.TestCase):
         self.assertIn('maneuvers', route['trip']['legs'][0])
         self.assertGreater(len(route['trip']['legs'][0]['maneuvers']), 0)
         self.assertIn('instruction', route['trip']['legs'][0]['maneuvers'][0])
-        assert(has_cyrillic(route['trip']['legs'][0]['maneuvers'][0]['instruction']))
+        self.assertTrue(has_cyrillic(route['trip']['legs'][0]['maneuvers'][0]['instruction']))
 
         # test the str api
         route_str = self.actor.route(json.dumps(query, ensure_ascii=False))
