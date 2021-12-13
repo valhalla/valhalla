@@ -60,7 +60,7 @@
    * FIXED: Better hash function of GraphId [#3332](https://github.com/valhalla/valhalla/pull/3332)
 
 * **Enhancement**
-   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)   
+   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
    * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3237](https://github.com/valhalla/valhalla/pull/3237)
    * CHANGED: Move pre-defined algorithm-based factors inside `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
    * ADDED: Reject alternatives with too long detours [#3238](https://github.com/valhalla/valhalla/pull/3238)
