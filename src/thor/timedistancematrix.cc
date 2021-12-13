@@ -28,7 +28,7 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
+    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -36,14 +36,14 @@ TimeDistanceMatrix::TimeDistanceMatrix()
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
   float average_speed_mph;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       average_speed_mph = 10.0f;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       average_speed_mph = 2.0f;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       average_speed_mph = 35.0f;
   }
@@ -109,7 +109,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     uint8_t flow_sources;
     Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) +
+                   costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) +
                    transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -153,7 +153,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
+                              const travel_mode_t mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -271,8 +271,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get cost. Use the opposing edge for EdgeCost.
     uint8_t flow_sources;
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
@@ -324,7 +323,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
+                              const travel_mode_t mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -394,7 +393,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::travel_mode_t mode,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
@@ -404,7 +403,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::travel_mode_t mode,
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
@@ -463,7 +462,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                 (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -516,7 +515,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, TimeInfo::invalid(), flow_sources) *
                 edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 

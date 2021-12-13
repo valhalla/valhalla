@@ -131,7 +131,7 @@ public:
     auto matrix_results =
         timedist_matrix_bss.SourceToTarget(matrix_request.options().sources(),
                                            matrix_request.options().targets(), reader, mode_costing,
-                                           TravelMode::kPedestrian, 400000.0);
+                                           sif::TravelMode::kPedestrian, 400000.0);
 
     auto s_size = sources.size();
     auto t_size = targets.size();

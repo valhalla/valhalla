@@ -556,11 +556,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TravelMode::kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TravelMode::kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TravelMode::kBicycle) {
     phrase_id += 16;
   }
 
@@ -630,11 +630,11 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
 
   // Set base phrase id per mode
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TravelMode::kDrive) {
     phrase_id += 5;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TravelMode::kPedestrian) {
     phrase_id += 10;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TravelMode::kBicycle) {
     phrase_id += 15;
   }
 
@@ -3873,11 +3873,11 @@ std::string NarrativeBuilder::FormVerbalSuccinctStartTransitionInstruction(Maneu
   uint8_t phrase_id = 0;
 
   // Set base phrase id per mode
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TravelMode::kDrive) {
     phrase_id += 5;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TravelMode::kPedestrian) {
     phrase_id += 10;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TravelMode::kBicycle) {
     phrase_id += 15;
   }
 
@@ -4411,7 +4411,7 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
     // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway. Additionally, if the path
     // is a pedestrian crossing, use appropriate phrasing.
-    if ((maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
+    if ((maneuver.travel_mode() == TravelMode::kPedestrian) && maneuver.unnamed_walkway()) {
       auto dictionary_index =
           maneuver.pedestrian_crossing() ? kPedestrianCrossingIndex : kWalkwayIndex;
       street_names_string = empty_street_name_labels->at(dictionary_index);
@@ -4419,14 +4419,13 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
 
     // If bicycle travel mode on unnamed cycleway
     // then set street names string to cycleway
-    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) && maneuver.unnamed_cycleway()) {
+    if ((maneuver.travel_mode() == TravelMode::kBicycle) && maneuver.unnamed_cycleway()) {
       street_names_string = empty_street_name_labels->at(kCyclewayIndex);
     }
 
     // If bicycle travel mode on unnamed mountain bike trail
     // then set street names string to mountain bike trail
-    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) &&
-        maneuver.unnamed_mountain_bike_trail()) {
+    if ((maneuver.travel_mode() == TravelMode::kBicycle) && maneuver.unnamed_mountain_bike_trail()) {
       street_names_string = empty_street_name_labels->at(kMountainBikeTrailIndex);
     }
   }

@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "mjolnir/osmpronunciation.h"
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmpronunciation.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {

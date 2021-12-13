@@ -1231,16 +1231,16 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   // Otherwise return based on the travel mode
   switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
+    case TravelMode::kDrive: {
       return "driving";
     }
-    case DirectionsLeg_TravelMode_kPedestrian: {
+    case TravelMode::kPedestrian: {
       return "walking";
     }
-    case DirectionsLeg_TravelMode_kBicycle: {
+    case TravelMode::kBicycle: {
       return "cycling";
     }
-    case DirectionsLeg_TravelMode_kTransit: {
+    case TravelMode::kTransit: {
       return "transit";
     }
   }

@@ -56,7 +56,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
-  mode_ = TravelMode::kDrive;
+  mode_ = travel_mode_t::kDrive;
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
   cost_diff_ = 0.0f;
@@ -275,9 +275,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
-      pred.cost() + (FORWARD
-                         ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
-                         : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources));
+      pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                             : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
 
   // Separate out transition cost.
   sif::Cost transition_cost =
@@ -490,7 +489,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
-                                const sif::TravelMode mode,
+                                const sif::travel_mode_t mode,
                                 const Options& options) {
   // Set the mode and costing
   mode_ = mode;
@@ -507,8 +506,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
 
+  // we use a non varying time for all time dependent routes until we can figure out how to vary the
+  // time during the path computation in the bidirectional algorithm
+  bool invariant = options.has_date_time_type();
   // Get time information for forward and backward searches
-  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
@@ -554,7 +555,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
     // Terminate if the iterations threshold has been exceeded.
     if ((edgelabels_reverse_.size() + edgelabels_forward_.size()) > iterations_threshold_) {
-      return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+      return FormPath(graphreader, options, origin, destination, forward_time_info);
     }
 
     // Get the next predecessor (based on which direction was expanded in prior step)
@@ -568,7 +569,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -587,7 +588,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
         LOG_ERROR("Forward search exhausted: n = " + std::to_string(edgelabels_forward_.size()) +
                   "," + std::to_string(edgelabels_reverse_.size()));
@@ -618,7 +619,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -637,7 +638,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
         LOG_ERROR("Reverse search exhausted: n = " + std::to_string(edgelabels_reverse_.size()) +
                   "," + std::to_string(edgelabels_forward_.size()));
@@ -975,7 +976,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
                 (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
@@ -1072,8 +1073,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week, flow_sources) *
-                edge.percent_along();
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1117,11 +1118,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
 // Form the path from the adjacency list.
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
-                                                                const Options& /*options*/,
+                                                                const Options& options,
                                                                 const valhalla::Location& origin,
                                                                 const valhalla::Location& dest,
-                                                                const baldr::TimeInfo& time_info,
-                                                                const bool invariant) {
+                                                                const baldr::TimeInfo& time_info) {
   LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
   if (desired_paths_count_ > 1) {
@@ -1275,6 +1275,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // recost edges in final path; ignore access restrictions
     try {
+      bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
       sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
                           time_info, invariant, true);
     } catch (const std::exception& e) {

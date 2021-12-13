@@ -17,8 +17,8 @@ constexpr uint32_t kMaxMatrixIterations = 2000000;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
-int GetThreshold(const TravelMode mode, const int n) {
-  return (mode == TravelMode::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
+int GetThreshold(const travel_mode_t mode, const int n) {
+  return (mode == travel_mode_t::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
@@ -35,8 +35,9 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix()
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), source_count_(0), remaining_sources_(0),
-      target_count_(0), remaining_targets_(0), current_cost_threshold_(0), targets_{new TargetMap} {
+    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
+      remaining_sources_(0), target_count_(0), remaining_targets_(0),
+      current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -45,14 +46,14 @@ CostMatrix::~CostMatrix() {
 float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
@@ -91,7 +92,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const travel_mode_t mode,
     const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -302,9 +303,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       uint8_t flow_sources;
-      Cost newcost =
-          pred.cost() + tc +
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost newcost = pred.cost() + tc +
+                     costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -588,7 +588,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       uint8_t flow_sources;
       Cost newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
 
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,
@@ -708,8 +708,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
-      Cost edgecost =
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -794,8 +793,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       uint8_t flow_sources;
-      Cost edgecost =
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 

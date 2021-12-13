@@ -30,7 +30,8 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
+  SimpleCost(const CostingOptions& options)
+      : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
@@ -79,7 +80,7 @@ public:
 
   Cost EdgeCost(const DirectedEdge* edge,
                 const graph_tile_ptr& /*tile*/,
-                const uint32_t /*seconds*/,
+                const baldr::TimeInfo& /*time_info*/,
                 uint8_t& /*flow_sources*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
@@ -231,7 +232,7 @@ TEST(Matrix, test_matrix) {
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results =
       cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                 mode_costing, TravelMode::kDrive, 400000.0);
+                                 mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
@@ -244,7 +245,7 @@ TEST(Matrix, test_matrix) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
@@ -275,7 +276,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                       reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -288,7 +289,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +

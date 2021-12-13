@@ -13,61 +13,6 @@ message DirectionsLeg {
     optional bool has_time_restrictions = 4; // Does the route contain any time restrictions?
   }
 
-  message TransitInfo {
-    optional string onestop_id = 1;
-    optional string short_name = 2;
-    optional string long_name = 3;
-    optional string headsign = 4;
-    optional uint32 color = 5;
-    optional uint32 text_color = 6;
-    optional string description = 7;
-    optional string operator_onestop_id = 8;
-    optional string operator_name = 9;
-    optional string operator_url = 10;
-    repeated TransitPlatformInfo transit_stops = 11;
-  }
-
-  enum TravelMode {
-    kDrive = 0;
-    kPedestrian = 1;
-    kBicycle = 2;
-    kTransit = 3;
-  }
-
-  // TODO: review and update as needed
-  enum VehicleType {
-    kCar = 0;
-    kMotorcycle = 1;
-    kAutoBus = 2;
-    kTractorTrailer = 3;
-    kMotorScooter = 4;
-  }
-
-  // TODO: review and update as needed
-  enum PedestrianType {
-    kFoot = 0;
-    kWheelchair = 1;
-    kSegway = 2;
-  }
-
-  enum BicycleType {
-    kRoad = 0;
-    kCross = 1;
-    kHybrid = 2;
-    kMountain = 3;
-  }
-
-  enum TransitType {
-    kTram = 0;
-    kMetro = 1;
-    kRail = 2;
-    kBus = 3;
-    kFerry = 4;
-    kCableCar = 5;
-    kGondola = 6;
-    kFunicular = 7;
-  }
-
   message GuidanceView {
     enum Type{
       kJunction = 0;
@@ -168,7 +113,7 @@ message DirectionsLeg {
     optional string verbal_depart_instruction = 19;              // verbal depart instruction - used with transit
     optional string arrive_instruction = 20;                     // arrive instruction - used with transit
     optional string verbal_arrive_instruction = 21;              // verbal arrive instruction - used with transit
-    optional TransitInfo transit_info = 22;                      // transit attributes including a list of transit stops
+    optional TransitRouteInfo transit_info = 22;                 // transit attributes including a list of transit stops
     optional bool verbal_multi_cue = 23;                         // verbal multi-cue flag
     optional TravelMode travel_mode = 24;                        // travel mode
     optional VehicleType vehicle_type = 25;
@@ -184,6 +129,7 @@ message DirectionsLeg {
     repeated GuidanceView guidance_views = 35;                   // List of guidance views
     optional BssManeuverType bss_maneuver_type = 36;
     optional string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
+    optional BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
   }
 
   optional uint64 trip_id = 1;

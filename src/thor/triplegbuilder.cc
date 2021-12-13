@@ -797,7 +797,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const graph_tile_ptr& graphtile,
-                          const uint32_t second_of_week,
+                          const baldr::TimeInfo& time_info,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
@@ -921,7 +921,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // can also call externally
     uint8_t flow_sources;
     auto speed = directededge->length() /
-                 costing->EdgeCost(directededge, graphtile, second_of_week, flow_sources).secs * 3.6;
+                 costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs * 3.6;
     trip_edge->set_speed(speed);
   }
 
@@ -1030,14 +1030,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // Override bicycle mode with pedestrian if dismount flag or steps
     if (directededge->dismount() || directededge->use() == Use::kSteps) {
       if (controller.attributes.at(kEdgeTravelMode)) {
-        trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian);
+        trip_edge->set_travel_mode(valhalla::TravelMode::kPedestrian);
       }
       if (controller.attributes.at(kEdgePedestrianType)) {
-        trip_edge->set_pedestrian_type(TripLeg_PedestrianType::TripLeg_PedestrianType_kFoot);
+        trip_edge->set_pedestrian_type(valhalla::PedestrianType::kFoot);
       }
     } else {
       if (controller.attributes.at(kEdgeTravelMode)) {
-        trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kBicycle);
+        trip_edge->set_travel_mode(valhalla::TravelMode::kBicycle);
       }
       if (controller.attributes.at(kEdgeBicycleType)) {
         trip_edge->set_bicycle_type(GetTripLegBicycleType(travel_type));
@@ -1045,21 +1045,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   } else if (mode == sif::TravelMode::kDrive) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kDrive);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kDrive);
     }
     if (controller.attributes.at(kEdgeVehicleType)) {
       trip_edge->set_vehicle_type(GetTripLegVehicleType(travel_type));
     }
   } else if (mode == sif::TravelMode::kPedestrian) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kPedestrian);
     }
     if (controller.attributes.at(kEdgePedestrianType)) {
       trip_edge->set_pedestrian_type(GetTripLegPedestrianType(travel_type));
     }
   } else if (mode == sif::TravelMode::kPublicTransit) {
     if (controller.attributes.at(kEdgeTravelMode)) {
-      trip_edge->set_travel_mode(TripLeg_TravelMode::TripLeg_TravelMode_kTransit);
+      trip_edge->set_travel_mode(valhalla::TravelMode::kTransit);
     }
   }
 
@@ -1173,7 +1173,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Process transit information
   if (trip_id && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
-    TripLeg_TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
+    TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
 
     // Set block_id if requested
     if (controller.attributes.at(kEdgeTransitRouteInfoBlockId)) {
@@ -1187,7 +1187,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
     const TransitDeparture* transit_departure =
         graphtile->GetTransitDeparture(directededge->lineid(), trip_id,
-                                       second_of_week % kSecondsPerDay);
+                                       time_info.second_of_week % kSecondsPerDay);
 
     if (transit_departure) {
 
@@ -1570,7 +1570,7 @@ void TripLegBuilder::Build(
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
+                    time_info, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->restriction_index);
 
     // some information regarding shape/length trimming

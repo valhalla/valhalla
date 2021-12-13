@@ -21,46 +21,6 @@ constexpr auto kMinEdgeLength = 0.001f;
 namespace valhalla {
 namespace odin {
 
-const std::unordered_map<int, DirectionsLeg_VehicleType> translate_vehicle_type{
-    {static_cast<int>(TripLeg_VehicleType_kCar), DirectionsLeg_VehicleType_kCar},
-    {static_cast<int>(TripLeg_VehicleType_kMotorcycle), DirectionsLeg_VehicleType_kMotorcycle},
-    {static_cast<int>(TripLeg_VehicleType_kAutoBus), DirectionsLeg_VehicleType_kAutoBus},
-    {static_cast<int>(TripLeg_VehicleType_kTractorTrailer),
-     DirectionsLeg_VehicleType_kTractorTrailer},
-    {static_cast<int>(TripLeg_VehicleType_kMotorScooter), DirectionsLeg_VehicleType_kMotorScooter},
-};
-
-const std::unordered_map<int, DirectionsLeg_PedestrianType> translate_pedestrian_type{
-    {static_cast<int>(TripLeg_PedestrianType_kFoot), DirectionsLeg_PedestrianType_kFoot},
-    {static_cast<int>(TripLeg_PedestrianType_kWheelchair), DirectionsLeg_PedestrianType_kWheelchair},
-    {static_cast<int>(TripLeg_PedestrianType_kSegway), DirectionsLeg_PedestrianType_kSegway},
-};
-
-const std::unordered_map<int, DirectionsLeg_BicycleType> translate_bicycle_type{
-    {static_cast<int>(TripLeg_BicycleType_kRoad), DirectionsLeg_BicycleType_kRoad},
-    {static_cast<int>(TripLeg_BicycleType_kCross), DirectionsLeg_BicycleType_kCross},
-    {static_cast<int>(TripLeg_BicycleType_kHybrid), DirectionsLeg_BicycleType_kHybrid},
-    {static_cast<int>(TripLeg_BicycleType_kMountain), DirectionsLeg_BicycleType_kMountain},
-};
-
-const std::unordered_map<int, DirectionsLeg_TransitType> translate_transit_type{
-    {static_cast<int>(TripLeg_TransitType_kTram), DirectionsLeg_TransitType_kTram},
-    {static_cast<int>(TripLeg_TransitType_kMetro), DirectionsLeg_TransitType_kMetro},
-    {static_cast<int>(TripLeg_TransitType_kRail), DirectionsLeg_TransitType_kRail},
-    {static_cast<int>(TripLeg_TransitType_kBus), DirectionsLeg_TransitType_kBus},
-    {static_cast<int>(TripLeg_TransitType_kFerry), DirectionsLeg_TransitType_kFerry},
-    {static_cast<int>(TripLeg_TransitType_kCableCar), DirectionsLeg_TransitType_kCableCar},
-    {static_cast<int>(TripLeg_TransitType_kGondola), DirectionsLeg_TransitType_kGondola},
-    {static_cast<int>(TripLeg_TransitType_kFunicular), DirectionsLeg_TransitType_kFunicular},
-};
-
-const std::unordered_map<int, DirectionsLeg_TravelMode> translate_travel_mode{
-    {static_cast<int>(TripLeg_TravelMode_kDrive), DirectionsLeg_TravelMode_kDrive},
-    {static_cast<int>(TripLeg_TravelMode_kPedestrian), DirectionsLeg_TravelMode_kPedestrian},
-    {static_cast<int>(TripLeg_TravelMode_kBicycle), DirectionsLeg_TravelMode_kBicycle},
-    {static_cast<int>(TripLeg_TravelMode_kTransit), DirectionsLeg_TravelMode_kTransit},
-};
-
 // Returns the trip directions based on the specified directions options
 // and trip path. This method calls ManeuversBuilder::Build and
 // NarrativeBuilder::Build to form the maneuver list. This method
@@ -410,28 +370,31 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     }
 
     // Travel mode
-    trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);
+    trip_maneuver->set_travel_mode(maneuver.travel_mode());
 
     // Bss maneuver type
     trip_maneuver->set_bss_maneuver_type(maneuver.bss_maneuver_type());
 
+    // Bss info
+    auto* trip_bss_info = trip_maneuver->mutable_bss_info();
+    trip_bss_info->CopyFrom(maneuver.bss_info());
+
     // Travel type
     switch (maneuver.travel_mode()) {
-      case TripLeg_TravelMode_kDrive: {
-        trip_maneuver->set_vehicle_type(translate_vehicle_type.find(maneuver.vehicle_type())->second);
+      case TravelMode::kDrive: {
+        trip_maneuver->set_vehicle_type(maneuver.vehicle_type());
         break;
       }
-      case TripLeg_TravelMode_kPedestrian: {
-        trip_maneuver->set_pedestrian_type(
-            translate_pedestrian_type.find(maneuver.pedestrian_type())->second);
+      case TravelMode::kPedestrian: {
+        trip_maneuver->set_pedestrian_type(maneuver.pedestrian_type());
         break;
       }
-      case TripLeg_TravelMode_kBicycle: {
-        trip_maneuver->set_bicycle_type(translate_bicycle_type.find(maneuver.bicycle_type())->second);
+      case TravelMode::kBicycle: {
+        trip_maneuver->set_bicycle_type(maneuver.bicycle_type());
         break;
       }
-      case TripLeg_TravelMode_kTransit: {
-        trip_maneuver->set_transit_type(translate_transit_type.find(maneuver.transit_type())->second);
+      case TravelMode::kTransit: {
+        trip_maneuver->set_transit_type(maneuver.transit_type());
         break;
       }
     }

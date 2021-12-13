@@ -12,10 +12,16 @@ endif()
 add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
+  )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
@@ -24,6 +30,7 @@ target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test GEOS::GEOS)
 endif()
+
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
@@ -258,7 +265,7 @@ add_custom_command(OUTPUT test/data/sample/N00
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N00
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N40
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplegz/N40
-  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplelz/N40
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplelz4/N40
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/service
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Creating test directories")
@@ -327,10 +334,10 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
+      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > test/python_valhalla.log 2>&1"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
-      ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       python_valhalla

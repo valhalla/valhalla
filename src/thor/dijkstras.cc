@@ -43,7 +43,7 @@ namespace thor {
 
 // Default constructor
 Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
+    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess),
       max_reserved_labels_count_(
           config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
       clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), multipath_(false) {
@@ -213,17 +213,15 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     if (FORWARD) {
       transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-      newcost = pred.cost() +
-                costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
+      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                           opp_pred_edge, pred.has_measured_speed(),
                                           pred.internal_turn());
-      newcost = pred.cost() +
-                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
-                transition_cost;
+      newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -297,7 +295,7 @@ void Dijkstras::Expand(const ExpansionType expansion_type,
                        valhalla::Api& api,
                        baldr::GraphReader& reader,
                        const sif::mode_costing_t& costings,
-                       const sif::TravelMode mode) {
+                       const sif::travel_mode_t mode) {
   // compute the expansion
   switch (expansion_type) {
     case ExpansionType::forward:
@@ -320,7 +318,7 @@ template <const ExpansionType expansion_direction>
 void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                         baldr::GraphReader& graphreader,
                         const sif::mode_costing_t& mode_costing,
-                        const sif::TravelMode mode) {
+                        const sif::travel_mode_t mode) {
 
   // Set the mode and costing
   mode_ = mode;
@@ -386,13 +384,13 @@ template void Dijkstras::Compute<ExpansionType::forward>(
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode);
+    const sif::travel_mode_t mode);
 
 template void Dijkstras::Compute<ExpansionType::reverse>(
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode);
+    const sif::travel_mode_t mode);
 
 // Expand from a node in forward direction using multimodal.
 void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
@@ -443,7 +441,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   uint32_t operator_id = pred.transit_operator();
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
     // Get the transfer penalty when changing stations
-    if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -460,7 +458,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Add transfer time to the local time when entering a stop as a pedestrian. This
     // is a small added cost on top of any costs along paths and roads. We only do this
     // once so if its from a transition we don't need to do it again
-    if (mode_ == TravelMode::kPedestrian && !from_transition) {
+    if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
       offset_time.local_time += transfer_cost.secs;
     }
 
@@ -526,7 +524,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
                                  date_before_tile_, tc->wheelchair(), tc->bicycle());
       if (departure) {
         // Check if there has been a mode change
-        mode_change = (mode_ == TravelMode::kPedestrian);
+        mode_change = (mode_ == travel_mode_t::kPedestrian);
 
         // Update trip Id and block Id
         tripid = departure->tripid();
@@ -568,7 +566,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         }
 
         // Change mode and costing to transit. Add edge cost.
-        mode_ = TravelMode::kPublicTransit;
+        mode_ = travel_mode_t::kPublicTransit;
         newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
       } else {
         // No matching departures found for this edge
@@ -578,9 +576,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     else {
       // If current mode is public transit we should only connect to
       // transit connection edges or transit edges
-      if (mode_ == TravelMode::kPublicTransit) {
+      if (mode_ == travel_mode_t::kPublicTransit) {
         // Disembark from transit and reset walking distance
-        mode_ = TravelMode::kPedestrian;
+        mode_ = travel_mode_t::kPedestrian;
         walking_distance = 0;
         mode_change = true;
       }
@@ -598,7 +596,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       newcost += c;
 
       // Add to walking distance
-      if (mode_ == TravelMode::kPedestrian) {
+      if (mode_ == travel_mode_t::kPedestrian) {
         walking_distance += directededge->length();
 
         // Prevent going from one egress connection directly to another
@@ -687,16 +685,16 @@ void Dijkstras::ComputeMultiModal(
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode) {
+    const travel_mode_t mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
-  const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];
+  const auto& pc = mode_costing[static_cast<uint8_t>(travel_mode_t::kPedestrian)];
   pc->SetAllowTransitConnections(true);
   pc->UseMaxMultiModalDistance();
 
   // Set the mode from the origin
   mode_ = mode;
-  const auto& tc = mode_costing[static_cast<uint8_t>(TravelMode::kPublicTransit)];
+  const auto& tc = mode_costing[static_cast<uint8_t>(travel_mode_t::kPublicTransit)];
 
   // Get maximum transfer distance
   // TODO - want to allow unlimited walking once you get off the transit stop...
@@ -800,7 +798,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -881,7 +879,7 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();

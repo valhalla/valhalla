@@ -116,7 +116,7 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
 
           size_t pos = 1;
           while (pos < strlen(name)) {
-            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+            const auto header = midgard::unaligned_read<linguistic_text_header_t>(name + pos);
             pos += 3;
             names.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) +
                                 std::string((name + pos), header.length_)));
@@ -219,7 +219,7 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
         if (tv == baldr::TaggedValue::kPronunciation) {
           size_t pos = 1;
           while (pos < strlen(name)) {
-            const auto& header = *reinterpret_cast<const linguistic_text_header_t*>(name + pos);
+            const auto header = midgard::unaligned_read<linguistic_text_header_t>(name + pos);
             pos += 3;
             std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
                 index_pronunciation_map.find(header.name_index_);

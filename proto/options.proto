@@ -235,7 +235,8 @@ message Options {
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  optional Action expansion_action = 48;                                  // Meta action for /expansion endpoint
-  optional bool skip_opposites = 49;                                      // Whether to return opposite edges encountered during expansion
-  repeated ExpansionProperties expansion_properties = 50;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+  optional bool prioritize_bidirectional = 48 [default = false];          // Prioritize bidirectional a* when depart_at date_time.type is specified
+  optional Action expansion_action = 49;                                  // Meta action for /expansion endpoint
+  optional bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
+  repeated ExpansionProperties expansion_properties = 51;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
 }
