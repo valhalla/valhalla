@@ -1,13 +1,31 @@
 #include "test.h"
 
 #include <algorithm>
-#include <cstdlib>
-#include <deque>
 #include <string>
 #include <unordered_set>
 
+#ifdef __APPLE__
+#include <cerrno>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+
+#include <openssl/sha.h>
+#elif __linux__
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#define STR_VALUE(val) #val
+#define STR(name) STR_VALUE(name)
+#define PATH_LEN 256
+#define MD5_LEN 32
+#endif
 
 #include <prime_server/prime_server.hpp>
 
@@ -361,22 +379,51 @@ void generate_tiles(const std::string& dst_dir) {
   ASSERT_FALSE(filesystem::is_empty(dst_dir));
 }
 
-#define STR_VALUE(val) #val
-#define STR(name) STR_VALUE(name)
+std::string generate_hashsum(const std::string& path) {
+#ifdef __APPLE__
+  std::ifstream fp(path, std::ios::in | std::ios::binary);
 
-#define PATH_LEN 256
-#define MD5_LEN 32
+  if (not fp.good()) {
+    std::ostringstream os;
+    os << "Cannot open \"" << path << "\": " << std::strerror(errno) << ".";
+    throw std::runtime_error(os.str());
+  }
 
-std::string generate_hash(const std::string& file_name) {
-  char md5_sum[MD5_LEN + 1];
+  constexpr const std::size_t buffer_size{1 << 12};
+  char buffer[buffer_size];
+
+  unsigned char hash[SHA256_DIGEST_LENGTH]{};
+
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+
+  while (fp.good()) {
+    fp.read(buffer, buffer_size);
+    SHA256_Update(&ctx, buffer, fp.gcount());
+  }
+
+  SHA256_Final(hash, &ctx);
+  fp.close();
+
+  std::ostringstream os;
+  os << std::hex << std::setfill('0');
+
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    os << std::setw(2) << static_cast<unsigned int>(hash[i]);
+  }
+
+  return os.str();
+#elif __linux__
+  char md5_sum[PATH_LEN + 1];
 #define MD5SUM_CMD_FMT "md5sum %." STR(PATH_LEN) "s 2>/dev/null"
   char cmd[PATH_LEN + sizeof(MD5SUM_CMD_FMT)];
-  sprintf(cmd, MD5SUM_CMD_FMT, file_name.c_str());
+  sprintf(cmd, MD5SUM_CMD_FMT, path.c_str());
 #undef MD5SUM_CMD_FMT
 
   FILE* p = popen(cmd, "r");
-  if (p == NULL)
-    return 0;
+  if (p == NULL) {
+    return {};
+  }
 
   int i, ch;
   for (i = 0; i < MD5_LEN && isxdigit(ch = fgetc(p)); i++) {
@@ -386,6 +433,7 @@ std::string generate_hash(const std::string& file_name) {
   md5_sum[i] = '\0';
   pclose(p);
   return std::string(md5_sum);
+#endif
 }
 
 std::string read_file(const std::string& file) {
@@ -426,7 +474,8 @@ bool copy(const std::string& src, const std::string& dst) {
 std::unordered_map<std::string, std::string> caclculate_dirhash(const std::string& dst) {
   std::unordered_map<std::string, std::string> res;
   for (const auto& file : filesystem::get_files(dst))
-    res[filesystem::path(file).filename().string()] = generate_hash(file);
+    res[full_to_relative_path(dst, {filesystem::path(file).string()}).front()] =
+        generate_hashsum(file);
 
   return res;
 }
@@ -490,10 +539,10 @@ TEST(ElevationBuilder, compare_applied_elevations) {
   for (const auto& tile_path : filesystem::get_files(tile_dst))
     ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
 
-  const std::string offline_dir{test_tile_dir + "/offline_test_dir/"};
+  const std::string offline_dir{test_tile_dir + "/offline_test_dir"};
   ASSERT_TRUE(filesystem::create_directories(offline_dir)) << "Failed to create " << offline_dir;
 
-  const std::string online_dir{test_tile_dir + "/online_test_dir/"};
+  const std::string online_dir{test_tile_dir + "/online_test_dir"};
   ASSERT_TRUE(filesystem::create_directories(online_dir)) << "Failed to create " << online_dir;
 
   ASSERT_TRUE(copy(tile_dst, offline_dir)) << "Failed to copy files to " << offline_dir;
@@ -505,12 +554,11 @@ TEST(ElevationBuilder, compare_applied_elevations) {
   for (const auto& tile_path : filesystem::get_files(online_dir))
     ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
 
-  std::unordered_map<std::string, std::string> original_filename_hash = caclculate_dirhash(tile_dst);
-  std::unordered_map<std::string, std::string> offline_filename_hash =
-      caclculate_dirhash(offline_dir);
+  auto original_filename_hash = caclculate_dirhash(tile_dst);
+  auto offline_filename_hash = caclculate_dirhash(offline_dir);
   ASSERT_EQ(original_filename_hash, offline_filename_hash);
 
-  std::unordered_map<std::string, std::string> online_filename_hash = caclculate_dirhash(online_dir);
+  auto online_filename_hash = caclculate_dirhash(online_dir);
   ASSERT_EQ(original_filename_hash, online_filename_hash);
 
   ASSERT_TRUE(filesystem::create_directories(src_path)) << "Failed to create " << src_path;

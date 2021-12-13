@@ -23,6 +23,7 @@ option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_OPENSSL "Enable openssl" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
@@ -274,6 +275,14 @@ if(ENABLE_PYTHON_BINDINGS)
     message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
   endif()
 endif()
+
+
+if (ENABLE_OPENSSL AND APPLE)
+#if (ENABLE_OPENSSL)
+  set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib)
+  set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
+endif()
+
 
 ## Executable targets
 function(get_source_path PATH NAME)
