@@ -101,8 +101,7 @@ TEST(ThorWorker, test_linear_references) {
   std::vector<std::string> requests = {
       R"({"costing":"auto","linear_references":true,"locations":[
           {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],
-          "action":"include"})",
+          {"lat":52.09098,"lon":5.09679}]})",
   };
   const std::vector<std::string>& expected = {
       "CwOgEyUK5SKXAP/H//wiBw==",

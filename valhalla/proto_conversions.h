@@ -264,6 +264,8 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
 bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t);
 const std::string& Location_Type_Enum_Name(const Location::Type t);
 const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet s);
+bool Options_ExpansionProperties_Enum_Parse(const std::string& prop, Options::ExpansionProperties* a);
+bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a);
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);

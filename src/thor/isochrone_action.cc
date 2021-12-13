@@ -37,6 +37,10 @@ std::string thor_worker_t::isochrones(Api& request) {
                                                                         : ExpansionType::forward;
   auto grid = isochrone_gen.Expand(expansion_type, request, *reader, mode_costing, mode);
 
+  // e.g. in case of /expansion request
+  if (options.action() == Options_Action_expansion)
+    return "";
+
   // we have parallel vectors of contour properties and the actual geojson features
   // this method sorts the contour specifications by metric (time or distance) and then by value
   // with the largest values coming first. eg (60min, 30min, 10min, 40km, 10km)
