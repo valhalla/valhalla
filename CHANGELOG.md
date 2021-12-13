@@ -34,6 +34,7 @@
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
@@ -59,7 +60,7 @@
    * FIXED: Better hash function of GraphId [#3332](https://github.com/valhalla/valhalla/pull/3332)
 
 * **Enhancement**
-   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)
+   * CHANGED: Favor turn channels more [#3222](https://github.com/valhalla/valhalla/pull/3222)   
    * CHANGED: Rename `valhalla::midgard::logging::LogLevel` enumerators to avoid clash with common macros [#3237](https://github.com/valhalla/valhalla/pull/3237)
    * CHANGED: Move pre-defined algorithm-based factors inside `RelaxHierarchyLimits` [#3253](https://github.com/valhalla/valhalla/pull/3253)
    * ADDED: Reject alternatives with too long detours [#3238](https://github.com/valhalla/valhalla/pull/3238)
