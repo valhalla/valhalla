@@ -90,12 +90,12 @@ const std::string& TripLeg_Use_Name(int v) {
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
+      {43, "kConstructionUse"},
       {50, "kRailUse"},
       {51, "kBusUse"},
       {52, "kEgressConnectionUse"},
       {53, "kPlatformConnectionUse"},
       {54, "kTransitConnectionUse"},
-      {55, "kConstructionUse"},
   };
   auto f = values.find(v);
   if (f == values.cend())

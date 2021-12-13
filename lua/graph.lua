@@ -1432,7 +1432,7 @@ function filter_tags_generic(kv)
 
   if kv["highway"] then
      if kv["highway"] == "construction" then
-        use = 55
+        use = 43
      elseif kv["highway"] == "track" then
         use = 3
      elseif kv["highway"] == "living_street" then
@@ -1474,8 +1474,8 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  -- do not change 'construction' use
-  if use ~= 55 and (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+  -- do not override 'construction' use
+  if use ~= 43 and (kv["access"] == "emergency" or kv["emergency"] == "yes") and
       kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
       kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
       kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
