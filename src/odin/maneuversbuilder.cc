@@ -606,8 +606,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
 bool ManeuversBuilder::PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
                                                            std::list<Maneuver>::iterator curr_man,
                                                            std::list<Maneuver>::iterator next_man) {
-  if (!curr_man->internal_intersection() &&
-      curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
+  if (!curr_man->internal_intersection() && curr_man->travel_mode() == TravelMode::kDrive &&
       !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
       (curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter)) &&
       curr_man != next_man && !curr_man->IsStartType() && !next_man->IsDestinationType()) {
@@ -1136,7 +1135,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Transit info
-  if (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit) {
+  if (prev_edge->travel_mode() == TravelMode::kTransit) {
     maneuver.set_rail(prev_edge->IsRailUse());
     maneuver.set_bus(prev_edge->IsBusUse());
     auto* transit_info = maneuver.mutable_transit_info();
@@ -1163,7 +1162,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     // If previous edge is transit connection platform
     // and current edge is transit then mark maneuver as transit connection start
     if (prev_edge->IsPlatformConnectionUse() && curr_edge &&
-        (curr_edge->travel_mode() == TripLeg_TravelMode_kTransit)) {
+        (curr_edge->travel_mode() == TravelMode::kTransit)) {
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kTransitConnectionStart);
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
       auto node = trip_path_->GetEnhancedNode(node_index);
@@ -1225,11 +1224,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Roundabouts
   if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && prev_edge->roundabout()) {
-    TripLeg_TravelMode mode = prev_edge->travel_mode();
+    TravelMode mode = prev_edge->travel_mode();
 
     // Adjust bicycle travel mode if roundabout is a road
-    if ((mode == TripLeg_TravelMode_kBicycle) && (prev_edge->IsRoadUse())) {
-      mode = TripLeg_TravelMode_kDrive;
+    if ((mode == TravelMode::kBicycle) && (prev_edge->IsRoadUse())) {
+      mode = TravelMode::kDrive;
     }
     // TODO might have to adjust for pedestrian too
 
@@ -1294,7 +1293,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Insert transit stop into the transit maneuver
-  if (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit) {
+  if (prev_edge->travel_mode() == TravelMode::kTransit) {
     auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_platform_info());
   }
@@ -1350,14 +1349,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Mark transit connection transfer
   if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kTransitConnectionStart) && prev_edge &&
-      (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit)) {
+      (prev_edge->travel_mode() == TravelMode::kTransit)) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kTransitConnectionTransfer);
     LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_TRANSFER");
   }
 
   // Add transit connection stop to a transit connection destination
   if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kTransitConnectionDestination) && prev_edge &&
-      (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit)) {
+      (prev_edge->travel_mode() == TravelMode::kTransit)) {
     auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.set_transit_connection_platform_info(node->transit_platform_info());
     LOG_TRACE("DirectionsLeg_Maneuver_Type_kTransitConnectionDestination "
@@ -1365,7 +1364,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Insert first transit stop
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kTransit) {
+  if (maneuver.travel_mode() == TravelMode::kTransit) {
     auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_platform_info());
   }
@@ -1386,8 +1385,8 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
-      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) &&
-      maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) {
+      (prev_edge->travel_mode() == TravelMode::kBicycle) &&
+      maneuver.travel_mode() == TravelMode::kPedestrian) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
     if (node->HasBssInfo()) {
       auto bss_info = node->GetBssInfo();
@@ -1395,8 +1394,8 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
-      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) &&
-      maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) {
+      (prev_edge->travel_mode() == TravelMode::kPedestrian) &&
+      maneuver.travel_mode() == TravelMode::kBicycle) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
     if (node->HasBssInfo()) {
       auto bss_info = node->GetBssInfo();
@@ -1465,8 +1464,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   auto curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
 
   // Process the different transit types
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kTransit) {
-    if (prev_edge && prev_edge->travel_mode() == TripLeg_TravelMode_kTransit) {
+  if (maneuver.travel_mode() == TravelMode::kTransit) {
+    if (prev_edge && prev_edge->travel_mode() == TravelMode::kTransit) {
       // Process transit remain on
       if ((maneuver.transit_info().block_id != 0) &&
           (maneuver.transit_info().block_id == prev_edge->transit_route_info().block_id()) &&
@@ -1488,7 +1487,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   }
   // Process post transit connection destination
   else if (prev_edge && prev_edge->IsTransitConnectionUse() &&
-           (maneuver.travel_mode() != TripLeg_TravelMode_kTransit)) {
+           (maneuver.travel_mode() != TravelMode::kTransit)) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination);
     LOG_TRACE("ManeuverType=POST_TRANSIT_CONNECTION_DESTINATION");
   }
@@ -1941,16 +1940,16 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   }
   /////////////////////////////////////////////////////////////////////////////
   // Process transit
-  if ((maneuver.travel_mode() == TripLeg_TravelMode_kTransit) &&
-      (prev_edge->travel_mode() != TripLeg_TravelMode_kTransit)) {
+  if ((maneuver.travel_mode() == TravelMode::kTransit) &&
+      (prev_edge->travel_mode() != TravelMode::kTransit)) {
     return false;
   }
-  if ((prev_edge->travel_mode() == TripLeg_TravelMode_kTransit) &&
-      (maneuver.travel_mode() != TripLeg_TravelMode_kTransit)) {
+  if ((prev_edge->travel_mode() == TravelMode::kTransit) &&
+      (maneuver.travel_mode() != TravelMode::kTransit)) {
     return false;
   }
-  if ((maneuver.travel_mode() == TripLeg_TravelMode_kTransit) &&
-      (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit)) {
+  if ((maneuver.travel_mode() == TravelMode::kTransit) &&
+      (prev_edge->travel_mode() == TravelMode::kTransit)) {
 
     // Both block id and trip id must be the same so we can combine...
     if ((maneuver.transit_info().block_id == prev_edge->transit_route_info().block_id()) &&
@@ -2474,8 +2473,8 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
   };
   auto node = trip_path_->GetEnhancedNode(node_index);
   uint32_t path_turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
-  bool is_pedestrian_travel_mode = ((prev_edge->travel_mode() == TripLeg_TravelMode_kPedestrian) &&
-                                    (curr_edge->travel_mode() == TripLeg_TravelMode_kPedestrian));
+  bool is_pedestrian_travel_mode = ((prev_edge->travel_mode() == TravelMode::kPedestrian) &&
+                                    (curr_edge->travel_mode() == TravelMode::kPedestrian));
 
   // Must be pedestrian travel mode
   // and the path turn degree is relative straight
@@ -2783,11 +2782,11 @@ void ManeuversBuilder::UpdateInternalTurnCount(Maneuver& maneuver, int node_inde
   }
 }
 
-float ManeuversBuilder::GetSpeed(TripLeg_TravelMode travel_mode, float edge_speed) const {
+float ManeuversBuilder::GetSpeed(TravelMode travel_mode, float edge_speed) const {
   // TODO use pedestrian and bicycle speeds from costing options?
-  if (travel_mode == TripLeg_TravelMode_kPedestrian) {
+  if (travel_mode == TravelMode::kPedestrian) {
     return 5.1f;
-  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
+  } else if (travel_mode == TravelMode::kBicycle) {
     return 20.0f;
   } else {
     return edge_speed;
@@ -2968,8 +2967,8 @@ bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuver
   return false;
 }
 
-bool ManeuversBuilder::AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const {
-  if ((travel_mode == TripLeg_TravelMode_kDrive) || (travel_mode == TripLeg_TravelMode_kBicycle)) {
+bool ManeuversBuilder::AreRoundaboutsProcessable(const TravelMode travel_mode) const {
+  if ((travel_mode == TravelMode::kDrive) || (travel_mode == TravelMode::kBicycle)) {
     return true;
   }
   return false;
@@ -3315,7 +3314,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
   while (curr_man != maneuvers.end()) {
 
     // Only process driving maneuvers
-    if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+    if (curr_man->travel_mode() == TravelMode::kDrive) {
 
       // Walk maneuvers by node (prev_edge of node has the turn lane info)
       // Assign turn lane at transition point
@@ -3399,7 +3398,7 @@ void ManeuversBuilder::ProcessGuidanceViews(std::list<Maneuver>& maneuvers) {
   for (Maneuver& maneuver : maneuvers) {
 
     // Only process driving maneuvers
-    if (maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+    if (maneuver.travel_mode() == TravelMode::kDrive) {
       auto prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
       if (prev_edge && (prev_edge->has_sign())) {
         // Process base guidance view junctions

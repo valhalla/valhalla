@@ -448,12 +448,13 @@ TEST_F(RouteWithTraffic, PredictedTrafficChangesOverTime) {
       {"2021-11-08T12:00", 28759},
       {"2021-11-08T18:00", 22948},
   };
-  for (const auto& [date_time, eta] : time_to_eta) {
+  for (const auto& date_time_eta : time_to_eta) {
     for (bool prioritize_bidirectional : {true, false}) {
-      auto result = gurka::do_action(valhalla::Options::route, map,
-                                     make_route_request(map, "A", "D", speeds,
-                                                        prioritize_bidirectional, 1, date_time));
-      gurka::assert::raw::expect_eta(result, eta, 1);
+      auto result =
+          gurka::do_action(valhalla::Options::route, map,
+                           make_route_request(map, "A", "D", speeds, prioritize_bidirectional, 1,
+                                              date_time_eta.first));
+      gurka::assert::raw::expect_eta(result, date_time_eta.second, 1);
     }
   }
 }
@@ -493,10 +494,11 @@ TEST_F(RouteWithTraffic, ConstrainedAndFreeflowTraffic) {
       {"2021-11-08T17:00", 12060}, // mixed, 2 constrained (day), 1 freeflow (night)
   };
 
-  for (const auto& [date_time, eta] : time_to_eta_with_recosting) {
-    auto result = gurka::do_action(valhalla::Options::route, map,
-                                   make_route_request(map, "A", "D", speeds, true, 1, date_time));
-    gurka::assert::raw::expect_eta(result, eta, 1);
+  for (const auto& date_time_eta : time_to_eta_with_recosting) {
+    auto result =
+        gurka::do_action(valhalla::Options::route, map,
+                         make_route_request(map, "A", "D", speeds, true, 1, date_time_eta.first));
+    gurka::assert::raw::expect_eta(result, date_time_eta.second, 1);
   }
 
   std::vector<std::pair<std::string, int>> time_to_eta_invariant{
@@ -504,10 +506,11 @@ TEST_F(RouteWithTraffic, ConstrainedAndFreeflowTraffic) {
       {"2021-11-08T18:30", 15300}, // no recosting -> constrained everywhere
       {"2021-11-08T17:00", 15300}, // no recosting -> constrained everywhere
   };
-  for (const auto& [date_time, eta] : time_to_eta_invariant) {
-    auto result = gurka::do_action(valhalla::Options::route, map,
-                                   make_route_request(map, "A", "D", speeds, true, 3, date_time));
-    gurka::assert::raw::expect_eta(result, eta, 1);
+  for (const auto& date_time_eta : time_to_eta_invariant) {
+    auto result =
+        gurka::do_action(valhalla::Options::route, map,
+                         make_route_request(map, "A", "D", speeds, true, 3, date_time_eta.first));
+    gurka::assert::raw::expect_eta(result, date_time_eta.second, 1);
   }
 }
 

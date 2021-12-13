@@ -70,7 +70,7 @@ Isochrone::Isochrone(const boost::property_tree::ptree& config)
 // the travel mode.
 void Isochrone::ConstructIsoTile(const bool multimodal,
                                  const valhalla::Api& api,
-                                 const sif::TravelMode mode) {
+                                 const sif::travel_mode_t mode) {
 
   // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
   // Cost (including penalties) is used when adding to the adjacency list but the elapsed
@@ -98,9 +98,9 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   float max_distance;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kPedestrian) {
+  } else if (mode == travel_mode_t::kPedestrian) {
     max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kBicycle) {
+  } else if (mode == travel_mode_t::kBicycle) {
     max_distance = max_seconds_ * 20.0f * kMPHtoMetersPerSec;
   } else {
     // A driving mode
@@ -185,7 +185,7 @@ std::shared_ptr<const GriddedData<2>> Isochrone::Expand(const ExpansionType& exp
                                                         Api& api,
                                                         GraphReader& reader,
                                                         const sif::mode_costing_t& mode_costing,
-                                                        const TravelMode mode) {
+                                                        const travel_mode_t mode) {
   // Initialize and create the isotile
   ConstructIsoTile(expansion_type == ExpansionType::multimodal, api, mode);
   // Compute the expansion
