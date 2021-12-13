@@ -64,6 +64,18 @@ public:
               const sif::mode_costing_t& costings,
               const sif::TravelMode mode);
 
+  /**
+   * Sets the functor which will track the Dijkstra expansion.
+   *
+   * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
+   *                             on a given edge
+   */
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
+  }
+
 protected:
   /**
    * Compute the best first graph traversal from a list of origin locations
@@ -142,6 +154,9 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  // for tracking the expansion of the Dijkstra
+  expansion_callback_t expansion_callback_;
 
   // when expanding should we treat each location as its own individual path to track concurrently but
   // separately from the other paths

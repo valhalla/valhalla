@@ -180,6 +180,14 @@ message Options {
     repeated LatLng coords = 1;
   }
 
+  enum ExpansionProperties {
+    costs = 0;
+    durations = 1;
+    distances = 2;
+    statuses = 3;
+    edge_ids = 4;
+  }
+
   optional Units units = 1;                                               // kilometers or miles
   optional string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
   optional DirectionsType directions_type = 3;                            // Enable/disable narrative production [default = instructions]
@@ -228,4 +236,7 @@ message Options {
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   optional bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
+  optional Action expansion_action = 49;                                  // Meta action for /expansion endpoint
+  optional bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
+  repeated ExpansionProperties expansion_properties = 51;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
 }

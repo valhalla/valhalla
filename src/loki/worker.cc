@@ -290,7 +290,6 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     // do request specific processing
     switch (options.action()) {
       case Options::route:
-      case Options::expansion:
       case Options::centroid:
         route(request);
         result.messages.emplace_back(request.SerializeAsString());
@@ -320,6 +319,14 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::status:
         status(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        break;
+      case Options::expansion:
+        if (options.expansion_action() == Options::route) {
+          route(request);
+        } else {
+          isochrones(request);
+        }
         result.messages.emplace_back(request.SerializeAsString());
         break;
       default:

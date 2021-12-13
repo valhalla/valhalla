@@ -490,20 +490,30 @@ TEST(LokiService, test_actions_whitelist) {
   for (auto action = Options::Action_MIN; action < Options::Action_ARRAYSIZE;
        action = static_cast<Options::Action>(static_cast<int>(action) + 1)) {
 
+    // expansion needs a body with an "action" member or parsing will fail
+    auto get_endpoint = [](Options::Action action) {
+      auto endpoint = Options_Action_Enum_Name(action);
+      if (action == Options_Action_expansion) {
+        endpoint += R"(?json={"action": "isochrone"})";
+      }
+      return "/" + endpoint;
+    };
+
     auto wrong_action = static_cast<Options::Action>(static_cast<int>(action) +
                                                      (action == Options::Action_MAX ? -1 : 1));
     auto cfg = make_config({Options_Action_Enum_Name(wrong_action)});
     loki::loki_worker_t worker(cfg);
-    http_request_t request(method_t::GET, "/" + Options_Action_Enum_Name(action));
+    http_request_t request(method_t::GET, get_endpoint(action));
     auto req_str = request.to_string();
     auto msg = zmq::message_t{reinterpret_cast<void*>(&req_str.front()), req_str.size(),
                               [](void*, void*) {}};
     auto result = worker.work({msg}, reinterpret_cast<void*>(&info), []() {});
 
     // failed to find that action in the whitelist
+    auto front = result.messages.front();
     EXPECT_TRUE(result.messages.front().find("Try any") != std::string::npos);
 
-    http_request_t request1(method_t::GET, "/" + Options_Action_Enum_Name(wrong_action));
+    http_request_t request1(method_t::GET, get_endpoint(wrong_action));
     req_str = request1.to_string();
     msg = zmq::message_t{reinterpret_cast<void*>(&req_str.front()), req_str.size(),
                          [](void*, void*) {}};

@@ -122,6 +122,17 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
+bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action> actions{{"route", Options::route},
+                                                                        {"isochrone",
+                                                                         Options::isochrone}};
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
@@ -346,6 +357,21 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   if (i == types.cend())
     return false;
   *rc = i->second;
+  return true;
+}
+
+bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
+                                            Options::ExpansionProperties* a) {
+  static const std::unordered_map<std::string, Options::ExpansionProperties>
+      actions{{"costs", Options_ExpansionProperties_costs},
+              {"durations", Options_ExpansionProperties_durations},
+              {"distances", Options_ExpansionProperties_distances},
+              {"statuses", Options_ExpansionProperties_statuses},
+              {"edge_ids", Options::ExpansionProperties::Options_ExpansionProperties_edge_ids}};
+  auto i = actions.find(prop);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
   return true;
 }
 
