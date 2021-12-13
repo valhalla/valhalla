@@ -144,18 +144,9 @@ if (NOT Boost_Found)
     message(FATAL_ERROR "conan needs to be installed for boost, see docs.conan.io/en/latest/installation.html.")
   endif()
 
-  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-    message(STATUS "Valhalla: Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/0.17.0/conan.cmake"
-                  "${CMAKE_BINARY_DIR}/conan.cmake"
-                  EXPECTED_HASH SHA256=3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef
-                  TLS_VERIFY ON)
-  endif()
-
+  # build dir needs to be added, that's where conan writes some info
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-
-  include(${CMAKE_BINARY_DIR}/conan.cmake)
+  include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
 
   conan_cmake_configure(REQUIRES boost/${boost_VERSION}.0
     GENERATORS cmake_find_package
@@ -166,7 +157,7 @@ if (NOT Boost_Found)
                       SETTINGS ${settings}
                       OUTPUT_QUIET)
 
-  find_package(Boost ${boost_VERSION})
+  find_package(Boost ${boost_VERSION} REQUIRED)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 

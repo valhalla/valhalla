@@ -118,6 +118,6 @@ valhalla_module(NAME baldr
     valhalla::midgard
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::headers
+    Boost::boost
     CURL::CURL
     ZLIB::ZLIB)

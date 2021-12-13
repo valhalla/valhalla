@@ -55,6 +55,6 @@ valhalla_module(NAME thor
     valhalla::sif
     valhalla::meili
     ${valhalla_protobuf_targets}
-    Boost::headers
+    Boost::boost
     libprime_server
     robin_hood::robin_hood)

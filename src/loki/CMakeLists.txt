@@ -44,5 +44,5 @@ valhalla_module(NAME loki
     valhalla::sif
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::headers
+    Boost::boost
     libprime_server)
