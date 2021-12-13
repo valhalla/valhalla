@@ -34,6 +34,7 @@
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * ADDED: Add `include_constructions` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
+   * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
