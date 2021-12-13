@@ -56,7 +56,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   cost_threshold_ = 0;
   iterations_threshold_ = 0;
   desired_paths_count_ = 1;
-  mode_ = TravelMode::kDrive;
+  mode_ = travel_mode_t::kDrive;
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
   cost_diff_ = 0.0f;
@@ -489,7 +489,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
-                                const sif::TravelMode mode,
+                                const sif::travel_mode_t mode,
                                 const Options& options) {
   // Set the mode and costing
   mode_ = mode;

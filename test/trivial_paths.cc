@@ -80,7 +80,7 @@ void try_path(GraphReader& reader,
 
   // For now this just tests auto costing - could extend to other
   request.mutable_options()->set_costing(Costing::auto_);
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 

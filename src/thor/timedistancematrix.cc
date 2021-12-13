@@ -28,7 +28,7 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
+    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -36,14 +36,14 @@ TimeDistanceMatrix::TimeDistanceMatrix()
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
   float average_speed_mph;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       average_speed_mph = 10.0f;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       average_speed_mph = 2.0f;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       average_speed_mph = 35.0f;
   }
@@ -153,7 +153,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
+                              const travel_mode_t mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -323,7 +323,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
+                              const travel_mode_t mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -393,7 +393,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::travel_mode_t mode,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
@@ -403,7 +403,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::travel_mode_t mode,
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
