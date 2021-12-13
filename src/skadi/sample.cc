@@ -483,7 +483,6 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
 }
 
 template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
-  std::lock_guard<std::mutex> _(cache_lck);
   auto tile = cache_->source(get_tile_index(coord));
   if (!tile)
     return get_no_data_value();
@@ -539,10 +538,13 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
 
   {
     std::lock_guard<std::shared_timed_mutex> _(st_lck);
-    st_.insert(uri);
-    if (!store(elev, result.bytes_)) {
-      LOG_WARN("Fail to save data loaded from remote server address: " + uri);
-      return get_no_data_value();
+    if (!st_.count(uri)) {
+      // TODO(neyromancer): переиспользовать функционал кэша, можно избавиться от st_.
+      st_.insert(uri);
+      if (!store(elev, result.bytes_)) {
+        LOG_WARN("Fail to save data loaded from remote server address: " + uri);
+        return get_no_data_value();
+      }
     }
   }
 

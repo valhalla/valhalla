@@ -487,14 +487,23 @@ TEST(ElevationBuilder, compare_applied_elevations) {
   ASSERT_TRUE(filesystem::create_directories(tile_dst));
   generate_tiles(tile_dst);
 
+  for (const auto& tile_path : filesystem::get_files(tile_dst))
+    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
+
   const std::string offline_dir{test_tile_dir + "/offline_test_dir/"};
-  ASSERT_TRUE(filesystem::create_directories(offline_dir));
+  ASSERT_TRUE(filesystem::create_directories(offline_dir)) << "Failed to create " << offline_dir;
 
   const std::string online_dir{test_tile_dir + "/online_test_dir/"};
-  ASSERT_TRUE(filesystem::create_directories(online_dir));
+  ASSERT_TRUE(filesystem::create_directories(online_dir)) << "Failed to create " << online_dir;
 
   ASSERT_TRUE(copy(tile_dst, offline_dir)) << "Failed to copy files to " << offline_dir;
+
+  for (const auto& tile_path : filesystem::get_files(offline_dir))
+    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
+
   ASSERT_TRUE(copy(tile_dst, online_dir)) << "Failed to copy files to " << online_dir;
+  for (const auto& tile_path : filesystem::get_files(online_dir))
+    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
 
   std::unordered_map<std::string, std::string> original_filename_hash = caclculate_dirhash(tile_dst);
   std::unordered_map<std::string, std::string> offline_filename_hash =
@@ -504,13 +513,20 @@ TEST(ElevationBuilder, compare_applied_elevations) {
   std::unordered_map<std::string, std::string> online_filename_hash = caclculate_dirhash(online_dir);
   ASSERT_EQ(original_filename_hash, online_filename_hash);
 
+  ASSERT_TRUE(filesystem::create_directories(src_path)) << "Failed to create " << src_path;
+
   build_elevations(offline_dir, src_path);
+  for (const auto& elev_path : filesystem::get_files(src_path))
+    ASSERT_TRUE(filesystem::exists(elev_path) && filesystem::is_regular_file(elev_path));
+
   apply_elevations(offline_dir, src_path);
   auto offline_filename_hash_with_elevations = caclculate_dirhash(offline_dir);
   ASSERT_NE(offline_filename_hash_with_elevations, offline_filename_hash);
 
   auto url{"127.0.0.1:38004/route-tile/v1/{tilePath}?version=%version&access_token=%token"};
   auto elev_storage_dir{"test/data/elevation_dst/"};
+  ASSERT_TRUE(filesystem::create_directories(elev_storage_dir)) << "Failed to create " << src_path;
+
   apply_elevations(online_dir, elev_storage_dir, url, elevation_local_src);
   auto online_filename_hash_with_elevations = caclculate_dirhash(online_dir);
   ASSERT_NE(online_filename_hash_with_elevations, online_filename_hash);
