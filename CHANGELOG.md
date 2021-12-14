@@ -34,9 +34,9 @@
    * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3438](https://github.com/valhalla/valhalla/pull/3438)
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
-   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
+   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
