@@ -1,0 +1,8 @@
+[requires]
+boost/1.71.0
+
+[generators]
+cmake_find_package
+
+[options]
+boost:header_only=True

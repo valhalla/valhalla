@@ -133,32 +133,28 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-# try to find an installed boost
+# try to find an installed boost or install locally with conan
 set(boost_VERSION "1.71")
 find_package(Boost ${boost_VERSION} QUIET)
-if (NOT Boost_Found)
+if (NOT Boost_FOUND)
   # bail if there's no conan installed
   message(STATUS "No compatible boost version detected, using conan...")
   find_program(conan_FOUND conan)
   if (NOT conan_FOUND)
-    message(FATAL_ERROR "conan needs to be installed for boost, see docs.conan.io/en/latest/installation.html.")
+    message(FATAL_ERROR "conan needs to be installed for boost, see https://docs.conan.io/en/latest/installation.html.")
   endif()
 
   # build dir needs to be added, that's where conan writes some info
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
   include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
 
-  conan_cmake_configure(REQUIRES boost/${boost_VERSION}.0
-    GENERATORS cmake_find_package
-    OPTIONS boost:header_only=True)
   conan_cmake_autodetect(settings)
   conan_cmake_install(PATH_OR_REFERENCE .
                       REMOTE conancenter
                       SETTINGS ${settings}
                       OUTPUT_QUIET)
-
-  find_package(Boost ${boost_VERSION} REQUIRED)
 endif()
+find_package(Boost ${boost_VERSION} REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 if(NOT TARGET CURL::CURL)
