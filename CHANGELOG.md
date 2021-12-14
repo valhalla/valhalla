@@ -36,6 +36,7 @@
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
+   * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
