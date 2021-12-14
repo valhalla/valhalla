@@ -1,12 +1,3 @@
-boost-algorithm
-boost-config
-boost-core
-boost-heap
-boost-lexical-cast
-boost-property-tree
-boost-variant
-boost-geometry
-boost-program-options
 curl
 protobuf
 zlib

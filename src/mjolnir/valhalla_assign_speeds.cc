@@ -4,7 +4,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
 
-#include <boost/program_options.hpp>
+#include <cxxopts.hpp>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
@@ -14,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -76,42 +76,41 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
-  bpo::options_description options("valhalla_assign_speeds " VALHALLA_VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_assign_speeds [options]\n"
-                                   "\n"
-                                   "Modifies default speeds based on provided configuration."
-                                   "\n"
-                                   "\n");
-
+  // args
   std::string config_file_path;
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", bpo::value<std::string>(&config_file_path), "Path to the json configuration file.");
 
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_assign_speeds",
+      "valhalla_assign_speeds " VALHALLA_VERSION "\n\n"
+      "Modifies default speeds based on provided configuration.\n");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>(config_file_path));
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("version")) {
+      std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (!result.count("config")) {
+      std::cout << "You must provide a config for loading and modifying tiles.\n";
+      return EXIT_FAILURE;
+    }
+  } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_assign_speeds " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (!vm.count("config")) {
-    std::cout << "You must provide a config for loading and modifying tiles.\n";
-    return EXIT_FAILURE;
   }
 
   // configure logging
