@@ -42,7 +42,6 @@
 #include <geos/util/GEOSException.h>
 
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 using namespace geos::geom;
@@ -54,7 +53,6 @@ using namespace geos::operation::linemerge;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
-namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
 namespace {

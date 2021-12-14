@@ -135,7 +135,7 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   if (!filesystem::exists(transit_tile.parent_path())) {
     filesystem::create_directories(transit_tile.parent_path());
   }
-  auto size = tile.ByteSize();
+  auto size = tile.ByteSizeLong();
   valhalla::midgard::mem_map<char> buffer;
   buffer.create(transit_tile.string(), size);
   if (!tile.SerializeToArray(buffer.get(), size)) {

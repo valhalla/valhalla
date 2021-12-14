@@ -10,8 +10,8 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: pip3 install requests shapely
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: pip3 install requests shapely conan
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
 
 jobs:
@@ -58,8 +58,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-{{ .Branch }}
-            - ccache-debug-linux-x86_64
+            - ccache-debug-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -78,9 +78,10 @@ jobs:
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
@@ -104,8 +105,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-{{ .Branch }}
-            - ccache-release-linux-x86_64
+            - ccache-release-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -119,9 +120,10 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
       - run: make -C build install
       - run: make -C build package
 
@@ -139,8 +141,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-macos-{{ .Branch }}
-            - ccache-release-macos
+            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: mkdir -p build
       - run: cd build && cmake ..
       - run: make -C build -j4
@@ -150,9 +152,10 @@ jobs:
       - run: make -C build -j2 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
 
 workflows:
   version: 2

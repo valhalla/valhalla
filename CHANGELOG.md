@@ -38,6 +38,7 @@
    * CHANGED: Removed all protobuf defaults either by doing them in code or by relying on 0 initialization. Also deprecated best_paths and do_not_track [#3454](https://github.com/valhalla/valhalla/pull/3454)
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
    * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
+   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
