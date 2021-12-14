@@ -79,18 +79,19 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   auto max_time_itr =
       std::max_element(api.options().contours().begin(), api.options().contours().end(),
                        [](const auto& a, const auto& b) {
-                         return (!a.has_time() && b.has_time()) ||
-                                (a.has_time() && b.has_time() && a.time() < b.time());
+                         return (!a.has_time_case() && b.has_time_case()) ||
+                                (a.has_time_case() && b.has_time_case() && a.time() < b.time());
                        });
-  bool has_time = max_time_itr->has_time();
+  bool has_time = max_time_itr->has_time_case();
   auto max_minutes = has_time ? max_time_itr->time() + 10.0f : std::numeric_limits<float>::min();
   auto max_dist_itr =
       std::max_element(api.options().contours().begin(), api.options().contours().end(),
                        [](const auto& a, const auto& b) {
-                         return (!a.has_distance() && b.has_distance()) ||
-                                (a.has_distance() && b.has_distance() && a.distance() < b.distance());
+                         return (!a.has_distance_case() && b.has_distance_case()) ||
+                                (a.has_distance_case() && b.has_distance_case() &&
+                                 a.distance() < b.distance());
                        });
-  bool has_distance = max_dist_itr->has_distance();
+  bool has_distance = max_dist_itr->has_distance_case();
   auto max_km = has_distance ? max_dist_itr->distance() + 10.0f : std::numeric_limits<float>::min();
 
   max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;

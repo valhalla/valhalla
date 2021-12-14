@@ -342,7 +342,7 @@ TransitCost::TransitCost(const CostingOptions& costing_options)
   transfer_penalty_ = costing_options.transfer_penalty();
 
   // Process stop filters
-  if (costing_options.has_filter_stop_action()) {
+  if (costing_options.has_filter_stop_action_case()) {
     auto stop_action = costing_options.filter_stop_action();
     for (const auto& id : costing_options.filter_stop_ids()) {
       if (stop_action == FilterAction::exclude) {
@@ -354,7 +354,7 @@ TransitCost::TransitCost(const CostingOptions& costing_options)
   }
 
   // Process operator filters
-  if (costing_options.has_filter_operator_action()) {
+  if (costing_options.has_filter_operator_action_case()) {
     auto operator_action = costing_options.filter_operator_action();
     for (const auto& id : costing_options.filter_operator_ids()) {
       if (operator_action == FilterAction::exclude) {
@@ -366,7 +366,7 @@ TransitCost::TransitCost(const CostingOptions& costing_options)
   }
 
   // Process route filters
-  if (costing_options.has_filter_route_action()) {
+  if (costing_options.has_filter_route_action_case()) {
     auto route_action = costing_options.filter_route_action();
     for (const auto& id : costing_options.filter_route_ids()) {
       if (route_action == FilterAction::exclude) {

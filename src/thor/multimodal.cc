@@ -119,7 +119,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   max_transfer_distance_ = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin.has_date_time()) {
+  if (!origin.has_date_time_case()) {
     return {};
   };
 
@@ -642,7 +642,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && origin.has_date_time_case() && origin.date_time() == "current") {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }

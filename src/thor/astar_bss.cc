@@ -473,7 +473,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && origin.has_date_time_case() && origin.date_time() == "current") {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }

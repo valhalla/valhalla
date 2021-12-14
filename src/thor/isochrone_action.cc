@@ -19,16 +19,16 @@ std::string thor_worker_t::isochrones(Api& request) {
   // name of the metric (time/distance, value, color)
   std::vector<GriddedData<2>::contour_interval_t> contours;
   for (const auto& contour : options.contours()) {
-    if (contour.has_time()) {
+    if (contour.has_time_case()) {
       contours.emplace_back(0, contour.time(), "time", contour.color());
     }
-    if (contour.has_distance()) {
+    if (contour.has_distance_case()) {
       contours.emplace_back(1, contour.distance(), "distance", contour.color());
     }
   }
 
   // If no generalization is requested an optimal factor is computed (based on the isotile grid size).
-  if (!options.has_generalize()) {
+  if (!options.has_generalize_case()) {
     options.set_generalize(kOptimalGeneralization);
   }
 
