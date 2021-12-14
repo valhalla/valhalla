@@ -56,8 +56,6 @@ protected:
                                               costing, shortest_options);
     float shortest_l = getLength(shortest);
 
-    std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;
-
     gurka::assert::raw::expect_path(fastest, fastest_path);
     gurka::assert::raw::expect_path(shortest, {"ABDE", "ABDE", "ABDE"});
     ASSERT_GT(fastest_l, shortest_l);

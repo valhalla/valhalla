@@ -13,6 +13,7 @@
    * FIXED: workaround python's ArgumentParser bug to not accept negative numbers as arguments [#3443](https://github.com/valhalla/valhalla/pull/3443)
    * FIXED: Undefined behaviour on some platforms due to unaligned reads [#3447](https://github.com/valhalla/valhalla/pull/3447)
    * FIXED: Fixed undefined behavior due to invalid shift exponent when getting edge's heading [#3450](https://github.com/valhalla/valhalla/pull/3450)
+   * FIXED: Use midgard::unaligned_read in GraphTileBuilder::AddSigns [#3456](https://github.com/valhalla/valhalla/pull/3456)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -34,6 +35,8 @@
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
+   * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

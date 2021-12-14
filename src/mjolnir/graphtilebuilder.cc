@@ -511,7 +511,8 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
           std::string updated_pronunciation;
 
           while (pos < strlen(p)) {
-            linguistic_text_header_t header = *reinterpret_cast<linguistic_text_header_t*>(p + pos);
+            linguistic_text_header_t header =
+                midgard::unaligned_read<linguistic_text_header_t>(p + pos);
             pos += 3;
             header.name_index_ = i;
             updated_pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +

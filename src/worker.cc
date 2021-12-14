@@ -58,6 +58,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {112, {112, "Insufficiently specified required parameter 'locations' or 'sources & targets'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "matrix_locations_parse_failed"}},
     {113, {113, "Insufficiently specified required parameter 'contours'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "contours_parse_failed"}},
     {114, {114, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
+    {115, {115, "Insufficiently specified required parameter 'action'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "action_parse_failed"}},
     {120, {120, "Insufficient number of locations provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_locations"}},
     {121, {121, "Insufficient number of sources provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_sources"}},
     {122, {122, "Insufficient number of targets provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "not_enough_targets"}},
@@ -78,6 +79,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {141, {141, "Arrive by for multimodal not implemented yet", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_multimodal"}},
     {142, {142, "Arrive by not implemented for isochrones", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_isochrones"}},
     {143, {143, "ignore_closures in costing and exclude_closures in search_filter cannot both be specified", 400, HTTP_400, OSRM_INVALID_VALUE, "closures_conflict"}},
+    {144, {144, "Action does not support expansion", 400, HTTP_400, OSRM_INVALID_VALUE, "no_action_for_expansion"}},
     {150, {150, "Exceeded max locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_locations"}},
     {151, {151, "Exceeded max time", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_time"}},
     {152, {152, "Exceeded max contours", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_contours"}},
@@ -95,6 +97,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {164, {164, "Invalid shape format", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_shape_format"}},
     {165, {165, "Date and time required for destination for date_type of invariant", 400, HTTP_400, OSRM_INVALID_OPTIONS, "missing_invariant_date"}},
     {167, {167, "Exceeded maximum circumference for exclude_polygons", 400, HTTP_400, OSRM_PERIMETER_EXCEEDED, "too_large_polygon"}},
+    {168, {168, "Invalid expansion property type", 400, HTTP_400, OSRM_INVALID_OPTIONS, "invalid_expansion_property"}},
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
@@ -717,8 +720,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // Option to use timestamps when computing elapsed time for matched routes
-  options.set_use_timestamps(
-      rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
+  options.set_use_timestamps(rapidjson::get<bool>(doc, "/use_timestamps", false));
 
   // Option to prioritize bidirectional a* over timedependent forward when depart_at is set.
   options.set_prioritize_bidirectional(
@@ -740,7 +742,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // TODO: remove this?
-  options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
+  options.set_do_not_track(rapidjson::get<bool>(doc, "/healthcheck", false));
 
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
@@ -822,14 +824,41 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_resample_distance(*resample_distance);
   }
 
+  // expansion action
+  auto exp_action_str = rapidjson::get_optional<std::string>(doc, "/action");
+  Options::Action exp_action;
+  if (exp_action_str) {
+    if (!Options_ExpansionAction_Enum_Parse(*exp_action_str, &exp_action)) {
+      throw valhalla_exception_t(144, *exp_action_str);
+    }
+    options.set_expansion_action(exp_action);
+  } else if (options.action() == Options_Action_expansion) {
+    throw valhalla_exception_t(115, std::string("action"));
+  }
+
+  // expansion response properties
+  auto exp_props_req = rapidjson::get_child_optional(doc, "/expansion_properties");
+  auto* exp_props_pbf = options.mutable_expansion_properties();
+  Options::ExpansionProperties exp_prop;
+  if (exp_props_req && exp_props_req->IsArray()) {
+    for (const auto& prop : exp_props_req->GetArray()) {
+      if (!valhalla::Options_ExpansionProperties_Enum_Parse(std::string(prop.GetString()),
+                                                            &exp_prop)) {
+        throw valhalla_exception_t(168, std::string(prop.GetString()));
+      }
+      exp_props_pbf->Add(exp_prop);
+    }
+  }
+
+  // should the expansion track opposites?
+  bool skip_opps = rapidjson::get<bool>(doc, "/skip_opposites", false);
+  options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", false));
+
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 
   // if specified, get the polygons boolean in there
-  auto polygons = rapidjson::get_optional<bool>(doc, "/polygons");
-  if (polygons) {
-    options.set_polygons(*polygons);
-  }
+  options.set_polygons(rapidjson::get<bool>(doc, "/polygons", false));
 
   // if specified, get the denoise in there
   auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
@@ -844,10 +873,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // if specified, get the show_locations boolean in there
-  auto show_locations = rapidjson::get_optional<bool>(doc, "/show_locations");
-  if (show_locations) {
-    options.set_show_locations(*show_locations);
-  }
+  options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", false));
 
   // if specified, get the shape_match in there
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
@@ -926,10 +952,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_alternates(0);
 
   // whether to return guidance_views, default false
-  auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
-  if (guidance_views) {
-    options.set_guidance_views(*guidance_views);
-  }
+  options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", false));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
