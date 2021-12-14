@@ -135,8 +135,8 @@ find_package(ZLIB REQUIRED)
 
 # try to find an installed boost or install locally with conan
 set(boost_VERSION "1.71")
-find_package(Boost ${boost_VERSION} QUIET)
-if (NOT Boost_FOUND)
+# find_package(Boost ${boost_VERSION} QUIET)
+# if (NOT Boost_FOUND)
   # bail if there's no conan installed
   message(STATUS "No compatible boost version detected, using conan...")
   find_program(conan_FOUND conan)
@@ -150,11 +150,11 @@ if (NOT Boost_FOUND)
   include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
 
   conan_cmake_autodetect(settings)
-  conan_cmake_install(PATH_OR_REFERENCE {VALHALLA_SOURCE_DIR}/conanfile.txt
+  conan_cmake_install(PATH_OR_REFERENCE ${VALHALLA_SOURCE_DIR}/conanfile.txt
                       REMOTE conancenter
                       SETTINGS ${settings}
                       OUTPUT_QUIET)
-endif()
+# endif()
 find_package(Boost ${boost_VERSION} REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
