@@ -35,6 +35,7 @@
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
+   * CHANGED: Removed all protobuf defaults either by doing them in code or by relying on 0 initialization. Also deprecated best_paths and do_not_track [#3454](https://github.com/valhalla/valhalla/pull/3454)
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4

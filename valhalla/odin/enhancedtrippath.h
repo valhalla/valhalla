@@ -246,7 +246,7 @@ public:
   }
 
   bool drive_on_right() const {
-    return mutable_edge_->drive_on_right();
+    return !mutable_edge_->drive_on_left();
   }
 
   ::valhalla::TripLeg_Surface surface() const {
