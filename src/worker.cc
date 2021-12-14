@@ -221,7 +221,7 @@ void parse_locations(const rapidjson::Document& doc,
   }
 
   bool had_date_time = false;
-  bool exclude_closures_disabled = false;
+  bool filter_closures = true;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -333,14 +333,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (accuracy) {
           location->set_accuracy(*accuracy);
         }
-        auto time = rapidjson::get_optional<unsigned int>(r_loc, "/time");
-        if (time) {
-          location->set_time(*time);
-        }
-        auto rank_candidates = rapidjson::get_optional<bool>(r_loc, "/rank_candidates");
-        if (rank_candidates) {
-          location->set_rank_candidates(*rank_candidates);
-        }
+        auto time = rapidjson::get<double>(r_loc, "/time", -1);
+        location->set_time(time);
+        auto rank_candidates = rapidjson::get<bool>(r_loc, "/rank_candidates", true);
+        location->set_skip_ranking_candidates(!rank_candidates);
         auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
         valhalla::Location::PreferredSide side;
         if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
@@ -368,20 +364,21 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_street_side_max_distance(*street_side_max_distance);
         }
 
+        boost::optional<bool> exclude_closures;
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
           // search_filter.min_road_class
           auto min_road_class =
-              rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
+              rapidjson::get<std::string>(*search_filter, "/min_road_class", "service_other");
           valhalla::RoadClass min_rc;
-          if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
+          if (RoadClass_Enum_Parse(min_road_class, &min_rc)) {
             location->mutable_search_filter()->set_min_road_class(min_rc);
           }
           // search_filter.max_road_class
           auto max_road_class =
-              rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
+              rapidjson::get<std::string>(*search_filter, "/max_road_class", "motorway");
           valhalla::RoadClass max_rc;
-          if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
+          if (RoadClass_Enum_Parse(max_road_class, &max_rc)) {
             location->mutable_search_filter()->set_max_road_class(max_rc);
           }
           // search_filter.exclude_tunnel
@@ -393,13 +390,10 @@ void parse_locations(const rapidjson::Document& doc,
           // search_filter.exclude_ramp
           location->mutable_search_filter()->set_exclude_ramp(
               rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
+          // search_filter.exclude_closures
+          exclude_closures = rapidjson::get<bool>(*search_filter, "/exclude_closures", true);
         }
 
-        // search_filter.exclude_closures must always be set because ignore_closures overrides it
-        // so if only ignore_closures is set we still need to set the search filter
-        auto exclude_closures =
-            search_filter ? rapidjson::get_optional<bool>(*search_filter, "/exclude_closures")
-                          : boost::none;
         // bail if you specified both of these, too confusing to work out how to use both at once
         if (ignore_closures && exclude_closures) {
           throw valhalla_exception_t{143};
@@ -407,11 +401,17 @@ void parse_locations(const rapidjson::Document& doc,
         // do we actually want to filter closures on THIS location
         // NOTE: that ignore_closures takes precedence
         location->mutable_search_filter()->set_exclude_closures(
-            ignore_closures ? !(*ignore_closures) : exclude_closures ? *exclude_closures : true);
+            ignore_closures ? !(*ignore_closures) : (exclude_closures ? *exclude_closures : true));
+        if (!location->search_filter().has_min_road_class()) {
+          location->mutable_search_filter()->set_min_road_class(valhalla::kServiceOther);
+        }
+        if (!location->search_filter().has_max_road_class()) {
+          location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
+        }
         // set exclude_closures_disabled if any of the locations has the
         // search_filter.exclude_closures set as false
         if (!location->search_filter().exclude_closures()) {
-          exclude_closures_disabled = true;
+          filter_closures = false;
         }
       }
       // Forward valhalla_exception_t types as-is, since they contain a more
@@ -435,11 +435,9 @@ void parse_locations(const rapidjson::Document& doc,
     // If any of the locations had search_filter.exclude_closures set to false,
     // we tell the costing to let all closed roads through, so that we can do
     // a secondary per-location filtering using loki's search_filter
-    // functionality
-    if (exclude_closures_disabled) {
-      for (auto& costing : *options.mutable_costing_options()) {
-        costing.set_filter_closures(false);
-      }
+    // functionality. Otherwise we default to skipping closed roads
+    for (auto& costing : *options.mutable_costing_options()) {
+      costing.set_filter_closures(filter_closures);
     }
   }
 }
@@ -519,6 +517,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  options.set_language("en-US");
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
   if (language && odin::get_locales().find(*language) != odin::get_locales().end()) {
     options.set_language(*language);
@@ -671,6 +670,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
       sll->mutable_ll()->set_lng(ll.lng());
       // set type to via by default
       sll->set_type(valhalla::Location::kVia);
+      sll->set_time(-1);
     }
     // first and last always get type break
     if (options.shape_size()) {
@@ -740,9 +740,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
       throw valhalla_exception_t{159};
     }
   }
-
-  // TODO: remove this?
-  options.set_do_not_track(rapidjson::get<bool>(doc, "/healthcheck", false));
 
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
@@ -861,10 +858,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   options.set_polygons(rapidjson::get<bool>(doc, "/polygons", false));
 
   // if specified, get the denoise in there
-  auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
-  if (denoise) {
-    options.set_denoise(std::max(std::min(*denoise, 1.f), 0.f));
-  }
+  auto denoise = rapidjson::get<float>(doc, "/denoise", 1.0);
+  options.set_denoise(std::max(std::min(denoise, 1.f), 0.f));
 
   // if specified, get the generalize value in there
   auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
@@ -884,12 +879,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     } else {
       throw valhalla_exception_t{445};
     }
-  }
-
-  // if specified, get the best_paths in there
-  auto best_paths = rapidjson::get_optional<uint32_t>(doc, "/best_paths");
-  if (best_paths) {
-    options.set_best_paths(*best_paths);
   }
 
   // if specified, get the trace gps_accuracy value in there
@@ -946,20 +935,20 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  // deprecated best_paths for map matching top k
+  auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
+
   // how many alternates are desired, default to none and if its multi point its also none
-  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", 0));
-  if (options.locations_size() > 2)
+  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", best_paths - 1));
+  if (options.action() != Options::trace_attributes && options.locations_size() > 2)
     options.set_alternates(0);
 
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", false));
 
   // whether to include roundabout_exit maneuvers, default true
-  auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
-  options.set_roundabout_exits(true);
-  if (roundabout_exits) {
-    options.set_roundabout_exits(*roundabout_exits);
-  }
+  auto roundabout_exits = rapidjson::get<bool>(doc, "/roundabout_exits", true);
+  options.set_roundabout_exits(roundabout_exits);
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);

@@ -225,14 +225,6 @@ void thor_worker_t::route(Api& request) {
   } else {
     path_depart_at(request, costing);
   }
-  // log admin areas
-  if (!options.do_not_track()) {
-    for (const auto& route : request.trip().routes()) {
-      for (const auto& leg : route.legs()) {
-        log_admin(leg);
-      }
-    }
-  }
 }
 
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,

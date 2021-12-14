@@ -415,7 +415,8 @@ void test_best_paths_parsing(const uint32_t expected_value,
                              const Options::Action action = Options::isochrone) {
   const std::string key = "best_paths";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_best_paths(), request.options().best_paths());
+  validate(key, expected_value, request.options().has_alternates(),
+           request.options().alternates() + 1);
 }
 
 void test_gps_accuracy_parsing(const float expected_value,
