@@ -453,8 +453,7 @@ void test_filter_action_parsing(const valhalla::FilterAction expected_value,
   const std::string parent_key = "filters";
   const std::string key = "action";
   Api request = get_request(get_request_str(parent_key, key, expected_value), action);
-  validate(key, expected_value, request.options().has_filter_action_case(),
-           request.options().filter_action());
+  validate(key, expected_value, true, request.options().filter_action());
 }
 
 void test_filter_attributes_parsing(const std::vector<std::string>& expected_values,
@@ -1615,8 +1614,7 @@ void test_filter_stop_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options().costing_options(static_cast<int>(costing)).has_filter_stop_action_case(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_stop_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_stop_ids_size() > 0),
@@ -1636,10 +1634,7 @@ void test_filter_route_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options()
-               .costing_options(static_cast<int>(costing))
-               .has_filter_route_action_case(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_route_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_route_ids_size() > 0),
@@ -1659,10 +1654,7 @@ void test_filter_operator_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options()
-               .costing_options(static_cast<int>(costing))
-               .has_filter_operator_action_case(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_operator_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_operator_ids_size() >

@@ -186,9 +186,7 @@ message TripLeg {
     oneof has_surface {
       Surface surface = 18;
     }
-    oneof has_sign {
-      TripSign sign = 19;
-    }
+    TripSign sign = 19;
     oneof has_travel_mode {
       TravelMode travel_mode = 20;
     }
@@ -204,9 +202,7 @@ message TripLeg {
     oneof has_transit_type {
       TransitType transit_type = 24;
     }
-    oneof has_transit_route_info {
-      TransitRouteInfo transit_route_info = 25;
-    }
+    TransitRouteInfo transit_route_info = 25;
     oneof has_id {
       uint64 id = 26;
     }
@@ -258,9 +254,7 @@ message TripLeg {
     oneof has_default_speed {
       float default_speed = 44;       // km/h
     }
-    oneof has_restriction {
-      Restriction restriction = 45;
-    }
+    Restriction restriction = 45;
     oneof has_destination_only {
       bool destination_only = 46;
     }
@@ -277,11 +271,8 @@ message TripLeg {
     oneof has_target_along_edge {
       float target_along_edge = 50;
     }
-
     oneof has_sac_scale {
-  
-    SacScale sac_scale = 51;
-
+      SacScale sac_scale = 51;
     }
     oneof has_shoulder {
       bool shoulder = 52;
@@ -316,9 +307,7 @@ message TripLeg {
     oneof has_lane_count {
       uint32 lane_count = 9;
     }
-    oneof has_sign {
-      TripSign sign = 10;
-    }
+    TripSign sign = 10;
   }
 
   message Cost {
@@ -331,12 +320,8 @@ message TripLeg {
   }
 
   message PathCost {
-    oneof has_elapsed_cost {
-      Cost elapsed_cost = 1;
-    }
-    oneof has_transition_cost {
-      Cost transition_cost = 2;
-    }
+    Cost elapsed_cost = 1;
+    Cost transition_cost = 2;
   }
 
   message Node {
@@ -356,12 +341,7 @@ message TripLeg {
       kTollGantry = 11;             // Toll gantry
       kSumpBuster = 12;             // Sump Buster
     }
-
-    oneof has_edge {
-  
     Edge edge = 1;
-
-    }
     repeated IntersectingEdge intersecting_edge = 2;
     oneof has_admin_index {
       uint32 admin_index = 3;         // index into the admin list
@@ -372,25 +352,15 @@ message TripLeg {
     oneof has_fork {
       bool fork = 5;                  // Fork
     }
-    oneof has_transit_platform_info {
-      TransitPlatformInfo transit_platform_info = 6;
-    }
-    oneof has_transit_station_info {
-      TransitStationInfo transit_station_info = 7;
-    }
-    oneof has_transit_egress_info {
-      TransitEgressInfo transit_egress_info = 10;
-    }
+    TransitPlatformInfo transit_platform_info = 6;
+    TransitStationInfo transit_station_info = 7;
+    TransitEgressInfo transit_egress_info = 10;
     oneof has_time_zone {
       string time_zone = 11;
     }
-    oneof has_cost {
-      PathCost cost = 12;             // how much cost did it take at this node in the path
-    }
+    PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
-    oneof has_bss_info {
-      BikeShareStationInfo bss_info = 14;
-    }
+    BikeShareStationInfo bss_info = 14;
  }
 
   message Admin {
@@ -419,9 +389,7 @@ message TripLeg {
   // we encapsulate the real incident object here so we can add information
   // about where it is along the route, ie once its referenced to the route
   message Incident {
-    oneof has_metadata {
-      valhalla.IncidentsTile.Metadata metadata = 1;
-    }
+    valhalla.IncidentsTile.Metadata metadata = 1;
     // Valhalla additions to incident metadata goes here
     oneof has_begin_shape_index {
       uint32 begin_shape_index = 3;
@@ -441,9 +409,7 @@ message TripLeg {
   };
 
   oneof has_osm_changeset {
-  
-  uint64 osm_changeset = 1;
-
+    uint64 osm_changeset = 1;
   }
   oneof has_trip_id {
     uint64 trip_id = 2;
@@ -460,12 +426,8 @@ message TripLeg {
   oneof has_shape {
     string shape = 8;
   }
-  oneof has_bbox {
-    BoundingBox bbox = 9;
-  }
-  oneof has_shape_attributes {
-    ShapeAttributes shape_attributes = 10;
-  }
+  BoundingBox bbox = 9;
+  ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
   repeated string algorithms = 12;
   repeated Closure closures = 13;

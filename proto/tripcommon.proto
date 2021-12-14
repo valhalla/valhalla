@@ -12,12 +12,8 @@ message LatLng {
 }
 
 message BoundingBox {
-  oneof has_min_ll {
-    LatLng min_ll = 1;
-  }
-  oneof has_max_ll {
-    LatLng max_ll = 2;
-  }
+  LatLng min_ll = 1;
+  LatLng max_ll = 2;
 }
 
 message Location {
@@ -47,9 +43,7 @@ message Location {
     oneof has_percent_along {
       double percent_along = 2;
     }
-    oneof has_ll {
-      LatLng ll = 3;
-    }
+    LatLng ll = 3;
     oneof has_side_of_street {
       SideOfStreet side_of_street = 4;
     }
@@ -101,9 +95,7 @@ message Location {
   }
 
   //inputs
-  oneof has_ll {
-    LatLng ll = 1;
-  }
+  LatLng ll = 1;
   oneof has_type {
     Type type = 2;                                      // [default = kBreak]
   }
@@ -171,9 +163,7 @@ message Location {
   oneof has_original_index {
     uint32 original_index = 24;
   }
-  oneof has_projected_ll {
-    LatLng projected_ll = 25;
-  }
+  LatLng projected_ll = 25;
   oneof has_leg_shape_index {
     uint32 leg_shape_index = 35;
   }
@@ -185,9 +175,7 @@ message Location {
   oneof has_preferred_side {
     PreferredSide preferred_side = 26;            // [default = either]
   }
-  oneof has_display_ll {
-    LatLng display_ll = 27;
-  }
+  LatLng display_ll = 27;
   oneof has_search_cutoff {
     uint32 search_cutoff = 28;
   }
@@ -200,9 +188,7 @@ message Location {
   oneof has_waypoint_index {
     uint32 waypoint_index = 31;
   }
-  oneof has_search_filter {
-    SearchFilter search_filter = 32;
-  }
+  SearchFilter search_filter = 32;
   oneof has_street_side_max_distance {
     uint32 street_side_max_distance = 33;
   }
@@ -218,9 +204,7 @@ message TransitEgressInfo {
   oneof has_name {
     string name = 2;              // The name of the egress
   }
-  oneof has_ll {
-    LatLng ll = 3;                // Latitude, longitude of the egress
-  }
+  LatLng ll = 3;                // Latitude, longitude of the egress
 }
 
 message TransitStationInfo {
@@ -230,9 +214,7 @@ message TransitStationInfo {
   oneof has_name {
     string name = 2;              // The name of the station
   }
-  oneof has_ll {
-    LatLng ll = 3;                // Latitude, longitude of the station
-  }
+  LatLng ll = 3;                // Latitude, longitude of the station
 }
 
 message BikeShareStationInfo {
@@ -266,9 +248,7 @@ message TransitPlatformInfo {
   }
 
   oneof has_type {
-  
-  Type type = 1;                  // The type of stop (station or simple stop)
-
+    Type type = 1;                  // The type of stop (station or simple stop)
   }
   oneof has_onestop_id {
     string onestop_id = 2;          // Unique transitland ID
@@ -285,9 +265,7 @@ message TransitPlatformInfo {
   oneof has_assumed_schedule {
     bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
   }
-  oneof has_ll {
-    LatLng ll = 7;                  // Latitude, longitude of the transit stop
-  }
+  LatLng ll = 7;                  // Latitude, longitude of the transit stop
   oneof has_station_onestop_id {
     string station_onestop_id = 8;  // Unique transitland station ID
   }
@@ -358,9 +336,7 @@ message StreetName {
   oneof has_is_route_number {
     bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
   }
-  oneof has_pronunciation {
-    Pronunciation pronunciation = 3; // The pronunciation associated with this street name
-  }
+  Pronunciation pronunciation = 3; // The pronunciation associated with this street name
 }
 
 message TurnLane {

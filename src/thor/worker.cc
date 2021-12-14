@@ -311,29 +311,27 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
   controller = AttributesController();
   const auto& options = request.options();
 
-  if (options.has_filter_action_case()) {
-    switch (options.filter_action()) {
-      case (FilterAction::include): {
-        if (is_strict_filter)
-          controller.disable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
+  switch (options.filter_action()) {
+    case (FilterAction::include): {
+      if (is_strict_filter)
+        controller.disable_all();
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = true;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
       }
-      case (FilterAction::exclude): {
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-      default:
-        throw std::logic_error("Unknown filter action");
+      break;
     }
+    case (FilterAction::exclude): {
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = false;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 

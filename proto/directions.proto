@@ -13,9 +13,7 @@ message DirectionsLeg {
     oneof has_time {
       double time = 2;           // seconds
     }
-    oneof has_bbox {
-      BoundingBox bbox = 3;      // Bounding box of the shape
-    }
+    BoundingBox bbox = 3;      // Bounding box of the shape
     oneof has_has_time_restrictions {
       bool has_time_restrictions = 4; // Does the route contain any time restrictions?
     }
@@ -107,9 +105,7 @@ message DirectionsLeg {
     }
 
     oneof has_type {
-  
-    Type type = 1;                                      // Maneuver type
-
+      Type type = 1;                                      // Maneuver type
     }
     oneof has_text_instruction {
       string text_instruction = 2;                        // text instruction
@@ -149,9 +145,7 @@ message DirectionsLeg {
       string verbal_post_transition_instruction = 14;     // verbal post-transition instruction
     }
     repeated StreetName begin_street_name = 15;                  // begin street names
-    oneof has_sign {
-      TripSign sign = 16;                                 // associated sign information, for example: exit number
-    }
+    TripSign sign = 16;                                 // associated sign information, for example: exit number
     oneof has_roundabout_exit_count {
       uint32 roundabout_exit_count = 17;                  // which spoke to exit roundabout after entering
     }
@@ -167,9 +161,7 @@ message DirectionsLeg {
     oneof has_verbal_arrive_instruction {
       string verbal_arrive_instruction = 21;              // verbal arrive instruction - used with transit
     }
-    oneof has_transit_info {
-      TransitRouteInfo transit_info = 22;                 // transit attributes including a list of transit stops
-    }
+    TransitRouteInfo transit_info = 22;                 // transit attributes including a list of transit stops
     oneof has_verbal_multi_cue {
       bool verbal_multi_cue = 23;                         // verbal multi-cue flag
     }
@@ -211,9 +203,7 @@ message DirectionsLeg {
     oneof has_verbal_succinct_transition_instruction {
       string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
     }
-    oneof has_bss_info {
-      BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
-    }
+    BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
   }
 
   oneof has_trip_id {
@@ -226,9 +216,7 @@ message DirectionsLeg {
     uint32 leg_count = 3;
   }
   repeated Location location = 4;
-  oneof has_summary {
-    Summary summary = 5;
-  }
+  Summary summary = 5;
   repeated Maneuver maneuver = 6;
   oneof has_shape {
     string shape = 7;

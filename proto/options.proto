@@ -22,8 +22,9 @@ enum ShapeMatch {
 }
 
 enum FilterAction {
-  exclude = 0;
-  include = 1;
+  no_action = 0;
+  exclude = 1;
+  include = 2;
 }
 
 enum DirectionsType {
@@ -210,17 +211,11 @@ message CostingOptions {
   oneof has_transfer_penalty {
     float transfer_penalty = 48;
   }
-  oneof has_filter_stop_action {
-    FilterAction filter_stop_action = 49;
-  }
+  FilterAction filter_stop_action = 49;
   repeated string filter_stop_ids = 50;
-  oneof has_filter_operator_action {
-    FilterAction filter_operator_action = 51;
-  }
+  FilterAction filter_operator_action = 51;
   repeated string filter_operator_ids = 52;
-  oneof has_filter_route_action {
-    FilterAction filter_route_action = 53;
-  }
+  FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   oneof has_flow_mask {
     uint32 flow_mask = 55;
@@ -353,9 +348,7 @@ message Options {
   }
 
   oneof has_units {
-  
-  Units units = 1;                                               // kilometers or miles
-
+    Units units = 1;                                               // kilometers or miles
   }
   oneof has_language {
     string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
@@ -430,15 +423,10 @@ message Options {
   oneof has_turn_penalty_factor {
     float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
   }
-  oneof has_filter_action {
-    FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
-  }
+  FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
-
   oneof has_breakage_distance {
-  
-  float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
-
+    float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   }
   oneof has_use_timestamps {
     bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]

@@ -13,9 +13,7 @@ message TripSignElement {
   oneof has_consecutive_count {
     uint32 consecutive_count = 3;    // The frequency of this sign element within a set a consecutive signs
   }
-  oneof has_pronunciation {
-    Pronunciation pronunciation = 4; // The pronunciation associated with this sign element
-  }
+  Pronunciation pronunciation = 4; // The pronunciation associated with this sign element
 }
 
 message TripSign {

@@ -195,7 +195,7 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // initialize shape_attributes once
-  if (!leg.has_shape_attributes_case() &&
+  if (!leg.has_shape_attributes() &&
       controller.category_attribute_enabled(kShapeAttributesCategory)) {
     leg.mutable_shape_attributes();
   }
