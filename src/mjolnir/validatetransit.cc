@@ -9,7 +9,6 @@
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "baldr/datetime.h"
