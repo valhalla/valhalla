@@ -1,3 +1,4 @@
+boost-regex
 curl
 protobuf
 zlib
