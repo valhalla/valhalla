@@ -1013,7 +1013,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set drive_on_right if requested
   if (controller.attributes.at(kEdgeDriveOnRight)) {
-    trip_edge->set_drive_on_right(drive_on_right);
+    trip_edge->set_drive_on_left(!drive_on_right);
   }
 
   // Set surface if requested

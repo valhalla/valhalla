@@ -87,9 +87,9 @@ message DirectionsLeg {
     }
 
     enum BssManeuverType{
-      kNoneAction = 1;
-      kRentBikeAtBikeShare = 2;
-      kReturnBikeAtBikeShare = 3;
+      kNoneAction = 0;
+      kRentBikeAtBikeShare = 1;
+      kReturnBikeAtBikeShare = 2;
     }
 
     optional Type type = 1;                                      // Maneuver type

@@ -49,18 +49,18 @@ message Location {
 
   message SearchFilter {
     // frc
-    optional RoadClass min_road_class = 1 [default = kServiceOther]; // lowest road class to allow in loki results
-    optional RoadClass max_road_class = 2 [default = kMotorway]; // highest road class to allow in loki results
+    optional RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
+    optional RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
     // form of way
-    optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
-    optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
-    optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results (default false)
-    optional bool exclude_closures  = 6 [default = true]; // whether to exclude roads marked as closed due to traffic
+    optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results [default = false]
+    optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results [default = false]
+    optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results [default = false]
+    optional bool exclude_closures  = 6;// whether to exclude roads marked as closed due to traffic [default = true]
   }
 
   //inputs
   optional LatLng ll = 1;
-  optional Type type = 2 [default = kBreak];
+  optional Type type = 2;                                      // [default = kBreak]
   optional uint32 heading = 3;                                 // 0-359
   optional string name = 4;
   optional string street = 5;
@@ -78,8 +78,8 @@ message Location {
   optional uint32 minimum_reachability = 17;
   optional uint32 radius = 18;
   optional uint32 accuracy = 19;
-  optional double time = 20 [default = -1.0];
-  optional bool rank_candidates = 21 [default = true];
+  optional double time = 20;
+  optional bool skip_ranking_candidates = 21;               // [default = false]
 
   //outputs
   repeated PathEdge path_edges = 22;
@@ -90,7 +90,7 @@ message Location {
   optional double distance_from_leg_origin = 36;
 
   //more inputs
-  optional PreferredSide preferred_side = 26 [default = either];
+  optional PreferredSide preferred_side = 26;            // [default = either]
   optional LatLng display_ll = 27;
   optional uint32 search_cutoff = 28;
   optional uint32 street_side_tolerance = 29;
@@ -158,12 +158,12 @@ message TransitRouteInfo {
 
 message Pronunciation {
   enum Alphabet {
-    kIpa = 1;
-    kXKatakana = 2;
-    kXJeita = 3;
-    kNtSampa = 4;
+    kIpa = 0;
+    kXKatakana = 1;
+    kXJeita = 2;
+    kNtSampa = 3;
   }
-  optional Alphabet alphabet = 1 [default = kIpa];
+  optional Alphabet alphabet = 1;           // [default = kIpa]
   optional string value = 2;
 }
 
@@ -180,7 +180,7 @@ message TurnLane {
     kActive = 2;
   }
   optional uint32 directions_mask = 1;
-  optional State state = 2 [default = kInvalid];
+  optional State state = 2;                // [default = kInvalid]
   optional uint32 active_direction = 3;
 }
 
@@ -197,6 +197,7 @@ enum RoadClass {
 
 message TaggedValue {
   enum Type {
+    kNone = 0;
     kLayer = 1;
     kBssInfo = 3;
     // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values

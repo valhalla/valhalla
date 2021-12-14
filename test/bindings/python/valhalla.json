@@ -246,12 +246,12 @@
       "max_distance_contour": 200
     },
     "trace": {
+      "max_alternates": 3,
+      "max_alternates_shape": 100,
       "max_distance": 200000.0,
       "max_gps_accuracy": 100.0,
       "max_search_radius": 100.0,
-      "max_shape": 16000,
-      "max_best_paths": 4,
-      "max_best_paths_shape": 100
+      "max_shape": 16000
     },
     "bikeshare": {
       "max_distance": 500000.0,
