@@ -13,9 +13,6 @@ commands:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests shapely conan
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
-  install_conan:
-    steps:
-      - run: apt-get update -y && apt-get install -y python3-pip && pip install conan
 
 jobs:
   build-docker-images:
@@ -52,7 +49,6 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_conan
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
@@ -100,7 +96,6 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_conan
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
