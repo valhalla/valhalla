@@ -73,15 +73,6 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
     PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif()
 
-if (APPLE)
-  find_package(OpenSSL REQUIRED)
-#  target_link_libraries(${test}  OpenSSL::SSL)
-#  target_link_libraries(${test} OpenSSL::Crypto)
-  target_link_libraries(valhalla_test OpenSSL::SSL)
-  target_link_libraries(valhalla_test OpenSSL::Crypto)
-endif()
-
-
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )

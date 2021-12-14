@@ -1,31 +1,10 @@
 #include "test.h"
 
 #include <algorithm>
+#include <fstream>
+#include <iterator>
 #include <string>
 #include <unordered_set>
-
-#ifdef __APPLE__
-#include <cerrno>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <stdexcept>
-
-#include <openssl/sha.h>
-#elif __linux__
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#define STR_VALUE(val) #val
-#define STR(name) STR_VALUE(name)
-#define PATH_LEN 256
-#define MD5_LEN 32
-#endif
 
 #include <prime_server/prime_server.hpp>
 
@@ -379,61 +358,33 @@ void generate_tiles(const std::string& dst_dir) {
   ASSERT_FALSE(filesystem::is_empty(dst_dir));
 }
 
-std::string generate_hashsum(const std::string& path) {
-#ifdef __APPLE__
-  std::ifstream fp(path, std::ios::in | std::ios::binary);
+bool are_files_equal(const std::string& file1, const std::string& file2) {
+  if (!filesystem::exists(file1) || !filesystem::exists(file2))
+    return false;
 
-  if (not fp.good()) {
-    std::ostringstream os;
-    os << "Cannot open \"" << path << "\": " << std::strerror(errno) << ".";
-    throw std::runtime_error(os.str());
+  std::ifstream f1(file1, std::ifstream::binary | std::ifstream::ate);
+  std::ifstream f2(file2, std::ifstream::binary | std::ifstream::ate);
+
+  if (f1.fail() || f2.fail()) {
+    return false; // file problem
   }
 
-  constexpr const std::size_t buffer_size{1 << 12};
-  char buffer[buffer_size];
-
-  unsigned char hash[SHA256_DIGEST_LENGTH]{};
-
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-
-  while (fp.good()) {
-    fp.read(buffer, buffer_size);
-    SHA256_Update(&ctx, buffer, fp.gcount());
+  if (f1.tellg() != f2.tellg()) {
+    return false; // size mismatch
   }
 
-  SHA256_Final(hash, &ctx);
-  fp.close();
+  f1.seekg(0, std::ifstream::beg);
+  f2.seekg(0, std::ifstream::beg);
+  return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()), std::istreambuf_iterator<char>(),
+                    std::istreambuf_iterator<char>(f2.rdbuf()));
+}
 
-  std::ostringstream os;
-  os << std::hex << std::setfill('0');
-
-  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-    os << std::setw(2) << static_cast<unsigned int>(hash[i]);
+bool are_dirs_equal(const std::string& dir1, const std::string& dir2) {
+  for (const auto& file : full_to_relative_path(dir1, filesystem::get_files(dir1))) {
+    if (!are_files_equal(dir1 + file, dir2 + file))
+      return false;
   }
-
-  return os.str();
-#elif __linux__
-  char md5_sum[PATH_LEN + 1];
-#define MD5SUM_CMD_FMT "md5sum %." STR(PATH_LEN) "s 2>/dev/null"
-  char cmd[PATH_LEN + sizeof(MD5SUM_CMD_FMT)];
-  sprintf(cmd, MD5SUM_CMD_FMT, path.c_str());
-#undef MD5SUM_CMD_FMT
-
-  FILE* p = popen(cmd, "r");
-  if (p == NULL) {
-    return {};
-  }
-
-  int i, ch;
-  for (i = 0; i < MD5_LEN && isxdigit(ch = fgetc(p)); i++) {
-    md5_sum[i] = ch;
-  }
-
-  md5_sum[i] = '\0';
-  pclose(p);
-  return std::string(md5_sum);
-#endif
+  return true;
 }
 
 std::string read_file(const std::string& file) {
@@ -469,15 +420,6 @@ bool copy(const std::string& src, const std::string& dst) {
   if (filesystem::is_directory(src) && filesystem::is_empty(src))
     return false;
   return copy_files(src, dst, filesystem::get_files(src));
-}
-
-std::unordered_map<std::string, std::string> caclculate_dirhash(const std::string& dst) {
-  std::unordered_map<std::string, std::string> res;
-  for (const auto& file : filesystem::get_files(dst))
-    res[full_to_relative_path(dst, {filesystem::path(file).string()}).front()] =
-        generate_hashsum(file);
-
-  return res;
 }
 
 void store_elevation(const std::string& elev) {
@@ -550,16 +492,13 @@ TEST(ElevationBuilder, compare_applied_elevations) {
   for (const auto& tile_path : filesystem::get_files(offline_dir))
     ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
 
+  ASSERT_TRUE(are_dirs_equal(tile_dst, offline_dir));
+
   ASSERT_TRUE(copy(tile_dst, online_dir)) << "Failed to copy files to " << online_dir;
   for (const auto& tile_path : filesystem::get_files(online_dir))
     ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
 
-  auto original_filename_hash = caclculate_dirhash(tile_dst);
-  auto offline_filename_hash = caclculate_dirhash(offline_dir);
-  ASSERT_EQ(original_filename_hash, offline_filename_hash);
-
-  auto online_filename_hash = caclculate_dirhash(online_dir);
-  ASSERT_EQ(original_filename_hash, online_filename_hash);
+  ASSERT_TRUE(are_dirs_equal(tile_dst, online_dir));
 
   ASSERT_TRUE(filesystem::create_directories(src_path)) << "Failed to create " << src_path;
 
@@ -568,18 +507,16 @@ TEST(ElevationBuilder, compare_applied_elevations) {
     ASSERT_TRUE(filesystem::exists(elev_path) && filesystem::is_regular_file(elev_path));
 
   apply_elevations(offline_dir, src_path);
-  auto offline_filename_hash_with_elevations = caclculate_dirhash(offline_dir);
-  ASSERT_NE(offline_filename_hash_with_elevations, offline_filename_hash);
+  ASSERT_FALSE(are_dirs_equal(tile_dst, offline_dir));
 
   auto url{"127.0.0.1:38004/route-tile/v1/{tilePath}?version=%version&access_token=%token"};
   auto elev_storage_dir{"test/data/elevation_dst/"};
   ASSERT_TRUE(filesystem::create_directories(elev_storage_dir)) << "Failed to create " << src_path;
 
   apply_elevations(online_dir, elev_storage_dir, url, elevation_local_src);
-  auto online_filename_hash_with_elevations = caclculate_dirhash(online_dir);
-  ASSERT_NE(online_filename_hash_with_elevations, online_filename_hash);
+  ASSERT_FALSE(are_dirs_equal(tile_dst, online_dir));
 
-  ASSERT_EQ(online_filename_hash_with_elevations, offline_filename_hash_with_elevations);
+  ASSERT_TRUE(are_dirs_equal(offline_dir, online_dir));
 
   clear(src_path);
   clear(elev_storage_dir);
