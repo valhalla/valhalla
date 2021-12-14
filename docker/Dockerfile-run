@@ -1,6 +1,6 @@
 ####################################################################
 # base image contains all the dependencies we need to build the code
-FROM valhalla/valhalla:build-latest as builder
+FROM valhalla/valhalla:3.1.0 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 # get the code into the right place and prepare to build it

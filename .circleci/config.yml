@@ -62,8 +62,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-x86_64-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
