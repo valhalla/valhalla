@@ -539,7 +539,6 @@ template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
   {
     std::lock_guard<std::shared_timed_mutex> _(st_lck);
     if (!st_.count(uri)) {
-      // TODO(neyromancer): переиспользовать функционал кэша, можно избавиться от st_.
       st_.insert(uri);
       if (!store(elev, result.bytes_)) {
         LOG_WARN("Fail to save data loaded from remote server address: " + uri);

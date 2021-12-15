@@ -42,13 +42,13 @@ public:
   ~sample();
 
   /**
-   * Get a single sample from the datasource
+   * @brief Get a single sample from the datasource
    * @param coord  the single posting at which to sample the datasource
    */
   template <class coord_t> double get(const coord_t& coord);
 
   /**
-   * Get multiple samples from the datasource
+   * @brief Get multiple samples from the datasource
    * @param coords  the list of postings at which to sample the datasource
    */
   template <class coords_t> std::vector<double> get_all(const coords_t& coords);
@@ -70,19 +70,19 @@ protected:
   template <class coord_t> static uint16_t get_tile_index(const coord_t& coord);
 
   /**
-   * Adds single tile in cache. Used only in tests
+   * @brief Adds single tile in cache. Used only in tests
    * @param path path to the tile
    */
   void add_single_tile(const std::string& path);
 
   /**
-   * Get a single sample from a remote source
+   * @brief Get a single sample from a remote source
    * @param coord the single posting at which to sample the datasource
    */
   template <class coord_t> double get_from_remote(const coord_t& coord);
 
   /**
-   * Get a single sample from cache
+   * @brief Get a single sample from cache
    * @param coord the single posting at which to sample the datasource
    */
   template <class coord_t> double get_from_cache(const coord_t& coord);
