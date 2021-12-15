@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str, config;
   std::string filename = "";
+  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -71,6 +72,19 @@ int main(int argc, char* argv[]) {
     } else {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
+    }
+
+    // parse the config
+    rapidjson::read_json(config.c_str(), pt);
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("thor.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
     }
 
     if (!result.count("json")) {
@@ -142,20 +156,6 @@ int main(int argc, char* argv[]) {
   auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
   if (exclude_locations.size() == 0) {
     LOG_INFO("No avoid locations");
-  }
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // Get something we can use to fetch tiles
