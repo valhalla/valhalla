@@ -220,7 +220,7 @@ void thor_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
 
   // get all the legs
-  if (options.has_date_time_type() && options.date_time_type() == Options::arrive_by) {
+  if (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by) {
     path_arrive_by(request, costing);
   } else {
     path_depart_at(request, costing);
@@ -254,7 +254,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
-  if (origin.has_date_time() && options.date_time_type() != Options::invariant &&
+  if (origin.has_date_time_case() && options.date_time_type() != Options::invariant &&
       !options.prioritize_bidirectional()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
@@ -265,7 +265,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the destination has date_time set use timedep_reverse method if the distance
   // between location is below some maximum distance (TBD).
-  if (destination.has_date_time() && options.date_time_type() != Options::invariant) {
+  if (destination.has_date_time_case() && options.date_time_type() != Options::invariant) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
@@ -379,7 +379,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
+      if (destination->has_date_time_case() &&
+          options.date_time_type() != valhalla::Options::invariant) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
@@ -533,7 +534,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
+      if (origin->has_date_time_case() && options.date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);

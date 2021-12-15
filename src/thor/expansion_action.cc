@@ -31,7 +31,7 @@ std::string thor_worker_t::expansion(Api& request) {
   std::unordered_set<Options::ExpansionProperties> exp_props;
 
   // default generalization to ~ zoom level 15
-  float gen_factor = options.has_generalize() ? options.generalize() : 10.f;
+  float gen_factor = options.has_generalize_case() ? options.generalize() : 10.f;
 
   // default the expansion geojson so its easy to add to as we go
   Document dom;

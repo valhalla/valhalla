@@ -209,46 +209,46 @@ public:
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
                loc.minimum_reachability(), loc.radius(), side, search_filter);
 
-    if (loc.has_name()) {
+    if (loc.has_name_case()) {
       l.name_ = loc.name();
     }
-    if (loc.has_street()) {
+    if (loc.has_street_case()) {
       l.street_ = loc.street();
     }
-    if (loc.has_city()) {
+    if (loc.has_city_case()) {
       l.city_ = loc.city();
     }
-    if (loc.has_state()) {
+    if (loc.has_state_case()) {
       l.state_ = loc.state();
     }
-    if (loc.has_postal_code()) {
+    if (loc.has_postal_code_case()) {
       l.zip_ = loc.postal_code();
     }
-    if (loc.has_country()) {
+    if (loc.has_country_case()) {
       l.country_ = loc.country();
     }
-    if (loc.has_date_time()) {
+    if (loc.has_date_time_case()) {
       l.date_time_ = loc.date_time();
     }
-    if (loc.has_heading()) {
+    if (loc.has_heading_case()) {
       l.heading_ = loc.heading();
     }
-    if (loc.has_heading_tolerance()) {
+    if (loc.has_heading_tolerance_case()) {
       l.heading_tolerance_ = loc.heading_tolerance();
     }
-    if (loc.has_node_snap_tolerance()) {
+    if (loc.has_node_snap_tolerance_case()) {
       l.node_snap_tolerance_ = loc.node_snap_tolerance();
     }
-    if (loc.has_way_id()) {
+    if (loc.has_way_id_case()) {
       l.way_id_ = loc.way_id();
     }
-    if (loc.has_search_cutoff()) {
+    if (loc.has_search_cutoff_case()) {
       l.search_cutoff_ = loc.search_cutoff();
     }
-    if (loc.has_street_side_tolerance()) {
+    if (loc.has_street_side_tolerance_case()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
     }
-    if (loc.has_street_side_max_distance()) {
+    if (loc.has_street_side_max_distance_case()) {
       l.street_side_max_distance_ = loc.street_side_max_distance();
     }
     if (loc.has_search_filter()) {
@@ -262,7 +262,7 @@ public:
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
-    if (loc.has_preferred_layer()) {
+    if (loc.has_preferred_layer_case()) {
       l.preferred_layer_ = loc.preferred_layer();
     }
     return l;

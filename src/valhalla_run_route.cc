@@ -379,13 +379,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
-    if (maneuver.has_depart_instruction()) {
+    if (maneuver.has_depart_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
-    if (maneuver.has_verbal_depart_instruction()) {
+    if (maneuver.has_verbal_depart_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
                                        maneuver.verbal_depart_instruction())
                                           .str(),
@@ -423,7 +423,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal succinct transition instruction
-    if (maneuver.has_verbal_succinct_transition_instruction()) {
+    if (maneuver.has_verbal_succinct_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
@@ -431,7 +431,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal transition alert instruction
-    if (maneuver.has_verbal_transition_alert_instruction()) {
+    if (maneuver.has_verbal_transition_alert_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
                                        maneuver.verbal_transition_alert_instruction())
                                           .str(),
@@ -439,7 +439,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal pre transition instruction
-    if (maneuver.has_verbal_pre_transition_instruction()) {
+    if (maneuver.has_verbal_pre_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
                                        maneuver.verbal_pre_transition_instruction())
                                           .str(),
@@ -447,7 +447,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal post transition instruction
-    if (maneuver.has_verbal_post_transition_instruction()) {
+    if (maneuver.has_verbal_post_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
                                        maneuver.verbal_post_transition_instruction())
                                           .str(),
@@ -455,13 +455,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Arrive instruction
-    if (maneuver.has_arrive_instruction()) {
+    if (maneuver.has_arrive_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
-    if (maneuver.has_verbal_arrive_instruction()) {
+    if (maneuver.has_verbal_arrive_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
                                        maneuver.verbal_arrive_instruction())
                                           .str(),
@@ -673,7 +673,7 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
+      if (options.has_date_time_case() && ll1.Distance(ll2) < max_timedep_distance &&
           (options.date_time_type() == valhalla::Options_DateTimeType_depart_at ||
            options.date_time_type() == valhalla::Options_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;

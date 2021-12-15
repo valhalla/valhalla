@@ -64,7 +64,7 @@ public:
    */
   cost_ptr_t Create(const Options& options) const {
     // you cant get a costing without a costing type
-    if (!options.has_costing())
+    if (!options.has_costing_case())
       throw std::runtime_error("No costing provided to cost factory");
 
     // create the cost using the creation function
@@ -94,7 +94,7 @@ public:
    */
   cost_ptr_t Create(const CostingOptions& options) const {
     // you cant get a costing without a costing type
-    if (!options.has_costing())
+    if (!options.has_costing_case())
       throw std::runtime_error("No costing provided to cost factory");
 
     auto itr = factory_funcs_.find(options.costing());

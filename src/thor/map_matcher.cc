@@ -42,7 +42,7 @@ init_time_info(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
       if (!tz)
         continue;
       // if its timestamp based we need to convert that to a date time string on the location
-      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+      if (!options.shape(0).has_date_time_case() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }

@@ -1,13 +1,19 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 import public "tripcommon.proto";
 
 message TripSignElement {
-  optional string text = 1;                 // The actual sign element text, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;        // true if sign element is a reference route number such as: I 81 South or US 322 West
-  optional uint32 consecutive_count = 3;    // The frequency of this sign element within a set a consecutive signs
-  optional Pronunciation pronunciation = 4; // The pronunciation associated with this sign element
+  oneof has_text {
+    string text = 1;                 // The actual sign element text, examples: I 95 North or Derry Street
+  }
+  oneof has_is_route_number {
+    bool is_route_number = 2;        // true if sign element is a reference route number such as: I 81 South or US 322 West
+  }
+  oneof has_consecutive_count {
+    uint32 consecutive_count = 3;    // The frequency of this sign element within a set a consecutive signs
+  }
+  Pronunciation pronunciation = 4; // The pronunciation associated with this sign element
 }
 
 message TripSign {

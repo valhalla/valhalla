@@ -136,7 +136,7 @@ void loki_worker_t::init_trace(Api& request) {
   // Validate shape count and distance (for now, just send max_factor for distance)
   check_shape(options.shape(), max_trace_shape);
   float breakage_distance =
-      options.has_breakage_distance() ? options.breakage_distance() : default_breakage_distance;
+      options.has_breakage_distance_case() ? options.breakage_distance() : default_breakage_distance;
   check_distance(options.shape(), max_distance.find("trace")->second, breakage_distance, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
@@ -145,13 +145,13 @@ void loki_worker_t::init_trace(Api& request) {
   }
 
   // Validate optional trace options
-  if (options.has_gps_accuracy()) {
+  if (options.has_gps_accuracy_case()) {
     check_gps_accuracy(options.gps_accuracy(), max_gps_accuracy);
   }
-  if (options.has_search_radius()) {
+  if (options.has_search_radius_case()) {
     check_search_radius(options.search_radius(), max_search_radius);
   }
-  if (options.has_turn_penalty_factor()) {
+  if (options.has_turn_penalty_factor_case()) {
     check_turn_penalty_factor(options.turn_penalty_factor());
   }
 
