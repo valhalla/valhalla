@@ -1,0 +1,51 @@
+name: Continuous Integration
+on: push
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: '${{ matrix.os }}'
+    strategy:
+      matrix:
+        os:
+          - ubuntu-20.04
+    steps:
+      - name: 'checkout'
+        uses: actions/checkout@v2
+      - name: 'lint source'
+        run: |
+          set -euxo pipefail
+          ./scripts/format.sh
+          ./scripts/error_on_dirty.sh
+      - name: 'git submodules'
+        run: |
+          set -euxo pipefail
+          git submodule sync
+          git submodule update --init
+      - name: 'install shared dependencies'
+        run: |
+          set -euxo pipefail
+          chmod +x docker/install-shared-deps.sh
+          sudo ./docker/install-shared-deps.sh
+      - name: 'run build'
+        run: |
+          set -euxo pipefail
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=On \
+            -DENABLE_PYTHON_BINDINGS=On \
+            -DLOGGING_LEVEL=TRACE \
+            -DCPACK_GENERATOR=DEB \
+            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" \
+            -DENABLE_SANITIZERS=ON
+          make -j$(nproc)
+          make utrecht_tiles
+          make -j$(nproc) tests
+          export ASAN_OPTIONS=detect_leaks=0
+          make -j$(nproc) check
+          make -j$(nproc) benchmarks
+          make -j$(nproc) run-benchmarks
+          sudo make install
+          sudo make package
