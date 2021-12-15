@@ -10,9 +10,9 @@ message Contour {
 }
 
 enum ShapeMatch {
-  edge_walk = 0;
-  map_snap = 1;
-  walk_or_snap = 2;
+  walk_or_snap = 0;
+  edge_walk = 1;
+  map_snap = 2;
 }
 
 enum FilterAction {
@@ -21,14 +21,14 @@ enum FilterAction {
 }
 
 enum DirectionsType {
-  none = 0;
-  maneuvers = 1;
-  instructions = 2;
+  instructions = 0;
+  none = 1;
+  maneuvers = 2;
 }
 
 enum ShapeFormat {
-  polyline5 = 0;
-  polyline6 = 1;
+  polyline6 = 0;
+  polyline5 = 1;
   geojson = 2;
 }
 
@@ -138,7 +138,7 @@ message CostingOptions {
   optional Costing costing = 90;
   optional string name = 91;
   repeated AvoidEdge exclude_edges = 92;                       // Exclude edges for any costing - derived from exclude_locations
-  optional bool filter_closures = 93 [default = true];
+  optional bool filter_closures = 93;
 }
 
 message Options {
@@ -155,18 +155,18 @@ message Options {
   }
 
   enum Action {
-    route = 1;
-    locate = 2;
-    sources_to_targets = 3;
-    optimized_route = 4;
-    isochrone = 5;
-    trace_route = 6;
-    trace_attributes = 7;
-    height = 8;
-    transit_available = 9;
-    expansion = 10;
-    centroid = 11;
-    status = 12;
+    route = 0;
+    locate = 1;
+    sources_to_targets = 2;
+    optimized_route = 3;
+    isochrone = 4;
+    trace_route = 5;
+    trace_attributes = 6;
+    height = 7;
+    transit_available = 8;
+    expansion = 9;
+    centroid = 10;
+    status = 11;
   }
 
   enum DateTimeType {
@@ -189,16 +189,16 @@ message Options {
   }
 
   optional Units units = 1;                                               // kilometers or miles
-  optional string language = 2 [default = "en-US"];                       // Based on IETF BCP 47 language tag string
-  optional DirectionsType directions_type = 3 [default = instructions];   // Enable/disable narrative production
-  optional Format format = 4 [default = json];                            // What the response format should be
+  optional string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
+  optional DirectionsType directions_type = 3;                            // Enable/disable narrative production [default = instructions]
+  optional Format format = 4;                                             // What the response format should be [default = json]
   optional string id = 5;                                                 // Optional id for the request
   optional string jsonp = 6;                                              // Optional javascript callback for the request
   optional string encoded_polyline = 7;                                   // Optional polyline 6 encoded shape used in /height /trace_*
   optional Action action = 8;                                             // Action signifying the request type
-  optional bool do_not_track = 9 [default = false];                       // Disable analytics for this request
-  optional bool range = 10 [default = false];                             // Used in /height if the range between points should be serialized
-  optional bool verbose = 11 [default = false];                           // Used in /locate & /status request to give back extensive information
+  //deprecated = 9;
+  optional bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
+  optional bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
   optional Costing costing = 12;                                          // Used to tell what type of costing to use
   repeated CostingOptions costing_options = 13;                           // A list of costing options for each costing model
   repeated Location locations = 14;                                       // Locations for /route /optimized /locate /isochrone
@@ -211,12 +211,12 @@ message Options {
   optional double resample_distance = 21;                                 // Resampling shape at regular intervals
   repeated Contour contours = 22;                                         // List of isochrone contours
   optional bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  optional float denoise = 24 [default = 1.0];                            // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float denoise = 24;                                            // A floating point value from 0 to 1 which can be used to remove smaller contours (default 1.0)
   optional float generalize = 25;                                         // Meters used as the tolerance for Douglas-Peucker generalization
   optional bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
   repeated Location trace = 27;                                           // Trace points for map matching
-  optional ShapeMatch shape_match = 28 [default = walk_or_snap];          // The matching algorithm based on the type of input
-  optional uint32 best_paths = 29 [default = 1];                          // The number of top k paths
+  optional ShapeMatch shape_match = 28;                                   // The matching algorithm based on the type of input [default = walk_or_snap]
+  //deprecated = 29;
   optional float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
   optional float search_radius = 31;                                      // The search radius associated with the supplied trace points
   optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
@@ -224,18 +224,18 @@ message Options {
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
 
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
-  optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
-  optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
+  optional bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
+  optional ShapeFormat shape_format = 38;                                 // Shape format (defaults to polyline6 encoding)
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   // 42 is reserved
-  optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
-  optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
+  optional uint32 height_precision = 43;                                  // Number of digits precision for heights returned [default = 0]
+  optional bool roundabout_exits = 44;                                    // Whether to announce roundabout exit maneuvers [default = true]
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  optional bool prioritize_bidirectional = 48 [default = false];          // Prioritize bidirectional a* when depart_at date_time.type is specified
+  optional bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
   optional Action expansion_action = 49;                                  // Meta action for /expansion endpoint
   optional bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
   repeated ExpansionProperties expansion_properties = 51;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"

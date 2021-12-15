@@ -90,14 +90,6 @@ const std::vector<http_request_t> valhalla_requests{
     http_request_t(
         GET,
         R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}]})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","directions_options":{"units":"miles"}})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles"}})"),
     http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
         "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles"}})"),
 };
@@ -181,10 +173,6 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
      R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
     {400,
      R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
-    {400,
-     R"({"error_code":158,"error":"Input trace option is out of bounds:(0). The best_paths lower limit is 1","status_code":400,"status":"Bad Request"})"},
-    {400,
-     R"({"error_code":158,"error":"Input trace option is out of bounds:(5). The best_paths upper limit is 4","status_code":400,"status":"Bad Request"})"},
     {400,
      R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}};
 
@@ -277,14 +265,6 @@ const std::vector<http_request_t> osrm_requests{
     http_request_t(
         GET,
         R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","exclude_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
     http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
         "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles","format":"osrm"}})"),
 };
@@ -323,10 +303,6 @@ const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {400,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {400,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {400,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {400,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {400,

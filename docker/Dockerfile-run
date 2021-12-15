@@ -1,6 +1,6 @@
 ####################################################################
 # base image contains all the dependencies we need to build the code
-FROM valhalla/valhalla:build-3.1.0 as builder
+FROM valhalla/valhalla:build-3.1.5 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 # get the code into the right place and prepare to build it
@@ -43,7 +43,7 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gn
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
-      libboost-program-options1.71.0 libcurl4 libczmq4 libluajit-5.1-2 \
+      libcurl4 libczmq4 libluajit-5.1-2 \
       libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
       curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \

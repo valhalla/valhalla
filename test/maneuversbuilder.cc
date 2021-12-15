@@ -84,7 +84,7 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Man
 
   // node:1
   node = path.add_node();
-  node->mutable_edge()->set_drive_on_right(true);
+  node->mutable_edge()->set_drive_on_left(false);
 
   // node:2 dummy last node
   node = path.add_node();
