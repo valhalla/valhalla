@@ -163,6 +163,16 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
       }
     }
   }
+  // Explicitely turn off access for constructions. It's done for backward compatibility
+  // of valhalla tiles and valhalla routing. In case we allow non-zero access then older
+  // versions of router will work with new tiles incorrectly. They would start to route
+  // on roads under construction because they're not awary about new 'Use::kConstruction'
+  // and use only access mode to check if an edge is routable or not.
+  if (way.use() == Use::kConstruction) {
+    forward_access = 0;
+    reverse_access = 0;
+    LOG_DEBUG("Turn off access mode for road under construction.");
+  }
 
   // Set access modes
   set_forwardaccess(forward_access);

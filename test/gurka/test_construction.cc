@@ -60,6 +60,9 @@ TEST_F(IncludeConstructionTest, CheckConstructionsIncluded) {
   ASSERT_NE(std::get<0>(BC), baldr::GraphId{}) << "constructions should be included";
   EXPECT_EQ(std::get<1>(BC)->use(), baldr::Use::kConstruction)
       << "invalid 'use'-type for construction edge";
+  // check that access set to zero for constructions
+  EXPECT_EQ(std::get<1>(BC)->forwardaccess(), 0) << "access should be turned off for constructions";
+  EXPECT_EQ(std::get<1>(BC)->reverseaccess(), 0) << "access should be turned off for constructions";
 
   auto CD = gurka::findEdge(reader, layout, "CD", "D");
   EXPECT_EQ(std::get<0>(CD), baldr::GraphId{})
