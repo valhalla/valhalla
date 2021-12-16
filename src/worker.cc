@@ -472,11 +472,12 @@ void parse_locations(const rapidjson::Document& doc,
       }
     }
 
+    if (locations->empty())
+      return;
+
     // first and last locations get the default type of break no matter what
-    if (locations->size()) {
-      locations->Mutable(0)->set_type(valhalla::Location::kBreak);
-      locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
-    }
+    locations->Mutable(0)->set_type(valhalla::Location::kBreak);
+    locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
 
     // push the date time information down into the locations
     if (!had_date_time) {
@@ -742,8 +743,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
                              : boost::none;
   if (options.has_costing_case()) {
     for (const auto& co : options.costing_options()) {
-      if (co.costing() == options.costing()) {
-        ignore_closures = co.has_ignore_closures_case() ? co.ignore_closures() : true;
+      if (co.costing() == options.costing() && co.has_ignore_closures_case()) {
+        ignore_closures = co.ignore_closures();
         break;
       }
     }
