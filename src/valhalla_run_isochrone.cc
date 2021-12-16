@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
 
   // Get generalize parameter
   float generalize = kOptimalGeneralization;
-  if (options.has_generalize()) {
+  if (options.has_generalize_case()) {
     generalize = options.generalize();
   }
 
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
   std::vector<GriddedData<2>::contour_interval_t> contour_times;
   float max_minutes = std::numeric_limits<float>::min();
   for (const auto& contour : options.contours()) {
-    if (contour.has_time()) {
+    if (contour.has_time_case()) {
       max_minutes = std::max(max_minutes, contour.time());
       contour_times.emplace_back(0, contour.time(), "time", contour.color());
     }

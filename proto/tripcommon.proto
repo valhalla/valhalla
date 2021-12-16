@@ -1,15 +1,19 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message LatLng {
-  optional double lat = 1;
-  optional double lng = 2;
+  oneof has_lat {
+    double lat = 1;
+  }
+  oneof has_lng {
+    double lng = 2;
+  }
 }
 
 message BoundingBox {
-  optional LatLng min_ll = 1;
-  optional LatLng max_ll = 2;
+  LatLng min_ll = 1;
+  LatLng max_ll = 2;
 }
 
 message Location {
@@ -33,94 +37,208 @@ message Location {
   }
 
   message PathEdge {
-    optional uint64 graph_id = 1;
-    optional double percent_along = 2;
-    optional LatLng ll = 3;
-    optional SideOfStreet side_of_street = 4;
-    optional double distance = 5;
-    optional int32 minimum_reachability = 6; //deprecated
-    optional bool begin_node = 7;
-    optional bool end_node = 8;
+    oneof has_graph_id {
+      uint64 graph_id = 1;
+    }
+    oneof has_percent_along {
+      double percent_along = 2;
+    }
+    LatLng ll = 3;
+    oneof has_side_of_street {
+      SideOfStreet side_of_street = 4;
+    }
+    oneof has_distance {
+      double distance = 5;
+    }
+    oneof has_minimum_reachability {
+      int32 minimum_reachability = 6; //deprecated
+    }
+    oneof has_begin_node {
+      bool begin_node = 7;
+    }
+    oneof has_end_node {
+      bool end_node = 8;
+    }
     repeated string names = 10;
-    optional int32 outbound_reach = 11;
-    optional int32 inbound_reach = 12;
-    optional float heading = 13;
+    oneof has_outbound_reach {
+      int32 outbound_reach = 11;
+    }
+    oneof has_inbound_reach {
+      int32 inbound_reach = 12;
+    }
+    oneof has_heading {
+      float heading = 13;
+    }
   }
 
   message SearchFilter {
     // frc
-    optional RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
-    optional RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
+    oneof has_min_road_class {
+      RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
+    }
+    oneof has_max_road_class {
+      RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
+    }
     // form of way
-    optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results [default = false]
-    optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results [default = false]
-    optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results [default = false]
-    optional bool exclude_closures  = 6;// whether to exclude roads marked as closed due to traffic [default = true]
+    oneof has_exclude_tunnel {
+      bool exclude_tunnel = 3;  // whether to exclude tunnels from loki results [default = false]
+    }
+    oneof has_exclude_bridge {
+      bool exclude_bridge = 4;  // whether to exclude bridges from loki results [default = false]
+    }
+    oneof has_exclude_ramp {
+      bool exclude_ramp = 5;    // whether to exclude roads with ramp use from loki results [default = false]
+    }
+    oneof has_exclude_closures {
+      bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
+    }
   }
 
   //inputs
-  optional LatLng ll = 1;
-  optional Type type = 2;                                      // [default = kBreak]
-  optional uint32 heading = 3;                                 // 0-359
-  optional string name = 4;
-  optional string street = 5;
-  optional string city = 6;
-  optional string state = 7;
-  optional string postal_code = 8;
-  optional string country = 9;
-  optional string phone = 10;
-  optional string url = 11;
-  optional string date_time = 12;
-  optional SideOfStreet side_of_street = 13;
-  optional uint32 heading_tolerance = 14;
-  optional uint32 node_snap_tolerance = 15;
-  optional uint64 way_id = 16;
-  optional uint32 minimum_reachability = 17;
-  optional uint32 radius = 18;
-  optional uint32 accuracy = 19;
-  optional double time = 20;
-  optional bool skip_ranking_candidates = 21;               // [default = false]
+  LatLng ll = 1;
+  oneof has_type {
+    Type type = 2;                                      // [default = kBreak]
+  }
+  oneof has_heading {
+    uint32 heading = 3;                                 // 0-359
+  }
+  oneof has_name {
+    string name = 4;
+  }
+  oneof has_street {
+    string street = 5;
+  }
+  oneof has_city {
+    string city = 6;
+  }
+  oneof has_state {
+    string state = 7;
+  }
+  oneof has_postal_code {
+    string postal_code = 8;
+  }
+  oneof has_country {
+    string country = 9;
+  }
+  oneof has_phone {
+    string phone = 10;
+  }
+  oneof has_url {
+    string url = 11;
+  }
+  oneof has_date_time {
+    string date_time = 12;
+  }
+  oneof has_side_of_street {
+    SideOfStreet side_of_street = 13;
+  }
+  oneof has_heading_tolerance {
+    uint32 heading_tolerance = 14;
+  }
+  oneof has_node_snap_tolerance {
+    uint32 node_snap_tolerance = 15;
+  }
+  oneof has_way_id {
+    uint64 way_id = 16;
+  }
+  oneof has_minimum_reachability {
+    uint32 minimum_reachability = 17;
+  }
+  oneof has_radius {
+    uint32 radius = 18;
+  }
+  oneof has_accuracy {
+    uint32 accuracy = 19;
+  }
+  oneof has_time {
+    double time = 20;
+  }
+  oneof has_skip_ranking_candidates {
+    bool skip_ranking_candidates = 21;               // [default = false]
+  }
 
   //outputs
   repeated PathEdge path_edges = 22;
   repeated PathEdge filtered_edges = 23;
-  optional uint32 original_index = 24;
-  optional LatLng projected_ll = 25;
-  optional uint32 leg_shape_index = 35;
-  optional double distance_from_leg_origin = 36;
+  oneof has_original_index {
+    uint32 original_index = 24;
+  }
+  LatLng projected_ll = 25;
+  oneof has_leg_shape_index {
+    uint32 leg_shape_index = 35;
+  }
+  oneof has_distance_from_leg_origin {
+    double distance_from_leg_origin = 36;
+  }
 
   //more inputs
-  optional PreferredSide preferred_side = 26;            // [default = either]
-  optional LatLng display_ll = 27;
-  optional uint32 search_cutoff = 28;
-  optional uint32 street_side_tolerance = 29;
-  optional uint32 route_index = 30;
-  optional uint32 waypoint_index = 31;
-  optional SearchFilter search_filter = 32;
-  optional uint32 street_side_max_distance = 33;
-  optional int32 preferred_layer = 34;
+  oneof has_preferred_side {
+    PreferredSide preferred_side = 26;            // [default = either]
+  }
+  LatLng display_ll = 27;
+  oneof has_search_cutoff {
+    uint32 search_cutoff = 28;
+  }
+  oneof has_street_side_tolerance {
+    uint32 street_side_tolerance = 29;
+  }
+  oneof has_route_index {
+    uint32 route_index = 30;
+  }
+  oneof has_waypoint_index {
+    uint32 waypoint_index = 31;
+  }
+  SearchFilter search_filter = 32;
+  oneof has_street_side_max_distance {
+    uint32 street_side_max_distance = 33;
+  }
+  oneof has_preferred_layer {
+    int32 preferred_layer = 34;
+  }
 }
 
 message TransitEgressInfo {
-  optional string onestop_id = 1;        // Unique transitland ID
-  optional string name = 2;              // The name of the egress
-  optional LatLng ll = 3;                // Latitude, longitude of the egress
+  oneof has_onestop_id {
+    string onestop_id = 1;        // Unique transitland ID
+  }
+  oneof has_name {
+    string name = 2;              // The name of the egress
+  }
+  LatLng ll = 3;                // Latitude, longitude of the egress
 }
 
 message TransitStationInfo {
-  optional string onestop_id = 1;        // Unique transitland ID
-  optional string name = 2;              // The name of the station
-  optional LatLng ll = 3;                // Latitude, longitude of the station
+  oneof has_onestop_id {
+    string onestop_id = 1;        // Unique transitland ID
+  }
+  oneof has_name {
+    string name = 2;              // The name of the station
+  }
+  LatLng ll = 3;                // Latitude, longitude of the station
 }
 
 message BikeShareStationInfo {
-  optional string name = 1;
-  optional string ref = 2;
-  optional uint32 capacity = 3;
-  optional string network = 4;
-  optional string operator = 5;
-  optional float rent_cost = 6;
-  optional float return_cost = 7;
+  oneof has_name {
+    string name = 1;
+  }
+  oneof has_ref {
+    string ref = 2;
+  }
+  oneof has_capacity {
+    uint32 capacity = 3;
+  }
+  oneof has_network {
+    string network = 4;
+  }
+  oneof has_operator_ {
+    string operator = 5;
+  }
+  oneof has_rent_cost {
+    float rent_cost = 6;
+  }
+  oneof has_return_cost {
+    float return_cost = 7;
+  }
 }
 
 message TransitPlatformInfo {
@@ -129,30 +247,70 @@ message TransitPlatformInfo {
     kStation = 1;
   }
 
-  optional Type type = 1;                  // The type of stop (station or simple stop)
-  optional string onestop_id = 2;          // Unique transitland ID
-  optional string name = 3;                // The name of the platform
-  optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
-  optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
-  optional bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
-  optional LatLng ll = 7;                  // Latitude, longitude of the transit stop
-  optional string station_onestop_id = 8;  // Unique transitland station ID
-  optional string station_name = 9;        // The station name of the platform
+  oneof has_type {
+    Type type = 1;                  // The type of stop (station or simple stop)
+  }
+  oneof has_onestop_id {
+    string onestop_id = 2;          // Unique transitland ID
+  }
+  oneof has_name {
+    string name = 3;                // The name of the platform
+  }
+  oneof has_arrival_date_time {
+    string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+  }
+  oneof has_departure_date_time {
+    string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+  }
+  oneof has_assumed_schedule {
+    bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
+  }
+  LatLng ll = 7;                  // Latitude, longitude of the transit stop
+  oneof has_station_onestop_id {
+    string station_onestop_id = 8;  // Unique transitland station ID
+  }
+  oneof has_station_name {
+    string station_name = 9;        // The station name of the platform
+  }
 }
 
 message TransitRouteInfo {
-  optional string onestop_id = 1;
-  optional uint32 block_id = 2;
-  optional uint32 trip_id = 3;
-  optional string short_name = 4;
-  optional string long_name = 5;
-  optional string headsign = 6;
-  optional uint32 color = 7;
-  optional uint32 text_color = 8;
-  optional string description = 9;
-  optional string operator_onestop_id = 10;
-  optional string operator_name = 11;
-  optional string operator_url = 12;
+  oneof has_onestop_id {
+    string onestop_id = 1;
+  }
+  oneof has_block_id {
+    uint32 block_id = 2;
+  }
+  oneof has_trip_id {
+    uint32 trip_id = 3;
+  }
+  oneof has_short_name {
+    string short_name = 4;
+  }
+  oneof has_long_name {
+    string long_name = 5;
+  }
+  oneof has_headsign {
+    string headsign = 6;
+  }
+  oneof has_color {
+    uint32 color = 7;
+  }
+  oneof has_text_color {
+    uint32 text_color = 8;
+  }
+  oneof has_description {
+    string description = 9;
+  }
+  oneof has_operator_onestop_id {
+    string operator_onestop_id = 10;
+  }
+  oneof has_operator_name {
+    string operator_name = 11;
+  }
+  oneof has_operator_url {
+    string operator_url = 12;
+  }
   repeated TransitPlatformInfo transit_stops = 13;
 }
 
@@ -163,14 +321,22 @@ message Pronunciation {
     kXJeita = 2;
     kNtSampa = 3;
   }
-  optional Alphabet alphabet = 1;           // [default = kIpa]
-  optional string value = 2;
+  oneof has_alphabet {
+    Alphabet alphabet = 1;           // [default = kIpa]
+  }
+  oneof has_value {
+    string value = 2;
+  }
 }
 
 message StreetName {
-  optional string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
-  optional Pronunciation pronunciation = 3; // The pronunciation associated with this street name
+  oneof has_value {
+    string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
+  }
+  oneof has_is_route_number {
+    bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
+  }
+  Pronunciation pronunciation = 3; // The pronunciation associated with this street name
 }
 
 message TurnLane {
@@ -179,9 +345,15 @@ message TurnLane {
     kValid = 1;
     kActive = 2;
   }
-  optional uint32 directions_mask = 1;
-  optional State state = 2;                // [default = kInvalid]
-  optional uint32 active_direction = 3;
+  oneof has_directions_mask {
+    uint32 directions_mask = 1;
+  }
+  oneof has_state {
+    State state = 2;                // [default = kInvalid]
+  }
+  oneof has_active_direction {
+    uint32 active_direction = 3;
+  }
 }
 
 enum RoadClass {
@@ -205,8 +377,12 @@ message TaggedValue {
     kTunnel = 49; // static_cast<uint8_t>('1')
     kBridge = 50; // static_cast<uint8_t>('2')
   }
-  optional string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
-  optional Type type = 2;      // The type of tagged name (tunnel or bridge)
+  oneof has_value {
+    string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
+  }
+  oneof has_type {
+    Type type = 2;      // The type of tagged name (tunnel or bridge)
+  }
 }
 
 enum TravelMode {

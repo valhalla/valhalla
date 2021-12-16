@@ -56,20 +56,22 @@ Config MapMatcherFactory::MergeConfig(const Options& options) const {
   auto config = config_;
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  if (options.has_search_radius() && config.candidate_search.is_search_radius_customizable) {
+  if (options.has_search_radius_case() && config.candidate_search.is_search_radius_customizable) {
     config.candidate_search.search_radius_meters = options.search_radius();
   }
-  if (options.has_turn_penalty_factor() &&
+  if (options.has_turn_penalty_factor_case() &&
       config.transition_cost.is_turn_penalty_factor_customizable) {
     config.transition_cost.turn_penalty_factor = options.turn_penalty_factor();
   }
-  if (options.has_gps_accuracy() && config.emission_cost.is_gps_accuracy_customizable) {
+  if (options.has_gps_accuracy_case() && config.emission_cost.is_gps_accuracy_customizable) {
     config.emission_cost.gps_accuracy_meters = options.gps_accuracy();
   }
-  if (options.has_breakage_distance() && config.transition_cost.is_breakage_distance_customizable) {
+  if (options.has_breakage_distance_case() &&
+      config.transition_cost.is_breakage_distance_customizable) {
     config.transition_cost.breakage_distance_meters = options.breakage_distance();
   }
-  if (options.has_interpolation_distance() && config.routing.is_interpolation_distance_customizable) {
+  if (options.has_interpolation_distance_case() &&
+      config.routing.is_interpolation_distance_customizable) {
     config.routing.interpolation_distance_meters = options.interpolation_distance();
   }
 

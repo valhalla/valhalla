@@ -380,42 +380,44 @@ void test_polygons_parsing(const bool expected_value,
                            const Options::Action action = Options::isochrone) {
   const std::string key = "polygons";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_polygons(), request.options().polygons());
+  validate(key, expected_value, request.options().has_polygons_case(), request.options().polygons());
 }
 
 void test_denoise_parsing(const float expected_value,
                           const Options::Action action = Options::isochrone) {
   const std::string key = "denoise";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_denoise(), request.options().denoise());
+  validate(key, expected_value, request.options().has_denoise_case(), request.options().denoise());
 }
 
 void test_generalize_parsing(const float expected_value,
                              const Options::Action action = Options::isochrone) {
   const std::string key = "generalize";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_generalize(), request.options().generalize());
+  validate(key, expected_value, request.options().has_generalize_case(),
+           request.options().generalize());
 }
 
 void test_show_locations_parsing(const bool expected_value,
                                  const Options::Action action = Options::isochrone) {
   const std::string key = "show_locations";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_show_locations(),
+  validate(key, expected_value, request.options().has_show_locations_case(),
            request.options().show_locations());
 }
 
 void test_shape_match_parsing(const ShapeMatch expected_value, const Options::Action action) {
   const std::string key = "shape_match";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_shape_match(), request.options().shape_match());
+  validate(key, expected_value, request.options().has_shape_match_case(),
+           request.options().shape_match());
 }
 
 void test_best_paths_parsing(const uint32_t expected_value,
                              const Options::Action action = Options::isochrone) {
   const std::string key = "best_paths";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_alternates(),
+  validate(key, expected_value, request.options().has_alternates_case(),
            request.options().alternates() + 1);
 }
 
@@ -424,7 +426,7 @@ void test_gps_accuracy_parsing(const float expected_value,
   const std::string parent_key = "trace_options";
   const std::string key = "gps_accuracy";
   Api request = get_request(get_request_str(parent_key, key, expected_value), action);
-  validate(key, expected_value, request.options().has_gps_accuracy(),
+  validate(key, expected_value, request.options().has_gps_accuracy_case(),
            request.options().gps_accuracy());
 }
 
@@ -433,7 +435,7 @@ void test_search_radius_parsing(const float expected_value,
   const std::string parent_key = "trace_options";
   const std::string key = "search_radius";
   Api request = get_request(get_request_str(parent_key, key, expected_value), action);
-  validate(key, expected_value, request.options().has_search_radius(),
+  validate(key, expected_value, request.options().has_search_radius_case(),
            request.options().search_radius());
 }
 
@@ -442,7 +444,7 @@ void test_turn_penalty_factor_parsing(const float expected_value,
   const std::string parent_key = "trace_options";
   const std::string key = "turn_penalty_factor";
   Api request = get_request(get_request_str(parent_key, key, expected_value), action);
-  validate(key, expected_value, request.options().has_turn_penalty_factor(),
+  validate(key, expected_value, request.options().has_turn_penalty_factor_case(),
            request.options().turn_penalty_factor());
 }
 
@@ -451,8 +453,7 @@ void test_filter_action_parsing(const valhalla::FilterAction expected_value,
   const std::string parent_key = "filters";
   const std::string key = "action";
   Api request = get_request(get_request_str(parent_key, key, expected_value), action);
-  validate(key, expected_value, request.options().has_filter_action(),
-           request.options().filter_action());
+  validate(key, expected_value, true, request.options().filter_action());
 }
 
 void test_filter_attributes_parsing(const std::vector<std::string>& expected_values,
@@ -1613,8 +1614,7 @@ void test_filter_stop_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options().costing_options(static_cast<int>(costing)).has_filter_stop_action(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_stop_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_stop_ids_size() > 0),
@@ -1634,8 +1634,7 @@ void test_filter_route_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options().costing_options(static_cast<int>(costing)).has_filter_route_action(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_route_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_route_ids_size() > 0),
@@ -1655,8 +1654,7 @@ void test_filter_operator_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  validate(action_key, filter_action,
-           request.options().costing_options(static_cast<int>(costing)).has_filter_operator_action(),
+  validate(action_key, filter_action, true,
            request.options().costing_options(static_cast<int>(costing)).filter_operator_action());
   validate(ids_key, filter_ids,
            (request.options().costing_options(static_cast<int>(costing)).filter_operator_ids_size() >

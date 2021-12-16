@@ -128,7 +128,7 @@ std::string serializeIsochrones(const Api& request,
       {"features", features},
   });
 
-  if (request.options().has_id()) {
+  if (request.options().has_id_case()) {
     feature_collection->emplace("id", request.options().id());
   }
 

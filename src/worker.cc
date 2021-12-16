@@ -155,7 +155,7 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 void add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // otherwise we do what the person was asking for
-  if (options.has_date_time() && !locations.empty()) {
+  if (options.has_date_time_case() && !locations.empty()) {
     switch (options.date_time_type()) {
       case Options::current:
         locations.Mutable(0)->set_date_time("current");
@@ -402,10 +402,10 @@ void parse_locations(const rapidjson::Document& doc,
         // NOTE: that ignore_closures takes precedence
         location->mutable_search_filter()->set_exclude_closures(
             ignore_closures ? !(*ignore_closures) : (exclude_closures ? *exclude_closures : true));
-        if (!location->search_filter().has_min_road_class()) {
+        if (!location->search_filter().has_min_road_class_case()) {
           location->mutable_search_filter()->set_min_road_class(valhalla::kServiceOther);
         }
-        if (!location->search_filter().has_max_road_class()) {
+        if (!location->search_filter().has_max_road_class_case()) {
           location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
         }
         // set exclude_closures_disabled if any of the locations has the
@@ -560,14 +560,14 @@ void from_json(rapidjson::Document& doc, Options& options) {
       throw valhalla_exception_t{162};
     options.set_date_time(*date_time_value);
   } // not specified but you want transit, then we default to current
-  else if (options.has_costing() &&
+  else if (options.has_costing_case() &&
            (options.costing() == multimodal || options.costing() == transit)) {
     options.set_date_time_type(Options::current);
     options.set_date_time("current");
   }
 
   // failure scenarios with respect to time dependence
-  if (options.has_date_time_type()) {
+  if (options.has_date_time_type_case()) {
     if (options.date_time_type() == Options::arrive_by ||
         options.date_time_type() == Options::invariant) {
       if (options.costing() == multimodal || options.costing() == transit)
@@ -731,7 +731,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (options.use_timestamps()) {
     bool has_time = false;
     for (const auto& s : options.shape()) {
-      if (s.has_time()) {
+      if (s.has_time_case()) {
         has_time = true;
         break;
       }
@@ -769,7 +769,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
       sif::ParseCostingOptions(doc, key, options.add_recostings());
-      if (!options.recostings().rbegin()->has_name()) {
+      if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
       }
     }
@@ -807,7 +807,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
+  if (!options.has_date_time_type_case() &&
+      (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
       costing.set_flow_mask(
           static_cast<uint8_t>(costing.flow_mask()) &
@@ -983,8 +984,8 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
 
   // overwrite with osrm error response
   if (request.options().format() == Options::osrm) {
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "")
-         << exception.osrm_error << (request.options().has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "")
+         << exception.osrm_error << (request.options().has_jsonp_case() ? ")" : "");
   } // valhalla error response
   else {
     // build up the json map
@@ -993,8 +994,8 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
-         << (request.options().has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "") << *json_error
+         << (request.options().has_jsonp_case() ? ")" : "");
   }
 
   // write a few stats about the error
@@ -1082,8 +1083,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message,
                            jsonify_error(exception, request),
-                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
-                                                                         : worker::JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp_case() ? worker::JS_MIME
+                                                                              : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1097,7 +1098,7 @@ worker_t::result_t to_response(const std::string& data,
                                const bool as_attachment) {
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
-  if (request.options().has_jsonp()) {
+  if (request.options().has_jsonp_case()) {
     std::ostringstream stream;
     stream << request.options().jsonp() << '(';
     stream << data;
@@ -1171,7 +1172,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
 
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
-    float frequency = stat.has_frequency() ? stat.frequency() : 1.f;
+    float frequency = stat.has_frequency_case() ? stat.frequency() : 1.f;
     switch (stat.type()) {
       case count:
         statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,

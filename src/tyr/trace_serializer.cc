@@ -25,16 +25,16 @@ json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
   for (const auto& admin : trip_path.admin()) {
     auto admin_map = json::map({});
-    if (admin.has_country_code()) {
+    if (admin.has_country_code_case()) {
       admin_map->emplace("country_code", admin.country_code());
     }
-    if (admin.has_country_text()) {
+    if (admin.has_country_text_case()) {
       admin_map->emplace("country_text", admin.country_text());
     }
-    if (admin.has_state_code()) {
+    if (admin.has_state_code_case()) {
       admin_map->emplace("state_code", admin.state_code());
     }
-    if (admin.has_state_text()) {
+    if (admin.has_state_text_case()) {
       admin_map->emplace("state_text", admin.state_text());
     }
 
@@ -51,7 +51,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 
   // Length and speed default to kilometers
   double scale = 1;
-  if (options.has_units() && options.units() == Options::miles) {
+  if (options.has_units_case() && options.units() == Options::miles) {
     scale = kMilePerKm;
   }
 
@@ -63,14 +63,14 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 
       // Process each edge
       auto edge_map = json::map({});
-      if (edge.has_truck_route()) {
+      if (edge.has_truck_route_case()) {
         edge_map->emplace("truck_route", static_cast<bool>(edge.truck_route()));
       }
-      if (edge.has_truck_speed() && (edge.truck_speed() > 0)) {
+      if (edge.has_truck_speed_case() && (edge.truck_speed() > 0)) {
         edge_map->emplace("truck_speed",
                           static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
       }
-      if (edge.has_speed_limit() && (edge.speed_limit() > 0)) {
+      if (edge.has_speed_limit_case() && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
           edge_map->emplace("speed_limit", std::string("unlimited"));
         } else {
@@ -78,25 +78,25 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                             static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
         }
       }
-      if (edge.has_density()) {
+      if (edge.has_density_case()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
       }
-      if (edge.has_sac_scale()) {
+      if (edge.has_sac_scale_case()) {
         edge_map->emplace("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
       }
-      if (edge.has_shoulder()) {
+      if (edge.has_shoulder_case()) {
         edge_map->emplace("shoulder", static_cast<bool>(edge.shoulder()));
       }
-      if (edge.has_sidewalk()) {
+      if (edge.has_sidewalk_case()) {
         edge_map->emplace("sidewalk", to_string(edge.sidewalk()));
       }
-      if (edge.has_bicycle_network()) {
+      if (edge.has_bicycle_network_case()) {
         edge_map->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
       }
-      if (edge.has_cycle_lane()) {
+      if (edge.has_cycle_lane_case()) {
         edge_map->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
       }
-      if (edge.has_lane_count()) {
+      if (edge.has_lane_count_case()) {
         edge_map->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
       }
       if (edge.lane_connectivity_size()) {
@@ -110,90 +110,91 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
         edge_map->emplace("lane_connectivity", lane_connectivity);
       }
-      if (edge.has_max_downward_grade()) {
+      if (edge.has_max_downward_grade_case()) {
         edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
       }
-      if (edge.has_max_upward_grade()) {
+      if (edge.has_max_upward_grade_case()) {
         edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
       }
-      if (edge.has_weighted_grade()) {
+      if (edge.has_weighted_grade_case()) {
         edge_map->emplace("weighted_grade", json::fixed_t{edge.weighted_grade(), 3});
       }
-      if (edge.has_mean_elevation()) {
+      if (edge.has_mean_elevation_case()) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean != kNoElevationData && options.has_units() && options.units() == Options::miles) {
+        if (mean != kNoElevationData && options.has_units_case() &&
+            options.units() == Options::miles) {
           mean *= kFeetPerMeter;
         }
         edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
       }
-      if (edge.has_way_id()) {
+      if (edge.has_way_id_case()) {
         edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
       }
-      if (edge.has_id()) {
+      if (edge.has_id_case()) {
         edge_map->emplace("id", static_cast<uint64_t>(edge.id()));
       }
-      if (edge.has_travel_mode()) {
+      if (edge.has_travel_mode_case()) {
         edge_map->emplace("travel_mode", to_string(edge.travel_mode()));
       }
-      if (edge.has_vehicle_type()) {
+      if (edge.has_vehicle_type_case()) {
         edge_map->emplace("vehicle_type", to_string(edge.vehicle_type()));
       }
-      if (edge.has_pedestrian_type()) {
+      if (edge.has_pedestrian_type_case()) {
         edge_map->emplace("pedestrian_type", to_string(edge.pedestrian_type()));
       }
-      if (edge.has_bicycle_type()) {
+      if (edge.has_bicycle_type_case()) {
         edge_map->emplace("bicycle_type", to_string(edge.bicycle_type()));
       }
-      if (edge.has_surface()) {
+      if (edge.has_surface_case()) {
         edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
-      if (edge.has_drive_on_left()) {
+      if (edge.has_drive_on_left_case()) {
         edge_map->emplace("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
-      if (edge.has_internal_intersection()) {
+      if (edge.has_internal_intersection_case()) {
         edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
       }
-      if (edge.has_roundabout()) {
+      if (edge.has_roundabout_case()) {
         edge_map->emplace("roundabout", static_cast<bool>(edge.roundabout()));
       }
-      if (edge.has_bridge()) {
+      if (edge.has_bridge_case()) {
         edge_map->emplace("bridge", static_cast<bool>(edge.bridge()));
       }
-      if (edge.has_tunnel()) {
+      if (edge.has_tunnel_case()) {
         edge_map->emplace("tunnel", static_cast<bool>(edge.tunnel()));
       }
-      if (edge.has_unpaved()) {
+      if (edge.has_unpaved_case()) {
         edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
       }
-      if (edge.has_toll()) {
+      if (edge.has_toll_case()) {
         edge_map->emplace("toll", static_cast<bool>(edge.toll()));
       }
-      if (edge.has_use()) {
+      if (edge.has_use_case()) {
         edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
       }
-      if (edge.has_traversability()) {
+      if (edge.has_traversability_case()) {
         edge_map->emplace("traversability", to_string(edge.traversability()));
       }
-      if (edge.has_end_shape_index()) {
+      if (edge.has_end_shape_index_case()) {
         edge_map->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
       }
-      if (edge.has_begin_shape_index()) {
+      if (edge.has_begin_shape_index_case()) {
         edge_map->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
       }
-      if (edge.has_end_heading()) {
+      if (edge.has_end_heading_case()) {
         edge_map->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
       }
-      if (edge.has_begin_heading()) {
+      if (edge.has_begin_heading_case()) {
         edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
       }
-      if (edge.has_road_class()) {
+      if (edge.has_road_class_case()) {
         edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
-      if (edge.has_speed()) {
+      if (edge.has_speed_case()) {
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
-      if (edge.has_length_km()) {
+      if (edge.has_length_km_case()) {
         edge_map->emplace("length", json::fixed_t{edge.length_km() * scale, 3});
       }
       // TODO: do we want to output 'is_route_number'?
@@ -271,13 +272,16 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
           auto intersecting_edge_array = json::array({});
           for (const auto& xedge : node.intersecting_edge()) {
             auto xedge_map = json::map({});
-            if (xedge.has_walkability() && (xedge.walkability() != TripLeg_Traversability_kNone)) {
+            if (xedge.has_walkability_case() &&
+                (xedge.walkability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("walkability", to_string(xedge.walkability()));
             }
-            if (xedge.has_cyclability() && (xedge.cyclability() != TripLeg_Traversability_kNone)) {
+            if (xedge.has_cyclability_case() &&
+                (xedge.cyclability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
             }
-            if (xedge.has_driveability() && (xedge.driveability() != TripLeg_Traversability_kNone)) {
+            if (xedge.has_driveability_case() &&
+                (xedge.driveability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
             }
             xedge_map->emplace("from_edge_name_consistency",
@@ -286,11 +290,11 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                                static_cast<bool>(xedge.curr_name_consistency()));
             xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
 
-            if (xedge.has_use()) {
+            if (xedge.has_use_case()) {
               xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
             }
 
-            if (xedge.has_road_class()) {
+            if (xedge.has_road_class_case()) {
               xedge_map->emplace("road_class",
                                  to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
             }
@@ -301,24 +305,24 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
 
         if (node.has_cost() && node.cost().has_elapsed_cost() &&
-            node.cost().elapsed_cost().has_seconds()) {
+            node.cost().elapsed_cost().has_seconds_case()) {
           end_node_map->emplace("elapsed_time",
                                 json::fixed_t{node.cost().elapsed_cost().seconds(), 3});
         }
-        if (node.has_admin_index()) {
+        if (node.has_admin_index_case()) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
         }
-        if (node.has_type()) {
+        if (node.has_type_case()) {
           end_node_map->emplace("type", to_string(static_cast<baldr::NodeType>(node.type())));
         }
-        if (node.has_fork()) {
+        if (node.has_fork_case()) {
           end_node_map->emplace("fork", static_cast<bool>(node.fork()));
         }
-        if (node.has_time_zone()) {
+        if (node.has_time_zone_case()) {
           end_node_map->emplace("time_zone", node.time_zone());
         }
         if (node.has_cost() && node.cost().has_transition_cost() &&
-            node.cost().transition_cost().has_seconds()) {
+            node.cost().transition_cost().has_seconds_case()) {
           end_node_map->emplace("transition_time",
                                 json::fixed_t{node.cost().transition_cost().seconds(), 3});
         }
@@ -462,12 +466,12 @@ void append_trace_info(
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
 
   // Add osm_changeset
-  if (trip_path.has_osm_changeset()) {
+  if (trip_path.has_osm_changeset_case()) {
     json->emplace("osm_changeset", trip_path.osm_changeset());
   }
 
   // Add shape
-  if (trip_path.has_shape()) {
+  if (trip_path.has_shape_case()) {
     json->emplace("shape", trip_path.shape());
   }
 
@@ -514,12 +518,12 @@ std::string serializeTraceAttributes(
   auto json = json::map({});
 
   // Add result id, if supplied
-  if (request.options().has_id()) {
+  if (request.options().has_id_case()) {
     json->emplace("id", request.options().id());
   }
 
   // Add units, if specified
-  if (request.options().has_units()) {
+  if (request.options().has_units_case()) {
     json->emplace("units", valhalla::Options_Units_Enum_Name(request.options().units()));
   }
 
