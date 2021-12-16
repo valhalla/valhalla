@@ -517,15 +517,15 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // TODO: speed_penality hasn't been extensively tested, might alter this in future
-  float average_historic_speed = edge_speed;
-  // disable dynamic(current/predicted) speed layers and use static
-  // ones(constrained_flow/free_flow/base)
-  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kDynamicFlowMask)) {
-    // do not pass seconds_of_week not to make speed penalties independent of datetime
-    average_historic_speed = tile->GetSpeed(edge, flow_mask_ & kStaticFlowMask);
+  float average_edge_speed = edge_speed;
+  // dont use current speed layer for penalties as live speeds might be too low/too high
+  // better to use layers with smoothed/constant speeds
+  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
+    average_edge_speed =
+        tile->GetSpeed(edge, flow_mask_ & kNotCurrentFlowMask, time_info.second_of_week);
   }
   float speed_penalty =
-      (average_historic_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+      (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
             edge->toll() * toll_factor_;

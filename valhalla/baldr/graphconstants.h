@@ -629,7 +629,7 @@ constexpr uint8_t kFreeFlowMask = 1;
 constexpr uint8_t kConstrainedFlowMask = 2;
 constexpr uint8_t kPredictedFlowMask = 4;
 constexpr uint8_t kCurrentFlowMask = 8;
-constexpr uint8_t kStaticFlowMask = kFreeFlowMask | kConstrainedFlowMask;
+constexpr uint8_t kNotCurrentFlowMask = kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask;
 constexpr uint8_t kDynamicFlowMask = kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
