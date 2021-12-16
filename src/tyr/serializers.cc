@@ -90,6 +90,9 @@ namespace valhalla {
 namespace tyr {
 std::string serializeStatus(const Api& request) {
 
+  if (request.options().format() == Options_Format_pbf)
+    return request.status().SerializeAsString();
+
   rapidjson::Document status_doc;
   status_doc.SetObject();
   auto& alloc = status_doc.GetAllocator();

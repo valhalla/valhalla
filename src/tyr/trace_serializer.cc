@@ -514,6 +514,11 @@ std::string serializeTraceAttributes(
     const AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
+  // TODO: this is missing the matched points, we should add this to the Trip object upstream
+  // If its pbf format just return the trip
+  if (request.options().format() == Options_Format_pbf)
+    return request.trip().SerializeAsString();
+
   // Create json map to return
   auto json = json::map({});
 

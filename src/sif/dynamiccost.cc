@@ -512,6 +512,8 @@ void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
 void ParseCostingOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          Options& options) {
+  // TODO: if we have existing costing options we need to sort them and add the missing ones
+
   // if specified, get the costing options in there
   for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
     Costing costing = static_cast<Costing>(i);

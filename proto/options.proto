@@ -311,6 +311,7 @@ message Options {
     json = 0;
     gpx = 1;
     osrm = 2;
+    pbf = 3;
   }
 
   enum Action {

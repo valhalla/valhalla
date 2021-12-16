@@ -91,9 +91,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       default: {
         // narrate them and serialize them along
         auto response = narrate(request);
-        const bool as_gpx = request.options().format() == Options::gpx;
-        result = to_response(response, info, request, as_gpx ? worker::GPX_MIME : worker::JSON_MIME,
-                             as_gpx);
+        result = to_response(response, info, request);
         break;
       }
     }
