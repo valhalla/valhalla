@@ -3,17 +3,16 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/valhalla_add_elevation_utils.h"
 
-namespace bpo = boost::program_options;
+namespace opt = cxxopts;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -32,56 +31,48 @@ enum Input { CONFIG, TILES };
  * */
 
 std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char** argv) {
-  std::string config_path;
-  std::vector<std::string> tiles;
-  bpo::options_description options(
+  opt::Options options(
+      "help",
       " Usage: valhalla_add_elevation [options]\n"
       "valhalla_add_elevation is a tool for loading elevations for a provided tile. "
       "The service checks if required elevations stored locally if they are not "
       "it tries to establish connection to the remote storage(based on the information from configuration file)"
       "and loads required elevations.\n");
 
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<std::string>(&config_path),
-      "Path to the json configuration file.")("tiles,t",
-                                              boost::program_options::value<std::vector<std::string>>(
-                                                  &tiles)
-                                                  ->multitoken());
+  options.add_options()("help,h", "Print usage:"),
+      ("config,c", "Path to the json configuration file.", opt::value<std::string>()),
+      ("tiles,t", opt::value<std::vector<std::string>>()->parse());
 
-  bpo::positional_options_description pos_options;
-  pos_options.add("tiles", 16);
-  bpo::variables_map vm;
+  std::string config_file;
+  std::vector<std::string> tiles;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    auto result = options.parse(argc, argv);
 
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return {};
+    }
+
+    if (!result.count("config")) {
+      std::cerr << "No configuration file provided"
+                << "\n\n";
+      return {};
+    }
+
+    if (!result.count("tiles")) {
+      std::cerr << "No tile file provided"
+                << "\n\n";
+      return {};
+    }
+
+    config_file = result["config"].as<std::string>();
+    tiles = result["tiles"].as<std::vector<std::string>>();
   } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
+    std::cerr << "Unable to parse command line options. Error: " << e.what() << "\n";
     return {};
   }
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return {};
-  }
-  if (vm.count("version")) {
-    std::cout << "valhalla_build_tiles " << VALHALLA_VERSION << "\n";
-    return {};
-  }
-
-  if (!vm.count("config")) {
-    std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    return {};
-  }
-
-  if (tiles.empty()) {
-    std::cerr << "Tile file is required\n\n" << options << "\n\n";
-    return {};
-  }
-
-  return {config_path, tiles};
+  return {config_file, tiles};
 }
 
 std::unordered_set<std::string> get_valid_tile_paths(std::vector<std::string>&& tiles) {
