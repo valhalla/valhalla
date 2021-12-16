@@ -18,6 +18,7 @@ public:
           baldr::GraphReader& reader,
           bool auto_cleanup = false);
   void cleanup();
+  std::string act(Api& api, const std::function<void()>* interrupt = nullptr);
   std::string route(const std::string& request_str,
                     const std::function<void()>* interrupt = nullptr,
                     Api* api = nullptr);

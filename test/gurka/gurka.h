@@ -157,6 +157,10 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
 
+std::string do_action(const map& map,
+                      valhalla::Api& api,
+                      std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,

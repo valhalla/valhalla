@@ -1084,13 +1084,6 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     message += ":" + extra;
 }
 
-void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
-  api.Clear();
-  auto document = from_string(request, valhalla_exception_t{100});
-  api.mutable_options()->set_action(action);
-  from_json(document, *api.mutable_options());
-}
-
 std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   // get the http status
   std::stringstream body;
@@ -1127,40 +1120,66 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   return body.str();
 }
 
+void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
+  // if it has options already we only want to clear the stuff we are going to eventually set
+  if (api.has_options()) {
+    api.clear_trip();
+    api.clear_directions();
+    api.clear_status();
+    api.clear_info();
+  } // otherwise blank it all just in case
+  else {
+    api.Clear();
+  }
+
+  // maybe parse some json
+  api.mutable_options()->set_action(action);
+  auto document = from_string(request, valhalla_exception_t{100});
+  from_json(document, *api.mutable_options());
+}
+
 #ifdef HAVE_HTTP
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
-  api.Clear();
-
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {
     throw valhalla_exception_t{101};
   };
 
+  // set the action
+  api.Clear();
+  auto& options = *api.mutable_options();
+  Options::Action action;
+  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
+    // if this is a pbf request, its action is overridden by the request path
+    options.set_action(action);
+  }
+
   // if its a protobuf mime go with that
   auto pbf_content = request.headers.find("Content-Type");
   if (pbf_content != request.headers.end() && pbf_content->second == worker::PBF_MIME.second) {
-    auto& options = *api.mutable_options();
-    if (!options.ParseFromString(request.body)) {
+    if (!api.ParseFromString(request.body)) {
       throw valhalla_exception_t{103};
     }
-    // TODO: validate the options..
+    // validate the options
+    rapidjson::Document document;
+    from_json(document, *api.mutable_options());
     return;
   }
 
-  // we are going with json
+  // parse the json input
   rapidjson::Document document;
   auto& allocator = document.GetAllocator();
-  // parse the input
   const auto& json = request.query.find("json");
   if (json != request.query.end() && json->second.size() && json->second.front().size()) {
     document.Parse(json->second.front().c_str());
-    // no json parameter, check the body
-  } else if (!request.body.empty()) {
+  } // no json parameter, check the body
+  else if (!request.body.empty()) {
     document.Parse(request.body.c_str());
-    // no json at all
-  } else {
+  } // no json at all
+  else {
     document.SetObject();
   }
+
   // if parsing failed
   if (document.HasParseError()) {
     throw valhalla_exception_t{100};
@@ -1185,14 +1204,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
       array.PushBack({value, allocator}, allocator);
     }
     document.AddMember({kv.first, allocator}, array, allocator);
-  }
-
-  auto& options = *api.mutable_options();
-
-  // set the action
-  Options::Action action;
-  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
-    options.set_action(action);
   }
 
   // parse out the options

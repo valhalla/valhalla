@@ -51,6 +51,40 @@ void actor_t::cleanup() {
   pimpl->cleanup();
 }
 
+std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
+  if (!api.options().has_action_case())
+    throw std::runtime_error("No action was specified");
+
+  switch (api.options().action()) {
+    case Options::route:
+      return route("", interrupt, &api);
+    case Options::locate:
+      return locate("", interrupt, &api);
+    case Options::sources_to_targets:
+      return matrix("", interrupt, &api);
+    case Options::optimized_route:
+      return optimized_route("", interrupt, &api);
+    case Options::isochrone:
+      return isochrone("", interrupt, &api);
+    case Options::trace_route:
+      return trace_route("", interrupt, &api);
+    case Options::trace_attributes:
+      return trace_attributes("", interrupt, &api);
+    case Options::height:
+      return height("", interrupt, &api);
+    case Options::transit_available:
+      return transit_available("", interrupt, &api);
+    case Options::expansion:
+      return expansion("", interrupt, &api);
+    case Options::centroid:
+      return centroid("", interrupt, &api);
+    case Options::status:
+      return status("", interrupt, &api);
+    default:
+      throw std::runtime_error("Unknown action");
+  }
+}
+
 std::string
 actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
@@ -283,22 +317,22 @@ std::string
 actor_t::centroid(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
-  // parse the request
+  // if the caller doesn't want a copy we'll use this temp one
   Api request;
-  ParseApi(request_str, Options::centroid, request);
+  if (!api) {
+    api = &request;
+  }
+  // parse the request
+  ParseApi(request_str, Options::centroid, *api);
   // check the request and locate the locations in the graph
-  pimpl->loki_worker.route(request);
+  pimpl->loki_worker.route(*api);
   // route between the locations in the graph to find the best path
-  pimpl->thor_worker.centroid(request);
+  pimpl->thor_worker.centroid(*api);
   // get some directions back from them and serialize
-  auto bytes = pimpl->odin_worker.narrate(request);
+  auto bytes = pimpl->odin_worker.narrate(*api);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
-  }
-  // give the caller a copy
-  if (api) {
-    api->Swap(&request);
   }
   return bytes;
 }

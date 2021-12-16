@@ -48,7 +48,6 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string statsd_key;
 };
 
-// TODO: this will go away and Options will be the request object
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);

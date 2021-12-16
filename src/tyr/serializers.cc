@@ -91,7 +91,7 @@ namespace tyr {
 std::string serializeStatus(const Api& request) {
 
   if (request.options().format() == Options_Format_pbf)
-    return request.status().SerializeAsString();
+    return request.SerializeAsString();
 
   rapidjson::Document status_doc;
   status_doc.SetObject();
