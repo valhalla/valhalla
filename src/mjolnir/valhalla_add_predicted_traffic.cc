@@ -309,6 +309,16 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  // configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      config.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
+    valhalla::midgard::logging::Configure(logging_config);
+  }
+
   // queue up all the work we'll be doing
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
   for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
@@ -328,16 +338,6 @@ int main(int argc, char** argv) {
                                                                           files_per_tile.end());
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
 
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);

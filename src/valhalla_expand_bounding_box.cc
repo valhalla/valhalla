@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
 
-    // Read the config filegi
+    // Read the config file
     if (result.count("inline-config")) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
@@ -54,6 +54,16 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
 
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("mjolnir.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
     if (!result.count("bounding-box")) {
       std::cerr << "You must provide a bounding box to expand.\n\n";
       std::cerr << options.help() << std::endl;
@@ -62,16 +72,6 @@ int main(int argc, char** argv) {
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
-  }
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   std::stringstream ss(bbox);
