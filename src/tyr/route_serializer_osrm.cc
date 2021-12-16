@@ -439,11 +439,13 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
   EnhancedTripLeg_Node* prev_node = nullptr;
+
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
     // Get the node and current edge from the enhanced trip path
     // NOTE: curr_edge does not exist for the arrive maneuver
+
     auto node = etp->GetEnhancedNode(i);
     auto curr_edge = etp->GetCurrEdge(i);
     auto prev_edge = etp->GetPrevEdge(i);
@@ -543,10 +545,19 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add the incoming edge except for the first depart intersection.
     // Set routeable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
+
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
       uint32_t prior_heading = prev_edge->end_heading();
       edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
+    }
+
+    if (i > 0 && !arrive_maneuver) {
+      bool entry = (arrive_maneuver) ? true : false;
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        edges.emplace_back(intersecting_edge->begin_heading(), entry, true, false);
+      }
     }
 
     // Create bearing and entry output
