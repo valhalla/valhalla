@@ -254,7 +254,7 @@ void parse_location(valhalla::Location* location,
     Location_Type_Enum_Parse(*stop_type_json, &type);
     location->set_type(type);
   } // and if you didnt set it it defaulted to break which is not the default for trace_route
-  else if (options.action() == Options::trace_route) {
+  else if (options.action() == Options::trace_route && !location->has_time_case()) {
     location->set_type(valhalla::Location::kVia);
   }
 
@@ -1122,8 +1122,8 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
 }
 
 void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
-  // if it has options already we only want to clear the stuff we are going to eventually set
-  if (api.has_options()) {
+  // if its a pbf request we only want to clear the stuff we are going to eventually set
+  if (api.has_options() && request.empty()) {
     api.clear_trip();
     api.clear_directions();
     api.clear_status();

@@ -951,7 +951,7 @@ TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float t
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestBicycleCost(request.options().costing_options(static_cast<int>(Costing::bicycle)));
+  return new TestBicycleCost(request.options().costing_options().find(Costing::bicycle)->second);
 }
 
 std::uniform_real_distribution<float>*

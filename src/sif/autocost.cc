@@ -1111,7 +1111,7 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return std::make_shared<TestAutoCost>(
-      request.options().costing_options(static_cast<int>(Costing::auto_)));
+      request.options().costing_options().find(Costing::auto_)->second);
 }
 
 std::uniform_real_distribution<float>

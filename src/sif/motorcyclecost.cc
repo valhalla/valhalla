@@ -639,7 +639,7 @@ TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, f
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorcycleCost(
-      request.options().costing_options(static_cast<int>(Costing::motorcycle)));
+      request.options().costing_options().find(Costing::motorcycle)->second);
 }
 
 template <typename T>

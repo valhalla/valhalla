@@ -770,6 +770,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   return c;
 }
 
+// TODO: we should only set the ones that arent already set..
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
                                 CostingOptions* pbf_costing_options) {
@@ -951,7 +952,7 @@ TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestPedestrianCost(
-      request.options().costing_options(static_cast<int>(Costing::pedestrian)));
+      request.options().costing_options().find(Costing::pedestrian)->second);
 }
 
 std::uniform_real_distribution<float>*

@@ -719,7 +719,7 @@ TestTruckCost* make_truckcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestTruckCost(request.options().costing_options(static_cast<int>(Costing::truck)));
+  return new TestTruckCost(request.options().costing_options().find(Costing::truck)->second);
 }
 
 std::uniform_real_distribution<float>*

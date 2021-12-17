@@ -761,7 +761,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TransitCost(request.options().costing_options(static_cast<int>(Costing::transit)));
+  return new TransitCost(request.options().costing_options().find(Costing::transit)->second);
 }
 
 std::uniform_real_distribution<float>*

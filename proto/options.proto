@@ -41,20 +41,17 @@ enum ShapeFormat {
 
 enum Costing {
   auto_ = 0;
-  // deprecated auto_shorter = 1;
-  bicycle = 2;
-  bus = 3;
-  // deprecated hov = 4;
-  motor_scooter = 5;
-  multimodal = 6;
-  pedestrian = 7;
-  transit = 8;
-  truck = 9;
-  motorcycle = 10;
-  // deprecated auto_data_fix = 11;
-  taxi = 12;
-  none_ = 13;
-  bikeshare = 14;
+  bicycle = 1;
+  bus = 2;
+  motor_scooter = 3;
+  multimodal = 4;
+  pedestrian = 5;
+  transit = 6;
+  truck = 7;
+  motorcycle = 8;
+  taxi = 9;
+  none_ = 10;
+  bikeshare = 11;
 }
 
 message AvoidEdge {

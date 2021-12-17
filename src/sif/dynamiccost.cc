@@ -348,6 +348,7 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
              2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
 }
 
+// TODO: only set the ones that arent set
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
@@ -366,6 +367,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
 }
 
+// TODO: only set the ones that arent set
 void ParseBaseCostOptions(const rapidjson::Value& value,
                           CostingOptions* pbf_costing_options,
                           const BaseCostingOptionsConfig& base_cfg) {

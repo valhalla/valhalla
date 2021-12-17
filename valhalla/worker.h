@@ -48,8 +48,28 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string statsd_key;
 };
 
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass anything but an empty string
+ * for the json request the pbf contents are ignored. If the json request is empty it is assumed
+ * the pbf is filled out.
+ *
+ * @param json_request  A json string in the APIs request format
+ * @param action        Which action to perform
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      already filled out, it will be validated and the json will be ignored
+ */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
+ * it is assumed that the body of the request is protobuf bytes and any json will be ignored. Likewise
+ * if no protobuf mime was passed then we assume json is either in the body or the query params.
+ *
+ * @param http_request  The http request object from which we get the request info
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      pbf bytes were passed, they will be deserialized into this object and any json
+ *                      will be ignored
+ */
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 

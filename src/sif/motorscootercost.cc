@@ -661,7 +661,7 @@ TestMotorScooterCost* make_motorscootercost_from_json(const std::string& propert
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorScooterCost(
-      request.options().costing_options(static_cast<int>(Costing::motor_scooter)));
+      request.options().costing_options().find(Costing::motor_scooter)->second);
 }
 
 template <typename T>
