@@ -39,10 +39,13 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
       "it tries to establish connection to the remote storage(based on the information from configuration file)"
       "and loads required elevations.\n");
 
-  options.add_options()("help,h", "Print usage:"),
-      ("config,c", "Path to the json configuration file.", opt::value<std::string>()),
-      ("tiles,t", opt::value<std::vector<std::string>>()->parse());
+  options.add_options()("h,help",
+                        "Print usage")("c,config", "Path to the configuration file.",
+                                       opt::value<
+                                           std::string>())("t,tiles", "Tiles to add elevations to",
+                                                           opt::value<std::vector<std::string>>());
 
+  options.allow_unrecognised_options();
   std::string config_file;
   std::vector<std::string> tiles;
   try {
@@ -56,17 +59,16 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
     if (!result.count("config")) {
       std::cerr << "No configuration file provided"
                 << "\n\n";
-      return {};
+    } else {
+      config_file = result["config"].as<std::string>();
     }
 
     if (!result.count("tiles")) {
       std::cerr << "No tile file provided"
                 << "\n\n";
-      return {};
+    } else {
+      tiles = result["tiles"].as<std::vector<std::string>>();
     }
-
-    config_file = result["config"].as<std::string>();
-    tiles = result["tiles"].as<std::vector<std::string>>();
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options. Error: " << e.what() << "\n";
     return {};
@@ -87,8 +89,12 @@ std::unordered_set<std::string> get_valid_tile_paths(std::vector<std::string>&& 
 
 int main(int argc, char** argv) {
   auto params = parse_arguments(argc, argv);
+  if (std::get<Input::CONFIG>(params).empty() && std::get<Input::TILES>(params).empty()) {
+    return EXIT_SUCCESS;
+  }
+
   if (std::get<Input::CONFIG>(params).empty() || std::get<Input::TILES>(params).empty()) {
-    std::cerr << "Invalid input " << (std::get<Input::CONFIG>(params).empty() ? "config" : "tile")
+    std::cerr << "Invalid input: " << (std::get<Input::CONFIG>(params).empty() ? "config" : "tile")
               << " was not provided\n\n";
     return EXIT_FAILURE;
   }
@@ -107,7 +113,12 @@ int main(int argc, char** argv) {
 
   boost::property_tree::ptree pt;
   rapidjson::read_json(std::get<Input::CONFIG>(params), pt);
-  ElevationBuilder::Build(pt, valhalla::mjolnir::get_tile_ids(pt, tiles));
+  auto tile_ids = valhalla::mjolnir::get_tile_ids(pt, tiles);
+  if (tile_ids.empty()) {
+    std::cerr << "Failed to load tiles\n\n";
+    return EXIT_FAILURE;
+  }
 
+  ElevationBuilder::Build(pt, tile_ids);
   return EXIT_SUCCESS;
 }

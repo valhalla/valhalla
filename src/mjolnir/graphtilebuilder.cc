@@ -76,7 +76,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   name_info.insert({0});
 
   // Copy nodes to the builder list
+  if (!header_)
+    throw std::logic_error("On building GraphTileBuilder tile header was not created");
+
   size_t n = header_->nodecount();
+
   nodes_builder_.reserve(n);
   std::copy(nodes_, nodes_ + n, std::back_inserter(nodes_builder_));
 
@@ -102,11 +106,13 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     departure_builder_.emplace_back(std::move(departures_[i]));
     name_info.insert({departures_[i].headsign_offset()});
   }
+
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     stop_builder_.emplace_back(std::move(transit_stops_[i]));
     name_info.insert({transit_stops_[i].one_stop_offset()});
     name_info.insert({transit_stops_[i].name_offset()});
   }
+
   for (uint32_t i = 0; i < header_->routecount(); i++) {
     route_builder_.emplace_back(std::move(transit_routes_[i]));
     name_info.insert({transit_routes_[i].one_stop_offset()});
@@ -117,6 +123,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     name_info.insert({transit_routes_[i].long_name_offset()});
     name_info.insert({transit_routes_[i].desc_offset()});
   }
+
   for (uint32_t i = 0; i < header_->schedulecount(); i++) {
     schedule_builder_.emplace_back(std::move(transit_schedules_[i]));
   }
@@ -144,7 +151,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   }
 
   // Edge bins are gotten by parent
-
   // Create an ordered set of edge info offsets
   std::set<uint32_t> edge_info_offsets;
   for (auto& diredge : directededges_builder_) {
@@ -181,6 +187,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
       name_info.insert(info);
       eib.AddNameInfo(info);
     }
+
     eib.set_encoded_shape(ei.encoded_shape());
     edge_info_offset_ += eib.SizeOf();
     edgeinfo_list_.emplace_back(std::move(eib));

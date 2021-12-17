@@ -97,9 +97,19 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
 graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
                                  const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
-
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
+    std::string error_msg;
+    if (!graphid.Is_Valid())
+      error_msg += "GraphId is invalid\n\n";
+
+    if (graphid.level() > TileHierarchy::get_max_level())
+      error_msg += "GraphId level exceeds tile hierarch max level\n\n";
+
+    if (tile_dir.empty())
+      error_msg += "tile_dir is empty\n\n";
+
+    LOG_ERROR("Failed to build GraphTile. Error: " + error_msg);
     return nullptr;
   }
 
@@ -133,6 +143,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Nothing to load anywhere
+  LOG_ERROR("Failed to build GraphTile");
   return nullptr;
 }
 
@@ -251,9 +262,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
   char* const tile_ptr = memory_->data;
   const size_t tile_size = memory_->size;
 
-  if (tile_size < sizeof(GraphTileHeader))
+  if (tile_size < sizeof(GraphTileHeader)) {
     throw std::runtime_error("Invalid tile data size = " + std::to_string(tile_size) +
                              ". Tile file might me corrupted");
+  }
 
   char* ptr = tile_ptr;
   header_ = reinterpret_cast<GraphTileHeader*>(ptr);
