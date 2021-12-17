@@ -463,8 +463,9 @@ void parse_locations(const rapidjson::Document& doc,
       }
     } // maybe its deserialized pbf
     else if (!locations->empty()) {
+      int i = 0;
       for (auto& loc : *locations) {
-        loc.set_original_index(&loc - &locations->Get(0));
+        loc.set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
         had_date_time = had_date_time || loc.has_date_time_case();
         // turn off filtering closures when any locations search filter allows closures
@@ -489,7 +490,7 @@ void parse_locations(const rapidjson::Document& doc,
     // a secondary per-location filtering using loki's search_filter
     // functionality. Otherwise we default to skipping closed roads
     for (auto& costing : *options.mutable_costing_options()) {
-      costing.set_filter_closures(filter_closures);
+      costing.second.set_filter_closures(filter_closures);
     }
   }
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
@@ -692,7 +693,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_linear_references(*linear_references);
   }
 
-  // TODO: move out
   // costing defaults to none which is only valid for locate
   auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
 
@@ -743,8 +743,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
                              : boost::none;
   if (options.has_costing_case()) {
     for (const auto& co : options.costing_options()) {
-      if (co.costing() == options.costing() && co.has_ignore_closures_case()) {
-        ignore_closures = co.ignore_closures();
+      if (co.second.costing() == options.costing() && co.second.has_ignore_closures_case()) {
+        ignore_closures = co.second.ignore_closures();
         break;
       }
     }
@@ -855,11 +855,12 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
 
-  // try the string directly, some strings are keywords so add an underscore
+  // set the costing if it wasn't already set
   Costing costing;
-  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+  if (!options.has_costing_case() && valhalla::Costing_Enum_Parse(costing_str, &costing)) {
     options.set_costing(costing);
-  } else {
+  }
+  if (!options.has_costing_case()) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
@@ -919,8 +920,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (!options.has_date_time_type_case() &&
       (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
-      costing.set_flow_mask(
-          static_cast<uint8_t>(costing.flow_mask()) &
+      costing.second.set_flow_mask(
+          static_cast<uint8_t>(costing.second.flow_mask()) &
           ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }

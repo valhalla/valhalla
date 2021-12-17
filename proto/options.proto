@@ -382,11 +382,11 @@ message Options {
   oneof has_costing {
     Costing costing = 12;                                          // Used to tell what type of costing to use
   }
-  repeated CostingOptions costing_options = 13;                           // A list of costing options for each costing model
-  repeated Location locations = 14;                                       // Locations for /route /optimized /locate /isochrone
-  repeated Location exclude_locations = 15;                               // Avoids for any costing
-  repeated Location sources = 16;                                         // Sources for /sources_to_targets
-  repeated Location targets = 17;                                         // Targets for /sources_to_targets
+  map<int32, CostingOptions> costing_options = 13;                 // A map of Costing enum value to its options of costing options for any costing models
+  repeated Location locations = 14;                                // Locations for /route /optimized /locate /isochrone
+  repeated Location exclude_locations = 15;                        // Avoids for any costing
+  repeated Location sources = 16;                                  // Sources for /sources_to_targets
+  repeated Location targets = 17;                                  // Targets for /sources_to_targets
   oneof has_date_time_type {
     DateTimeType date_time_type = 18;                              // Are you leaving now or then or arriving then
   }

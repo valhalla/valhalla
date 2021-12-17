@@ -613,6 +613,21 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
     case valhalla::Options::isochrone:
       json_str = actor.isochrone(request_json, nullptr, &api);
       break;
+    case valhalla::Options::optimized_route:
+      json_str = actor.optimized_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::sources_to_targets:
+      json_str = actor.matrix(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::height:
+      json_str = actor.height(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::status:
+      json_str = actor.status(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::transit_available:
+      json_str = actor.height(request_json, nullptr, &api);
+      break;
     default:
       throw std::logic_error("Unsupported action");
       break;
@@ -646,8 +661,10 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto location_type =
-      action == Options::trace_route || action == Options::trace_attributes ? "shape" : "locations";
+  auto location_type = action == Options::trace_route || action == Options::trace_attributes ||
+                               action == Options::height || action == Options::transit_available
+                           ? "shape"
+                           : "locations";
   auto request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
   return do_action(action, map, request_json, reader, json);
 }

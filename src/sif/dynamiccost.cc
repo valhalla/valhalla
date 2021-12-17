@@ -515,19 +515,15 @@ void ParseCostingOptions(const rapidjson::Document& doc,
   // TODO: if we have existing costing options we need to sort them and add the missing ones
 
   // if specified, get the costing options in there
-  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
-    Costing costing = static_cast<Costing>(i);
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Deprecated costings still need their place in the array
-    if (costing_str.empty()) {
-      options.add_costing_options();
-      continue;
-    }
+  for (auto i = Costing_MIN; i <= Costing_MAX; i = Costing(i + 1)) {
     // Create the costing options key
+    const auto& costing_str = valhalla::Costing_Enum_Name(i);
+    if (costing_str.empty())
+      continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    ParseCostingOptions(doc, key, options.add_costing_options(), costing);
+    auto& costing_options = (*options.mutable_costing_options())[i];
+    ParseCostingOptions(doc, key, &costing_options, i);
   }
 }
 
