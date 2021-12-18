@@ -73,11 +73,11 @@ void ParseApi(const std::string& json_request, Options::Action action, Api& api)
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
-std::string jsonify_error(const valhalla_exception_t& exception, Api& options);
+std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 #ifdef HAVE_HTTP
-prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
-                                               prime_server::http_request_info_t& request_info,
-                                               Api& options);
+prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
+                                                 prime_server::http_request_info_t& request_info,
+                                                 Api& options);
 namespace worker {
 using content_type = prime_server::headers_t::value_type;
 const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};

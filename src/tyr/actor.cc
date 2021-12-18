@@ -53,7 +53,7 @@ void actor_t::cleanup() {
 
 std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
   if (!api.options().has_action_case())
-    throw std::runtime_error("No action was specified");
+    throw valhalla_exception_t{106};
 
   switch (api.options().action()) {
     case Options::route:
@@ -81,7 +81,7 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
     case Options::status:
       return status("", interrupt, &api);
     default:
-      throw std::runtime_error("Unknown action");
+      throw valhalla_exception_t{106};
   }
 }
 

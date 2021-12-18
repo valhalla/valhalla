@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "test.h"
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
@@ -73,5 +74,27 @@ TEST(pbf_api, pbf_in_out) {
       // write_to_file("expected.pbf", expected_pbf.SerializeAsString());
       EXPECT_EQ(actual_pbf.trip().SerializeAsString(), expected_pbf.trip().SerializeAsString());
     }
+  }
+}
+
+TEST(pbf_api, pbf_error) {
+  // we set nothing so we should get an error about having not selecting an action
+  Api api;
+  gurka::map map{test::make_config("./foobar"), {}};
+
+  for (int i = 0; i < 2; ++i) {
+    try {
+      api.mutable_options()->set_format(Options::pbf);
+      gurka::do_action(map, api);
+      throw std::runtime_error("We should not get to here");
+    } catch (valhalla_exception_t& e) {
+      auto pbf_bytes = serialize_error(e, api);
+      Api actual;
+      EXPECT_TRUE(actual.ParseFromString(pbf_bytes));
+      EXPECT_EQ(actual.info().errors().size(), 1);
+    }
+    // try again with an action but no locations
+    api.Clear();
+    api.mutable_options()->set_action(Options::route);
   }
 }

@@ -96,7 +96,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       }
     }
   } catch (const std::exception& e) {
-    result = jsonify_error({299, std::string(e.what())}, info, request);
+    result = serialize_error({299, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client (this should be the case)

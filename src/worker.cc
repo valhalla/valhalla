@@ -1085,7 +1085,7 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     message += ":" + extra;
 }
 
-std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
+std::string serialize_error(const valhalla_exception_t& exception, Api& request) {
   // get the http status
   std::stringstream body;
 
@@ -1093,8 +1093,8 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   if (request.options().format() == Options::osrm) {
     body << (request.options().has_jsonp_case() ? request.options().jsonp() + "(" : "")
          << exception.osrm_error << (request.options().has_jsonp_case() ? ")" : "");
-  } // valhalla error response
-  else {
+  } // valhalla json error response
+  else if (request.options().format() != Options::pbf) {
     // build up the json map
     auto json_error = baldr::json::map({});
     json_error->emplace("status", exception.http_message);
@@ -1105,8 +1105,12 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
          << (request.options().has_jsonp_case() ? ")" : "");
   }
 
+  // keep track of what the error was
+  auto* err = request.mutable_info()->mutable_errors()->Add();
+  err->set_description(exception.message);
+  err->set_code(exception.code);
+
   // write a few stats about the error
-  request.mutable_info()->set_error(true);
   auto worker = exception.code < 200 || (exception.code >= 300 && exception.code < 400)
                     ? ".loki."
                     : (exception.code >= 400 && exception.code <= 500 ? ".thor." : ".odin.");
@@ -1118,6 +1122,12 @@ std::string jsonify_error(const valhalla_exception_t& exception, Api& request) {
   err_stat->set_value(1);
   err_stat->set_type(count);
 
+  // pbf format output
+  if (request.options().format() == Options::pbf) {
+    return request.SerializeAsString();
+  }
+
+  // json
   return body.str();
 }
 
@@ -1214,12 +1224,12 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
-worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
-                                 http_request_info_t& request_info,
-                                 Api& request) {
+worker_t::result_t serialize_error(const valhalla_exception_t& exception,
+                                   http_request_info_t& request_info,
+                                   Api& request) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message,
-                           jsonify_error(exception, request),
+                           serialize_error(exception, request),
                            headers_t{CORS, request.options().has_jsonp_case() ? worker::JS_MIME
                                                                               : worker::JSON_MIME});
   response.from_info(request_info);
@@ -1333,7 +1343,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
   }
 
   // before we are done with the request, if this was not an error we log it was ok
-  if (!api.info().error()) {
+  if (api.info().errors().empty()) {
     const auto& action = Options_Action_Enum_Name(api.options().action());
     statsd_client->count(action + ".info." + service_name() + ".ok", 1, 1.f, statsd_client->tags);
   }
