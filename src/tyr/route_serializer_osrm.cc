@@ -532,29 +532,28 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
-    // the arrive step.
+    // the arrival step.
     std::vector<IntersectionEdges> edges;
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+      if (i > 0) {
+        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+          auto intersecting_edge = node->GetIntersectingEdge(m);
+          bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, true);
+        }
+      }
     }
 
     // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
+    // Set routable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
       uint32_t prior_heading = prev_edge->end_heading();
       edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
-    }
-
-    if (i > 0 && !arrive_maneuver) {
-      bool entry = (arrive_maneuver) ? true : false;
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        edges.emplace_back(intersecting_edge->begin_heading(), entry, true, false);
-      }
     }
 
     // Create bearing and entry output
