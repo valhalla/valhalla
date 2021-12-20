@@ -41,6 +41,7 @@
    * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457)(https://github.com/valhalla/valhalla/pull/3457)
+   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460)(https://github.com/valhalla/valhalla/pull/3460)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
