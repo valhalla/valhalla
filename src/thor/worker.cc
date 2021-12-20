@@ -276,10 +276,10 @@ void thor_worker_t::parse_measurements(const Api& request) {
     for (const auto& pt : options.shape()) {
       trace.emplace_back(
           meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
-                             pt.has_accuracy() ? pt.accuracy()
-                                               : config.emission_cost.gps_accuracy_meters,
-                             pt.has_radius() ? pt.radius()
-                                             : config.candidate_search.search_radius_meters,
+                             pt.has_accuracy_case() ? pt.accuracy()
+                                                    : config.emission_cost.gps_accuracy_meters,
+                             pt.has_radius_case() ? pt.radius()
+                                                  : config.candidate_search.search_radius_meters,
                              pt.time(),
                              PathLocation::fromPBF(pt.type())});
     }
@@ -291,10 +291,10 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> country_iso;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
-      if (admin.has_state_code()) {
+      if (admin.has_state_code_case()) {
         state_iso.insert(admin.state_code());
       }
-      if (admin.has_country_code()) {
+      if (admin.has_country_code_case()) {
         country_iso.insert(admin.country_code());
       }
     }
@@ -311,27 +311,27 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
   controller = AttributesController();
   const auto& options = request.options();
 
-  if (options.has_filter_action()) {
-    switch (options.filter_action()) {
-      case (FilterAction::include): {
-        if (is_strict_filter)
-          controller.disable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
+  switch (options.filter_action()) {
+    case (FilterAction::include): {
+      if (is_strict_filter)
+        controller.disable_all();
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = true;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
       }
-      case (FilterAction::exclude): {
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
+      break;
     }
+    case (FilterAction::exclude): {
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = false;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 

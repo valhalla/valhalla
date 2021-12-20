@@ -411,30 +411,32 @@ std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   switch (maneuver.travel_mode()) {
     case TravelMode::kDrive: {
-      auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
-                                           : vehicle_to_string.cend();
+      auto i = maneuver.has_vehicle_type_case() ? vehicle_to_string.find(maneuver.vehicle_type())
+                                                : vehicle_to_string.cend();
       return i == vehicle_to_string.cend() ? std::make_pair("drive", "car")
                                            : std::make_pair("drive", i->second);
     }
     case TravelMode::kPedestrian: {
-      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
-                                              : pedestrian_to_string.cend();
+      auto i = maneuver.has_pedestrian_type_case()
+                   ? pedestrian_to_string.find(maneuver.pedestrian_type())
+                   : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot")
                                               : std::make_pair("pedestrian", i->second);
     }
     case TravelMode::kBicycle: {
-      auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
-                                           : bicycle_to_string.cend();
+      auto i = maneuver.has_bicycle_type_case() ? bicycle_to_string.find(maneuver.bicycle_type())
+                                                : bicycle_to_string.cend();
       return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road")
                                            : std::make_pair("bicycle", i->second);
     }
     case TravelMode::kTransit: {
-      auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
-                                           : transit_to_string.cend();
+      auto i = maneuver.has_transit_type_case() ? transit_to_string.find(maneuver.transit_type())
+                                                : transit_to_string.cend();
       return i == transit_to_string.cend() ? std::make_pair("transit", "rail")
                                            : std::make_pair("transit", i->second);
     }
+    default:
+      throw std::logic_error("Unknown travel mode");
   }
-  throw std::runtime_error("Unhandled case");
 }
 } // namespace valhalla

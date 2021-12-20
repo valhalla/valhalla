@@ -155,7 +155,7 @@ valhalla::TripLeg_Closure* fetch_or_create_closure_annotation(TripLeg& leg) {
   valhalla::TripLeg_Closure* closure = fetch_last_closure_annotation(leg);
   // If last closure annotation has its end index populated, create a new
   // closure annotation
-  return (!closure || closure->has_end_shape_index()) ? leg.add_closures() : closure;
+  return (!closure || closure->has_end_shape_index_case()) ? leg.add_closures() : closure;
 }
 
 /**
@@ -337,14 +337,14 @@ void SetShapeAttributes(const AttributesController& controller,
         // annotation if it does not have an end index set (meaning the shape
         // is still within an existing closure)
         ::valhalla::TripLeg_Closure* closure = fetch_or_create_closure_annotation(leg);
-        if (!closure->has_begin_shape_index()) {
+        if (!closure->has_begin_shape_index_case()) {
           closure->set_begin_shape_index(i - 1);
         }
       } else {
         // Not a closure, check if we need to set the end of an existing
         // closure annotation or not
         ::valhalla::TripLeg_Closure* closure = fetch_last_closure_annotation(leg);
-        if (closure && !closure->has_end_shape_index()) {
+        if (closure && !closure->has_end_shape_index_case()) {
           closure->set_end_shape_index(i - 1);
         }
       }
@@ -370,11 +370,11 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set shape attributes speed per shape point if requested
     if (controller.attributes.at(kShapeAttributesSpeed)) {
       // convert speed to decimeters per sec and then round to an integer
-      double speed = (distance * kDecimeterPerMeter / time) + 0.5;
-      if (std::isnan(speed) || time == 0.) { // avoid NaN
-        speed = 0.;
+      double decimeters_sec = (distance * kDecimeterPerMeter / time) + 0.5;
+      if (std::isnan(decimeters_sec) || time == 0.) { // avoid NaN
+        decimeters_sec = 0.;
       }
-      leg.mutable_shape_attributes()->add_speed(speed);
+      leg.mutable_shape_attributes()->add_speed(decimeters_sec);
     }
 
     // Set the maxspeed if requested
@@ -442,7 +442,7 @@ void CopyLocations(TripLeg& trip_path,
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
     // we can grab the right edge index in the path because we temporarily set it for trimming
-    if (!intermediate.has_leg_shape_index()) {
+    if (!intermediate.has_leg_shape_index_case()) {
       throw std::logic_error("leg_shape_index not set for intermediate location");
     }
     RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
@@ -1388,7 +1388,7 @@ void TripLegBuilder::Build(
 
   // check if we should use static time or offset time as the path lengthens
   const bool invariant =
-      options.has_date_time_type() && options.date_time_type() == Options::invariant;
+      options.has_date_time_type_case() && options.date_time_type() == Options::invariant;
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -1677,7 +1677,7 @@ void TripLegBuilder::Build(
       // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
       // So here we need to set this one as if it were at the end of the previous edge in the path
       if (trimming == edge_trimming.end() &&
-          (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)) {
+          (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by)) {
         intermediate_itr->set_leg_shape_index(begin_index);
         intermediate_itr->set_distance_from_leg_origin(previous_total_distance);
       }
@@ -1773,7 +1773,7 @@ void TripLegBuilder::Build(
     // Set the end shape index if we're ending on a closure as the last index is
     // not processed in SetShapeAttributes above
     valhalla::TripLeg_Closure* closure = fetch_last_closure_annotation(trip_path);
-    if (closure && !closure->has_end_shape_index()) {
+    if (closure && !closure->has_end_shape_index_case()) {
       closure->set_end_shape_index(trip_shape.size() - 1);
     }
   }

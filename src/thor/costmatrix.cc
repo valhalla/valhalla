@@ -22,8 +22,8 @@ int GetThreshold(const travel_mode_t mode, const int n) {
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
-  return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
-         (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
+  return a.has_lat_case() == b.has_lat_case() && a.has_lng_case() == b.has_lng_case() &&
+         (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
 } // namespace

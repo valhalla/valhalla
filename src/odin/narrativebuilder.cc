@@ -684,12 +684,12 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
   std::string destination;
   const auto& dest = trip_path_->GetDestination();
   // Check for destination name
-  if (dest.has_name() && !(dest.name().empty())) {
+  if (dest.has_name_case() && !(dest.name().empty())) {
     phrase_id += 1;
     destination = dest.name();
   }
   // Check for destination street
-  else if (dest.has_street() && !(dest.street().empty())) {
+  else if (dest.has_street_case() && !(dest.street().empty())) {
     phrase_id += 1;
     destination = dest.street();
   }
@@ -735,12 +735,12 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(Maneuver& ma
   std::string destination;
   auto& dest = trip_path_->GetDestination();
   // Check for destination name
-  if (dest.has_name() && !(dest.name().empty())) {
+  if (dest.has_name_case() && !(dest.name().empty())) {
     phrase_id += 1;
     destination = dest.name();
   }
   // Check for destination street
-  else if (dest.has_street() && !(dest.street().empty())) {
+  else if (dest.has_street_case() && !(dest.street().empty())) {
     phrase_id += 1;
     auto* verbal_formatter = maneuver.verbal_formatter();
     if (verbal_formatter) {
@@ -791,12 +791,12 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(Maneuver& maneuve
   std::string destination;
   auto& dest = trip_path_->GetDestination();
   // Check for destination name
-  if (dest.has_name() && !(dest.name().empty())) {
+  if (dest.has_name_case() && !(dest.name().empty())) {
     phrase_id += 1;
     destination = dest.name();
   }
   // Check for destination street
-  else if (dest.has_street() && !(dest.street().empty())) {
+  else if (dest.has_street_case() && !(dest.street().empty())) {
     phrase_id += 1;
     auto* verbal_formatter = maneuver.verbal_formatter();
     if (verbal_formatter) {

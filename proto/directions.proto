@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 import public "tripcommon.proto";
@@ -7,10 +7,16 @@ import public "sign.proto";
 message DirectionsLeg {
 
   message Summary {
-    optional float length = 1;          // kilometers or miles based on units
-    optional double time = 2;           // seconds
-    optional BoundingBox bbox = 3;      // Bounding box of the shape
-    optional bool has_time_restrictions = 4; // Does the route contain any time restrictions?
+    oneof has_length {
+      float length = 1;          // kilometers or miles based on units
+    }
+    oneof has_time {
+      double time = 2;           // seconds
+    }
+    BoundingBox bbox = 3;      // Bounding box of the shape
+    oneof has_has_time_restrictions {
+      bool has_time_restrictions = 4; // Does the route contain any time restrictions?
+    }
   }
 
   message GuidanceView {
@@ -25,9 +31,15 @@ message DirectionsLeg {
       kDirectionboard = 7;
       kSignboard = 8;
     }
-    optional string data_id = 1;        // TODO future enum as data id?
-    optional Type type = 2;             // The type of guidance view
-    optional string base_id = 3;        // Image base id
+    oneof has_data_id {
+      string data_id = 1;        // TODO future enum as data id?
+    }
+    oneof has_type {
+      Type type = 2;             // The type of guidance view
+    }
+    oneof has_base_id {
+      string base_id = 3;        // Image base id
+    }
     repeated string overlay_ids = 4;    // List of overlay ids
   }
 
@@ -92,53 +104,123 @@ message DirectionsLeg {
       kReturnBikeAtBikeShare = 2;
     }
 
-    optional Type type = 1;                                      // Maneuver type
-    optional string text_instruction = 2;                        // text instruction
+    oneof has_type {
+      Type type = 1;                                      // Maneuver type
+    }
+    oneof has_text_instruction {
+      string text_instruction = 2;                        // text instruction
+    }
     repeated StreetName street_name = 3;                         // street names
-    optional float length = 4;                                   // kilometers or miles based on units
-    optional double time = 5;                                    // seconds
-    optional CardinalDirection begin_cardinal_direction = 6;     // CardinalDirection
-    optional uint32 begin_heading = 7;                           // 0-360
-    optional uint32 begin_shape_index = 8;                       // inclusive index
-    optional uint32 end_shape_index = 9;                         // inclusive index
-    optional bool portions_toll = 10;                            // has portions toll
-    optional bool portions_unpaved = 11;                         // has portions unpaved
-    optional string verbal_transition_alert_instruction = 12;    // verbal transition alert instruction
-    optional string verbal_pre_transition_instruction = 13;      // verbal pre-transition instruction
-    optional string verbal_post_transition_instruction = 14;     // verbal post-transition instruction
+    oneof has_length {
+      float length = 4;                                   // kilometers or miles based on units
+    }
+    oneof has_time {
+      double time = 5;                                    // seconds
+    }
+    oneof has_begin_cardinal_direction {
+      CardinalDirection begin_cardinal_direction = 6;     // CardinalDirection
+    }
+    oneof has_begin_heading {
+      uint32 begin_heading = 7;                           // 0-360
+    }
+    oneof has_begin_shape_index {
+      uint32 begin_shape_index = 8;                       // inclusive index
+    }
+    oneof has_end_shape_index {
+      uint32 end_shape_index = 9;                         // inclusive index
+    }
+    oneof has_portions_toll {
+      bool portions_toll = 10;                            // has portions toll
+    }
+    oneof has_portions_unpaved {
+      bool portions_unpaved = 11;                         // has portions unpaved
+    }
+    oneof has_verbal_transition_alert_instruction {
+      string verbal_transition_alert_instruction = 12;    // verbal transition alert instruction
+    }
+    oneof has_verbal_pre_transition_instruction {
+      string verbal_pre_transition_instruction = 13;      // verbal pre-transition instruction
+    }
+    oneof has_verbal_post_transition_instruction {
+      string verbal_post_transition_instruction = 14;     // verbal post-transition instruction
+    }
     repeated StreetName begin_street_name = 15;                  // begin street names
-    optional TripSign sign = 16;                                 // associated sign information, for example: exit number
-    optional uint32 roundabout_exit_count = 17;                  // which spoke to exit roundabout after entering
-    optional string depart_instruction = 18;                     // depart instruction - used with transit
-    optional string verbal_depart_instruction = 19;              // verbal depart instruction - used with transit
-    optional string arrive_instruction = 20;                     // arrive instruction - used with transit
-    optional string verbal_arrive_instruction = 21;              // verbal arrive instruction - used with transit
-    optional TransitRouteInfo transit_info = 22;                 // transit attributes including a list of transit stops
-    optional bool verbal_multi_cue = 23;                         // verbal multi-cue flag
-    optional TravelMode travel_mode = 24;                        // travel mode
-    optional VehicleType vehicle_type = 25;
-    optional PedestrianType pedestrian_type = 26;
-    optional BicycleType bicycle_type = 27;
-    optional TransitType transit_type = 28;
-    optional uint32 begin_path_index = 29;                       // Index in TripPath for first node of maneuver
-    optional uint32 end_path_index = 30;                         // Index in TripPath for last node of maneuver
-    optional bool to_stay_on = 31;                               // True if same name as previous maneuver
+    TripSign sign = 16;                                 // associated sign information, for example: exit number
+    oneof has_roundabout_exit_count {
+      uint32 roundabout_exit_count = 17;                  // which spoke to exit roundabout after entering
+    }
+    oneof has_depart_instruction {
+      string depart_instruction = 18;                     // depart instruction - used with transit
+    }
+    oneof has_verbal_depart_instruction {
+      string verbal_depart_instruction = 19;              // verbal depart instruction - used with transit
+    }
+    oneof has_arrive_instruction {
+      string arrive_instruction = 20;                     // arrive instruction - used with transit
+    }
+    oneof has_verbal_arrive_instruction {
+      string verbal_arrive_instruction = 21;              // verbal arrive instruction - used with transit
+    }
+    TransitRouteInfo transit_info = 22;                 // transit attributes including a list of transit stops
+    oneof has_verbal_multi_cue {
+      bool verbal_multi_cue = 23;                         // verbal multi-cue flag
+    }
+    oneof has_travel_mode {
+      TravelMode travel_mode = 24;                        // travel mode
+    }
+    oneof has_vehicle_type {
+      VehicleType vehicle_type = 25;
+    }
+    oneof has_pedestrian_type {
+      PedestrianType pedestrian_type = 26;
+    }
+    oneof has_bicycle_type {
+      BicycleType bicycle_type = 27;
+    }
+    oneof has_transit_type {
+      TransitType transit_type = 28;
+    }
+    oneof has_begin_path_index {
+      uint32 begin_path_index = 29;                       // Index in TripPath for first node of maneuver
+    }
+    oneof has_end_path_index {
+      uint32 end_path_index = 30;                         // Index in TripPath for last node of maneuver
+    }
+    oneof has_to_stay_on {
+      bool to_stay_on = 31;                               // True if same name as previous maneuver
+    }
     repeated StreetName roundabout_exit_street_names = 32;       // Outbound street names from roundabout
-    optional uint32 turn_degree = 33;                            // Turn degree of maneuver
-    optional bool has_time_restrictions = 34;                    // Whether edge has any time restrictions or not
+    oneof has_turn_degree {
+      uint32 turn_degree = 33;                            // Turn degree of maneuver
+    }
+    oneof has_has_time_restrictions {
+      bool has_time_restrictions = 34;                    // Whether edge has any time restrictions or not
+    }
     repeated GuidanceView guidance_views = 35;                   // List of guidance views
-    optional BssManeuverType bss_maneuver_type = 36;
-    optional string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
-    optional BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
+    oneof has_bss_maneuver_type {
+      BssManeuverType bss_maneuver_type = 36;
+    }
+    oneof has_verbal_succinct_transition_instruction {
+      string verbal_succinct_transition_instruction = 37; // verbal succinct transition instruction
+    }
+    BikeShareStationInfo bss_info = 38;                 // Bike Share Station Info
   }
 
-  optional uint64 trip_id = 1;
-  optional uint32 leg_id = 2;
-  optional uint32 leg_count = 3;
+  oneof has_trip_id {
+    uint64 trip_id = 1;
+  }
+  oneof has_leg_id {
+    uint32 leg_id = 2;
+  }
+  oneof has_leg_count {
+    uint32 leg_count = 3;
+  }
   repeated Location location = 4;
-  optional Summary summary = 5;
+  Summary summary = 5;
   repeated Maneuver maneuver = 6;
-  optional string shape = 7;
+  oneof has_shape {
+    string shape = 7;
+  }
 }
 
 message DirectionsRoute {

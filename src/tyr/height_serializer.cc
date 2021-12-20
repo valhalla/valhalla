@@ -86,12 +86,12 @@ std::string serializeHeight(const Api& request,
         {{"height", serialize_height(heights, precision, skadi::sample::get_no_data_value())}});
   }
   // send back the shape as well
-  if (request.options().has_encoded_polyline()) {
+  if (request.options().has_encoded_polyline_case()) {
     json->emplace("encoded_polyline", request.options().encoded_polyline());
   } else {
     json->emplace("shape", serialize_shape(request.options().shape()));
   }
-  if (request.options().has_id()) {
+  if (request.options().has_id_case()) {
     json->emplace("id", request.options().id());
   }
 

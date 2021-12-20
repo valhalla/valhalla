@@ -68,6 +68,31 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
 
+    // Read the config file
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, pt);
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(
+                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+      rapidjson::read_json(config_file_path.string(), pt);
+    } else {
+      std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
+      return EXIT_FAILURE;
+    }
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("mjolnir.logging");
+    if (logging_subtree) {
+      auto subtree = logging_subtree.get();
+      auto logging_config =
+          valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                   std::unordered_map<std::string, std::string>>(subtree);
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
     // Convert stage strings to BuildStage
     if (result.count("start")) {
       start_stage = string_to_buildstage(result["start"].as<std::string>());
@@ -100,32 +125,8 @@ int main(int argc, char** argv) {
       std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
-
-    // Read the config file
-    if (result.count("inline-config")) {
-      std::stringstream ss;
-      ss << result["inline-config"].as<std::string>();
-      rapidjson::read_json(ss, pt);
-    } else if (result.count("config") &&
-               filesystem::is_regular_file(
-                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
-      rapidjson::read_json(config_file_path.string(), pt);
-    } else {
-      std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
-  }
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // Build some tiles!

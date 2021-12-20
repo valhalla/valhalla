@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str, config;
   std::string filename = "";
+  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -73,6 +74,19 @@ int main(int argc, char* argv[]) {
       return EXIT_FAILURE;
     }
 
+    // parse the config
+    rapidjson::read_json(config.c_str(), pt);
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("thor.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
     if (!result.count("json")) {
       std::cerr << "A JSON format request must be present."
                 << "\n";
@@ -102,7 +116,7 @@ int main(int argc, char* argv[]) {
 
   // Get generalize parameter
   float generalize = kOptimalGeneralization;
-  if (options.has_generalize()) {
+  if (options.has_generalize_case()) {
     generalize = options.generalize();
   }
 
@@ -122,7 +136,7 @@ int main(int argc, char* argv[]) {
   std::vector<GriddedData<2>::contour_interval_t> contour_times;
   float max_minutes = std::numeric_limits<float>::min();
   for (const auto& contour : options.contours()) {
-    if (contour.has_time()) {
+    if (contour.has_time_case()) {
       max_minutes = std::max(max_minutes, contour.time());
       contour_times.emplace_back(0, contour.time(), "time", contour.color());
     }
@@ -142,20 +156,6 @@ int main(int argc, char* argv[]) {
   auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
   if (exclude_locations.size() == 0) {
     LOG_INFO("No avoid locations");
-  }
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // Get something we can use to fetch tiles

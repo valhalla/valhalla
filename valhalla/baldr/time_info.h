@@ -69,7 +69,7 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (!location.has_date_time())
+    if (!location.has_date_time_case())
       return TimeInfo::invalid();
 
     // Find the first edge whose end node has a valid timezone index and keep it
