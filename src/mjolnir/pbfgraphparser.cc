@@ -161,7 +161,7 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
-    include_constructions_ = pt.get<bool>("include_constructions", false);
+    include_construction_ = pt.get<bool>("include_construction", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -1701,8 +1701,8 @@ public:
           return;
         }
       }
-      // Throw away constructions if include_constructions_ is false
-      if (!include_constructions_ && (use = results.find("use")) != results.end() &&
+      // Throw away constructions if include_construction_ is false
+      if (!include_construction_ && (use = results.find("use")) != results.end() &&
           static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
         return;
       }
@@ -2911,7 +2911,7 @@ public:
   bool include_driveways_;
 
   // Configuration option to include roads under construction
-  bool include_constructions_;
+  bool include_construction_;
 
   // Configuration option indicating whether or not to infer internal intersections during the graph
   // enhancer phase or use the internal_intersection key from the pbf

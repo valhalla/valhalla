@@ -32,7 +32,7 @@ gurka::ways IncludeConstructionTest::ways = {};
 TEST_F(IncludeConstructionTest, CheckConstructionsExcluded) {
   // exclude roads under construction
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/construction",
-                               {{"mjolnir.include_constructions", "false"}});
+                               {{"mjolnir.include_construction", "false"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -49,7 +49,7 @@ TEST_F(IncludeConstructionTest, CheckConstructionsExcluded) {
 TEST_F(IncludeConstructionTest, CheckConstructionsIncluded) {
   // include roads under construction
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/construction",
-                               {{"mjolnir.include_constructions", "true"}});
+                               {{"mjolnir.include_construction", "true"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -93,7 +93,7 @@ TEST(ConstructionInShortcuts, ExcludeConstructionsFromShortcut) {
 
   const auto map =
       gurka::buildtiles(layout, ways, {}, {}, "test/data/construction",
-                        {{"mjolnir.include_constructions", "true"}, {"mjolnir.shortcuts", "true"}});
+                        {{"mjolnir.include_construction", "true"}, {"mjolnir.shortcuts", "true"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
@@ -135,7 +135,7 @@ protected:
     const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 100);
 
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/construction",
-                            {{"mjolnir.include_constructions", "true"}});
+                            {{"mjolnir.include_construction", "true"}});
   }
 };
 
