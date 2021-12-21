@@ -94,7 +94,9 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("costing", costing, allocator);
 
   rapidjson::SetValueByPointer(doc, "/chinese_postman_polygon", chinese_polygon);
-  rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  if (avoid_polygons.Size() > 1) {
+    rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  }
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -120,7 +122,9 @@ std::string build_local_req_route(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  if (avoid_polygons.Size() > 1) {
+    rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  }
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
