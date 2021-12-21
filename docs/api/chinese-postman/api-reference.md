@@ -1,4 +1,4 @@
-# Chinese Postman service API reference
+# Chinese Postman service API reference (BETA)
 
 The chinese postman service provides a computation to find the shortest route to visit all roads in an area at least once. This problem of finding a such route is known as Chinese Postman Problem or [Route Inspection Problem](https://en.wikipedia.org/wiki/Route_inspection_problem) in graph theory. The full algorithm to solve this problem can explored with [this visualisation](https://algorithms.discrete.ma.tum.de/graph-algorithms/directed-chinese-postman/index_en.html) from Technische Universität München (TUM).
 
@@ -44,3 +44,12 @@ The response is of the Chinese Postman service is in the same format as in the r
 The chinese postman service will consider all road that **within** the chinese polygon but not the **intersect** the exclude polygons. The locations also must be inside the chinese polygon.
 
 Please refer to the [routing API](/turn-by-turn/api-reference.md) for further detail.
+
+## Known Issues
+
+Below are the known issues for the current implementation. All cases are found on the real data and happen sometimes.
+
+1. For some cases, it failed to find the shortest route between two locations (to make the graph balanced or strongly connected). Thus, it will connect those two locations with a straight line. Based on our testing, it happens in ~10% of the random test cases. When we compute the route using Valhalla directly, it can find the route. An example of this issue is below:
+   ![Example of no route between two locations.](../images/chinese-postman-no-route.png)
+2. In some cases, it failed to cover all the roads inside the Chinese polygon. Until the current investigation, it failed to build a balanced graph. See the image below for example:
+   ![Example of no route between two locations.](../images/chinese-postman-unvisited-road.png)
