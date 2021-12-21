@@ -94,8 +94,11 @@ std::string build_local_req(rapidjson::Document& doc,
   doc.AddMember("costing", costing, allocator);
 
   rapidjson::SetValueByPointer(doc, "/chinese_postman_polygon", chinese_polygon);
-  if (avoid_polygons.Size() > 1) {
-    rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  // Skip if empty to avoid segmentation fault
+  if (avoid_polygons.Size() > 0) {
+    if (avoid_polygons[0].Size() > 0) {
+      rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+    }
   }
 
   rapidjson::StringBuffer sb;
@@ -122,8 +125,11 @@ std::string build_local_req_route(rapidjson::Document& doc,
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  if (avoid_polygons.Size() > 1) {
-    rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  // Skip if empty to avoid segmentation fault
+  if (avoid_polygons.Size() > 0) {
+    if (avoid_polygons[0].Size() > 0) {
+      rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+    }
   }
 
   rapidjson::StringBuffer sb;
@@ -386,7 +392,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanSimple) {
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "A", "A",
                {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "B", "B",
-               {"BE_2", "DE_2", "DE_2", "BE_2", "AB_2", "AB_2"});
+               {"AB_2", "AB_2", "BE_2", "DE_2", "DE_2", "BE_2"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
@@ -406,10 +412,10 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
   // create a chinese polygon (pqsr)
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "B",
-               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE",
+               {"BC", "CD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE",
                 "EA", "AB"});
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "C", "C",
-               {"CD", "DE", "EA", "AF", "FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FE",
+               {"CD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE",
                 "EA", "AC"});
 }
 
@@ -442,21 +448,17 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
 
   // A more complex example, non-ideal graph
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "F", "E",
-               {"FD", "DE", "EA", "AF", "FE", "EA", "AB", "BC", "CD", "DE", "EA", "AC", "CD", "DE"});
+               {"FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
-  for (auto& c : "ABCDEF") {
-    auto x = complex_chinese_postman_map.nodes[std::string(1, c)];
-    std::cout << c << ": " << x.lng() << ", " << x.lat() << "\n";
-  }
   // test_request(chinese_postman_map, GetParam(), "prwu", "iknl", "D", "A", {"GH"});
   test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "F", "E",
                {"FD", "DE", "EA", "AF", "FE"});
   test_request(complex_chinese_postman_map, GetParam(), "xqsy", "", "E", "F",
                {"EA", "AF", "FD", "DE", "EA", "AF", "FE", "EA", "AF"});
   test_request(complex_chinese_postman_map, GetParam(), "pxyr", "", "A", "C",
-               {"AC", "CD", "DE", "EA", "AB", "BC"});
+               {"AB", "BC", "CD", "DE", "EA", "AC"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanMiddleEdge) {
