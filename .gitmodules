@@ -40,3 +40,6 @@
 [submodule "third_party/lz4"]
 	path = third_party/lz4
 	url = https://github.com/lz4/lz4
+[submodule "third_party/hungarian-algorithm-cpp"]
+	path = third_party/hungarian-algorithm-cpp
+	url = https://github.com/mcximing/hungarian-algorithm-cpp
