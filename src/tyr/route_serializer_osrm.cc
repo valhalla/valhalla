@@ -533,16 +533,23 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
-    // the arrive step.
+    // the arrival step.
     std::vector<IntersectionEdges> edges;
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+      if (i > 0) {
+        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+          auto intersecting_edge = node->GetIntersectingEdge(m);
+          bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, true);
+        }
+      }
     }
 
     // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
+    // Set routable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
@@ -1247,6 +1254,8 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case TravelMode::kTransit: {
       return "transit";
     }
+    default:
+      return {};
   }
   auto num = static_cast<int>(maneuver.travel_mode());
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
