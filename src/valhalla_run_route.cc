@@ -524,6 +524,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 int main(int argc, char* argv[]) {
   // args
   std::string json_str, json_file, config;
+  boost::property_tree::ptree pt;
   bool match_test, verbose_lanes;
   bool multi_run = false;
   uint32_t iterations;
@@ -566,6 +567,19 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
+    // parse the config
+    rapidjson::read_json(config.c_str(), pt);
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("thor.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
     if (iterations > 1) {
       multi_run = true;
     }
@@ -601,19 +615,6 @@ int main(int argc, char* argv[]) {
     throw;
   }
 
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
