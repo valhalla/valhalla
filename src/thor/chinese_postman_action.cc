@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "Hungarian.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/multi_array.hpp>
@@ -9,7 +10,6 @@
 #include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
-#include "thor/Hungarian.h"
 #include "thor/chinese_postman_graph.h"
 #include "thor/costmatrix.h"
 #include "thor/worker.h"
