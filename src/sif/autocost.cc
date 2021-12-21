@@ -522,7 +522,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   // better to use layers with smoothed/constant speeds
   if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
     average_edge_speed =
-        tile->GetSpeed(edge, flow_mask_ & kNotCurrentFlowMask, time_info.second_of_week);
+        tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
   }
   float speed_penalty =
       (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
@@ -999,7 +999,7 @@ public:
     // better to use layers with smoothed/constant speeds
     if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
       average_edge_speed =
-          tile->GetSpeed(edge, flow_mask_ & kNotCurrentFlowMask, time_info.second_of_week);
+          tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
     }
     float speed_penalty =
         (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
