@@ -45,7 +45,7 @@ MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptr
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
                     config.get<bool>("clear_reserved_memory", false)),
       walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kPedestrian), travel_type_(0) {
+      mode_(travel_mode_t::kPedestrian), travel_type_(0) {
 }
 
 // Destructor
@@ -102,24 +102,24 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      valhalla::Location& destination,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
-                                     const TravelMode mode,
+                                     const travel_mode_t mode,
                                      const Options&) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
-  const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
+  const auto& pc = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
   pc->SetAllowTransitConnections(true);
   pc->UseMaxMultiModalDistance();
 
   // Set the mode from the origin
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-  const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
+  const auto& tc = mode_costing[static_cast<uint32_t>(travel_mode_t::kPublicTransit)];
 
   // Get maximum transfer distance
   max_transfer_distance_ = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin.has_date_time()) {
+  if (!origin.has_date_time_case()) {
     return {};
   };
 
@@ -137,7 +137,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // destination - for now assume pedestrian
   // TODO - some means of setting destination mode
   disable_transit_ = false;
-  if (!CanReachDestination(destination, graphreader, TravelMode::kPedestrian, pc)) {
+  if (!CanReachDestination(destination, graphreader, travel_mode_t::kPedestrian, pc)) {
     // Return if distance exceeds maximum distance set for the starting distance
     // of a multimodal route (TODO - add methods to costing to support this).
     if (mindist > 2000) {
@@ -277,7 +277,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
 
     // Get the transfer penalty when changing stations
-    if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -285,7 +285,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // as a pedestrian. This is a small added cost on top of
     // any costs along paths and roads. We only do this once
     // so if its from a transition we don't need to do it again
-    if (mode_ == TravelMode::kPedestrian && !from_transition) {
+    if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
       offset_time.local_time += transfer_cost.secs;
     }
 
@@ -315,19 +315,19 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   // been visited using a different mode.
   bool mode_change = false;
   /*if (nodeinfo->type() == NodeType::kBikeShare) {
-     if (mode_ == TravelMode::kBicycle) {
-       mode_ = TravelMode::kPedestrian;
+     if (mode_ == travel_mode_t::kBicycle) {
+       mode_ = travel_mode_t::kPedestrian;
        mode_change = true;
-     } else if (mode_ == TravelMode::kPedestrian) {
-       mode_ = TravelMode::kBicycle;
+     } else if (mode_ == travel_mode_t::kPedestrian) {
+       mode_ = travel_mode_t::kBicycle;
        mode_change = true;
      }
    } else if (nodeinfo->type() == NodeType::kParking) {
-     if (mode_ == TravelMode::kDrive) {
-       mode_ = TravelMode::kPedestrian;
+     if (mode_ == travel_mode_t::kDrive) {
+       mode_ = travel_mode_t::kPedestrian;
        mode_change = true;
-     } else if (mode_ == TravelMode::kPedestrian) {
-       mode_ = TravelMode::kDrive;
+     } else if (mode_ == travel_mode_t::kPedestrian) {
+       mode_ = travel_mode_t::kDrive;
        mode_change = true;
      }
    }*/
@@ -371,7 +371,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
       if (departure) {
         // Check if there has been a mode change
-        mode_change = (mode_ == TravelMode::kPedestrian);
+        mode_change = (mode_ == travel_mode_t::kPedestrian);
 
         // Update trip Id and block Id
         tripid = departure->tripid();
@@ -413,7 +413,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         }
 
         // Change mode and costing to transit. Add edge cost.
-        mode_ = TravelMode::kPublicTransit;
+        mode_ = travel_mode_t::kPublicTransit;
         newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
       } else {
         // No matching departures found for this edge
@@ -422,9 +422,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     } else {
       // If current mode is public transit we should only connect to
       // transit connection edges or transit edges
-      if (mode_ == TravelMode::kPublicTransit) {
+      if (mode_ == travel_mode_t::kPublicTransit) {
         // Disembark from transit and reset walking distance
-        mode_ = TravelMode::kPedestrian;
+        mode_ = travel_mode_t::kPedestrian;
         walking_distance_ = 0;
         mode_change = true;
       }
@@ -442,7 +442,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       newcost += c;
 
       // Add to walking distance
-      if (mode_ == TravelMode::kPedestrian) {
+      if (mode_ == travel_mode_t::kPedestrian) {
         walking_distance_ += directededge->length();
 
         // Prevent going from one transit connection directly to another
@@ -642,7 +642,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && origin.has_date_time_case() && origin.date_time() == "current") {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
@@ -776,7 +776,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
 // or bikeshare locations are within walking distance.
 bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& destination,
                                                   GraphReader& graphreader,
-                                                  const TravelMode dest_mode,
+                                                  const travel_mode_t dest_mode,
                                                   const std::shared_ptr<DynamicCost>& costing) {
   // Assume pedestrian mode for now
   mode_ = dest_mode;

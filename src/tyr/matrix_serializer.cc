@@ -129,7 +129,7 @@ json::MapPtr serialize(const Api& request,
   json->emplace("targets", json::array({locations(options.targets())}));
   json->emplace("sources", json::array({locations(options.sources())}));
 
-  if (options.has_id()) {
+  if (options.has_id_case()) {
     json->emplace("id", options.id());
   }
   return json;

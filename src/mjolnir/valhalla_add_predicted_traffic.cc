@@ -9,12 +9,12 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cxxopts.hpp>
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -32,8 +32,13 @@ namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
 
-namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
+
+// args
+boost::property_tree::ptree config;
+filesystem::path traffic_tile_dir;
+unsigned int num_threads;
+bool summary = false;
 
 namespace {
 
@@ -238,60 +243,80 @@ void update_tiles(
 
 } // anonymous namespace
 
-int main(int argc, char** argv) {
-  std::string config, traffic_tile_dir;
-  std::string inline_config;
-  std::string config_file_path;
-  unsigned int num_threads = std::thread::hardware_concurrency();
-  bool summary = false;
-
-  bpo::options_description options("valhalla_add_predicted_traffic " VALHALLA_VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_add_predicted_traffic [options]\n"
-                                   "\n"
-                                   "adds predicted traffic to valhalla tiles. "
-                                   "\n"
-                                   "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "concurrency,j", bpo::value<unsigned int>(&num_threads),
-      "Number of threads to use.")("config,c",
-                                   boost::program_options::value<std::string>(&config_file_path),
-                                   "Path to the json configuration file.")(
-      "inline-config,i", boost::program_options::value<std::string>(&inline_config),
-      "Inline json config.")("summary,s", bpo::value<bool>(&summary),
-                             "Output summary information about traffic coverage for the tile set")
-      // positional arguments
-      ("traffic-tile-dir,t", bpo::value<std::string>(&traffic_tile_dir),
-       "Location of traffic csv tiles.");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("traffic-tile-dir", 1);
-  bpo::variables_map vm;
+bool ParseArguments(int argc, char* argv[]) {
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_add_predicted_traffic",
+      "valhalla_add_predicted_traffic " VALHALLA_VERSION "\n\n"
+      "adds predicted traffic to valhalla tiles.\n");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
+      ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
+      ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
+    // clang-format on
+
+    options.parse_positional({"traffic-tile-dir"});
+    options.positional_help("Traffic tile dir");
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      exit(0);
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_add_predicted_traffic " << VALHALLA_VERSION << "\n";
+      exit(0);
+    }
+
+    if (!result.count("traffic_tile_dir")) {
+      std::cout << "You must provide a tile directory to read the csv tiles from.\n";
+      return false;
+    }
+    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
+
+    // Read the config file
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, config);
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(result["config"].as<std::string>())) {
+      rapidjson::read_json(result["config"].as<std::string>(), config);
+    } else {
+      std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
+      return false;
+    }
+
+    return true;
+  } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    return false;
+  }
+
+  return true;
+}
+
+int main(int argc, char** argv) {
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
   }
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_add_predicted_traffic " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (!vm.count("traffic-tile-dir")) {
-    std::cout << "You must provide a tile directory to read the csv tiles from.\n";
-    return EXIT_FAILURE;
+  // configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      config.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
+    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // queue up all the work we'll be doing
@@ -314,37 +339,16 @@ int main(int argc, char** argv) {
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
-  // Read the config file
-  boost::property_tree::ptree pt;
-  if (vm.count("inline-config")) {
-    std::stringstream ss;
-    ss << inline_config;
-    rapidjson::read_json(ss, pt);
-  } else if (vm.count("config") && filesystem::is_regular_file(config_file_path)) {
-    rapidjson::read_json(config_file_path, pt);
-  } else {
-    std::cerr << "Configuration is required\n\n" << options << "\n\n";
-    return EXIT_FAILURE;
-  }
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
-
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
+
+  std::cout << traffic_tile_dir << std::endl;
 
   LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();
   size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
   decltype(traffic_tiles)::const_iterator tile_start, tile_end = traffic_tiles.begin();
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<stats>> results;
   // Atomically pass around stats info
@@ -389,7 +393,7 @@ int main(int argc, char** argv) {
   if (!summary)
     return EXIT_SUCCESS;
 
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphReader reader(config.get_child("mjolnir"));
   // Iterate through the tiles
   int shortcuts_with_speed = 0;
   int non_dr_with_speed = 0;

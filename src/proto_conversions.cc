@@ -123,6 +123,17 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
+bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action> actions{{"route", Options::route},
+                                                                        {"isochrone",
+                                                                         Options::isochrone}};
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
@@ -350,66 +361,83 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   return true;
 }
 
+bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
+                                            Options::ExpansionProperties* a) {
+  static const std::unordered_map<std::string, Options::ExpansionProperties>
+      actions{{"costs", Options_ExpansionProperties_costs},
+              {"durations", Options_ExpansionProperties_durations},
+              {"distances", Options_ExpansionProperties_distances},
+              {"statuses", Options_ExpansionProperties_statuses},
+              {"edge_ids", Options::ExpansionProperties::Options_ExpansionProperties_edge_ids}};
+  auto i = actions.find(prop);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kAutoBus), "bus"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorScooter), "motor_scooter"},
+    {static_cast<int>(VehicleType::kCar), "car"},
+    {static_cast<int>(VehicleType::kMotorcycle), "motorcycle"},
+    {static_cast<int>(VehicleType::kAutoBus), "bus"},
+    {static_cast<int>(VehicleType::kTractorTrailer), "tractor_trailer"},
+    {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
 };
 
 const std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(DirectionsLeg_PedestrianType_kFoot), "foot"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kSegway), "segway"},
+    {static_cast<int>(PedestrianType::kFoot), "foot"},
+    {static_cast<int>(PedestrianType::kWheelchair), "wheelchair"},
+    {static_cast<int>(PedestrianType::kSegway), "segway"},
 };
 
 const std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(DirectionsLeg_BicycleType_kRoad), "road"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kCross), "cross"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kHybrid), "hybrid"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kMountain), "mountain"},
+    {static_cast<int>(BicycleType::kRoad), "road"},
+    {static_cast<int>(BicycleType::kCross), "cross"},
+    {static_cast<int>(BicycleType::kHybrid), "hybrid"},
+    {static_cast<int>(BicycleType::kMountain), "mountain"},
 };
 
 const std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(DirectionsLeg_TransitType_kTram), "tram"},
-    {static_cast<int>(DirectionsLeg_TransitType_kMetro), "metro"},
-    {static_cast<int>(DirectionsLeg_TransitType_kRail), "rail"},
-    {static_cast<int>(DirectionsLeg_TransitType_kBus), "bus"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFerry), "ferry"},
-    {static_cast<int>(DirectionsLeg_TransitType_kCableCar), "cable_car"},
-    {static_cast<int>(DirectionsLeg_TransitType_kGondola), "gondola"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFunicular), "funicular"},
+    {static_cast<int>(TransitType::kTram), "tram"},
+    {static_cast<int>(TransitType::kMetro), "metro"},
+    {static_cast<int>(TransitType::kRail), "rail"},
+    {static_cast<int>(TransitType::kBus), "bus"},
+    {static_cast<int>(TransitType::kFerry), "ferry"},
+    {static_cast<int>(TransitType::kCableCar), "cable_car"},
+    {static_cast<int>(TransitType::kGondola), "gondola"},
+    {static_cast<int>(TransitType::kFunicular), "funicular"},
 };
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
-      auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
-                                           : vehicle_to_string.cend();
+    case TravelMode::kDrive: {
+      auto i = maneuver.has_vehicle_type_case() ? vehicle_to_string.find(maneuver.vehicle_type())
+                                                : vehicle_to_string.cend();
       return i == vehicle_to_string.cend() ? std::make_pair("drive", "car")
                                            : std::make_pair("drive", i->second);
     }
-    case DirectionsLeg_TravelMode_kPedestrian: {
-      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
-                                              : pedestrian_to_string.cend();
+    case TravelMode::kPedestrian: {
+      auto i = maneuver.has_pedestrian_type_case()
+                   ? pedestrian_to_string.find(maneuver.pedestrian_type())
+                   : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot")
                                               : std::make_pair("pedestrian", i->second);
     }
-    case DirectionsLeg_TravelMode_kBicycle: {
-      auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
-                                           : bicycle_to_string.cend();
+    case TravelMode::kBicycle: {
+      auto i = maneuver.has_bicycle_type_case() ? bicycle_to_string.find(maneuver.bicycle_type())
+                                                : bicycle_to_string.cend();
       return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road")
                                            : std::make_pair("bicycle", i->second);
     }
-    case DirectionsLeg_TravelMode_kTransit: {
-      auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
-                                           : transit_to_string.cend();
+    case TravelMode::kTransit: {
+      auto i = maneuver.has_transit_type_case() ? transit_to_string.find(maneuver.transit_type())
+                                                : transit_to_string.cend();
       return i == transit_to_string.cend() ? std::make_pair("transit", "rail")
                                            : std::make_pair("transit", i->second);
     }
+    default:
+      throw std::logic_error("Unknown travel mode");
   }
-  throw std::runtime_error("Unhandled case");
 }
 } // namespace valhalla

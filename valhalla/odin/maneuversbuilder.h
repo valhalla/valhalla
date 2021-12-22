@@ -148,7 +148,7 @@ protected:
    *
    * @return the speed based on the specified travel mode.
    */
-  float GetSpeed(TripLeg_TravelMode travel_mode, float edge_speed) const;
+  float GetSpeed(TravelMode travel_mode, float edge_speed) const;
 
   /**
    * Returns true if the current turn channel maneuver is able to be combined
@@ -200,7 +200,7 @@ protected:
    *
    * @return true if roundabouts are processable based on the specified travel mode.
    */
-  bool AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const;
+  bool AreRoundaboutsProcessable(const TravelMode travel_mode) const;
 
   /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.

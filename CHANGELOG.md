@@ -13,6 +13,10 @@
    * FIXED: workaround python's ArgumentParser bug to not accept negative numbers as arguments [#3443](https://github.com/valhalla/valhalla/pull/3443)
    * FIXED: Undefined behaviour on some platforms due to unaligned reads [#3447](https://github.com/valhalla/valhalla/pull/3447)
    * FIXED: Fixed undefined behavior due to invalid shift exponent when getting edge's heading [#3450](https://github.com/valhalla/valhalla/pull/3450)
+   * FIXED: Use midgard::unaligned_read in GraphTileBuilder::AddSigns [#3456](https://github.com/valhalla/valhalla/pull/3456)
+   * FIXED: Relax test margin for time dependent traffic test [#3467](https://github.com/valhalla/valhalla/pull/3467)
+   * FIXED: Fixed missed intersection heading [#3463](https://github.com/valhalla/valhalla/pull/3463)
+   * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -33,6 +37,13 @@
    * CHANGED: Use std::multimap for polygons returned for admin and timezone queries. Improves performance when building tiles. [#3427](https://github.com/valhalla/valhalla/pull/3427)
    * CHANGED: Refactored GraphBuilder::CreateSignInfoList [#3438](https://github.com/valhalla/valhalla/pull/3438)
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
+   * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
+   * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
+   * CHANGED: Removed all protobuf defaults either by doing them in code or by relying on 0 initialization. Also deprecated best_paths and do_not_track [#3454](https://github.com/valhalla/valhalla/pull/3454)
+   * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
+   * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
+   * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
+   * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457)(https://github.com/valhalla/valhalla/pull/3457)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

@@ -64,8 +64,8 @@ private:
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
 
-    auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
+    auto pedestrian_costing = mode_costing[static_cast<size_t>(travel_mode_t::kPedestrian)];
+    auto bicycle_costing = mode_costing[static_cast<size_t>(travel_mode_t::kBicycle)];
 
     if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
 
@@ -263,7 +263,7 @@ private:
 
         assumed_schedule = false;
         uint32_t date, day = 0;
-        if (origin.has_date_time()) {
+        if (origin.has_date_time_case()) {
           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
 
           if (graphtile->header()->date_created() > date) {

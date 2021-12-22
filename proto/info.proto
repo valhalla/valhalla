@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 
@@ -16,13 +16,23 @@ enum StatisticType {
 // action.worker_name.metric so that we can tell what type of request it was and where in the pipeline it happened
 
 message Statistic {
-  optional string key = 1;          // the key/name of the statistic
-  optional double value = 2;        // the value of the statistic
-  optional float frequency = 3;     // how often to report the statistic [0-1]
-  optional StatisticType type = 4;  // what type is it
+  oneof has_key {
+    string key = 1;          // the key/name of the statistic
+  }
+  oneof has_value {
+    double value = 2;        // the value of the statistic
+  }
+  oneof has_frequency {
+    float frequency = 3;     // how often to report the statistic [0-1]
+  }
+  oneof has_type {
+    StatisticType type = 4;  // what type is it
+  }
 }
 
 message Info {
   repeated Statistic statistics = 1;
-  optional bool error = 2;
+  oneof has_error {
+    bool error = 2;
+  }
 }

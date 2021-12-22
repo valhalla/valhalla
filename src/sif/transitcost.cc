@@ -342,38 +342,32 @@ TransitCost::TransitCost(const CostingOptions& costing_options)
   transfer_penalty_ = costing_options.transfer_penalty();
 
   // Process stop filters
-  if (costing_options.has_filter_stop_action()) {
-    auto stop_action = costing_options.filter_stop_action();
-    for (const auto& id : costing_options.filter_stop_ids()) {
-      if (stop_action == FilterAction::exclude) {
-        stop_exclude_onestops_.emplace(id);
-      } else if (stop_action == FilterAction::include) {
-        stop_include_onestops_.emplace(id);
-      }
+  auto stop_action = costing_options.filter_stop_action();
+  for (const auto& id : costing_options.filter_stop_ids()) {
+    if (stop_action == FilterAction::exclude) {
+      stop_exclude_onestops_.emplace(id);
+    } else if (stop_action == FilterAction::include) {
+      stop_include_onestops_.emplace(id);
     }
   }
 
   // Process operator filters
-  if (costing_options.has_filter_operator_action()) {
-    auto operator_action = costing_options.filter_operator_action();
-    for (const auto& id : costing_options.filter_operator_ids()) {
-      if (operator_action == FilterAction::exclude) {
-        operator_exclude_onestops_.emplace(id);
-      } else if (operator_action == FilterAction::include) {
-        operator_include_onestops_.emplace(id);
-      }
+  auto operator_action = costing_options.filter_operator_action();
+  for (const auto& id : costing_options.filter_operator_ids()) {
+    if (operator_action == FilterAction::exclude) {
+      operator_exclude_onestops_.emplace(id);
+    } else if (operator_action == FilterAction::include) {
+      operator_include_onestops_.emplace(id);
     }
   }
 
   // Process route filters
-  if (costing_options.has_filter_route_action()) {
-    auto route_action = costing_options.filter_route_action();
-    for (const auto& id : costing_options.filter_route_ids()) {
-      if (route_action == FilterAction::exclude) {
-        route_exclude_onestops_.emplace(id);
-      } else if (route_action == FilterAction::include) {
-        route_include_onestops_.emplace(id);
-      }
+  auto route_action = costing_options.filter_route_action();
+  for (const auto& id : costing_options.filter_route_ids()) {
+    if (route_action == FilterAction::exclude) {
+      route_exclude_onestops_.emplace(id);
+    } else if (route_action == FilterAction::include) {
+      route_include_onestops_.emplace(id);
     }
   }
 

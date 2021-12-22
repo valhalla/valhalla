@@ -175,95 +175,6 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
 namespace valhalla {
 namespace thor {
 
-std::string thor_worker_t::expansion(Api& request) {
-  // time this whole method and save that statistic
-  measure_scope_time(request);
-
-  // default the expansion geojson so its easy to add to as we go
-  rapidjson::Document dom;
-  dom.SetObject();
-  rapidjson::Pointer("/type").Set(dom, "FeatureCollection");
-  rapidjson::Pointer("/properties/algorithm").Set(dom, "none");
-  rapidjson::Pointer("/features/0/type").Set(dom, "Feature");
-  rapidjson::Pointer("/features/0/geometry/type").Set(dom, "MultiLineString");
-  rapidjson::Pointer("/features/0/geometry/coordinates").Create(dom).SetArray();
-  rapidjson::Pointer("/features/0/properties/edge_ids").Create(dom).SetArray();
-  rapidjson::Pointer("/features/0/properties/statuses").Create(dom).SetArray();
-
-  // a lambda that the path algorithm can call to add stuff to the dom
-  auto track_expansion = [&dom](baldr::GraphReader& reader, const char* algorithm,
-                                baldr::GraphId edgeid, const char* status, bool full_shape = false) {
-    // full shape might be overkill but meh, its trace
-    auto tile = reader.GetGraphTile(edgeid);
-    if (tile == nullptr) {
-      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
-                std::to_string(edgeid.Tile_Base()));
-      return;
-    }
-    const auto* edge = tile->directededge(edgeid);
-    auto shape = tile->edgeinfo(edge).shape();
-    if (!edge->forward())
-      std::reverse(shape.begin(), shape.end());
-    if (!full_shape && shape.size() > 2)
-      shape.erase(shape.begin() + 1, shape.end() - 1);
-
-    // make the geom
-    auto& a = dom.GetAllocator();
-    auto* coords = rapidjson::Pointer("/features/0/geometry/coordinates").Get(dom);
-    coords->GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-    auto& linestring = (*coords)[coords->Size() - 1];
-    for (const auto& p : shape) {
-      linestring.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-      auto point = linestring[linestring.Size() - 1].GetArray();
-      point.PushBack(p.first, a);
-      point.PushBack(p.second, a);
-    }
-
-    // make the properties
-    rapidjson::Pointer("/properties/algorithm").Set(dom, algorithm);
-    rapidjson::Pointer("/features/0/properties/edge_ids")
-        .Get(dom)
-        ->GetArray()
-        .PushBack(static_cast<uint64_t>(edgeid), a);
-    rapidjson::Pointer("/features/0/properties/statuses")
-        .Get(dom)
-        ->GetArray()
-        .PushBack(rapidjson::Value{}.SetString(status, a), a);
-  };
-
-  // tell all the algorithms how to track expansion
-  for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
-           &bidir_astar,
-           &bss_astar,
-       }) {
-    alg->set_track_expansion(track_expansion);
-  }
-
-  // track the expansion
-  try {
-    route(request);
-  } catch (...) {
-    // we swallow exceptions because we actually want to see what the heck the expansion did anyway
-  }
-
-  // tell all the algorithms to stop tracking the expansion
-  for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
-           &bidir_astar,
-           &bss_astar,
-       }) {
-    alg->set_track_expansion(nullptr);
-  }
-
-  // serialize it
-  return rapidjson::to_string(dom, 5);
-}
-
 void thor_worker_t::centroid(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
@@ -309,18 +220,10 @@ void thor_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
 
   // get all the legs
-  if (options.has_date_time_type() && options.date_time_type() == Options::arrive_by) {
+  if (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by) {
     path_arrive_by(request, costing);
   } else {
     path_depart_at(request, costing);
-  }
-  // log admin areas
-  if (!options.do_not_track()) {
-    for (const auto& route : request.trip().routes()) {
-      for (const auto& leg : route.legs()) {
-        log_admin(leg);
-      }
-    }
   }
 }
 
@@ -351,7 +254,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
-  if (origin.has_date_time() && options.date_time_type() != Options::invariant &&
+  if (origin.has_date_time_case() && options.date_time_type() != Options::invariant &&
       !options.prioritize_bidirectional()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
@@ -362,7 +265,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the destination has date_time set use timedep_reverse method if the distance
   // between location is below some maximum distance (TBD).
-  if (destination.has_date_time() && options.date_time_type() != Options::invariant) {
+  if (destination.has_date_time_case() && options.date_time_type() != Options::invariant) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
@@ -476,7 +379,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
+      if (destination->has_date_time_case() &&
+          options.date_time_type() != valhalla::Options::invariant) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
@@ -630,7 +534,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time() && options.date_time_type() != valhalla::Options::invariant) {
+      if (origin->has_date_time_case() && options.date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);

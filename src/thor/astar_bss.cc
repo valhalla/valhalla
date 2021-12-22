@@ -13,10 +13,10 @@ using namespace valhalla::sif;
 
 namespace {
 
-static TravelMode get_other_travel_mode(const TravelMode current_mode) {
+static travel_mode_t get_other_travel_mode(const travel_mode_t current_mode) {
   static const auto bss_modes =
-      std::vector<TravelMode>{TravelMode::kPedestrian, TravelMode::kBicycle};
-  return bss_modes[static_cast<size_t>(current_mode == TravelMode::kPedestrian)];
+      std::vector<travel_mode_t>{travel_mode_t::kPedestrian, travel_mode_t::kBicycle};
+  return bss_modes[static_cast<size_t>(current_mode == travel_mode_t::kPedestrian)];
 }
 } // namespace
 
@@ -32,7 +32,7 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
       travel_type_(0) {
 }
 
@@ -105,13 +105,13 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
                                       const uint32_t pred_idx,
                                       const bool from_transition,
                                       const bool from_bss,
-                                      const sif::TravelMode mode,
+                                      const sif::travel_mode_t mode,
                                       const valhalla::Location& destination,
                                       std::pair<int32_t, float>& best_path) {
   const auto& current_costing =
-      (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
   const auto& current_heuristic =
-      (mode == TravelMode::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -130,7 +130,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
 
   EdgeStatusInfo* current_es =
-      (mode == TravelMode::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
+      (mode == travel_mode_t::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
           .GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
 
@@ -168,7 +168,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
-    auto p = mode != TravelMode::kPedestrian ? destinations_.end() : destinations_.find(edgeid);
+    auto p = mode != travel_mode_t::kPedestrian ? destinations_.end() : destinations_.find(edgeid);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
       newcost -= p->second;
@@ -252,12 +252,12 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
                                valhalla::Location& destination,
                                GraphReader& graphreader,
                                const sif::mode_costing_t& mode_costing,
-                               const TravelMode mode,
+                               const travel_mode_t mode,
                                const Options&) {
   // Set the mode and costing
   mode_ = mode;
-  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
-  bicycle_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kBicycle)];
+  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
+  bicycle_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kBicycle)];
   travel_type_ = pedestrian_costing_->travel_type();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
@@ -310,7 +310,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     auto ll = tile->get_node_ll(pred.endnode());
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
-        pred.mode() == TravelMode::kPedestrian) {
+        pred.mode() == travel_mode_t::kPedestrian) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
@@ -324,11 +324,11 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
-    if (!pred.origin() && pred.mode() == TravelMode::kPedestrian) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kPedestrian) {
       pedestrian_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-    if (!pred.origin() && pred.mode() == TravelMode::kBicycle) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kBicycle) {
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
@@ -459,8 +459,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true, false,
-                         sif::InternalTurn::kNoTurn);
+                         travel_mode_t::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true,
+                         false, sif::InternalTurn::kNoTurn);
     // Set the origin flag
     edge_label.set_origin();
 
@@ -473,7 +473,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && origin.has_date_time_case() && origin.date_time() == "current") {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
@@ -529,7 +529,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
 
   // Work backwards from the destination
   std::vector<PathInfo> path;
-  TravelMode old = TravelMode::kPedestrian;
+  travel_mode_t old = travel_mode_t::kPedestrian;
   int mode_change_count = 0;
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;

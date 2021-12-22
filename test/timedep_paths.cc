@@ -46,7 +46,7 @@ void adjust_scores(Options& options) {
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
+          if (location.skip_ranking_candidates())
             candidate.set_distance(0);
           // scale the score to favor closer results more
           else
@@ -83,7 +83,7 @@ void try_path(GraphReader& reader,
   adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other
-  TravelMode mode;
+  travel_mode_t mode;
   auto mode_costing = sif::CostFactory().CreateModeCosting(request.options(), mode);
 
   valhalla::Location origin = request.options().locations(0);

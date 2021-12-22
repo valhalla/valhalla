@@ -21,7 +21,7 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(TravelMode::kDrive),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
       travel_type_(0), access_mode_{kAutoAccess} {
 }
 
@@ -422,7 +422,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     valhalla::Location& destination,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const travel_mode_t mode,
     const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
@@ -432,7 +432,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
   if (!FORWARD) {
     // date_time must be set on the destination. Log an error but allow routes for now.
-    if (!destination.has_date_time()) {
+    if (!destination.has_date_time_case()) {
       LOG_ERROR("TimeDepReverse called without time set on the destination location");
       // return {};
     }
@@ -559,14 +559,14 @@ UnidirectionalAStar<ExpansionType::forward>::GetBestPath(valhalla::Location& ori
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
-                                                         const TravelMode mode,
+                                                         const travel_mode_t mode,
                                                          const Options& /*options*/);
 template std::vector<std::vector<PathInfo>>
 UnidirectionalAStar<ExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
-                                                         const TravelMode mode,
+                                                         const travel_mode_t mode,
                                                          const Options& /*options*/);
 // Set the mode and costing
 // Initialize prior to finding best path

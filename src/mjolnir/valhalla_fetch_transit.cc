@@ -1062,7 +1062,7 @@ void stitch_tiles(const ptree& pt,
         }
       }
       lock.lock();
-      auto size = tile.ByteSize();
+      auto size = tile.ByteSizeLong();
       valhalla::midgard::mem_map<char> buffer;
       buffer.create(file_name, size);
       tile.SerializeToArray(buffer.get(), size);

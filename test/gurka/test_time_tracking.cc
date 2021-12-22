@@ -42,7 +42,7 @@ TEST(TimeTracking, make) {
     // no time
     auto ti = baldr::TimeInfo::make(location, reader, cache);
     ASSERT_EQ(ti, basic_ti);
-    ASSERT_FALSE(location.has_date_time());
+    ASSERT_FALSE(location.has_date_time_case());
 
     // bad timezone defaults to UTC
     location.set_date_time("2020-04-01T12:34");

@@ -99,21 +99,21 @@ std::string serializeStatus(const Api& request) {
   status_doc.AddMember("tileset_last_modified",
                        rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
 
-  if (request.status().has_has_tiles())
+  if (request.status().has_has_tiles_case())
     status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
                          alloc);
-  if (request.status().has_has_admins())
+  if (request.status().has_has_admins_case())
     status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
                          alloc);
-  if (request.status().has_has_timezones())
+  if (request.status().has_has_timezones_case())
     status_doc.AddMember("has_timezones",
                          rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
-  if (request.status().has_has_live_traffic())
+  if (request.status().has_has_live_traffic_case())
     status_doc.AddMember("has_live_traffic",
                          rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
 
   rapidjson::Document bbox_doc;
-  if (request.status().has_bbox()) {
+  if (request.status().has_bbox_case()) {
     bbox_doc.Parse(request.status().bbox());
     rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
   }

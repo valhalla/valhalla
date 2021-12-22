@@ -43,7 +43,7 @@ void adjust_scores(Options& options) {
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
+          if (location.skip_ranking_candidates())
             candidate.set_distance(0);
           // scale the score to favor closer results more
           else
@@ -80,7 +80,7 @@ void try_path(GraphReader& reader,
 
   // For now this just tests auto costing - could extend to other
   request.mutable_options()->set_costing(Costing::auto_);
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 

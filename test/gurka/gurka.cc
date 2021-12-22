@@ -97,7 +97,6 @@ std::string build_valhalla_request(const std::string& location_type,
 
   rapidjson::Value co(rapidjson::kObjectType);
   if (!custom_speed_types) {
-    rapidjson::Value dt(rapidjson::kObjectType);
     rapidjson::Value speed_types(rapidjson::kArrayType);
     speed_types.PushBack("freeflow", allocator);
     speed_types.PushBack("constrained", allocator);
@@ -601,14 +600,12 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       break;
     case valhalla::Options::expansion:
       json_str = actor.expansion(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
       break;
     case valhalla::Options::chinese_postman:
       json_str = actor.chinese_postman(request_json, nullptr, &api);
       break;
     case valhalla::Options::isochrone:
       json_str = actor.isochrone(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
       break;
     case valhalla::Options::sources_to_targets:
       json_str = actor.matrix(request_json, nullptr, &api);

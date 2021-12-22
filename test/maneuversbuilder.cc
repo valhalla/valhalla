@@ -84,7 +84,7 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Man
 
   // node:1
   node = path.add_node();
-  node->mutable_edge()->set_drive_on_right(true);
+  node->mutable_edge()->set_drive_on_left(false);
 
   // node:2 dummy last node
   node = path.add_node();
@@ -375,7 +375,7 @@ void PopulateEdge(TripLeg_Edge* edge,
                   const std::vector<std::pair<std::string, bool>>& exit_onto_streets,
                   const std::vector<std::pair<std::string, bool>>& exit_toward_locations,
                   const std::vector<std::pair<std::string, bool>>& exit_names,
-                  TripLeg_TravelMode travel_mode = TripLeg_TravelMode_kDrive) {
+                  TravelMode travel_mode = TravelMode::kDrive) {
   for (const auto& name : names) {
     auto* edge_name = edge->add_name();
     edge_name->set_value(name.first);
@@ -1770,14 +1770,14 @@ TEST(Maneuversbuilder, TestPathRightXStraightIsIntersectingForwardEdge) {
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.027827, 30.000000, valhalla::RoadClass::kResidential,
                250, 291, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+               {}, TravelMode::kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, valhalla::RoadClass::kResidential,
                20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+               {}, TravelMode::kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
@@ -1802,14 +1802,14 @@ TEST(Maneuversbuilder, TestPathLeftXStraightIsIntersectingForwardEdge) {
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.047007, 30.000000, valhalla::RoadClass::kResidential,
                108, 108, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+               {}, TravelMode::kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, valhalla::RoadClass::kResidential,
                20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+               {}, TravelMode::kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
@@ -1834,14 +1834,14 @@ TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) 
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.102593, 30.000000,
                valhalla::RoadClass::kResidential, 23, 13, 0, 6, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TravelMode::kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.205258, 30.000000,
                valhalla::RoadClass::kResidential, 45, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TravelMode::kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 3, 0, 0, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 

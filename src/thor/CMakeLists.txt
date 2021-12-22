@@ -10,6 +10,7 @@ set(sources
   chinese_postman_graph.cc
   costmatrix.cc
   dijkstras.cc
+  expansion_action.cc
   isochrone_action.cc
   isochrone.cc
   map_matcher.cc
