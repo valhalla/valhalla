@@ -457,7 +457,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   }
   // Start build path here
   LOG_DEBUG("Building full path");
-  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
+  bool invariant = options.has_date_time_type_case();
   auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
   std::vector<PathInfo> path =
       buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
