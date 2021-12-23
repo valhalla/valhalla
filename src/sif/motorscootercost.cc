@@ -434,7 +434,15 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
+  float average_edge_speed = speed;
+  // dont use current speed layer for penalties as live speeds might be too low/too high
+  // better to use layers with smoothed/constant speeds
+  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
+    average_edge_speed =
+        tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
+  }
+  float speed_penalty =
+      (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
                  grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
