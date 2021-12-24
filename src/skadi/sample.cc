@@ -212,7 +212,7 @@ private:
   bool reusable;
 
 public:
-  tile_data() : c(nullptr), index(0), reusable(false), data(nullptr) {
+  tile_data() : c(nullptr), index(TILE_COUNT), reusable(false), data(nullptr) {
   }
 
   tile_data(const tile_data& other) : c(nullptr) {
@@ -234,6 +234,10 @@ public:
 
   inline explicit operator bool() const {
     return data != nullptr;
+  }
+
+  uint16_t get_index() const {
+    return index;
   }
 
   double get(double u, double v) const {
@@ -448,14 +452,16 @@ sample::~sample() {
   delete cache_;
 }
 
-template <class coord_t> double sample::get(const coord_t& coord) {
+template <class coord_t> double sample::get(const coord_t& coord, tile_data& tile) {
   // check the cache and load
   auto lon = std::floor(coord.first);
   auto lat = std::floor(coord.second);
   auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
 
-  // get the proper source of the data
-  const auto& tile = cache_->source(index);
+  if (index != tile.get_index()) {
+    // get the proper source of the data
+    tile = cache_->source(index);
+  }
   if (!tile) {
     return NO_DATA_VALUE;
   }
@@ -470,29 +476,18 @@ template <class coord_t> double sample::get(const coord_t& coord) {
   return tile.get(u, v);
 }
 
+template <class coord_t> double sample::get(const coord_t& coord) {
+  tile_data tile;
+  return get(coord, tile);
+}
+
 template <class coords_t> std::vector<double> sample::get_all(const coords_t& coords) {
   std::vector<double> values;
   values.reserve(coords.size());
-  uint16_t curIndex = TILE_COUNT;
-  tile_data tile(cache_, TILE_COUNT, false, nullptr);
+  // reusable tile
+  tile_data tile;
   for (const auto& coord : coords) {
-    auto lon = std::floor(coord.first);
-    auto lat = std::floor(coord.second);
-    auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
-
-    if (index != curIndex) {
-      tile = cache_->source(index);
-      curIndex = index;
-    }
-
-    double value = NO_DATA_VALUE;
-    if (tile) {
-      double u = (coord.first - lon) * (HGT_DIM - 1);
-      double v = (1.0 - (coord.second - lat)) * (HGT_DIM - 1);
-      value = tile.get(u, v);
-    }
-
-    values.emplace_back(value);
+    values.emplace_back(get(coord, tile));
   }
   return values;
 }
