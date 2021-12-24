@@ -516,18 +516,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
-  // TODO: speed_penality hasn't been extensively tested, might alter this in future
-  float average_edge_speed = edge_speed;
-  // dont use current speed layer for penalties as live speeds might be too low/too high
-  // better to use layers with smoothed/constant speeds
-  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
-    average_edge_speed =
-        tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
-  }
-  float speed_penalty =
-      (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
             edge->toll() * toll_factor_;
 
   switch (edge->use()) {
@@ -994,16 +985,7 @@ public:
     }
 
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-    float average_edge_speed = edge_speed;
-    // dont use current speed layer for penalties as live speeds might be too low/too high
-    // better to use layers with smoothed/constant speeds
-    if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
-      average_edge_speed =
-          tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
-    }
-    float speed_penalty =
-        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
-    factor += speed_penalty;
+    factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }

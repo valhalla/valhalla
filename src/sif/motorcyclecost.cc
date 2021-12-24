@@ -415,17 +415,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-  // TODO: factor hasn't been extensively tested, might alter this in future
-  float average_edge_speed = edge_speed;
-  // dont use current speed layer for penalties as live speeds might be too low/too high
-  // better to use layers with smoothed/constant speeds
-  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
-    average_edge_speed =
-        tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
-  }
-  float speed_penalty =
-      (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
-  factor += speed_penalty;
+  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->toll()) {
     factor += toll_factor_;
   }

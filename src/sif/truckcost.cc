@@ -436,17 +436,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
-  float average_edge_speed = edge_speed;
-  // dont use current speed layer for penalties as live speeds might be too low/too high
-  // better to use layers with smoothed/constant speeds
-  if (top_speed_ != kMaxAssumedSpeed && (flow_sources & kCurrentFlowMask)) {
-    average_edge_speed =
-        tile->GetSpeed(edge, flow_mask_ & (~kCurrentFlowMask), time_info.second_of_week);
-  }
-  float speed_penalty =
-      (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] + speed_penalty;
+  float factor = density_factor_[edge->density()] +
+                 SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
