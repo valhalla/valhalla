@@ -11,6 +11,7 @@
 #include <valhalla/mjolnir/osmdata.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/util.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -47,13 +48,13 @@ public:
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& pronunciation_file,
-                    const std::map<baldr::GraphId, size_t>& tiles);
+                    std::vector<TileDef>& tiles);
 
-  static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
-                                                     const std::string& ways_file,
-                                                     const std::string& way_nodes_file,
-                                                     const std::string& nodes_file,
-                                                     const std::string& edges_file);
+  static std::vector<TileDef> BuildEdges(const ptree& conf,
+                                         const std::string& ways_file,
+                                         const std::string& way_nodes_file,
+                                         const std::string& nodes_file,
+                                         const std::string& edges_file);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 

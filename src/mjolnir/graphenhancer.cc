@@ -1354,13 +1354,13 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
+    if (tilequeue.empty()) {
+      break;
+    }
+
     // Get the next tile Id from the queue and get writeable and readable
     // tile. Lock while we access the tile queue and get the tile.
     lock.lock();
-    if (tilequeue.empty()) {
-      lock.unlock();
-      break;
-    }
     GraphId tile_id = tilequeue.front();
     tilequeue.pop();
 
@@ -1766,6 +1766,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::list<std::promise<enhancer_stats>> results;
 
   // Create a randomized queue of tiles to work from
+  // TODO: use a smarter strategy for work distribution
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   auto local_level = TileHierarchy::levels().back().level;

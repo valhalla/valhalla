@@ -1,4 +1,5 @@
 #include <future>
+#include <mutex>
 #include <set>
 #include <thread>
 #include <utility>
@@ -38,9 +39,10 @@ namespace {
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
+ * tiles are sorted by node count (descending order)
  *
  */
-std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
+std::vector<TileDef> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
@@ -69,12 +71,12 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   uint32_t node_index = 0;
   size_t node_count = 0;
   Node last_node{};
-  std::map<GraphId, size_t> tiles;
+  std::vector<TileDef> tiles;
   nodes.transform(
       [&starts, &ends, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
         // remember if this was a new tile
-        if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
-          tiles.insert({node.graph_id, node_index});
+        if (node_index == 0 || node.graph_id != (--tiles.end())->graph_id) {
+          tiles.push_back({node.graph_id, node_index, node_count});
           node.graph_id.set_id(0);
           run_index = node_index;
           ++node_count;
@@ -138,6 +140,10 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   ends.reset();
   filesystem::remove(start_node_edge_file);
   filesystem::remove(end_node_edge_file);
+
+  // sort the tiles according to node count to process the heaviest first
+  std::sort(tiles.begin(), tiles.end(),
+            [](const TileDef& a, const TileDef& b) { return a.node_count > b.node_count; });
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -388,8 +394,8 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& pronunciation_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
-                  std::map<GraphId, size_t>::const_iterator tile_start,
-                  std::map<GraphId, size_t>::const_iterator tile_end,
+                  std::vector<TileDef>& tilequeue,
+                  std::mutex& lock,
                   const uint32_t tile_creation_date,
                   const boost::property_tree::ptree& pt,
                   std::promise<DataQuality>& result) {
@@ -452,10 +458,19 @@ void BuildTileSet(const std::string& ways_file,
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
-  for (; tile_start != tile_end; ++tile_start) {
+  TileDef current_tile;
+  while (true) {
     try {
+      if (tilequeue.empty()) {
+        break;
+      }
+      lock.lock();
+      current_tile = tilequeue.back();
+      tilequeue.pop_back();
+      lock.unlock();
+
       // What actually writes the tile
-      GraphId tile_id = tile_start->first.Tile_Base();
+      GraphId tile_id = current_tile.graph_id.Tile_Base();
       GraphTileBuilder graphtile(tile_dir, tile_id, false);
 
       // Information about tile creation
@@ -497,12 +512,10 @@ void BuildTileSet(const std::string& ways_file,
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
-      auto node_itr = nodes[tile_start->second];
+      auto node_itr = nodes[current_tile.node_index];
       // to avoid realloc we guess how many edges there might be in a given tile
       geo_attribute_cache.clear();
-      geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end
-                                           ? nodes.end() - node_itr
-                                           : std::next(tile_start)->second - tile_start->second));
+      geo_attribute_cache.reserve(5 * current_tile.node_count);
 
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
@@ -1096,14 +1109,14 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first %
+      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % current_tile.graph_id %
                  graphtile.header_builder().end_offset())
                     .str());
     } // Whatever happens in Vegas..
     catch (std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      LOG_ERROR((boost::format("Failed tile %1%: %2%") % tile_start->first % e.what()).str());
+      LOG_ERROR((boost::format("Failed tile %1%: %2%") % current_tile.graph_id % e.what()).str());
       return;
     }
   }
@@ -1130,7 +1143,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& complex_from_restriction_file,
                      const std::string& complex_to_restriction_file,
                      const std::string& pronunciation_file,
-                     const std::map<GraphId, size_t>& tiles,
+                     std::vector<TileDef>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
                      const boost::property_tree::ptree& pt) {
@@ -1147,27 +1160,18 @@ void BuildLocalTiles(const unsigned int thread_count,
   // Hold the results (DataQuality/stats) for the threads
   std::vector<std::promise<DataQuality>> results(threads.size());
 
-  // Divvy up the work
-  size_t floor = tiles.size() / threads.size();
-  size_t at_ceiling = tiles.size() - (threads.size() * floor);
-  std::map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
-
+  std::mutex lock;
   // Atomically pass around stats info
   for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    // Where the range begins
-    tile_start = tile_end;
-    // Where the range ends
-    std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
                                      std::cref(complex_to_restriction_file),
                                      std::cref(pronunciation_file), std::cref(tile_dir),
-                                     std::cref(osmdata), tile_start, tile_end, tile_creation_date,
-                                     std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
+                                     std::cref(osmdata), std::ref(tiles), std::ref(lock),
+                                     tile_creation_date, std::cref(pt.get_child("mjolnir")),
+                                     std::ref(results[i])));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1197,11 +1201,11 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla {
 namespace mjolnir {
 
-std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
-                                                   const std::string& ways_file,
-                                                   const std::string& way_nodes_file,
-                                                   const std::string& nodes_file,
-                                                   const std::string& edges_file) {
+std::vector<TileDef> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
+                                              const std::string& ways_file,
+                                              const std::string& way_nodes_file,
+                                              const std::string& nodes_file,
+                                              const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
@@ -1223,7 +1227,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::string& pronunciation_file,
-                         const std::map<GraphId, size_t>& tiles) {
+                         std::vector<TileDef>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;

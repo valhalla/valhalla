@@ -173,16 +173,25 @@ bool build_tile_set(const ptree& config,
 //     }
 //   ]
 // }
+
+struct TileDef {
+  baldr::GraphId graph_id;
+  size_t node_index;
+  size_t node_count;
+};
+
 struct TileManifest {
 
-  std::map<baldr::GraphId, size_t> tileset;
+  std::vector<TileDef> tileset;
 
   std::string ToString() const {
     baldr::json::ArrayPtr array = baldr::json::array({});
     for (const auto& tile : tileset) {
-      const baldr::json::Value& graphid = tile.first.json();
-      const baldr::json::MapPtr& item = baldr::json::map(
-          {{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
+      const baldr::json::Value& graphid = tile.graph_id.json();
+      const baldr::json::MapPtr& item =
+          baldr::json::map({{"graphid", graphid},
+                            {"node_index", static_cast<uint64_t>(tile.node_index)},
+                            {"node_size", static_cast<uint64_t>(tile.node_count)}});
       array->emplace_back(item);
     }
     std::stringstream manifest;
@@ -202,12 +211,13 @@ struct TileManifest {
     ptree manifest;
     rapidjson::read_json(filename, manifest);
     LOG_INFO("Reading tile manifest from " + filename);
-    std::map<baldr::GraphId, size_t> tileset;
+    std::vector<TileDef> tileset;
     for (const auto& tile_info : manifest.get_child("tiles")) {
       const ptree& graph_id = tile_info.second.get_child("graphid");
       const baldr::GraphId id(graph_id.get<uint64_t>("value"));
       const size_t node_index = tile_info.second.get<size_t>("node_index");
-      tileset.insert({id, node_index});
+      const size_t node_count = tile_info.second.get<size_t>("node_size");
+      tileset.push_back({id, node_index, node_count});
     }
     LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
              filename);

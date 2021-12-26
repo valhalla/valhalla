@@ -284,7 +284,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   }
 
   // Construct edges
-  std::map<baldr::GraphId, size_t> tiles;
+  std::vector<TileDef> tiles;
   if (start_stage <= BuildStage::kConstructEdges && BuildStage::kConstructEdges <= end_stage) {
 
     // Read OSMData from files if construct edges is the first stage
