@@ -1227,7 +1227,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::string& pronunciation_file,
-                         std::vector<TileDef>& tiles) {
+                         std::vector<TileDef> tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;

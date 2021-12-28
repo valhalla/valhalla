@@ -48,7 +48,7 @@ public:
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& pronunciation_file,
-                    std::vector<TileDef>& tiles);
+                    std::vector<TileDef> tiles);
 
   static std::vector<TileDef> BuildEdges(const ptree& conf,
                                          const std::string& ways_file,

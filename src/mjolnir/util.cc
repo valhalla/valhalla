@@ -324,8 +324,16 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read OSMData names from file if enhancing tiles is the first stage
     if (start_stage == BuildStage::kEnhance) {
       osm_data.read_from_unique_names_file(tile_dir);
+      if (filesystem::exists(tile_manifest)) {
+        tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
+      } else {
+        // TODO: Remove this backfill in the future, and make calling constructedges stage
+        // explicitly required in the future.
+        LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
+        tiles = GraphBuilder::BuildEdges(config, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+      }
     }
-    GraphEnhancer::Enhance(config, osm_data, access_bin);
+    GraphEnhancer::Enhance(config, osm_data, access_bin, tiles);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)

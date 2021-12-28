@@ -1314,7 +1314,7 @@ void enhance(const boost::property_tree::ptree& pt,
              const OSMData& osmdata,
              const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
-             std::queue<GraphId>& tilequeue,
+             std::vector<valhalla::mjolnir::TileDef>& tilequeue,
              std::mutex& lock,
              std::promise<enhancer_stats>& result) {
 
@@ -1361,8 +1361,8 @@ void enhance(const boost::property_tree::ptree& pt,
     // Get the next tile Id from the queue and get writeable and readable
     // tile. Lock while we access the tile queue and get the tile.
     lock.lock();
-    GraphId tile_id = tilequeue.front();
-    tilequeue.pop();
+    GraphId tile_id = tilequeue.back().graph_id;
+    tilequeue.pop_back();
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
@@ -1754,7 +1754,8 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
-                            const std::string& access_file) {
+                            const std::string& access_file,
+                            std::vector<mjolnir::TileDef> tiles) {
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
