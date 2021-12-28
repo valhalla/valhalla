@@ -231,7 +231,7 @@ wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://downl
 #get the config and setup
 mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
-#build timezones.sqlite
+#build timezones.sqlite to support time-dependent routing
 valhalla_build_timezones > valhalla_tiles/timezones.sqlite
 #build routing tiles
 #TODO: run valhalla_build_admins?
