@@ -1,6 +1,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
-#include <stack>
+#include <utility>
 
 #include "midgard/util.h"
 #include "thor/chinese_postman_graph.h"
@@ -93,18 +93,19 @@ std::vector<baldr::GraphId> ChinesePostmanGraph::getUnbalancedVertices() {
     }
   }
   sort(unbalaced_graph_ids.begin(), unbalaced_graph_ids.end());
+  unbalaced_vertices.reserve(unbalaced_graph_ids.size());
   for (auto const& graph_id : unbalaced_graph_ids) {
     unbalaced_vertices.push_back(GraphId(graph_id));
   }
   return unbalaced_vertices;
 }
 
-std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex start_vertex,
+std::vector<int> ChinesePostmanGraph::computeIdealEulerCycle(const CPVertex& start_vertex,
                                                              ExtraPaths extraPaths) {
   LOG_DEBUG("computeIdealEulerCycle");
   int startNodeIndex = this->getVertexIndex(start_vertex);
 
-  this->setupDFSEulerCycle(extraPaths);
+  this->setupDFSEulerCycle(std::move(extraPaths));
   this->dfsEulerCycle(startNodeIndex);
 
   int edgeUnvisited = 0;
@@ -121,7 +122,7 @@ void ChinesePostmanGraph::setupDFSEulerCycle(ExtraPaths extraPaths) {
   this->reversedEulerPath.clear();
   this->outEdges.clear();
   // populate out edges
-  this->expandedAdjacencyList = this->getAdjacencyList(extraPaths);
+  this->expandedAdjacencyList = this->getAdjacencyList(std::move(extraPaths));
   for (const auto& x : this->expandedAdjacencyList) {
     this->outEdges[x.first] = x.second.size();
   }

@@ -64,8 +64,8 @@ int get_node_candidate_index(const valhalla::Location& location,
 
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
                                 const Options& /*options*/,
-                                const valhalla::Location& origin,
-                                const valhalla::Location& dest,
+                                const valhalla::Location& /*origin*/,
+                                const valhalla::Location& /*dest*/,
                                 const baldr::TimeInfo& time_info,
                                 const bool invariant,
                                 std::vector<GraphId> path_edges,
@@ -171,7 +171,7 @@ std::vector<GraphId>
 thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
                                 CPVertex cpvertex_end,
                                 const Options& options,
-                                const std::string costing_str,
+                                const std::string& costing_str,
                                 const std::shared_ptr<sif::DynamicCost>& costing) {
   LOG_DEBUG("computeFullRoute");
   std::vector<GraphId> edge_graph_ids;
@@ -234,7 +234,7 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
 std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerPath,
                                                  ChinesePostmanGraph& G,
                                                  const Options& options,
-                                                 const std::string costing_str,
+                                                 const std::string& costing_str,
                                                  const std::shared_ptr<sif::DynamicCost>& costing) {
   std::vector<GraphId> eulerPathEdgeGraphIDs;
   for (auto it = reversedEulerPath.rbegin(); it != reversedEulerPath.rend(); ++it) {

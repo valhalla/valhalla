@@ -102,7 +102,7 @@ namespace loki {
 
 // This custon within is created because using the boost::within for edge_info
 // shape will give different result depending on the order of the point.
-bool IsWithin(vb::EdgeInfo edge_info, polygon_type polygon) {
+bool IsWithin(vb::EdgeInfo edge_info, const polygon_type& polygon) {
   // create temporary line from edge_info
   point_type p1(edge_info.shape()[0].first, edge_info.shape()[0].second);
   point_type p2(edge_info.shape()[1].first, edge_info.shape()[1].second);
@@ -218,7 +218,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
   polygon_type polygon;
 
   std::vector<point_type> points;
-  for (auto p : ring_bg) {
+  for (const auto& p : ring_bg) {
     // point_type new_point(p.first, p.second);
     // points.push_back(point_type(p.first, p.second));
     bg::append(polygon.outer(), point_type(p.first, p.second));

@@ -89,7 +89,7 @@ public:
 
   // Compute euler cycle of the graph. Graph is ideal after added by extraPaths.
   // It returns a vector of reversed Euler path, or this->reversedEulerPath
-  std::vector<int> computeIdealEulerCycle(const CPVertex start_vertex,
+  std::vector<int> computeIdealEulerCycle(const CPVertex& start_vertex,
                                           ExtraPaths extraPaths = ExtraPaths());
 
   // Setup the DFS for computing the Euler cycle

@@ -111,12 +111,12 @@ protected:
   std::vector<baldr::GraphId> computeFullRoute(CPVertex cpvertex_start,
                                                CPVertex cpvertex_end,
                                                const Options& options,
-                                               const std::string costing_str,
+                                               const std::string& costing_str,
                                                const std::shared_ptr<sif::DynamicCost>& costing);
   std::vector<baldr::GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
                                            ChinesePostmanGraph& G,
                                            const Options& options,
-                                           const std::string costing_str,
+                                           const std::string& costing_str,
                                            const std::shared_ptr<sif::DynamicCost>& costing);
 
   void build_route(
