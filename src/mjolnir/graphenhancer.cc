@@ -1755,7 +1755,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
                             const std::string& access_file,
-                            std::vector<mjolnir::TileDef> tiles) {
+                            std::vector<TileDef> tiles) {
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
@@ -1768,17 +1768,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
 
   // Create a randomized queue of tiles to work from
   // TODO: use a smarter strategy for work distribution
-  std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().back().level;
-  GraphReader reader(hierarchy_properties);
-  auto local_tiles = reader.GetTileSet(local_level);
-  for (const auto& tile_id : local_tiles) {
-    tempqueue.emplace_back(tile_id);
-  }
-  std::random_device rd;
-  std::shuffle(tempqueue.begin(), tempqueue.end(), std::mt19937(rd()));
-  std::queue<GraphId> tilequeue(tempqueue);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -1788,7 +1778,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     results.emplace_back();
     thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
                                  std::cref(access_file), std::ref(hierarchy_properties),
-                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
+                                 std::ref(tiles), std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work

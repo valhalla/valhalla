@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/util.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -22,7 +23,7 @@ public:
   static void Enhance(const boost::property_tree::ptree& pt,
                       const OSMData& osmdata,
                       const std::string& access_file,
-                      std::vector<mjolnir::TileDef> tiles);
+                      std::vector<TileDef> tiles);
 };
 
 } // namespace mjolnir
