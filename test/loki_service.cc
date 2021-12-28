@@ -372,6 +372,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "expansion",
                                             "centroid",
                                             "status",
+                                            "chinese_postman",
                                         }) {
   auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
                  "loki_service_tmp";

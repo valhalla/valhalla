@@ -149,6 +149,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
       {Options::expansion, "expansion"},
       {Options::centroid, "centroid"},
       {Options::status, "status"},
+      {Options::chinese_postman, "chinese_postman"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
