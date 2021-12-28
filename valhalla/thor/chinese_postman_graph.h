@@ -10,9 +10,6 @@
 #include <thor/bidirectional_astar.h>
 #include <valhalla/baldr/graphid.h>
 
-using namespace valhalla::sif;
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace thor {
 
@@ -27,9 +24,9 @@ struct CPVertex {
 };
 
 struct CPEdge {
-  Cost cost;
+  sif::Cost cost;
   baldr::GraphId graph_id;
-  CPEdge(Cost cost = Cost(0, 0), baldr::GraphId graph_id = baldr::GraphId())
+  CPEdge(sif::Cost cost = sif::Cost(0, 0), baldr::GraphId graph_id = baldr::GraphId())
       : cost(cost), graph_id(graph_id) {
   }
 };
