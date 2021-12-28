@@ -143,7 +143,7 @@ std::vector<TileDef> SortGraph(const std::string& nodes_file, const std::string&
 
   // sort the tiles according to node count to process the heaviest first
   std::sort(tiles.begin(), tiles.end(),
-            [](const TileDef& a, const TileDef& b) { return a.node_count > b.node_count; });
+            [](const TileDef& a, const TileDef& b) { return a.node_count < b.node_count; });
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
