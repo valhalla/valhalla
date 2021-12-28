@@ -8,9 +8,9 @@
 #include <boost/graph/properties.hpp>
 #include <stack>
 #include <thor/bidirectional_astar.h>
+#include <valhalla/baldr/graphid.h>
 
 using namespace valhalla::sif;
-using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace valhalla {
@@ -20,16 +20,17 @@ constexpr double NOT_CONNECTED{999999.0};
 
 struct CPVertex {
   std::string vertex_id;
-  GraphId graph_id;
-  CPVertex(GraphId graph_id = GraphId()) : graph_id(graph_id) {
+  baldr::GraphId graph_id;
+  CPVertex(baldr::GraphId graph_id = baldr::GraphId()) : graph_id(graph_id) {
     vertex_id = std::to_string(graph_id);
   }
 };
 
 struct CPEdge {
   Cost cost;
-  GraphId graph_id;
-  CPEdge(Cost cost = Cost(0, 0), GraphId graph_id = GraphId()) : cost(cost), graph_id(graph_id) {
+  baldr::GraphId graph_id;
+  CPEdge(Cost cost = Cost(0, 0), baldr::GraphId graph_id = baldr::GraphId())
+      : cost(cost), graph_id(graph_id) {
   }
 };
 
@@ -72,7 +73,7 @@ public:
 
   VertexItr findVertex(CPVertex cpvertex);
   int getVertexIndex(CPVertex cpvertex);
-  int getVertexIndex(GraphId graphID);
+  int getVertexIndex(baldr::GraphId graphID);
   bool isVertexExist(CPVertex cpvertex);
 
   int numVertices();
