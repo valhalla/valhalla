@@ -17,6 +17,7 @@
    * FIXED: Relax test margin for time dependent traffic test [#3467](https://github.com/valhalla/valhalla/pull/3467)
    * FIXED: Fixed missed intersection heading [#3463](https://github.com/valhalla/valhalla/pull/3463)
    * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
+   * FIXED: valhalla_service uses now loki logging config instead of deprecated tyr logging [#3481](https://github.com/valhalla/valhalla/pull/3481)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
