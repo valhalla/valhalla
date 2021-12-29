@@ -402,7 +402,7 @@ TEST_P(ChinesePostmanTest, TestMaxChinesePolygonPerimeter) {
   // make sure the right exception is thrown
   try {
     gurka::do_action(Options::route, chinese_postman_map, req);
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 173); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }

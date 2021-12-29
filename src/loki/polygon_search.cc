@@ -213,7 +213,7 @@ std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring
   // convert to bg object and check length restriction
   const ring_bg_t ring_bg = PBFToRing(ring_pbf);
   if (bg::perimeter(ring_bg, Haversine()) > max_length) {
-    throw valhalla_exception_t(167, std::to_string(max_length));
+    throw valhalla_exception_t(173, std::to_string(max_length));
   }
   polygon_type polygon;
 
