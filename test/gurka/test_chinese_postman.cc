@@ -324,7 +324,8 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
-                                            {{"service_limits.max_exclude_polygons_length", "1000"}});
+                                            {{"service_limits.max_exclude_polygons_length", "1000"},
+                                             {"service_limits.max_chinese_polygon_length", "1000"}});
 
     // Setup complex_chinese_postman_map "AB", "BC", "CD", "DE", "EA"
     // B----<---A--->----F
@@ -370,7 +371,8 @@ protected:
     complex_chinese_postman_map =
         gurka::buildtiles(complex_layout, complex_ways, {}, {},
                           "test/data/gurka_complex_chinese_postman",
-                          {{"service_limits.max_exclude_polygons_length", "1000"}});
+                          {{"service_limits.max_exclude_polygons_length", "1000"},
+                           {"service_limits.max_chinese_polygon_length", "1000"}});
   }
 };
 

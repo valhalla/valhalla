@@ -158,6 +158,7 @@
     },
     "max_exclude_locations": 50,
     "max_exclude_polygons_length": 10000,
+    "max_chinese_polygon_length": 10000,
     "max_radius": 200,
     "max_reachability": 100,
     "max_alternates": 2,

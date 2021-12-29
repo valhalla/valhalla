@@ -144,7 +144,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   if (options.has_chinese_polygon()) {
     const auto chinese_edges =
-        edges_in_ring(options.chinese_polygon(), *reader, costing, max_exclude_polygons_length);
+        edges_in_ring(options.chinese_polygon(), *reader, costing, max_chinese_polygon_length);
 
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : chinese_edges) {
@@ -239,6 +239,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
+  max_chinese_polygon_length = config.get<float>("service_limits.max_chinese_polygon_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

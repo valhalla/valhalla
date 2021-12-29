@@ -78,6 +78,7 @@ protected:
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_exclude_locations;
   float max_exclude_polygons_length;
+  float max_chinese_polygon_length;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;
