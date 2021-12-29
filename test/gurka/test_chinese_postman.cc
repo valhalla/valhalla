@@ -379,6 +379,34 @@ protected:
 gurka::map ChinesePostmanTest::chinese_postman_map = {};
 gurka::map ChinesePostmanTest::complex_chinese_postman_map = {};
 
+TEST_P(ChinesePostmanTest, TestMaxChinesePolygonPerimeter) {
+  // Add a polygon with longer perimeter than the limit
+  ring_bg_t chinese_ring{{13.38625361, 52.4652558},
+                         {13.38625361, 52.48000128},
+                         {13.4181769, 52.48000128},
+                         {13.4181769, 52.4652558}};
+
+  ring_bg_t exclude_ring = create_ring_from_string(chinese_postman_map, "");
+  std::vector<ring_bg_t> exclude_rings;
+  exclude_rings.push_back(exclude_ring);
+
+  auto lls = {chinese_postman_map.nodes["A"], chinese_postman_map.nodes["C"]};
+
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
+  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, exclude_polygons);
+
+  // make sure the right exception is thrown
+  try {
+    gurka::do_action(Options::route, chinese_postman_map, req);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
 TEST_F(ChinesePostmanTest, TestChinesePostmanEdges) {
   ASSERT_EQ(get_edges(chinese_postman_map, "styx").size(), 1);  // a one-way
   ASSERT_EQ(get_edges(chinese_postman_map, "rsxw").size(), 1);  // a one-way
