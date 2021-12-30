@@ -23,7 +23,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length,
-               std::string mode = "avoid_polygons");
+               const std::string& mode = "avoid_polygons");
 
 } // namespace loki
 } // namespace valhalla
