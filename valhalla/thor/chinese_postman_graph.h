@@ -1,19 +1,14 @@
 #ifndef VALHALLA_THOR_CHINESES_POSTMAN_GRAPH_H_
 #define VALHALLA_THOR_CHINESES_POSTMAN_GRAPH_H_
 
-#include "midgard/util.h"
-#include "sif/costconstants.h"
-#include "tyr/serializers.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
-#include <stack>
-#include <thor/bidirectional_astar.h>
-#include <valhalla/baldr/graphid.h>
+
+#include "baldr/graphid.h"
+#include "sif/costconstants.h"
 
 namespace valhalla {
 namespace thor {
-
-constexpr double NOT_CONNECTED{999999.0};
 
 struct CPVertex {
   std::string vertex_id;
@@ -33,13 +28,12 @@ struct CPEdge {
 
 typedef std::vector<std::pair<int, int>> ExtraPaths;
 
-// Define the graph with the vertex as a mytuple and the vertices container as a vector
+// Define the graph
 using CPGraph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, CPVertex, CPEdge>;
 using Vertex = boost::graph_traits<CPGraph>::vertex_descriptor;              // Define Vertex
 using VertexItr = boost::graph_traits<CPGraph>::vertex_iterator;             // Define Vertex iterator
 using Edge = std::pair<boost::graph_traits<CPGraph>::edge_descriptor, bool>; // Define Edge
 using EdgeItr = boost::graph_traits<CPGraph>::edge_iterator;                 // Define Edge Iterator
-using DegreeSizeType = boost::graph_traits<CPGraph>::degree_size_type; // Define Degree Size Type
 
 /**
  * Graph representation for solving chinese postman problem
@@ -47,7 +41,6 @@ using DegreeSizeType = boost::graph_traits<CPGraph>::degree_size_type; // Define
 
 class ChinesePostmanGraph {
 private:
-  /* data */
   CPGraph G;
   std::map<std::string, Vertex> vertices;
 
@@ -56,30 +49,40 @@ private:
   std::map<std::string, int> outdegrees;
 
   // Used for Hiezholer's algorithm
-  std::vector<int> reversedEulerPath; // Storing euler path
+  std::vector<int> reversedEulerPath; // Storing euler path, but reversed
   std::map<int, int> outEdges;        // Storing the number of outedges from a node index
   std::map<int, std::vector<int>>
       expandedAdjacencyList; // Storing the adjacency list after being expanded
 
 public:
-  ChinesePostmanGraph(/* args */);
+  ChinesePostmanGraph();
   ~ChinesePostmanGraph();
 
+  // Add cpvertex to the graph
   void addVertex(CPVertex cpvertex);
+  // Add cpEdge to the graph that connect cpStartVertex to cpEndVertex
   void addEdge(CPVertex cpStartVertex, CPVertex cpEndVertex, CPEdge cpEdge);
 
+  // Find the vertext iterator for cpvertex, return null if not found
   VertexItr findVertex(CPVertex cpvertex);
+
+  // Get the vertex index in the graph from a CPVertex, return -1 if not found
   int getVertexIndex(CPVertex cpvertex);
+  // Get the vertex index in the graph from a GraphID, , return -1 if not found
   int getVertexIndex(baldr::GraphId graphID);
+
+  // Check if a CPVertex exists
   bool isVertexExist(CPVertex cpvertex);
 
+  // Return the number of vertices in the graph
   int numVertices();
+  // Return the number of edges in the graph
   int numEdges();
 
   // Return map of graph id (as string) as the key and the difference between indegree and outdegree
   std::map<std::string, int> getUnbalancedVerticesMap();
 
-  // Return a sorted vector of unbalanced vertices (CPVertex)
+  // Return a sorted vector of unbalanced vertices (GraphID)
   std::vector<baldr::GraphId> getUnbalancedVertices();
 
   // Helper to get the adjacency list from the graph. It returns a map with

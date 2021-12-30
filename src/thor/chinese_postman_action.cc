@@ -1,10 +1,11 @@
 #include <algorithm>
 
-#include "Hungarian.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/multi_array/subarray.hpp>
+
+#include "Hungarian.h"
 
 #include "loki/search.h"
 #include "midgard/util.h"
@@ -14,7 +15,6 @@
 #include "thor/costmatrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
-#include <thor/bidirectional_astar.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -22,11 +22,6 @@ using namespace valhalla::sif;
 
 namespace valhalla {
 namespace thor {
-
-// typedef DistanceMatrix::index DistanceMatrixIndex;
-
-typedef boost::multi_array<std::vector<int>, 2> PathMatrix;
-typedef PathMatrix::index PathMatrixIndex;
 
 midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
@@ -36,14 +31,6 @@ midgard::PointLL getPointLL(baldr::GraphId node, GraphReader& reader) {
   const NodeInfo* ni_start = reader.nodeinfo(node);
   graph_tile_ptr tile = reader.GetGraphTile(node);
   return ni_start->latlng(tile->header()->base_ll());
-}
-
-inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
-  for (const auto& e : location.path_edges()) {
-    if (e.graph_id() == edge_id)
-      return e.percent_along();
-  }
-  throw std::logic_error("Could not find candidate edge for the location");
 }
 
 // Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
@@ -63,9 +50,9 @@ int get_node_candidate_index(const valhalla::Location& location,
 }
 
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
-                                const Options& /*options*/,
+                                const Options&,
                                 const valhalla::Location& /*origin*/,
-                                const valhalla::Location& /*dest*/,
+                                const valhalla::Location& /*destination*/,
                                 const baldr::TimeInfo& time_info,
                                 const bool invariant,
                                 std::vector<GraphId> path_edges,
@@ -102,15 +89,19 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
   return path;
 }
 
+// Computing the cost matrix between graph ids
 DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
                                                 const std::shared_ptr<sif::DynamicCost>& costing,
                                                 const float max_matrix_distance) {
+
+  // Create a DistanceMatrix to with the size of graph_ids size
   DistanceMatrix distanceMatrix(boost::extents[graph_ids.size()][graph_ids.size()]);
+
+  // If the graph_ids is empty, return empty DistanceMatrix
   if (graph_ids.size() == 0) {
     return distanceMatrix;
   }
 
-  // TODO: Need to populate these two variables
   google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
   google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
 
@@ -158,15 +149,9 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
   return distanceMatrix;
 }
 
-double getEdgeCost(GraphReader& reader, baldr::GraphId edge_id) {
-  Cost cost{};
-  // fetch the graph objects
-  graph_tile_ptr tile;
-  const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
-  // Notes: Use edge length for now
-  return edge->length();
-}
-
+// Compute a full route from a cpvertex_start to cpvertex_end
+// The route found can go outside the chinese postman polygon, but will not go through the exclude
+// polygons
 std::vector<GraphId>
 thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
                                 CPVertex cpvertex_end,
@@ -258,6 +243,7 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
   return eulerPathEdgeGraphIDs;
 }
 
+// Helper function to get the index of a graph id from a vector of graph id
 int getCPVertexIndex(baldr::GraphId graph_id, std::vector<baldr::GraphId> cp_vertices) {
   for (int i = 0; i < cp_vertices.size(); i++) {
     if (graph_id == cp_vertices[i]) {
@@ -295,10 +281,10 @@ void thor_worker_t::chinese_postman(Api& request) {
   const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
 
   auto* co = options.mutable_costing_options(options.costing());
-  std::list<std::string> avoid_edge_ids;
+  std::list<std::string> exclude_edge_ids;
 
-  for (auto& avoid_edge : co->exclude_edges()) {
-    avoid_edge_ids.push_back(std::to_string(GraphId(avoid_edge.id())));
+  for (auto& exclude_edge : co->exclude_edges()) {
+    exclude_edge_ids.push_back(std::to_string(GraphId(exclude_edge.id())));
   }
 
   int currentOriginNodeIndex = originLocation.path_edges().size();
@@ -311,11 +297,11 @@ void thor_worker_t::chinese_postman(Api& request) {
   int candidateDestinationNodeIndex;
   int destinationPercentAlong;
 
-  // Add chinese edges to internal set
+  // Add chinese edges to the CP Graph
   for (auto& edge : co->chinese_edges()) {
-    // Exclude the edge if the edge is in avoid_edges
-    bool excluded = (std::find(avoid_edge_ids.begin(), avoid_edge_ids.end(),
-                               std::to_string(GraphId(edge.id()))) != avoid_edge_ids.end());
+    // Exclude the edge if the edge is in exclude_edges
+    bool excluded = (std::find(exclude_edge_ids.begin(), exclude_edge_ids.end(),
+                               std::to_string(GraphId(edge.id()))) != exclude_edge_ids.end());
     if (excluded)
       continue;
 
@@ -371,6 +357,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   LOG_DEBUG("Number of edges in Chinese Postman Graph: " + std::to_string(G.numEdges()));
 
+  // A flag if the destination and the origin is the same node
   bool isSameOriginDestination = destinationVertex.graph_id == originVertex.graph_id;
 
   // Solving the Chinese Postman
@@ -378,31 +365,45 @@ void thor_worker_t::chinese_postman(Api& request) {
 
   // Check if the graph is ideal or not
   if (G.isIdealGraph(originVertex, destinationVertex)) {
+    // If the graph is ideal, we can already compute the euler path
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
+    // Build the edge graph ids from the computed euler path
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str, costing_);
   } else {
+    // If the graph is not ideal, we need to make it ideal by creating a "imaginary" edge between the
+    // unbalanced nodes
 
-    // Do matching here
+    // First, get all the unbalanced nodes
     auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
+
     // A flag to check whether we already evaluate the origin and destination nodes
     bool originNodeChecked = false;
     bool destinationNodeChecked = false;
 
-    // Populate the list of node which has too many incoming and too few incoming
-    std::vector<baldr::GraphId> overNodes;
-    std::vector<baldr::GraphId> underNodes;
+    // Populate the list of node which has too many incoming and too few incoming edges
+    std::vector<baldr::GraphId> overNodes;  // Incoming > Outcoming edges
+    std::vector<baldr::GraphId> underNodes; // Incoming < Outcoming edges
+
     for (auto const& v : G.getUnbalancedVerticesMap()) {
-      // Calculate the number of needed edges to make it balanced
+      // Calculate the number of needed extra edges to make it balance
       int extraEdges = 0;
+
       if (!isSameOriginDestination && v.first == originVertex.vertex_id) {
+        // If the origin != destination and the vertex is the origin vertex, we need to add 1 extra
+        // edge
         extraEdges = abs(v.second + 1);
         originNodeChecked = true;
       } else if (!isSameOriginDestination && v.first == destinationVertex.vertex_id) {
+        // If the origin != destination and the vertex is the destination vertex, we need to reduce 1
+        // extra edge
         extraEdges = abs(v.second - 1);
         destinationNodeChecked = true;
       } else {
+        // In other case, just add a number of difference between incoming and outcoming nodes to the
+        // extra edges
         extraEdges = abs(v.second);
       }
+      // Populate the overNode and undeNodes
       for (int i = 0; i < extraEdges; i++) {
         if (v.second > 0) {
           overNodes.push_back(GraphId(v.first));
@@ -412,6 +413,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     // Handle if the origin or destination nodes are not managed yet
+    // This can happen when the origin or destinaton has the same number of incoming and outcoming
+    // edge, but the route has different origin and destination
     if (!isSameOriginDestination) {
       if (!originNodeChecked) {
         sorted_unbalanced_nodes.push_back(originVertex.graph_id);
@@ -423,6 +426,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
 
+    // Compute the distance/cost between unbalanced nodes.
     auto distance_matrix = computeCostMatrix(sorted_unbalanced_nodes, costing_,
                                              max_matrix_distance.find(costing_str)->second);
     // Populating matrix for pairing
@@ -430,7 +434,6 @@ void thor_worker_t::chinese_postman(Api& request) {
     for (int i = 0; i < overNodes.size(); i++) {
       pairingMatrix.push_back(std::vector<double>{});
       for (int j = 0; j < underNodes.size(); j++) {
-        // int overNodeIndex = G.getVertexIndex(overNodes[i]);
         int overNodeIndex = getCPVertexIndex(overNodes[i], sorted_unbalanced_nodes);
         int underNodeIndex = getCPVertexIndex(underNodes[i], sorted_unbalanced_nodes);
 
@@ -438,7 +441,7 @@ void thor_worker_t::chinese_postman(Api& request) {
         pairingMatrix[i].push_back(distance);
       }
     }
-    // Calling hungarian algorithm
+    // Calling hungarian algorithm to pair the unbalanced nodes
     LOG_DEBUG("Run Hungarian Algorithm");
     LOG_DEBUG("Number of nodes: " + std::to_string(pairingMatrix.size()));
     HungarianAlgorithm hungarian_algorithm;
@@ -467,6 +470,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::vector<std::string> algorithms{"Chinese Postman"};
   TripRoute* route = nullptr;
   valhalla::Trip& trip = *request.mutable_trip();
+
   // Form output information based on path edges
   if (trip.routes_size() == 0 || options.alternates() > 0) {
     route = trip.mutable_routes()->Add();
@@ -476,8 +480,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias; // Empty
   TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                         originLocation, destinationLocation, leg, algorithms, interrupt);
-  // thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-  //                               *origin, dest, leg, {"centroid"}, interrupt);
 }
 
 } // namespace thor

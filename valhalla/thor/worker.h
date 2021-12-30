@@ -38,6 +38,7 @@ namespace thor {
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
+// A matrix to store a distance between a list of location to a list of location
 typedef boost::multi_array<double, 2> DistanceMatrix;
 
 class thor_worker_t : public service_worker_t {
@@ -101,18 +102,19 @@ protected:
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
-  std::vector<baldr::GraphId>
-  computeEdgeIds(midgard::PointLL origin, midgard::PointLL destination, std::string costing);
-
+  // Compute a cost matrix among graph ids. It calls costmatrix.SourceToTarget
   DistanceMatrix computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
                                    const std::shared_ptr<sif::DynamicCost>& costing,
                                    const float max_matrix_distance);
 
+  // Compute a route from cpvertex_start to cpvertex_end. It calls PathAlgorithm's GetBestPath
   std::vector<baldr::GraphId> computeFullRoute(CPVertex cpvertex_start,
                                                CPVertex cpvertex_end,
                                                const Options& options,
                                                const std::string& costing_str,
                                                const std::shared_ptr<sif::DynamicCost>& costing);
+
+  // Build Edge Ids from a list of (reversedEulerPath)
   std::vector<baldr::GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
                                            ChinesePostmanGraph& G,
                                            const Options& options,

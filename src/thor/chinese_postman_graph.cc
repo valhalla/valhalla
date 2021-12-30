@@ -1,12 +1,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
-#include <utility>
 
-#include "midgard/util.h"
 #include "thor/chinese_postman_graph.h"
 #include "thor/worker.h"
-#include "tyr/serializers.h"
-#include <thor/bidirectional_astar.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -14,7 +10,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace thor {
 
-ChinesePostmanGraph::ChinesePostmanGraph(/* args */) {
+ChinesePostmanGraph::ChinesePostmanGraph() {
 }
 
 ChinesePostmanGraph::~ChinesePostmanGraph() {
