@@ -22,21 +22,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
                float max_length,
                std::string mode = "intersect");
 
-/**
- * Finds all edge IDs which are intersected by the ring
- *
- * The logic is adapted from edges_in_rings
- *
- * @param ring The (optionally closed) ring to intersect edges with
- * @param reader GraphReader instance
- *
- */
-std::unordered_set<valhalla::baldr::GraphId>
-edges_in_ring(const valhalla::Options_Ring& ring_pbf,
-              baldr::GraphReader& reader,
-              const std::shared_ptr<sif::DynamicCost>& costing,
-              float max_length);
-
 } // namespace loki
 } // namespace valhalla
 

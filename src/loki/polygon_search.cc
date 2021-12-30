@@ -1,6 +1,4 @@
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
@@ -25,10 +23,6 @@ namespace {
 using line_bg_t = bg::model::linestring<vm::PointLL>;
 using ring_bg_t = std::vector<vm::PointLL>;
 using namespace vb::json;
-
-typedef bg::model::d2::point_xy<double> point_type;
-typedef bg::model::polygon<point_type> polygon_type;
-typedef bg::model::linestring<point_type> linestring_t;
 
 // map of tile for map of bin ids & their ring ids
 // TODO: simplify the logic behind this a little
@@ -99,16 +93,6 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
 
 namespace valhalla {
 namespace loki {
-
-// This custon within is created because using the boost::within for edge_info
-// shape will give different result depending on the order of the point.
-bool IsWithin(vb::EdgeInfo edge_info, const polygon_type& polygon) {
-  // create temporary line from edge_info
-  point_type p1(edge_info.shape()[0].first, edge_info.shape()[0].second);
-  point_type p2(edge_info.shape()[1].first, edge_info.shape()[1].second);
-  linestring_t edge_line{p1, p2};
-  return bg::within(edge_line, polygon);
-}
 
 std::unordered_set<vb::GraphId>
 edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings_pbf,
@@ -233,87 +217,6 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
   }
 #endif
   return avoid_edge_ids;
-}
-
-// TODO: Probable merged the logic with edges_in_rings above (if possible)
-// TODO: Refactor the variable name (i.e. it's not specific to avoid edge)
-std::unordered_set<vb::GraphId> edges_in_ring(const valhalla::Options_Ring& ring_pbf,
-                                              baldr::GraphReader& reader,
-                                              const std::shared_ptr<sif::DynamicCost>& costing,
-                                              float max_length) {
-  // convert to bg object and check length restriction
-  const ring_bg_t ring_bg = PBFToRing(ring_pbf);
-  if (bg::perimeter(ring_bg, Haversine()) > max_length) {
-    throw valhalla_exception_t(173, std::to_string(max_length));
-  }
-  polygon_type polygon;
-
-  std::vector<point_type> points;
-  for (const auto& p : ring_bg) {
-    // point_type new_point(p.first, p.second);
-    // points.push_back(point_type(p.first, p.second));
-    bg::append(polygon.outer(), point_type(p.first, p.second));
-  }
-  // polygon_type polygon{{points}};
-  // Get the lowest level and tiles
-  const auto tiles = vb::TileHierarchy::levels().back().tiles;
-  const auto bin_level = vb::TileHierarchy::levels().back().level;
-
-  // keep track which tile's bins intersect which rings
-  bins_collector bins_intersected;
-  std::unordered_set<vb::GraphId> cp_edge_ids;
-
-  // first pull out all *unique* bins which intersect the ring
-  auto line_intersected = tiles.Intersect(ring_bg);
-  for (const auto& tb : line_intersected) {
-    for (const auto& b : tb.second) {
-      bins_intersected[static_cast<uint32_t>(tb.first)][b].push_back(0);
-    }
-  }
-  for (const auto& intersection : bins_intersected) {
-    auto tile = reader.GetGraphTile({intersection.first, bin_level, 0});
-    if (!tile) {
-      continue;
-    }
-    for (const auto& bin : intersection.second) {
-      // tile will be mutated most likely in the loop
-      reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
-      for (const auto& edge_id : tile->GetBin(bin.first)) {
-        if (cp_edge_ids.count(edge_id) != 0) {
-          continue;
-        }
-        // TODO: optimize the tile switching by enqueuing edges
-        // from other levels & tiles and process them after this big loop
-        if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
-            !reader.GetGraphTile(edge_id, tile)) {
-          continue;
-        }
-        const auto edge = tile->directededge(edge_id);
-        auto opp_tile = tile;
-        const baldr::DirectedEdge* opp_edge = nullptr;
-        baldr::GraphId opp_id;
-
-        // bail if we wouldnt be allowed on this edge anyway (or its opposing)
-        if (!costing->Allowed(edge, tile) &&
-            (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
-             !costing->Allowed(opp_edge, opp_tile))) {
-          continue;
-        }
-        bool is_within = IsWithin(tile->edgeinfo(edge), polygon);
-        if (is_within) {
-          if (costing->IsAccessible(edge)) {
-            cp_edge_ids.emplace(edge_id);
-          }
-          // Add the opposite edge if a two way.
-          opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-          if (costing->IsAccessible(opp_edge)) {
-            cp_edge_ids.emplace(opp_id);
-          }
-        }
-      }
-    }
-  }
-  return cp_edge_ids;
 }
 
 } // namespace loki

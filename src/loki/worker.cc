@@ -143,8 +143,13 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   if (options.has_chinese_polygon()) {
+    // Create rings for edges_in_rings function
+    google::protobuf::RepeatedPtrField<valhalla::Options::Ring> rings;
+    auto* r = rings.Add();
+    r->CopyFrom(options.chinese_polygon());
+
     const auto chinese_edges =
-        edges_in_ring(options.chinese_polygon(), *reader, costing, max_chinese_polygon_length);
+        edges_in_rings(rings, *reader, costing, max_chinese_polygon_length, "within");
 
     auto* co = options.mutable_costing_options(options.costing());
     for (const auto& edge_id : chinese_edges) {
