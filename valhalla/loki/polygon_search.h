@@ -19,7 +19,8 @@ std::unordered_set<valhalla::baldr::GraphId>
 edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
-               float max_length);
+               float max_length,
+               std::string mode = "intersect");
 
 /**
  * Finds all edge IDs which are intersected by the ring
