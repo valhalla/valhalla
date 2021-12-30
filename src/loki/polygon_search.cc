@@ -109,9 +109,9 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    if (mode == "intersect") {
+    if (mode == "avoid_polygons") {
       throw valhalla_exception_t(167, std::to_string(max_length));
-    } else if (mode == "within") {
+    } else if (mode == "chinese_postman") {
       throw valhalla_exception_t(173, std::to_string(max_length));
     } else {
       throw valhalla_exception_t(107);
@@ -165,11 +165,10 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
              !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
-
-        if (mode == "intersect") {
-          // TODO: some logic to set percent_along for origin/destination edges
-          // careful: polygon can intersect a single edge multiple times
-          auto edge_info = tile->edgeinfo(edge);
+        // TODO: some logic to set percent_along for origin/destination edges
+        // careful: polygon can intersect a single edge multiple times
+        auto edge_info = tile->edgeinfo(edge);
+        if (mode == "avoid_polygons") {
           bool intersects = false;
           for (const auto& ring_loc : bin.second) {
             intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
@@ -183,19 +182,16 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
             avoid_edge_ids.emplace(
                 opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
           }
-        } else if (mode == "within") {
-          // TODO: some logic to set percent_along for origin/destination edges
-          // careful: polygon can intersect a single edge multiple times
-          auto edge_info = tile->edgeinfo(edge);
-          bool intersects = false;
+        } else if (mode == "chinese_postman") {
+          bool is_within = false;
           for (const auto& ring_loc : bin.second) {
-            intersects = bg::within(line_bg_t(edge_info.shape().begin(), edge_info.shape().end()),
-                                    rings_bg[ring_loc]);
-            if (intersects) {
+            is_within = bg::within(line_bg_t(edge_info.shape().begin(), edge_info.shape().end()),
+                                   rings_bg[ring_loc]);
+            if (is_within) {
               break;
             }
           }
-          if (intersects) {
+          if (is_within) {
             if (costing->IsAccessible(edge)) {
               avoid_edge_ids.emplace(edge_id);
             }
@@ -212,8 +208,10 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
 
 // log the GeoJSON of avoided edges
 #ifdef LOGGING_LEVEL_TRACE
-  if (!avoid_edge_ids.empty()) {
-    LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
+  if (mode == "avoid_polygons") {
+    if (!avoid_edge_ids.empty()) {
+      LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
+    }
   }
 #endif
   return avoid_edge_ids;

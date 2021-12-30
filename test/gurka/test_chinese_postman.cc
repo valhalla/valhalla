@@ -77,7 +77,7 @@ std::unordered_set<valhalla::baldr::GraphId> get_edges(gurka::map map, std::stri
     ll->set_lat(coord.lat());
     ll->set_lng(coord.lng());
   }
-  return vl::edges_in_rings(rings, reader, costing, 10000, "within");
+  return vl::edges_in_rings(rings, reader, costing, 10000, "chinese_postman");
   // return vl::edges_in_ring(*ring, reader, costing, 10000);
 }
 
