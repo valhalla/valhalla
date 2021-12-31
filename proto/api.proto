@@ -22,6 +22,6 @@ message Api {
   //TODO: height
   //TODO: expansion
 
-  // here we store a bit of info about what happened during request processing
+  // here we store a bit of info about what happened during request processing (stats/errors/warnings)
   Info info = 20;
 }
