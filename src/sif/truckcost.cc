@@ -617,70 +617,22 @@ uint8_t TruckCost::travel_type() const {
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::truck);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                           CostingOptions* co) {
+  co->set_costing(Costing::truck);
+  co->set_name(Costing_Enum_Name(co->costing()));
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
-
-    // low_class_penalty
-    pbf_costing_options->set_low_class_penalty(kLowClassPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/low_class_penalty")
-            .get_value_or(kDefaultLowClassPenalty)));
-
-    // hazmat
-    pbf_costing_options->set_hazmat(
-        rapidjson::get_optional<bool>(*json_costing_options, "/hazmat").get_value_or(false));
-
-    // weight
-    pbf_costing_options->set_weight(
-        kTruckWeightRange(rapidjson::get_optional<float>(*json_costing_options, "/weight")
-                              .get_value_or(kDefaultTruckWeight)));
-
-    // axle_load
-    pbf_costing_options->set_axle_load(
-        kTruckAxleLoadRange(rapidjson::get_optional<float>(*json_costing_options, "/axle_load")
-                                .get_value_or(kDefaultTruckAxleLoad)));
-
-    // height
-    pbf_costing_options->set_height(
-        kTruckHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
-                              .get_value_or(kDefaultTruckHeight)));
-
-    // width
-    pbf_costing_options->set_width(
-        kTruckWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
-                             .get_value_or(kDefaultTruckWidth)));
-
-    // length
-    pbf_costing_options->set_length(
-        kTruckLengthRange(rapidjson::get_optional<float>(*json_costing_options, "/length")
-                              .get_value_or(kDefaultTruckLength)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_low_class_penalty(kDefaultLowClassPenalty);
-    pbf_costing_options->set_hazmat(false);
-    pbf_costing_options->set_weight(kDefaultTruckWeight);
-    pbf_costing_options->set_axle_load(kDefaultTruckAxleLoad);
-    pbf_costing_options->set_height(kDefaultTruckHeight);
-    pbf_costing_options->set_width(kDefaultTruckWidth);
-    pbf_costing_options->set_length(kDefaultTruckLength);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-  }
+  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
+  JSON_PBF_DEFAULT(co, false, json, "/hazmat", hazmat);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
 }
 
 cost_ptr_t CreateTruckCost(const CostingOptions& costing_options) {

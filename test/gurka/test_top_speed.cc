@@ -83,7 +83,7 @@ TEST_F(TopSpeedTest, ClampMaxSpeed) {
 
   options.set_costing(Costing::auto_);
   auto& co = (*options.mutable_costing_options())[Costing::auto_];
-  sif::ParseSharedCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co);
+  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {});
 
   ASSERT_EQ(co.top_speed(), baldr::kMaxAssumedSpeed);
 }
