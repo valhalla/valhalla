@@ -17,6 +17,7 @@
    * FIXED: Relax test margin for time dependent traffic test [#3467](https://github.com/valhalla/valhalla/pull/3467)
    * FIXED: Fixed missed intersection heading [#3463](https://github.com/valhalla/valhalla/pull/3463)
    * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
+   * FIXED: valhalla_service uses now loki logging config instead of deprecated tyr logging [#3481](https://github.com/valhalla/valhalla/pull/3481)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -44,6 +45,8 @@
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457](https://github.com/valhalla/valhalla/pull/3457)
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
+   * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457)(https://github.com/valhalla/valhalla/pull/3457)
+   * CHANGED: Allow up to 32 outgoing link edges on a node when reclassifying links [#3483)(https://github.com/valhalla/valhalla/pull/3483)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
