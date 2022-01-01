@@ -12,7 +12,7 @@ RUN mkdir build
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
 RUN make all -j$(nproc)
 RUN make install
 
