@@ -231,7 +231,6 @@ std::vector<GraphId> thor_worker_t::buildEdgeIds(std::vector<int> reversedEulerP
       eulerPathEdgeGraphIDs.push_back(cpEdge->graph_id);
     } else {
       // Find the edges for path through outside polygon
-      auto a = G.getCPVertex(*it);
       auto fullRoute = computeFullRoute(*G.getCPVertex(*it), *G.getCPVertex(*(it + 1)), options,
                                         costing_str, costing);
 
@@ -446,7 +445,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     LOG_DEBUG("Number of nodes: " + std::to_string(pairingMatrix.size()));
     HungarianAlgorithm hungarian_algorithm;
     vector<int> assignment;
-    double cost = hungarian_algorithm.Solve(pairingMatrix, assignment);
+    hungarian_algorithm.Solve(pairingMatrix, assignment);
     std::vector<std::pair<int, int>> extraPairs;
     for (unsigned int x = 0; x < pairingMatrix.size(); x++) {
       // Get node's index for that pair

@@ -232,13 +232,12 @@ void test_request_route(const gurka::map& map,
   gurka::assert::raw::expect_path(route, expected_names);
 }
 
-void test_request(const gurka::map& map,
-                  const std::string& costing,
-                  const std::string& chinese_polygon_string,
-                  const std::string& exclude_polygon_string,
-                  const std::string& start_node,
-                  const std::string& end_node,
-                  const std::vector<std::string>& expected_names) {
+valhalla::Api request_cp(const gurka::map& map,
+                         const std::string& costing,
+                         const std::string& chinese_polygon_string,
+                         const std::string& exclude_polygon_string,
+                         const std::string& start_node,
+                         const std::string& end_node) {
 
   ring_bg_t chinese_ring = create_ring_from_string(map, chinese_polygon_string);
   // exclude ring can have more than one, but for now, use one only
@@ -284,8 +283,31 @@ void test_request(const gurka::map& map,
   auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
   auto req = build_local_req(doc, allocator, lls, costing, chinese_polygon, exclude_polygons);
 
-  auto route = gurka::do_action(Options::chinese_postman, map, req);
+  return gurka::do_action(Options::chinese_postman, map, req);
+}
+
+void test_request(const gurka::map& map,
+                  const std::string& costing,
+                  const std::string& chinese_polygon_string,
+                  const std::string& exclude_polygon_string,
+                  const std::string& start_node,
+                  const std::string& end_node,
+                  const std::vector<std::string>& expected_names) {
+  auto route =
+      request_cp(map, costing, chinese_polygon_string, exclude_polygon_string, start_node, end_node);
   gurka::assert::raw::expect_path(route, expected_names);
+}
+
+void test_request_multi_results(const gurka::map& map,
+                                const std::string& costing,
+                                const std::string& chinese_polygon_string,
+                                const std::string& exclude_polygon_string,
+                                const std::string& start_node,
+                                const std::string& end_node,
+                                const std::vector<std::vector<std::string>>& expected_names) {
+  auto route =
+      request_cp(map, costing, chinese_polygon_string, exclude_polygon_string, start_node, end_node);
+  gurka::assert::raw::expect_path_optional(route, expected_names);
 }
 } // namespace
 
@@ -440,10 +462,16 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOneWayIdealGraph) {
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
   // create a chinese polygon (qsxv)
-  test_request(chinese_postman_map, GetParam(), "qsxv", "", "B", "B",
-               {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2"});
-  test_request(chinese_postman_map, GetParam(), "qsxv", "", "F", "F",
-               {"FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2"});
+  test_request_multi_results(chinese_postman_map, GetParam(), "qsxv", "", "B", "B",
+                             {
+                                 {"BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2", "EF_2",
+                                  "BE_2"}, // ubuntu
+                                 {"BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2", "FC", "CB"} // osx
+                             });
+  test_request_multi_results(chinese_postman_map, GetParam(), "qsxv", "", "F", "F",
+                             {{"FC", "CB", "BE_2", "EF_2", "EF_2", "BE_2", "BE_2", "EF_2"}, // ubuntu
+                              {"EF_2", "BE_2", "BE_2", "EF_2", "FC", "CB", "BE_2", "EF_2"}} // osx
+  );
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
