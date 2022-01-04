@@ -458,6 +458,7 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
   auto lat = std::floor(coord.second);
   auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
 
+  // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
     // get the proper source of the data
     tile = cache_->source(index);
