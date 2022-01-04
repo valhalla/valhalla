@@ -68,7 +68,7 @@ constexpr float kDestinationOnlyFactor = 0.2f;
 // roads. These penalties are modulated by the road factor - further
 // avoiding higher class roads for those with low propensity for using
 // primary roads.
-constexpr float kRoadClassFactor[] = {
+float kRoadClassFactor[] = {
     1.0f,  // Motorway
     0.5f,  // Trunk
     0.2f,  // Primary
@@ -361,6 +361,25 @@ MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
   // start to increase the differences.
   float use_primary = costing_options.use_primary();
   road_factor_ = (use_primary >= 0.5f) ? 1.5f - use_primary : 3.0f - use_primary * 5.0f;
+  
+  kRoadClassFactor[1] = 1.0f - use_primary * 0.2f;
+  kRoadClassFactor[2] = 1.0f - use_primary * 0.8f;
+  kRoadClassFactor[3] = 0.4f + (1 - use_primary) * 0.2f;
+  kRoadClassFactor[4] = 0.0f + use_primary * 0.5f;
+  kRoadClassFactor[5] = 0.1f + use_primary * 0.5f;
+  kRoadClassFactor[6] = 0.15f + use_primary * 0.85f;
+  kRoadClassFactor[7] = 0.2f + use_primary * 0.8f;
+
+/*
+    1.0f,  // Motorway       0
+    0.95f,  // Trunk         1
+    0.8f,  // Primary        2
+    0.4f,  // Secondary      3
+    0.05f, // Tertiary       4
+    0.05f, // Unclassified   5
+    0.0f,  // Residential    6
+    0.2f   // Service, other 7
+*/
 }
 
 // Check if access is allowed on the specified edge.
@@ -436,7 +455,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
-                 (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
+                 2* (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
                  grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
 
   if (edge->destonly()) {
