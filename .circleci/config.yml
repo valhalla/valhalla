@@ -3,14 +3,13 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 13.1.0
+      xcode: 12.5.1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
 
 commands:
   install_macos_dependencies:
     steps:
-      - run: pip3 uninstall -y six
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests shapely conan
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
