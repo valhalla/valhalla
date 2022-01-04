@@ -207,10 +207,10 @@ public:
 
 void ParseNoCostOptions(const rapidjson::Document&,
                         const std::string&,
-                        CostingOptions* pbf_costing_options) {
+                        CostingOptions* costing_options) {
   // this is probably not needed but its part of the contract for costing..
-  pbf_costing_options->set_costing(Costing::none_);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+  costing_options->set_costing(Costing::none_);
+  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
 }
 
 cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {

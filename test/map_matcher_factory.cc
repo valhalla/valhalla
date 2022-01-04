@@ -144,8 +144,9 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 
       delete matcher;
 
-      options.mutable_costing_options(static_cast<int>(Costing::pedestrian))
-          ->set_transport_type("segway");
+      options.mutable_costing_options()
+          ->find(Costing::pedestrian)
+          ->second.set_transport_type("segway");
       matcher = factory.Create(options);
 
       EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)

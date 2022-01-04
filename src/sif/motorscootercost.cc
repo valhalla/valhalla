@@ -588,40 +588,17 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
-                                  CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::motor_scooter);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                                  CostingOptions* co) {
+  co->set_costing(Costing::motor_scooter);
+  co->set_name(Costing_Enum_Name(co->costing()));
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
-
-    // top_speed; override defaults
-    pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
-                           .get_value_or(kDefaultTopSpeed)));
-
-    // use_hills
-    pbf_costing_options->set_use_hills(
-        kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
-                           .get_value_or(kDefaultUseHills)));
-
-    // use_primary
-    pbf_costing_options->set_use_primary(
-        kUsePrimaryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_primary")
-                             .get_value_or(kDefaultUsePrimary)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_top_speed(kDefaultTopSpeed);
-    pbf_costing_options->set_use_hills(kDefaultUseHills);
-    pbf_costing_options->set_use_primary(kDefaultUsePrimary);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-  }
+  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
+  JSON_PBF_RANGED_DEFAULT(co, kUsePrimaryRange, json, "/use_primary", use_primary);
 }
 
 cost_ptr_t CreateMotorScooterCost(const CostingOptions& costing_options) {
@@ -661,7 +638,7 @@ TestMotorScooterCost* make_motorscootercost_from_json(const std::string& propert
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorScooterCost(
-      request.options().costing_options(static_cast<int>(Costing::motor_scooter)));
+      request.options().costing_options().find(Costing::motor_scooter)->second);
 }
 
 template <typename T>

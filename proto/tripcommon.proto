@@ -157,6 +157,7 @@ message Location {
     bool skip_ranking_candidates = 21;               // [default = false]
   }
 
+  //TODO: move this down, move the other inputs up and put space between them
   //outputs
   repeated PathEdge path_edges = 22;
   repeated PathEdge filtered_edges = 23;

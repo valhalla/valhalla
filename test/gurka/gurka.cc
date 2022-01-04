@@ -571,11 +571,20 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
+std::string
+do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+  std::cerr << "[          ] Valhalla request is pbf " << std::endl;
+  if (!reader)
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  return actor.act(api);
+}
+
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json) {
+                        std::string* response) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
@@ -604,12 +613,27 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
     case valhalla::Options::isochrone:
       json_str = actor.isochrone(request_json, nullptr, &api);
       break;
+    case valhalla::Options::optimized_route:
+      json_str = actor.optimized_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::sources_to_targets:
+      json_str = actor.matrix(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::height:
+      json_str = actor.height(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::status:
+      json_str = actor.status(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::transit_available:
+      json_str = actor.transit_available(request_json, nullptr, &api);
+      break;
     default:
       throw std::logic_error("Unsupported action");
       break;
   }
-  if (json) {
-    *json = json_str;
+  if (response) {
+    *response = json_str;
   }
   return api;
 }
@@ -620,8 +644,9 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json,
-                        const std::string& stop_type) {
+                        std::string* response,
+                        const std::string& stop_type,
+                        std::string* request_json) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
@@ -637,10 +662,16 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto location_type =
-      action == Options::trace_route || action == Options::trace_attributes ? "shape" : "locations";
-  auto request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
-  return do_action(action, map, request_json, reader, json);
+  auto location_type = action == Options::trace_route || action == Options::trace_attributes ||
+                               action == Options::height
+                           ? "shape"
+                           : "locations";
+  std::string dummy_request_json;
+  if (!request_json) {
+    request_json = &dummy_request_json;
+  }
+  *request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
+  return do_action(action, map, *request_json, reader, response);
 }
 
 /* Returns the raw_result formatted as a JSON document in the given format.

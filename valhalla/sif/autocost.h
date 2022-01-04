@@ -16,11 +16,11 @@ namespace sif {
  * @param doc The json request represented as a DOM tree.
  * @param costing_options_key A string representing the location in the DOM tree where the costing
  *                            options are stored.
- * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ * @param co A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* pbf_costing_options);
+                          CostingOptions* co);
 
 /**
  * Create an auto route cost method. This is generally shortest time but uses

@@ -176,10 +176,10 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     }
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error(e, info, request);
+    result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error({499, std::string(e.what())}, info, request);
+    result = serialize_error({499, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client

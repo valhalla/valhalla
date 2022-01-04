@@ -226,8 +226,8 @@ TEST(Matrix, test_matrix) {
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costing_options().find(request.options().costing())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results =
@@ -270,8 +270,8 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costing_options().find(request.options().costing())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
