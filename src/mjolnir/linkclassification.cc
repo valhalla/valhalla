@@ -18,7 +18,7 @@ namespace valhalla {
 namespace mjolnir {
 
 constexpr uint32_t kMaxClassification = 8;
-constexpr uint32_t kMaxLinkEdges = 16;
+constexpr uint32_t kMaxLinkEdges = 32;
 constexpr uint32_t kServiceClass = static_cast<uint32_t>(RoadClass::kServiceOther);
 using nodelist_t = std::vector<std::vector<sequence<Node>::iterator>>;
 
