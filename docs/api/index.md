@@ -14,10 +14,10 @@ Use the **elevation** service to find the elevation along a path or at specified
 
 Use the **transit available** service to check the availability of transit for at least 1 location. See the [api documentation](/transit-available/api-reference.md).
 
-You can use the **expansion** (beta) service to return a geojson representation of a graph traversal at a given location. See the [api documentation](/expansion/api-reference.md).
+You can use the **expansion** service to return a geojson representation of a graph traversal at a given location. See the [api documentation](/expansion/api-reference.md).
 
 The **locate** service allows you to get detailed metadata about the nodes and edges in the graph. See the [api documentation](/locate/api-reference.md).
 
 The **status** service is a simple service that returns information about the running server or valhalla instance. See the [api documentation](/status/api-reference.md).
 
-The **centroid** (beta) service allows you to find the least cost convergence point of routes from multiple locations. Documentation coming soonish.
+The **centroid** service allows you to find the least cost convergence point of routes from multiple locations. Documentation coming soonish.

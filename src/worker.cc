@@ -1240,30 +1240,29 @@ worker_t::result_t serialize_error(const valhalla_exception_t& exception,
 
 worker_t::result_t
 to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
+  // try to get all the proper headers
   auto fmt = request.options().format();
+  const auto& mime = fmt == Options::json || fmt == Options::osrm
+                         ? worker::JSON_MIME
+                         : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
+  headers_t headers{CORS, mime};
+  if (fmt == Options::gpx)
+    headers.insert(ATTACHMENT);
+
+  // jsonp needs wrapped in a javascript function call
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   if (request.options().has_jsonp_case()) {
+    headers.insert(worker::JS_MIME); // reset content type to javascript
     std::ostringstream stream;
     stream << request.options().jsonp() << '(';
     stream << data;
     stream << ')';
 
-    headers_t headers{CORS, worker::JS_MIME};
-    // im not sure it makes sense to have this header with jsonp
-    if (fmt == Options::gpx)
-      headers.insert(ATTACHMENT);
-
     http_response_t response(200, "OK", stream.str(), headers);
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
-  } else {
-    const auto& mime = fmt == Options::json || fmt == Options::osrm
-                           ? worker::JSON_MIME
-                           : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
-    headers_t headers{CORS, mime};
-    if (fmt == Options::gpx)
-      headers.insert(ATTACHMENT);
+  } // everything else is bytes already
+  else {
     http_response_t response(200, "OK", data, headers);
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
