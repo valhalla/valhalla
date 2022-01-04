@@ -3,7 +3,7 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 12.5.1
+      xcode: 12.4.0
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
 
