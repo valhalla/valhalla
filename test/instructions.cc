@@ -19,6 +19,28 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
+// this is useful when you modify the Options proto and need to restore it
+//#include "worker.h"
+// void fix_request(const std::string& filename, valhalla::Api& request) {
+//  auto txt = filename;
+//  txt.replace(txt.size() - 3, 3, "txt");
+//  std::string req_txt = test::load_binary_file(txt);
+//  req_txt.pop_back();
+//  req_txt.pop_back();
+//  req_txt = req_txt.substr(4);
+//
+//  valhalla::Api api;
+//  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
+//  request.mutable_options()->clear_costing_options();
+//  for (auto& co : *api.mutable_options()->mutable_costing_options()) {
+//    (*request.mutable_options()->mutable_costing_options())[co.first].Swap(&co.second);
+//  }
+//
+//  std::ofstream f(filename);
+//  auto buf = request.SerializeAsString();
+//  f.write(buf.data(), buf.size());
+//}
+
 using namespace valhalla::baldr;
 
 namespace {
@@ -40,6 +62,8 @@ void test_instructions(const std::string& filename,
   // Create the request from the path bytes
   valhalla::Api request;
   request.ParseFromString(path_bytes);
+
+  // fix_request(filename, request);
 
   // Build the directions
   valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
@@ -110,6 +134,8 @@ void test_osrm_maneuver(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
@@ -154,6 +180,8 @@ void test_osrm_destinations(const std::string& filename,
   // Create the request from the path bytes
   valhalla::Api request;
   request.ParseFromString(path_bytes);
+
+  // fix_request(filename, request);
 
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);

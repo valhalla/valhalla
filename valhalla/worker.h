@@ -48,31 +48,47 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string statsd_key;
 };
 
-// TODO: this will go away and Options will be the request object
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass anything but an empty string
+ * for the json request the pbf contents are ignored. If the json request is empty it is assumed
+ * the pbf is filled out.
+ *
+ * @param json_request  A json string in the APIs request format
+ * @param action        Which action to perform
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      already filled out, it will be validated and the json will be ignored
+ */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
+ * it is assumed that the body of the request is protobuf bytes and any json will be ignored. Likewise
+ * if no protobuf mime was passed then we assume json is either in the body or the query params.
+ *
+ * @param http_request  The http request object from which we get the request info
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      pbf bytes were passed, they will be deserialized into this object and any json
+ *                      will be ignored
+ */
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
-std::string jsonify_error(const valhalla_exception_t& exception, Api& options);
+std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 #ifdef HAVE_HTTP
-prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
-                                               prime_server::http_request_info_t& request_info,
-                                               Api& options);
+prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
+                                                 prime_server::http_request_info_t& request_info,
+                                                 Api& options);
 namespace worker {
 using content_type = prime_server::headers_t::value_type;
 const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const content_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
+const content_type PBF_MIME{"Content-type", "application/x-protobuf"};
 const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 } // namespace worker
 
-prime_server::worker_t::result_t
-to_response(const std::string& data,
-            prime_server::http_request_info_t& request_info,
-            const Api& options,
-            const worker::content_type& content_type = worker::JSON_MIME,
-            const bool as_attachment = false);
+prime_server::worker_t::result_t to_response(const std::string& data,
+                                             prime_server::http_request_info_t& request_info,
+                                             const Api& options);
 #endif
 
 struct statsd_client_t;

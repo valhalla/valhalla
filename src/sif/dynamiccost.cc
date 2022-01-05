@@ -348,184 +348,129 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
              2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
 }
 
-void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
-  auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
-  pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+void ParseBaseCostOptions(const rapidjson::Value& json,
+                          CostingOptions* co,
+                          const BaseCostingOptionsConfig& cfg) {
+  // ignore bogus input
+  if (co->has_flow_mask_case() && co->flow_mask() > kDefaultFlowMask)
+    co->clear_flow_mask();
 
-  pbf_costing_options->set_ignore_restrictions(
-      rapidjson::get<bool>(value, "/ignore_restrictions", false));
-  pbf_costing_options->set_ignore_oneways(rapidjson::get<bool>(value, "/ignore_oneways", false));
-  pbf_costing_options->set_ignore_access(rapidjson::get<bool>(value, "/ignore_access", false));
-  pbf_costing_options->set_ignore_closures(rapidjson::get<bool>(value, "/ignore_closures", false));
-  auto name = rapidjson::get_optional<std::string>(value, "/name");
+  // defer to json or defaults if no pbf is present
+  auto speed_types = rapidjson::get_child_optional(json, "/speed_types");
+  if (speed_types || !co->has_flow_mask_case())
+    co->set_flow_mask(SpeedMask_Parse(speed_types));
+
+  // named costing
+  auto name = rapidjson::get_optional<std::string>(json, "/name");
   if (name) {
-    pbf_costing_options->set_name(*name);
+    co->set_name(*name);
   }
-  pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
-  pbf_costing_options->set_top_speed(
-      kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
-}
 
-void ParseBaseCostOptions(const rapidjson::Value& value,
-                          CostingOptions* pbf_costing_options,
-                          const BaseCostingOptionsConfig& base_cfg) {
+  // various traversability flags
+  JSON_PBF_DEFAULT(co, false, json, "/ignore_restrictions", ignore_restrictions);
+  JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
+  JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
+  JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+
+  // shortest
+  JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+
+  // top speed
+  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
+
   // destination only penalty
-  pbf_costing_options->set_destination_only_penalty(base_cfg.dest_only_penalty_(
-      rapidjson::get<float>(value, "/destination_only_penalty", base_cfg.dest_only_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
+                          destination_only_penalty);
 
   // maneuver_penalty
-  pbf_costing_options->set_maneuver_penalty(base_cfg.maneuver_penalty_(
-      rapidjson::get<float>(value, "/maneuver_penalty", base_cfg.maneuver_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.maneuver_penalty_, json, "/maneuver_penalty", maneuver_penalty);
 
   // alley_penalty
-  pbf_costing_options->set_alley_penalty(base_cfg.alley_penalty_(
-      rapidjson::get<float>(value, "/alley_penalty", base_cfg.alley_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.alley_penalty_, json, "/alley_penalty", alley_penalty);
 
   // gate_cost
-  pbf_costing_options->set_gate_cost(
-      base_cfg.gate_cost_(rapidjson::get<float>(value, "/gate_cost", base_cfg.gate_cost_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_cost_, json, "/gate_cost", gate_cost);
 
   // gate_penalty
-  pbf_costing_options->set_gate_penalty(base_cfg.gate_penalty_(
-      rapidjson::get<float>(value, "/gate_penalty", base_cfg.gate_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.gate_penalty_, json, "/gate_penalty", gate_penalty);
 
   // private_access_penalty
-  pbf_costing_options->set_private_access_penalty(base_cfg.private_access_penalty_(
-      rapidjson::get<float>(value, "/private_access_penalty", base_cfg.private_access_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.private_access_penalty_, json, "/private_access_penalty",
+                          private_access_penalty);
 
   // country_crossing_cost
-  pbf_costing_options->set_country_crossing_cost(base_cfg.country_crossing_cost_(
-      rapidjson::get<float>(value, "/country_crossing_cost", base_cfg.country_crossing_cost_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_cost_, json, "/country_crossing_cost",
+                          country_crossing_cost);
 
   // country_crossing_penalty
-  pbf_costing_options->set_country_crossing_penalty(base_cfg.country_crossing_penalty_(
-      rapidjson::get<float>(value, "/country_crossing_penalty",
-                            base_cfg.country_crossing_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_penalty_, json, "/country_crossing_penalty",
+                          country_crossing_penalty);
 
-  if (!base_cfg.disable_toll_booth_) {
+  if (!cfg.disable_toll_booth_) {
     // toll_booth_cost
-    pbf_costing_options->set_toll_booth_cost(base_cfg.toll_booth_cost_(
-        rapidjson::get<float>(value, "/toll_booth_cost", base_cfg.toll_booth_cost_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.toll_booth_cost_, json, "/toll_booth_cost", toll_booth_cost);
 
     // toll_booth_penalty
-    pbf_costing_options->set_toll_booth_penalty(base_cfg.toll_booth_penalty_(
-        rapidjson::get<float>(value, "/toll_booth_penalty", base_cfg.toll_booth_penalty_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.toll_booth_penalty_, json, "/toll_booth_penalty",
+                            toll_booth_penalty);
   }
 
-  if (!base_cfg.disable_ferry_) {
+  if (!cfg.disable_ferry_) {
     // ferry_cost
-    pbf_costing_options->set_ferry_cost(
-        base_cfg.ferry_cost_(rapidjson::get<float>(value, "/ferry_cost", base_cfg.ferry_cost_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.ferry_cost_, json, "/ferry_cost", ferry_cost);
 
     // use_ferry
-    pbf_costing_options->set_use_ferry(
-        base_cfg.use_ferry_(rapidjson::get<float>(value, "/use_ferry", base_cfg.use_ferry_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.use_ferry_, json, "/use_ferry", use_ferry);
   }
 
-  if (!base_cfg.disable_rail_ferry_) {
+  if (!cfg.disable_rail_ferry_) {
     // rail_ferry_cost
-    pbf_costing_options->set_rail_ferry_cost(base_cfg.rail_ferry_cost_(
-        rapidjson::get<float>(value, "/rail_ferry_cost", base_cfg.rail_ferry_cost_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.rail_ferry_cost_, json, "/rail_ferry_cost", rail_ferry_cost);
 
     // use_rail_ferry
-    pbf_costing_options->set_use_rail_ferry(base_cfg.use_rail_ferry_(
-        rapidjson::get<float>(value, "/use_rail_ferry", base_cfg.use_rail_ferry_.def)));
+    JSON_PBF_RANGED_DEFAULT(co, cfg.use_rail_ferry_, json, "/use_rail_ferry", use_rail_ferry);
   }
 
-  pbf_costing_options->set_exclude_unpaved(
-      rapidjson::get<bool>(value, "/exclude_unpaved", base_cfg.exclude_unpaved_));
+  JSON_PBF_DEFAULT(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
 
-  pbf_costing_options->set_exclude_cash_only_tolls(
-      rapidjson::get<bool>(value, "/exclude_cash_only_tolls", base_cfg.exclude_cash_only_tolls_));
+  JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
+                   exclude_cash_only_tolls);
 
   // service_penalty
-  pbf_costing_options->set_service_penalty(base_cfg.service_penalty_(
-      rapidjson::get<float>(value, "/service_penalty", base_cfg.service_penalty_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
 
   // service_factor
-  pbf_costing_options->set_service_factor(base_cfg.service_factor_(
-      rapidjson::get<float>(value, "/service_factor", base_cfg.service_factor_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.service_factor_, json, "/service_factor", service_factor);
 
   // use_tracks
-  pbf_costing_options->set_use_tracks(
-      base_cfg.use_tracks_(rapidjson::get<float>(value, "/use_tracks", base_cfg.use_tracks_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_tracks_, json, "/use_tracks", use_tracks);
 
   // use_living_streets
-  pbf_costing_options->set_use_living_streets(base_cfg.use_living_streets_(
-      rapidjson::get<float>(value, "/use_living_streets", base_cfg.use_living_streets_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.use_living_streets_, json, "/use_living_streets",
+                          use_living_streets);
 
   // closure_factor
-  pbf_costing_options->set_closure_factor(base_cfg.closure_factor_(
-      rapidjson::get<float>(value, "/closure_factor", base_cfg.closure_factor_.def)));
+  JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
 
   // HOT/HOV
-  pbf_costing_options->set_include_hot(
-      rapidjson::get<bool>(value, "/include_hot", base_cfg.include_hot_));
-  pbf_costing_options->set_include_hov2(
-      rapidjson::get<bool>(value, "/include_hov2", base_cfg.include_hov2_));
-  pbf_costing_options->set_include_hov3(
-      rapidjson::get<bool>(value, "/include_hov3", base_cfg.include_hov3_));
-}
-
-void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
-                               const BaseCostingOptionsConfig& shared_opts) {
-  pbf_costing_options->set_destination_only_penalty(shared_opts.dest_only_penalty_.def);
-  pbf_costing_options->set_maneuver_penalty(shared_opts.maneuver_penalty_.def);
-  pbf_costing_options->set_alley_penalty(shared_opts.alley_penalty_.def);
-  pbf_costing_options->set_gate_cost(shared_opts.gate_cost_.def);
-  pbf_costing_options->set_gate_penalty(shared_opts.gate_penalty_.def);
-  pbf_costing_options->set_private_access_penalty(shared_opts.private_access_penalty_.def);
-  pbf_costing_options->set_country_crossing_cost(shared_opts.country_crossing_cost_.def);
-  pbf_costing_options->set_country_crossing_penalty(shared_opts.country_crossing_penalty_.def);
-
-  if (!shared_opts.disable_toll_booth_) {
-    pbf_costing_options->set_toll_booth_cost(shared_opts.toll_booth_cost_.def);
-    pbf_costing_options->set_toll_booth_penalty(shared_opts.toll_booth_penalty_.def);
-  }
-
-  if (!shared_opts.disable_ferry_) {
-    pbf_costing_options->set_ferry_cost(shared_opts.ferry_cost_.def);
-    pbf_costing_options->set_use_ferry(shared_opts.use_ferry_.def);
-  }
-
-  if (!shared_opts.disable_rail_ferry_) {
-    pbf_costing_options->set_rail_ferry_cost(shared_opts.rail_ferry_cost_.def);
-    pbf_costing_options->set_use_rail_ferry(shared_opts.use_rail_ferry_.def);
-  }
-
-  pbf_costing_options->set_service_penalty(shared_opts.service_penalty_.def);
-  pbf_costing_options->set_service_factor(shared_opts.service_factor_.def);
-
-  pbf_costing_options->set_use_tracks(shared_opts.use_tracks_.def);
-  pbf_costing_options->set_use_living_streets(shared_opts.use_living_streets_.def);
-
-  pbf_costing_options->set_closure_factor(shared_opts.closure_factor_.def);
-
-  pbf_costing_options->set_exclude_unpaved(shared_opts.exclude_unpaved_);
-  pbf_costing_options->set_exclude_cash_only_tolls(shared_opts.exclude_cash_only_tolls_);
-
-  pbf_costing_options->set_include_hot(shared_opts.include_hot_);
-  pbf_costing_options->set_include_hov2(shared_opts.include_hov2_);
-  pbf_costing_options->set_include_hov3(shared_opts.include_hov3_);
+  JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          Options& options) {
   // if specified, get the costing options in there
-  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
-    Costing costing = static_cast<Costing>(i);
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Deprecated costings still need their place in the array
-    if (costing_str.empty()) {
-      options.add_costing_options();
-      continue;
-    }
+  for (auto i = Costing_MIN; i <= Costing_MAX; i = Costing(i + 1)) {
     // Create the costing options key
+    const auto& costing_str = valhalla::Costing_Enum_Name(i);
+    if (costing_str.empty())
+      continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    ParseCostingOptions(doc, key, options.add_costing_options(), costing);
+    auto& costing_options = (*options.mutable_costing_options())[i];
+    ParseCostingOptions(doc, key, &costing_options, i);
   }
 }
 

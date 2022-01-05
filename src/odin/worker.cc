@@ -91,14 +91,12 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       default: {
         // narrate them and serialize them along
         auto response = narrate(request);
-        const bool as_gpx = request.options().format() == Options::gpx;
-        result = to_response(response, info, request, as_gpx ? worker::GPX_MIME : worker::JSON_MIME,
-                             as_gpx);
+        result = to_response(response, info, request);
         break;
       }
     }
   } catch (const std::exception& e) {
-    result = jsonify_error({299, std::string(e.what())}, info, request);
+    result = serialize_error({299, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client (this should be the case)

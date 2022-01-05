@@ -8,6 +8,7 @@ namespace valhalla {
 namespace skadi {
 
 struct cache_t;
+class tile_data;
 
 class sample {
 public:
@@ -43,6 +44,16 @@ public:
   static double get_no_data_value();
 
 protected:
+  /**
+   * Get a single sample from the datasource
+   * supplies the current tile - so if the same tile is requested in succession it does not have to
+   * look up the tile in the cache.
+   * @param coord  the single posting at which to sample the datasource
+   * @param tile the tile pointer that may already contain a tile, output value
+   * @return a single sample
+   */
+  template <class coord_t> double get(const coord_t& coord, tile_data& tile);
+
   /**
    * @return A tile index value from a coordinate
    */
