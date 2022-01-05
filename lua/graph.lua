@@ -1786,6 +1786,43 @@ function filter_tags_generic(kv)
   kv["bike_local_ref"] = lref
   kv["bike_network_mask"] = bike_mask
 
+  -- Explicitly turn off access for construction type. It's done for backward compatibility
+  -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
+  -- versions of router will work with new tiles incorrectly. They would start to route
+  -- on roads under construction because they're not aware about new 'Use::kConstruction'
+  -- and use only access mode to check if an edge is routable or not.
+  if kv["highway"] == "construction" then
+    kv["auto_forward"] = "false"
+    kv["auto_backward"] = "false"
+
+    kv["truck_forward"] = "false"
+    kv["truck_backward"] = "false"
+
+    kv["bus_forward"] = "false"
+    kv["bus_backward"] = "false"
+
+    kv["taxi_forward"] = "false"
+    kv["taxi_backward"] = "false"
+
+    kv["hov_forward"] = "false"
+    kv["hov_backward"] = "false"
+
+    kv["pedestrian_forward"] = "false"
+    kv["pedestrian_backward"] = "false"
+
+    kv["bike_forward"] = "false"
+    kv["bike_backward"] = "false"
+
+    kv["moped_forward"] = "false"
+    kv["moped_backward"] = "false"
+
+    kv["motorcycle_forward"] = "false"
+    kv["motorcycle_backward"] = "false"
+
+    kv["emergency_forward"] = "false"
+    kv["emergency_backward"] = "false"
+  end
+
   return 0
 end
 

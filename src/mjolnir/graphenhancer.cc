@@ -859,11 +859,10 @@ uint32_t GetDensity(GraphReader& reader,
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, ferries, etc.)
+          // Exclude non-roads (parking, walkways, ferries, construction, etc.)
           if (directededge->is_road() || directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-              directededge->use() == Use::kEmergencyAccess ||
-              directededge->use() == Use::kConstruction) {
+              directededge->use() == Use::kEmergencyAccess) {
             roadlengths += directededge->length();
           }
         }

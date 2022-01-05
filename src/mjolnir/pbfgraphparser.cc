@@ -1868,7 +1868,7 @@ public:
 
     // We need to set a data processing flag so we need to
     // process in pbfgraphparser instead of lua because of config option use_rest_area
-    if (use_rest_area_ && service_ == "rest_area") {
+    if (use_rest_area_ && service_ == "rest_area" && way_.use() != Use::kConstruction) {
       if (amenity_ == "yes") {
         way_.set_use(Use::kServiceArea);
       } else {
@@ -1961,10 +1961,10 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbScale;
-        if (access && !way_.oneway_reverse()) {
+        if (access && !way_.oneway_reverse() && way_.use() != Use::kConstruction) {
           way_.set_bike_forward(true);
         }
-        if (access && !way_.oneway()) {
+        if (access && !way_.oneway() && way_.use() != Use::kConstruction) {
           way_.set_bike_backward(true);
         }
       }
@@ -1988,10 +1988,10 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbUphillScale;
-        if (access && !way_.oneway_reverse()) {
+        if (access && !way_.oneway_reverse() && way_.use() != Use::kConstruction) {
           way_.set_bike_forward(true);
         }
-        if (access && !way_.oneway()) {
+        if (access && !way_.oneway() && way_.use() != Use::kConstruction) {
           way_.set_bike_backward(true);
         }
       }
@@ -2002,7 +2002,7 @@ public:
     bool has_mtb_imba = mtb_imba_scale != results.end();
     if (has_mtb_imba) {
       // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
-      if (!has_mtb_scale && !has_mtb_uphill_scale) {
+      if (!has_mtb_scale && !has_mtb_uphill_scale && way_.use() != Use::kConstruction) {
         if (!way_.oneway_reverse()) {
           way_.set_bike_forward(true);
         }
@@ -2014,7 +2014,8 @@ public:
 
     // Only has MTB description - set bicycle access.
     bool has_mtb_desc = results.find("mtb:description") != results.end();
-    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
+    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba &&
+        way_.use() != Use::kConstruction) {
       if (!way_.oneway_reverse()) {
         way_.set_bike_forward(true);
       }

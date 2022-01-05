@@ -37,10 +37,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_length(std::max(length, kMinimumEdgeLength), true);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
-  if (way.ferry()) {
+  if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);
   }
-  if (way.rail()) {
+  if (way.rail() && way.use() != Use::kConstruction) {
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
@@ -150,7 +150,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps) {
+  if (way.use() != Use::kSteps && way.use() != Use::kConstruction) {
     if (way.wheelchair_tag() && way.wheelchair()) {
       forward_access |= kWheelchairAccess;
       reverse_access |= kWheelchairAccess;
@@ -162,16 +162,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
         reverse_access |= kWheelchairAccess;
       }
     }
-  }
-  // Explicitely turn off access for constructions. It's done for backward compatibility
-  // of valhalla tiles and valhalla routing. In case we allow non-zero access then older
-  // versions of router will work with new tiles incorrectly. They would start to route
-  // on roads under construction because they're not aware about new 'Use::kConstruction'
-  // and use only access mode to check if an edge is routable or not.
-  if (way.use() == Use::kConstruction) {
-    forward_access = 0;
-    reverse_access = 0;
-    LOG_DEBUG("Turn off access mode for road under construction.");
   }
 
   // Set access modes
