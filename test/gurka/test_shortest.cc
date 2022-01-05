@@ -104,9 +104,10 @@ TEST(AutoShorter, deprecation) {
   ParseApi(request_str, Options::route, request);
 
   ASSERT_EQ(request.options().costing(), valhalla::auto_);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).shortest(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  const auto& options = request.options().costing_options().find(valhalla::auto_)->second;
+  ASSERT_EQ(options.shortest(), true);
+  ASSERT_EQ(options.use_ferry(), 0.1f);
+  ASSERT_EQ(options.use_tolls(), 0.77f);
 }
 
 TEST_F(ShortestTest, AutoUseDistance) {

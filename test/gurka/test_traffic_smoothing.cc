@@ -290,7 +290,9 @@ TEST_F(RouteWithTraffic, OneEdgeCurrentTime) {
   for (const auto& result : results) {
     gurka::assert::raw::expect_path_length(result, 50, 1);
     // live traffic is used whenever current time is specified
-    gurka::assert::raw::expect_eta(result, 3461, 10);
+    // error margin is set to 70, because live speed can be mixed with predicted
+    // when a new minute starts, in this case edge speed can become 51 instead of 52.
+    gurka::assert::raw::expect_eta(result, 3461, 70);
   }
 }
 

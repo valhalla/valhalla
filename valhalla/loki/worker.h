@@ -95,8 +95,8 @@ protected:
   size_t max_trace_shape;
   float max_gps_accuracy;
   float max_search_radius;
-  unsigned int max_best_paths;
-  size_t max_best_paths_shape;
+  unsigned int max_trace_alternates;
+  size_t max_trace_alternates_shape;
   skadi::sample sample;
   size_t max_elevation_shape;
   float min_resample;

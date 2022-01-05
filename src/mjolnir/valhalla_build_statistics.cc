@@ -4,8 +4,8 @@
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>
@@ -17,6 +17,8 @@
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include "config.h"
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -33,7 +35,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-namespace bpo = boost::program_options;
 filesystem::path config_file_path;
 
 namespace {
@@ -286,7 +287,7 @@ void AddStatistics(statistics& stats,
                    GraphId& node,
                    const NodeInfo& nodeinfo) {
 
-  auto rclass = directededge.classification();
+  const auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ? directededge.length() * 0.5f
                                                                   : directededge.length() * 0.25f;
 
@@ -567,32 +568,39 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 }
 
 bool ParseArguments(int argc, char* argv[]) {
-  bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
-  options.add_options()("help,h",
-                        "Print this help message")("config,c",
-                                                   boost::program_options::value<filesystem::path>(
-                                                       &config_file_path)
-                                                       ->required(),
-                                                   "Path to the json configuration file.");
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
-    return false;
-  }
+    // clang-format off
+    cxxopts::Options options("valhalla_build_statistics",
+        "valhalla_build_statistics " VALHALLA_VERSION "\n\n"
+        "valhalla_build_statistics is a program that builds a statistics database.\n\n");
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
+    options.add_options()
+      ("h,help", "Print this help message")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      exit(0);
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_build_statistics " << VALHALLA_VERSION << "\n";
+      exit(0);
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(config_file_path =
+                                        filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
     }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
   }
 
   return false;

@@ -1,13 +1,27 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message Status {
-  optional bool has_tiles = 1;
-  optional bool has_admins = 2;
-  optional bool has_timezones = 3;
-  optional bool has_live_traffic = 4;
-  optional string bbox = 5;
-  optional string version = 6;
-  optional uint32 tileset_last_modified = 7;
+  oneof has_has_tiles {
+    bool has_tiles = 1;
+  }
+  oneof has_has_admins {
+    bool has_admins = 2;
+  }
+  oneof has_has_timezones {
+    bool has_timezones = 3;
+  }
+  oneof has_has_live_traffic {
+    bool has_live_traffic = 4;
+  }
+  oneof has_bbox {
+    string bbox = 5;
+  }
+  oneof has_version {
+    string version = 6;
+  }
+  oneof has_tileset_last_modified {
+    uint32 tileset_last_modified = 7;
+  }
 }

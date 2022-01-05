@@ -125,7 +125,7 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
 sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin python3-shapely
 source /etc/lsb-release
@@ -172,7 +172,7 @@ To install valhalla on macOS, you need to install its dependencies with [Homebre
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
+brew install automake cmake libtool protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -231,6 +231,8 @@ wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://downl
 #get the config and setup
 mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+#build timezones.sqlite to support time-dependent routing
+valhalla_build_timezones > valhalla_tiles/timezones.sqlite
 #build routing tiles
 #TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf

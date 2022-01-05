@@ -68,6 +68,7 @@ constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
+const std::string kDefaultAutoType = "car";
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
@@ -686,77 +687,26 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::auto_);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                          CostingOptions* co) {
+  co->set_costing(Costing::auto_);
+  co->set_name(Costing_Enum_Name(co->costing()));
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
-
-    // type (transport_type)
-    pbf_costing_options->set_transport_type(
-        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
-
-    // alley_factor
-    pbf_costing_options->set_alley_factor(
-        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
-                              .get_value_or(kDefaultAlleyFactor)));
-
-    // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-
-    // use distance
-    pbf_costing_options->set_use_distance(
-        kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
-                              .get_value_or(kDefaultUseDistance)));
-
-    // height
-    pbf_costing_options->set_height(
-        kAutoHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
-                             .get_value_or(kDefaultAutoHeight)));
-
-    // width
-    pbf_costing_options->set_width(
-        kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
-                            .get_value_or(kDefaultAutoWidth)));
-
-    // probability
-    pbf_costing_options->set_restriction_probability(kProbabilityRange(
-        rapidjson::get_optional<uint32_t>(*json_costing_options, "/restriction_probability")
-            .get_value_or(kDefaultRestrictionProbability)));
-
-    // HOT/HOV-use
-    pbf_costing_options->set_include_hot(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hot").get_value_or(false));
-    pbf_costing_options->set_include_hov2(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov2").get_value_or(false));
-    pbf_costing_options->set_include_hov3(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov3").get_value_or(false));
-  } else {
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-    // Set pbf values to defaults
-    pbf_costing_options->set_transport_type("car");
-    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-    pbf_costing_options->set_use_distance(kDefaultUseDistance);
-    pbf_costing_options->set_height(kDefaultAutoHeight);
-    pbf_costing_options->set_width(kDefaultAutoWidth);
-    pbf_costing_options->set_restriction_probability(kDefaultRestrictionProbability);
-  }
+  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
+  JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
+                          restriction_probability);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
 }
 
 cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
@@ -885,10 +835,10 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::bus);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+                         CostingOptions* costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, costing_options);
+  costing_options->set_costing(Costing::bus);
+  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
 }
 
 cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
@@ -1062,10 +1012,10 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::taxi);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+                          CostingOptions* costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, costing_options);
+  costing_options->set_costing(Costing::taxi);
+  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
 }
 
 cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
@@ -1111,7 +1061,7 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return std::make_shared<TestAutoCost>(
-      request.options().costing_options(static_cast<int>(Costing::auto_)));
+      request.options().costing_options().find(Costing::auto_)->second);
 }
 
 std::uniform_real_distribution<float>

@@ -82,7 +82,8 @@ TEST_F(TopSpeedTest, ClampMaxSpeed) {
   rapidjson::SetValueByPointer(dom, "/top_speed", 500);
 
   options.set_costing(Costing::auto_);
-  sif::ParseSharedCostOptions(*rapidjson::GetValueByPointer(dom, ""), options.add_costing_options());
+  auto& co = (*options.mutable_costing_options())[Costing::auto_];
+  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {});
 
-  ASSERT_EQ(options.costing_options().Get(0).top_speed(), baldr::kMaxAssumedSpeed);
+  ASSERT_EQ(co.top_speed(), baldr::kMaxAssumedSpeed);
 }

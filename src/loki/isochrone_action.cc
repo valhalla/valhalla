@@ -51,9 +51,9 @@ void loki_worker_t::init_isochrones(Api& request) {
 
   // check the contour metrics
   for (auto& contour : options.contours()) {
-    if (contour.has_time() && contour.time() > max_contour_min)
+    if (contour.has_time_case() && contour.time() > max_contour_min)
       throw valhalla_exception_t{151, std::to_string(max_contour_min)};
-    if (contour.has_distance() && contour.distance() > max_contour_km)
+    if (contour.has_distance_case() && contour.distance() > max_contour_km)
       throw valhalla_exception_t{166, std::to_string(max_contour_km)};
   }
 

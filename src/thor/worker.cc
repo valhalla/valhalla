@@ -176,10 +176,10 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     }
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error(e, info, request);
+    result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error({499, std::string(e.what())}, info, request);
+    result = serialize_error({499, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client
@@ -236,7 +236,7 @@ void thor_worker_t::parse_locations(Api& request) {
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates()) {
+          if (location.skip_ranking_candidates()) {
             candidate.set_distance(0);
             // scale the score to favor closer results more
           } else {
@@ -276,10 +276,10 @@ void thor_worker_t::parse_measurements(const Api& request) {
     for (const auto& pt : options.shape()) {
       trace.emplace_back(
           meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
-                             pt.has_accuracy() ? pt.accuracy()
-                                               : config.emission_cost.gps_accuracy_meters,
-                             pt.has_radius() ? pt.radius()
-                                             : config.candidate_search.search_radius_meters,
+                             pt.has_accuracy_case() ? pt.accuracy()
+                                                    : config.emission_cost.gps_accuracy_meters,
+                             pt.has_radius_case() ? pt.radius()
+                                                  : config.candidate_search.search_radius_meters,
                              pt.time(),
                              PathLocation::fromPBF(pt.type())});
     }
@@ -291,10 +291,10 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> country_iso;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
-      if (admin.has_state_code()) {
+      if (admin.has_state_code_case()) {
         state_iso.insert(admin.state_code());
       }
-      if (admin.has_country_code()) {
+      if (admin.has_country_code_case()) {
         country_iso.insert(admin.country_code());
       }
     }
@@ -311,27 +311,27 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
   controller = AttributesController();
   const auto& options = request.options();
 
-  if (options.has_filter_action()) {
-    switch (options.filter_action()) {
-      case (FilterAction::include): {
-        if (is_strict_filter)
-          controller.disable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
+  switch (options.filter_action()) {
+    case (FilterAction::include): {
+      if (is_strict_filter)
+        controller.disable_all();
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = true;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
       }
-      case (FilterAction::exclude): {
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
+      break;
     }
+    case (FilterAction::exclude): {
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          controller.attributes.at(filter_attribute) = false;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 

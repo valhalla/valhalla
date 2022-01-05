@@ -157,6 +157,10 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
 
+std::string do_action(const map& map,
+                      valhalla::Api& api,
+                      std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
@@ -170,7 +174,8 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::unordered_map<std::string, std::string>& options = {},
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
                         std::string* json = nullptr,
-                        const std::string& stop_type = "break");
+                        const std::string& stop_type = "break",
+                        std::string* request_json = nullptr);
 
 /* Returns the raw_result formatted as a JSON document in the given format.
  *

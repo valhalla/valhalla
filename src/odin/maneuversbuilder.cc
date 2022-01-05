@@ -187,7 +187,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
                               ? ""
                               : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
   std::string units =
-      (options_.has_units())
+      (options_.has_units_case())
           ? ((options_.units() == valhalla::Options::kilometers) ? "kilometers" : "miles")
           : "miles";
   LOG_DEBUG((boost::format("ROUTE_REQUEST|-j "

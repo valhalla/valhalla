@@ -34,29 +34,29 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
                                     boost::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (!location.has_minimum_reachability())
+      if (!location.has_minimum_reachability_case())
         location.set_minimum_reachability(default_reachability);
       else if (location.minimum_reachability() > max_reachability)
         location.set_minimum_reachability(max_reachability);
 
-      if (!location.has_radius())
+      if (!location.has_radius_case())
         location.set_radius(default_radius);
       else if (location.radius() > max_radius)
         location.set_radius(max_radius);
 
-      if (!location.has_heading_tolerance())
+      if (!location.has_heading_tolerance_case())
         location.set_heading_tolerance(default_heading_tolerance);
 
-      if (!location.has_node_snap_tolerance())
+      if (!location.has_node_snap_tolerance_case())
         location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-      if (!location.has_search_cutoff())
+      if (!location.has_search_cutoff_case())
         location.set_search_cutoff(default_search_cutoff);
 
-      if (!location.has_street_side_tolerance())
+      if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
-      if (!location.has_street_side_max_distance())
+      if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
     }
   } else if (required_exception) {
@@ -67,7 +67,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing() || (!allow_none && options.costing() == Costing::none_)) {
+  if (!options.has_costing_case() || (!allow_none && options.costing() == Costing::none_)) {
     throw valhalla_exception_t{124};
   }
 
@@ -87,9 +87,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   if (options.exclude_polygons_size()) {
     const auto edges =
         edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
-    auto* co = options.mutable_costing_options(options.costing());
+    auto& co = options.mutable_costing_options()->find(options.costing())->second;
     for (const auto& edge_id : edges) {
-      auto* avoid = co->add_exclude_edges();
+      auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
       avoid->set_percent_along(0);
@@ -106,7 +106,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
       auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
-      auto* co = options.mutable_costing_options(options.costing());
+      auto& co = options.mutable_costing_options()->find(options.costing())->second;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
@@ -115,7 +115,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = co->add_exclude_edges();
+            auto* avoid = co.add_exclude_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -128,7 +128,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid_shortcut = co->add_exclude_edges();
+                auto* avoid_shortcut = co.add_exclude_edges();
                 avoid_shortcut->set_id(shortcut);
                 avoid_shortcut->set_percent_along(0);
               }
@@ -143,8 +143,10 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   // If more alternates are requested than we support we cap it
-  if (options.alternates() > max_alternates)
+  if (options.action() != Options::trace_attributes && options.alternates() > max_alternates)
     options.set_alternates(max_alternates);
+  if (options.action() == Options::trace_attributes && options.alternates() > max_trace_alternates)
+    options.set_alternates(max_trace_alternates);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -238,8 +240,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   default_breakage_distance = config.get<float>("meili.default.breakage_distance");
   max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
-  max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
-  max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
+  max_trace_alternates = config.get<unsigned int>("service_limits.trace.max_alternates");
+  max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
 
@@ -279,7 +281,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (!options.has_action() || actions.find(options.action()) == actions.cend()) {
+    if (!options.has_action_case() || actions.find(options.action()) == actions.cend()) {
       throw valhalla_exception_t{106, action_str};
     }
 
@@ -333,10 +335,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     }
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error(e, info, request);
+    result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error({199, std::string(e.what())}, info, request);
+    result = serialize_error({199, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client

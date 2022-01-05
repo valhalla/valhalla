@@ -230,8 +230,9 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fixed_t{duration, 3});
 
   route->emplace("weight", json::fixed_t{weight, 3});
-  assert(api.options().costing_options(api.options().costing()).has_name());
-  route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
+  assert(api.options().costing_options().find(api.options().costing())->second.has_name_case());
+  route->emplace("weight_name",
+                 api.options().costing_options().find(api.options().costing())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {
@@ -316,9 +317,10 @@ void route_geometry(json::MapPtr& route,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
   std::vector<PointLL> shape;
-  if (options.has_generalize() && options.generalize() == 0.0f) {
+  if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);
-  } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
+  } else if (!options.has_generalize_case() ||
+             (options.has_generalize_case() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
   if (options.shape_format() == geojson) {
@@ -531,16 +533,23 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
-    // the arrive step.
+    // the arrival step.
     std::vector<IntersectionEdges> edges;
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+      if (i > 0) {
+        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+          auto intersecting_edge = node->GetIntersectingEdge(m);
+          bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, true);
+        }
+      }
     }
 
     // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
+    // Set routable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
@@ -709,9 +718,11 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incide
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
   osrm::serializeIncidentProperties(writer, incident.metadata(),
-                                    incident.has_begin_shape_index() ? incident.begin_shape_index()
-                                                                     : -1,
-                                    incident.has_end_shape_index() ? incident.end_shape_index() : -1,
+                                    incident.has_begin_shape_index_case()
+                                        ? incident.begin_shape_index()
+                                        : -1,
+                                    incident.has_end_shape_index_case() ? incident.end_shape_index()
+                                                                        : -1,
                                     "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
@@ -1102,7 +1113,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       maneuver_type = "roundabout";
     }
     // Roundabout count
-    if (maneuver.has_roundabout_exit_count()) {
+    if (maneuver.has_roundabout_exit_count_case()) {
       osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
     }
   } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
@@ -1243,6 +1254,8 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case TravelMode::kTransit: {
       return "transit";
     }
+    default:
+      return {};
   }
   auto num = static_cast<int>(maneuver.travel_mode());
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -1534,7 +1547,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     admins->reserve(path_leg.admin_size());
     for (const auto& admin : path_leg.admin()) {
       auto admin_map = json::map({});
-      if (admin.has_country_code()) {
+      if (admin.has_country_code_case()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
         auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {

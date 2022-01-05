@@ -348,8 +348,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_matrix_locations": 50
         },
         "trace": {
-          "max_best_paths": 4,
-          "max_best_paths_shape": 100,
+          "max_alternates": 3,
+          "max_alternates_shape": 100,
           "max_distance": 200000.0,
           "max_gps_accuracy": 100.0,
           "max_search_radius": 100.0,

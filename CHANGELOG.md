@@ -14,6 +14,11 @@
    * FIXED: Undefined behaviour on some platforms due to unaligned reads [#3447](https://github.com/valhalla/valhalla/pull/3447)
    * FIXED: Fixed undefined behavior due to invalid shift exponent when getting edge's heading [#3450](https://github.com/valhalla/valhalla/pull/3450)
    * FIXED: Use midgard::unaligned_read in GraphTileBuilder::AddSigns [#3456](https://github.com/valhalla/valhalla/pull/3456)
+   * FIXED: Relax test margin for time dependent traffic test [#3467](https://github.com/valhalla/valhalla/pull/3467)
+   * FIXED: Fixed missed intersection heading [#3463](https://github.com/valhalla/valhalla/pull/3463)
+   * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
+   * FIXED: valhalla_service uses now loki logging config instead of deprecated tyr logging [#3481](https://github.com/valhalla/valhalla/pull/3481)
+   * FIXED: Docker image `valhalla/valhalla:run-latest`: conan error + python integration [#3485](https://github.com/valhalla/valhalla/pull/3485)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -35,10 +40,16 @@
    * ADDED: Add support for LZ4 compressed elevation tiles [#3401](https://github.com/valhalla/valhalla/pull/3401)
    * CHANGED: Rearranged some of the protobufs to remove redundancy [#3452](https://github.com/valhalla/valhalla/pull/3452)
    * CHANGED: overhaul python bindings [#3380](https://github.com/valhalla/valhalla/pull/3380)
+   * CHANGED: Removed all protobuf defaults either by doing them in code or by relying on 0 initialization. Also deprecated best_paths and do_not_track [#3454](https://github.com/valhalla/valhalla/pull/3454)
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
    * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * ADDED: Add `include_construction` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
+   * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457](https://github.com/valhalla/valhalla/pull/3457)
+   * CHANGED: Allow up to 32 outgoing link edges on a node when reclassifying links [#3483](https://github.com/valhalla/valhalla/pull/3483)
+   * CHANGED: Reuse sample::get implementation [#3471](https://github.com/valhalla/valhalla/pull/3471)
+   * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
+   * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

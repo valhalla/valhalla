@@ -1,10 +1,10 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <queue>
@@ -48,8 +48,6 @@ using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 using namespace valhalla::meili;
-
-namespace bpo = boost::program_options;
 
 namespace {
 
@@ -381,13 +379,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
-    if (maneuver.has_depart_instruction()) {
+    if (maneuver.has_depart_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
-    if (maneuver.has_verbal_depart_instruction()) {
+    if (maneuver.has_verbal_depart_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
                                        maneuver.verbal_depart_instruction())
                                           .str(),
@@ -425,7 +423,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal succinct transition instruction
-    if (maneuver.has_verbal_succinct_transition_instruction()) {
+    if (maneuver.has_verbal_succinct_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
@@ -433,7 +431,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal transition alert instruction
-    if (maneuver.has_verbal_transition_alert_instruction()) {
+    if (maneuver.has_verbal_transition_alert_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
                                        maneuver.verbal_transition_alert_instruction())
                                           .str(),
@@ -441,7 +439,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal pre transition instruction
-    if (maneuver.has_verbal_pre_transition_instruction()) {
+    if (maneuver.has_verbal_pre_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
                                        maneuver.verbal_pre_transition_instruction())
                                           .str(),
@@ -449,7 +447,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal post transition instruction
-    if (maneuver.has_verbal_post_transition_instruction()) {
+    if (maneuver.has_verbal_post_transition_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
                                        maneuver.verbal_post_transition_instruction())
                                           .str(),
@@ -457,13 +455,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Arrive instruction
-    if (maneuver.has_arrive_instruction()) {
+    if (maneuver.has_arrive_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
-    if (maneuver.has_verbal_arrive_instruction()) {
+    if (maneuver.has_verbal_arrive_instruction_case()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
                                        maneuver.verbal_arrive_instruction())
                                           .str(),
@@ -524,86 +522,87 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description poptions(
-      "valhalla_run_route " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_run_route [options]\n"
-      "\n"
-      "valhalla_run_route is a simple command line test tool for shortest path routing. "
-      "\n"
-      "Use -j option for specifying the locations and costing method and options. "
-      "\n"
-      "\n");
-
-  std::string json, json_file, config;
+  // args
+  std::string json_str, json_file, config;
+  boost::property_tree::ptree pt;
+  bool match_test, verbose_lanes;
   bool multi_run = false;
-  bool match_test = false;
-  bool verbose_lanes = false;
   uint32_t iterations;
 
-  poptions.add_options()("help,h", "Print this help message.")("version,v",
-                                                               "Print the version of this software.")(
-      "json,j", boost::program_options::value<std::string>(&json),
-      "JSON Example: "
-      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
-      "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
-      "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
-      "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
-      "json-file", boost::program_options::value<std::string>(&json_file),
-      "file containing the json query")("match-test", "Test RouteMatcher with resulting shape.")(
-      "multi-run", bpo::value<uint32_t>(&iterations),
-      "Generate the route N additional times before exiting.")(
-      "verbose-lanes", bpo::bool_switch(&verbose_lanes),
-      "Include verbose lanes output in DirectionsTest.")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
-  }
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_run_route",
+      "valhalla_run_route " VALHALLA_VERSION "\n\n"
+      "valhalla_run_route is a command line test tool for shortest path routing.\n"
+      "Use the -j option for specifying the locations and costing method and options.");
 
-  if (vm.count("help")) {
-    std::cout << poptions << "\n";
-    return EXIT_SUCCESS;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("j,json", "JSON Example: "
+        "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
+        "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
+        "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
+        "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
+        "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
+      ("json-file", "File containing the JSON query", cxxopts::value<std::string>())
+      ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>(match_test)->default_value("false"))
+      ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>(iterations)->default_value("1"))
+      ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>(verbose_lanes)->default_value("false"))
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+    // clang-format on
 
-  if (vm.count("version")) {
-    std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
+    auto result = options.parse(argc, argv);
 
-  if (vm.count("match-test")) {
-    match_test = true;
-  }
-
-  if (vm.count("multi-run")) {
-    multi_run = true;
-  }
-
-  if (vm.count("json-file")) {
-    if (vm.count("json")) {
-      LOG_WARN("json and json-file option are set, using json-file content");
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
     }
-    std::ifstream ifs(json_file);
-    json.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+
+    if (result.count("version")) {
+      std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    // parse the config
+    rapidjson::read_json(config.c_str(), pt);
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("thor.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
+    if (iterations > 1) {
+      multi_run = true;
+    }
+
+    if (result.count("json-file") && result.count("json")) {
+      LOG_WARN("json and json-file option are set, using json-file content");
+    } else if (result.count("json-file")) {
+      std::ifstream ifs(result["json-file"].as<std::string>());
+      json_str.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+    } else if (result.count("json")) {
+      json_str = result["json"].as<std::string>();
+    } else {
+      std::cerr << "Either json or json-file args must be set." << std::endl;
+      return EXIT_FAILURE;
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Grab the directions options, if they exist
   valhalla::Api request;
-  valhalla::ParseApi(json, valhalla::Options::route, request);
+  valhalla::ParseApi(json_str, valhalla::Options::route, request);
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
@@ -616,19 +615,6 @@ int main(int argc, char* argv[]) {
     throw;
   }
 
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
@@ -688,7 +674,7 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
+      if (options.has_date_time_case() && ll1.Distance(ll2) < max_timedep_distance &&
           (options.date_time_type() == valhalla::Options_DateTimeType_depart_at ||
            options.date_time_type() == valhalla::Options_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;

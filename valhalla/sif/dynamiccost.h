@@ -25,6 +25,49 @@
 #include <rapidjson/document.h>
 #include <unordered_map>
 
+// macros aren't great but writing these out for every option is an abomination worse than this macro
+
+/**
+ * this macro takes a ranged_default_t and uses it to make sure user provided values (in json or in
+ * pbf) are in range before setting it on the costing options
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param range            ranged_default_t object which will check any provided values are in range
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name)                 \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
+                                                  costing_options->has_##option_name##_case()        \
+                                                      ? costing_options->option_name()               \
+                                                      : range.def)));                                \
+  }
+
+/**
+ * this macro takes a default value and uses it when no user provided values exist (in json or in pbf)
+ * to set the option on the costing options object
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param def              the default value which is used when neither json nor pbf is provided
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the json
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_DEFAULT(costing_options, def, json, json_key, option_name)                          \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        rapidjson::get<std::remove_cv<std::remove_reference<decltype(def)>::type>::                  \
+                           type>(json, json_key,                                                     \
+                                 costing_options->has_##option_name##_case()                         \
+                                     ? costing_options->option_name()                                \
+                                     : def));                                                        \
+  }
+
 using namespace valhalla::midgard;
 
 namespace valhalla {
@@ -1114,32 +1157,16 @@ struct BaseCostingOptionsConfig {
 };
 
 /**
- * Parses the cost options from json and stores values in pbf.
- * @param object The json request represented as a DOM tree.
- * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
- */
-void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
-
-/**
  * Parses base cost options that are common for most costing models. If you use this function
  * make sure that different default values were overridden in the config. Also explicitly
  * disable options that shouldn't be parsed.
- * @param obj The json request represented as a DOM tree.
- * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
- * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ * @param json The json request represented as a DOM tree.
+ * @param co A mutable protocol buffer where the parsed json values will be stored.
+ * @param cfg Default values with enable/disable parsing indicators for costing options.
  */
-void ParseBaseCostOptions(const rapidjson::Value& obj,
-                          CostingOptions* pbf_costing_options,
-                          const BaseCostingOptionsConfig& base_cfg);
-
-/**
- * Set default values of base costing options to pbf structure. Skip options that were
- * explicitly disabled.
- * @param pbf_costing_options A mutable protocol buffer where default values will be stored.
- * @param base_cfg Default values with enable/disable parsing indicators for costing options.
- */
-void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
-                               const BaseCostingOptionsConfig& base_cfg);
+void ParseBaseCostOptions(const rapidjson::Value& json,
+                          CostingOptions* co,
+                          const BaseCostingOptionsConfig& cfg);
 
 /**
  * Parses all the costing options for all supported costings

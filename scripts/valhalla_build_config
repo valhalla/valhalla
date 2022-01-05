@@ -251,8 +251,8 @@ config = {
       'max_gps_accuracy': 100.0,
       'max_search_radius': 100.0,
       'max_shape': 16000,
-      'max_best_paths': 4,
-      'max_best_paths_shape': 100
+      'max_alternates': 3,
+      'max_alternates_shape': 100
     },
     'bikeshare': {
       'max_distance': 500000.0,
@@ -520,8 +520,8 @@ help_text = {
       'max_gps_accuracy': 'Maximum input gps accuracy in meters',
       'max_search_radius': 'Maximum upper bounds of the search radius in meters',
       'max_shape': 'Maximum number of input shape points',
-      'max_best_paths': 'Maximum number of best paths',
-      'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
+      'max_alternates': 'Maximum number of alternate map matching',
+      'max_alternates_shape': 'Maximum number of input shape points when requesting multiple paths'
     },
     'bikeshare': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
