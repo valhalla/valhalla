@@ -138,7 +138,7 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
 #if GOOGLE_PROTOBUF_VERSION >= 3001000
   auto size = tile.ByteSizeLong();
 #else
-  auto size = tile.ByteSize()
+  auto size = tile.ByteSize();
 #endif
   valhalla::midgard::mem_map<char> buffer;
   buffer.create(transit_tile.string(), size);
