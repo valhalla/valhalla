@@ -494,12 +494,23 @@ inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const 
   return std::chrono::system_clock::from_time_t(FS_MTIME(s));
 }
 
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+
 /**
  * @brief Saves data to the path.
  * @attention Will replace the contents in case if fpath already exists. Will create
  * new directory if directory did not exist before hand.
  * */
-template <typename T> inline bool save(const std::string& fpath, const T& data = {}) {
+template <typename Container>
+typename std::enable_if<has_data<Container>::value, bool>::type inline save(
+    const std::string& fpath,
+    const Container& data = {}) {
   if (fpath.empty())
     return false;
 

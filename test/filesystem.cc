@@ -270,6 +270,26 @@ TEST(Filesystem, concurrent_folder_create_delete) {
   }
 }
 
+TEST(Filesystem, has_data_member_type) {
+  auto arr = filesystem::has_data<std::array<int, 3>>::value;
+  EXPECT_TRUE(arr);
+
+  auto vc = filesystem::has_data<std::vector<int>>::value;
+  EXPECT_TRUE(vc);
+
+  auto str = filesystem::has_data<std::string>::value;
+  EXPECT_TRUE(str);
+
+  auto umap = filesystem::has_data<std::unordered_map<int, int>>::value;
+  EXPECT_FALSE(umap);
+
+  auto integer = filesystem::has_data<int>::value;
+  EXPECT_FALSE(integer);
+
+  auto lst = filesystem::has_data<std::list<int>>::value;
+  EXPECT_FALSE(lst);
+}
+
 TEST(Filesystem, save_file_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",

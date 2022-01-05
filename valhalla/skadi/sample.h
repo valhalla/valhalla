@@ -77,15 +77,12 @@ protected:
 
   /**
    * @brief Get a single sample from a remote source
-   * @param coord the single posting at which to sample the datasource
+   * @param[in] index tile index
+   * @return
+   *    true - in success case
+   *    false - in fail case
    */
-  template <class coord_t> double get_from_remote(const coord_t& coord);
-
-  /**
-   * @brief Get a single sample from cache
-   * @param coord the single posting at which to sample the datasource
-   */
-  template <class coord_t> double get_from_cache(const coord_t& coord);
+  bool fetch(uint16_t index);
 
   /**
    * @brief Add tile to cache and store it in local filesystem.
@@ -107,8 +104,6 @@ private:
   std::mutex cache_lck;
   std::string url_;
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
-  std::unordered_set<std::string> st_;
-  std::shared_timed_mutex st_lck;
   // This parameter is used only in tests
   std::string remote_path_;
 };

@@ -97,19 +97,18 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
 graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
                                  const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
-    std::string error_msg;
-    if (!graphid.Is_Valid())
-      error_msg += "GraphId is invalid\n\n";
+  if (!graphid.Is_Valid()) {
+    LOG_ERROR("Failed to build GraphTile. Error: GraphId is invalid");
+    return nullptr;
+  }
 
-    if (graphid.level() > TileHierarchy::get_max_level())
-      error_msg += "GraphId level exceeds tile hierarch max level\n\n";
+  if (graphid.level() > TileHierarchy::get_max_level()) {
+    LOG_ERROR("Failed to build GraphTile. Error: GraphId level exceeds tile hierarchy max level");
+    return nullptr;
+  }
 
-    if (tile_dir.empty())
-      error_msg += "tile_dir is empty\n\n";
-
-    LOG_ERROR("Failed to build GraphTile. Error: " + error_msg);
+  if (tile_dir.empty()) {
+    LOG_ERROR("Failed to build GraphTile. Error: Tile dir is empty");
     return nullptr;
   }
 
@@ -143,7 +142,6 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Nothing to load anywhere
-  LOG_ERROR("Failed to build GraphTile");
   return nullptr;
 }
 

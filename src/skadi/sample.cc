@@ -447,11 +447,13 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
 
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
-    // get the proper source of the data
-    tile = cache_->source(index);
-  }
-  if (!tile) {
-    return NO_DATA_VALUE;
+    if (!(tile = cache_->source(index))) {
+      if (!fetch(index))
+        return get_no_data_value();
+
+      if (!(tile = cache_->source(index)))
+        return get_no_data_value();
+    }
   }
 
   // figure out what row and column we need from the array of data
@@ -473,23 +475,12 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
   std::vector<double> values;
   values.reserve(coords.size());
 
-  // reusable tile
   tile_data tile;
   for (const auto& coord : coords) {
     values.emplace_back(get(coord, tile));
   }
 
   return values;
-}
-
-template <class coord_t> double sample::get_from_cache(const coord_t& coord) {
-  auto tile = cache_->source(get_tile_index(coord));
-  if (!tile)
-    return get_no_data_value();
-
-  double u = (coord.first - std::floor(coord.first)) * (HGT_DIM - 1);
-  double v = (1.0 - (coord.second - std::floor(coord.second))) * (HGT_DIM - 1);
-  return tile.get(u, v);
 }
 
 bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
@@ -514,47 +505,28 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   return cache_->insert(data->first, fpath, data->second);
 }
 
-template <class coord_t> double sample::get_from_remote(const coord_t& coord) {
+bool sample::fetch(uint16_t index) {
   if (url_.empty() || !remote_loader_)
-    return get_no_data_value();
+    return false;
 
-  auto index = get_tile_index(coord);
   auto elev = get_hgt_file_name(index);
   auto uri = baldr::make_single_point_url(url_, elev, remote_path_);
-
-  {
-    std::shared_lock<std::shared_timed_mutex> _(st_lck);
-    if (st_.count(uri))
-      return get_from_cache(coord);
-  }
 
   LOG_INFO("Start loading data from remote server address: " + uri);
   auto result = remote_loader_->get(uri);
 
   if (result.status_ != baldr::tile_getter_t::status_code_t::SUCCESS) {
     LOG_WARN("Fail to load data from remote server address: " + uri);
-    return get_no_data_value();
+    return false;
   }
 
-  {
-    std::lock_guard<std::shared_timed_mutex> _(st_lck);
-    if (!st_.count(uri)) {
-      st_.insert(uri);
-      if (!store(elev, result.bytes_)) {
-        LOG_WARN("Fail to save data loaded from remote server address: " + uri);
-        return get_no_data_value();
-      }
-    }
-  }
-
-  auto res = get_from_cache(coord);
-  if (res == get_no_data_value()) {
-    LOG_WARN("Fail to load data from remote server address: " + uri);
-    return get_no_data_value();
+  if (!store(elev, result.bytes_)) {
+    LOG_WARN("Fail to save data loaded from remote server address: " + uri);
+    return false;
   }
 
   LOG_INFO("Data loaded from remote server address: " + uri);
-  return res;
+  return true;
 }
 
 template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
@@ -573,17 +545,6 @@ template double sample::get<std::pair<double, double>>(const std::pair<double, d
 template double sample::get<std::pair<float, float>>(const std::pair<float, float>&);
 template double sample::get<midgard::PointLL>(const midgard::PointLL&);
 template double sample::get<midgard::Point2>(const midgard::Point2&);
-
-template double sample::get_from_remote<std::pair<double, double>>(const std::pair<double, double>&);
-template double sample::get_from_remote<std::pair<float, float>>(const std::pair<float, float>&);
-template double sample::get_from_remote<midgard::PointLL>(const midgard::PointLL&);
-template double sample::get_from_remote<midgard::Point2>(const midgard::Point2&);
-
-template double
-sample::get_from_cache<std::pair<double, double>>(const std::pair<double, double>& coord);
-template double sample::get_from_cache<std::pair<float, float>>(const std::pair<float, float>& coord);
-template double sample::get_from_cache<midgard::PointLL>(const midgard::PointLL& coord);
-template double sample::get_from_cache<midgard::Point2>(const midgard::Point2& coord);
 
 template std::vector<double>
 sample::get_all<std::list<std::pair<double, double>>>(const std::list<std::pair<double, double>>&);
