@@ -297,6 +297,20 @@ void expect_path(const valhalla::Api& result,
                  const std::vector<std::string>& expected_names,
                  const std::string& message = "");
 
+/**
+ * Tests if a found path traverses the expected edges in the expected order,
+ * and there are more than one valid order
+ * For some cases, different OS gives different output for chinese postman route, but has the same
+ * cost
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_names a list of names of the edges of valid path
+ * @param message the message prints if a test is failed
+ */
+void expect_path_optional(const valhalla::Api& result,
+                          const std::vector<std::vector<std::string>>& expected_names,
+                          const std::string& message = "");
+
 } // namespace raw
 } // namespace assert
 

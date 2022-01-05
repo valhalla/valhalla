@@ -63,6 +63,15 @@ message AvoidEdge {
   }
 }
 
+message ChinesePostmanEdge {
+  oneof has_id {
+    uint64 id = 1;
+  }
+  oneof has_percent_along {
+    float percent_along = 2;
+  }
+}
+
 message CostingOptions {
   oneof has_maneuver_penalty {
     float maneuver_penalty = 1;
@@ -295,6 +304,7 @@ message CostingOptions {
   oneof has_filter_closures {
     bool filter_closures = 93;
   }
+  repeated ChinesePostmanEdge chinese_edges = 94;       // Edges to be visited for chinese postman algorithm
 }
 
 message Options {
@@ -324,6 +334,7 @@ message Options {
     expansion = 9;
     centroid = 10;
     status = 11;
+    chinese_postman = 12;
   }
 
   enum DateTimeType {
@@ -463,4 +474,8 @@ message Options {
     bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
   }
   repeated ExpansionProperties expansion_properties = 51;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+
+  oneof has_chinese_polygon {
+    Ring chinese_polygon = 52;                                      // Polygon to select which roads to be visited on chinese postman
+  }
 }

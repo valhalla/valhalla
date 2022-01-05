@@ -112,9 +112,9 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' '\/chinese_postman' ","status_code":404,"status":"Not Found"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' '\/chinese_postman' ","status_code":404,"status":"Not Found"})"},
     {400,
      R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
     {400,
@@ -372,6 +372,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "expansion",
                                             "centroid",
                                             "status",
+                                            "chinese_postman",
                                         }) {
   auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
                  "loki_service_tmp";

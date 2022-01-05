@@ -45,6 +45,7 @@ constexpr const char* OSRM_SERVER_ERROR = R"({"code":"InvalidUrl","message":"Fai
 constexpr const char* OSRM_DISTANCE_EXCEEDED = R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})";
 constexpr const char* OSRM_PERIMETER_EXCEEDED = R"({"code":"PerimeterExceeded","message":"Perimeter of avoid polygons exceeds the max limit."})";
 constexpr const char* OSRM_BREAKAGE_EXCEEDED = R"({"code":"BreakageDistanceExceeded","message":"All coordinates are too far away from each other"})";
+constexpr const char* OSRM_CHINESE_PERIMETER_EXCEEDED = R"({"code":"ChinesePerimeterExceeded","message":"Perimeter of chinese polygon exceeds the max limit."})";
 
 using ve = valhalla_exception_t;
 const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
@@ -102,6 +103,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {173, {173, "Exceeded maximum circumference for chinese_polygon", 400, HTTP_400, OSRM_CHINESE_PERIMETER_EXCEEDED, "too_large_chinese_polygon"}},
     {199, {199, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -134,6 +136,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {443, {443, "Exact route match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "shape_match_failed"}},
     {444, {444, "Map Match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "map_match_failed"}},
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
+    {450, {450, "Impossible to find chinese postman route on not strongly connected segment.", 400, HTTP_400, OSRM_NO_ROUTE, "no_path"}},
+    {451, {451, "Failed to find the nearest road for origin or destination because they are outside the Chinese polygon or too close to the polygon's edge..", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
 };
@@ -914,6 +918,15 @@ void from_json(rapidjson::Document& doc, Options& options) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
     }
+  }
+
+  // get the avoid chinese polygon in there
+  auto chinese_polygon = rapidjson::get_child_optional(doc, "/chinese_postman_polygon");
+  if (chinese_polygon) {
+    valhalla::Options_Ring* ring_pbf = options.mutable_chinese_polygon();
+    try {
+      parse_ring(ring_pbf, *chinese_polygon);
+    } catch (...) { throw valhalla_exception_t{137}; }
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources

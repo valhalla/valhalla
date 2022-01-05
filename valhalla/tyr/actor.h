@@ -213,6 +213,20 @@ public:
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
 
+  /**
+   * Perform the chinese postman action and return json or protobuf depending on which was requested.
+   * The request may either be in the form of a json string provided by the request_str parameter or
+   * contained in the api parameter as a deserialized protobuf object
+   * @param request_str  json string if json input is being used empty otherwise
+   * @param interrupt    allows the underlying computation to be aborted via the functor throwing
+   * @param api          protobuffer object which can contain the input request via the options object
+   *                     and will be filled out as the request is processed
+   * @return json or pbf bytes depending on what was specified in the options object
+   */
+  std::string chinese_postman(const std::string& request_str,
+                              const std::function<void()>* interrupt = nullptr,
+                              Api* api = nullptr);
+
 protected:
   struct pimpl_t;
   std::shared_ptr<pimpl_t> pimpl;

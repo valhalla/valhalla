@@ -268,7 +268,8 @@ config = {
     'max_radius': 200,
     'max_timedep_distance': 500000,
     'max_alternates': 2,
-    'max_exclude_polygons_length': 10000
+    'max_exclude_polygons_length': 10000,
+    'max_chinese_polygon_length': 10000,
   },
   'statsd': {
     'host': Optional(str),
@@ -536,7 +537,8 @@ help_text = {
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
     'max_alternates': 'Maximum number of alternate routes to allow in a request',
-    'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters'
+    'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
+    'max_chinese_polygon_length': 'Maximum total perimeter of the chinese polygon in meters'
   },
   'statsd': {
     'host': 'The statsd host address',
@@ -589,7 +591,7 @@ def override_config(args_: dict, leaves_: list, config_: dict):
         v = config_
         for k in keys[:-1]:
             v = v[k]
-        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))        
+        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
         if isinstance(v[keys[-1]], type(Optional())):
             del v[keys[-1]]
 

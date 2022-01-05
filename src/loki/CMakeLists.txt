@@ -13,7 +13,8 @@ set(sources
   trace_route_action.cc
   transit_available_action.cc
   node_search.cc
-  polygon_search.cc)
+  polygon_search.cc
+  chinese_postman_action.cc)
 
 if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis

@@ -6,6 +6,8 @@ set(sources
   attributes_controller.cc
   bidirectional_astar.cc
   centroid.cc
+  chinese_postman_action.cc
+  chinese_postman_graph.cc
   costmatrix.cc
   dijkstras.cc
   expansion_action.cc
@@ -26,7 +28,8 @@ set(sources
   triplegbuilder.cc
   triplegbuilder_utils.h
   unidirectional_astar.cc
-  worker.cc)
+  worker.cc
+  ${VALHALLA_SOURCE_DIR}/third_party/hungarian-algorithm-cpp/Hungarian.cpp)
 
 if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
@@ -50,6 +53,7 @@ valhalla_module(NAME thor
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${VALHALLA_SOURCE_DIR}/third_party/hungarian-algorithm-cpp
       ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::proto

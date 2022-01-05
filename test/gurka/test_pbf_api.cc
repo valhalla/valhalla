@@ -36,7 +36,7 @@ TEST(pbf_api, pbf_in_out) {
   for (int action = Options::Action_MIN; action <= Options::Action_MAX; ++action) {
     // don't have convenient support of these in gurka yet
     if (action == Options::sources_to_targets || action == Options::isochrone ||
-        action == Options::expansion)
+        action == Options::expansion || action == Options::chinese_postman)
       continue;
 
     // do the regular request with json in and out
