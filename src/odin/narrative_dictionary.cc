@@ -314,6 +314,11 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate approach_verbal_alert_subset...");
   // Populate approach_verbal_alert_subset
   Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate proceed_to_route_start_subset...");
+  // Populate proceed_to_route_start_subset
+  Load(proceed_to_route_start_subset, narrative_pt.get_child(kProceedToRouteStartKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,

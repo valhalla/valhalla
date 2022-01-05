@@ -1338,6 +1338,13 @@ TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
   validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
+TEST(NarrativeDictionary, test_en_US_proceed_to_route_start) {
+    const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+    const auto& phrase_0 = dictionary.proceed_to_route_start_subset.phrases.at("0");
+    validate(phrase_0, "Proceed to route start.");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

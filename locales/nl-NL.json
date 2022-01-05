@@ -2172,6 +2172,16 @@
           "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
+    },
+    "proceed_to_route_start": {
+      "phrases": {
+        "0": "Proceed to route start."
+      },
+      "example_phrases": {
+        "0": [
+          "Proceed to route start."
+        ]
+      }
     }
   }
 }

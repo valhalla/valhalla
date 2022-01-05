@@ -76,6 +76,7 @@ constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 constexpr auto kApproachVerbalAlertKey = "instructions.approach_verbal_alert";
+constexpr auto kProceedToRouteStartKey = "instructions.proceed_to_route_start";
 constexpr auto kPosixLocaleKey = "posix_locale";
 
 // Variable keys
@@ -361,6 +362,9 @@ public:
 
   // Approach verbal alert
   ApproachVerbalAlertSubset approach_verbal_alert_subset;
+
+  // Proceed to route start
+  PhraseSet proceed_to_route_start_subset;
 
   // Posix locale
   std::string posix_locale;
