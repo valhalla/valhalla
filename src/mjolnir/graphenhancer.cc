@@ -1219,8 +1219,8 @@ void ProcessEdgeTransitions(const uint32_t idx,
     uint32_t left_count = 0;
     if (ntrans > 2) {
       for (uint32_t j = 0; j < ntrans; ++j) {
-        // Skip the from and to edges
-        if (j == i || j == idx) {
+        // Skip the from and to edges; also skip roads under construction
+        if (j == i || j == idx || edges[j].use() == Use::kConstruction) {
           continue;
         }
 
