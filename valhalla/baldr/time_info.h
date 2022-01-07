@@ -74,7 +74,7 @@ struct TimeInfo {
 
     // Find the first edge whose end node has a valid timezone index and keep it
     int timezone_index = 0;
-    for (const auto& pe : location.path_edges()) {
+    for (const auto& pe : location.correlation().edges()) {
       graph_tile_ptr tile;
       const auto* edge = reader.directededge(baldr::GraphId(pe.graph_id()), tile);
       timezone_index = reader.GetTimezone(edge->endnode(), tile);

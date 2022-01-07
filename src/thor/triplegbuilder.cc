@@ -411,16 +411,19 @@ void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
  * @param edge_id   The edge id to keep
  */
 void RemovePathEdges(valhalla::Location* location, const GraphId& edge_id) {
-  auto pos = std::find_if(location->path_edges().begin(), location->path_edges().end(),
-                          [&edge_id](const valhalla::Location::PathEdge& e) {
-                            return e.graph_id() == edge_id;
-                          });
-  if (pos == location->path_edges().end())
+  auto pos =
+      std::find_if(location->correlation().edges().begin(), location->correlation().edges().end(),
+                   [&edge_id](const valhalla::PathEdge& e) { return e.graph_id() == edge_id; });
+  if (pos == location->correlation().edges().end())
     throw std::logic_error("Could not find matching edge candidate");
 
-  if (location->path_edges_size() > 1) {
-    location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
-    location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
+  if (location->correlation().edges_size() > 1) {
+    location->mutable_correlation()
+        ->mutable_edges()
+        ->SwapElements(0, pos - location->correlation().edges().begin());
+    location->mutable_correlation()
+        ->mutable_edges()
+        ->DeleteSubrange(1, location->correlation().edges_size() - 1);
   }
 }
 
@@ -442,11 +445,11 @@ void CopyLocations(TripLeg& trip_path,
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
     // we can grab the right edge index in the path because we temporarily set it for trimming
-    if (!intermediate.has_leg_shape_index_case()) {
+    if (!intermediate.correlation().has_leg_shape_index_case()) {
       throw std::logic_error("leg_shape_index not set for intermediate location");
     }
     RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
-                    (path_begin + intermediate.leg_shape_index())->edgeid);
+                    (path_begin + intermediate.correlation().leg_shape_index())->edgeid);
   }
   // destination
   trip_path.add_location()->CopyFrom(dest);
@@ -1417,7 +1420,7 @@ void TripLegBuilder::Build(
   valhalla::Location::SideOfStreet start_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
-  for (const auto& e : origin.path_edges()) {
+  for (const auto& e : origin.correlation().edges()) {
     if (e.graph_id() == path_begin->edgeid) {
       start_pct = e.percent_along();
       start_sos = e.side_of_street();
@@ -1427,7 +1430,7 @@ void TripLegBuilder::Build(
   }
 
   // Set the origin projected location
-  LatLng* proj_ll = tp_orig->mutable_projected_ll();
+  LatLng* proj_ll = tp_orig->mutable_correlation()->mutable_projected_ll();
   proj_ll->set_lat(start_vrt.lat());
   proj_ll->set_lng(start_vrt.lng());
 
@@ -1441,7 +1444,7 @@ void TripLegBuilder::Build(
   valhalla::Location::SideOfStreet end_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
-  for (const auto& e : dest.path_edges()) {
+  for (const auto& e : dest.correlation().edges()) {
     if (e.graph_id() == (path_end - 1)->edgeid) {
       end_pct = e.percent_along();
       end_sos = e.side_of_street();
@@ -1451,7 +1454,7 @@ void TripLegBuilder::Build(
   }
 
   // Set the destination projected location
-  proj_ll = tp_dest->mutable_projected_ll();
+  proj_ll = tp_dest->mutable_correlation()->mutable_projected_ll();
   proj_ll->set_lat(end_vrt.lat());
   proj_ll->set_lng(end_vrt.lng());
 
@@ -1669,17 +1672,18 @@ void TripLegBuilder::Build(
     // If we are at a node or if we hit the edge index that matches our through location edge index,
     // we need to reset to the shape index then increment the iterator
     if (intermediate_itr != trip_path.mutable_location()->end() &&
-        intermediate_itr->leg_shape_index() == edge_index) {
-      intermediate_itr->set_leg_shape_index(trip_shape.size() - 1);
-      intermediate_itr->set_distance_from_leg_origin(total_distance);
+        intermediate_itr->correlation().leg_shape_index() == edge_index) {
+      intermediate_itr->mutable_correlation()->set_leg_shape_index(trip_shape.size() - 1);
+      intermediate_itr->mutable_correlation()->set_distance_from_leg_origin(total_distance);
       // NOTE:
       // So for intermediate locations that dont have any trimming we know they occur at the node
       // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
       // So here we need to set this one as if it were at the end of the previous edge in the path
       if (trimming == edge_trimming.end() &&
           (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by)) {
-        intermediate_itr->set_leg_shape_index(begin_index);
-        intermediate_itr->set_distance_from_leg_origin(previous_total_distance);
+        intermediate_itr->mutable_correlation()->set_leg_shape_index(begin_index);
+        intermediate_itr->mutable_correlation()->set_distance_from_leg_origin(
+            previous_total_distance);
       }
       ++intermediate_itr;
     }

@@ -15,6 +15,10 @@ message Contour {
   }
 }
 
+message Ring {
+  repeated LatLng coords = 1;
+}
+
 enum ShapeMatch {
   walk_or_snap = 0;
   edge_walk = 1;
@@ -331,10 +335,6 @@ message Options {
     depart_at = 1;
     arrive_by = 2;
     invariant = 3;
-  }
-
-  message Ring {
-    repeated LatLng coords = 1;
   }
 
   enum ExpansionProperties {

@@ -26,8 +26,9 @@ float kAtMostShared = 0.75f; // sharing threshold
 namespace valhalla {
 namespace thor {
 float get_max_sharing(const valhalla::Location& origin, const valhalla::Location& destination) {
-  PointLL from(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL to(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  PointLL from(origin.correlation().edges(0).ll().lng(), origin.correlation().edges(0).ll().lat());
+  PointLL to(destination.correlation().edges(0).ll().lng(),
+             destination.correlation().edges(0).ll().lat());
   float distance = from.Distance(to);
 
   // 10km

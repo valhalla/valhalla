@@ -888,7 +888,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
   std::vector<int> actual_path_edge_sizes;
   actual_path_edge_sizes.reserve(api.options().locations_size());
   for (int i = 0; i < api.options().locations_size(); i++) {
-    actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
+    actual_path_edge_sizes.emplace_back(api.options().locations(i).correlation().edges().size());
   }
   ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
 }

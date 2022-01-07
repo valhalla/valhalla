@@ -455,7 +455,7 @@ void parse_locations(const rapidjson::Document& doc,
     if (request_locations) {
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
-        loc->set_original_index(locations->size() - 1);
+        loc->mutable_correlation()->set_original_index(locations->size() - 1);
         parse_location(loc, r_loc, options, ignore_closures);
         had_date_time = had_date_time || loc->has_date_time_case();
         // turn off filtering closures when any locations search filter allows closures
@@ -465,7 +465,7 @@ void parse_locations(const rapidjson::Document& doc,
     else if (!locations->empty()) {
       int i = 0;
       for (auto& loc : *locations) {
-        loc.set_original_index(i++);
+        loc.mutable_correlation()->set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
         had_date_time = had_date_time || loc.has_date_time_case();
         // turn off filtering closures when any locations search filter allows closures

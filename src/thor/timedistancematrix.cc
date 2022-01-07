@@ -10,9 +10,9 @@ namespace {
 static bool IsTrivial(const uint64_t& edgeid,
                       const valhalla::Location& origin,
                       const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.path_edges()) {
+  for (const auto& destination_edge : destination.correlation().edges()) {
     if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.path_edges()) {
+      for (const auto& origin_edge : origin.correlation().edges()) {
         if (origin_edge.graph_id() == edgeid &&
             origin_edge.percent_along() <= destination_edge.percent_along()) {
           return true;
@@ -430,13 +430,13 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
                                             const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
@@ -487,7 +487,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
 void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                                             const valhalla::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
     if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
@@ -546,7 +546,7 @@ void TimeDistanceMatrix::SetDestinations(
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
       // Disallow any user avoided edges if the avoid location is behind the destination along the
       // edge
       GraphId edgeid(edge.graph_id());
@@ -595,7 +595,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
       // Get the opposing directed edge Id - this is the edge marked as the "destination",
       // but the cost is based on the forward path along the initial edge.
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(static_cast<GraphId>(edge.graph_id()));

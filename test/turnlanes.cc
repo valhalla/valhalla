@@ -39,6 +39,17 @@
 //    (*request.mutable_options()->mutable_costing_options())[co.first].Swap(&co.second);
 //  }
 //
+//  for (auto& route : *request.mutable_trip()->mutable_routes()) {
+//    for (auto& leg : *route.mutable_legs()) {
+//      for (auto& loc : *leg.mutable_location()) {
+//        loc.clear_correlation();
+//        auto* edge = loc.mutable_correlation()->add_edges();
+//        edge->mutable_ll()->set_lat(loc.ll().lat());
+//        edge->mutable_ll()->set_lng(loc.ll().lng());
+//      }
+//    }
+//  }
+//
 //  std::ofstream f(filename);
 //  auto buf = request.SerializeAsString();
 //  f.write(buf.data(), buf.size());

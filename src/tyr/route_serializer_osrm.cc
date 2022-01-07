@@ -400,7 +400,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
-    return locs.Get(a).original_index() < locs.Get(b).original_index();
+    return locs.Get(a).correlation().original_index() < locs.Get(b).correlation().original_index();
   });
 
   // Output each location in its original index order along with its
