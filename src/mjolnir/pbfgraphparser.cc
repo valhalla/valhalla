@@ -3165,7 +3165,8 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Since the sequence is flushed, we can read the whole bss_nodes_file
-  LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) + " bss nodes...");
+  LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) +
+           " bss nodes...");
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
