@@ -3154,7 +3154,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                     new sequence<OSMNode>(bss_nodes_file, true));
+                     new sequence<OSMNode>(bss_nodes_file, false));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
     }
