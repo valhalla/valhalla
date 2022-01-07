@@ -684,8 +684,8 @@ int main(int argc, char* argv[]) {
       } else {
         // Use bidirectional except for trivial cases (same edge or connected edges)
         pathalgorithm = &bd;
-        for (auto& edge1 : origin.path_edges()) {
-          for (auto& edge2 : dest.path_edges()) {
+        for (auto& edge1 : origin.correlation().edges()) {
+          for (auto& edge2 : dest.correlation().edges()) {
             if (edge1.graph_id() == edge2.graph_id() ||
                 reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
               pathalgorithm = &timedep_forward;
