@@ -3157,12 +3157,15 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, create));
-      create = false;
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
+      create = false;
     }
   }
   callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+  // Since the sequence is flushed, we can read the whole bss_nodes_file
+  LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) + " bss nodes...");
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
