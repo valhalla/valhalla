@@ -50,6 +50,7 @@
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
    * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
    * CHANGED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
+   * CHANGED: valhalla.h and config.h don't need cmake configuration [#3502](https://github.com/valhalla/valhalla/pull/3502)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
