@@ -19,7 +19,8 @@
    * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
    * FIXED: valhalla_service uses now loki logging config instead of deprecated tyr logging [#3481](https://github.com/valhalla/valhalla/pull/3481)
    * FIXED: Docker image `valhalla/valhalla:run-latest`: conan error + python integration [#3485](https://github.com/valhalla/valhalla/pull/3485)
-
+   * FIXED: Fix bss import only last osm [#3503](https://github.com/valhalla/valhalla/pull/3503)
+   
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
