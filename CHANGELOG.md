@@ -19,7 +19,10 @@
    * FIXED: Stopped putting binary bytes into a string field of the protobuf TaggedValue since proto3 protects against that for cross language support [#3468](https://github.com/valhalla/valhalla/pull/3468)
    * FIXED: valhalla_service uses now loki logging config instead of deprecated tyr logging [#3481](https://github.com/valhalla/valhalla/pull/3481)
    * FIXED: Docker image `valhalla/valhalla:run-latest`: conan error + python integration [#3485](https://github.com/valhalla/valhalla/pull/3485)
-
+   * FIXED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
+   * FIXED: fix one more protobuf unstable 3.x API [#3501](https://github.com/valhalla/valhalla/pull/3501)
+   * FIXED: Fix valhalla_build_tiles imports only bss from last osm file [#3503](https://github.com/valhalla/valhalla/pull/3503)
+   
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
@@ -50,8 +53,8 @@
    * CHANGED: Reuse sample::get implementation [#3471](https://github.com/valhalla/valhalla/pull/3471)
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
    * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
-   * CHANGED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
-
+   * ADDED: Add JSON generator to conan [#3493)(https://github.com/valhalla/valhalla/pull/3493)
+   
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
 * **Bug Fix**
