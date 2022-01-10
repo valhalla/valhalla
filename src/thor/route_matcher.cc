@@ -441,11 +441,11 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // go find the edge candidate that was actually used in the path
           auto found_edge = destination.correlation().edges().end();
           if (n->second.first.end_node()) {
-            found_edge =
-                std::find_if(destination.correlation().edges().begin(), destination.correlation().edges().end(),
-                             [&path_infos](const auto& e) -> bool {
-                               return e.graph_id() == path_infos.back().edgeid;
-                             });
+            found_edge = std::find_if(destination.correlation().edges().begin(),
+                                      destination.correlation().edges().end(),
+                                      [&path_infos](const auto& e) -> bool {
+                                        return e.graph_id() == path_infos.back().edgeid;
+                                      });
             if (found_edge == destination.correlation().edges().end()) {
               throw std::logic_error("Could not find destination candidate in shape-walked path");
             }
@@ -456,7 +456,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           const auto& end_edge =
               found_edge == destination.correlation().edges().end() ? n->second.first : *found_edge;
           options.mutable_shape(0)->mutable_correlation()->mutable_edges()->Add()->CopyFrom(edge);
-          options.mutable_shape()->rbegin()->mutable_correlation()->mutable_edges()->Add()->CopyFrom(end_edge);
+          options.mutable_shape()->rbegin()->mutable_correlation()->mutable_edges()->Add()->CopyFrom(
+              end_edge);
 
           // If the end edge is at a node then we are done (no partial time along a destination edge)
           if (end_edge.end_node()) {
