@@ -52,10 +52,8 @@
    * CHANGED: Reuse sample::get implementation [#3471](https://github.com/valhalla/valhalla/pull/3471)
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
    * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
-   * CHANGED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
+   * ADDED: Add JSON generator to conan [#3493](https://github.com/valhalla/valhalla/pull/3493)
    * CHANGED: Refactor options protobuf for Location and Costing objects [#3506](https://github.com/valhalla/valhalla/pull/3506)
-
-   * ADDED: Add JSON generator to conan [#3493)(https://github.com/valhalla/valhalla/pull/3493)
    
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
