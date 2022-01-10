@@ -565,39 +565,17 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::motorcycle);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                                CostingOptions* co) {
+  co->set_costing(Costing::motorcycle);
+  co->set_name(Costing_Enum_Name(co->costing()));
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-
-    // use_trails
-    pbf_costing_options->set_use_trails(
-        kUseTrailsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
-                            .get_value_or(kDefaultUseTrails)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_use_trails(kDefaultUseTrails);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-  }
+  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
 }
 
 cost_ptr_t CreateMotorcycleCost(const CostingOptions& costing_options) {
@@ -637,7 +615,7 @@ TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, f
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorcycleCost(
-      request.options().costing_options(static_cast<int>(Costing::motorcycle)));
+      request.options().costing_options().find(Costing::motorcycle)->second);
 }
 
 template <typename T>

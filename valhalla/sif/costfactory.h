@@ -69,8 +69,9 @@ public:
 
     // create the cost using the creation function
     auto costing_index = static_cast<int>(options.costing());
-    if (costing_index < options.costing_options_size()) {
-      return Create(options.costing_options(costing_index));
+    auto found = options.costing_options().find(costing_index);
+    if (found != options.costing_options().end()) {
+      return Create(found->second);
     } // if we didnt have costing options we need to use some default ones
     else {
       throw std::runtime_error("No costing options provided to cost factory");
@@ -113,10 +114,10 @@ public:
         options.costing() == Costing::bikeshare) {
       // For multi-modal we construct costing for all modes and set the
       // initial mode to pedestrian. (TODO - allow other initial modes)
-      mode_costing[0] = Create(options.costing_options(static_cast<int>(Costing::auto_)));
-      mode_costing[1] = Create(options.costing_options(static_cast<int>(Costing::pedestrian)));
-      mode_costing[2] = Create(options.costing_options(static_cast<int>(Costing::bicycle)));
-      mode_costing[3] = Create(options.costing_options(static_cast<int>(Costing::transit)));
+      mode_costing[0] = Create(options.costing_options().find(Costing::auto_)->second);
+      mode_costing[1] = Create(options.costing_options().find(Costing::pedestrian)->second);
+      mode_costing[2] = Create(options.costing_options().find(Costing::bicycle)->second);
+      mode_costing[3] = Create(options.costing_options().find(Costing::transit)->second);
       mode = valhalla::sif::TravelMode::kPedestrian;
     } else {
       valhalla::sif::cost_ptr_t cost = Create(options);

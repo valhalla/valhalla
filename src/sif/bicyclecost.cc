@@ -838,83 +838,41 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseBicycleCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::bicycle);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                             CostingOptions* co) {
+  co->set_costing(Costing::bicycle);
+  co->set_name(Costing_Enum_Name(co->costing()));
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
+  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kUseRoadRange, json, "/use_roads", use_roads);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
+  JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces",
+                          avoid_bad_surfaces);
+  JSON_PBF_DEFAULT(co, kDefaultBicycleType, json, "/bicycle_type", transport_type);
 
-    // use_roads
-    pbf_costing_options->set_use_roads(
-        kUseRoadRange(rapidjson::get_optional<float>(*json_costing_options, "/use_roads")
-                          .get_value_or(kDefaultUseRoad)));
-
-    // use_hills
-    pbf_costing_options->set_use_hills(
-        kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
-                           .get_value_or(kDefaultUseHills)));
-
-    // avoid_bad_surfaces
-    pbf_costing_options->set_avoid_bad_surfaces(kAvoidBadSurfacesRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/avoid_bad_surfaces")
-            .get_value_or(kDefaultAvoidBadSurfaces)));
-
-    // bicycle_type
-    pbf_costing_options->set_transport_type(
-        rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
-            .get_value_or(kDefaultBicycleType));
-
-    // convert string to enum, set ranges and defaults based on enum
-    BicycleType type;
-    if (pbf_costing_options->transport_type() == "Cross") {
-      type = BicycleType::kCross;
-    } else if (pbf_costing_options->transport_type() == "Road") {
-      type = BicycleType::kRoad;
-    } else if (pbf_costing_options->transport_type() == "Mountain") {
-      type = BicycleType::kMountain;
-    } else {
-      type = BicycleType::kHybrid;
-    }
-
-    // This is the average speed on smooth, flat roads. If not present or outside the
-    // valid range use a default speed based on the bicycle type.
-    uint32_t t = static_cast<uint32_t>(type);
-    ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
-                                             kMaxCyclingSpeed};
-
-    // Set type specific defaults, override with URL inputs
-    // cycling_speed
-    pbf_costing_options->set_cycling_speed(
-        kCycleSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/cycling_speed")
-                             .get_value_or(kDefaultCyclingSpeed[t])));
-
-    // bss rent cost
-    pbf_costing_options->set_bike_share_cost(
-        kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_return_cost")
-                          .get_value_or(kDefaultBssCost)));
-
-    pbf_costing_options->set_bike_share_penalty(kBSSPenaltyRange(
-        rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_return_penalty")
-            .get_value_or(kDefaultBssPenalty)));
+  // convert string to enum, set ranges and defaults based on enum
+  BicycleType type;
+  if (co->transport_type() == "Cross") {
+    type = BicycleType::kCross;
+  } else if (co->transport_type() == "Road") {
+    type = BicycleType::kRoad;
+  } else if (co->transport_type() == "Mountain") {
+    type = BicycleType::kMountain;
   } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_use_roads(kDefaultUseRoad);
-    pbf_costing_options->set_use_hills(kDefaultUseHills);
-    pbf_costing_options->set_avoid_bad_surfaces(kDefaultAvoidBadSurfaces);
-    pbf_costing_options->set_transport_type(kDefaultBicycleType);
-    pbf_costing_options->set_cycling_speed(
-        kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
-    pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+    type = BicycleType::kHybrid;
   }
+
+  // This is the average speed on smooth, flat roads. If not present or outside the
+  // valid range use a default speed based on the bicycle type.
+  uint32_t t = static_cast<uint32_t>(type);
+  ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
+                                           kMaxCyclingSpeed};
+
+  JSON_PBF_RANGED_DEFAULT(co, kCycleSpeedRange, json, "/cycling_speed", cycling_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kBSSCostRange, json, "/bss_return_cost", bike_share_cost);
+  JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_return_penalty", bike_share_penalty);
 }
 
 cost_ptr_t CreateBicycleCost(const CostingOptions& costing_options) {
@@ -951,7 +909,7 @@ TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float t
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestBicycleCost(request.options().costing_options(static_cast<int>(Costing::bicycle)));
+  return new TestBicycleCost(request.options().costing_options().find(Costing::bicycle)->second);
 }
 
 std::uniform_real_distribution<float>*

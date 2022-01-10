@@ -218,12 +218,13 @@ TEST(AutoDataFix, deprecation) {
   ParseApi(request_str, Options::route, request);
 
   EXPECT_EQ(request.options().costing(), valhalla::auto_);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  const auto& co = request.options().costing_options().find(valhalla::auto_)->second;
+  EXPECT_EQ(co.ignore_access(), true);
+  EXPECT_EQ(co.ignore_closures(), true);
+  EXPECT_EQ(co.ignore_oneways(), true);
+  EXPECT_EQ(co.ignore_restrictions(), true);
+  EXPECT_EQ(co.use_ferry(), 0.1f);
+  EXPECT_EQ(co.use_tolls(), 0.77f);
 }
 
 /*************************************************************/

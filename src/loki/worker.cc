@@ -87,9 +87,9 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   if (options.exclude_polygons_size()) {
     const auto edges =
         edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
-    auto* co = options.mutable_costing_options(options.costing());
+    auto& co = options.mutable_costing_options()->find(options.costing())->second;
     for (const auto& edge_id : edges) {
-      auto* avoid = co->add_exclude_edges();
+      auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
       avoid->set_percent_along(0);
@@ -106,7 +106,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
       auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
-      auto* co = options.mutable_costing_options(options.costing());
+      auto& co = options.mutable_costing_options()->find(options.costing())->second;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
@@ -115,7 +115,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = co->add_exclude_edges();
+            auto* avoid = co.add_exclude_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -128,7 +128,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid_shortcut = co->add_exclude_edges();
+                auto* avoid_shortcut = co.add_exclude_edges();
                 avoid_shortcut->set_id(shortcut);
                 avoid_shortcut->set_percent_along(0);
               }
@@ -335,10 +335,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     }
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error(e, info, request);
+    result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error({199, std::string(e.what())}, info, request);
+    result = serialize_error({199, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client
