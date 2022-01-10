@@ -105,7 +105,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  MotorcycleCost(const CostingOptions& costing_options);
+  MotorcycleCost(const Costing& costing_options);
 
   virtual ~MotorcycleCost();
 
@@ -278,16 +278,18 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kMotorcycleAccess),
+MotorcycleCost::MotorcycleCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kMotorcycleAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+
+  const auto& costing_options = costing.options();
 
   // Vehicle type is motorcycle
   type_ = VehicleType::kMotorcycle;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
@@ -567,20 +569,21 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                CostingOptions* co) {
-  co->set_costing(Costing::motorcycle);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                                Costing* c) {
+  c->set_type(Costing::motorcycle);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
 }
 
-cost_ptr_t CreateMotorcycleCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
   return std::make_shared<MotorcycleCost>(costing_options);
 }
 
@@ -598,7 +601,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const CostingOptions& costing_options) : MotorcycleCost(costing_options){};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
@@ -616,8 +619,7 @@ TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, f
   ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorcycleCost(
-      request.options().costing_options().find(Costing::motorcycle)->second);
+  return new TestMotorcycleCost(request.options().costings().find(Costing::motorcycle)->second);
 }
 
 template <typename T>

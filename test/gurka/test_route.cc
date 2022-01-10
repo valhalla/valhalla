@@ -217,8 +217,8 @@ TEST(AutoDataFix, deprecation) {
       R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
   ParseApi(request_str, Options::route, request);
 
-  EXPECT_EQ(request.options().costing(), valhalla::auto_);
-  const auto& co = request.options().costing_options().find(valhalla::auto_)->second;
+  EXPECT_EQ(request.options().costing_type(), Costing::auto_);
+  const auto& co = request.options().costings().find(Costing::auto_)->second.options();
   EXPECT_EQ(co.ignore_access(), true);
   EXPECT_EQ(co.ignore_closures(), true);
   EXPECT_EQ(co.ignore_oneways(), true);

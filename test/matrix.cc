@@ -30,8 +30,7 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options)
-      : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
+  SimpleCost(const Costing& options) : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
@@ -117,7 +116,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
+cost_ptr_t CreateSimpleCost(const Costing& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
@@ -159,7 +158,7 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
       for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
                                location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
@@ -229,7 +228,7 @@ TEST(Matrix, test_matrix) {
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
-      CreateSimpleCost(request.options().costing_options().find(request.options().costing())->second);
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results =
@@ -273,7 +272,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
-      CreateSimpleCost(request.options().costing_options().find(request.options().costing())->second);
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;

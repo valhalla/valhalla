@@ -63,7 +63,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  TransitCost(const CostingOptions& costing_options);
+  TransitCost(const Costing& costing_options);
 
   virtual ~TransitCost();
 
@@ -309,8 +309,9 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPublicTransit, kPedestrianAccess) {
+TransitCost::TransitCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kPublicTransit, kPedestrianAccess) {
+  const auto& costing_options = costing.options();
 
   mode_factor_ = costing_options.mode_factor();
 
@@ -625,9 +626,10 @@ uint32_t TransitCost::UnitSize() const {
 
 void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             CostingOptions* co) {
-  co->set_costing(Costing::transit);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                             Costing* c) {
+  c->set_type(Costing::transit);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
@@ -696,7 +698,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTransitCost(const Costing& costing_options) {
   return std::make_shared<TransitCost>(costing_options);
 }
 
@@ -717,7 +719,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TransitCost(request.options().costing_options().find(Costing::transit)->second);
+  return new TransitCost(request.options().costings().find(Costing::transit)->second);
 }
 
 std::uniform_real_distribution<float>*

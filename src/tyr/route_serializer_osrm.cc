@@ -230,9 +230,9 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fixed_t{duration, 3});
 
   route->emplace("weight", json::fixed_t{weight, 3});
-  assert(api.options().costing_options().find(api.options().costing())->second.has_name_case());
+  assert(api.options().costings().find(api.options().costing_type())->second.has_name_case());
   route->emplace("weight_name",
-                 api.options().costing_options().find(api.options().costing())->second.name());
+                 api.options().costings().find(api.options().costing_type())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {

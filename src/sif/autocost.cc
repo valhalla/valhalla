@@ -138,7 +138,7 @@ public:
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
+  AutoCost(const Costing& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
 
   virtual ~AutoCost() {
   }
@@ -346,10 +346,11 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
-    : DynamicCost(costing_options, TravelMode::kDrive, access_mask, true),
+AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
+    : DynamicCost(costing, TravelMode::kDrive, access_mask, true),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+  const auto& costing_options = costing.options();
 
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
@@ -370,7 +371,7 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   }
 
   // Get the base transition costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Get alley factor from costing options.
   alley_factor_ = costing_options.alley_factor();
@@ -687,14 +688,15 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* co) {
-  co->set_costing(Costing::auto_);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                          Costing* c) {
+  c->set_type(Costing::auto_);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
@@ -709,7 +711,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
 }
 
-cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateAutoCost(const Costing& costing_options) {
   return std::make_shared<AutoCost>(costing_options);
 }
 
@@ -723,7 +725,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options, kBusAccess) {
+  BusCost(const Costing& costing_options) : AutoCost(costing_options, kBusAccess) {
     type_ = VehicleType::kBus;
   }
 
@@ -835,13 +837,13 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         CostingOptions* costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, costing_options);
-  costing_options->set_costing(Costing::bus);
-  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
+                         Costing* c) {
+  ParseAutoCostOptions(doc, costing_options_key, c);
+  c->set_type(Costing::bus);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateBusCost(const Costing& costing_options) {
   return std::make_shared<BusCost>(costing_options);
 }
 
@@ -856,7 +858,7 @@ public:
    * Pass in costing_options using protocol buffer(pbf).
    * @param  costing_options  pbf with costing_options.
    */
-  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options, kTaxiAccess) {
+  TaxiCost(const Costing& costing_options) : AutoCost(costing_options, kTaxiAccess) {
   }
 
   virtual ~TaxiCost() {
@@ -1012,13 +1014,13 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, costing_options);
-  costing_options->set_costing(Costing::taxi);
-  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
+                          Costing* c) {
+  ParseAutoCostOptions(doc, costing_options_key, c);
+  c->set_type(Costing::taxi);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTaxiCost(const Costing& costing_options) {
   return std::make_shared<TaxiCost>(costing_options);
 }
 
@@ -1036,7 +1038,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const CostingOptions& costing_options) : AutoCost(costing_options){};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
@@ -1060,8 +1062,7 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
      << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return std::make_shared<TestAutoCost>(
-      request.options().costing_options().find(Costing::auto_)->second);
+  return std::make_shared<TestAutoCost>(request.options().costings().find(Costing::auto_)->second);
 }
 
 std::uniform_real_distribution<float>

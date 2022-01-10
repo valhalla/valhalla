@@ -489,7 +489,7 @@ void parse_locations(const rapidjson::Document& doc,
     // we tell the costing to let all closed roads through, so that we can do
     // a secondary per-location filtering using loki's search_filter
     // functionality. Otherwise we default to skipping closed roads
-    for (auto& costing : *options.mutable_costing_options()) {
+    for (auto& costing : *options.mutable_costings()) {
       costing.second.set_filter_closures(filter_closures);
     }
   }
@@ -650,8 +650,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
       throw valhalla_exception_t{162};
     options.set_date_time(date_time_value);
   } // not specified but you want transit, then we default to current
-  else if (options.has_costing_case() &&
-           (options.costing() == multimodal || options.costing() == transit)) {
+  else if (options.has_costing_type_case() && (options.costing_type() == Costing::multimodal ||
+                                               options.costing_type() == Costing::transit)) {
     options.set_date_time_type(Options::current);
     options.set_date_time("current");
   }
@@ -660,7 +660,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (options.has_date_time_type_case()) {
     if (options.date_time_type() == Options::arrive_by ||
         options.date_time_type() == Options::invariant) {
-      if (options.costing() == multimodal || options.costing() == transit)
+      if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
         throw valhalla_exception_t{141};
       if (options.action() == Options::isochrone)
         throw valhalla_exception_t{142};
@@ -741,10 +741,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto ignore_closures = costing_str != "multimodal"
                              ? rapidjson::get_optional<bool>(doc, ss.str().c_str())
                              : boost::none;
-  if (options.has_costing_case()) {
-    for (const auto& co : options.costing_options()) {
-      if (co.second.costing() == options.costing() && co.second.has_ignore_closures_case()) {
-        ignore_closures = co.second.ignore_closures();
+  if (options.has_costing_type_case()) {
+    for (const auto& co : options.costings()) {
+      if (co.second.type() == options.costing_type() &&
+          co.second.options().has_ignore_closures_case()) {
+        ignore_closures = co.second.options().ignore_closures();
         break;
       }
     }
@@ -856,16 +857,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
   options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
 
   // set the costing if it wasn't already set
-  Costing costing;
-  if (!options.has_costing_case() && valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-    options.set_costing(costing);
+  Costing::Type costing;
+  if (!options.has_costing_type_case() && valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing_type(costing);
   }
-  if (!options.has_costing_case()) {
+  if (!options.has_costing_type_case()) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
   // Parse all of the costing options in their specified order
-  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options);
 
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
@@ -873,7 +874,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCostingOptions(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings());
       if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
       }
@@ -919,9 +920,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type_case() &&
       (options.shape_size() == 0 || options.shape(0).time() == -1)) {
-    for (auto& costing : *options.mutable_costing_options()) {
-      costing.second.set_flow_mask(
-          static_cast<uint8_t>(costing.second.flow_mask()) &
+    for (auto& costing : *options.mutable_costings()) {
+      costing.second.mutable_options()->set_flow_mask(
+          static_cast<uint8_t>(costing.second.options().flow_mask()) &
           ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }

@@ -164,7 +164,7 @@ void loki_worker_t::trace(Api& request) {
   auto _ = measure_scope_time(request);
 
   init_trace(request);
-  if (request.options().costing() == Costing::multimodal) {
+  if (request.options().costing_type() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
   };
 }

@@ -21,7 +21,7 @@
 
 // this is useful when you modify the Options proto and need to restore it
 //#include "worker.h"
-//void fix_request(const std::string& filename, valhalla::Api& request) {
+// void fix_request(const std::string& filename, valhalla::Api& request) {
 //  auto txt = filename;
 //  txt.replace(txt.size() - 3, 3, "txt");
 //  std::string req_txt = test::load_binary_file(txt);
@@ -31,21 +31,9 @@
 //
 //  valhalla::Api api;
 //  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
-//  request.mutable_options()->clear_costing_options();
-//  for (auto& co : *api.mutable_options()->mutable_costing_options()) {
-//    (*request.mutable_options()->mutable_costing_options())[co.first].Swap(&co.second);
-//  }
-//
-//  for (auto& route : *request.mutable_trip()->mutable_routes()) {
-//    for (auto& leg : *route.mutable_legs()) {
-//      for (auto& loc : *leg.mutable_location()) {
-//        loc.clear_correlation();
-//        auto* edge = loc.mutable_correlation()->add_edges();
-//        edge->mutable_ll()->set_lat(loc.ll().lat());
-//        edge->mutable_ll()->set_lng(loc.ll().lng());
-//      }
-//    }
-//  }
+//  request.mutable_options()->set_costing_type(api.options().costing_type());
+//  request.mutable_options()->clear_costings();
+//  request.mutable_options()->mutable_costings()->swap(*api.mutable_options()->mutable_costings());
 //
 //  std::ofstream f(filename);
 //  auto buf = request.SerializeAsString();
@@ -74,7 +62,7 @@ void test_instructions(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
-  //fix_request(filename, request);
+  // fix_request(filename, request);
 
   // Build the directions
   valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
@@ -145,7 +133,7 @@ void test_osrm_maneuver(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
-  //fix_request(filename, request);
+  // fix_request(filename, request);
 
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
@@ -192,7 +180,7 @@ void test_osrm_destinations(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
-  //fix_request(filename, request);
+  // fix_request(filename, request);
 
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);

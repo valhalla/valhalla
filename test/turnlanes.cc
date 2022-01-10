@@ -34,21 +34,9 @@
 //
 //  valhalla::Api api;
 //  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
-//  request.mutable_options()->clear_costing_options();
-//  for (auto& co : *api.mutable_options()->mutable_costing_options()) {
-//    (*request.mutable_options()->mutable_costing_options())[co.first].Swap(&co.second);
-//  }
-//
-//  for (auto& route : *request.mutable_trip()->mutable_routes()) {
-//    for (auto& leg : *route.mutable_legs()) {
-//      for (auto& loc : *leg.mutable_location()) {
-//        loc.clear_correlation();
-//        auto* edge = loc.mutable_correlation()->add_edges();
-//        edge->mutable_ll()->set_lat(loc.ll().lat());
-//        edge->mutable_ll()->set_lng(loc.ll().lng());
-//      }
-//    }
-//  }
+//  request.mutable_options()->set_costing_type(api.options().costing_type());
+//  request.mutable_options()->clear_costings();
+//  request.mutable_options()->mutable_costings()->swap(*api.mutable_options()->mutable_costings());
 //
 //  std::ofstream f(filename);
 //  auto buf = request.SerializeAsString();

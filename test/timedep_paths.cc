@@ -59,7 +59,7 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
       for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
                                location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
