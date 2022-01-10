@@ -447,7 +447,11 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
 
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
-    if (!(tile = cache_->source(index))) {
+    {
+      std::lock_guard<std::mutex> _(cache_lck);
+      tile = cache_->source(index);
+    }
+    if (!tile) {
       if (!fetch(index))
         return get_no_data_value();
 

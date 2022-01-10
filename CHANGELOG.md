@@ -63,8 +63,6 @@
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
    * ADDED: Add JSON generator to conan [#3493)(https://github.com/valhalla/valhalla/pull/3493)
-   
-   * CHANGED: fix more protobuf unstable 3.x API [#3494](https://github.com/valhalla/valhalla/pull/3494)
    * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
