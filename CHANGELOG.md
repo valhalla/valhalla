@@ -48,6 +48,7 @@
    * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
    * ADDED: Add `include_construction` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
+   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460)(https://github.com/valhalla/valhalla/pull/3460)
    * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457](https://github.com/valhalla/valhalla/pull/3457)
    * CHANGED: Allow up to 32 outgoing link edges on a node when reclassifying links [#3483](https://github.com/valhalla/valhalla/pull/3483)
    * CHANGED: Reuse sample::get implementation [#3471](https://github.com/valhalla/valhalla/pull/3471)
