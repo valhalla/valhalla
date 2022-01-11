@@ -436,9 +436,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] + speed_penalty;
+  float factor = density_factor_[edge->density()] +
+                 SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }

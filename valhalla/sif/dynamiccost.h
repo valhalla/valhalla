@@ -863,6 +863,25 @@ public:
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
+  float SpeedPenalty(const baldr::DirectedEdge* edge,
+                     const graph_tile_ptr& tile,
+                     const baldr::TimeInfo& time_info,
+                     uint8_t flow_sources,
+                     float edge_speed) const {
+    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    float average_edge_speed = edge_speed;
+    // dont use current speed layer for penalties as live speeds might be too low/too high
+    // better to use layers with smoothed/constant speeds
+    if (top_speed_ != baldr::kMaxAssumedSpeed && (flow_sources & baldr::kCurrentFlowMask)) {
+      average_edge_speed =
+          tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
+    }
+    float speed_penalty =
+        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+
+    return speed_penalty;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
