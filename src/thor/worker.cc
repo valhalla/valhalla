@@ -225,7 +225,7 @@ void run_service(const boost::property_tree::ptree& config) {
 std::string thor_worker_t::parse_costing(const Api& request) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
-  auto costing = options.costing();
+  auto costing = options.costing_type();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
   return costing_str;
@@ -238,7 +238,8 @@ void thor_worker_t::parse_locations(Api& request) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
           if (location.skip_ranking_candidates()) {
@@ -255,8 +256,9 @@ void thor_worker_t::parse_locations(Api& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
           if (candidate.distance() > max_score->second) {

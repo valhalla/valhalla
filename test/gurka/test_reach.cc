@@ -123,12 +123,12 @@ TEST_F(TestReach, ReachWithNoClosures) {
   // - flow mask: "default" (includes current) to consider live speeds
   // - filter_closures: disable filter closed edges
   sif::CostFactory factory;
-  CostingOptions co;
-  co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
-  co.set_filter_closures(false);
+  Costing c;
+  c.set_type(Costing::auto_);
+  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.set_filter_closures(false);
 
-  auto costing = factory.Create(co);
+  auto costing = factory.Create(c);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
 
   // check its reach
@@ -158,13 +158,13 @@ TEST_F(TestReach, ReachWithClosures) {
   sif::CostFactory factory;
   loki::Reach reach_checker;
 
-  CostingOptions co;
-  co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
-  co.set_filter_closures(true);
+  Costing c;
+  c.set_type(Costing::auto_);
+  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.set_filter_closures(true);
   // Check reach for AB - enclosed by closures, so reach should be 0
   {
-    auto costing = factory.Create(co);
+    auto costing = factory.Create(c);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -174,7 +174,7 @@ TEST_F(TestReach, ReachWithClosures) {
   }
   // Check reach for HI - open, but reduced reach without ignoring closures
   {
-    auto costing = factory.Create(co);
+    auto costing = factory.Create(c);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "H", "I");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -184,8 +184,8 @@ TEST_F(TestReach, ReachWithClosures) {
 
   // Check reach for AB ignoring closures
   {
-    co.set_filter_closures(false);
-    auto costing = factory.Create(co);
+    c.set_filter_closures(false);
+    auto costing = factory.Create(c);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -194,8 +194,8 @@ TEST_F(TestReach, ReachWithClosures) {
   }
   // Check reach for HI ignoring closures
   {
-    co.set_filter_closures(false);
-    auto costing = factory.Create(co);
+    c.set_filter_closures(false);
+    auto costing = factory.Create(c);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "H", "I");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -219,11 +219,11 @@ TEST_F(TestReach, DISABLED_ReachWithClosures2) {
   sif::CostFactory factory;
   loki::Reach reach_checker;
 
-  CostingOptions co;
-  co.set_costing(valhalla::auto_);
-  co.set_flow_mask(kDefaultFlowMask);
-  co.set_filter_closures(false);
-  auto costing = factory.Create(co);
+  Costing c;
+  c.set_type(Costing::auto_);
+  c.mutable_options()->set_flow_mask(kDefaultFlowMask);
+  c.set_filter_closures(false);
+  auto costing = factory.Create(c);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "K", "L");
   auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 

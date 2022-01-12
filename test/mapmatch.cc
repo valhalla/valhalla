@@ -223,8 +223,8 @@ TEST(Mapmatch, test_matcher) {
           R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
               json_escape(encoded_shape) + "\"}",
           nullptr, &api);
-      EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
-      EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
+      EXPECT_NE(api.trip().routes(0).legs(0).location(0).correlation().edges_size(), 0);
+      EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
       walked = test::json_to_pt(walked_json);
     } catch (...) {
       std::cout << test_case << std::endl;
@@ -952,8 +952,8 @@ TEST(Mapmatch, test_now_matches) {
       json_escape(encoded_shape) + "\"}";
   Api api;
   actor.trace_route(test_case, nullptr, &api);
-  EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
-  EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
+  EXPECT_NE(api.trip().routes(0).legs(0).location(0).correlation().edges_size(), 0);
+  EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
 }
 
 TEST(Mapmatch, test_leg_duration_trimming) {

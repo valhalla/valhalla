@@ -90,7 +90,7 @@ void loki_worker_t::matrix(Api& request) {
 
   init_matrix(request);
   auto& options = *request.mutable_options();
-  const auto& costing_name = Costing_Enum_Name(options.costing());
+  const auto& costing_name = Costing_Enum_Name(options.costing_type());
 
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};

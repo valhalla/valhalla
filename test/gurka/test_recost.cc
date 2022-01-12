@@ -366,14 +366,14 @@ TEST(recosting, all_algorithms) {
 
         // find the percentage of the edges used
         float src_pct = 0;
-        for (const auto& edge : api.options().locations(0).path_edges()) {
+        for (const auto& edge : api.options().locations(0).correlation().edges()) {
           if (leg.node(0).edge().id() == edge.graph_id()) {
             src_pct = edge.percent_along();
             break;
           }
         }
         float tgt_pct = 1;
-        for (const auto& edge : api.options().locations(1).path_edges()) {
+        for (const auto& edge : api.options().locations(1).correlation().edges()) {
           if (std::next(leg.node().rbegin())->edge().id() == edge.graph_id()) {
             tgt_pct = edge.percent_along();
             break;

@@ -20,9 +20,9 @@ using namespace valhalla;
 namespace {
 
 void create_costing_options(Options& options) {
-  options.set_costing(Costing::auto_);
+  options.set_costing_type(Costing::auto_);
   rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options);
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {

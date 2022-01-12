@@ -763,13 +763,13 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(location.path_edges().begin(), location.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(location.correlation().edges().begin(), location.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (location.path_edges())) {
+    for (const auto& edge : (location.correlation().edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -843,13 +843,13 @@ void Dijkstras::SetDestinationLocations(
 
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(location.path_edges().begin(), location.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(location.correlation().edges().begin(), location.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.begin_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (location.path_edges())) {
+    for (const auto& edge : (location.correlation().edges())) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (has_other_edges && edge.begin_node()) {
@@ -921,13 +921,13 @@ void Dijkstras::SetOriginLocationsMultiModal(
   for (auto& origin : origin_locations) {
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.path_edges())) {
+    for (const auto& edge : (origin.correlation().edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;

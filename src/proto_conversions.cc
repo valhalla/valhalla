@@ -191,8 +191,8 @@ const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet 
   return i == sides.cend() ? empty : i->second;
 }
 
-bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
-  static const std::unordered_map<std::string, Costing> costings{
+bool Costing_Enum_Parse(const std::string& costing, Costing::Type* c) {
+  static const std::unordered_map<std::string, Costing::Type> costings{
       {"auto", Costing::auto_},
       // auto_shorter is deprecated
       {"bicycle", Costing::bicycle},
@@ -216,7 +216,7 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   return true;
 }
 
-const std::string& Costing_Enum_Name(const Costing costing) {
+const std::string& Costing_Enum_Name(const Costing::Type costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},

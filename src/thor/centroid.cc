@@ -28,7 +28,7 @@ valhalla::Location make_centroid(const valhalla::baldr::GraphId& edge_id,
   location.mutable_ll()->set_lng(mid_point.first);
   location.mutable_ll()->set_lat(mid_point.second);
 
-  auto* path_edge = location.mutable_path_edges()->Add();
+  auto* path_edge = location.mutable_correlation()->mutable_edges()->Add();
   std::for_each(names.begin(), names.end(),
                 [path_edge](const std::string& n) { path_edge->mutable_names()->Add()->assign(n); });
   path_edge->set_begin_node(false);

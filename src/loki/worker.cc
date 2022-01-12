@@ -67,17 +67,17 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing_case() || (!allow_none && options.costing() == Costing::none_)) {
+  if (!options.has_costing_type_case() || (!allow_none && options.costing_type() == Costing::none_)) {
     throw valhalla_exception_t{124};
   }
 
-  const auto& costing_str = Costing_Enum_Name(options.costing());
+  const auto& costing_str = Costing_Enum_Name(options.costing_type());
   try {
     // For the begin and end of multimodal we expect you to be walking
-    if (options.costing() == Costing::multimodal) {
-      options.set_costing(Costing::pedestrian);
+    if (options.costing_type() == Costing::multimodal) {
+      options.set_costing_type(Costing::pedestrian);
       costing = factory.Create(options);
-      options.set_costing(Costing::multimodal);
+      options.set_costing_type(Costing::multimodal);
     } // otherwise use the provided costing
     else {
       costing = factory.Create(options);
@@ -87,7 +87,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   if (options.exclude_polygons_size()) {
     const auto edges = edges_in_rings(options.exclude_polygons(), *reader, costing,
                                       max_exclude_polygons_length, "avoid_polygons");
-    auto& co = options.mutable_costing_options()->find(options.costing())->second;
+    auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
@@ -106,7 +106,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
       auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
-      auto& co = options.mutable_costing_options()->find(options.costing())->second;
+      auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
@@ -144,7 +144,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   // Create rings for edges_in_rings function
   if (options.has_chinese_polygon()) {
-
     google::protobuf::RepeatedPtrField<valhalla::Options::Ring> rings;
     auto* r = rings.Add();
     r->Swap(options.mutable_chinese_polygon());
@@ -152,7 +151,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
         edges_in_rings(rings, *reader, costing, max_chinese_polygon_length, "chinese_postman");
     options.mutable_chinese_polygon()->Swap(r);
 
-    auto& co = options.mutable_costing_options()->find(options.costing())->second;
+    auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : chinese_edges) {
       auto* chinese_edge = co.add_chinese_edges();
       chinese_edge->set_id(edge_id);
