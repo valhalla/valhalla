@@ -47,15 +47,16 @@
    * ADDED: isochrone action for /expansion endpoint to track dijkstra expansion [#3215](https://github.com/valhalla/valhalla/pull/3215)
    * CHANGED: remove boost from dependencies and add conan as prep for #3346 [#3459](https://github.com/valhalla/valhalla/pull/3459)
    * CHANGED: Remove boost.program_options in favor of cxxopts header-only lib and use conan to install header-only boost. [#3346](https://github.com/valhalla/valhalla/pull/3346)
-   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460)(https://github.com/valhalla/valhalla/pull/3460)
    * CHANGED: Moved all protos to proto3 for internal request/response handling [#3457](https://github.com/valhalla/valhalla/pull/3457)
    * CHANGED: Allow up to 32 outgoing link edges on a node when reclassifying links [#3483](https://github.com/valhalla/valhalla/pull/3483)
    * CHANGED: Reuse sample::get implementation [#3471](https://github.com/valhalla/valhalla/pull/3471)
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
    * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
    * ADDED: Add JSON generator to conan [#3493](https://github.com/valhalla/valhalla/pull/3493)
+   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460](https://github.com/valhalla/valhalla/pull/3460)
    * ADDED: Add `include_construction` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
    * CHANGED: Refactor options protobuf for Location and Costing objects [#3506](https://github.com/valhalla/valhalla/pull/3506)
+   * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
    
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
