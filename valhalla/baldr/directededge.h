@@ -328,6 +328,20 @@ public:
   void set_bridge(const bool bridge);
 
   /**
+   * Is this edge indoor?
+   * @return  Returns true if this edge is indoor, false if not (outdoor).
+   */
+  bool indoor() const {
+    return indoor_;
+  }
+
+  /**
+   * Sets the flag indicating this edge is indoor.
+   * @param  indoor   True if the edge is indoor, false if not (outdoor).
+   */
+  void set_indoor(const bool indoor);
+
+  /**
    * Get the HOV type (see graphconstants.h).
    */
   HOVEdgeType hov_type() const {
@@ -1177,7 +1191,8 @@ protected:
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
-  uint64_t spare4_ : 6;
+  uint64_t indoor_ : 1;         // Is this edge indoor
+  uint64_t spare4_ : 5;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

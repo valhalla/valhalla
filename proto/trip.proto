@@ -42,6 +42,8 @@ message TripLeg {
     kPedestrianUse = 28;
     kBridlewayUse = 29;
     kPedestrianCrossingUse = 32;
+    kElevatorUse = 33;
+    kEscalatorUse = 34;
 
     //Rest/Service Areas
     kRestAreaUse = 30;
@@ -277,6 +279,9 @@ message TripLeg {
     oneof has_shoulder {
       bool shoulder = 52;
     }
+    oneof has_indoor {
+      bool indoor = 53;
+    }
   }
 
   message IntersectingEdge {
@@ -340,6 +345,8 @@ message TripLeg {
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
       kSumpBuster = 12;             // Sump Buster
+      kBuildingEntrance = 13;       // Building Entrance
+      kElevator = 14;               // Elevator
     }
     Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2;

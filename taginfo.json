@@ -1004,6 +1004,13 @@
       "description": "Overrides access flags for bus.  Bus Routing allowed.  busway:left must exist as well."
     },
     {
+      "key": "conveying",
+      "object_types": [
+        "way"
+      ],
+      "description": "Used for escalator and moving walkway."
+    },
+    {
       "key": "crossing",
       "object_types": [
         "node"
@@ -1722,6 +1729,14 @@
       "object_types": [
         "way"
       ]
+    },
+    {
+      "key": "entrance",
+      "value": "yes",
+      "object_types": [
+        "node"
+      ],
+      "description": "The point where you can go into a building or enclosed area."
     },
     {
       "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
@@ -2705,6 +2720,21 @@
     },
     {
       "key": "highway",
+      "value": "corridor",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "highway",
+      "value": "elevator",
+      "object_types": [
+        "node",
+        "way"
+      ]
+    },
+    {
+      "key": "highway",
       "value": "steps",
       "object_types": [
         "way"
@@ -2866,6 +2896,14 @@
         "way"
       ],
       "description": "This is used by HOT.  Turns off access unless bus, motorcar, motor_vehicle, foot, etc. is set."
+    },
+    {
+      "key": "indoor",
+      "object_types": [
+        "node",
+        "ways"
+      ],
+      "description": "Used for indoor elements."
     },
     {
       "key": "int_ref",
@@ -3094,6 +3132,20 @@
         "way"
       ],
       "description": "Overrides access flags for bus.  Bus Routing allowed."
+    },
+    {
+      "key": "level",
+      "description": "Floor level of a building.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "level:ref",
+      "description": "The ref or name of the floor level of a building.",
+      "object_types": [
+        "way"
+      ]
     },
     {
       "key": "lcn",
@@ -4303,7 +4355,7 @@
       ],
       "description": "This tag contains a phonetic guide to pronouncing the official name for a country used in that country if it differs from what is in the name tag"
     },
-   {
+    {
       "key": "access",
       "value": "conditional",
       "object_types": [
@@ -4343,7 +4395,7 @@
       ],
       "description": "Sets reverse flag to true for all types of routing."
     },
-   {
+    {
       "key": "oneway",
       "value": "reversible",
       "object_types": [
@@ -4351,7 +4403,7 @@
       ],
       "description": "Indicates the travel direction on the way can change."
     },
-   {
+    {
       "key": "oneway",
       "value": "conditional",
       "object_types": [

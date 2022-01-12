@@ -118,6 +118,10 @@ inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
       return TripLeg_Node_Type_kTollGantry;
     case baldr::NodeType::kSumpBuster:
       return TripLeg_Node_Type_kSumpBuster;
+    case baldr::NodeType::kBuildingEntrance:
+      return TripLeg_Node_Type_kBuildingEntrance;
+    case baldr::NodeType::kElevator:
+      return TripLeg_Node_Type_kElevator;
   }
   auto num = static_cast<uint8_t>(node_type);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -197,8 +201,12 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kFootwayUse; // TODO: update when odin has been updated
     case baldr::Use::kFootway:
       return TripLeg_Use_kFootwayUse;
+    case baldr::Use::kElevator:
+      return TripLeg_Use_kElevatorUse;
     case baldr::Use::kSteps:
       return TripLeg_Use_kStepsUse;
+    case baldr::Use::kEscalator:
+      return TripLeg_Use_kEscalatorUse;
     case baldr::Use::kPath:
       return TripLeg_Use_kPathUse;
     case baldr::Use::kPedestrian:

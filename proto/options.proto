@@ -283,6 +283,9 @@ message CostingOptions {
   oneof has_restriction_probability {
     uint32 restriction_probability = 77;
   }
+  oneof has_elevator_penalty {
+    float elevator_penalty = 78;
+  }
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   oneof has_costing {

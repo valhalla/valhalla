@@ -66,6 +66,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());
+  set_indoor(way.indoor());
   set_link(way.link());
   set_hov_type(way.hov_type());
   set_classification(rc);

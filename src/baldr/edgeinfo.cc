@@ -290,6 +290,26 @@ int8_t EdgeInfo::layer() const {
   return static_cast<int8_t>(value.front());
 }
 
+std::string EdgeInfo::level() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kLevel);
+  if (itr == tags.end()) {
+    return 0;
+  }
+  const std::string& value = itr->second;
+  return value;
+}
+
+std::string EdgeInfo::level_ref() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kLevelRef);
+  if (itr == tags.end()) {
+    return 0;
+  }
+  const std::string& value = itr->second;
+  return value;
+}
+
 json::MapPtr EdgeInfo::json() const {
   json::MapPtr edge_info = json::map({
       {"way_id", static_cast<uint64_t>(wayid())},

@@ -87,6 +87,8 @@ const std::string& TripLeg_Use_Name(int v) {
       {30, "kRestAreaUse"},
       {31, "kServiceAreaUse"},
       {32, "kPedestrianCrossingUse"},
+      {33, "kElevatorUse"},
+      {34, "kEscalatorUse"},
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
