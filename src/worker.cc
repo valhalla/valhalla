@@ -1123,9 +1123,18 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
   err_stat->set_value(1);
   err_stat->set_type(count);
 
-  // pbf format output
+  // pbf format output, we only send back the info with errors in it
   if (request.options().format() == Options::pbf) {
-    return request.SerializeAsString();
+    Api error_only;
+    error_only.mutable_info()->Swap(request.mutable_info());
+    auto bytes = error_only.SerializeAsString();
+    // if we are handling a service request we need the request intact
+    if (error_only.info().is_service())
+      error_only.mutable_info()->Swap(request.mutable_info());
+    // otherwise we can blank the object save for the info
+    else
+      request.Swap(&error_only);
+    return bytes;
   }
 
   // json
@@ -1157,8 +1166,11 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
     throw valhalla_exception_t{101};
   };
 
-  // set the action
+  // this is a service request
   api.Clear();
+  api.mutable_info()->set_is_service(true);
+
+  // set the action
   auto& options = *api.mutable_options();
   Options::Action action;
   if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {

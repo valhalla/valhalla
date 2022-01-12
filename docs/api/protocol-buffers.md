@@ -23,7 +23,7 @@ To use protobuf as a request/input to the HTTP API you need to do two things:
 * Send the proper HTTP header to signal a protobuf payload. The header should be: `Content-Type: application/x-protobuf`
 * Send protocol buffer's serialized bytes as the body of the HTTP request
 
-The message we use for the entire transaction is the `Api` message, whose definition you can find [here](../../proto/api.proto). All of the request parameters should be filled out via the `Options` message attached to the `Api` message. Most importantly, you will want to set your `format` to `pbf` and your `action` to the relevant API you are calling (though the HTTP request path also provides the latter). The rest of the request options depend on which API you are calling. For more information about what and which options to set for a given API please read that APIs specific docs regarding its request options.
+The message we use for the entire transaction is the `Api` message, whose definition you can find [here](../../proto/api.proto). All of the request parameters should be filled out via the `Options` message attached to the `Api` message. Most importantly, you will want to set your `format` to `pbf` and your `action` to the relevant API you are calling (though the HTTP request path also provides the latter). The `options` object also contains a subobject named `pbf_field_selector` which can be used to turn on/off the top level fields in the response. For example, if you only want the `directions` part of the protobuf response to be present (much smaller payload) then turn on only that flag in the field selector. The rest of the request options depend on which API you are calling. For more information about what and which options to set for a given API please read that APIs specific docs regarding its request options.
 
 ## Response
 
@@ -34,5 +34,4 @@ As with the request/input, the response/output will again be the `Api` message b
 There are a few more things we should do before we can remove the beta label from this feature:
 
 * **Add Native PBF Support to Python Bindings**: We can support, in addition to JSON strings, the ability for python to work directly with protobuf objects (those generated with protoc) across the python/c++ barrier. This would be a very natural way for python users to interact with Valhalla.
-* **Slim Responses**: The `Api`object has lots of stuff the requester may not want, so we should allow for requesting only specific subfields to be returned (this will be the most efficient means of interaction).
 * **Support for All APIs**: As mentioned above we only support a certain subset Valhalla's APIs, over time we can add the rest of the APIs to the `Api` message.
