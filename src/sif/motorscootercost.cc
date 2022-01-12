@@ -436,10 +436,10 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
-                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
+                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
+                 SpeedPenalty(edge, tile, time_info, flow_sources, speed);
 
   if (edge->destonly()) {
     factor += kDestinationOnlyFactor;
