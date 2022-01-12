@@ -734,7 +734,8 @@ void AddIntersectingEdges(const AttributesController& controller,
     if (intersecting_edge->is_shortcut() ||
         intersecting_edge->localedgeidx() == prior_opp_local_index ||
         intersecting_edge->localedgeidx() == directededge->localedgeidx() ||
-        (directededge->is_shortcut() && directededge->shortcut() & intersecting_edge->superseded())) {
+        (directededge->is_shortcut() && directededge->shortcut() & intersecting_edge->superseded()) ||
+        intersecting_edge->use() == Use::kConstruction) {
       continue;
     }
 
@@ -759,7 +760,8 @@ void AddIntersectingEdges(const AttributesController& controller,
         // Skip shortcut edges and edges on the path
         if (intersecting_edge2->is_shortcut() ||
             intersecting_edge2->localedgeidx() == prior_opp_local_index ||
-            intersecting_edge2->localedgeidx() == directededge->localedgeidx()) {
+            intersecting_edge2->localedgeidx() == directededge->localedgeidx() ||
+            intersecting_edge2->use() == Use::kConstruction) {
           continue;
         }
 

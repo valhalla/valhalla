@@ -109,7 +109,8 @@ GraphId GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, directededge++, ++edgeid) {
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection) {
+        directededge->use() == Use::kPlatformConnection ||
+        directededge->use() == Use::kConstruction) {
       continue;
     }
     if (directededge->endnode() == node && directededge->classification() == edge->classification() &&
@@ -198,7 +199,8 @@ bool CanContract(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (!directededge->is_shortcut() && directededge->use() != Use::kTransitConnection &&
         directededge->use() != Use::kEgressConnection &&
-        directededge->use() != Use::kPlatformConnection && !directededge->start_restriction() &&
+        directededge->use() != Use::kPlatformConnection &&
+        directededge->use() != Use::kConstruction && !directededge->start_restriction() &&
         !directededge->end_restriction()) {
       edges.push_back(edgeid);
     }
@@ -386,7 +388,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection || directededge->bss_connection()) {
+        directededge->use() == Use::kPlatformConnection || directededge->bss_connection() ||
+        directededge->use() == Use::kConstruction) {
       continue;
     }
 
