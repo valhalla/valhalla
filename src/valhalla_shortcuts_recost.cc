@@ -103,14 +103,14 @@ template <class T> bool write_vector(std::string filename, std::vector<T> vec) {
 // to ways that are driveable.
 int main(int argc, char** argv) {
   // Parse command line arguments
-  // if (!ParseArguments(argc, argv)) {
-  //   return EXIT_FAILURE;
-  // }
+  if (!ParseArguments(argc, argv)) {
+    return EXIT_FAILURE;
+  }
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  // rapidjson::read_json(config_file_path.string(), pt);
-  rapidjson::read_json("/SDD_datadrive/valhalla/deu/valhalla_deu.json", pt);
+  rapidjson::read_json(config_file_path.string(), pt);
+  // rapidjson::read_json("/SDD_datadrive/valhalla/deu/valhalla_deu.json", pt);
 
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<GraphId, std::vector<GraphId>> shortcuts_edges;
@@ -144,10 +144,7 @@ int main(int argc, char** argv) {
 
       if (result.size() < 2)
         continue;
-      // uint64_t shortcut_id = 421662709653913;
-      // if (edge_id.value == shortcut_id) {
-      //   result = reader.RecoverShortcut(edge_id);
-      // }
+
       for (auto id : result) {
         auto tile2 = reader.GetGraphTile(GraphId{id});
         auto edge2 = tile2->directededge(id);
@@ -159,12 +156,7 @@ int main(int argc, char** argv) {
           shortcut_duration = 0;
           break;
         } else {
-          // if (edge_id.value == shortcut_id) {
-          //   uint64_t wayid = tile2->edgeinfo(edge2).wayid();
-          //   std::cout << "id: " << wayid << ", length: " << edge2->length() << ", speed: " << speed
-          //             << std::endl;
-          // }
-          shortcut_duration += edge2->length(); // / static_cast<float>(speed);
+          shortcut_duration += edge2->length() / static_cast<float>(speed);
         }
       } // for
 
@@ -177,13 +169,14 @@ int main(int argc, char** argv) {
         // new_speed = static_cast<decltype(shortcut_speed)>(edge->length() / shortcut_time);
         new_speed = static_cast<uint32_t>(std::round(edge->length() / shortcut_duration));
       }
-      if (std::abs(static_cast<int>(new_speed) - static_cast<int>(shortcut_speed)) > 4) {
+
+      // if speed has be changed. new speed shall be slower than old speed
+      // some shortcut speed has increase a lot after recalculation. root cause is unknown
+      // the recalculated length of shortcuts is not changed
+      // Therefore, RecoverShortcut works.  
+      if (static_cast<int>(shortcut_speed) - static_cast<int>(new_speed) > 2) {
         shortcuts_edges[edge_id].emplace_back(new_speed);
         shortcuts_edges[edge_id].emplace_back(shortcut_speed);
-        // if (edge_id.value == shortcut_id) {
-        //   std::cout << "total length: " << edge->length() << " ,new_speed: " << new_speed
-        //             << ", shortcut_speed: " << shortcut_speed << std::endl;
-        // }
       }
 
       edge_count++;
