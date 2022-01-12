@@ -135,17 +135,20 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                       false} {
 }
 
-DynamicCost::DynamicCost(const CostingOptions& options,
+DynamicCost::DynamicCost(const Costing& costing,
                          const TravelMode mode,
                          uint32_t access_mask,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
-      shortest_(options.shortest()), ignore_restrictions_(options.ignore_restrictions()),
-      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()),
-      ignore_closures_(options.ignore_closures()), top_speed_(options.top_speed()),
-      filter_closures_(ignore_closures_ ? false : options.filter_closures()),
+      shortest_(costing.options().shortest()),
+      ignore_restrictions_(costing.options().ignore_restrictions()),
+      ignore_oneways_(costing.options().ignore_oneways()),
+      ignore_access_(costing.options().ignore_access()),
+      ignore_closures_(costing.options().ignore_closures()),
+      top_speed_(costing.options().top_speed()),
+      filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
@@ -155,7 +158,7 @@ DynamicCost::DynamicCost(const CostingOptions& options,
   }
 
   // Add avoid edges to internal set
-  for (auto& edge : options.exclude_edges()) {
+  for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }
@@ -349,8 +352,10 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,
-                          CostingOptions* co,
+                          Costing* c,
                           const BaseCostingOptionsConfig& cfg) {
+  auto* co = c->mutable_options();
+
   // ignore bogus input
   if (co->has_flow_mask_case() && co->flow_mask() > kDefaultFlowMask)
     co->clear_flow_mask();
@@ -363,7 +368,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // named costing
   auto name = rapidjson::get_optional<std::string>(json, "/name");
   if (name) {
-    co->set_name(*name);
+    c->set_name(*name);
   }
 
   // various traversability flags
@@ -458,28 +463,28 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 }
 
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         Options& options) {
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& costing_options_key,
+                  Options& options) {
   // if specified, get the costing options in there
-  for (auto i = Costing_MIN; i <= Costing_MAX; i = Costing(i + 1)) {
+  for (auto i = Costing::Type_MIN; i <= Costing::Type_MAX; i = Costing::Type(i + 1)) {
     // Create the costing options key
     const auto& costing_str = valhalla::Costing_Enum_Name(i);
     if (costing_str.empty())
       continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    auto& costing_options = (*options.mutable_costing_options())[i];
-    ParseCostingOptions(doc, key, &costing_options, i);
+    auto& costing = (*options.mutable_costings())[i];
+    ParseCosting(doc, key, &costing, i);
   }
 }
 
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& key,
-                         CostingOptions* costing_options,
-                         Costing costing) {
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& key,
+                  Costing* costing,
+                  Costing::Type costing_type) {
   // if the costing wasnt specified we have to find it nested in the json object
-  if (costing == Costing_ARRAYSIZE) {
+  if (costing_type == Costing::Type_ARRAYSIZE) {
     // it has to have a costing object, it has to be an object, it has to have a member
     // named costing and the value of that member has to be a string type
     auto json = rapidjson::get_child_optional(doc, key.c_str());
@@ -491,63 +496,63 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     // then we can try to parse the string and if its invalid we barf
     std::string costing_str = costing_itr->value.GetString();
-    if (!Costing_Enum_Parse(costing_str, &costing)) {
+    if (!Costing_Enum_Parse(costing_str, &costing_type)) {
       throw valhalla_exception_t{125, "'" + costing_str + "'"};
     }
   }
   // finally we can parse the costing
-  switch (costing) {
-    case auto_: {
-      sif::ParseAutoCostOptions(doc, key, costing_options);
+  switch (costing_type) {
+    case Costing::auto_: {
+      sif::ParseAutoCostOptions(doc, key, costing);
       break;
     }
-    case bicycle: {
-      sif::ParseBicycleCostOptions(doc, key, costing_options);
+    case Costing::bicycle: {
+      sif::ParseBicycleCostOptions(doc, key, costing);
       break;
     }
-    case bus: {
-      sif::ParseBusCostOptions(doc, key, costing_options);
+    case Costing::bus: {
+      sif::ParseBusCostOptions(doc, key, costing);
       break;
     }
-    case taxi: {
-      sif::ParseTaxiCostOptions(doc, key, costing_options);
+    case Costing::taxi: {
+      sif::ParseTaxiCostOptions(doc, key, costing);
       break;
     }
-    case motor_scooter: {
-      sif::ParseMotorScooterCostOptions(doc, key, costing_options);
+    case Costing::motor_scooter: {
+      sif::ParseMotorScooterCostOptions(doc, key, costing);
       break;
     }
-    case multimodal: {
-      costing_options->set_costing(Costing::multimodal); // Nothing to parse for this one
+    case Costing::multimodal: {
+      costing->set_type(Costing::multimodal); // Nothing to parse for this one
       break;
     }
-    case pedestrian: {
-      sif::ParsePedestrianCostOptions(doc, key, costing_options);
+    case Costing::pedestrian: {
+      sif::ParsePedestrianCostOptions(doc, key, costing);
       break;
     }
-    case bikeshare: {
-      costing_options->set_costing(Costing::bikeshare); // Nothing to parse for this one
+    case Costing::bikeshare: {
+      costing->set_type(Costing::bikeshare); // Nothing to parse for this one
       break;
     }
-    case transit: {
-      sif::ParseTransitCostOptions(doc, key, costing_options);
+    case Costing::transit: {
+      sif::ParseTransitCostOptions(doc, key, costing);
       break;
     }
-    case truck: {
-      sif::ParseTruckCostOptions(doc, key, costing_options);
+    case Costing::truck: {
+      sif::ParseTruckCostOptions(doc, key, costing);
       break;
     }
-    case motorcycle: {
-      sif::ParseMotorcycleCostOptions(doc, key, costing_options);
+    case Costing::motorcycle: {
+      sif::ParseMotorcycleCostOptions(doc, key, costing);
       break;
     }
-    case none_: {
-      sif::ParseNoCostOptions(doc, key, costing_options);
+    case Costing::none_: {
+      sif::ParseNoCostOptions(doc, key, costing);
       break;
     }
     default: { throw std::logic_error("Unknown costing"); }
   }
-  costing_options->set_costing(costing);
+  costing->set_type(costing_type);
 }
 
 } // namespace sif

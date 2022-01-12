@@ -124,7 +124,7 @@ public:
    * @param  access_mask Access mask
    * @param  penalize_uturns Should we penalize uturns?
    */
-  DynamicCost(const CostingOptions& options,
+  DynamicCost(const Costing& options,
               const TravelMode mode,
               uint32_t access_mask,
               bool penalize_uturns = false);
@@ -979,7 +979,8 @@ protected:
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
    */
-  void get_base_costs(const CostingOptions& costing_options) {
+  void get_base_costs(const Costing& costing) {
+    const auto& costing_options = costing.options();
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
@@ -1184,18 +1185,18 @@ struct BaseCostingOptionsConfig {
  * @param cfg Default values with enable/disable parsing indicators for costing options.
  */
 void ParseBaseCostOptions(const rapidjson::Value& json,
-                          CostingOptions* co,
+                          Costing* co,
                           const BaseCostingOptionsConfig& cfg);
 
 /**
  * Parses all the costing options for all supported costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
- * @param options               where to store the parsed costing options
+ * @param options               where to store the parsed costing
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         Options& options);
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& costing_options_key,
+                  Options& options);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1206,10 +1207,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
  * @param costing_options       where to store the parsed options
  * @param costing               specify the costing you want to parse or let it check the json
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& key,
-                         CostingOptions* costing_options,
-                         Costing costing = static_cast<Costing>(Costing_ARRAYSIZE));
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& key,
+                  Costing* costing,
+                  Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif
 

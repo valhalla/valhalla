@@ -249,8 +249,8 @@ const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_Guidan
 // which would allow us to delete this completely would be to target a newer protobuf version
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a);
 const std::string& Options_Action_Enum_Name(const Options::Action action);
-bool Costing_Enum_Parse(const std::string& costing, Costing* c);
-const std::string& Costing_Enum_Name(const Costing costing);
+bool Costing_Enum_Parse(const std::string& costing, Costing::Type* c);
+const std::string& Costing_Enum_Name(const Costing::Type costing);
 bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s);
 const std::string& ShapeMatch_Enum_Name(const ShapeMatch match);
 bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f);

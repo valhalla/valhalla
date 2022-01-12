@@ -606,7 +606,7 @@ int main(int argc, char* argv[]) {
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing_type());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -684,8 +684,8 @@ int main(int argc, char* argv[]) {
       } else {
         // Use bidirectional except for trivial cases (same edge or connected edges)
         pathalgorithm = &bd;
-        for (auto& edge1 : origin.path_edges()) {
-          for (auto& edge2 : dest.path_edges()) {
+        for (auto& edge1 : origin.correlation().edges()) {
+          for (auto& edge2 : dest.correlation().edges()) {
             if (edge1.graph_id() == edge2.graph_id() ||
                 reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
               pathalgorithm = &timedep_forward;

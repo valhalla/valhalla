@@ -370,7 +370,7 @@ Api get_request(const std::string& request_str, const Options::Action action) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // test parsing methods
-std::string get_costing_str(Costing costing) {
+std::string get_costing_str(Costing::Type costing) {
   // Create the costing string
   auto costing_str = Costing_Enum_Name(costing);
   return costing_str;
@@ -465,14 +465,16 @@ void test_filter_attributes_parsing(const std::vector<std::string>& expected_val
            request.options().filter_attributes());
 }
 
-void test_default_base_auto_cost_options(const Costing costing, const Options::Action action) {
+void test_default_base_auto_cost_options(const Costing::Type costing_type,
+                                         const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("maneuver_penalty", kDefaultAuto_ManeuverPenalty, options.maneuver_penalty());
   validate("destination_only_penalty", kDefaultAuto_DestinationOnlyPenalty,
            options.destination_only_penalty());
@@ -497,14 +499,16 @@ void test_default_base_auto_cost_options(const Costing costing, const Options::A
   validate("service_factor", kDefaultAuto_ServiceFactor, options.service_factor());
 }
 
-void test_default_motor_scooter_cost_options(const Costing costing, const Options::Action action) {
+void test_default_motor_scooter_cost_options(const Costing::Type costing_type,
+                                             const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("maneuver_penalty", kDefaultMotorScooter_ManeuverPenalty, options.maneuver_penalty());
   validate("destination_only_penalty", kDefaultMotorScooter_DestinationOnlyPenalty,
            options.destination_only_penalty());
@@ -527,14 +531,16 @@ void test_default_motor_scooter_cost_options(const Costing costing, const Option
   validate("service_factor", kDefaultMotorcycle_ServiceFactor, options.service_factor());
 }
 
-void test_default_motorcycle_cost_options(const Costing costing, const Options::Action action) {
+void test_default_motorcycle_cost_options(const Costing::Type costing_type,
+                                          const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("maneuver_penalty", kDefaultMotorcycle_ManeuverPenalty, options.maneuver_penalty());
   validate("destination_only_penalty", kDefaultMotorcycle_DestinationOnlyPenalty,
            options.destination_only_penalty());
@@ -555,14 +561,16 @@ void test_default_motorcycle_cost_options(const Costing costing, const Options::
   validate("service_factor", kDefaultMotorcycle_ServiceFactor, options.service_factor());
 }
 
-void test_default_pedestrian_cost_options(const Costing costing, const Options::Action action) {
+void test_default_pedestrian_cost_options(const Costing::Type costing_type,
+                                          const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("type", "foot", options.transport_type());
   validate("maneuver_penalty", kDefaultPedestrian_ManeuverPenalty, options.maneuver_penalty());
   validate("gate_penalty", kDefaultPedestrian_GatePenalty, options.gate_penalty());
@@ -593,14 +601,16 @@ void test_default_pedestrian_cost_options(const Costing costing, const Options::
            options.transit_transfer_max_distance());
 }
 
-void test_default_bicycle_cost_options(const Costing costing, const Options::Action action) {
+void test_default_bicycle_cost_options(const Costing::Type costing_type,
+                                       const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("bicycle_type", kDefaultBicycle_BicycleType, options.transport_type());
   validate("maneuver_penalty", kDefaultBicycle_ManeuverPenalty, options.maneuver_penalty());
   validate("alley_penalty", kDefaultBicycle_AlleyPenalty, options.alley_penalty());
@@ -624,14 +634,15 @@ void test_default_bicycle_cost_options(const Costing costing, const Options::Act
            options.cycling_speed());
 }
 
-void test_default_truck_cost_options(const Costing costing, const Options::Action action) {
+void test_default_truck_cost_options(const Costing::Type costing_type, const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("maneuver_penalty", kDefaultTruck_ManeuverPenalty, options.maneuver_penalty());
   validate("destination_only_penalty", kDefaultTruck_DestinationOnlyPenalty,
            options.destination_only_penalty());
@@ -659,14 +670,16 @@ void test_default_truck_cost_options(const Costing costing, const Options::Actio
   validate("service_factor", kDefaultTruck_ServiceFactor, options.service_factor());
 }
 
-void test_default_transit_cost_options(const Costing costing, const Options::Action action) {
+void test_default_transit_cost_options(const Costing::Type costing_type,
+                                       const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& costing = request.options().costings().find(costing_type)->second;
+  const auto& options = costing.options();
   validate("mode_factor", kDefaultTransit_ModeFactor, options.mode_factor());
   validate("wheelchair", false, options.wheelchair());
   validate("bicycle", false, options.bicycle());
@@ -677,361 +690,361 @@ void test_default_transit_cost_options(const Costing costing, const Options::Act
   validate("transfer_penalty", kDefaultTransit_TransferPenalty, options.transfer_penalty());
 }
 
-void test_default_base_cost_options(const Costing costing, const Options::Action action) {
+void test_default_base_cost_options(const Costing::Type costing_type, const Options::Action action) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string key = "costing";
 
   // Get cost request with no cost options
   Api request = get_request(get_request_str(key, costing_str), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(costing_str + " closure_factor", kDefaultClosureFactor, options.closure_factor());
   // TODO: Validate more common cost attributes
 }
 
-void test_transport_type_parsing(const Costing costing,
+void test_transport_type_parsing(const Costing::Type costing_type,
                                  const std::string& key,
                                  const std::string& specified_value,
                                  const std::string& expected_value,
                                  const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.transport_type());
 }
 
-void test_maneuver_penalty_parsing(const Costing costing,
+void test_maneuver_penalty_parsing(const Costing::Type costing_type,
                                    const float specified_value,
                                    const float expected_value,
                                    const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "maneuver_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.maneuver_penalty());
 }
 
-void test_destination_only_penalty_parsing(const Costing costing,
+void test_destination_only_penalty_parsing(const Costing::Type costing_type,
                                            const float specified_value,
                                            const float expected_value,
                                            const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "destination_only_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.destination_only_penalty());
 }
 
-void test_gate_cost_parsing(const Costing costing,
+void test_gate_cost_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "gate_cost";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.gate_cost());
 }
 
-void test_gate_penalty_parsing(const Costing costing,
+void test_gate_penalty_parsing(const Costing::Type costing_type,
                                const float specified_value,
                                const float expected_value,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "gate_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.gate_penalty());
 }
 
-void test_private_access_penalty_parsing(const Costing costing,
+void test_private_access_penalty_parsing(const Costing::Type costing_type,
                                          const float specified_value,
                                          const float expected_value,
                                          const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "private_access_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.private_access_penalty());
 }
 
-void test_toll_booth_cost_parsing(const Costing costing,
+void test_toll_booth_cost_parsing(const Costing::Type costing_type,
                                   const float specified_value,
                                   const float expected_value,
                                   const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "toll_booth_cost";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.toll_booth_cost());
 }
 
-void test_toll_booth_penalty_parsing(const Costing costing,
+void test_toll_booth_penalty_parsing(const Costing::Type costing_type,
                                      const float specified_value,
                                      const float expected_value,
                                      const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "toll_booth_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.toll_booth_penalty());
 }
 
-void test_alley_penalty_parsing(const Costing costing,
+void test_alley_penalty_parsing(const Costing::Type costing_type,
                                 const float specified_value,
                                 const float expected_value,
                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "alley_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.alley_penalty());
 }
 
-void test_country_crossing_cost_parsing(const Costing costing,
+void test_country_crossing_cost_parsing(const Costing::Type costing_type,
                                         const float specified_value,
                                         const float expected_value,
                                         const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "country_crossing_cost";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.country_crossing_cost());
 }
 
-void test_country_crossing_penalty_parsing(const Costing costing,
+void test_country_crossing_penalty_parsing(const Costing::Type costing_type,
                                            const float specified_value,
                                            const float expected_value,
                                            const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "country_crossing_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.country_crossing_penalty());
 }
 
-void test_ferry_cost_parsing(const Costing costing,
+void test_ferry_cost_parsing(const Costing::Type costing_type,
                              const float specified_value,
                              const float expected_value,
                              const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "ferry_cost";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.ferry_cost());
 }
 
-void test_use_ferry_parsing(const Costing costing,
+void test_use_ferry_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_ferry";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_ferry());
 }
 
-void test_use_highways_parsing(const Costing costing,
+void test_use_highways_parsing(const Costing::Type costing_type,
                                const float specified_value,
                                const float expected_value,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_highways";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_highways());
 }
 
-void test_use_tolls_parsing(const Costing costing,
+void test_use_tolls_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_tolls";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_tolls());
 }
 
-void test_use_tracks_parsing(const Costing costing,
+void test_use_tracks_parsing(const Costing::Type costing_type,
                              const float specified_value,
                              const float expected_value,
                              const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_tracks";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_tracks());
 }
 
-void test_use_living_streets_parsing(const Costing costing,
+void test_use_living_streets_parsing(const Costing::Type costing_type,
                                      const float specified_value,
                                      const float expected_value,
                                      const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_living_streets";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_living_streets());
 }
 
-void test_use_hills_parsing(const Costing costing,
+void test_use_hills_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_hills";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_hills());
 }
 
-void test_use_primary_parsing(const Costing costing,
+void test_use_primary_parsing(const Costing::Type costing_type,
                               const float specified_value,
                               const float expected_value,
                               const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_primary";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_primary());
 }
 
-void test_top_speed_parsing(const Costing costing,
+void test_top_speed_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "top_speed";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.top_speed());
 }
 
-void test_use_trails_parsing(const Costing costing,
+void test_use_trails_parsing(const Costing::Type costing_type,
                              const float specified_value,
                              const float expected_value,
                              const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_trails";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_trails());
 }
 
-void test_max_distance_parsing(const Costing costing,
+void test_max_distance_parsing(const Costing::Type costing_type,
                                const std::string& transport_type,
                                const uint32_t specified_value,
                                const uint32_t expected_value,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1040,17 +1053,17 @@ void test_max_distance_parsing(const Costing costing,
   Api request = get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type,
                                             key, specified_value),
                             action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.max_distance());
 }
 
-void test_walking_speed_parsing(const Costing costing,
+void test_walking_speed_parsing(const Costing::Type costing_type,
                                 const std::string& transport_type,
                                 const float specified_value,
                                 const float expected_value,
                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1059,17 +1072,17 @@ void test_walking_speed_parsing(const Costing costing,
   Api request = get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type,
                                             key, specified_value),
                             action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.walking_speed());
 }
 
-void test_cycling_speed_parsing(const Costing costing,
+void test_cycling_speed_parsing(const Costing::Type costing_type,
                                 const std::string& transport_type,
                                 const float specified_value,
                                 const float expected_value,
                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string sibling_key = "bicycle_type";
@@ -1078,17 +1091,17 @@ void test_cycling_speed_parsing(const Costing costing,
   Api request = get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type,
                                             key, specified_value),
                             action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.cycling_speed());
 }
 
-void test_step_penalty_parsing(const Costing costing,
+void test_step_penalty_parsing(const Costing::Type costing_type,
                                const std::string& transport_type,
                                const float specified_value,
                                const float expected_value,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1097,17 +1110,17 @@ void test_step_penalty_parsing(const Costing costing,
   Api request = get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type,
                                             key, specified_value),
                             action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.step_penalty());
 }
 
-void test_max_grade_parsing(const Costing costing,
+void test_max_grade_parsing(const Costing::Type costing_type,
                             const std::string& transport_type,
                             const uint32_t specified_value,
                             const uint32_t expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1116,400 +1129,400 @@ void test_max_grade_parsing(const Costing costing,
   Api request = get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type,
                                             key, specified_value),
                             action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.max_grade());
 }
 
-void test_max_hiking_difficulty_parsing(const Costing costing,
+void test_max_hiking_difficulty_parsing(const Costing::Type costing_type,
                                         const uint32_t specified_value,
                                         const uint32_t expected_value,
                                         const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "max_hiking_difficulty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.max_hiking_difficulty());
 }
 
-void test_mode_factor_parsing(const Costing costing,
+void test_mode_factor_parsing(const Costing::Type costing_type,
                               const float specified_value,
                               const float expected_value,
                               const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "mode_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.mode_factor());
 }
 
-void test_walkway_factor_parsing(const Costing costing,
+void test_walkway_factor_parsing(const Costing::Type costing_type,
                                  const float specified_value,
                                  const float expected_value,
                                  const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "walkway_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.walkway_factor());
 }
 
-void test_sidewalk_factor_parsing(const Costing costing,
+void test_sidewalk_factor_parsing(const Costing::Type costing_type,
                                   const float specified_value,
                                   const float expected_value,
                                   const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "sidewalk_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.sidewalk_factor());
 }
 
-void test_alley_factor_parsing(const Costing costing,
+void test_alley_factor_parsing(const Costing::Type costing_type,
                                const float specified_value,
                                const float expected_value,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "alley_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.alley_factor());
 }
 
-void test_driveway_factor_parsing(const Costing costing,
+void test_driveway_factor_parsing(const Costing::Type costing_type,
                                   const float specified_value,
                                   const float expected_value,
                                   const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "driveway_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.driveway_factor());
 }
 
-void test_use_roads_parsing(const Costing costing,
+void test_use_roads_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_roads";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_roads());
 }
 
-void test_avoid_bad_surfaces_parsing(const Costing costing,
+void test_avoid_bad_surfaces_parsing(const Costing::Type costing_type,
                                      const float specified_value,
                                      const float expected_value,
                                      const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "avoid_bad_surfaces";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.avoid_bad_surfaces());
 }
 
-void test_transit_start_end_max_distance_parsing(const Costing costing,
+void test_transit_start_end_max_distance_parsing(const Costing::Type costing_type,
                                                  const uint32_t specified_value,
                                                  const uint32_t expected_value,
                                                  const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "transit_start_end_max_distance";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.transit_start_end_max_distance());
 }
 
-void test_transit_transfer_max_distance_parsing(const Costing costing,
+void test_transit_transfer_max_distance_parsing(const Costing::Type costing_type,
                                                 const uint32_t specified_value,
                                                 const uint32_t expected_value,
                                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "transit_transfer_max_distance";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.transit_transfer_max_distance());
 }
 
-void test_low_class_penalty_parsing(const Costing costing,
+void test_low_class_penalty_parsing(const Costing::Type costing_type,
                                     const float specified_value,
                                     const float expected_value,
                                     const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "low_class_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.low_class_penalty());
 }
 
-void test_weight_parsing(const Costing costing,
+void test_weight_parsing(const Costing::Type costing_type,
                          const float specified_value,
                          const float expected_value,
                          const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "weight";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.weight());
 }
 
-void test_axle_load_parsing(const Costing costing,
+void test_axle_load_parsing(const Costing::Type costing_type,
                             const float specified_value,
                             const float expected_value,
                             const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "axle_load";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.axle_load());
 }
 
-void test_height_parsing(const Costing costing,
+void test_height_parsing(const Costing::Type costing_type,
                          const float specified_value,
                          const float expected_value,
                          const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "height";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.height());
 }
 
-void test_width_parsing(const Costing costing,
+void test_width_parsing(const Costing::Type costing_type,
                         const float specified_value,
                         const float expected_value,
                         const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "width";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.width());
 }
 
-void test_length_parsing(const Costing costing,
+void test_length_parsing(const Costing::Type costing_type,
                          const float specified_value,
                          const float expected_value,
                          const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "length";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.length());
 }
 
-void test_use_bus_parsing(const Costing costing,
+void test_use_bus_parsing(const Costing::Type costing_type,
                           const float specified_value,
                           const float expected_value,
                           const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_bus";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_bus());
 }
 
-void test_use_rail_parsing(const Costing costing,
+void test_use_rail_parsing(const Costing::Type costing_type,
                            const float specified_value,
                            const float expected_value,
                            const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_rail";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_rail());
 }
 
-void test_use_transfers_parsing(const Costing costing,
+void test_use_transfers_parsing(const Costing::Type costing_type,
                                 const float specified_value,
                                 const float expected_value,
                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "use_transfers";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_transfers());
 }
 
-void test_transfer_cost_parsing(const Costing costing,
+void test_transfer_cost_parsing(const Costing::Type costing_type,
                                 const float specified_value,
                                 const float expected_value,
                                 const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "transfer_cost";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.transfer_cost());
 }
 
-void test_transfer_penalty_parsing(const Costing costing,
+void test_transfer_penalty_parsing(const Costing::Type costing_type,
                                    const float specified_value,
                                    const float expected_value,
                                    const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "transfer_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.transfer_penalty());
 }
 
-void test_hazmat_parsing(const Costing costing,
+void test_hazmat_parsing(const Costing::Type costing_type,
                          const bool specified_value,
                          const bool expected_value,
                          const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "hazmat";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.hazmat());
 }
 
-void test_wheelchair_parsing(const Costing costing,
+void test_wheelchair_parsing(const Costing::Type costing_type,
                              const bool specified_value,
                              const bool expected_value,
                              const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "wheelchair";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.wheelchair());
 }
 
-void test_bicycle_parsing(const Costing costing,
+void test_bicycle_parsing(const Costing::Type costing_type,
                           const bool specified_value,
                           const bool expected_value,
                           const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "bicycle";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.bicycle());
 }
 
-void test_filter_stop_parsing(const Costing costing,
+void test_filter_stop_parsing(const Costing::Type costing_type,
                               const valhalla::FilterAction filter_action,
                               const std::vector<std::string>& filter_ids,
                               const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string filter_type = "stops";
   const std::string action_key = "filter_stop_action";
   const std::string ids_key = "filter_stop_ids";
@@ -1517,17 +1530,17 @@ void test_filter_stop_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(action_key, filter_action, true, options.filter_stop_action());
   validate(ids_key, filter_ids, (options.filter_stop_ids_size() > 0), options.filter_stop_ids());
 }
 
-void test_filter_route_parsing(const Costing costing,
+void test_filter_route_parsing(const Costing::Type costing_type,
                                const valhalla::FilterAction filter_action,
                                const std::vector<std::string>& filter_ids,
                                const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string filter_type = "routes";
   const std::string action_key = "filter_route_action";
   const std::string ids_key = "filter_route_ids";
@@ -1535,17 +1548,17 @@ void test_filter_route_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(action_key, filter_action, true, options.filter_route_action());
   validate(ids_key, filter_ids, (options.filter_route_ids_size() > 0), options.filter_route_ids());
 }
 
-void test_filter_operator_parsing(const Costing costing,
+void test_filter_operator_parsing(const Costing::Type costing_type,
                                   const valhalla::FilterAction filter_action,
                                   const std::vector<std::string>& filter_ids,
                                   const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string filter_type = "operators";
   const std::string action_key = "filter_operator_action";
   const std::string ids_key = "filter_operator_ids";
@@ -1553,57 +1566,57 @@ void test_filter_operator_parsing(const Costing costing,
   Api request =
       get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
                   action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(action_key, filter_action, true, options.filter_operator_action());
   validate(ids_key, filter_ids, (options.filter_operator_ids_size() > 0),
            options.filter_operator_ids());
 }
 
-void test_service_penalty_parsing(const Costing costing,
+void test_service_penalty_parsing(const Costing::Type costing_type,
                                   const float specified_value,
                                   const float expected_value,
                                   const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "service_penalty";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.service_penalty());
 }
 
-void test_service_factor_parsing(const Costing costing,
+void test_service_factor_parsing(const Costing::Type costing_type,
                                  const float specified_value,
                                  const float expected_value,
                                  const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "service_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.service_factor());
 }
 
-void test_closure_factor_parsing(const Costing costing,
+void test_closure_factor_parsing(const Costing::Type costing_type,
                                  const float specified_value,
                                  const float expected_value,
                                  const Options::Action action = Options::route) {
   // Create the costing string
-  auto costing_str = get_costing_str(costing);
+  auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
   const std::string key = "closure_factor";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
-  auto& options = request.options().costing_options().find(costing)->second;
+  const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.closure_factor());
 }
 
@@ -1667,12 +1680,12 @@ TEST(ParseRequest, test_filter_attributes) {
   test_filter_attributes_parsing({"edge.names", "edge.id", "edge.weighted_grade", "edge.speed"});
 }
 
-std::vector<Costing> get_all_motor_costings() {
+std::vector<Costing::Type> get_all_motor_costings() {
   return {Costing::auto_,         Costing::bicycle,    Costing::bus,   Costing::taxi,
           Costing::motor_scooter, Costing::pedestrian, Costing::truck, Costing::motorcycle};
 }
 
-std::vector<Costing> get_base_auto_costing_list() {
+std::vector<Costing::Type> get_base_auto_costing_list() {
   return {Costing::auto_, Costing::bus, Costing::taxi};
 }
 TEST(ParseRequest, test_default_base_auto_cost_options) {
@@ -1682,27 +1695,27 @@ TEST(ParseRequest, test_default_base_auto_cost_options) {
 }
 
 TEST(ParseRequest, test_default_motor_scooter_cost_options) {
-  test_default_motor_scooter_cost_options(motor_scooter, Options::route);
+  test_default_motor_scooter_cost_options(Costing::motor_scooter, Options::route);
 }
 
 TEST(ParseRequest, test_default_motorcycle_cost_options) {
-  test_default_motorcycle_cost_options(motorcycle, Options::route);
+  test_default_motorcycle_cost_options(Costing::motorcycle, Options::route);
 }
 
 TEST(ParseRequest, test_default_pedestrian_cost_options) {
-  test_default_pedestrian_cost_options(pedestrian, Options::route);
+  test_default_pedestrian_cost_options(Costing::pedestrian, Options::route);
 }
 
 TEST(ParseRequest, test_default_bicycle_cost_options) {
-  test_default_bicycle_cost_options(bicycle, Options::route);
+  test_default_bicycle_cost_options(Costing::bicycle, Options::route);
 }
 
 TEST(ParseRequest, test_default_truck_cost_options) {
-  test_default_truck_cost_options(truck, Options::route);
+  test_default_truck_cost_options(Costing::truck, Options::route);
 }
 
 TEST(ParseRequest, test_default_transit_cost_options) {
-  test_default_transit_cost_options(transit, Options::route);
+  test_default_transit_cost_options(Costing::transit, Options::route);
 }
 
 TEST(ParseRequest, test_default_base_cost_options) {
@@ -1719,7 +1732,7 @@ TEST(ParseRequest, test_transport_type) {
                                 transport_type_value);
   }
 
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   for (const auto& transport_type_value : {"foot", "wheelchair"}) {
     test_transport_type_parsing(costing, transport_type_key, transport_type_value,
                                 transport_type_value);
@@ -1743,7 +1756,7 @@ TEST(ParseRequest, test_maneuver_penalty) {
     test_maneuver_penalty_parsing(costing, 50000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_ManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
@@ -1794,7 +1807,7 @@ TEST(ParseRequest, test_destination_only_penalty) {
     test_destination_only_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_DestinationOnlyPenalty;
   test_destination_only_penalty_parsing(costing, default_value, default_value);
   test_destination_only_penalty_parsing(costing, 2.f, 2.f);
@@ -1829,7 +1842,7 @@ TEST(ParseRequest, test_gate_cost) {
     test_gate_cost_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_GateCost;
   test_gate_cost_parsing(costing, default_value, default_value);
   test_gate_cost_parsing(costing, 2.f, 2.f);
@@ -1872,7 +1885,7 @@ TEST(ParseRequest, test_gate_penalty) {
     test_gate_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_GatePenalty;
   test_gate_penalty_parsing(costing, default_value, default_value);
   test_gate_penalty_parsing(costing, 2.f, 2.f);
@@ -1923,7 +1936,7 @@ TEST(ParseRequest, test_private_access_penalty) {
     test_private_access_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_PrivateAccessPenalty;
   test_private_access_penalty_parsing(costing, default_value, default_value);
   test_private_access_penalty_parsing(costing, 2.f, 2.f);
@@ -1966,7 +1979,7 @@ TEST(ParseRequest, test_toll_booth_cost) {
     test_toll_booth_cost_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motorcycle;
+  Costing::Type costing = Costing::motorcycle;
   default_value = kDefaultMotorcycle_TollBoothCost;
   test_toll_booth_cost_parsing(costing, default_value, default_value);
   test_toll_booth_cost_parsing(costing, 2.f, 2.f);
@@ -1993,7 +2006,7 @@ TEST(ParseRequest, test_toll_booth_penalty) {
     test_toll_booth_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motorcycle;
+  Costing::Type costing = Costing::motorcycle;
   default_value = kDefaultMotorcycle_TollBoothPenalty;
   test_toll_booth_penalty_parsing(costing, default_value, default_value);
   test_toll_booth_penalty_parsing(costing, 2.f, 2.f);
@@ -2020,7 +2033,7 @@ TEST(ParseRequest, test_alley_penalty) {
     test_alley_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_AlleyPenalty;
   test_alley_penalty_parsing(costing, default_value, default_value);
   test_alley_penalty_parsing(costing, 2.f, 2.f);
@@ -2063,7 +2076,7 @@ TEST(ParseRequest, test_country_crossing_cost) {
     test_country_crossing_cost_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_CountryCrossingCost;
   test_country_crossing_cost_parsing(costing, default_value, default_value);
   test_country_crossing_cost_parsing(costing, 2.f, 2.f);
@@ -2114,7 +2127,7 @@ TEST(ParseRequest, test_country_crossing_penalty) {
     test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_CountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
@@ -2163,7 +2176,7 @@ TEST(ParseRequest, test_ferry_cost) {
     test_ferry_cost_parsing(costing, 500000.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_FerryCost;
   test_ferry_cost_parsing(costing, default_value, default_value);
   test_ferry_cost_parsing(costing, 2.f, 2.f);
@@ -2206,7 +2219,7 @@ TEST(ParseRequest, test_use_ferry) {
     test_use_ferry_parsing(costing, 2.f, default_value);
   }
 
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   default_value = kDefaultMotorScooter_UseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
@@ -2240,7 +2253,7 @@ TEST(ParseRequest, test_use_ferry) {
 }
 
 TEST(ParseRequest, test_use_living_streets) {
-  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  std::vector<std::pair<Costing::Type, float>> costing_with_defaults;
   for (auto costing : get_base_auto_costing_list())
     costing_with_defaults.emplace_back(costing, kDefaultAuto_UseLivingStreets);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_UseLivingStreets);
@@ -2261,7 +2274,7 @@ TEST(ParseRequest, test_use_living_streets) {
 }
 
 TEST(ParseRequest, test_service_penalty) {
-  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  std::vector<std::pair<Costing::Type, float>> costing_with_defaults;
   for (auto costing : get_base_auto_costing_list())
     costing_with_defaults.emplace_back(costing, kDefaultAuto_ServicePenalty);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_ServicePenalty);
@@ -2282,7 +2295,7 @@ TEST(ParseRequest, test_service_penalty) {
 }
 
 TEST(ParseRequest, test_service_factor) {
-  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  std::vector<std::pair<Costing::Type, float>> costing_with_defaults;
   for (auto costing : get_base_auto_costing_list())
     costing_with_defaults.emplace_back(costing, kDefaultAuto_ServiceFactor);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_ServiceFactor);
@@ -2322,7 +2335,7 @@ TEST(ParseRequest, test_use_highways) {
     test_use_highways_parsing(costing, 2.f, default_value);
   }
 
-  Costing costing = Costing::motorcycle;
+  Costing::Type costing = Costing::motorcycle;
   default_value = kDefaultMotorcycle_UseHighways;
   test_use_highways_parsing(costing, default_value, default_value);
   test_use_highways_parsing(costing, 0.2f, 0.2f);
@@ -2341,7 +2354,7 @@ TEST(ParseRequest, test_use_tolls) {
     test_use_tolls_parsing(costing, 2.f, default_value);
   }
 
-  Costing costing = Costing::motorcycle;
+  Costing::Type costing = Costing::motorcycle;
   default_value = kDefaultMotorcycle_UseTolls;
   test_use_tolls_parsing(costing, default_value, default_value);
   test_use_tolls_parsing(costing, 0.2f, 0.2f);
@@ -2351,7 +2364,7 @@ TEST(ParseRequest, test_use_tolls) {
 }
 
 TEST(ParseRequest, test_use_tracks) {
-  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  std::vector<std::pair<Costing::Type, float>> costing_with_defaults;
   for (auto costing : get_base_auto_costing_list())
     costing_with_defaults.emplace_back(costing, kDefaultTruck_UseTracks);
   costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_UseTracks);
@@ -2368,7 +2381,7 @@ TEST(ParseRequest, test_use_tracks) {
 }
 
 TEST(ParseRequest, test_use_hills) {
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   float default_value = kDefaultMotorScooter_UseHills;
   test_use_hills_parsing(costing, default_value, default_value);
   test_use_hills_parsing(costing, 0.2f, 0.2f);
@@ -2386,7 +2399,7 @@ TEST(ParseRequest, test_use_hills) {
 }
 
 TEST(ParseRequest, test_use_primary) {
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   float default_value = kDefaultMotorScooter_UsePrimary;
   test_use_primary_parsing(costing, default_value, default_value);
   test_use_primary_parsing(costing, 0.2f, 0.2f);
@@ -2396,7 +2409,7 @@ TEST(ParseRequest, test_use_primary) {
 }
 
 TEST(ParseRequest, test_top_speed) {
-  Costing costing = Costing::motor_scooter;
+  Costing::Type costing = Costing::motor_scooter;
   float default_value = kDefaultMotorScooter_TopSpeed;
   test_top_speed_parsing(costing, default_value, default_value);
   test_top_speed_parsing(costing, 25, 25);
@@ -2406,7 +2419,7 @@ TEST(ParseRequest, test_top_speed) {
 }
 
 TEST(ParseRequest, test_use_trails) {
-  Costing costing = Costing::motorcycle;
+  Costing::Type costing = Costing::motorcycle;
   float default_value = kDefaultMotorcycle_UseTrails;
   test_use_trails_parsing(costing, default_value, default_value);
   test_use_trails_parsing(costing, 0.2f, 0.2f);
@@ -2416,7 +2429,7 @@ TEST(ParseRequest, test_use_trails) {
 }
 
 TEST(ParseRequest, test_max_distance) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
 
   std::string transport_type = "foot";
   uint32_t default_value = kDefaultPedestrian_MaxDistanceFoot;
@@ -2432,7 +2445,7 @@ TEST(ParseRequest, test_max_distance) {
 }
 
 TEST(ParseRequest, test_walking_speed) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
 
   std::string transport_type = "foot";
   float default_value = kDefaultPedestrian_SpeedFoot;
@@ -2452,7 +2465,7 @@ TEST(ParseRequest, test_walking_speed) {
 }
 
 TEST(ParseRequest, test_step_penalty) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
 
   std::string transport_type = "foot";
   float default_value = kDefaultPedestrian_StepPenaltyFoot;
@@ -2472,7 +2485,7 @@ TEST(ParseRequest, test_step_penalty) {
 }
 
 TEST(ParseRequest, test_max_grade) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
 
   std::string transport_type = "foot";
   uint32_t default_value = kDefaultPedestrian_MaxGradeFoot;
@@ -2489,7 +2502,7 @@ TEST(ParseRequest, test_max_grade) {
 }
 
 TEST(ParseRequest, test_max_hiking_difficulty) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_MaxHikingDifficulty;
   test_max_hiking_difficulty_parsing(costing, default_value, default_value);
   test_max_hiking_difficulty_parsing(costing, 3, 3);
@@ -2497,7 +2510,7 @@ TEST(ParseRequest, test_max_hiking_difficulty) {
 }
 
 TEST(ParseRequest, test_mode_factor) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_ModeFactor;
   test_mode_factor_parsing(costing, default_value, default_value);
   test_mode_factor_parsing(costing, 1.f, 1.f);
@@ -2514,7 +2527,7 @@ TEST(ParseRequest, test_mode_factor) {
 }
 
 TEST(ParseRequest, test_walkway_factor) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_WalkwayFactor;
   test_walkway_factor_parsing(costing, default_value, default_value);
   test_walkway_factor_parsing(costing, 0.5f, 0.5f);
@@ -2524,7 +2537,7 @@ TEST(ParseRequest, test_walkway_factor) {
 }
 
 TEST(ParseRequest, test_sidewalk_factor) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_SideWalkFactor;
   test_sidewalk_factor_parsing(costing, default_value, default_value);
   test_sidewalk_factor_parsing(costing, 0.5f, 0.5f);
@@ -2534,7 +2547,7 @@ TEST(ParseRequest, test_sidewalk_factor) {
 }
 
 TEST(ParseRequest, test_alley_factor) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_AlleyFactor;
   test_alley_factor_parsing(costing, default_value, default_value);
   test_alley_factor_parsing(costing, 1.f, 1.f);
@@ -2544,7 +2557,7 @@ TEST(ParseRequest, test_alley_factor) {
 }
 
 TEST(ParseRequest, test_driveway_factor) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_DrivewayFactor;
   test_driveway_factor_parsing(costing, default_value, default_value);
   test_driveway_factor_parsing(costing, 1.f, 1.f);
@@ -2554,7 +2567,7 @@ TEST(ParseRequest, test_driveway_factor) {
 }
 
 TEST(ParseRequest, test_transit_start_end_max_distance) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_TransitStartEndMaxDistance;
   test_transit_start_end_max_distance_parsing(costing, default_value, default_value);
   test_transit_start_end_max_distance_parsing(costing, 3000, 3000);
@@ -2562,7 +2575,7 @@ TEST(ParseRequest, test_transit_start_end_max_distance) {
 }
 
 TEST(ParseRequest, test_transit_transfer_max_distance) {
-  Costing costing = Costing::pedestrian;
+  Costing::Type costing = Costing::pedestrian;
   float default_value = kDefaultPedestrian_TransitTransferMaxDistance;
   test_transit_transfer_max_distance_parsing(costing, default_value, default_value);
   test_transit_transfer_max_distance_parsing(costing, 1500, 1500);
@@ -2570,7 +2583,7 @@ TEST(ParseRequest, test_transit_transfer_max_distance) {
 }
 
 TEST(ParseRequest, test_use_roads) {
-  Costing costing = Costing::bicycle;
+  Costing::Type costing = Costing::bicycle;
   float default_value = kDefaultBicycle_UseRoad;
   test_use_roads_parsing(costing, default_value, default_value);
   test_use_roads_parsing(costing, 0.1f, 0.1f);
@@ -2580,7 +2593,7 @@ TEST(ParseRequest, test_use_roads) {
 }
 
 TEST(ParseRequest, test_avoid_bad_surfaces) {
-  Costing costing = Costing::bicycle;
+  Costing::Type costing = Costing::bicycle;
   float default_value = kDefaultBicycle_AvoidBadSurfaces;
   test_avoid_bad_surfaces_parsing(costing, default_value, default_value);
   test_avoid_bad_surfaces_parsing(costing, 0.1f, 0.1f);
@@ -2590,7 +2603,7 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
 }
 
 TEST(ParseRequest, test_cycling_speed) {
-  Costing costing = Costing::bicycle;
+  Costing::Type costing = Costing::bicycle;
 
   std::string transport_type = "Road";
   float default_value =
@@ -2630,7 +2643,7 @@ TEST(ParseRequest, test_cycling_speed) {
 }
 
 TEST(ParseRequest, test_low_class_penalty) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_LowClassPenalty;
   test_low_class_penalty_parsing(costing, default_value, default_value);
   test_low_class_penalty_parsing(costing, 15.f, 15.f);
@@ -2640,7 +2653,7 @@ TEST(ParseRequest, test_low_class_penalty) {
 }
 
 TEST(ParseRequest, test_weight) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckWeight;
   test_weight_parsing(costing, default_value, default_value);
   test_weight_parsing(costing, 15.f, 15.f);
@@ -2650,7 +2663,7 @@ TEST(ParseRequest, test_weight) {
 }
 
 TEST(ParseRequest, test_axle_load) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckAxleLoad;
   test_axle_load_parsing(costing, default_value, default_value);
   test_axle_load_parsing(costing, 5.f, 5.f);
@@ -2660,7 +2673,7 @@ TEST(ParseRequest, test_axle_load) {
 }
 
 TEST(ParseRequest, test_height) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckHeight;
   test_height_parsing(costing, default_value, default_value);
   test_height_parsing(costing, 2.f, 2.f);
@@ -2670,7 +2683,7 @@ TEST(ParseRequest, test_height) {
 }
 
 TEST(ParseRequest, test_width) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckWidth;
   test_width_parsing(costing, default_value, default_value);
   test_width_parsing(costing, 2.f, 2.f);
@@ -2680,7 +2693,7 @@ TEST(ParseRequest, test_width) {
 }
 
 TEST(ParseRequest, test_length) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckLength;
   test_length_parsing(costing, default_value, default_value);
   test_length_parsing(costing, 15.f, 15.f);
@@ -2690,7 +2703,7 @@ TEST(ParseRequest, test_length) {
 }
 
 TEST(ParseRequest, test_hazmat) {
-  Costing costing = Costing::truck;
+  Costing::Type costing = Costing::truck;
   bool default_value = false;
   test_hazmat_parsing(costing, default_value, default_value);
   test_hazmat_parsing(costing, true, true);
@@ -2698,7 +2711,7 @@ TEST(ParseRequest, test_hazmat) {
 }
 
 TEST(ParseRequest, test_wheelchair) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   bool default_value = false;
   test_wheelchair_parsing(costing, default_value, default_value);
   test_wheelchair_parsing(costing, true, true);
@@ -2706,7 +2719,7 @@ TEST(ParseRequest, test_wheelchair) {
 }
 
 TEST(ParseRequest, test_bicycle) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   bool default_value = false;
   test_bicycle_parsing(costing, default_value, default_value);
   test_bicycle_parsing(costing, true, true);
@@ -2714,7 +2727,7 @@ TEST(ParseRequest, test_bicycle) {
 }
 
 TEST(ParseRequest, test_use_bus) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   float default_value = kDefaultTransit_UseBus;
   test_use_bus_parsing(costing, default_value, default_value);
   test_use_bus_parsing(costing, 0.2f, 0.2f);
@@ -2724,7 +2737,7 @@ TEST(ParseRequest, test_use_bus) {
 }
 
 TEST(ParseRequest, test_use_rail) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   float default_value = kDefaultTransit_UseRail;
   test_use_rail_parsing(costing, default_value, default_value);
   test_use_rail_parsing(costing, 0.3f, 0.3f);
@@ -2734,7 +2747,7 @@ TEST(ParseRequest, test_use_rail) {
 }
 
 TEST(ParseRequest, test_use_transfers) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   float default_value = kDefaultTransit_UseTransfers;
   test_use_transfers_parsing(costing, default_value, default_value);
   test_use_transfers_parsing(costing, 0.2f, 0.2f);
@@ -2744,7 +2757,7 @@ TEST(ParseRequest, test_use_transfers) {
 }
 
 TEST(ParseRequest, test_transfer_cost) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   float default_value = kDefaultTransit_TransferCost;
   test_transfer_cost_parsing(costing, default_value, default_value);
   test_transfer_cost_parsing(costing, 10.f, 10.f);
@@ -2754,7 +2767,7 @@ TEST(ParseRequest, test_transfer_cost) {
 }
 
 TEST(ParseRequest, test_transfer_penalty) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
   float default_value = kDefaultTransit_TransferPenalty;
   test_transfer_penalty_parsing(costing, default_value, default_value);
   test_transfer_penalty_parsing(costing, 150.f, 150.f);
@@ -2764,7 +2777,7 @@ TEST(ParseRequest, test_transfer_penalty) {
 }
 
 TEST(ParseRequest, test_stops_transit_filter) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
 
   valhalla::FilterAction filter_action = valhalla::FilterAction::exclude;
   std::vector<std::string> filter_ids = {"stop1", "stop2", "stop3"};
@@ -2776,7 +2789,7 @@ TEST(ParseRequest, test_stops_transit_filter) {
 }
 
 TEST(ParseRequest, test_routes_transit_filter) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
 
   valhalla::FilterAction filter_action = valhalla::FilterAction::exclude;
   std::vector<std::string> filter_ids = {"route1", "route2", "route3"};
@@ -2788,7 +2801,7 @@ TEST(ParseRequest, test_routes_transit_filter) {
 }
 
 TEST(ParseRequest, test_operators_transit_filter) {
-  Costing costing = Costing::transit;
+  Costing::Type costing = Costing::transit;
 
   valhalla::FilterAction filter_action = valhalla::FilterAction::exclude;
   std::vector<std::string> filter_ids = {"operator1", "operator2", "operator3"};

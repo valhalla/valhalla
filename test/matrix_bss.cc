@@ -47,9 +47,9 @@ class MatrixBssTest : public ::testing::Test {
 public:
   MatrixBssTest() {
     Options options;
-    options.set_costing(Costing::bikeshare);
+    options.set_costing_type(Costing::bikeshare);
     rapidjson::Document doc;
-    sif::ParseCostingOptions(doc, "/costing_options", options);
+    sif::ParseCosting(doc, "/costing_options", options);
     sif::TravelMode mode;
     mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
   }

@@ -31,8 +31,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options)
-      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
+  NoCost(const Costing& costing) : DynamicCost(costing, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
@@ -205,15 +204,13 @@ public:
   }
 };
 
-void ParseNoCostOptions(const rapidjson::Document&,
-                        const std::string&,
-                        CostingOptions* costing_options) {
+void ParseNoCostOptions(const rapidjson::Document&, const std::string&, Costing* c) {
   // this is probably not needed but its part of the contract for costing..
-  costing_options->set_costing(Costing::none_);
-  costing_options->set_name(Costing_Enum_Name(costing_options->costing()));
+  c->set_type(Costing::none_);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateNoCost(const Costing& costing_options) {
   return std::make_shared<NoCost>(costing_options);
 }
 
