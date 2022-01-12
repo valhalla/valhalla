@@ -37,10 +37,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_length(std::max(length, kMinimumEdgeLength), true);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
-  if (way.ferry()) {
+  if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);
   }
-  if (way.rail()) {
+  if (way.rail() && way.use() != Use::kConstruction) {
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
@@ -150,7 +150,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps) {
+  if (way.use() != Use::kSteps && way.use() != Use::kConstruction) {
     if (way.wheelchair_tag() && way.wheelchair()) {
       forward_access |= kWheelchairAccess;
       reverse_access |= kWheelchairAccess;
