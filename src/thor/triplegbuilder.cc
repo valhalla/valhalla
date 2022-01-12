@@ -1025,6 +1025,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_destination_only(directededge->destonly());
   }
 
+  // Set indoor flag if requested
+  if (directededge->indoor() && controller.attributes.at(kEdgeIndoor)) {
+    trip_edge->set_indoor(true);
+  }
+
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
     // Override bicycle mode with pedestrian if dismount flag or steps

@@ -42,6 +42,9 @@ constexpr float kDefaultSpeedWheelchair = 4.0f; // 2.5  MPH  TODO
 constexpr float kDefaultStepPenaltyFoot = 30.0f;        // 30 seconds
 constexpr float kDefaultStepPenaltyWheelchair = 600.0f; // 10 minutes
 
+// Penalty to take elevator
+constexpr float kDefaultElevatorPenalty = 5.0f; // 5 seconds
+
 // Maximum grade30
 constexpr uint32_t kDefaultMaxGradeFoot = 90;
 constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
@@ -122,6 +125,7 @@ constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kElevatorPenaltyRange{0, kDefaultElevatorPenalty, kMaxPenalty};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -482,6 +486,7 @@ public:
   float alley_factor_;             // Avoid alleys factor.
   float driveway_factor_;          // Avoid driveways factor.
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
+  float elevator_penalty_;         // Penalty applied to elevator (seconds).
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -582,6 +587,7 @@ PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
   max_distance_ = costing_options.max_distance();
   speed_ = costing_options.walking_speed();
   step_penalty_ = costing_options.step_penalty();
+  elevator_penalty_ = costing_options.elevator_penalty();
   max_grade_ = costing_options.max_grade();
 
   if (type_ == PedestrianType::kFoot) {
@@ -724,6 +730,10 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
   }
+  // fixed penalty for elevator
+  if (edge->use() == Use::kElevator) {
+    return {elevator_penalty_, 0.0f};
+  }
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
@@ -757,6 +767,10 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
+  }
+  // fixed penalty for elevator
+  if (edge->use() == Use::kElevator || node->type() == NodeType::kElevator) {
+    return {elevator_penalty_, 0.0f};
   }
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
@@ -812,6 +826,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kBSSCostRange, json, "/bss_rent_cost", bike_share_cost);
   JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_rent_penalty", bike_share_penalty);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
+  JSON_PBF_RANGED_DEFAULT(co, kElevatorPenaltyRange, json, "/elevator_penalty", elevator_penalty);
 }
 
 cost_ptr_t CreatePedestrianCost(const CostingOptions& costing_options) {
