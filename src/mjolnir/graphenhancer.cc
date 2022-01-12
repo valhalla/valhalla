@@ -859,7 +859,7 @@ uint32_t GetDensity(GraphReader& reader,
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, ferries, etc.)
+          // Exclude non-roads (parking, walkways, ferries, construction, etc.)
           if (directededge->is_road() || directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
               directededge->use() == Use::kEmergencyAccess) {
@@ -1219,8 +1219,8 @@ void ProcessEdgeTransitions(const uint32_t idx,
     uint32_t left_count = 0;
     if (ntrans > 2) {
       for (uint32_t j = 0; j < ntrans; ++j) {
-        // Skip the from and to edges
-        if (j == i || j == idx) {
+        // Skip the from and to edges; also skip roads under construction
+        if (j == i || j == idx || edges[j].use() == Use::kConstruction) {
           continue;
         }
 

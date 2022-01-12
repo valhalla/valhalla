@@ -217,6 +217,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kFerryUse;
     case baldr::Use::kRailFerry:
       return TripLeg_Use_kRailFerryUse;
+    case baldr::Use::kConstruction:
+      return TripLeg_Use_kConstructionUse;
     case baldr::Use::kRail:
       return TripLeg_Use_kRailUse;
     case baldr::Use::kBus:
