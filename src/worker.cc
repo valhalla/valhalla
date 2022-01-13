@@ -407,7 +407,7 @@ void parse_location(valhalla::Location* location,
                            : true;
   }
 
-  // bail if you specified both of these, too confusing to work out how to use both at once
+  // if you specified both of these they may contradict so we throw up our hands
   if (ignore_closures && exclude_closures) {
     throw valhalla_exception_t{143};
   }
@@ -544,9 +544,25 @@ void parse_contours(const rapidjson::Document& doc,
  * function will still validate it and set the defaults, but if json is provided it will
  * override anything this is in the options object
  * @param doc      the rapidjson request doc
+ * @param action   which request action will be performed
  * @param options  the options to fill out or validate if they are already filled out
  */
-void from_json(rapidjson::Document& doc, Options& options) {
+void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
+  // if its a pbf request we want to keep the options and clear the rest
+  if (api.has_options() && doc.ObjectEmpty()) {
+    api.clear_trip();
+    api.clear_directions();
+    api.clear_status();
+    api.clear_info();
+  } // when its json we start with a blank slate and fill it all in
+  else {
+    api.Clear();
+  }
+
+  // set the action
+  auto& options = *api.mutable_options();
+  options.set_action(action);
+
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
   auto deprecated = get_child_optional(doc, "/directions_options");
@@ -1142,21 +1158,9 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
 }
 
 void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
-  // if its a pbf request we only want to clear the stuff we are going to eventually set
-  if (api.has_options() && request.empty()) {
-    api.clear_trip();
-    api.clear_directions();
-    api.clear_status();
-    api.clear_info();
-  } // otherwise blank it all just in case
-  else {
-    api.Clear();
-  }
-
   // maybe parse some json
-  api.mutable_options()->set_action(action);
   auto document = from_string(request, valhalla_exception_t{100});
-  from_json(document, *api.mutable_options());
+  from_json(document, action, api);
 }
 
 #ifdef HAVE_HTTP
@@ -1170,13 +1174,10 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   api.Clear();
   api.mutable_info()->set_is_service(true);
 
-  // set the action
-  auto& options = *api.mutable_options();
+  // get the action
   Options::Action action;
-  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
-    // if this is a pbf request, its action is overridden by the request path
-    options.set_action(action);
-  }
+  if (!request.path.empty())
+    Options_Action_Enum_Parse(request.path.substr(1), &action);
 
   // if its a protobuf mime go with that
   auto pbf_content = request.headers.find("Content-Type");
@@ -1185,8 +1186,9 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
       throw valhalla_exception_t{103};
     }
     // validate the options
-    rapidjson::Document document;
-    from_json(document, *api.mutable_options());
+    rapidjson::Document dummy;
+    dummy.SetObject();
+    from_json(dummy, action, api);
     return;
   }
 
@@ -1231,7 +1233,7 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   }
 
   // parse out the options
-  from_json(document, options);
+  from_json(document, action, api);
 }
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
