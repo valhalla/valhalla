@@ -39,7 +39,7 @@ int get_node_candidate_index(const valhalla::Location& location,
                              const GraphId& edge_id,
                              int* percent_along) {
   int i = 0;
-  for (const auto& e : location.path_edges()) {
+  for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id) {
       *percent_along = e.percent_along();
       return i;
@@ -173,7 +173,7 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
     auto edge_id = tile->id();
     edge_id.set_id(node->edge_index());
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
-      auto* path_edge = loc->add_path_edges();
+      auto* path_edge = loc->mutable_correlation()->add_edges();
       path_edge->set_distance(0);
       path_edge->set_begin_node(true);
       path_edge->set_end_node(false);
@@ -279,19 +279,19 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto& options = *request.mutable_options();
   const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
 
-  auto& co = options.mutable_costing_options()->find(options.costing())->second;
+  auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
   std::list<std::string> exclude_edge_ids;
 
   for (auto& exclude_edge : co.exclude_edges()) {
     exclude_edge_ids.push_back(std::to_string(GraphId(exclude_edge.id())));
   }
 
-  int currentOriginNodeIndex = originLocation.path_edges().size();
+  int currentOriginNodeIndex = originLocation.correlation().edges().size();
   CPVertex originVertex;
   int candidateOriginNodeIndex;
   int originPercentAlong;
 
-  int currentDestinationNodeIndex = destinationLocation.path_edges().size();
+  int currentDestinationNodeIndex = destinationLocation.correlation().edges().size();
   CPVertex destinationVertex;
   int candidateDestinationNodeIndex;
   int destinationPercentAlong;
@@ -347,10 +347,10 @@ void thor_worker_t::chinese_postman(Api& request) {
   }
   // If the node index is more than the path_edge size, that means that there is no suitable
   // node for the origin or destination location.
-  if (currentOriginNodeIndex >= originLocation.path_edges().size()) {
+  if (currentOriginNodeIndex >= originLocation.correlation().edges().size()) {
     throw valhalla_exception_t(451);
   }
-  if (currentDestinationNodeIndex >= destinationLocation.path_edges().size()) {
+  if (currentDestinationNodeIndex >= destinationLocation.correlation().edges().size()) {
     throw valhalla_exception_t(451);
   }
 

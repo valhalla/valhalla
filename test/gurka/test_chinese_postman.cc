@@ -52,16 +52,16 @@ rapidjson::Value get_chinese_polygon(ring_bg_t ring, rapidjson::MemoryPoolAlloca
 
 std::unordered_set<valhalla::baldr::GraphId> get_edges(gurka::map map, std::string nodes) {
   valhalla::Options options;
-  options.set_costing(valhalla::Costing::auto_);
-  auto& co = (*options.mutable_costing_options())[valhalla::Costing::auto_];
-  co.set_costing(valhalla::Costing::auto_);
+  options.set_costing_type(Costing::auto_);
+  auto& co = (*options.mutable_costings())[valhalla::Costing::auto_];
+  co.set_type(valhalla::Costing::auto_);
 
   const auto costing = valhalla::sif::CostFactory{}.Create(co);
   GraphReader reader(map.config.get_child("mjolnir"));
 
   auto* exclude_polygons = options.mutable_exclude_polygons();
 
-  google::protobuf::RepeatedPtrField<valhalla::Options::Ring> rings;
+  google::protobuf::RepeatedPtrField<valhalla::Ring> rings;
 
   auto* ring = rings.Add();
 

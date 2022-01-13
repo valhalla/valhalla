@@ -144,7 +144,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   // Create rings for edges_in_rings function
   if (options.has_chinese_polygon()) {
-    google::protobuf::RepeatedPtrField<valhalla::Options::Ring> rings;
+    google::protobuf::RepeatedPtrField<valhalla::Ring> rings;
     auto* r = rings.Add();
     r->Swap(options.mutable_chinese_polygon());
     const auto chinese_edges =
