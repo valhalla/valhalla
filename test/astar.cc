@@ -205,10 +205,10 @@ void make_tile() {
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
-void create_costing_options(Options& options, Costing costing) {
+void create_costing_options(Options& options, Costing::Type costing) {
   const rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
-  options.set_costing(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
+  options.set_costing_type(costing);
 }
 // Convert locations to format needed by PathAlgorithm
 std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,

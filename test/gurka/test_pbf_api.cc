@@ -52,7 +52,7 @@ TEST(pbf_api, pbf_in_out) {
     // do the request still with json out but with pbf in
     Api json_out;
     json_out.mutable_options()->CopyFrom(clean_pbf.options());
-    json_out.mutable_options()->clear_costing_options();
+    json_out.mutable_options()->clear_costings();
     auto actual_json = gurka::do_action(map, json_out);
     EXPECT_EQ(actual_json, expected_json);
 
@@ -65,7 +65,7 @@ TEST(pbf_api, pbf_in_out) {
     if (pbf_actions.count(Options::Action(action))) {
       Api pbf_out;
       pbf_out.mutable_options()->CopyFrom(clean_pbf.options());
-      pbf_out.mutable_options()->clear_costing_options();
+      pbf_out.mutable_options()->clear_costings();
       pbf_out.mutable_options()->set_format(Options::pbf);
       auto pbf_bytes = gurka::do_action(map, pbf_out);
       Api actual_pbf;

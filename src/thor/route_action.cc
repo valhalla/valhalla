@@ -39,26 +39,24 @@ bool intermediate_loc_edge_trimming(
     const size_t path_index,
     const bool arrive_by) {
   // Find the path edges within the locations.
-  auto in_pe =
-      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
-                   [&in](const valhalla::Location::PathEdge& e) { return e.graph_id() == in; });
-  auto out_pe =
-      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
-                   [&out](const valhalla::Location::PathEdge& e) { return e.graph_id() == out; });
+  auto in_pe = std::find_if(loc.correlation().edges().begin(), loc.correlation().edges().end(),
+                            [&in](const valhalla::PathEdge& e) { return e.graph_id() == in; });
+  auto out_pe = std::find_if(loc.correlation().edges().begin(), loc.correlation().edges().end(),
+                             [&out](const valhalla::PathEdge& e) { return e.graph_id() == out; });
 
   // Could not find the edges. This seems like it should not happen. Log a warning
   // and do not insert an intermediate location.
-  if (in_pe == loc.path_edges().end() || out_pe == loc.path_edges().end()) {
+  if (in_pe == loc.correlation().edges().end() || out_pe == loc.correlation().edges().end()) {
     LOG_WARN("Could not find connecting edges within the intermediate loc edge trimming");
     return false;
   }
 
   // Just set the edge index on the location for now then in triplegbuilder set to the shape index
-  loc.set_leg_shape_index(path_index + (arrive_by ? 1 : 0));
+  loc.mutable_correlation()->set_leg_shape_index(path_index + (arrive_by ? 1 : 0));
   // If the intermediate point is at a node we dont need to trim the edge we just set the edge index
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
     // In this case we won't add a duplicate edge so we cant increment for arrive by
-    loc.set_leg_shape_index(path_index);
+    loc.mutable_correlation()->set_leg_shape_index(path_index);
     return true;
   }
 
@@ -108,22 +106,25 @@ inline bool is_break_point(const valhalla::Location& l) {
   return l.type() == valhalla::Location::kBreak || l.type() == valhalla::Location::kBreakThrough;
 }
 
-inline bool is_highly_reachable(const valhalla::Location& loc,
-                                const valhalla::Location_PathEdge& edge) {
+inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
   return edge.inbound_reach() >= loc.minimum_reachability() &&
          edge.outbound_reach() >= loc.minimum_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
-  auto new_end =
-      std::remove_if(loc.mutable_path_edges()->begin(), loc.mutable_path_edges()->end(), pred);
-  int start_idx = std::distance(loc.mutable_path_edges()->begin(), new_end);
-  loc.mutable_path_edges()->DeleteSubrange(start_idx, loc.path_edges_size() - start_idx);
+  auto new_end = std::remove_if(loc.mutable_correlation()->mutable_edges()->begin(),
+                                loc.mutable_correlation()->mutable_edges()->end(), pred);
+  int start_idx = std::distance(loc.mutable_correlation()->mutable_edges()->begin(), new_end);
+  loc.mutable_correlation()->mutable_edges()->DeleteSubrange(start_idx,
+                                                             loc.correlation().edges_size() -
+                                                                 start_idx);
 
-  new_end = std::remove_if(loc.mutable_filtered_edges()->begin(), loc.mutable_filtered_edges()->end(),
-                           pred);
-  start_idx = std::distance(loc.mutable_filtered_edges()->begin(), new_end);
-  loc.mutable_filtered_edges()->DeleteSubrange(start_idx, loc.filtered_edges_size() - start_idx);
+  new_end = std::remove_if(loc.mutable_correlation()->mutable_filtered_edges()->begin(),
+                           loc.mutable_correlation()->mutable_filtered_edges()->end(), pred);
+  start_idx = std::distance(loc.mutable_correlation()->mutable_filtered_edges()->begin(), new_end);
+  loc.mutable_correlation()
+      ->mutable_filtered_edges()
+      ->DeleteSubrange(start_idx, loc.correlation().filtered_edges_size() - start_idx);
 }
 
 /**
@@ -131,8 +132,8 @@ template <typename Predicate> inline void remove_path_edges(valhalla::Location& 
 void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& reader) {
   // find the path edge at this point
   auto pe =
-      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
-                   [&edge_id](const valhalla::Location::PathEdge& e) { return e.graph_id() == edge_id;
+      std::find_if(loc.correlation().edges().begin(), loc.correlation().edges().end(),
+                   [&edge_id](const valhalla::PathEdge& e) { return e.graph_id() == edge_id;
 });
   // if its in the middle of the edge it can only be this edge or the opposing depending on type
   if (!pe->begin_node() && !pe->end_node()) {
@@ -141,9 +142,9 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
       opposing = reader.GetOpposingEdgeId(edge_id);
     // remove anything that isnt one of these two edges
     for (int i = 0; i < loc.path_edges_size(); ++i) {
-      if (loc.path_edges(i).graph_id() != edge_id && loc.path_edges(i).graph_id() != opposing) {
-        loc.mutable_path_edges()->SwapElements(i, loc.path_edges_size() - 1);
-        loc.mutable_path_edges()->RemoveLast();
+      if (loc.correlation().edges(i).graph_id() != edge_id && loc.correlation().edges(i).graph_id() !=
+opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path_edges_size() - 1);
+        loc.mutable_correlation()->mutable_edges()->RemoveLast();
       }
     }
     return;
@@ -163,9 +164,9 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
   start_edge.set_id(node->edge_index);
   GraphId end_edge = start_edge + node->edge_count;
   for (int i = 0; i < loc.path_edges_size(); ++i) {
-    if (loc.path_edges(i).graph_id() < start_edge || loc.path_edges(i) >= end_edge) {
-      loc.mutable_path_edges()->SwapElements(i, loc.path_edges_size() - 1);
-      loc.mutable_path_edges()->RemoveLast();
+    if (loc.correlation().edges(i).graph_id() < start_edge || loc.correlation().edges(i) >= end_edge)
+{ loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path_edges_size() - 1);
+      loc.mutable_correlation()->mutable_edges()->RemoveLast();
     }
   }
 }*/
@@ -195,7 +196,7 @@ void thor_worker_t::centroid(Api& request) {
   for (const auto& path : paths) {
     // the centroid could be either direction of the edge so here we set which it was by id
     auto dest = destination;
-    dest.mutable_path_edges(0)->set_graph_id(path.back().edgeid);
+    dest.mutable_correlation()->mutable_edges(0)->set_graph_id(path.back().edgeid);
 
     // actually build the route object
     auto* route = request.mutable_trip()->mutable_routes()->Add();
@@ -277,8 +278,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // use bidirectional A*. Bidirectional A* does not handle trivial cases with oneways and
   // has issues when cost of origin or destination edge is high (needs a high threshold to
   // find the proper connection).
-  for (auto& edge1 : origin.path_edges()) {
-    for (auto& edge2 : destination.path_edges()) {
+  for (auto& edge1 : origin.correlation().edges()) {
+    for (auto& edge2 : destination.correlation().edges()) {
       bool same_graph_id = edge1.graph_id() == edge2.graph_id();
       bool are_connected =
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
@@ -325,8 +326,9 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // by heading on first pass).
   if ((paths.empty() || ped_second_pass) && cost->AllowMultiPass()) {
     // add filtered edges to candidate edges for origin and destination
-    origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
-    destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
+    origin.mutable_correlation()->mutable_edges()->MergeFrom(origin.correlation().filtered_edges());
+    destination.mutable_correlation()->mutable_edges()->MergeFrom(
+        destination.correlation().filtered_edges());
 
     path_algorithm->Clear();
     cost->set_pass(1);
@@ -421,7 +423,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // Move destination back to the last break
         std::vector<valhalla::Location> intermediates;
         while (!is_break_point(*destination)) {
-          destination->set_leg_shape_index(path.size() - destination->leg_shape_index());
+          destination->mutable_correlation()->set_leg_shape_index(
+              path.size() - destination->correlation().leg_shape_index());
           intermediates.push_back(*destination);
           --destination;
         }
@@ -467,8 +470,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
       if (allow_retry && destination != correlated.rbegin() && is_through_point(*destination) &&
-          destination->path_edges_size() > 0 &&
-          !is_highly_reachable(*destination, destination->path_edges(0))) {
+          destination->correlation().edges_size() > 0 &&
+          !is_highly_reachable(*destination, destination->correlation().edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
@@ -476,7 +479,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           remove_path_edges(*loc,
                             [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
           // it doesn't make sense to continue if there are no more path edges
-          if (loc->path_edges_size() == 0)
+          if (loc->correlation().edges_size() == 0)
             // no route found
             throw valhalla_exception_t{442};
         }
@@ -612,7 +615,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       // (such road lies in a small connectivity component that is not connected to other locations)
       // we should leave only high reachability candidates and try to route again
       if (allow_retry && origin != correlated.begin() && is_through_point(*origin) &&
-          origin->path_edges_size() > 0 && !is_highly_reachable(*origin, origin->path_edges(0))) {
+          origin->correlation().edges_size() > 0 &&
+          !is_highly_reachable(*origin, origin->correlation().edges(0))) {
         allow_retry = false;
         // for each intermediate waypoint remove candidates with low reachability
         correlated = options.locations();
@@ -620,7 +624,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           remove_path_edges(*loc,
                             [&loc](const auto& edge) { return !is_highly_reachable(*loc, edge); });
           // it doesn't make sense to continue if there are no more path edges
-          if (loc->path_edges_size() == 0)
+          if (loc->correlation().edges_size() == 0)
             // no route found
             throw valhalla_exception_t{442};
         }

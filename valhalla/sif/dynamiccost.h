@@ -124,7 +124,7 @@ public:
    * @param  access_mask Access mask
    * @param  penalize_uturns Should we penalize uturns?
    */
-  DynamicCost(const CostingOptions& options,
+  DynamicCost(const Costing& options,
               const TravelMode mode,
               uint32_t access_mask,
               bool penalize_uturns = false);
@@ -276,7 +276,7 @@ public:
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
         ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
         ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
-    return accessible && !assumed_restricted;
+    return accessible && !assumed_restricted && (edge->use() != baldr::Use::kConstruction);
   }
 
   /**
@@ -290,9 +290,10 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return (edge->forwardaccess() & access_mask_) ||
-           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-           (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+    return ((edge->forwardaccess() & access_mask_) ||
+            (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+            (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
+           (edge->use() != baldr::Use::kConstruction);
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -863,6 +864,25 @@ public:
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
+  float SpeedPenalty(const baldr::DirectedEdge* edge,
+                     const graph_tile_ptr& tile,
+                     const baldr::TimeInfo& time_info,
+                     uint8_t flow_sources,
+                     float edge_speed) const {
+    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    float average_edge_speed = edge_speed;
+    // dont use current speed layer for penalties as live speeds might be too low/too high
+    // better to use layers with smoothed/constant speeds
+    if (top_speed_ != baldr::kMaxAssumedSpeed && (flow_sources & baldr::kCurrentFlowMask)) {
+      average_edge_speed =
+          tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
+    }
+    float speed_penalty =
+        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+
+    return speed_penalty;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -959,7 +979,8 @@ protected:
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
    */
-  void get_base_costs(const CostingOptions& costing_options) {
+  void get_base_costs(const Costing& costing) {
+    const auto& costing_options = costing.options();
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
@@ -1164,18 +1185,18 @@ struct BaseCostingOptionsConfig {
  * @param cfg Default values with enable/disable parsing indicators for costing options.
  */
 void ParseBaseCostOptions(const rapidjson::Value& json,
-                          CostingOptions* co,
+                          Costing* co,
                           const BaseCostingOptionsConfig& cfg);
 
 /**
  * Parses all the costing options for all supported costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
- * @param options               where to store the parsed costing options
+ * @param options               where to store the parsed costing
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         Options& options);
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& costing_options_key,
+                  Options& options);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1186,10 +1207,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
  * @param costing_options       where to store the parsed options
  * @param costing               specify the costing you want to parse or let it check the json
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& key,
-                         CostingOptions* costing_options,
-                         Costing costing = static_cast<Costing>(Costing_ARRAYSIZE));
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& key,
+                  Costing* costing,
+                  Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif
 

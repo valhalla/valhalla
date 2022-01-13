@@ -184,9 +184,9 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
-  options.set_costing(valhalla::Costing::truck);
-  auto& co = (*options.mutable_costing_options())[Costing::truck];
-  co.set_costing(valhalla::Costing::truck);
+  options.set_costing_type(valhalla::Costing::truck);
+  auto& co = (*options.mutable_costings())[Costing::truck];
+  co.set_type(valhalla::Costing::truck);
 
   // create the polygon intersecting a shortcut
   auto* rings = options.mutable_exclude_polygons();

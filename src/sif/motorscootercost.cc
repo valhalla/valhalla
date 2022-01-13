@@ -153,7 +153,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  MotorScooterCost(const CostingOptions& costing_options);
+  MotorScooterCost(const Costing& costing_options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -328,12 +328,14 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kMopedAccess),
+MotorScooterCost::MotorScooterCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kMopedAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+  const auto& costing_options = costing.options();
+
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -434,10 +436,10 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
-                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
+                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
+                 SpeedPenalty(edge, tile, time_info, flow_sources, speed);
 
   if (edge->destonly()) {
     factor += kDestinationOnlyFactor;
@@ -588,20 +590,21 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
-                                  CostingOptions* co) {
-  co->set_costing(Costing::motor_scooter);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                                  Costing* c) {
+  c->set_type(Costing::motor_scooter);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
   JSON_PBF_RANGED_DEFAULT(co, kUsePrimaryRange, json, "/use_primary", use_primary);
 }
 
-cost_ptr_t CreateMotorScooterCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateMotorScooterCost(const Costing& costing_options) {
   return std::make_shared<MotorScooterCost>(costing_options);
 }
 
@@ -619,7 +622,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const CostingOptions& costing_options) : MotorScooterCost(costing_options){};
+  TestMotorScooterCost(const Costing& costing_options) : MotorScooterCost(costing_options){};
 
   using MotorScooterCost::alley_penalty_;
   using MotorScooterCost::country_crossing_cost_;
@@ -637,8 +640,7 @@ TestMotorScooterCost* make_motorscootercost_from_json(const std::string& propert
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorScooterCost(
-      request.options().costing_options().find(Costing::motor_scooter)->second);
+  return new TestMotorScooterCost(request.options().costings().find(Costing::motor_scooter)->second);
 }
 
 template <typename T>

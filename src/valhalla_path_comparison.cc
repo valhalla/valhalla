@@ -285,13 +285,13 @@ int main(int argc, char* argv[]) {
 
   if (!map_match) {
     rapidjson::Document doc;
-    sif::ParseCostingOptions(doc, "/costing_options", *request.mutable_options());
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
   }
 
   // Construct costing
-  valhalla::Costing costing;
+  valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
-    request.mutable_options()->set_costing(costing);
+    request.mutable_options()->set_costing_type(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }

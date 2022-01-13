@@ -98,7 +98,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  TruckCost(const CostingOptions& costing_options);
+  TruckCost(const Costing& costing_options);
 
   virtual ~TruckCost();
 
@@ -282,15 +282,16 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kTruckAccess, true),
+TruckCost::TruckCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kTruckAccess, true),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+  const auto& costing_options = costing.options();
 
   type_ = VehicleType::kTractorTrailer;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
 
@@ -436,9 +437,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] + speed_penalty;
+  float factor = density_factor_[edge->density()] +
+                 SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
@@ -617,14 +617,15 @@ uint8_t TruckCost::travel_type() const {
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           CostingOptions* co) {
-  co->set_costing(Costing::truck);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                           Costing* c) {
+  c->set_type(Costing::truck);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
   JSON_PBF_DEFAULT(co, false, json, "/hazmat", hazmat);
   JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
@@ -635,7 +636,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
 }
 
-cost_ptr_t CreateTruckCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTruckCost(const Costing& costing_options) {
   return std::make_shared<TruckCost>(costing_options);
 }
 
@@ -653,7 +654,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const CostingOptions& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -671,7 +672,7 @@ TestTruckCost* make_truckcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestTruckCost(request.options().costing_options().find(Costing::truck)->second);
+  return new TestTruckCost(request.options().costings().find(Costing::truck)->second);
 }
 
 std::uniform_real_distribution<float>*

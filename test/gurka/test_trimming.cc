@@ -13,7 +13,7 @@ fake_location(const baldr::GraphId& edge_id, const midgard::PointLL& ll, float a
   valhalla::Location loc;
   loc.mutable_ll()->set_lng(ll.first);
   loc.mutable_ll()->set_lat(ll.second);
-  auto* path_edge = loc.add_path_edges();
+  auto* path_edge = loc.mutable_correlation()->add_edges();
   path_edge->set_graph_id(edge_id);
   path_edge->mutable_ll()->set_lng(ll.first);
   path_edge->mutable_ll()->set_lat(ll.second);
@@ -74,8 +74,8 @@ TEST(Trimming, routes) {
   // fake a costing
   const rapidjson::Document doc;
   valhalla::Options options;
-  options.set_costing(Costing::auto_);
-  sif::ParseCostingOptions(doc, "/costing_options", options);
+  options.set_costing_type(Costing::auto_);
+  sif::ParseCosting(doc, "/costing_options", options);
   sif::TravelMode mode;
   sif::CostFactory factory;
   auto mode_costings = factory.CreateModeCosting(options, mode);

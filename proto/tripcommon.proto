@@ -16,6 +16,80 @@ message BoundingBox {
   LatLng max_ll = 2;
 }
 
+message SearchFilter {
+  // frc
+  oneof has_min_road_class {
+    RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
+  }
+  oneof has_max_road_class {
+    RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
+  }
+  // form of way
+  oneof has_exclude_tunnel {
+    bool exclude_tunnel = 3;  // whether to exclude tunnels from loki results [default = false]
+  }
+  oneof has_exclude_bridge {
+    bool exclude_bridge = 4;  // whether to exclude bridges from loki results [default = false]
+  }
+  oneof has_exclude_ramp {
+    bool exclude_ramp = 5;    // whether to exclude roads with ramp use from loki results [default = false]
+  }
+  oneof has_exclude_closures {
+    bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
+  }
+}
+
+message PathEdge {
+  oneof has_graph_id {
+    uint64 graph_id = 1;
+  }
+  oneof has_percent_along {
+    double percent_along = 2;
+  }
+  LatLng ll = 3;
+  oneof has_side_of_street {
+    Location.SideOfStreet side_of_street = 4;
+  }
+  oneof has_distance {
+    double distance = 5;
+  }
+  oneof has_minimum_reachability {
+    int32 minimum_reachability = 6; //deprecated
+  }
+  oneof has_begin_node {
+    bool begin_node = 7;
+  }
+  oneof has_end_node {
+    bool end_node = 8;
+  }
+  repeated string names = 10;
+  oneof has_outbound_reach {
+    int32 outbound_reach = 11;
+  }
+  oneof has_inbound_reach {
+    int32 inbound_reach = 12;
+  }
+  oneof has_heading {
+    float heading = 13;
+  }
+}
+
+// Output information about how the location object below is correlated to the graph or to the route etc
+message Correlation {
+  repeated PathEdge edges = 50;
+  repeated PathEdge filtered_edges = 51;
+  oneof has_original_index {
+    uint32 original_index = 52;
+  }
+  LatLng projected_ll = 53;
+  oneof has_leg_shape_index {
+    uint32 leg_shape_index = 54;
+  }
+  oneof has_distance_from_leg_origin {
+    double distance_from_leg_origin = 55;
+  }
+}
+
 message Location {
   enum Type {
     kBreak = 0;
@@ -24,77 +98,18 @@ message Location {
     kBreakThrough = 3;
   }
 
-  enum SideOfStreet {
-    kNone = 0;
-    kLeft = 1;
-    kRight = 2;
-  }
-
   enum PreferredSide {
     either = 0;
     same = 1;
     opposite = 2;
   }
 
-  message PathEdge {
-    oneof has_graph_id {
-      uint64 graph_id = 1;
-    }
-    oneof has_percent_along {
-      double percent_along = 2;
-    }
-    LatLng ll = 3;
-    oneof has_side_of_street {
-      SideOfStreet side_of_street = 4;
-    }
-    oneof has_distance {
-      double distance = 5;
-    }
-    oneof has_minimum_reachability {
-      int32 minimum_reachability = 6; //deprecated
-    }
-    oneof has_begin_node {
-      bool begin_node = 7;
-    }
-    oneof has_end_node {
-      bool end_node = 8;
-    }
-    repeated string names = 10;
-    oneof has_outbound_reach {
-      int32 outbound_reach = 11;
-    }
-    oneof has_inbound_reach {
-      int32 inbound_reach = 12;
-    }
-    oneof has_heading {
-      float heading = 13;
-    }
+  enum SideOfStreet {
+    kNone = 0;
+    kLeft = 1;
+    kRight = 2;
   }
 
-  message SearchFilter {
-    // frc
-    oneof has_min_road_class {
-      RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
-    }
-    oneof has_max_road_class {
-      RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
-    }
-    // form of way
-    oneof has_exclude_tunnel {
-      bool exclude_tunnel = 3;  // whether to exclude tunnels from loki results [default = false]
-    }
-    oneof has_exclude_bridge {
-      bool exclude_bridge = 4;  // whether to exclude bridges from loki results [default = false]
-    }
-    oneof has_exclude_ramp {
-      bool exclude_ramp = 5;    // whether to exclude roads with ramp use from loki results [default = false]
-    }
-    oneof has_exclude_closures {
-      bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
-    }
-  }
-
-  //inputs
   LatLng ll = 1;
   oneof has_type {
     Type type = 2;                                      // [default = kBreak]
@@ -156,46 +171,32 @@ message Location {
   oneof has_skip_ranking_candidates {
     bool skip_ranking_candidates = 21;               // [default = false]
   }
-
-  //TODO: move this down, move the other inputs up and put space between them
-  //outputs
-  repeated PathEdge path_edges = 22;
-  repeated PathEdge filtered_edges = 23;
-  oneof has_original_index {
-    uint32 original_index = 24;
-  }
-  LatLng projected_ll = 25;
-  oneof has_leg_shape_index {
-    uint32 leg_shape_index = 35;
-  }
-  oneof has_distance_from_leg_origin {
-    double distance_from_leg_origin = 36;
-  }
-
-  //more inputs
   oneof has_preferred_side {
-    PreferredSide preferred_side = 26;            // [default = either]
+    PreferredSide preferred_side = 22;            // [default = either]
   }
-  LatLng display_ll = 27;
+  LatLng display_ll = 23;
   oneof has_search_cutoff {
-    uint32 search_cutoff = 28;
+    uint32 search_cutoff = 24;
   }
   oneof has_street_side_tolerance {
-    uint32 street_side_tolerance = 29;
+    uint32 street_side_tolerance = 25;
   }
   oneof has_route_index {
-    uint32 route_index = 30;
+    uint32 route_index = 26;
   }
   oneof has_waypoint_index {
-    uint32 waypoint_index = 31;
+    uint32 waypoint_index = 27;
   }
-  SearchFilter search_filter = 32;
+  SearchFilter search_filter = 28;
   oneof has_street_side_max_distance {
-    uint32 street_side_max_distance = 33;
+    uint32 street_side_max_distance = 29;
   }
   oneof has_preferred_layer {
-    int32 preferred_layer = 34;
+    int32 preferred_layer = 30;
   }
+
+  // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
+  Correlation correlation = 90;
 }
 
 message TransitEgressInfo {
