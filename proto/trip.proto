@@ -56,12 +56,15 @@ message TripLeg {
     kFerryUse = 41;
     kRailFerryUse = 42;
 
+    kConstructionUse = 43;       // Road under construction
+
     // Transit specific uses. Must be last in the list
     kRailUse = 50;               // Rail line
     kBusUse = 51;                // Bus line
     kEgressConnectionUse = 52;   // Connection between transit station and transit egress
     kPlatformConnectionUse = 53; // Connection between transit station and transit platform
     kTransitConnectionUse = 54;  // Connection between road network and transit egress
+
   }
 
   enum Surface {

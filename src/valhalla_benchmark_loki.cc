@@ -133,13 +133,13 @@ int ParseArguments(int argc, char* argv[]) {
 
 valhalla::sif::cost_ptr_t create_costing() {
   valhalla::Options options;
-  valhalla::Costing costing;
+  valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-    options.set_costing(costing);
+    options.set_costing_type(costing);
   } else {
-    options.set_costing(valhalla::Costing::none_);
+    options.set_costing_type(valhalla::Costing::none_);
   }
-  (*options.mutable_costing_options())[costing];
+  (*options.mutable_costings())[costing];
   return valhalla::sif::CostFactory{}.Create(options);
 }
 

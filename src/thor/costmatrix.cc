@@ -689,7 +689,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : origin.path_edges()) {
+    for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (edge.end_node()) {
         continue;
@@ -764,7 +764,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : dest.path_edges()) {
+    for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (edge.begin_node()) {

@@ -230,7 +230,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  BicycleCost(const CostingOptions& costing_options);
+  BicycleCost(const Costing& costing_options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -433,15 +433,17 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kBicycle, kBicycleAccess) {
+BicycleCost::BicycleCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kBicycle, kBicycleAccess) {
+  const auto& costing_options = costing.options();
+
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
   }
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Get the bicycle type - enter as string and convert to enum
   const std::string& bicycle_type = costing_options.transport_type();
@@ -838,14 +840,15 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseBicycleCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             CostingOptions* co) {
-  co->set_costing(Costing::bicycle);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                             Costing* c) {
+  c->set_type(Costing::bicycle);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kUseRoadRange, json, "/use_roads", use_roads);
   JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
   JSON_PBF_RANGED_DEFAULT(co, kAvoidBadSurfacesRange, json, "/avoid_bad_surfaces",
@@ -875,7 +878,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_return_penalty", bike_share_penalty);
 }
 
-cost_ptr_t CreateBicycleCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateBicycleCost(const Costing& costing_options) {
   return std::make_shared<BicycleCost>(costing_options);
 }
 
@@ -893,7 +896,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const CostingOptions& costing_options) : BicycleCost(costing_options){};
+  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options){};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
@@ -909,7 +912,7 @@ TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float t
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestBicycleCost(request.options().costing_options().find(Costing::bicycle)->second);
+  return new TestBicycleCost(request.options().costings().find(Costing::bicycle)->second);
 }
 
 std::uniform_real_distribution<float>*
