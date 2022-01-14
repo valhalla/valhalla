@@ -54,7 +54,7 @@
    * ADDED: Beta support for interacting with the http/bindings/library via serialized and pbf objects respectively [#3464](https://github.com/valhalla/valhalla/pull/3464)
    * CHANGED: Update xcode to 12.4.0 [#3492](https://github.com/valhalla/valhalla/pull/3492)
    * ADDED: Add JSON generator to conan [#3493](https://github.com/valhalla/valhalla/pull/3493)
-   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460](https://github.com/v     alhalla/valhalla/pull/3460)
+   * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460](https://github.com/valhalla/valhalla/pull/3460)
    * ADDED: Add `include_construction` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
    * CHANGED: Refactor options protobuf for Location and Costing objects [#3506](https://github.com/valhalla/valhalla/pull/3506)
    * CHANGED: valhalla.h and config.h don't need cmake configuration [#3502](https://github.com/valhalla/valhalla/pull/3502)
