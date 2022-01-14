@@ -33,6 +33,12 @@ TEST(pbf_api, pbf_in_out) {
       Options::centroid, Options::trace_attributes, Options::status,
   };
 
+  PbfFieldSelector select_all;
+  select_all.set_directions(true);
+  select_all.set_trip(true);
+  select_all.set_status(true);
+  select_all.set_options(true);
+
   for (int action = Options::Action_MIN; action <= Options::Action_MAX; ++action) {
     // don't have convenient support of these in gurka yet
     if (action == Options::sources_to_targets || action == Options::isochrone ||
@@ -56,23 +62,53 @@ TEST(pbf_api, pbf_in_out) {
     auto actual_json = gurka::do_action(map, json_out);
     EXPECT_EQ(actual_json, expected_json);
 
-    // auto write_to_file = [](const std::string& path, const std::string& buf) {
-    //  std::ofstream f(path);
-    //  f.write(buf.data(), buf.size());
-    // };
-
-    // if this action support pbf out try that
+    // if this action supports pbf out so try that
     if (pbf_actions.count(Options::Action(action))) {
       Api pbf_out;
       pbf_out.mutable_options()->CopyFrom(clean_pbf.options());
       pbf_out.mutable_options()->clear_costings();
       pbf_out.mutable_options()->set_format(Options::pbf);
+      pbf_out.mutable_options()->mutable_pbf_field_selector()->CopyFrom(select_all);
       auto pbf_bytes = gurka::do_action(map, pbf_out);
       Api actual_pbf;
       EXPECT_TRUE(actual_pbf.ParseFromString(pbf_bytes));
-      // write_to_file("actual.pbf", actual_pbf.SerializeAsString());
-      // write_to_file("expected.pbf", expected_pbf.SerializeAsString());
       EXPECT_EQ(actual_pbf.trip().SerializeAsString(), expected_pbf.trip().SerializeAsString());
+      EXPECT_TRUE(actual_pbf.has_options());
+      EXPECT_TRUE(actual_pbf.has_trip() || action == Options::status);
+      EXPECT_TRUE(actual_pbf.has_directions() || action == Options::trace_attributes ||
+                  action == Options::status);
+      EXPECT_TRUE(actual_pbf.has_status() || action != Options::status);
+      EXPECT_TRUE(actual_pbf.has_info() || action == Options::status);
+
+      // lets try it again but this time we'll disable all the fields but one
+      Api slimmed;
+      slimmed.mutable_options()->CopyFrom(clean_pbf.options());
+      slimmed.mutable_options()->clear_costings();
+      slimmed.mutable_options()->set_format(Options::pbf);
+      slimmed.mutable_options()->mutable_pbf_field_selector()->set_trip(true);
+      pbf_bytes = gurka::do_action(map, slimmed);
+      Api actual_slimmed;
+      EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
+      EXPECT_FALSE(actual_slimmed.has_options());
+      EXPECT_TRUE(actual_slimmed.has_trip() || action == Options::status);
+      EXPECT_FALSE(actual_slimmed.has_directions());
+      EXPECT_FALSE(actual_slimmed.has_status());
+      EXPECT_TRUE(actual_slimmed.has_info() || action == Options::status);
+
+      // lets try it one more time but this time we'll let it default to the right output
+      slimmed.Clear();
+      slimmed.mutable_options()->CopyFrom(clean_pbf.options());
+      slimmed.mutable_options()->clear_costings();
+      slimmed.mutable_options()->set_format(Options::pbf);
+      pbf_bytes = gurka::do_action(map, slimmed);
+      actual_slimmed.Clear();
+      EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
+      EXPECT_FALSE(actual_slimmed.has_options());
+      EXPECT_TRUE(actual_slimmed.has_trip() || action != Options::trace_attributes);
+      EXPECT_TRUE(actual_slimmed.has_directions() || action == Options::trace_attributes ||
+                  action == Options::status);
+      EXPECT_TRUE(actual_slimmed.has_status() || action != Options::status);
+      EXPECT_TRUE(actual_slimmed.has_info() || action == Options::status);
     }
   }
 }
@@ -91,6 +127,10 @@ TEST(pbf_api, pbf_error) {
       auto pbf_bytes = serialize_error(e, api);
       Api actual;
       EXPECT_TRUE(actual.ParseFromString(pbf_bytes));
+      EXPECT_FALSE(actual.has_options());
+      EXPECT_FALSE(actual.has_trip());
+      EXPECT_FALSE(actual.has_directions());
+      EXPECT_FALSE(actual.has_status());
       EXPECT_EQ(actual.info().errors().size(), 1);
     }
     // try again with an action but no locations
