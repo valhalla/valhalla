@@ -1626,7 +1626,7 @@ public:
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kBuildingEntrance);
-      } else if (tag.first == "highway" && tag.second == "elevator") {
+      } else if (tag.first == "elevator" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kElevator);
