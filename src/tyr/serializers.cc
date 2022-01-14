@@ -158,10 +158,30 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
 }
 
 std::string serializePbf(Api& request) {
-  // if they dont want to select the parts just bail
-  if (!request.options().has_pbf_field_selector())
-    return request.SerializeAsString();
-  const auto& selection = request.options().pbf_field_selector();
+  // if they dont want to select the parts just pick the obvious thing they would want based on action
+  PbfFieldSelector selection = request.options().pbf_field_selector();
+  if (!request.options().has_pbf_field_selector()) {
+    switch (request.options().action()) {
+      // route like requests
+      case Options::route:
+      case Options::centroid:
+      case Options::optimized_route:
+      case Options::trace_route:
+        selection.set_directions(true);
+        break;
+      // meta data requests
+      case Options::trace_attributes:
+        selection.set_trip(true);
+        break;
+      // service stats
+      case Options::status:
+        selection.set_status(true);
+        break;
+      // should never get here, actions which dont have pbf yet return json
+      default:
+        throw std::logic_error("Requested action is not yet serializable as pbf");
+    }
+  }
 
   // if they dont want the options object but its a service request we have to work around it
   bool skip_options = !request.options().pbf_field_selector().options() && request.has_info() &&
