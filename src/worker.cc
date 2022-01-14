@@ -560,7 +560,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // set the action
   auto& options = *api.mutable_options();
-  options.set_action(action);
+  if (Options::Action_IsValid(action))
+    options.set_action(action);
 
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
@@ -1174,7 +1175,7 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   api.mutable_info()->set_is_service(true);
 
   // get the action
-  Options::Action action;
+  Options::Action action = static_cast<Options::Action>(Options::Action_ARRAYSIZE);
   if (!request.path.empty())
     Options_Action_Enum_Parse(request.path.substr(1), &action);
 
