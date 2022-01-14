@@ -92,6 +92,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
+      {43, "kConstructionUse"},
       {50, "kRailUse"},
       {51, "kBusUse"},
       {52, "kEgressConnectionUse"},
@@ -445,6 +446,10 @@ bool EnhancedTripLeg_Edge::IsPlatformConnectionUse() const {
 
 bool EnhancedTripLeg_Edge::IsTransitConnectionUse() const {
   return (use() == TripLeg_Use_kTransitConnectionUse);
+}
+
+bool EnhancedTripLeg_Edge::IsConstructionUse() const {
+  return (use() == TripLeg_Use_kConstructionUse);
 }
 
 bool EnhancedTripLeg_Edge::IsTransitConnection() const {

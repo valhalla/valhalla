@@ -36,7 +36,7 @@ constexpr float kAlternativeCostExtend = 1.2f;
 constexpr uint32_t kAlternativeIterationsDelta = 100000;
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
-  for (const auto& e : location.path_edges()) {
+  for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
       return e.percent_along();
   }
@@ -502,8 +502,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     desired_paths_count_ += options.alternates();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  PointLL origin_new(origin.correlation().edges(0).ll().lng(),
+                     origin.correlation().edges(0).ll().lat());
+  PointLL destination_new(destination.correlation().edges(0).ll().lng(),
+                          destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
 
   // we use a non varying time for all time dependent routes until we can figure out how to vary the
@@ -940,13 +942,13 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                                    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges =
-      std::any_of(origin.path_edges().begin(), origin.path_edges().end(),
-                  [](const valhalla::Location::PathEdge& e) { return !e.end_node(); });
+      std::any_of(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                  [](const valhalla::PathEdge& e) { return !e.end_node(); });
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
   const NodeInfo* closest_ni = nullptr;
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
@@ -1034,12 +1036,12 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                         const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
   bool has_other_edges =
-      std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
-                  [](const valhalla::Location::PathEdge& e) { return !e.begin_node(); });
+      std::any_of(dest.correlation().edges().begin(), dest.correlation().edges().end(),
+                  [](const valhalla::PathEdge& e) { return !e.begin_node(); });
 
   // Iterate through edges and add to adjacency list
   Cost c;
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // If the destination is at a node, skip any outbound edges (so any
     // opposing inbound edges are not considered)
     if (has_other_edges && edge.begin_node()) {

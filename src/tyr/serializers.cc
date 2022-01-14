@@ -171,14 +171,15 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
   auto loc = json::array({});
-  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lng(), 6});
-  loc->emplace_back(json::fixed_t{location.path_edges(0).ll().lat(), 6});
+  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lng(), 6});
+  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lat(), 6});
   waypoint->emplace("location", loc);
 
   // Add street name.
-  std::string name = location.path_edges_size() && location.path_edges(0).names_size()
-                         ? location.path_edges(0).names(0)
-                         : "";
+  std::string name =
+      location.correlation().edges_size() && location.correlation().edges(0).names_size()
+          ? location.correlation().edges(0).names(0)
+          : "";
   waypoint->emplace("name", name);
 
   // Add distance in meters from the input location to the nearest
@@ -186,12 +187,14 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // TODO: since distance was normalized in thor - need to recalculate here
   //       in the future we shall have store separately from score
   waypoint->emplace("distance",
-                    json::fixed_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())),
+                    json::fixed_t{to_ll(location.ll())
+                                      .Distance(to_ll(location.correlation().edges(0).ll())),
                                   3});
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
-    waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
+    waypoint->emplace("alternatives_count",
+                      static_cast<uint64_t>(location.correlation().edges_size() - 1));
     if (location.waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
@@ -219,7 +222,7 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
                          bool is_tracepoint) {
   auto waypoints = json::array({});
   for (const auto& location : locations) {
-    if (location.path_edges().size() == 0) {
+    if (location.correlation().edges().size() == 0) {
       waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
     } else {
       waypoints->emplace_back(waypoint(location, is_tracepoint));
@@ -258,9 +261,12 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
     // Only create via_waypoints object if the locations are via or through types
     if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
       auto via_waypoint = json::map({});
-      via_waypoint->emplace("geometry_index", static_cast<uint64_t>(loc.leg_shape_index()));
-      via_waypoint->emplace("distance_from_start", json::fixed_t{loc.distance_from_leg_origin(), 3});
-      via_waypoint->emplace("waypoint_index", static_cast<uint64_t>(loc.original_index()));
+      via_waypoint->emplace("geometry_index",
+                            static_cast<uint64_t>(loc.correlation().leg_shape_index()));
+      via_waypoint->emplace("distance_from_start",
+                            json::fixed_t{loc.correlation().distance_from_leg_origin(), 3});
+      via_waypoint->emplace("waypoint_index",
+                            static_cast<uint64_t>(loc.correlation().original_index()));
       via_waypoints->emplace_back(via_waypoint);
     }
   }

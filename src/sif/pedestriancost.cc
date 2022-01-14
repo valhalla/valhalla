@@ -223,7 +223,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  PedestrianCost(const CostingOptions& costing_options);
+  PedestrianCost(const Costing& costing_options);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -553,8 +553,10 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPedestrian, kPedestrianAccess) {
+PedestrianCost::PedestrianCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kPedestrian, kPedestrianAccess) {
+  const auto& costing_options = costing.options();
+
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -563,7 +565,7 @@ PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
   allow_transit_connections_ = false;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Get the pedestrian type - enter as string and convert to enum
   const std::string& type = costing_options.transport_type();
@@ -789,14 +791,15 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 // TODO: we should only set the ones that arent already set..
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                CostingOptions* co) {
-  co->set_costing(Costing::pedestrian);
-  co->set_name(Costing_Enum_Name(co->costing()));
+                                Costing* c) {
+  c->set_type(Costing::pedestrian);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, co, kBaseCostOptsConfig);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_DEFAULT(co, kDefaultPedestrianType, json, "/type", transport_type);
 
   // Set type specific defaults, override with json
@@ -829,11 +832,11 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kElevatorPenaltyRange, json, "/elevator_penalty", elevator_penalty);
 }
 
-cost_ptr_t CreatePedestrianCost(const CostingOptions& costing_options) {
+cost_ptr_t CreatePedestrianCost(const Costing& costing_options) {
   return std::make_shared<PedestrianCost>(costing_options);
 }
 
-cost_ptr_t CreateBikeShareCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateBikeShareCost(const Costing& costing_options) {
   auto cost_ptr = std::make_shared<PedestrianCost>(costing_options);
   cost_ptr->project_on_bss_connection = true;
   return cost_ptr;
@@ -853,7 +856,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const CostingOptions& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
@@ -872,8 +875,7 @@ TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestPedestrianCost(
-      request.options().costing_options().find(Costing::pedestrian)->second);
+  return new TestPedestrianCost(request.options().costings().find(Costing::pedestrian)->second);
 }
 
 std::uniform_real_distribution<float>*

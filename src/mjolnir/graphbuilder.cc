@@ -790,10 +790,11 @@ void BuildTileSet(const std::string& ways_file,
           directededge.set_curvature(std::get<1>(found->second));
 
           // Set use to ramp or turn channel
-          if (edge.attributes.turn_channel) {
+          if (edge.attributes.turn_channel && use != Use::kConstruction) {
             directededge.set_use(Use::kTurnChannel);
             // Do not overwrite rest area or service area use for ramps
-          } else if (edge.attributes.link && (use != Use::kServiceArea && use != Use::kRestArea)) {
+          } else if (edge.attributes.link && (use != Use::kServiceArea && use != Use::kRestArea &&
+                                              use != Use::kConstruction)) {
             directededge.set_use(Use::kRamp);
           }
 

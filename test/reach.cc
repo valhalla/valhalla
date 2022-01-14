@@ -104,7 +104,7 @@ TEST(Reach, transition_misscount) {
 
   // get an auto costing
   sif::CostFactory factory;
-  auto costing = factory.Create(valhalla::auto_);
+  auto costing = factory.Create(Costing::auto_);
 
   // find the problem edge
   baldr::GraphReader reader(map.config.get_child("mjolnir"));

@@ -230,9 +230,9 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fixed_t{duration, 3});
 
   route->emplace("weight", json::fixed_t{weight, 3});
-  assert(api.options().costing_options().find(api.options().costing())->second.has_name_case());
+  assert(api.options().costings().find(api.options().costing_type())->second.has_name_case());
   route->emplace("weight_name",
-                 api.options().costing_options().find(api.options().costing())->second.name());
+                 api.options().costings().find(api.options().costing_type())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {
@@ -400,7 +400,7 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
-    return locs.Get(a).original_index() < locs.Get(b).original_index();
+    return locs.Get(a).correlation().original_index() < locs.Get(b).correlation().original_index();
   });
 
   // Output each location in its original index order along with its

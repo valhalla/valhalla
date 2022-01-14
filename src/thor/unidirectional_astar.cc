@@ -258,7 +258,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // Find the destination edge and update cost to include the edge score.
     // Note - with high edge scores the convergence test fails some routes
     // so reduce the edge score.
-    for (const auto& destination_edge : destination.path_edges()) {
+    for (const auto& destination_edge : destination.correlation().edges()) {
       if (destination_edge.graph_id() == meta.edge_id) {
         newcost.cost += destination_edge.distance();
       }
@@ -441,9 +441,10 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
-                                   destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.correlation().edges(0).ll().lng(),
+                              origin.correlation().edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
+                                   destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -636,8 +637,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
@@ -672,13 +673,13 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
   // its super trivial if both are node snapped to the same end of the same edge
   // note the check for node snapping is in the if below and not in this lambda
-  auto super_trivial = [this](const valhalla::Location::PathEdge& edge) {
+  auto super_trivial = [this](const valhalla::PathEdge& edge) {
     auto p = destinations_percent_along_.find(edge.graph_id());
     return p != destinations_percent_along_.end() && edge.percent_along() == p->second;
   };
 
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If this is a node snap and we have other candidates that we can skip this unless its the one we
     // need for super trivial route
     if ((FORWARD ? edge.end_node() : edge.begin_node()) && has_other_edges && !super_trivial(edge)) {
@@ -742,7 +743,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
           FORWARD ? IsTrivial(edgeid, origin, destination) : IsTrivial(edgeid, destination, origin);
       if (trivial) {
         // Find the destination edge and update cost.
-        for (const auto& dest_path_edge : destination.path_edges()) {
+        for (const auto& dest_path_edge : destination.correlation().edges()) {
           if (dest_path_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
@@ -814,14 +815,14 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
                                                                   const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || !(FORWARD ? e.begin_node() : e.end_node());
                 });
 
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && (FORWARD ? edge.begin_node() : edge.end_node())) {
       continue;
