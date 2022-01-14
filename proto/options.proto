@@ -289,12 +289,9 @@ message Costing {
       uint32 restriction_probability = 77;
     }
     repeated AvoidEdge exclude_edges = 78;
-  }
-  oneof has_elevator_penalty {
-    float elevator_penalty = 78;
-  }
-  oneof has_elevator_penalty {
-    float elevator_penalty = 78;
+    oneof has_elevator_penalty {
+      float elevator_penalty = 79;
+    }
   }
 
   oneof has_options {

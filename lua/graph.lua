@@ -2057,6 +2057,8 @@ function nodes_proc (kv, nokeys)
     kv["toll_gantry"] = "true"
   elseif kv["entrance"] == "yes" and kv["indoor"] == "yes" then
     kv["building_entrance"] = "true"
+  elseif kv["highway"] == "elevator" then
+    kv["elevator"] = "true"
   end
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
