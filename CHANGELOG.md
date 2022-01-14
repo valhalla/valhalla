@@ -57,9 +57,8 @@
    * CHANGED: top_speed option: ignore live speed for speed based penalties [#3460](https://github.com/v     alhalla/valhalla/pull/3460)
    * ADDED: Add `include_construction` option into the config to include/exclude roads under construction from the graph [#3455](https://github.com/valhalla/valhalla/pull/3455)
    * CHANGED: Refactor options protobuf for Location and Costing objects [#3506](https://github.com/valhalla/valhalla/pull/3506)
-   * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
-   
    * CHANGED: valhalla.h and config.h don't need cmake configuration [#3502](https://github.com/valhalla/valhalla/pull/3502)
+   * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
