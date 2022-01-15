@@ -43,6 +43,21 @@ enum ShapeFormat {
   geojson = 2;
 }
 
+// use this to select which top level fields should be present in the pbf output
+// the actions below are marked for each field that would provide a minimal response
+message PbfFieldSelector {
+  bool options = 1;
+  bool trip = 2;       // /trace_attributes
+  bool directions = 3; // /route /trace_route /optimized_route /centroid
+  bool status = 4;     // /status
+  // TODO: enable these once we have objects for them
+  // bool isochrone = 5;
+  // bool matrix = 6;
+  // bool locate = 7;
+  // bool height = 8;
+  // bool expansion = 9;
+}
+
 message AvoidEdge {
   oneof has_id {
     uint64 id = 1;
@@ -471,5 +486,6 @@ message Options {
   oneof has_skip_opposites {
     bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
   }
-  repeated ExpansionProperties expansion_properties = 51;                 // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+  repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
+  PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
 }

@@ -681,7 +681,6 @@ struct tar {
       throw std::runtime_error(tar_file + "(stat): invalid archive size " +
                                std::to_string(s.st_size) + " with header size " +
                                std::to_string(sizeof(header_t)));
-      return;
     }
 
     // map the file

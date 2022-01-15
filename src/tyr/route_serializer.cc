@@ -85,7 +85,7 @@ std::string serializeDirections(Api& request) {
     case Options_Format_json:
       return valhalla_serializers::serialize(request);
     case Options_Format_pbf:
-      return request.SerializeAsString();
+      return serializePbf(request);
     default:
       throw;
   }

@@ -88,10 +88,10 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
-std::string serializeStatus(const Api& request) {
+std::string serializeStatus(Api& request) {
 
   if (request.options().format() == Options_Format_pbf)
-    return request.SerializeAsString();
+    return serializePbf(request);
 
   rapidjson::Document status_doc;
   status_doc.SetObject();
@@ -155,6 +155,61 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
     }
   }
   writer.end_array();
+}
+
+std::string serializePbf(Api& request) {
+  // if they dont want to select the parts just pick the obvious thing they would want based on action
+  PbfFieldSelector selection = request.options().pbf_field_selector();
+  if (!request.options().has_pbf_field_selector()) {
+    switch (request.options().action()) {
+      // route like requests
+      case Options::route:
+      case Options::centroid:
+      case Options::optimized_route:
+      case Options::trace_route:
+        selection.set_directions(true);
+        break;
+      // meta data requests
+      case Options::trace_attributes:
+        selection.set_trip(true);
+        break;
+      // service stats
+      case Options::status:
+        selection.set_status(true);
+        break;
+      // should never get here, actions which dont have pbf yet return json
+      default:
+        throw std::logic_error("Requested action is not yet serializable as pbf");
+    }
+  }
+
+  // if they dont want the options object but its a service request we have to work around it
+  bool skip_options = !request.options().pbf_field_selector().options() && request.has_info() &&
+                      request.info().is_service();
+  Options dummy;
+  if (skip_options) {
+    request.mutable_options()->Swap(&dummy);
+  }
+
+  // disable all the stuff we need to disable, options must be last since we are referencing it
+  if (!selection.trip())
+    request.clear_trip();
+  if (!selection.directions())
+    request.clear_directions();
+  if (!selection.status())
+    request.clear_status();
+  if (!selection.options())
+    request.clear_options();
+
+  // serialize the bytes
+  auto bytes = request.SerializeAsString();
+
+  // we do need to keep the options object though because downstream request handling relies on it
+  if (skip_options) {
+    request.mutable_options()->Swap(&dummy);
+  }
+
+  return bytes;
 }
 } // namespace tyr
 } // namespace valhalla
