@@ -165,9 +165,8 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
  * @param node_name        name of the node
  * @return the node_id
  */
-baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
-                        const nodelayout& nodes,
-                        const std::string& node_name);
+baldr::GraphId
+findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& node_name);
 
 std::string do_action(const map& map,
                       valhalla::Api& api,
