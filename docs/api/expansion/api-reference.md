@@ -12,13 +12,13 @@ The expansion service wraps the `route` and `isochrone` services and returns a G
 
 Since this service wraps other services, the request format mostly follows the ones of the [route](../turn-by-turn/api-reference.md#inputs-of-a-route) and [isochrone](../isochrone/api-reference.md#inputs-of-the-isochrone-service). Additionally, it accepts the following parameters:
 
-| Parameter          | Description                           |
-| :---------         | :------------------------------------ |
-| `action` (required)          | The service whose expansion should be tracked. Currently one of `route` or `isochrone`. | 
-| `skip_opposites` (optional)   | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
-| `expansion_props` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses". **Note**, that each additional property will increase the output size by minimum ~ 25%. By default an empty `properties` object is returned. |
+| Parameter                         | Description                           |
+|:----------------------------------| :------------------------------------ |
+| `action` (required)               | The service whose expansion should be tracked. Currently one of `route` or `isochrone`. | 
+| `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
+| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "durations", "distances", "costs", "edge_ids", "statuses". **Note**, that each additional property will increase the output size by minimum ~ 25%. By default an empty `properties` object is returned. |
 
-The `expansion_props` choices are as follows:
+The `expansion_properties` choices are as follows:
 
 | Property   | Description                           |
 | :--------- | :------------------------------------ |
@@ -31,14 +31,14 @@ The `expansion_props` choices are as follows:
 An example request is:
 
 ```
-{"expansion_props":["distances", "durations", "costs"],"contours":[{"time":1.0}],"locations":[{"lon":0.00026949361342338066,"lat":-0.00017966240895360996}],"costing":"auto","action":"isochrone"}
+{"expansion_properties":["distances", "durations", "costs"],"contours":[{"time":1.0}],"locations":[{"lon":0.00026949361342338066,"lat":-0.00017966240895360996}],"costing":"auto","action":"isochrone"}
 ```
 
 ## Outputs of the Expansion service
 
 In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/). The geometry is a single `MultiLineString` with each `LineString` representing one way segment (edge). Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses. However, that also means that the `properties` contain arrays of the tracked attributes, where the indices are correlating to the `coordinates` array, i.e. the 3rd element in a `properties` array will correspond to the 3rd `LineString` in the `MultiLineString` geometry.
 
-The output will only contain the `properties` which were specified in the `expansion_props` request array. If the parameter was omitted in the request, the output will contain an empty `properties` object.
+The output will only contain the `properties` which were specified in the `expansion_properties` request array. If the parameter was omitted in the request, the output will contain an empty `properties` object.
 
 An example response for `"action": "isochrone"` is:
 
