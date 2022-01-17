@@ -267,6 +267,7 @@ bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
       {"json", Options::json},
       {"gpx", Options::gpx},
       {"osrm", Options::osrm},
+      {"pbf", Options::pbf},
   };
   auto i = formats.find(format);
   if (i == formats.cend())
@@ -281,6 +282,7 @@ const std::string& Options_Format_Enum_Name(const Options::Format match) {
       {Options::json, "json"},
       {Options::gpx, "gpx"},
       {Options::osrm, "osrm"},
+      {Options::pbf, "pbf"},
   };
   auto i = formats.find(match);
   return i == formats.cend() ? empty : i->second;
