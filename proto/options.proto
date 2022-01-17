@@ -497,6 +497,6 @@ message Options {
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
   oneof has_chinese_polygon {
-    Ring chinese_polygon = 52;                                      // Polygon to select which roads to be visited on chinese postman
+    Ring chinese_polygon = 53;                                      // Polygon to select which roads to be visited on chinese postman
   }
 }
