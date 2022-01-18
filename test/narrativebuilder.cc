@@ -13,9 +13,9 @@
 #include "odin/signs.h"
 #include "odin/util.h"
 
+#include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/common.pb.h"
 
 #include "test.h"
 

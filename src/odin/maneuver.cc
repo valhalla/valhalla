@@ -10,9 +10,9 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
+#include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
-#include "proto/common.pb.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
