@@ -11,7 +11,7 @@
 #include "sif/pedestriancost.h"
 #include "thor/attributes_controller.h"
 
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;

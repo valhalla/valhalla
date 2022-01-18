@@ -6,8 +6,8 @@
 #include "baldr/openlr.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "proto/common.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
 #include "tyr/serializers.h"
 
 #include "test.h"
