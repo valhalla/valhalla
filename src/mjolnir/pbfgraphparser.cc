@@ -26,7 +26,7 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "mjolnir/timeparsing.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

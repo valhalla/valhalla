@@ -13,7 +13,7 @@
 #include "odin/util.h"
 
 #include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

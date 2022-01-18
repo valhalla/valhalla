@@ -15,7 +15,7 @@
 
 #include "proto/directions.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 #include "test.h"
 

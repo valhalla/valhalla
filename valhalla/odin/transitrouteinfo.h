@@ -5,7 +5,7 @@
 #include <string>
 
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace odin {

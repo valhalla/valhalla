@@ -12,7 +12,7 @@
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
