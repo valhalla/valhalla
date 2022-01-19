@@ -12,8 +12,8 @@
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 
+#include "proto/common.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -6,7 +6,7 @@
 
 #include <boost/optional.hpp>
 
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
