@@ -585,21 +585,11 @@ baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
   // Iterate over all the tiles, there wont be many in unit tests..
   for (auto tile_id : reader.GetTileSet()) {
     auto tile = reader.GetGraphTile(tile_id);
-    // Iterate over all directed edges to find one with the name we want
-    for (const auto& e : tile->GetDirectedEdges()) {
-      // Check end node
-      auto end_node_id = e.endnode();
-      auto ll = reader.GetGraphTile(end_node_id)->get_node_ll(end_node_id);
+    // Iterate over all nodes to find one with the name we want
+    for (auto node_id = tile_id; node_id.id() < tile->header()->nodecount(); ++node_id) {
+      auto ll = tile->get_node_ll(node_id);
       if (ll.ApproximatelyEqual(nodes.at(node_name))) {
-        return end_node_id;
-      }
-      // Check begin node
-      auto edge_id = tile_id;
-      edge_id.set_id(&e - tile->directededge(0));
-      auto begin_node_id = reader.edge_startnode(edge_id);
-      ll = tile->get_node_ll(begin_node_id);
-      if (ll.ApproximatelyEqual(nodes.at(node_name))) {
-        return begin_node_id;
+        return node_id;
       }
     }
   }
