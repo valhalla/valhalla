@@ -23,8 +23,8 @@ protected:
               |
               B
               |
-              C
-              |
+              C---------x--------y
+              |                  |
     D----E----F----G----H----I---J
               |
               K
@@ -51,6 +51,10 @@ protected:
         {"GH", {{"highway", "elevator"}, {"indoor", "yes"}, {"level", "1;2"}}},
         {"HI", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "2"}}},
         {"IJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+
+        {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "1;2"}}},
+        {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
+        {"yJ", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "3"}}},
     };
 
     const gurka::nodes nodes = {
@@ -66,37 +70,49 @@ gurka::map Indoor::map = {};
 std::string Indoor::ascii_map = {};
 gurka::nodelayout Indoor::layout = {};
 
-Api api;
-rapidjson::Document d;
-
 /*************************************************************/
 
 TEST_F(Indoor, NodeInfo) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   auto node_id = gurka::findNode(graphreader, layout, "E");
-  EXPECT_EQ(graphreader.nodeinfo(node_id)->type(), baldr::NodeType::kBuildingEntrance);
+  const auto* node = graphreader.nodeinfo(node_id);
+  EXPECT_EQ(node->type(), baldr::NodeType::kBuildingEntrance);
+  EXPECT_TRUE(node->access() & baldr::kPedestrianAccess);
 
   node_id = gurka::findNode(graphreader, layout, "I");
+  node = graphreader.nodeinfo(node_id);
   EXPECT_EQ(graphreader.nodeinfo(node_id)->type(), baldr::NodeType::kElevator);
+  EXPECT_TRUE(node->access() & baldr::kPedestrianAccess);
 }
 
 TEST_F(Indoor, DirectedEdge) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
-  auto directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "B", "C"));
+  const auto* directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "B", "C"));
   EXPECT_EQ(directededge->use(), baldr::Use::kSteps);
+  EXPECT_TRUE(directededge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 
   directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "G", "H"));
   EXPECT_EQ(directededge->use(), baldr::Use::kElevator);
+  EXPECT_TRUE(directededge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 
   directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "K", "L"));
   EXPECT_EQ(directededge->use(), baldr::Use::kEscalator);
+  EXPECT_TRUE(directededge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 
   directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "D", "E"));
   EXPECT_EQ(directededge->indoor(), false);
+  EXPECT_TRUE(directededge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
+
   directededge = std::get<1>(gurka::findEdgeByNodes(graphreader, layout, "E", "F"));
   EXPECT_EQ(directededge->indoor(), true);
+  EXPECT_TRUE(directededge->forwardaccess() & baldr::kPedestrianAccess);
+  EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 }
 
 TEST_F(Indoor, EdgeInfo) {
@@ -117,4 +133,15 @@ TEST_F(Indoor, EdgeInfo) {
   EXPECT_EQ(get_level_ref("A", "B"), "Parking");
   EXPECT_EQ(get_level_ref("B", "C"), "");
   EXPECT_EQ(get_level_ref("C", "F"), "Lobby");
+}
+
+TEST_F(Indoor, ElevatorPenalty) {
+  // first route should take the elevator node
+  auto result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"EF", "FG", "GH", "HI", "IJ"});
+
+  // second route should take the stairs because we gave the elevator a huge penalty
+  result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "pedestrian",
+                            {{"/costing_options/pedestrian/elevator_penalty", "3600"}});
+  gurka::assert::raw::expect_path(result, {"EF", "CF", "Cx", "xy", "yJ"});
 }

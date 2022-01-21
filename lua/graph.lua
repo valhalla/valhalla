@@ -30,8 +30,8 @@ highway = {
 ["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
 ["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"},
-["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"}
+["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
