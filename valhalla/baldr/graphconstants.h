@@ -215,7 +215,9 @@ enum class NodeType : uint8_t {
   kMotorWayJunction = 9,        // Highway = motorway_junction
   kBorderControl = 10,          // Border control
   kTollGantry = 11,             // Toll gantry
-  kSumpBuster = 12              // Sump Buster
+  kSumpBuster = 12,             // Sump Buster
+  kBuildingEntrance = 13,       // Building entrance
+  kElevator = 14,               // Elevator
 };
 inline std::string to_string(NodeType n) {
   static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
@@ -231,7 +233,9 @@ inline std::string to_string(NodeType n) {
        {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
        {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
        {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"},
-       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"}};
+       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"},
+       {static_cast<uint8_t>(NodeType::kBuildingEntrance), "building_entrance"},
+       {static_cast<uint8_t>(NodeType::kElevator), "elevator"}};
 
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
   if (i == NodeTypeStrings.cend()) {
@@ -296,6 +300,8 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
   kPedestrianCrossing = 32, // cross walks
+  kElevator = 33,
+  kEscalator = 34,
 
   // Rest/Service Areas
   kRestArea = 30,
@@ -335,7 +341,9 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
       {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
       {static_cast<uint8_t>(Use::kFootway), "footway"},
+      {static_cast<uint8_t>(Use::kElevator), "elevator"},
       {static_cast<uint8_t>(Use::kSteps), "steps"},
+      {static_cast<uint8_t>(Use::kEscalator), "escalator"},
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
@@ -364,6 +372,8 @@ enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kLayer = 1,
   kPronunciation = 2,
   kBssInfo = 3,
+  kLevel = 4,
+  kLevelRef = 5,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),

@@ -29,7 +29,9 @@ highway = {
 ["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "true"},
 ["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
 ["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"}
+["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -1449,6 +1451,10 @@ function filter_tags_generic(kv)
         use = 32
      elseif kv["highway"] == "footway" then
         use = 25
+     elseif kv["highway"] == "elevator" then
+        use = 33 --elevator
+     elseif (kv["highway"] == "steps" and kv["conveying"] ~= nil) then
+        use = 34 --escalator
      elseif kv["highway"] == "steps" then
         use = 26 --steps/stairs
      elseif kv["highway"] == "path" then
@@ -1786,6 +1792,11 @@ function filter_tags_generic(kv)
   kv["bike_local_ref"] = lref
   kv["bike_network_mask"] = bike_mask
 
+  -- turn semicolon into colon due to challenges to store ";" in string
+  if kv["level"] ~= nil then
+    kv["level"] = kv["level"]:gsub(";", ":")
+  end
+  
   -- Explicitly turn off access for construction type. It's done for backward compatibility
   -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
   -- versions of router will work with new tiles incorrectly. They would start to route
@@ -2047,6 +2058,10 @@ function nodes_proc (kv, nokeys)
     end
   elseif kv["highway"] == "toll_gantry" then
     kv["toll_gantry"] = "true"
+  elseif kv["entrance"] == "yes" and kv["indoor"] == "yes" then
+    kv["building_entrance"] = "true"
+  elseif kv["highway"] == "elevator" then
+    kv["elevator"] = "true"
   end
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then

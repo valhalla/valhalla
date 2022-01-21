@@ -203,6 +203,11 @@ void DirectedEdge::set_bridge(const bool bridge) {
   bridge_ = bridge;
 }
 
+// Sets the flag indicating this edge is indoor.
+void DirectedEdge::set_indoor(const bool indoor) {
+  indoor_ = indoor;
+}
+
 // Sets the hov type.
 void DirectedEdge::set_hov_type(const HOVEdgeType hov_type) {
   hov_type_ = static_cast<uint32_t>(hov_type);

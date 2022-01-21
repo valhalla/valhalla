@@ -157,6 +157,17 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
 
+/**
+ * Finds a node in the graph based on its node name
+ *
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
+ */
+baldr::GraphId
+findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& node_name);
+
 std::string do_action(const map& map,
                       valhalla::Api& api,
                       std::shared_ptr<valhalla::baldr::GraphReader> reader = {});

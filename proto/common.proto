@@ -376,6 +376,8 @@ message TaggedValue {
     kLayer = 1;
     kPronunciation = 2;
     kBssInfo = 3;
+    kLevel = 4;
+    kLevelRef = 5;
     kTunnel = 49;
     kBridge = 50;    
   }

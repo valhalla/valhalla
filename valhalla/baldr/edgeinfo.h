@@ -213,6 +213,20 @@ public:
   int8_t layer() const;
 
   /**
+   * Get level of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level
+   * @return layer index of the edge
+   */
+
+  std::string level() const;
+  /**
+   * Get layer:ref of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
+   * @return layer index of the edge
+   */
+  std::string level_ref() const;
+
+  /**
    * Returns json representing this object
    * @return json object
    */
