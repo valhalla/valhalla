@@ -392,8 +392,16 @@ bool EnhancedTripLeg_Edge::IsPedestrianCrossingUse() const {
   return (use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
+bool EnhancedTripLeg_Edge::IsElevatorUse() const {
+  return (use() == TripLeg_Use_kElevatorUse);
+}
+
 bool EnhancedTripLeg_Edge::IsStepsUse() const {
   return (use() == TripLeg_Use_kStepsUse);
+}
+
+bool EnhancedTripLeg_Edge::IsEscalatorUse() const {
+  return (use() == TripLeg_Use_kEscalatorUse);
 }
 
 bool EnhancedTripLeg_Edge::IsPathUse() const {
@@ -513,6 +521,21 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
     name_list.push_back({name.value(), name.is_route_number()});
   }
   return name_list;
+}
+
+std::string EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::string level_ref;
+  if (!tagged_value().empty()) {
+    for (uint32_t t = 0; t < tagged_value().size(); ++t) {
+      if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
+        level_ref = tagged_value().Get(t).value();
+        break;
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
+        level_ref = "Level " + tagged_value().Get(t).value();
+      }
+    }
+  }
+  return level_ref;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
@@ -1960,6 +1983,14 @@ bool EnhancedTripLeg_Node::IsTollGantry() const {
 
 bool EnhancedTripLeg_Node::IsSumpBuster() const {
   return (type() == TripLeg_Node_Type_kSumpBuster);
+}
+
+bool EnhancedTripLeg_Node::IsBuildingEntrance() const {
+  return (type() == TripLeg_Node_Type_kBuildingEntrance);
+}
+
+bool EnhancedTripLeg_Node::IsElevator() const {
+  return (type() == TripLeg_Node_Type_kElevator);
 }
 
 std::string EnhancedTripLeg_Node::ToString() const {

@@ -378,6 +378,24 @@ public:
   const BikeShareStationInfo& bss_info() const;
   void set_bss_info(const BikeShareStationInfo& bss_info);
 
+  bool elevator() const;
+  void set_elevator(bool elevator);
+
+  bool steps() const;
+  void set_steps(bool steps);
+
+  bool escalator() const;
+  void set_escalator(bool escalator);
+
+  bool building_enter() const;
+  void set_building_enter(bool building_enter);
+
+  bool building_exit() const;
+  void set_building_exit(bool building_exit);
+
+  std::string end_level_ref() const;
+  void set_end_level_ref(std::string end_level_ref);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -452,6 +470,14 @@ protected:
 
   // Bss support
   BikeShareStationInfo bss_info_;
+
+  // Indoor elements
+  bool elevator_;
+  bool steps_;
+  bool escalator_;
+  bool building_enter_;
+  bool building_exit_;
+  std::string end_level_ref_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

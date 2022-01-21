@@ -363,6 +363,43 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         maneuvers_have_been_combined = true;
       }
       // Do not combine
+      // if current or next maneuver is an elevator
+      else if (curr_man->elevator() || next_man->elevator()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is an elevator +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
+      // if current or next maneuver is a steps
+      else if (curr_man->steps() || next_man->steps()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a steps +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
+      // if current or next maneuver is an escalator
+      else if (curr_man->escalator() || next_man->escalator()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is an escalator +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
+      // if current or next maneuver is a building entrance
+      else if (curr_man->building_enter() || next_man->building_enter() ||
+               curr_man->building_exit() || next_man->building_exit()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a building entrance +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
       // if any transit connection maneuvers
       else if (curr_man->transit_connection() || next_man->transit_connection()) {
         LOG_TRACE("+++ Do Not Combine: if any transit connection maneuvers +++");
@@ -802,6 +839,24 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
   // Update end shape index
   curr_man->set_end_shape_index(next_man->end_shape_index());
 
+  // Update end level
+  curr_man->set_end_level_ref(next_man->end_level_ref());
+
+  // If needed, set elevator
+  if (next_man->elevator()) {
+    curr_man->set_elevator(true);
+  }
+
+  // If needed, set steps
+  if (next_man->steps()) {
+    curr_man->set_steps(true);
+  }
+
+  // If needed, set escalator
+  if (next_man->escalator()) {
+    curr_man->set_escalator(true);
+  }
+
   // If needed, set ramp
   if (next_man->ramp()) {
     curr_man->set_ramp(true);
@@ -1062,6 +1117,26 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Set the end shape index
   maneuver.set_end_shape_index(prev_edge->end_shape_index());
 
+  // Set the end level ref
+  if (curr_edge && !curr_edge->GetLevelRef().empty()) {
+    maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+  }
+
+  // Elevator
+  if (prev_edge->IsElevatorUse()) {
+    maneuver.set_elevator(true);
+  }
+
+  // Steps
+  if (prev_edge->IsStepsUse()) {
+    maneuver.set_steps(true);
+  }
+
+  // Escalator
+  if (prev_edge->IsEscalatorUse()) {
+    maneuver.set_escalator(true);
+  }
+
   // Ramp
   if (prev_edge->IsRampUse()) {
     maneuver.set_ramp(true);
@@ -1321,6 +1396,24 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // and end nodes
   maneuver.set_time(trip_path_->node(maneuver.end_node_index()).cost().elapsed_cost().seconds() -
                     trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
+
+  // Set elevator
+  if (node->IsElevator()) {
+    maneuver.set_elevator(true);
+    // Set the end level ref
+    if (curr_edge && !curr_edge->GetLevelRef().empty()) {
+      maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+    }
+  }
+
+  // Set enter/exit building
+  if (node->IsBuildingEntrance()) {
+    if (curr_edge->indoor() && prev_edge && !prev_edge->indoor()) {
+      maneuver.set_building_enter(true);
+    } else if (!curr_edge->indoor() && prev_edge && prev_edge->indoor()) {
+      maneuver.set_building_exit(true);
+    }
+  }
 
   // if possible, set the turn degree and relative direction
   if (prev_edge) {
@@ -1647,6 +1740,31 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   else if (prev_edge && (prev_edge->IsFerryUse() || prev_edge->IsRailFerryUse())) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kFerryExit);
     LOG_TRACE("ManeuverType=FERRY_EXIT");
+  }
+  // Process elevator
+  else if (maneuver.elevator()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kElevatorEnter);
+    LOG_TRACE("ManeuverType=ELEVATOR");
+  }
+  // Process steps
+  else if (maneuver.steps()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
+    LOG_TRACE("ManeuverType=STEPS");
+  }
+  // Process escalator
+  else if (maneuver.escalator()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kEscalatorEnter);
+    LOG_TRACE("ManeuverType=ESCALATOR");
+  }
+  // Process enter building
+  else if (maneuver.building_enter()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kBuildingEnter);
+    LOG_TRACE("ManeuverType=BUILDING_ENTER");
+  }
+  // Process exit building
+  else if (maneuver.building_exit()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kBuildingExit);
+    LOG_TRACE("ManeuverType=BUILDING_EXIT");
   }
   // Process simple direction
   else {
@@ -1997,6 +2115,51 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   /////////////////////////////////////////////////////////////////////////////
   // Process driving side
   if (maneuver.drive_on_right() != prev_edge->drive_on_right()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process elevator
+  if (maneuver.elevator() && !prev_edge->IsElevatorUse()) {
+    return false;
+  }
+  if (prev_edge->IsElevatorUse() && !maneuver.elevator()) {
+    return false;
+  }
+  if (maneuver.elevator() && prev_edge->IsElevatorUse()) {
+    return true;
+  }
+  if (node->IsElevator()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process steps
+  if (maneuver.steps() && !prev_edge->IsStepsUse()) {
+    return false;
+  }
+  if (prev_edge->IsStepsUse() && !maneuver.steps()) {
+    return false;
+  }
+  if (maneuver.steps() && prev_edge->IsStepsUse()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process escalator
+  if (maneuver.escalator() && !prev_edge->IsEscalatorUse()) {
+    return false;
+  }
+  if (prev_edge->IsEscalatorUse() && !maneuver.escalator()) {
+    return false;
+  }
+  if (maneuver.escalator() && prev_edge->IsEscalatorUse()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process building entrance
+  if (node->IsBuildingEntrance()) {
     return false;
   }
 
