@@ -313,7 +313,10 @@ message Costing {
       uint32 restriction_probability = 77;
     }
     repeated AvoidEdge exclude_edges = 78;
-    repeated ChinesePostmanEdge chinese_edges = 94;   // Edges to be visited for chinese postman algorithm
+    oneof has_elevator_penalty {
+      float elevator_penalty = 79;
+    }
+    repeated ChinesePostmanEdge chinese_edges = 80;   // Edges to be visited for chinese postman algorithm
   }
 
   oneof has_options {

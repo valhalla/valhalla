@@ -330,6 +330,21 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
   if (layer_ != 0) {
     names.emplace_back(encode_tag(TaggedValue::kLayer) + static_cast<char>(layer_));
   }
+
+  if (level_index_ != 0) {
+    // level
+    auto tokens = GetTagTokens(name_offset_map.name(level_index_));
+    for (const auto& t : tokens) {
+      names.emplace_back(encode_tag(TaggedValue::kLevel) + t);
+    }
+  }
+  if (level_ref_index_ != 0) {
+    // level:ref
+    auto tokens = GetTagTokens(name_offset_map.name(level_ref_index_));
+    for (const auto& t : tokens) {
+      names.emplace_back(encode_tag(TaggedValue::kLevelRef) + t);
+    }
+  }
 }
 
 } // namespace mjolnir

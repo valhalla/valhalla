@@ -571,6 +571,31 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
+/**
+ * Finds a node in the graph based on its node name
+ *
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
+ */
+baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
+                        const nodelayout& nodes,
+                        const std::string& node_name) {
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto tile = reader.GetGraphTile(tile_id);
+    // Iterate over all nodes to find one with the name we want
+    for (auto node_id = tile_id; node_id.id() < tile->header()->nodecount(); ++node_id) {
+      auto ll = tile->get_node_ll(node_id);
+      if (ll.ApproximatelyEqual(nodes.at(node_name))) {
+        return node_id;
+      }
+    }
+  }
+  throw std::runtime_error("Could not find node " + node_name);
+}
+
 std::string
 do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
   std::cerr << "[          ] Valhalla request is pbf " << std::endl;
