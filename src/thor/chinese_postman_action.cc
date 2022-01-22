@@ -27,12 +27,6 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-midgard::PointLL getPointLL(baldr::GraphId node, GraphReader& reader) {
-  const NodeInfo* ni_start = reader.nodeinfo(node);
-  graph_tile_ptr tile = reader.GetGraphTile(node);
-  return ni_start->latlng(tile->header()->base_ll());
-}
-
 // Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
 // ordered by the best.
 int get_node_candidate_index(const valhalla::Location& location,
@@ -102,47 +96,44 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
     return distanceMatrix;
   }
 
-  google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
-  google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
+  // get all the path locations for all the nodes
+  google::protobuf::RepeatedPtrField<valhalla::Location> sources, targets;
+  graph_tile_ptr tile, opp_tile;
+  for (const auto& node_id : graph_ids) {
+    // skip missing tiles
+    if (!reader->GetGraphTile(node_id, tile))
+      continue;
 
-  for (const auto& graph_id : graph_ids) {
-    GraphId g(graph_id);
-    auto l = getPointLL(g, *reader);
-    Location loc = Location();
+    // set up a basic path location for a node in the graph
+    const auto* node = tile->node(node_id);
+    auto ll = node->latlng(tile->header()->base_ll());
+    PathLocation source(ll), target(ll);
 
-    loc.mutable_ll()->set_lng(l.first);
-    loc.mutable_ll()->set_lat(l.second);
-    source_location_list.Add()->CopyFrom(loc);
-    target_location_list.Add()->CopyFrom(loc);
+    // get all the edges leaving the source and entering the target
+    source.edges.reserve(node->edge_count());
+    target.edges.reserve(node->edge_count());
+    for (const auto& edge : tile->GetDirectedEdges(node)) {
+      auto edge_id = tile->id(&edge);
+      source.edges.emplace_back(edge_id, 0, ll, 0);
+      auto opp_id = reader->GetOpposingEdgeId(edge_id, opp_tile);
+      if (opp_id)
+        target.edges.emplace_back(opp_id, 1, ll, 0);
+    }
+
+    // convert it back to pbf for the matrix api
+    PathLocation::toPBF(source, sources.Add(), *reader);
+    PathLocation::toPBF(target, targets.Add(), *reader);
   }
 
-  try {
-    auto locations = PathLocation::fromPBF(source_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, source_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  try {
-    auto locations = PathLocation::fromPBF(target_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, target_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
+  // get the all pairs matrix result
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
-                                mode, max_matrix_distance);
+      costmatrix.SourceToTarget(sources, targets, *reader, mode_costing, mode, max_matrix_distance);
 
   // Update Distance Matrix
   for (int i = 0; i < graph_ids.size(); i++) {
     for (int j = 0; j < graph_ids.size(); j++) {
-      distanceMatrix[i][j] = td[i * source_location_list.size() + j].dist;
+      distanceMatrix[i][j] = td[i * graph_ids.size() + j].dist;
     }
   }
 

@@ -142,6 +142,32 @@ public:
   }
 
   /**
+   * Return the graph id for an edge contained within this tile
+   * @param edge  the edge for which we want to know the id
+   * @return the edges id or an invalid id if the edge doesnt belong to the tile
+   */
+  GraphId id(const DirectedEdge* edge) const {
+    if (edge < directededges_ || edge >= directededges_ + header_->directededgecount())
+      return {};
+    auto edge_id = header_->graphid();
+    edge_id.set_id(edge - directededges_);
+    return edge_id;
+  }
+
+  /**
+   * Return the graph id for a node contained within this tile
+   * @param node  the node for which we want to know the id
+   * @return the nodes id or an invalid id if the node doesnt belong to the tile
+   */
+  GraphId id(const NodeInfo* node) const {
+    if (node < nodes_ || node >= nodes_ + header_->nodecount())
+      return {};
+    auto node_id = header_->graphid();
+    node_id.set_id(node - nodes_);
+    return node_id;
+  }
+
+  /**
    * Gets a pointer to the graph tile header.
    * @return  Returns the header for the graph tile.
    */
