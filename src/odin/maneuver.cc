@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <utility>
 
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
@@ -1178,7 +1179,7 @@ std::string Maneuver::end_level_ref() const {
 }
 
 void Maneuver::set_end_level_ref(std::string end_level_ref) {
-  end_level_ref_ = end_level_ref;
+  end_level_ref_ = std::move(end_level_ref);
 }
 
 #ifdef LOGGING_LEVEL_TRACE
