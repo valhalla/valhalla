@@ -106,6 +106,8 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
 
     // set up a basic path location for a node in the graph
     const auto* node = tile->node(node_id);
+    if (!costing->Allowed(node))
+      continue;
     auto ll = node->latlng(tile->header()->base_ll());
     PathLocation source(ll), target(ll);
 
@@ -113,6 +115,8 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
     source.edges.reserve(node->edge_count());
     target.edges.reserve(node->edge_count());
     for (const auto& edge : tile->GetDirectedEdges(node)) {
+      if (!costing->Allowed(&edge, tile, kDisallowShortcut))
+        continue;
       auto edge_id = tile->id(&edge);
       source.edges.emplace_back(edge_id, 0, ll, 0);
       auto opp_id = reader->GetOpposingEdgeId(edge_id, opp_tile);
