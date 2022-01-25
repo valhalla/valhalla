@@ -1541,7 +1541,11 @@ void TripLegBuilder::Build(
     auto edgeinfo = graphtile->edgeinfo(directededge);
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
-      auto edge_shape = edgeinfo.shape();
+      auto edge_shape2 = edgeinfo.shape();
+      std::vector<midgard::PointLL> edge_shape;
+      edge_shape.emplace_back(edge_shape2.front());
+      edge_shape.emplace_back(edge_shape2.back());
+
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
@@ -1595,7 +1599,12 @@ void TripLegBuilder::Build(
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
-      auto edge_shape = edgeinfo.shape();
+      // auto edge_shape = edgeinfo.shape();
+      auto edge_shape2 = edgeinfo.shape();
+      std::vector<midgard::PointLL> edge_shape;
+      edge_shape.emplace_back(edge_shape2.front());
+      edge_shape.emplace_back(edge_shape2.back());
+
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
@@ -1614,10 +1623,17 @@ void TripLegBuilder::Build(
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
+      auto edge_shape2 = edgeinfo.shape();
+      std::vector<midgard::PointLL> edge_shape;
+      edge_shape.emplace_back(edge_shape2.front());
+      edge_shape.emplace_back(edge_shape2.back());
+
       if (directededge->forward()) {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+        // trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+        trip_shape.insert(trip_shape.end(), edge_shape.begin() + 1, edge_shape.end());
       } else {
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+        // trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+        trip_shape.insert(trip_shape.end(), edge_shape.rbegin() + 1, edge_shape.rend());
       }
     }
 
