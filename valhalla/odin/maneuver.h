@@ -381,8 +381,8 @@ public:
   bool elevator() const;
   void set_elevator(bool elevator);
 
-  bool steps() const;
-  void set_steps(bool steps);
+  bool indoor_steps() const;
+  void set_indoor_steps(bool indoor_steps);
 
   bool escalator() const;
   void set_escalator(bool escalator);
@@ -473,7 +473,7 @@ protected:
 
   // Indoor elements
   bool elevator_;
-  bool steps_;
+  bool indoor_steps_;
   bool escalator_;
   bool building_enter_;
   bool building_exit_;

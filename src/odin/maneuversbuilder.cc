@@ -372,9 +372,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Do not combine
-      // if current or next maneuver is a steps
-      else if (curr_man->steps() || next_man->steps()) {
-        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a steps +++");
+      // if current or next maneuver is indoor steps
+      else if (curr_man->indoor_steps() || next_man->indoor_steps()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is indoor steps +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -848,8 +848,8 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
   }
 
   // If needed, set steps
-  if (next_man->steps()) {
-    curr_man->set_steps(true);
+  if (next_man->indoor_steps()) {
+    curr_man->set_indoor_steps(true);
   }
 
   // If needed, set escalator
@@ -1127,9 +1127,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_elevator(true);
   }
 
-  // Steps
-  if (prev_edge->IsStepsUse()) {
-    maneuver.set_steps(true);
+  // Indoor Steps
+  if (prev_edge->IsStepsUse() && prev_edge->indoor()) {
+    maneuver.set_indoor_steps(true);
   }
 
   // Escalator
@@ -1747,7 +1747,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ELEVATOR");
   }
   // Process steps
-  else if (maneuver.steps()) {
+  else if (maneuver.indoor_steps()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
     LOG_TRACE("ManeuverType=STEPS");
   }
@@ -2134,14 +2134,14 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Process steps
-  if (maneuver.steps() && !prev_edge->IsStepsUse()) {
+  // Process indoor steps
+  if (maneuver.indoor_steps() && (!prev_edge->IsStepsUse() || !prev_edge->indoor())) {
     return false;
   }
-  if (prev_edge->IsStepsUse() && !maneuver.steps()) {
+  if (prev_edge->IsStepsUse() && prev_edge->indoor() && !maneuver.indoor_steps()) {
     return false;
   }
-  if (maneuver.steps() && prev_edge->IsStepsUse()) {
+  if (maneuver.indoor_steps() && prev_edge->IsStepsUse() && prev_edge->indoor()) {
     return true;
   }
 
