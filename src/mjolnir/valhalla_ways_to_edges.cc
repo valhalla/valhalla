@@ -73,6 +73,21 @@ bool ParseArguments(int argc, char* argv[]) {
   return false;
 }
 
+template <class T> bool write_vector(std::string filename, std::vector<T> vec) {
+  std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!file.is_open()) {
+    LOG_ERROR("Failed to open output file: " + filename);
+    return false;
+  }
+
+  // Write the count and then the via ids
+  uint64_t sz = vec.size();
+  // file.write(reinterpret_cast<const char*>(&sz), sizeof(T));
+  file.write(reinterpret_cast<const char*>(vec.data()), vec.size() * sizeof(T));
+  file.close();
+  return true;
+}
+
 // Main application to create a list wayids and directed edges belonging
 // to ways that are driveable.
 int main(int argc, char** argv) {
@@ -88,6 +103,7 @@ int main(int argc, char** argv) {
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
+  uint64_t edge_count = 0;
   GraphReader reader(pt.get_child("mjolnir"));
   // Iterate through all tiles
   for (auto edge_id : reader.GetTileSet()) {
@@ -113,12 +129,19 @@ int main(int argc, char** argv) {
       // Get the way Id
       uint64_t wayid = tile->edgeinfo(edge).wayid();
       ways_edges[wayid].push_back({edge->forward(), edge_id});
+      edge_count++;
     }
   }
 
   std::ofstream ways_file;
   std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
                       filesystem::path::preferred_separator + "way_edges.txt";
+
+  std::vector<long> vec_ways;
+  // vec_ways.resize(edge_count);
+  std::vector<uint64_t> vec_edges;
+  // vec_edges.resize(edge_count);
+
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
     // ways_file << way.first;
@@ -130,9 +153,23 @@ int main(int argc, char** argv) {
     for (auto edge : way.second) {
       ways_file << way.first << " " << (uint32_t)edge.forward << " " << (uint64_t)edge.edgeid
                 << std::endl;
+      if (edge.forward == true) {
+        vec_ways.emplace_back(way.first);
+      } else {
+        vec_ways.emplace_back(-1 * way.first);
+      }
+      vec_edges.emplace_back((uint64_t)edge.edgeid);
     }
   }
   ways_file.close();
+
+  // write to binary files
+  write_vector<long>(pt.get<std::string>("mjolnir.tile_dir") + filesystem::path::preferred_separator +
+                         "link_id",
+                     vec_ways);
+  write_vector<uint64_t>(pt.get<std::string>("mjolnir.tile_dir") +
+                             filesystem::path::preferred_separator + "edge_id",
+                         vec_edges);
 
   return EXIT_SUCCESS;
 }
