@@ -21,8 +21,8 @@ namespace {
 // register a few boost.geometry types
 using ring_bg_t = std::vector<vm::PointLL>;
 
-rapidjson::Value get_avoid_polys(const std::vector<ring_bg_t>& rings,
-                                 rapidjson::MemoryPoolAllocator<>& allocator) {
+rapidjson::Value get_excluded_polys(const std::vector<ring_bg_t>& rings,
+                                    rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value rings_j(rapidjson::kArrayType);
   for (auto& ring : rings) {
     rapidjson::Value ring_j(rapidjson::kArrayType);
@@ -87,7 +87,7 @@ std::string build_local_req(rapidjson::Document& doc,
                             const std::vector<midgard::PointLL>& waypoints,
                             const std::string& costing,
                             const rapidjson::Value& chinese_polygon,
-                            const rapidjson::Value& avoid_polygons) {
+                            const rapidjson::Value& exclude_polygons) {
 
   rapidjson::Value locations(rapidjson::kArrayType);
   for (const auto& waypoint : waypoints) {
@@ -102,9 +102,9 @@ std::string build_local_req(rapidjson::Document& doc,
 
   rapidjson::SetValueByPointer(doc, "/chinese_postman_polygon", chinese_polygon);
   // Skip if empty to avoid segmentation fault
-  if (avoid_polygons.Size() > 0) {
-    if (avoid_polygons[0].Size() > 0) {
-      rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  if (exclude_polygons.Size() > 0) {
+    if (exclude_polygons[0].Size() > 0) {
+      rapidjson::SetValueByPointer(doc, "/exclude_polygons", exclude_polygons);
     }
   }
 
@@ -119,7 +119,7 @@ std::string build_local_req_route(rapidjson::Document& doc,
                                   rapidjson::MemoryPoolAllocator<>& allocator,
                                   const std::vector<midgard::PointLL>& waypoints,
                                   const std::string& costing,
-                                  const rapidjson::Value& avoid_polygons) {
+                                  const rapidjson::Value& exclude_polygons) {
 
   rapidjson::Value locations(rapidjson::kArrayType);
   for (const auto& waypoint : waypoints) {
@@ -133,9 +133,9 @@ std::string build_local_req_route(rapidjson::Document& doc,
   doc.AddMember("costing", costing, allocator);
 
   // Skip if empty to avoid segmentation fault
-  if (avoid_polygons.Size() > 0) {
-    if (avoid_polygons[0].Size() > 0) {
-      rapidjson::SetValueByPointer(doc, "/avoid_polygons", avoid_polygons);
+  if (exclude_polygons.Size() > 0) {
+    if (exclude_polygons[0].Size() > 0) {
+      rapidjson::SetValueByPointer(doc, "/exclude_polygons", exclude_polygons);
     }
   }
 
@@ -225,7 +225,7 @@ void test_request_route(const gurka::map& map,
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
-  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto exclude_polygons = get_excluded_polys(exclude_rings, allocator);
   auto req = build_local_req_route(doc, allocator, lls, costing, exclude_polygons);
 
   auto route = gurka::do_action(Options::route, map, req);
@@ -280,7 +280,7 @@ valhalla::Api request_cp(const gurka::map& map,
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto exclude_polygons = get_excluded_polys(exclude_rings, allocator);
   auto req = build_local_req(doc, allocator, lls, costing, chinese_polygon, exclude_polygons);
 
   return gurka::do_action(Options::chinese_postman, map, req);
@@ -351,7 +351,7 @@ protected:
                               {"HF",
                                {{"highway", "residential"}, {"name", "HF"}, {"oneway", "yes"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    // Add low length limit for avoid_polygons so it throws an error
+    // Add low length limit for excluded_polygons so it throws an error
     chinese_postman_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_chinese_postman",
                                             {{"service_limits.max_exclude_polygons_length", "1000"},
                                              {"service_limits.max_chinese_polygon_length", "1000"}});
@@ -396,7 +396,7 @@ protected:
          {"FD", {{"highway", "residential"}, {"name", "FD"}, {"oneway", "yes"}}},
          {"FE", {{"highway", "residential"}, {"name", "FE"}, {"oneway", "yes"}}}};
     const auto complex_layout = gurka::detail::map_to_coordinates(complex_ascii_map, 10);
-    // Add low length limit for avoid_polygons so it throws an error
+    // Add low length limit for excluded_polygons so it throws an error
     complex_chinese_postman_map =
         gurka::buildtiles(complex_layout, complex_ways, {}, {},
                           "test/data/gurka_complex_chinese_postman",
@@ -425,7 +425,7 @@ TEST_P(ChinesePostmanTest, TestMaxChinesePolygonPerimeter) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
   auto chinese_polygon = get_chinese_polygon(chinese_ring, allocator);
-  auto exclude_polygons = get_avoid_polys(exclude_rings, allocator);
+  auto exclude_polygons = get_excluded_polys(exclude_rings, allocator);
   auto req = build_local_req(doc, allocator, lls, GetParam(), chinese_polygon, exclude_polygons);
 
   // make sure the right exception is thrown
