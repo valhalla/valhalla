@@ -1113,7 +1113,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       maneuver_type = "roundabout";
     }
     // Roundabout count
-    if (maneuver.has_roundabout_exit_count_case()) {
+    if (maneuver.roundabout_exit_count() > 0) {
       osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
     }
   } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {

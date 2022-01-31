@@ -235,17 +235,17 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 
       // Instruction and verbal instructions
       writer("instruction", maneuver.text_instruction());
-      if (maneuver.has_verbal_transition_alert_instruction_case()) {
+      if (!maneuver.verbal_transition_alert_instruction().empty()) {
         writer("verbal_transition_alert_instruction", maneuver.verbal_transition_alert_instruction());
       }
-      if (maneuver.has_verbal_succinct_transition_instruction_case()) {
+      if (!maneuver.verbal_succinct_transition_instruction().empty()) {
         writer("verbal_succinct_transition_instruction",
                maneuver.verbal_succinct_transition_instruction());
       }
-      if (maneuver.has_verbal_pre_transition_instruction_case()) {
+      if (!maneuver.verbal_pre_transition_instruction().empty()) {
         writer("verbal_pre_transition_instruction", maneuver.verbal_pre_transition_instruction());
       }
-      if (maneuver.has_verbal_post_transition_instruction_case()) {
+      if (!maneuver.verbal_post_transition_instruction().empty()) {
         writer("verbal_post_transition_instruction", maneuver.verbal_post_transition_instruction());
       }
 
@@ -296,7 +296,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       if (maneuver.portions_unpaved()) {
         writer("rough", maneuver.portions_unpaved());
       }
-      if (maneuver.has_has_time_restrictions_case()) {
+      if (maneuver.has_time_restrictions()) {
         writer("has_time_restrictions", maneuver.has_time_restrictions());
         has_time_restrictions = true;
       }
@@ -378,21 +378,21 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       }
 
       // Roundabout count
-      if (maneuver.has_roundabout_exit_count_case()) {
+      if (maneuver.roundabout_exit_count() > 0) {
         writer("roundabout_exit_count", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
       }
 
       // Depart and arrive instructions
-      if (maneuver.has_depart_instruction_case()) {
+      if (!maneuver.depart_instruction().empty()) {
         writer("depart_instruction", maneuver.depart_instruction());
       }
-      if (maneuver.has_verbal_depart_instruction_case()) {
+      if (!maneuver.verbal_depart_instruction().empty()) {
         writer("verbal_depart_instruction", maneuver.verbal_depart_instruction());
       }
-      if (maneuver.has_arrive_instruction_case()) {
+      if (!maneuver.arrive_instruction().empty()) {
         writer("arrive_instruction", maneuver.arrive_instruction());
       }
-      if (maneuver.has_verbal_arrive_instruction_case()) {
+      if (!maneuver.verbal_arrive_instruction().empty()) {
         writer("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
       }
 
