@@ -434,7 +434,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
-                             const bool arrive_maneuver) {
+                             const bool arrive_maneuver,
+                             const baldr::AttributesController& controller) {
   // Iterate through the nodes/intersections of the path for this maneuver
   count = 0;
   auto intersections = json::array({});
@@ -460,14 +461,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
 
     // Add index into admin list
-    if (node->has_admin_index()) {
+    if (controller(kNodeAdminIndex)) {
       intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
     }
 
-    if (!arrive_maneuver) {
-      if (curr_edge->has_is_urban()) {
-        intersection->emplace("is_urban", curr_edge->is_urban());
-      }
+    if (!arrive_maneuver && controller(kEdgeIsUrban)) {
+      intersection->emplace("is_urban", curr_edge->is_urban());
     }
 
     auto toll_collection = json::map({});
@@ -717,13 +716,8 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incide
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
-  osrm::serializeIncidentProperties(writer, incident.metadata(),
-                                    incident.has_begin_shape_index_case()
-                                        ? incident.begin_shape_index()
-                                        : -1,
-                                    incident.has_end_shape_index_case() ? incident.end_shape_index()
-                                                                        : -1,
-                                    "", "");
+  osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
+                                    incident.end_shape_index(), "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
 }
@@ -1321,7 +1315,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                               const std::vector<std::string>& leg_summaries,
                               google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
                               bool imperial,
-                              const valhalla::Options& options) {
+                              const valhalla::Options& options,
+                              const baldr::AttributesController& controller) {
   auto output_legs = json::array({});
   output_legs->reserve(path_legs.size());
 
@@ -1506,8 +1501,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
 
       // Add intersections
-      step->emplace("intersections",
-                    intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
+      step->emplace("intersections", intersections(maneuver, &etp, shape, prev_intersection_count,
+                                                   arrive_maneuver, controller));
 
       // Add step
       prev_rotary = rotary;
@@ -1547,7 +1542,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     admins->reserve(path_leg.admin_size());
     for (const auto& admin : path_leg.admin()) {
       auto admin_map = json::map({});
-      if (admin.has_country_code_case()) {
+      if (!admin.country_code().empty()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
         auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {
@@ -1666,6 +1661,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
   auto& options = *api.mutable_options();
+  AttributesController controller(options);
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1721,7 +1717,7 @@ std::string serialize(valhalla::Api& api) {
     // Serialize route legs
     route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
-                                          imperial, options));
+                                          imperial, options, controller));
 
     routes->emplace_back(std::move(route));
   }

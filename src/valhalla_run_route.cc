@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/attributes_controller.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
@@ -26,7 +27,6 @@
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
-#include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
@@ -379,13 +379,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
-    if (maneuver.has_depart_instruction_case()) {
+    if (!maneuver.depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
-    if (maneuver.has_verbal_depart_instruction_case()) {
+    if (!maneuver.verbal_depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
                                        maneuver.verbal_depart_instruction())
                                           .str(),
@@ -423,7 +423,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal succinct transition instruction
-    if (maneuver.has_verbal_succinct_transition_instruction_case()) {
+    if (!maneuver.verbal_succinct_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
@@ -431,7 +431,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal transition alert instruction
-    if (maneuver.has_verbal_transition_alert_instruction_case()) {
+    if (!maneuver.verbal_transition_alert_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
                                        maneuver.verbal_transition_alert_instruction())
                                           .str(),
@@ -439,7 +439,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal pre transition instruction
-    if (maneuver.has_verbal_pre_transition_instruction_case()) {
+    if (!maneuver.verbal_pre_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
                                        maneuver.verbal_pre_transition_instruction())
                                           .str(),
@@ -447,7 +447,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal post transition instruction
-    if (maneuver.has_verbal_post_transition_instruction_case()) {
+    if (!maneuver.verbal_post_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
                                        maneuver.verbal_post_transition_instruction())
                                           .str(),
@@ -455,13 +455,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Arrive instruction
-    if (maneuver.has_arrive_instruction_case()) {
+    if (!maneuver.arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
-    if (maneuver.has_verbal_arrive_instruction_case()) {
+    if (!maneuver.verbal_arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
                                        maneuver.verbal_arrive_instruction())
                                           .str(),

@@ -1805,7 +1805,7 @@ uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegr
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
       // If a use pointer was passed in and the intersecting edge has a use then set
-      if ((use != nullptr) && xedge->has_use()) {
+      if (use != nullptr) {
         *use = xedge->use();
       }
     }

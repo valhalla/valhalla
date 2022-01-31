@@ -1,10 +1,10 @@
 #include <cstdint>
 
+#include "baldr/attributes_controller.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
 #include "proto_conversions.h"
-#include "thor/attributes_controller.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -25,16 +25,16 @@ json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
   for (const auto& admin : trip_path.admin()) {
     auto admin_map = json::map({});
-    if (admin.has_country_code_case()) {
+    if (!admin.country_code().empty()) {
       admin_map->emplace("country_code", admin.country_code());
     }
-    if (admin.has_country_text_case()) {
+    if (!admin.country_text().empty()) {
       admin_map->emplace("country_text", admin.country_text());
     }
-    if (admin.has_state_code_case()) {
+    if (!admin.state_code().empty()) {
       admin_map->emplace("state_code", admin.state_code());
     }
-    if (admin.has_state_text_case()) {
+    if (!admin.state_text().empty()) {
       admin_map->emplace("state_text", admin.state_text());
     }
 
@@ -63,14 +63,14 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 
       // Process each edge
       auto edge_map = json::map({});
-      if (edge.has_truck_route_case()) {
+      if (controller(kEdgeTruckRoute)) {
         edge_map->emplace("truck_route", static_cast<bool>(edge.truck_route()));
       }
-      if (edge.has_truck_speed_case() && (edge.truck_speed() > 0)) {
+      if (controller(kEdgeTruckSpeed) && (edge.truck_speed() > 0)) {
         edge_map->emplace("truck_speed",
                           static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
       }
-      if (edge.has_speed_limit_case() && (edge.speed_limit() > 0)) {
+      if (controller(kEdgeSpeedLimit) && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
           edge_map->emplace("speed_limit", std::string("unlimited"));
         } else {
@@ -78,25 +78,25 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                             static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
         }
       }
-      if (edge.has_density_case()) {
+      if (controller(kEdgeDensity)) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
       }
-      if (edge.has_sac_scale_case()) {
+      if (controller(kEdgeSacScale)) {
         edge_map->emplace("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
       }
-      if (edge.has_shoulder_case()) {
+      if (controller(kEdgeShoulder)) {
         edge_map->emplace("shoulder", static_cast<bool>(edge.shoulder()));
       }
-      if (edge.has_sidewalk_case()) {
+      if (controller(kEdgeSidewalk)) {
         edge_map->emplace("sidewalk", to_string(edge.sidewalk()));
       }
-      if (edge.has_bicycle_network_case()) {
+      if (controller(kEdgeBicycleNetwork)) {
         edge_map->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
       }
-      if (edge.has_cycle_lane_case()) {
+      if (controller(kEdgeCycleLane)) {
         edge_map->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
       }
-      if (edge.has_lane_count_case()) {
+      if (controller(kEdgeLaneCount)) {
         edge_map->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
       }
       if (edge.lane_connectivity_size()) {
@@ -110,16 +110,16 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
         edge_map->emplace("lane_connectivity", lane_connectivity);
       }
-      if (edge.has_max_downward_grade_case()) {
+      if (controller(kEdgeMaxDownwardGrade)) {
         edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
       }
-      if (edge.has_max_upward_grade_case()) {
+      if (controller(kEdgeMaxUpwardGrade)) {
         edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
       }
-      if (edge.has_weighted_grade_case()) {
+      if (controller(kEdgeWeightedGrade)) {
         edge_map->emplace("weighted_grade", json::fixed_t{edge.weighted_grade(), 3});
       }
-      if (edge.has_mean_elevation_case()) {
+      if (controller(kEdgeMeanElevation)) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
         if (mean != kNoElevationData && options.units() == Options::miles) {
@@ -127,73 +127,73 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
         edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
       }
-      if (edge.has_way_id_case()) {
+      if (controller(kEdgeWayId)) {
         edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
       }
-      if (edge.has_id_case()) {
+      if (controller(kEdgeId)) {
         edge_map->emplace("id", static_cast<uint64_t>(edge.id()));
       }
-      if (edge.has_travel_mode_case()) {
+      if (controller(kEdgeTravelMode)) {
         edge_map->emplace("travel_mode", to_string(edge.travel_mode()));
       }
-      if (edge.has_vehicle_type_case()) {
+      if (controller(kEdgeVehicleType) && edge.travel_mode() == valhalla::kDrive) {
         edge_map->emplace("vehicle_type", to_string(edge.vehicle_type()));
       }
-      if (edge.has_pedestrian_type_case()) {
+      if (controller(kEdgePedestrianType) && edge.travel_mode() == valhalla::kPedestrian) {
         edge_map->emplace("pedestrian_type", to_string(edge.pedestrian_type()));
       }
-      if (edge.has_bicycle_type_case()) {
+      if (controller(kEdgeBicycleType) && edge.travel_mode() == valhalla::kBicycle) {
         edge_map->emplace("bicycle_type", to_string(edge.bicycle_type()));
       }
-      if (edge.has_surface_case()) {
+      if (controller(kEdgeSurface)) {
         edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
-      if (edge.has_drive_on_left_case()) {
+      if (controller(kEdgeDriveOnRight)) {
         edge_map->emplace("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
-      if (edge.has_internal_intersection_case()) {
+      if (controller(kEdgeInternalIntersection)) {
         edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
       }
-      if (edge.has_roundabout_case()) {
+      if (controller(kEdgeRoundabout)) {
         edge_map->emplace("roundabout", static_cast<bool>(edge.roundabout()));
       }
-      if (edge.has_bridge_case()) {
+      if (controller(kEdgeBridge)) {
         edge_map->emplace("bridge", static_cast<bool>(edge.bridge()));
       }
-      if (edge.has_tunnel_case()) {
+      if (controller(kEdgeTunnel)) {
         edge_map->emplace("tunnel", static_cast<bool>(edge.tunnel()));
       }
-      if (edge.has_unpaved_case()) {
+      if (controller(kEdgeUnpaved)) {
         edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
       }
-      if (edge.has_toll_case()) {
+      if (controller(kEdgeToll)) {
         edge_map->emplace("toll", static_cast<bool>(edge.toll()));
       }
-      if (edge.has_use_case()) {
+      if (controller(kEdgeUse)) {
         edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
       }
-      if (edge.has_traversability_case()) {
+      if (controller(kEdgeTraversability)) {
         edge_map->emplace("traversability", to_string(edge.traversability()));
       }
-      if (edge.has_end_shape_index_case()) {
+      if (controller(kEdgeEndShapeIndex)) {
         edge_map->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
       }
-      if (edge.has_begin_shape_index_case()) {
+      if (controller(kEdgeBeginShapeIndex)) {
         edge_map->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
       }
-      if (edge.has_end_heading_case()) {
+      if (controller(kEdgeEndHeading)) {
         edge_map->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
       }
-      if (edge.has_begin_heading_case()) {
+      if (controller(kEdgeBeginHeading)) {
         edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
       }
-      if (edge.has_road_class_case()) {
+      if (controller(kEdgeRoadClass)) {
         edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
-      if (edge.has_speed_case()) {
+      if (controller(kEdgeSpeed)) {
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
-      if (edge.has_length_km_case()) {
+      if (controller(kEdgeLength)) {
         edge_map->emplace("length", json::fixed_t{edge.length_km() * scale, 3});
       }
       // TODO: do we want to output 'is_route_number'?
@@ -271,57 +271,58 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
           auto intersecting_edge_array = json::array({});
           for (const auto& xedge : node.intersecting_edge()) {
             auto xedge_map = json::map({});
-            if (xedge.has_walkability_case() &&
+            if (controller(kNodeIntersectingEdgeWalkability) &&
                 (xedge.walkability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("walkability", to_string(xedge.walkability()));
             }
-            if (xedge.has_cyclability_case() &&
+            if (controller(kNodeIntersectingEdgeCyclability) &&
                 (xedge.cyclability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
             }
-            if (xedge.has_driveability_case() &&
+            if (controller(kNodeIntersectingEdgeDriveability) &&
                 (xedge.driveability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
             }
-            xedge_map->emplace("from_edge_name_consistency",
-                               static_cast<bool>(xedge.prev_name_consistency()));
-            xedge_map->emplace("to_edge_name_consistency",
-                               static_cast<bool>(xedge.curr_name_consistency()));
-            xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
-
-            if (xedge.has_use_case()) {
+            if (controller(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
+              xedge_map->emplace("from_edge_name_consistency",
+                                 static_cast<bool>(xedge.prev_name_consistency()));
+            }
+            if (controller(kNodeIntersectingEdgeToEdgeNameConsistency)) {
+              xedge_map->emplace("to_edge_name_consistency",
+                                 static_cast<bool>(xedge.curr_name_consistency()));
+            }
+            if (controller(kNodeIntersectingEdgeBeginHeading)) {
+              xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
+            }
+            if (controller(kNodeIntersectingEdgeUse)) {
               xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
             }
-
-            if (xedge.has_road_class_case()) {
+            if (controller(kNodeIntersectingEdgeRoadClass)) {
               xedge_map->emplace("road_class",
                                  to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
             }
-
             intersecting_edge_array->emplace_back(xedge_map);
           }
           end_node_map->emplace("intersecting_edges", intersecting_edge_array);
         }
 
-        if (node.has_cost() && node.cost().has_elapsed_cost() &&
-            node.cost().elapsed_cost().has_seconds_case()) {
+        if (controller(kNodeElapsedTime)) {
           end_node_map->emplace("elapsed_time",
                                 json::fixed_t{node.cost().elapsed_cost().seconds(), 3});
         }
-        if (node.has_admin_index_case()) {
+        if (controller(kNodeAdminIndex)) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
         }
-        if (node.has_type_case()) {
+        if (controller(kNodeType)) {
           end_node_map->emplace("type", to_string(static_cast<baldr::NodeType>(node.type())));
         }
-        if (node.has_fork_case()) {
+        if (controller(kNodeFork)) {
           end_node_map->emplace("fork", static_cast<bool>(node.fork()));
         }
-        if (node.has_time_zone_case()) {
+        if (controller(kNodeTimeZone) && !node.time_zone().empty()) {
           end_node_map->emplace("time_zone", node.time_zone());
         }
-        if (node.has_cost() && node.cost().has_transition_cost() &&
-            node.cost().transition_cost().has_seconds_case()) {
+        if (controller(kNodeTransitionTime)) {
           end_node_map->emplace("transition_time",
                                 json::fixed_t{node.cost().transition_cost().seconds(), 3});
         }
@@ -367,13 +368,13 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
     auto match_points_map = json::map({});
 
     // Process matched point
-    if (controller.attributes.at(kMatchedPoint)) {
+    if (controller(kMatchedPoint)) {
       match_points_map->emplace("lon", json::fixed_t{match_result.lnglat.first, 6});
       match_points_map->emplace("lat", json::fixed_t{match_result.lnglat.second, 6});
     }
 
     // Process matched type
-    if (controller.attributes.at(kMatchedType)) {
+    if (controller(kMatchedType)) {
       switch (match_result.GetType()) {
         case meili::MatchResult::Type::kMatched:
           match_points_map->emplace("type", std::string("matched"));
@@ -390,31 +391,30 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
     // TODO: need to keep track of the index of the edge in the global set of edges a given
     // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller.attributes.at(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
+    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
       match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 
     // Process matched point begin route discontinuity
-    if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) &&
-        match_result.begins_discontinuity) {
+    if (controller(kMatchedBeginRouteDiscontinuity) && match_result.begins_discontinuity) {
       match_points_map->emplace("begin_route_discontinuity",
                                 static_cast<bool>(match_result.begins_discontinuity));
     }
 
     // Process matched point end route discontinuity
-    if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.ends_discontinuity) {
+    if (controller(kMatchedEndRouteDiscontinuity) && match_result.ends_discontinuity) {
       match_points_map->emplace("end_route_discontinuity",
                                 static_cast<bool>(match_result.ends_discontinuity));
     }
 
     // Process matched point distance along edge
-    if (controller.attributes.at(kMatchedDistanceAlongEdge) &&
+    if (controller(kMatchedDistanceAlongEdge) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
       match_points_map->emplace("distance_along_edge", json::fixed_t{match_result.distance_along, 3});
     }
 
     // Process matched point distance from trace point
-    if (controller.attributes.at(kMatchedDistanceFromTracePoint) &&
+    if (controller(kMatchedDistanceFromTracePoint) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
       match_points_map->emplace("distance_from_trace_point",
                                 json::fixed_t{match_result.distance_from, 3});
@@ -428,7 +428,7 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
 json::MapPtr serialize_shape_attributes(const AttributesController& controller,
                                         const TripLeg& trip_path) {
   auto attributes_map = json::map({});
-  if (controller.attributes.at(kShapeAttributesTime)) {
+  if (controller(kShapeAttributesTime)) {
     auto times_array = json::array({});
     for (const auto& time : trip_path.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
@@ -436,7 +436,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     }
     attributes_map->emplace("time", times_array);
   }
-  if (controller.attributes.at(kShapeAttributesLength)) {
+  if (controller(kShapeAttributesLength)) {
     auto lengths_array = json::array({});
     for (const auto& length : trip_path.shape_attributes().length()) {
       // decimeters (dm) to kilometer (km)
@@ -444,7 +444,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     }
     attributes_map->emplace("length", lengths_array);
   }
-  if (controller.attributes.at(kShapeAttributesSpeed)) {
+  if (controller(kShapeAttributesSpeed)) {
     auto speeds_array = json::array({});
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
@@ -465,23 +465,23 @@ void append_trace_info(
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
 
   // Add osm_changeset
-  if (trip_path.has_osm_changeset_case()) {
+  if (controller(kOsmChangeset)) {
     json->emplace("osm_changeset", trip_path.osm_changeset());
   }
 
   // Add shape
-  if (trip_path.has_shape_case()) {
+  if (controller(kShape)) {
     json->emplace("shape", trip_path.shape());
   }
 
   // Add confidence_score
-  if (controller.attributes.at(kConfidenceScore)) {
+  if (controller(kConfidenceScore)) {
     json->emplace("confidence_score",
                   json::fixed_t{std::get<kConfidenceScoreIndex>(map_match_result), 3});
   }
 
   // Add raw_score
-  if (controller.attributes.at(kRawScore)) {
+  if (controller(kRawScore)) {
     json->emplace("raw_score", json::fixed_t{std::get<kRawScoreIndex>(map_match_result), 3});
   }
 
@@ -522,7 +522,7 @@ std::string serializeTraceAttributes(
   auto json = json::map({});
 
   // Add result id, if supplied
-  if (request.options().has_id_case()) {
+  if (!request.options().id().empty()) {
     json->emplace("id", request.options().id());
   }
 

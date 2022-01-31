@@ -1,6 +1,7 @@
 #include "thor/worker.h"
 #include <cstdint>
 
+#include "baldr/attributes_controller.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
@@ -9,7 +10,6 @@
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
-#include "thor/attributes_controller.h"
 
 #include "proto/common.pb.h"
 
@@ -181,7 +181,7 @@ void thor_worker_t::centroid(Api& request) {
   auto _ = measure_scope_time(request);
 
   parse_locations(request);
-  parse_filter_attributes(request);
+  controller = AttributesController(request.options());
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
   auto& locations = *options.mutable_locations();
@@ -215,10 +215,10 @@ void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  parse_locations(request);
-  parse_filter_attributes(request);
-  auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
+  parse_locations(request);
+  controller = AttributesController(options);
+  auto costing = parse_costing(request);
 
   // get all the legs
   if (options.date_time_type() == Options::arrive_by) {

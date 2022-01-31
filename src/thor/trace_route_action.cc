@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/attributes_controller.h"
 #include "meili/map_matcher.h"
 #include "meili/match_result.h"
 #include "midgard/util.h"
-#include "thor/attributes_controller.h"
 #include "thor/map_matcher.h"
 #include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
@@ -74,9 +74,8 @@ void thor_worker_t::trace_route(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
-  parse_filter_attributes(request);
-
   const auto& options = *request.mutable_options();
+  controller = AttributesController(options);
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,

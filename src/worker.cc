@@ -1052,7 +1052,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
       // compatibility
       if (attribute == "edge.tagged_names") {
-        attribute = thor::kEdgeTaggedValues;
+        attribute = baldr::kEdgeTaggedValues;
       }
       options.add_filter_attributes(attribute);
     }
