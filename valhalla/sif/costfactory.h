@@ -93,10 +93,6 @@ public:
    * @param options  pbf with request options
    */
   cost_ptr_t Create(const Costing& costing) const {
-    // you cant get a costing without a costing type
-    if (!costing.has_type_case())
-      throw std::runtime_error("No costing provided to cost factory");
-
     auto itr = factory_funcs_.find(costing.type());
     if (itr == factory_funcs_.end()) {
       auto costing_str = Costing_Enum_Name(costing.type());

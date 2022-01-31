@@ -548,11 +548,13 @@ void parse_contours(const rapidjson::Document& doc,
  */
 void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // if its a pbf request we want to keep the options and clear the rest
+  bool pbf = false;
   if (api.has_options() && doc.ObjectEmpty()) {
     api.clear_trip();
     api.clear_directions();
     api.clear_status();
     api.clear_info();
+    pbf = true;
   } // when its json we start with a blank slate and fill it all in
   else {
     api.Clear();
@@ -610,12 +612,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
-  if (units) {
-    if ((*units == "miles") || (*units == "mi")) {
-      options.set_units(Options::miles);
-    } else {
-      options.set_units(Options::kilometers);
-    }
+  if (units && ((*units == "miles") || (*units == "mi"))) {
+    options.set_units(Options::miles);
   }
 
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
@@ -640,10 +638,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // date_time
   auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
-  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
-    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type));
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type + 1)) {
+    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type + 1));
   }
-  if (options.has_date_time_type_case()) {
+  if (options.date_time_type() != Options::no_time) {
     // check the type is in bounds
     auto v = options.date_time_type();
     if (v >= Options::DateTimeType_ARRAYSIZE)
@@ -673,7 +671,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // failure scenarios with respect to time dependence
-  if (options.has_date_time_type_case()) {
+  if (options.date_time_type() != Options::no_time) {
     if (options.date_time_type() == Options::arrive_by ||
         options.date_time_type() == Options::invariant) {
       if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
@@ -699,9 +697,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       throw valhalla_exception_t{164};
     }
   }
-  if (!options.has_shape_format_case()) {
-    options.set_shape_format(polyline6);
-  }
 
   // whether or not to output b64 encoded openlr
   auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
@@ -710,7 +705,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // costing defaults to none which is only valid for locate
-  auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  auto costing_str =
+      rapidjson::get<std::string>(doc, "/costing",
+                                  pbf ? Costing_Enum_Name(options.costing_type()) : "none");
 
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
@@ -872,14 +869,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
 
-  // set the costing if it wasn't already set
+  // set the costing based on the name given, redundant for pbf input
   Costing::Type costing;
-  if (!options.has_costing_type_case() && valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-    options.set_costing_type(costing);
-  }
-  if (!options.has_costing_type_case()) {
+  if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
-  }
+  else
+    options.set_costing_type(costing);
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
@@ -934,7 +929,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  if (!options.has_date_time_type_case() &&
+  if (options.date_time_type() == Options::no_time &&
       (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costings()) {
       costing.second.mutable_options()->set_flow_mask(
@@ -1335,7 +1330,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
 
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
-    float frequency = stat.has_frequency_case() ? stat.frequency() : 1.f;
+    float frequency = stat.frequency() ? stat.frequency() : 1.f;
     switch (stat.type()) {
       case count:
         statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,

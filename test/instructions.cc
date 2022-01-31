@@ -31,9 +31,7 @@
 //
 //  valhalla::Api api;
 //  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
-//  request.mutable_options()->set_costing_type(api.options().costing_type());
-//  request.mutable_options()->clear_costings();
-//  request.mutable_options()->mutable_costings()->swap(*api.mutable_options()->mutable_costings());
+//  request.mutable_options()->set_action(valhalla::Options::route);
 //
 //  std::ofstream f(filename);
 //  auto buf = request.SerializeAsString();

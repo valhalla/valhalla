@@ -221,7 +221,7 @@ void thor_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
 
   // get all the legs
-  if (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by) {
+  if (options.date_time_type() == Options::arrive_by) {
     path_arrive_by(request, costing);
   } else {
     path_depart_at(request, costing);

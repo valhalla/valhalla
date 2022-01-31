@@ -51,7 +51,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 
   // Length and speed default to kilometers
   double scale = 1;
-  if (options.has_units_case() && options.units() == Options::miles) {
+  if (options.units() == Options::miles) {
     scale = kMilePerKm;
   }
 
@@ -122,8 +122,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_mean_elevation_case()) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean != kNoElevationData && options.has_units_case() &&
-            options.units() == Options::miles) {
+        if (mean != kNoElevationData && options.units() == Options::miles) {
           mean *= kFeetPerMeter;
         }
         edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
@@ -527,10 +526,8 @@ std::string serializeTraceAttributes(
     json->emplace("id", request.options().id());
   }
 
-  // Add units, if specified
-  if (request.options().has_units_case()) {
-    json->emplace("units", valhalla::Options_Units_Enum_Name(request.options().units()));
-  }
+  // Add units
+  json->emplace("units", valhalla::Options_Units_Enum_Name(request.options().units()));
 
   // Loop over all results to process the best path
   // and the alternate paths (if alternates exist)

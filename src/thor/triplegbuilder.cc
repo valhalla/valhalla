@@ -1397,8 +1397,7 @@ void TripLegBuilder::Build(
   const auto forward_time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
 
   // check if we should use static time or offset time as the path lengthens
-  const bool invariant =
-      options.has_date_time_type_case() && options.date_time_type() == Options::invariant;
+  const bool invariant = options.date_time_type() == Options::invariant;
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -1686,8 +1685,7 @@ void TripLegBuilder::Build(
       // So for intermediate locations that dont have any trimming we know they occur at the node
       // In this case and only for ARRIVE_BY, the edge index that we convert to shape is off by 1
       // So here we need to set this one as if it were at the end of the previous edge in the path
-      if (trimming == edge_trimming.end() &&
-          (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by)) {
+      if (trimming == edge_trimming.end() && options.date_time_type() == Options::arrive_by) {
         intermediate_itr->mutable_correlation()->set_leg_shape_index(begin_index);
         intermediate_itr->mutable_correlation()->set_distance_from_leg_origin(
             previous_total_distance);

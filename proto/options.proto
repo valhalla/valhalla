@@ -69,7 +69,7 @@ message AvoidEdge {
 
 message Costing {
   enum Type {
-    auto_ = 0;
+    none_ = 0;
     bicycle = 1;
     bus = 2;
     motor_scooter = 3;
@@ -79,7 +79,7 @@ message Costing {
     truck = 7;
     motorcycle = 8;
     taxi = 9;
-    none_ = 10;
+    auto_ = 10;
     bikeshare = 11;    // turns into pedestrian + bike
   }
 
@@ -312,9 +312,7 @@ message Costing {
   oneof has_options {
     Options options = 1;
   }
-  oneof has_type {
-    Type type = 2;
-  }
+  Type type = 2;
   oneof has_name {
     string name = 3;
   }
@@ -340,25 +338,27 @@ message Options {
   }
 
   enum Action {
-    route = 0;
-    locate = 1;
-    sources_to_targets = 2;
-    optimized_route = 3;
-    isochrone = 4;
-    trace_route = 5;
-    trace_attributes = 6;
-    height = 7;
-    transit_available = 8;
-    expansion = 9;
-    centroid = 10;
-    status = 11;
+    no_action = 0;
+    route = 1;
+    locate = 2;
+    sources_to_targets = 3;
+    optimized_route = 4;
+    isochrone = 5;
+    trace_route = 6;
+    trace_attributes = 7;
+    height = 8;
+    transit_available = 9;
+    expansion = 10;
+    centroid = 11;
+    status = 12;
   }
 
   enum DateTimeType {
-    current = 0;
-    depart_at = 1;
-    arrive_by = 2;
-    invariant = 3;
+    no_time  = 0;
+    current = 1;
+    depart_at = 2;
+    arrive_by = 3;
+    invariant = 4;
   }
 
   enum ExpansionProperties {
@@ -369,18 +369,12 @@ message Options {
     edge_ids = 4;
   }
 
-  oneof has_units {
-    Units units = 1;                                               // kilometers or miles
-  }
+  Units units = 1;                                                 // kilometers or miles
   oneof has_language {
     string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
   }
-  oneof has_directions_type {
-    DirectionsType directions_type = 3;                            // Enable/disable narrative production [default = instructions]
-  }
-  oneof has_format {
-    Format format = 4;                                             // What the response format should be [default = json]
-  }
+  DirectionsType directions_type = 3;                              // Enable/disable narrative production [default = instructions]
+  Format format = 4;                                               // What the response format should be [default = json]
   oneof has_id {
     string id = 5;                                                 // id for the request
   }
@@ -390,9 +384,7 @@ message Options {
   oneof has_encoded_polyline {
     string encoded_polyline = 7;                                   // polyline 6 encoded shape used in /height /trace_*
   }
-  oneof has_action {
-    Action action = 8;                                             // Action signifying the request type
-  }
+  Action action = 8;                                               // Action signifying the request type
   //deprecated = 9;
   oneof has_range {
     bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
@@ -408,17 +400,15 @@ message Options {
   repeated Location exclude_locations = 15;                        // Avoids for any costing
   repeated Location sources = 16;                                  // Sources for /sources_to_targets
   repeated Location targets = 17;                                  // Targets for /sources_to_targets
-  oneof has_date_time_type {
-    DateTimeType date_time_type = 18;                              // Are you leaving now or then or arriving then
-  }
+  DateTimeType date_time_type = 18;                                // Are you leaving now or then or arriving then
   oneof has_date_time {
     string date_time = 19;                                         // And what day and time
   }
-  repeated Location shape = 20;                                           // Raw shape for map matching
+  repeated Location shape = 20;                                    // Raw shape for map matching
   oneof has_resample_distance {
     double resample_distance = 21;                                 // Resampling shape at regular intervals
   }
-  repeated Contour contours = 22;                                         // List of isochrone contours
+  repeated Contour contours = 22;                                  // List of isochrone contours
   oneof has_polygons {
     bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
   }
@@ -431,10 +421,8 @@ message Options {
   oneof has_show_locations {
     bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
   }
-  repeated Location trace = 27;                                           // Trace points for map matching
-  oneof has_shape_match {
-    ShapeMatch shape_match = 28;                                   // The matching algorithm based on the type of input [default = walk_or_snap]
-  }
+  repeated Location trace = 27;                                    // Trace points for map matching
+  ShapeMatch shape_match = 28;                                     // The matching algorithm based on the type of input [default = walk_or_snap]
   //deprecated = 29;
   oneof has_gps_accuracy {
     float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
@@ -445,17 +433,15 @@ message Options {
   oneof has_turn_penalty_factor {
     float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
   }
-  FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
-  repeated string filter_attributes = 34;                                 // The filter list for trace attributes
+  FilterAction filter_action = 33;                                 // The trace filter action - either exclude or include
+  repeated string filter_attributes = 34;                          // The filter list for trace attributes
   oneof has_breakage_distance {
     float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   }
   oneof has_use_timestamps {
     bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   }
-  oneof has_shape_format {
-    ShapeFormat shape_format = 38;                                 // Shape format (defaults to polyline6 encoding)
-  }
+  ShapeFormat shape_format = 38;                                   // Shape format (defaults to polyline6 encoding)
   oneof has_alternates {
     uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   }

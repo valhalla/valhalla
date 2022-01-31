@@ -281,7 +281,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (!options.has_action_case() || actions.find(options.action()) == actions.cend()) {
+    if (actions.find(options.action()) == actions.cend()) {
       throw valhalla_exception_t{106, action_str};
     }
 
