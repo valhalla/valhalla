@@ -1683,6 +1683,8 @@ function filter_tags_generic(kv)
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
 
     local only_hov_allowed = kv["hov"] == "designated"
+
+    -- If "hov:lanes" is specified ensure all lanes are tagged "designated"
     if only_hov_allowed then
       if kv["hov:lanes"] then
         for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
@@ -1693,8 +1695,29 @@ function filter_tags_generic(kv)
       end
     end
 
+    -- I want to be strict with the "hov:minimum" tag: I will only accept the
+    -- values 2 or 3. We want to be strict because routing onto an HOV lane
+    -- without the correct number of occupants is illegal.
     if only_hov_allowed then
-      -- If we get here we know the way is a true hov-lane (not mixed).
+      if (kv["hov:minimum"] == "2") then
+        kv["hov_type"] = "HOV2";
+      elseif (kv["hov:minimum"] == "3") then
+        kv["hov_type"] = "HOV3";
+      else
+        only_hov_allowed = false;
+      end
+    end
+
+    -- HOV lanes are sometimes time-conditional and can change direction. We avoid
+    -- these. Also, we expect "hov_type" to be set.
+    if only_hov_allowed then
+      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or
+        kv["oneway"] == "false" or kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil
+      only_hov_allowed = not avoid_these_hovs;
+    end
+
+    if only_hov_allowed then
+      -- If we get here we know the way is a true hov-only-lane (not mixed).
       -- As a result, none of the following costings can use it.
       -- (Okay, that's not exactly true, we do some wizardry in some of the
       -- costings to allow hov under certain conditions.)
@@ -1717,25 +1740,10 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
       end
-
-      -- I want to be strict with the "hov:minimum" tag: I will only accept the
-      -- values 2 or 3. We want to be strict because routing onto an HOV lane
-      -- without the correct number of occupants is illegal.
-      if (kv["hov:minimum"] == "2") then
-        kv["hov_type"] = "HOV2";
-      elseif (kv["hov:minimum"] == "3") then
-        kv["hov_type"] = "HOV3";
-      end
-
-      -- HOV lanes are sometimes time-conditional and can change direction. We avoid
-      -- these. Also, we expect "hov_type" to be set.
-      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or kv["oneway"] == "false" or
-            kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil or kv["hov_type"] == nil
-
-      if avoid_these_hovs then
-        kv["hov_forward"] = "false"
-        kv["hov_backward"] = "false"
-      end
+    else
+      -- This is not an hov-only lane.
+      kv["hov_forward"] = "false"
+      kv["hov_backward"] = "false"
     end
   end
 
@@ -1796,7 +1804,7 @@ function filter_tags_generic(kv)
   if kv["level"] ~= nil then
     kv["level"] = kv["level"]:gsub(";", ":")
   end
-  
+
   -- Explicitly turn off access for construction type. It's done for backward compatibility
   -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
   -- versions of router will work with new tiles incorrectly. They would start to route
