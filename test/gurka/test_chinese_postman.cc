@@ -529,8 +529,25 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanMiddleEdge) {
 
   // create a chinese polygon (prwu)
+  // AB means the middle point between node A and node B
   test_request(chinese_postman_map, GetParam(), "prwu", "ijml", "AB", "AB",
                {"AB_2", "BE_2", "DE_2", "DE_2", "BE_2", "AB_2"});
+}
+
+TEST_P(ChinesePostmanTest, TestChinesePostmanCouldNotFindingMatchingEdge) {
+  // This test is replicating an error related to "Could not finding matching edge candidate"
+
+  // The test below are working fine
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "C", {"CG", "GH", "HF", "FC"});
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "CG", "G",
+               {"CG", "GH", "HF", "FC", "CG"});
+
+  // These two test do not work properly (e.g. throw the error)
+  // CG means the middle point between node C and node G
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "C", "CG",
+               {"CG", "GH", "HF", "FC", "CG"});
+  test_request(chinese_postman_map, GetParam(), "rtyw", "", "CG", "CG",
+               {"CG", "GH", "HF", "FC", "CG"});
 }
 
 TEST_P(ChinesePostmanTest, TestRoute) {
