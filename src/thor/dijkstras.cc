@@ -701,7 +701,7 @@ void Dijkstras::ComputeMultiModal(
   max_transfer_distance_ = 99999.0f; // costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin_locations.Get(0).has_date_time_case()) {
+  if (origin_locations.Get(0).date_time().empty()) {
     LOG_ERROR("No date time set on the origin location");
     return;
   }

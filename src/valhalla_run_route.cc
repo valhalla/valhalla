@@ -265,74 +265,15 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
 namespace std {
 
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
+// TODO: need to pass original json here for extra address bits that we dont store in Location
 std::string to_string(const valhalla::baldr::Location& l) {
   std::string s;
-  for (auto address : {&l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_}) {
+  for (auto address : {&l.name_, &l.street_}) {
     s.append(*address);
     s.push_back(',');
   }
   s.erase(s.end() - 1);
   return s;
-}
-
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
-std::string to_json(const valhalla::baldr::Location& l) {
-  std::string json = "{";
-  json += "\"lat\":";
-  json += std::to_string(l.latlng_.lat());
-
-  json += ",\"lon\":";
-  json += std::to_string(l.latlng_.lng());
-
-  json += ",\"type\":\"";
-  json += (l.stoptype_ == valhalla::baldr::Location::StopType::THROUGH) ? "through" : "break";
-  json += "\"";
-
-  if (l.heading_) {
-    json += ",\"heading\":";
-    json += *l.heading_;
-  }
-
-  if (!l.name_.empty()) {
-    json += ",\"name\":\"";
-    json += l.name_;
-    json += "\"";
-  }
-
-  if (!l.street_.empty()) {
-    json += ",\"street\":\"";
-    json += l.street_;
-    json += "\"";
-  }
-
-  if (!l.city_.empty()) {
-    json += ",\"city\":\"";
-    json += l.city_;
-    json += "\"";
-  }
-
-  if (!l.state_.empty()) {
-    json += ",\"state\":\"";
-    json += l.state_;
-    json += "\"";
-  }
-
-  if (!l.zip_.empty()) {
-    json += ",\"postal_code\":\"";
-    json += l.zip_;
-    json += "\"";
-  }
-
-  if (!l.country_.empty()) {
-    json += ",\"country\":\"";
-    json += l.country_;
-    json += "\"";
-  }
-
-  json += "}";
-
-  return json;
 }
 
 } // namespace std

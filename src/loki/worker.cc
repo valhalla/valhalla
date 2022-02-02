@@ -44,7 +44,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       else if (location.radius() > max_radius)
         location.set_radius(max_radius);
 
-      if (!location.has_heading_tolerance_case())
+      if (location.has_heading_tolerance_case())
         location.set_heading_tolerance(default_heading_tolerance);
 
       if (!location.has_node_snap_tolerance_case())

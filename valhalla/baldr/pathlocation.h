@@ -108,18 +108,6 @@ public:
     if (!pl.street_.empty()) {
       l->set_street(pl.street_);
     }
-    if (!pl.city_.empty()) {
-      l->set_city(pl.city_);
-    }
-    if (!pl.state_.empty()) {
-      l->set_state(pl.state_);
-    }
-    if (!pl.zip_.empty()) {
-      l->set_postal_code(pl.zip_);
-    }
-    if (!pl.country_.empty()) {
-      l->set_country(pl.country_);
-    }
     if (pl.date_time_) {
       l->set_date_time(*pl.date_time_);
     }
@@ -130,9 +118,6 @@ public:
     l->set_node_snap_tolerance(pl.node_snap_tolerance_);
     if (pl.preferred_layer_) {
       l->set_preferred_layer(*pl.preferred_layer_);
-    }
-    if (pl.way_id_) {
-      l->set_way_id(*pl.way_id_);
     }
     l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
@@ -209,25 +194,10 @@ public:
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
                loc.minimum_reachability(), loc.radius(), side, search_filter);
 
-    if (loc.has_name_case()) {
-      l.name_ = loc.name();
-    }
-    if (loc.has_street_case()) {
-      l.street_ = loc.street();
-    }
-    if (loc.has_city_case()) {
-      l.city_ = loc.city();
-    }
-    if (loc.has_state_case()) {
-      l.state_ = loc.state();
-    }
-    if (loc.has_postal_code_case()) {
-      l.zip_ = loc.postal_code();
-    }
-    if (loc.has_country_case()) {
-      l.country_ = loc.country();
-    }
-    if (loc.has_date_time_case()) {
+    l.name_ = loc.name();
+    l.street_ = loc.street();
+
+    if (!loc.date_time().empty()) {
       l.date_time_ = loc.date_time();
     }
     if (loc.has_heading_case()) {
@@ -238,9 +208,6 @@ public:
     }
     if (loc.has_node_snap_tolerance_case()) {
       l.node_snap_tolerance_ = loc.node_snap_tolerance();
-    }
-    if (loc.has_way_id_case()) {
-      l.way_id_ = loc.way_id();
     }
     if (loc.has_search_cutoff_case()) {
       l.search_cutoff_ = loc.search_cutoff();

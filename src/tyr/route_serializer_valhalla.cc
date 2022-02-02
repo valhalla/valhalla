@@ -176,22 +176,6 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("street", location->street());
       }
 
-      if (!location->city().empty()) {
-        writer("city", location->city());
-      }
-
-      if (!location->state().empty()) {
-        writer("state", location->state());
-      }
-
-      if (!location->postal_code().empty()) {
-        writer("postal_code", location->postal_code());
-      }
-
-      if (!location->country().empty()) {
-        writer("country", location->country());
-      }
-
       if (location->has_heading_case()) {
         writer("heading", static_cast<uint64_t>(location->heading()));
       }
@@ -200,9 +184,8 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("date_time", location->date_time());
       }
 
-      if (location->has_side_of_street_case() &&
-          location->side_of_street() != valhalla::Location::kNone) {
-        writer("city", Location_SideOfStreet_Enum_Name(location->side_of_street()));
+      if (location->side_of_street() != valhalla::Location::kNone) {
+        writer("side_of_street", Location_SideOfStreet_Enum_Name(location->side_of_street()));
       }
 
       if (location->correlation().has_original_index_case()) {
@@ -401,34 +384,30 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         const auto& transit_info = maneuver.transit_info();
         writer.start_object("transit_info");
 
-        if (transit_info.has_onestop_id_case()) {
+        if (!transit_info.onestop_id().empty()) {
           writer("onestop_id", transit_info.onestop_id());
         }
-        if (transit_info.has_short_name_case()) {
+        if (!transit_info.short_name().empty()) {
           writer("short_name", transit_info.short_name());
         }
-        if (transit_info.has_long_name_case()) {
+        if (!transit_info.long_name().empty()) {
           writer("long_name", transit_info.long_name());
         }
-        if (transit_info.has_headsign_case()) {
+        if (!transit_info.headsign().empty()) {
           writer("headsign", transit_info.headsign());
         }
-        if (transit_info.has_color_case()) {
-          writer("color", static_cast<uint64_t>(transit_info.color()));
-        }
-        if (transit_info.has_text_color_case()) {
-          writer("text_color", static_cast<uint64_t>(transit_info.text_color()));
-        }
-        if (transit_info.has_description_case()) {
+        writer("color", static_cast<uint64_t>(transit_info.color()));
+        writer("text_color", static_cast<uint64_t>(transit_info.text_color()));
+        if (!transit_info.description().empty()) {
           writer("description", transit_info.description());
         }
-        if (transit_info.has_operator_onestop_id_case()) {
+        if (!transit_info.operator_onestop_id().empty()) {
           writer("operator_onestop_id", transit_info.operator_onestop_id());
         }
-        if (transit_info.has_operator_name_case()) {
+        if (!transit_info.operator_name().empty()) {
           writer("operator_name", transit_info.operator_name());
         }
-        if (transit_info.has_operator_url_case()) {
+        if (!transit_info.operator_url().empty()) {
           writer("operator_url", transit_info.operator_url());
         }
 
@@ -439,38 +418,34 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
             writer.start_object("transit_stop");
 
             // type
-            if (transit_stop.has_type_case()) {
-              if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
-                writer("type", std::string("station"));
-              } else {
-                writer("type", std::string("stop"));
-              }
+            if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
+              writer("type", std::string("station"));
+            } else {
+              writer("type", std::string("stop"));
             }
 
             // onestop_id - using the station onestop_id
-            if (transit_stop.has_station_onestop_id_case()) {
+            if (!transit_stop.station_onestop_id().empty()) {
               writer("onestop_id", transit_stop.station_onestop_id());
             }
 
             // name - using the station name
-            if (transit_stop.has_station_name_case()) {
+            if (!transit_stop.station_name().empty()) {
               writer("name", transit_stop.station_name());
             }
 
             // arrival_date_time
-            if (transit_stop.has_arrival_date_time_case()) {
+            if (!transit_stop.arrival_date_time().empty()) {
               writer("arrival_date_time", transit_stop.arrival_date_time());
             }
 
             // departure_date_time
-            if (transit_stop.has_departure_date_time_case()) {
+            if (!transit_stop.departure_date_time().empty()) {
               writer("departure_date_time", transit_stop.departure_date_time());
             }
 
             // assumed_schedule
-            if (transit_stop.has_assumed_schedule_case()) {
-              writer("assumed_schedule", transit_stop.assumed_schedule());
-            }
+            writer("assumed_schedule", transit_stop.assumed_schedule());
 
             // latitude and longitude
             if (transit_stop.has_ll()) {

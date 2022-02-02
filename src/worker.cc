@@ -266,31 +266,6 @@ void parse_location(valhalla::Location* location,
   if (street) {
     location->set_street(*street);
   }
-  auto city = rapidjson::get_optional<std::string>(r_loc, "/city");
-  if (city) {
-    location->set_city(*city);
-  }
-  auto state = rapidjson::get_optional<std::string>(r_loc, "/state");
-  if (state) {
-    location->set_state(*state);
-  }
-  auto zip = rapidjson::get_optional<std::string>(r_loc, "/postal_code");
-  if (zip) {
-    location->set_postal_code(*zip);
-  }
-  auto country = rapidjson::get_optional<std::string>(r_loc, "/country");
-  if (country) {
-    location->set_country(*country);
-  }
-  auto phone = rapidjson::get_optional<std::string>(r_loc, "/phone");
-  if (phone) {
-    location->set_phone(*phone);
-  }
-  auto url = rapidjson::get_optional<std::string>(r_loc, "/url");
-  if (url) {
-    location->set_url(*url);
-  }
-
   auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
   if (date_time) {
     location->set_date_time(*date_time);
@@ -311,10 +286,6 @@ void parse_location(valhalla::Location* location,
   if (node_snap_tolerance) {
     location->set_node_snap_tolerance(*node_snap_tolerance);
   }
-  auto way_id = rapidjson::get_optional<uint64_t>(r_loc, "/way_id");
-  if (way_id) {
-    location->set_way_id(*way_id);
-  }
   auto minimum_reachability = rapidjson::get_optional<unsigned int>(r_loc, "/minimum_reachability");
   if (minimum_reachability) {
     location->set_minimum_reachability(*minimum_reachability);
@@ -330,10 +301,8 @@ void parse_location(valhalla::Location* location,
   auto time =
       rapidjson::get<double>(r_loc, "/time", location->has_time_case() ? location->time() : -1);
   location->set_time(time);
-  auto rank_candidates = rapidjson::get<bool>(r_loc, "/rank_candidates",
-                                              location->has_skip_ranking_candidates_case()
-                                                  ? !location->skip_ranking_candidates()
-                                                  : true);
+  auto rank_candidates =
+      rapidjson::get<bool>(r_loc, "/rank_candidates", !location->skip_ranking_candidates());
   location->set_skip_ranking_candidates(!rank_candidates);
   auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
   valhalla::Location::PreferredSide side;
@@ -456,7 +425,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto* loc = locations->Add();
         loc->mutable_correlation()->set_original_index(locations->size() - 1);
         parse_location(loc, r_loc, options, ignore_closures);
-        had_date_time = had_date_time || loc->has_date_time_case();
+        had_date_time = had_date_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
       }
@@ -466,7 +435,7 @@ void parse_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         loc.mutable_correlation()->set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
-        had_date_time = had_date_time || loc.has_date_time_case();
+        had_date_time = had_date_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
       }
