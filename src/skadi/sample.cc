@@ -514,6 +514,8 @@ bool sample::fetch(uint16_t index) {
     return false;
 
   auto elev = get_hgt_file_name(index);
+  // drop leading '/'
+  elev.erase(elev.begin());
   auto uri = baldr::make_single_point_url(url_, elev, remote_path_);
 
   LOG_INFO("Start loading data from remote server address: " + uri);
