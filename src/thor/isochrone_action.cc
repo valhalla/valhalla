@@ -27,14 +27,16 @@ std::string thor_worker_t::isochrones(Api& request) {
     }
   }
 
+  bool reverse = options.isochrone_type() == valhalla::Options::reverse;
   // If no generalization is requested an optimal factor is computed (based on the isotile grid size).
   if (!options.has_generalize_case()) {
     options.set_generalize(kOptimalGeneralization);
   }
 
   // get the raster
-  auto expansion_type = costing == "multimodal" || costing == "transit" ? ExpansionType::multimodal
-                                                                        : ExpansionType::forward;
+  auto expansion_type = costing == "multimodal" || costing == "transit"
+                            ? ExpansionType::multimodal
+                            : (reverse ? ExpansionType::reverse : ExpansionType::forward);
   auto grid = isochrone_gen.Expand(expansion_type, request, *reader, mode_costing, mode);
 
   // e.g. in case of /expansion request

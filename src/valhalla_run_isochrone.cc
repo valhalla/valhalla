@@ -126,11 +126,8 @@ int main(int argc, char* argv[]) {
   // Show locations
   bool show_locations = options.show_locations();
 
-  // reverse (arrive-by) isochrone - trigger if date time type is arrive by
-  // TODO - is this how we want to expose in the service? only support reverse
-  // for time dependent isochrones? or do we also want a flag to support for
-  // general case with no time?
-  bool reverse = options.date_time_type() == valhalla::Options::arrive_by;
+  // reverse (arrive-by) isochrone 
+  bool reverse = options.isochrone_type() == valhalla::Options::reverse;
 
   // Get Contours
   std::vector<GriddedData<2>::contour_interval_t> contour_times;
