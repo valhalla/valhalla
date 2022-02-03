@@ -206,7 +206,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
   std::vector<std::shared_ptr<std::thread>> threads(nthreads);
   std::vector<std::promise<uint32_t>> results(nthreads);
 
-  LOG_INFO("Loading elevations to tiles");
+  LOG_INFO("Adding elevation to " + std::to_string(tilequeue.size()) + " tiles with " +
+           std::to_string(nthreads) + " threads...");
   std::mutex lock;
   for (auto& thread : threads) {
     results.emplace_back();
