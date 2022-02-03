@@ -1130,33 +1130,31 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += SignElementsToParameterString(this->sign().guidance_view_signboards());
 
   str += delim;
-  if (this->has_travel_mode()) {
-    str += "TripLeg_TravelMode_";
-    str += TripLeg_TravelMode_Name(travel_mode());
-  }
+  str += "TripLeg_TravelMode_";
+  str += TripLeg_TravelMode_Name(travel_mode());
 
   // NOTE: Current PopulateEdge implementation
 
   str += delim;
-  if (this->has_vehicle_type()) {
+  if (travel_mode() == kDrive) {
     str += "TripLeg_VehicleType_";
     str += TripLeg_VehicleType_Name(vehicle_type());
   }
 
   str += delim;
-  if (this->has_pedestrian_type()) {
+  if (travel_mode() == kPedestrian) {
     str += "TripLeg_PedestrianType_";
     str += TripLeg_PedestrianType_Name(pedestrian_type());
   }
 
   str += delim;
-  if (this->has_bicycle_type()) {
+  if (travel_mode() == kBicycle) {
     str += "TripLeg_BicycleType_";
     str += TripLeg_BicycleType_Name(bicycle_type());
   }
 
   str += delim;
-  if (this->has_transit_type()) {
+  if (travel_mode() == kTransit) {
     str += "TripLeg_TransitType_";
     str += TripLeg_TransitType_Name(transit_type());
   }
@@ -1168,7 +1166,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(surface());
 
   str += delim;
-  if (transit_route_info().has_onestop_id_case()) {
+  if (!transit_route_info().onestop_id().empty()) {
     str += "\"";
     str += transit_route_info().onestop_id();
     str += "\"";
@@ -1181,21 +1179,21 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(transit_route_info().trip_id());
 
   str += delim;
-  if (transit_route_info().has_short_name_case()) {
+  if (!transit_route_info().short_name().empty()) {
     str += "\"";
     str += transit_route_info().short_name();
     str += "\"";
   }
 
   str += delim;
-  if (transit_route_info().has_long_name_case()) {
+  if (!transit_route_info().long_name().empty()) {
     str += "\"";
     str += transit_route_info().long_name();
     str += "\"";
   }
 
   str += delim;
-  if (transit_route_info().has_headsign_case()) {
+  if (!transit_route_info().headsign().empty()) {
     str += "\"";
     str += transit_route_info().headsign();
     str += "\"";
@@ -1208,7 +1206,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(transit_route_info().text_color());
 
   str += delim;
-  if (transit_route_info().has_operator_onestop_id_case()) {
+  if (!transit_route_info().operator_onestop_id().empty()) {
     str += "\"";
     str += transit_route_info().operator_onestop_id();
     str += "\"";
