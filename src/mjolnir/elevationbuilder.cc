@@ -219,7 +219,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
     thread->join();
   }
 
-  LOG_INFO("Finished loading elevations");
+  LOG_INFO("Finished");
 }
 
 } // namespace mjolnir
