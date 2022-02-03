@@ -514,9 +514,9 @@ bool sample::fetch(uint16_t index) {
     return false;
 
   auto elev = get_hgt_file_name(index);
-  // drop leading '/'
-  elev.erase(elev.begin());
-  auto uri = baldr::make_single_point_url(url_, elev, remote_path_);
+  // we assume that tile_url already has valid format
+  // and no additional '/' needed
+  auto uri = baldr::make_single_point_url(url_, elev.substr(1), remote_path_);
 
   LOG_INFO("Start loading data from remote server address: " + uri);
   auto result = remote_loader_->get(uri);

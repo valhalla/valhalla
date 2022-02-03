@@ -42,7 +42,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles tar_index)
+  incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser

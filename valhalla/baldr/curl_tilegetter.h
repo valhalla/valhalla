@@ -63,7 +63,7 @@ private:
  * @return full uri address
  */
 inline std::string make_single_point_url(const std::string& tile_url,
-                                         const std::string& fname,
+                                         std::string fname,
                                          const std::string& remote_path = {}) {
   static const std::string path_pattern{"{tilePath}"};
   auto id_pos = tile_url.find(path_pattern);

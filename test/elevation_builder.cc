@@ -26,7 +26,7 @@ namespace {
 // see elevationbuilder.cc for details
 constexpr double POSTING_INTERVAL = 60;
 const std::string src_dir{"test/data/"};
-const std::string elevation_local_src{"elevation_src"};
+const std::string elevation_local_src{"elevation_src/"};
 const std::string src_path = src_dir + elevation_local_src;
 const std::string test_tile_dir{"test/data/elevationbuild"};
 const std::string pbf_dir{"test/data/elevationbuild/pbf_data/"};
