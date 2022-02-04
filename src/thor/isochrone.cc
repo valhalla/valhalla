@@ -12,6 +12,8 @@ using namespace valhalla::sif;
 
 namespace {
 
+constexpr float METRIC_PADDING = 10.f;
+
 // Method to get an operator Id from a map of operator strings vs. Id.
 uint32_t GetOperatorId(const graph_tile_ptr& tile,
                        uint32_t routeid,
@@ -83,7 +85,8 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
                                 (a.has_time_case() && b.has_time_case() && a.time() < b.time());
                        });
   bool has_time = max_time_itr->has_time_case();
-  auto max_minutes = has_time ? max_time_itr->time() + 10.0f : std::numeric_limits<float>::min();
+  auto max_minutes =
+      has_time ? max_time_itr->time() + METRIC_PADDING : std::numeric_limits<float>::min();
   auto max_dist_itr =
       std::max_element(api.options().contours().begin(), api.options().contours().end(),
                        [](const auto& a, const auto& b) {
@@ -92,7 +95,8 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
                                  a.distance() < b.distance());
                        });
   bool has_distance = max_dist_itr->has_distance_case();
-  auto max_km = has_distance ? max_dist_itr->distance() + 10.0f : std::numeric_limits<float>::min();
+  auto max_km =
+      has_distance ? max_dist_itr->distance() + METRIC_PADDING : std::numeric_limits<float>::min();
 
   max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;
   max_meters_ = has_distance ? max_km * kMetersPerKm : max_km;
@@ -309,7 +313,7 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
   UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0, dist0);
 }
 
-ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
+ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
                                                 const sif::EdgeLabel& pred,
                                                 const ExpansionType route_type) {
   if (route_type == ExpansionType::multimodal) {
@@ -329,6 +333,16 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // prune the edge if its start is above max contour
   if (time > max_seconds_ && distance > max_meters_)
     return ExpansionRecommendation::prune_expansion;
+
+  // log it back to expansion_action
+  if (expansion_callback_) {
+    if (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) &&
+        distance <= (METRIC_PADDING - 10 * 1000)) {
+      expansion_callback_(graphreader, pred.edgeid(), "dijkstras", "s", pred.cost().secs,
+                          pred.path_distance(), pred.cost().cost);
+    }
+  }
+
   return ExpansionRecommendation::continue_expansion;
 };
 

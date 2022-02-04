@@ -368,12 +368,6 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
       ExpandInner<expansion_direction>(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
                                        false, time_infos.front());
     }
-
-    if (expansion_callback_) {
-      // "algorithm" arg defaults already to dijkstra
-      expansion_callback_(graphreader, pred.edgeid(), "dijkstras", "s", pred.cost().secs,
-                          pred.path_distance(), pred.cost().cost);
-    }
   }
 }
 
