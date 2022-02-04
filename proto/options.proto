@@ -362,7 +362,7 @@ message Options {
   }
 
   enum IsochroneType {
-    normal = 0;
+    forward = 0;
     reverse = 1;
   }
 
