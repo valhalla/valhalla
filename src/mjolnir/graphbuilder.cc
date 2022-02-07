@@ -1205,11 +1205,10 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
-  ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
-                 [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId(node.latlng(), level);
-                 },
-                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  ConstructEdges(
+      ways_file, way_nodes_file, nodes_file, edges_file,
+      [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
+      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
 }

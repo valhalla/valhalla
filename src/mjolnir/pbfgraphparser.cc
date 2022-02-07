@@ -1484,12 +1484,10 @@ public:
     // for then it must be in another pbf file. so we need to move on to the next waynode that could
     // possibly actually be in this pbf file
     if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
-      current_way_node_index_ =
-          way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                    [](const OSMWayNode& a, const OSMWayNode& b) {
-                                      return a.node.osmid_ <= b.node.osmid_;
-                                    },
-                                    current_way_node_index_);
+      current_way_node_index_ = way_nodes_->find_first_of(
+          OSMWayNode{{osmid}},
+          [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ <= b.node.osmid_; },
+          current_way_node_index_);
     }
 
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
