@@ -103,6 +103,7 @@ TEST(HOVTest, mistagged_hov) {
     auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
     const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
     ASSERT_EQ(edge->is_hov_only(), false);
+    ASSERT_TRUE(edge->forwardaccess() & kAutoAccess);
   }
 }
 

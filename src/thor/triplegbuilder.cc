@@ -19,7 +19,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
 #include "thor/attributes_controller.h"
@@ -1028,6 +1028,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (directededge->destonly() && controller.attributes.at(kEdgeDestinationOnly)) {
     trip_edge->set_destination_only(directededge->destonly());
+  }
+
+  // Set indoor flag if requested
+  if (directededge->indoor() && controller.attributes.at(kEdgeIndoor)) {
+    trip_edge->set_indoor(true);
   }
 
   // Set the mode and travel type

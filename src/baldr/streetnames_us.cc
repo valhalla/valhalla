@@ -6,7 +6,7 @@
 #include "baldr/streetname.h"
 #include "baldr/streetnames_us.h"
 #include "midgard/util.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 namespace valhalla {
 namespace baldr {

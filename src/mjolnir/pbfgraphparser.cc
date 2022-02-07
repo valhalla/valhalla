@@ -26,7 +26,7 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "mjolnir/timeparsing.h"
-#include "proto/tripcommon.pb.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -376,8 +376,14 @@ public:
         case Use::kPath:
           way_.set_use(Use::kPath);
           break;
+        case Use::kElevator:
+          way_.set_use(Use::kElevator);
+          break;
         case Use::kSteps:
           way_.set_use(Use::kSteps);
+          break;
+        case Use::kEscalator:
+          way_.set_use(Use::kEscalator);
           break;
         case Use::kBridleway:
           way_.set_use(Use::kBridleway);
@@ -488,6 +494,14 @@ public:
     tag_handlers_["tunnel:name"] = [this]() {
       if (!tag_.second.empty())
         way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["level"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["level:ref"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_level_ref_index(osmdata_.name_offset_map.index(tag_.second));
     };
     tag_handlers_["name:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
@@ -1061,6 +1075,7 @@ public:
     tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
+    tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
@@ -1607,6 +1622,14 @@ public:
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kSumpBuster);
+      } else if (tag.first == "building_entrance" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kBuildingEntrance);
+      } else if (tag.first == "elevator" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kElevator);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
       } else if (tag.first == "tagged_access") {
