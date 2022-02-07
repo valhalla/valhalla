@@ -336,8 +336,8 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
 
   // log it back to expansion_action
   if (expansion_callback_) {
-    if (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) &&
-        distance <= (METRIC_PADDING - 10 * 1000)) {
+    if (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
+        distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm)) {
       expansion_callback_(graphreader, pred.edgeid(), "dijkstras", "s", pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }
