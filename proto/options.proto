@@ -392,9 +392,7 @@ message Options {
   oneof has_verbose {
     bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
   }
-  oneof has_costing_type {
-    Costing.Type costing_type = 12;                                // The main costing to use with the action, in multimodal this is the first costing to use
-  }
+  Costing.Type costing_type = 12;                                  // The main costing to use with the action, in multimodal this is the first costing to use
   map<int32, Costing> costings = 13;                               // A map of Costing.Type enum to its Costing object
   repeated Location locations = 14;                                // Locations for /route /optimized /locate /isochrone
   repeated Location exclude_locations = 15;                        // Avoids for any costing

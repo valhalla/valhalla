@@ -605,74 +605,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_directions_type(directions_type);
   }
 
-  // date_time
-  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
-  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type + 1)) {
-    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type + 1));
-  }
-  if (options.date_time_type() != Options::no_time) {
-    // check the type is in bounds
-    auto v = options.date_time_type();
-    if (v >= Options::DateTimeType_ARRAYSIZE)
-      throw valhalla_exception_t{163};
-    // check the value exists for depart at and arrive by
-    auto date_time_value =
-        v != Options::current
-            ? rapidjson::get<std::string>(doc, "/date_time/value", options.date_time())
-            : std::string("current");
-    if (date_time_value.empty()) {
-      if (v == Options::depart_at)
-        throw valhalla_exception_t{160};
-      else if (v == Options::arrive_by)
-        throw valhalla_exception_t{161};
-      else if (v == Options::invariant)
-        throw valhalla_exception_t{165};
-    }
-    // check the value is sane
-    if (date_time_value != "current" && !baldr::DateTime::is_iso_valid(date_time_value))
-      throw valhalla_exception_t{162};
-    options.set_date_time(date_time_value);
-  } // not specified but you want transit, then we default to current
-  else if (options.has_costing_type_case() && (options.costing_type() == Costing::multimodal ||
-                                               options.costing_type() == Costing::transit)) {
-    options.set_date_time_type(Options::current);
-    options.set_date_time("current");
-  }
-
-  // failure scenarios with respect to time dependence
-  if (options.date_time_type() != Options::no_time) {
-    if (options.date_time_type() == Options::arrive_by ||
-        options.date_time_type() == Options::invariant) {
-      if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
-        throw valhalla_exception_t{141};
-      if (options.action() == Options::isochrone)
-        throw valhalla_exception_t{142};
-    }
-  }
-
-  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
-  // This also controls the input precision for encoded_polyline in height action
-  // TODO - this just for OSRM compatibility at the moment but could be supported
-  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
-  if (shape_format) {
-    if (*shape_format == "polyline6") {
-      options.set_shape_format(polyline6);
-    } else if (*shape_format == "polyline5") {
-      options.set_shape_format(polyline5);
-    } else if (*shape_format == "geojson") {
-      options.set_shape_format(geojson);
-    } else {
-      // Throw an error if shape format is invalid
-      throw valhalla_exception_t{164};
-    }
-  }
-
-  // whether or not to output b64 encoded openlr
-  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
-  if (linear_references) {
-    options.set_linear_references(*linear_references);
-  }
-
   // costing defaults to none which is only valid for locate
   auto costing_str =
       rapidjson::get<std::string>(doc, "/costing",
@@ -717,19 +649,92 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
+  // set the costing based on the name given, redundant for pbf input
+  Costing::Type costing;
+  if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
+  else
+    options.set_costing_type(costing);
+
+  // date_time
+  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type + 1)) {
+    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type + 1));
+  }
+  if (options.date_time_type() != Options::no_time) {
+    // check the type is in bounds
+    auto v = options.date_time_type();
+    if (v >= Options::DateTimeType_ARRAYSIZE)
+      throw valhalla_exception_t{163};
+    // check the value exists for depart at and arrive by
+    auto date_time_value =
+        v != Options::current
+            ? rapidjson::get<std::string>(doc, "/date_time/value", options.date_time())
+            : std::string("current");
+    if (date_time_value.empty()) {
+      if (v == Options::depart_at)
+        throw valhalla_exception_t{160};
+      else if (v == Options::arrive_by)
+        throw valhalla_exception_t{161};
+      else if (v == Options::invariant)
+        throw valhalla_exception_t{165};
+    }
+    // check the value is sane
+    if (date_time_value != "current" && !baldr::DateTime::is_iso_valid(date_time_value))
+      throw valhalla_exception_t{162};
+    options.set_date_time(date_time_value);
+  } // not specified but you want transit, then we default to current
+  else if (options.costing_type() == Costing::multimodal ||
+           options.costing_type() == Costing::transit) {
+    options.set_date_time_type(Options::current);
+    options.set_date_time("current");
+  }
+
+  // failure scenarios with respect to time dependence
+  if (options.date_time_type() != Options::no_time) {
+    if (options.date_time_type() == Options::arrive_by ||
+        options.date_time_type() == Options::invariant) {
+      if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
+        throw valhalla_exception_t{141};
+      if (options.action() == Options::isochrone)
+        throw valhalla_exception_t{142};
+    }
+  }
+
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // This also controls the input precision for encoded_polyline in height action
+  // TODO - this just for OSRM compatibility at the moment but could be supported
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
+    }
+  }
+
+  // whether or not to output b64 encoded openlr
+  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
+  if (linear_references) {
+    options.set_linear_references(*linear_references);
+  }
+
   // whatever our costing is, check to see if we are going to ignore_closures
   std::stringstream ss;
   ss << "/costing_options/" << costing_str << "/ignore_closures";
   auto ignore_closures = costing_str != "multimodal"
                              ? rapidjson::get_optional<bool>(doc, ss.str().c_str())
                              : boost::none;
-  if (options.has_costing_type_case()) {
-    for (const auto& co : options.costings()) {
-      if (co.second.type() == options.costing_type() &&
-          co.second.options().has_ignore_closures_case()) {
-        ignore_closures = co.second.options().ignore_closures();
-        break;
-      }
+  for (const auto& co : options.costings()) {
+    if (co.second.type() == options.costing_type() &&
+        co.second.options().has_ignore_closures_case()) {
+      ignore_closures = co.second.options().ignore_closures();
+      break;
     }
   }
 
@@ -837,13 +842,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
-
-  // set the costing based on the name given, redundant for pbf input
-  Costing::Type costing;
-  if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
-    throw valhalla_exception_t{125, "'" + costing_str + "'"};
-  else
-    options.set_costing_type(costing);
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);

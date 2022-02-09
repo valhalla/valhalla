@@ -52,16 +52,10 @@ message PathEdge {
 message Correlation {
   repeated PathEdge edges = 50;
   repeated PathEdge filtered_edges = 51;
-  oneof has_original_index {
-    uint32 original_index = 52;
-  }
+  uint32 original_index = 52;
   LatLng projected_ll = 53;
-  oneof has_leg_shape_index {
-    uint32 leg_shape_index = 54;
-  }
-  oneof has_distance_from_leg_origin {
-    double distance_from_leg_origin = 55;
-  }
+  uint32 leg_shape_index = 54;
+  double distance_from_leg_origin = 55;
 }
 
 message Location {
@@ -120,6 +114,8 @@ message Location {
   oneof has_street_side_tolerance {
     uint32 street_side_tolerance = 25;
   }
+
+
   oneof has_route_index {
     uint32 route_index = 26;
   }

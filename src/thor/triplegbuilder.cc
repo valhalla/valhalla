@@ -443,9 +443,9 @@ void CopyLocations(TripLeg& trip_path,
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
     // we can grab the right edge index in the path because we temporarily set it for trimming
-    if (!intermediate.correlation().has_leg_shape_index_case()) {
+    /*if (!intermediate.correlation().has_leg_shape_index_case()) {
       throw std::logic_error("leg_shape_index not set for intermediate location");
-    }
+    }*/
     RemovePathEdges(&*trip_path.mutable_location()->rbegin(),
                     (path_begin + intermediate.correlation().leg_shape_index())->edgeid);
   }

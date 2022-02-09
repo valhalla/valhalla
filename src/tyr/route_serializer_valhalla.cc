@@ -188,9 +188,7 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("side_of_street", Location_SideOfStreet_Enum_Name(location->side_of_street()));
       }
 
-      if (location->correlation().has_original_index_case()) {
-        writer("original_index", static_cast<uint64_t>(location->correlation().original_index()));
-      }
+      writer("original_index", static_cast<uint64_t>(location->correlation().original_index()));
 
       writer.end_object();
     }

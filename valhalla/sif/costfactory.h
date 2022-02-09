@@ -63,10 +63,6 @@ public:
    * @param options  pbf with costing type and costing options
    */
   cost_ptr_t Create(const Options& options) const {
-    // you cant get a costing without a costing type
-    if (!options.has_costing_type_case())
-      throw std::runtime_error("No costing provided to cost factory");
-
     // create the cost using the creation function
     auto found = options.costings().find(options.costing_type());
     if (found != options.costings().end()) {

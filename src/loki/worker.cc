@@ -67,7 +67,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing_type_case() || (!allow_none && options.costing_type() == Costing::none_)) {
+  if (!allow_none && options.costing_type() == Costing::none_) {
     throw valhalla_exception_t{124};
   }
 
