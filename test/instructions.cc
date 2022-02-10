@@ -29,9 +29,28 @@
 //  req_txt.pop_back();
 //  req_txt = req_txt.substr(4);
 //
-//  valhalla::Api api;
-//  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
-//  request.mutable_options()->set_action(valhalla::Options::route);
+//  // valhalla::Api api;
+//  // valhalla::ParseApi(req_txt, valhalla::Options::route, api);
+//  // request.mutable_options()->CopyFrom(api.options());
+//
+//  for (auto& loc : *request.mutable_options()->mutable_locations()) {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  for (auto& loc : *request.mutable_trip()->mutable_routes(0)->mutable_legs(0)->mutable_location())
+//  {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
 //
 //  std::ofstream f(filename);
 //  auto buf = request.SerializeAsString();

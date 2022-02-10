@@ -361,8 +361,9 @@ void thor_worker_t::build_route(
     int dest_match_idx = dest_segment->last_match_idx;
 
     for (int i = origin_match_idx; i <= dest_match_idx; ++i) {
-      options.mutable_shape(i)->set_route_index(route_index);
-      options.mutable_shape(i)->set_waypoint_index(std::numeric_limits<uint32_t>::max());
+      options.mutable_shape(i)->mutable_correlation()->set_route_index(route_index);
+      options.mutable_shape(i)->mutable_correlation()->set_waypoint_index(
+          std::numeric_limits<uint32_t>::max());
     }
 
     // initialize the origin and destination location for route
@@ -371,8 +372,8 @@ void thor_worker_t::build_route(
 
     // when handling multi routes, orsm serializer need to know both the
     // matching_index(route_index) and the waypoint_index(shape_index).
-    origin_location->set_waypoint_index(way_point_index);
-    destination_location->set_waypoint_index(++way_point_index);
+    origin_location->mutable_correlation()->set_waypoint_index(way_point_index);
+    destination_location->mutable_correlation()->set_waypoint_index(++way_point_index);
 
     // we fake up something that looks like the output of loki. segment edge id and matchresult edge
     // ids can disagree at node snaps but leg building requires that we refer to edges in the path.

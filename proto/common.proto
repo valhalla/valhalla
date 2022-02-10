@@ -50,12 +50,14 @@ message PathEdge {
 
 // Output information about how the location object below is correlated to the graph or to the route etc
 message Correlation {
-  repeated PathEdge edges = 50;
-  repeated PathEdge filtered_edges = 51;
-  uint32 original_index = 52;
-  LatLng projected_ll = 53;
-  uint32 leg_shape_index = 54;
-  double distance_from_leg_origin = 55;
+  repeated PathEdge edges = 1;
+  repeated PathEdge filtered_edges = 2;
+  uint32 original_index = 3;
+  LatLng projected_ll = 4;
+  uint32 leg_shape_index = 5;
+  double distance_from_leg_origin = 6;
+  uint32 route_index = 7;     // primarily for matchings index in osrm map matching
+  uint32 waypoint_index = 8;  // primarily for matched point index in osrm map matching
 }
 
 message Location {
@@ -114,20 +116,12 @@ message Location {
   oneof has_street_side_tolerance {
     uint32 street_side_tolerance = 25;
   }
-
-
-  oneof has_route_index {
-    uint32 route_index = 26;
-  }
-  oneof has_waypoint_index {
-    uint32 waypoint_index = 27;
-  }
-  SearchFilter search_filter = 28;
+  SearchFilter search_filter = 26;
   oneof has_street_side_max_distance {
-    uint32 street_side_max_distance = 29;
+    uint32 street_side_max_distance = 27;
   }
   oneof has_preferred_layer {
-    int32 preferred_layer = 30;
+    int32 preferred_layer = 28;
   }
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
