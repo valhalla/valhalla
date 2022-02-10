@@ -62,7 +62,8 @@ config = {
     }
   },
   'additional_data': {
-    'elevation': '/data/valhalla/elevation/'
+    'elevation': '/data/valhalla/elevation/',
+    'elevation_url': Optional(str)
   },
   'loki': {
     'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid', 'status'],
@@ -331,7 +332,8 @@ help_text = {
     }
   },
   'additional_data': {
-    'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
+    'elevation': 'Location of elevation tiles',
+    'elevation_url': 'Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation'
   },
   'loki': {
     'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status',
