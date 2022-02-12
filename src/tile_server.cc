@@ -101,18 +101,14 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
 
 namespace valhalla {
 // static
-const std::string test_tile_server_t::server_url = "127.0.0.1:8004";
-
-// static
 void test_tile_server_t::start(const std::string& tile_source_dir, zmq::context_t& context) {
   // change these to tcp://known.ip.address.with:port if you want to do this across machines
-  std::string result_endpoint = "ipc:///tmp/http_test_result_endpoint";
-  std::string request_interrupt = "ipc:///tmp/http_test_request_interrupt";
-  std::string proxy_endpoint = "ipc:///tmp/http_test_proxy_endpoint";
-
+  std::string result_endpoint{"ipc:///tmp/http_test_result_endpoint" + m_url};
+  std::string request_interrupt{"ipc:///tmp/http_test_request_interrupt" + m_url};
+  std::string proxy_endpoint{"ipc:///tmp/http_test_proxy_endpoint" + m_url};
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, "tcp://*:8004", proxy_endpoint + "_upstream",
+                               http_server_t(context, "tcp://" + m_url, proxy_endpoint + "_upstream",
                                              result_endpoint, request_interrupt, false)));
   server.detach();
 
