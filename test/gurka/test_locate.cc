@@ -118,4 +118,15 @@ TEST(locate, basic_properties) {
       ASSERT_TRUE(std::count(allowed_headings.begin(), allowed_headings.end(), heading));
     }
   }
+
+  // if we  search with a cutoff and a certain heading and tolerance we should end up with no results
+  result = gurka::do_action(valhalla::Options::locate, map, {"1"}, "none",
+                            {
+                                {"/locations/0/heading", "45"},
+                                {"/locations/0/heading_tolerance", "20"},
+                                {"/locations/0/search_cutoff", "1"},
+                            },
+                            reader, &json);
+  ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
+  ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
 }
