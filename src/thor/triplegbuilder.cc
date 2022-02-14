@@ -439,7 +439,7 @@ void CopyLocations(TripLeg& trip_path,
   trip_path.add_location()->CopyFrom(origin);
   RemovePathEdges(&*trip_path.mutable_location()->rbegin(), path_begin->edgeid);
   // intermediates
-  boost::optional<uint32_t> last_shape_index = boost::none;
+  boost::optional<uint32_t> last_shape_index = boost::make_optional(false, uint32_t());
   for (const auto& intermediate : intermediates) {
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
