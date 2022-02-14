@@ -250,14 +250,15 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count",
                       static_cast<uint64_t>(location.correlation().edges_size() - 1));
-    if (location.waypoint_index() == numeric_limits<uint32_t>::max()) {
+    if (location.correlation().waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
       waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
     } else {
-      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
+      waypoint->emplace("waypoint_index",
+                        static_cast<uint64_t>(location.correlation().waypoint_index()));
     }
-    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
+    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.correlation().route_index()));
   }
 
   // If the location was used for optimized route we add trips_index and waypoint
@@ -265,7 +266,8 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.waypoint_index()));
+    waypoint->emplace("waypoint_index",
+                      static_cast<uint64_t>(location.correlation().waypoint_index()));
   }
 
   return waypoint;

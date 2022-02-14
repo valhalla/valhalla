@@ -33,10 +33,8 @@ bool PathLocation::operator==(const PathLocation& other) const {
       other.min_inbound_reach_ != min_inbound_reach_ || other.radius_ != radius_ ||
       other.stoptype_ != stoptype_ || other.latlng_ != latlng_ || other.heading_ != heading_ ||
       other.heading_tolerance_ != heading_tolerance_ ||
-      other.node_snap_tolerance_ != node_snap_tolerance_ || other.way_id_ != way_id_ ||
-      other.city_ != city_ || other.country_ != country_ || other.date_time_ != date_time_ ||
-      other.name_ != name_ || other.state_ != state_ || other.street_ != street_ ||
-      other.zip_ != zip_ || other.edges.size() != edges.size()) {
+      other.node_snap_tolerance_ != node_snap_tolerance_ || other.date_time_ != date_time_ ||
+      other.name_ != name_ || other.street_ != street_ || other.edges.size() != edges.size()) {
     return false;
   }
 
