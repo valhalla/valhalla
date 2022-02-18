@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/attributes_controller.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
@@ -26,7 +27,6 @@
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
-#include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
@@ -265,74 +265,15 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
 namespace std {
 
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
+// TODO: need to pass original json here for extra address bits that we dont store in Location
 std::string to_string(const valhalla::baldr::Location& l) {
   std::string s;
-  for (auto address : {&l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_}) {
+  for (auto address : {&l.name_, &l.street_}) {
     s.append(*address);
     s.push_back(',');
   }
   s.erase(s.end() - 1);
   return s;
-}
-
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
-std::string to_json(const valhalla::baldr::Location& l) {
-  std::string json = "{";
-  json += "\"lat\":";
-  json += std::to_string(l.latlng_.lat());
-
-  json += ",\"lon\":";
-  json += std::to_string(l.latlng_.lng());
-
-  json += ",\"type\":\"";
-  json += (l.stoptype_ == valhalla::baldr::Location::StopType::THROUGH) ? "through" : "break";
-  json += "\"";
-
-  if (l.heading_) {
-    json += ",\"heading\":";
-    json += *l.heading_;
-  }
-
-  if (!l.name_.empty()) {
-    json += ",\"name\":\"";
-    json += l.name_;
-    json += "\"";
-  }
-
-  if (!l.street_.empty()) {
-    json += ",\"street\":\"";
-    json += l.street_;
-    json += "\"";
-  }
-
-  if (!l.city_.empty()) {
-    json += ",\"city\":\"";
-    json += l.city_;
-    json += "\"";
-  }
-
-  if (!l.state_.empty()) {
-    json += ",\"state\":\"";
-    json += l.state_;
-    json += "\"";
-  }
-
-  if (!l.zip_.empty()) {
-    json += ",\"postal_code\":\"";
-    json += l.zip_;
-    json += "\"";
-  }
-
-  if (!l.country_.empty()) {
-    json += ",\"country\":\"";
-    json += l.country_;
-    json += "\"";
-  }
-
-  json += "}";
-
-  return json;
 }
 
 } // namespace std
@@ -379,13 +320,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
-    if (maneuver.has_depart_instruction_case()) {
+    if (!maneuver.depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
-    if (maneuver.has_verbal_depart_instruction_case()) {
+    if (!maneuver.verbal_depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
                                        maneuver.verbal_depart_instruction())
                                           .str(),
@@ -423,7 +364,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal succinct transition instruction
-    if (maneuver.has_verbal_succinct_transition_instruction_case()) {
+    if (!maneuver.verbal_succinct_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
@@ -431,7 +372,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal transition alert instruction
-    if (maneuver.has_verbal_transition_alert_instruction_case()) {
+    if (!maneuver.verbal_transition_alert_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
                                        maneuver.verbal_transition_alert_instruction())
                                           .str(),
@@ -439,7 +380,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal pre transition instruction
-    if (maneuver.has_verbal_pre_transition_instruction_case()) {
+    if (!maneuver.verbal_pre_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
                                        maneuver.verbal_pre_transition_instruction())
                                           .str(),
@@ -447,7 +388,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal post transition instruction
-    if (maneuver.has_verbal_post_transition_instruction_case()) {
+    if (!maneuver.verbal_post_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
                                        maneuver.verbal_post_transition_instruction())
                                           .str(),
@@ -455,13 +396,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Arrive instruction
-    if (maneuver.has_arrive_instruction_case()) {
+    if (!maneuver.arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
-    if (maneuver.has_verbal_arrive_instruction_case()) {
+    if (!maneuver.verbal_arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
                                        maneuver.verbal_arrive_instruction())
                                           .str(),

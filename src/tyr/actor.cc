@@ -52,7 +52,7 @@ void actor_t::cleanup() {
 }
 
 std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
-  if (!api.options().has_action_case())
+  if (api.options().action() == Options::no_action)
     throw valhalla_exception_t{106};
 
   switch (api.options().action()) {

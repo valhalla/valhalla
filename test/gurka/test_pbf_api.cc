@@ -39,7 +39,7 @@ TEST(pbf_api, pbf_in_out) {
   select_all.set_status(true);
   select_all.set_options(true);
 
-  for (int action = Options::Action_MIN; action <= Options::Action_MAX; ++action) {
+  for (int action = Options::no_action + 1; action <= Options::Action_MAX; ++action) {
     // don't have convenient support of these in gurka yet
     if (action == Options::sources_to_targets || action == Options::isochrone ||
         action == Options::expansion || action == Options::chinese_postman)

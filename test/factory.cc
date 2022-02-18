@@ -24,7 +24,6 @@ TEST(Factory, Register) {
   options.set_costing_type(Costing::multimodal);
   EXPECT_THROW(factory.Create(options), std::runtime_error);
   auto truck = factory.Create(Costing::truck);
-  EXPECT_THROW(factory.Create(Costing{}), std::runtime_error);
 }
 
 // TODO: add many more tests!

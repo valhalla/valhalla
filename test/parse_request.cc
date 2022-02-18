@@ -409,8 +409,7 @@ void test_show_locations_parsing(const bool expected_value,
 void test_shape_match_parsing(const ShapeMatch expected_value, const Options::Action action) {
   const std::string key = "shape_match";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_shape_match_case(),
-           request.options().shape_match());
+  validate(key, expected_value, true, request.options().shape_match());
 }
 
 void test_best_paths_parsing(const uint32_t expected_value,
