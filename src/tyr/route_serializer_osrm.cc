@@ -542,7 +542,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
           auto intersecting_edge = node->GetIntersectingEdge(m);
           bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, true);
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
         }
       }
     }
