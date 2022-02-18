@@ -269,7 +269,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   ChinesePostmanGraph G;
 
   parse_locations(request);
-  parse_filter_attributes(request);
+  controller = AttributesController(request.options());
   auto costing_str = parse_costing(request);
   auto& options = *request.mutable_options();
   const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
@@ -454,7 +454,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   }
   // Start build path here
   LOG_DEBUG("Building full path");
-  bool invariant = options.has_date_time_type_case();
+  bool invariant = options.date_time_type() != Options::no_time;
   auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
   std::vector<PathInfo> path =
       buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
